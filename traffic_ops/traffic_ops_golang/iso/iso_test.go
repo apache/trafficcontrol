@@ -34,6 +34,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -217,7 +218,8 @@ func TestISOS(t *testing.T) {
 				req = req.WithContext(ctx)
 			}
 
-			isos(tx, w, req, tc.input)
+			var user auth.CurrentUser
+			isos(tx, &user, w, req, tc.input)
 
 			// pass or fail the test by inspecting the response recorder
 			tc.validator(t, w)

@@ -21,19 +21,27 @@ package iso
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
 )
 
+// environment variables used by the mock command
+const (
+	mockCmdEnvInvoke = "GO_HELPER_CMD"
+	mockCmdEnvError  = "GO_HELPER_CMD_FORCE_ERROR"
+	mockCmdEnvOutput = "GO_HELPER_CMD_OUTPUT"
+)
+
 // mockISOCmd returns a modified version of the given Cmd
 // so that when run, the command actually invokes the
 // TestHelperMockCmd test. See TestHelperMockCmd for
 // more details on its behavior.
-// If forceError is true, the command will exit a non-0 code and write
-// nothing to STDOUT/output.
-// If cmdOutput is blank, the command will write to STDOUT, otherwise
+//
+// - If forceError is true, the command will exit a non-0 code and write to STDERR.
+// - If cmdOutput is blank, the command will write to STDOUT, otherwise
 // it will write its output to the file specified by cmdOutput.
 func mockISOCmd(cmd *exec.Cmd, forceError bool, cmdOutput string) *exec.Cmd {
 	args := []string{
@@ -46,35 +54,56 @@ func mockISOCmd(cmd *exec.Cmd, forceError bool, cmdOutput string) *exec.Cmd {
 	mocked := exec.Command(os.Args[0], args...)
 
 	env := cmd.Env
-	env = append(cmd.Env, "GO_HELPER_CMD=1")
+	env = append(cmd.Env, fmt.Sprintf("%s=1", mockCmdEnvInvoke))
 	if forceError {
-		env = append(env, "GO_HELPER_CMD_FORCE_ERROR=1")
+		env = append(env, fmt.Sprintf("%s=1", mockCmdEnvError))
 	}
 	if cmdOutput != "" {
-		env = append(env, fmt.Sprintf("GO_HELPER_CMD_OUTPUT=%s", cmdOutput))
+		env = append(env, fmt.Sprintf("%s=%s", mockCmdEnvOutput, cmdOutput))
 	}
 	mocked.Env = env
 
 	return mocked
 }
 
+// TestHelperMockCmd is a special test case that is meant to be invoked
+// by a subprocess, e.g. go test -run=TestHelperMockCmd.
+//
+// In order for the test to act like a subprocess, the GO_HELPER_CMD environment
+// variable must be set, otherwise the test is skipped. Use the mockISOCmd to
+// assist with modifying an existing exec.Cmd to use this helper.
+//
+// The test writes to either STDOUT/STDERR/or a file all arguments it receives
+// after the '--' argument. In practice, the mockISOCmd passes the original
+// command's arguments in this position, essentially echoing back what the
+// original command was.
 func TestHelperMockCmd(t *testing.T) {
-	if os.Getenv("GO_HELPER_CMD") != "1" {
+	if os.Getenv(mockCmdEnvInvoke) != "1" {
 		return
 	}
 
-	var respCode int
-	if os.Getenv("GO_HELPER_CMD_FORCE_ERROR") == "1" {
-		respCode = 1
-	}
+	var (
+		respCode int
+		dest     io.Writer
+	)
 
-	dest := os.Stdout
-	if cmdOutput := os.Getenv("GO_HELPER_CMD_OUTPUT"); cmdOutput != "" {
-		fd, err := os.Create(cmdOutput)
+	switch {
+	case os.Getenv(mockCmdEnvError) == "1":
+		respCode = 1
+		dest = os.Stderr
+
+	case os.Getenv(mockCmdEnvOutput) != "":
+		fd, err := os.Create(os.Getenv(mockCmdEnvOutput))
 		if err == nil {
 			defer fd.Close()
 			dest = fd
+		} else {
+			respCode = 100
+			dest = os.Stderr
 		}
+
+	default:
+		dest = os.Stdout
 	}
 
 	// Set args to all arguments past '--'.
@@ -86,8 +115,6 @@ func TestHelperMockCmd(t *testing.T) {
 		}
 	}
 
-	if respCode == 0 {
-		fmt.Fprintf(dest, strings.Join(args, " "))
-	}
+	fmt.Fprintf(dest, strings.Join(args, " "))
 	os.Exit(respCode)
 }

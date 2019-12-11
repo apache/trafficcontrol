@@ -67,6 +67,35 @@ func TestStreamISOCmd_stdout(t *testing.T) {
 	t.Logf("got: %q", b.String())
 }
 
+func TestStreamISOCmd_stdout_err(t *testing.T) {
+	s, err := newStreamISOCmd("/tmp/nothing/here")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// No custom/generate executable exists in the given directory,
+	// so isoDest should be blank meaning the command will write to
+	// STDOUT.
+	if s.isoDest != "" {
+		t.Fatalf("isoDest = %q; expected blank string", s.isoDest)
+	}
+
+	// Modify the command to use the mock command helper
+	// which will return an error.
+	s.cmd = mockISOCmd(s.cmd, true, "")
+
+	// stream will invoke the command. It's expected
+	// to receive back an error (since the mocked command
+	// is setup to return an error).
+	var b bytes.Buffer
+	err = s.stream(&b)
+	if err == nil {
+		t.Fatalf("stream() error: %v; expected non-nil", err)
+	}
+
+	t.Logf("got (expected) error: %q", err)
+}
+
 func TestStreamISOCmd_file(t *testing.T) {
 	// Create scratch directory
 	dir, err := ioutil.TempDir("", t.Name())
@@ -122,6 +151,50 @@ func TestStreamISOCmd_file(t *testing.T) {
 		t.Fatalf("stat of %q expected to receive NotExist error; got %v", isoDir, err)
 	}
 	t.Logf("stat of %q (expected): %v", isoDir, err)
+}
+
+func TestStreamISOCmd_file_err(t *testing.T) {
+	// Create scratch directory
+	dir, err := ioutil.TempDir("", t.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	// Create custom executable that should be used instead of mkisofs
+	fd, err := os.OpenFile(filepath.Join(dir, ksAltCommand), os.O_CREATE|os.O_EXCL, 0777)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fd.Close()
+
+	s, err := newStreamISOCmd(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Ensure that the custom executable was found. The custom executable
+	// is expected to write the ISO image to a temporary file, which is what
+	// isoDest represents.
+	if s.isoDest == "" {
+		t.Fatalf("isoDest = %q; expected non-blank string", s.isoDest)
+	}
+	t.Logf("isoDest = %q", s.isoDest)
+
+	// Modify the command to use the mock command helper
+	// which will return an error
+	s.cmd = mockISOCmd(s.cmd, true, s.isoDest)
+
+	// stream will invoke the command. It's expected
+	// to receive back an error (since the mocked command
+	// is setup to return an error).
+	var b bytes.Buffer
+	err = s.stream(&b)
+	if err == nil {
+		t.Fatalf("stream() error: %v; expected non-nil", err)
+	}
+
+	t.Logf("got (expected) error: %q", err)
 }
 
 func TestKickstarterDir(t *testing.T) {

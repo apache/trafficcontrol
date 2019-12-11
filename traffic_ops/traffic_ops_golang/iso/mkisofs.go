@@ -127,16 +127,23 @@ func (s *streamISOCmd) stream(w io.Writer) error {
 // streamStdout invokes the command and pipes its STDOUT
 // to w.
 func (s *streamISOCmd) streamStdout(w io.Writer) error {
+	var stderr bytes.Buffer
 	s.cmd.Stdout = w
-	return s.cmd.Run()
+	s.cmd.Stderr = &stderr
+	if err := s.cmd.Run(); err != nil {
+		return fmt.Errorf("%v: %s", err, &stderr)
+	}
+	return nil
 }
 
 // streamFromFile invokes the command and expects the ISO
 // to be written to isoDest. It then copies the contents
 // of that file to w.
 func (s *streamISOCmd) streamFromFile(w io.Writer) error {
+	var stderr bytes.Buffer
+	s.cmd.Stderr = &stderr
 	if err := s.cmd.Run(); err != nil {
-		return err
+		return fmt.Errorf("%v: %s", err, &stderr)
 	}
 
 	isoFd, err := os.Open(s.isoDest)

@@ -169,7 +169,8 @@ func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.
 
 	if err = genISOCmd.stream(w); err != nil {
 		statusCode := http.StatusInternalServerError
-		api.HandleErr(w, req, tx.Tx, statusCode, errors.New(http.StatusText(statusCode)), fmt.Errorf("error streaming iso: %v", err))
+		userErr := errors.New("unable to generate ISO")
+		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
 		return
 	}
 
