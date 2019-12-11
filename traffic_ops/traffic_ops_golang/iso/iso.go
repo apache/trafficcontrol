@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -43,7 +44,7 @@ const (
 	cfgFilenamePerl = "osversions.cfg"  // Config file name in the Perl version
 
 	// This is the directory name inside each OS directory where
-	// configuration files are placed.
+	// configuration files for kickstart scripts are placed.
 	ksCfgDir = "ks_scripts"
 
 	// Configuration files that are generated inside the ks_scripts directory.
@@ -84,18 +85,6 @@ const (
 //     ]
 //   }
 //
-// Success (streaming = false):
-//   HTTP 200
-//   {
-//     "alerts": [
-//       {"level":"success","text":"Generate ISO was successful."}
-//     ],
-//     "response": {
-//       "isoURL":"https:\/\/trafficops-perl.infra.ciab.test\/iso\/db.infra.ciab.test-centos72.iso",
-//       "isoName":"db.infra.ciab.test-centos72.iso"
-//     }
-//   }
-//
 // Success (streaming = true):
 //   HTTP 200
 //   Content-Disposition: attachment; filename="db.infra.ciab.test-centos72.iso"
@@ -116,14 +105,16 @@ func ISOs(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	isos(inf.Tx, w, req, ir)
+	isos(inf.Tx, inf.User, w, req, ir)
 }
 
 // cmdOverwriteCtxKey is used in an http.Request's context
 // to set a cmd override value.
 var cmdOverwriteCtxKey struct{}
 
-func isos(tx *sqlx.Tx, w http.ResponseWriter, req *http.Request, ir isoRequest) {
+// isos performs the majority of work for the /isos endpoint handler. It is separated out from
+// the exported handler for testability.
+func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.Request, ir isoRequest) {
 	// Ensure isoRequest is valid.
 	if errMsgs := ir.validate(); len(errMsgs) > 0 {
 		writeRespErrorAlerts(w, req, errMsgs)
@@ -134,14 +125,18 @@ func isos(tx *sqlx.Tx, w http.ResponseWriter, req *http.Request, ir isoRequest) 
 
 	isoFilename := fmt.Sprintf("%s-%s.iso", ir.fqdn(), ir.OSVersionDir)
 
+	// Determine the kickstart root directory, which is either a default
+	// value or may be overridden by a database/Parameter entry.
 	ksDir, err := kickstarterDir(tx, ir.OSVersionDir)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		userErr := errors.New("unable to determine kickstarter directory")
-		api.HandleErr(w, req, tx.Tx, statusCode, userErr, err)
+		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
 		return
 	}
 
+	// cfgDir holds the kickstart config files within the root
+	// kickstart directory.
 	cfgDir := filepath.Join(ksDir, ksCfgDir)
 	log.Infof("cfg_dir: %s", cfgDir)
 
@@ -149,7 +144,7 @@ func isos(tx *sqlx.Tx, w http.ResponseWriter, req *http.Request, ir isoRequest) 
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		userErr := errors.New("unable to initialize genISO command")
-		api.HandleErr(w, req, tx.Tx, statusCode, userErr, err)
+		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
 		return
 	}
 	defer genISOCmd.cleanup()
@@ -165,7 +160,7 @@ func isos(tx *sqlx.Tx, w http.ResponseWriter, req *http.Request, ir isoRequest) 
 	if err = writeKSCfgs(cfgDir, ir, genISOCmd.String()); err != nil {
 		statusCode := http.StatusInternalServerError
 		userErr := errors.New("unable to create kickstarter files")
-		api.HandleErr(w, req, tx.Tx, statusCode, userErr, err)
+		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
 		return
 	}
 
@@ -175,7 +170,19 @@ func isos(tx *sqlx.Tx, w http.ResponseWriter, req *http.Request, ir isoRequest) 
 	if err = genISOCmd.stream(w); err != nil {
 		statusCode := http.StatusInternalServerError
 		api.HandleErr(w, req, tx.Tx, statusCode, errors.New(http.StatusText(statusCode)), fmt.Errorf("error streaming iso: %v", err))
+		return
 	}
+
+	// Create changelog entry
+	api.CreateChangeLogBuildMsg(
+		api.ApiChange,
+		api.Created,
+		user,
+		tx.Tx,
+		"ISO",
+		ir.fqdn(),
+		map[string]interface{}{"OS": ir.OSVersionDir},
+	)
 }
 
 // writeRespErrorAlerts writes to w an Alerts JSON response with

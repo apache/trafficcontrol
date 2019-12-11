@@ -51,7 +51,8 @@ func newStreamISOCmd(ksDir string) (*streamISOCmd, error) {
 	if customExec := customGenISOPath(ksDir); customExec != "" {
 		// The custom script must accept a single argument: The path
 		// where it will write the ISO. Here we create a temporary
-		// directory for this purpose.
+		// directory for this purpose. The cleanup method is responsible
+		// for removing it.
 		tmpDir, err := ioutil.TempDir("", "genISO")
 		if err != nil {
 			return nil, err
@@ -103,7 +104,8 @@ func (s *streamISOCmd) String() string {
 }
 
 // cleanup should be defered after calling newStreamISOCmd.
-// It removes any temporary resources created.
+// It removes any temporary resources created. If the command
+// doesn't need any cleanup, this is a no-op.
 func (s *streamISOCmd) cleanup() error {
 	if s.isoDest == "" {
 		return nil
