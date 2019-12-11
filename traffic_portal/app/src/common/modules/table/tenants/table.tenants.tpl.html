@@ -23,7 +23,7 @@ under the License.
             <li class="active">Tenants</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" ng-click="createTenant()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" title="Create New Tenant" ng-click="createTenant()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -40,7 +40,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editTenant(t.id)" ng-repeat="t in ::tenants" ng-class="::{'active': isUserTenant(t)}">
-                <td data-search="^{{::t.name}}$">{{::t.name}}</td>
+                <td name="name" data-search="^{{::t.name}}$">{{::t.name}}</td>
                 <td data-search="^{{::t.active}}$">{{::t.active}}</td>
                 <td data-search="^{{::t.parentName}}$">{{::t.parentName}}</td>
             </tr>

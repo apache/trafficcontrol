@@ -21,8 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	Use the ``id`` query parameter of a ``GET`` request to :ref:`to-api-profiles-id` instead.
 
 :Auth. Required: Yes
 :Roles Required: None

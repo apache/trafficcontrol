@@ -8,9 +8,9 @@ package client
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package client
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"crypto/tls"
@@ -31,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/test/router/data"
+	"github.com/apache/trafficcontrol/test/router/data"
 )
 
 func MustLoadCertificates(cafile string) *x509.CertPool {
@@ -95,7 +94,7 @@ func DoRequest(isHttps bool, tlsConfig *tls.Config, host string, resultsChan cha
 	}
 
 	scheme := "http://"
-	if (isHttps) {
+	if isHttps {
 		scheme = "https://"
 	}
 
@@ -105,7 +104,7 @@ func DoRequest(isHttps bool, tlsConfig *tls.Config, host string, resultsChan cha
 	req, err := http.NewRequest("GET", url, nil)
 
 	if err != nil {
-		fmt.Println("^^^^^^",err)
+		fmt.Println("^^^^^^", err)
 	}
 
 	req.Header.Set("Connection", "close")
@@ -124,7 +123,7 @@ func DoRequest(isHttps bool, tlsConfig *tls.Config, host string, resultsChan cha
 	if err != nil {
 		fmt.Println("*** Error ****", err)
 		httpResult.Err = err
-		fmt.Println(httpResult);
+		fmt.Println(httpResult)
 		return
 	}
 

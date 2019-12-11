@@ -166,7 +166,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		if !authenticated {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
@@ -206,7 +206,7 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.Write(append(respBts, '\n'))
 
 		// TODO: afaik, Perl never clears these tokens. They should be reset to NULL on login, I think.
@@ -357,7 +357,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		if !authenticated {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
@@ -393,8 +393,8 @@ func VerifyUrlOnWhiteList(urlString string, whiteListedUrls []string) (bool, err
 	return false, nil
 }
 
-func setToken(addr rfc.EmailAddress, tx *sql.Tx) (string, error) {
-	t := make([]byte, 16)
+func generateToken() (string, error) {
+	var t = make([]byte, 16)
 	_, err := rand.Read(t)
 	if err != nil {
 		return "", err
@@ -402,12 +402,19 @@ func setToken(addr rfc.EmailAddress, tx *sql.Tx) (string, error) {
 	t[6] = (t[6] & 0x0f) | 0x40
 	t[8] = (t[8] & 0x3f) | 0x80
 
-	token := fmt.Sprintf("%x-%x-%x-%x-%x", t[0:4], t[4:6], t[6:8], t[8:10], t[10:])
+	return fmt.Sprintf("%x-%x-%x-%x-%x", t[0:4], t[4:6], t[6:8], t[8:10], t[10:]), nil
+}
+
+func setToken(addr rfc.EmailAddress, tx *sql.Tx) (string, error) {
+	token, err := generateToken()
+	if err != nil {
+		return "", err
+	}
 
 	if _, err = tx.Exec(setTokenQuery, token, addr.Address.Address); err != nil {
 		return "", err
 	}
-	return string(token), nil
+	return token, nil
 }
 
 func createMsg(addr rfc.EmailAddress, t string, db *sqlx.DB, c config.ConfigPortal) ([]byte, error) {
@@ -503,7 +510,7 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.Write(append(respBts, '\n'))
 	}
 }

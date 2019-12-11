@@ -18,12 +18,11 @@
 ***********************
 ``server_capabilities``
 ***********************
+.. versionadded:: 1.4
 
 ``GET``
 =======
-.. versionadded:: 1.4
-
-Retrieves server capabilities.
+Retrieves :term:`Server Capabilities`.
 
 :Auth. Required: Yes
 :Roles Required: "read-only"
@@ -33,11 +32,11 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
-	|    Name    | Required |                Description                                                                                                     |
-	+============+==========+================================================================================================================================+
-	|    name    | no       | Return the server capability with this name                                                                                    |
-	+------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
+	+------+----------+-----------------------------------------------------+
+	| Name | Required | Description                                         |
+	+======+==========+=====================================================+
+	| name | no       | Return the :term:`Server Capability` with this name |
+	+------+----------+-----------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Structure
@@ -50,8 +49,8 @@ Request Structure
 
 Response Structure
 ------------------
-:name:        The name of this server capability
-:lastUpdated: The date and time at which this server capability was last updated, in ISO-like format
+:name:        The name of this :term:`Server Capability`
+:lastUpdated: The date and time at which this :term:`Server Capability` was last updated, in ISO-like format
 
 .. code-block:: http
 	:caption: Response Example
@@ -79,9 +78,7 @@ Response Structure
 
 ``POST``
 ========
-.. versionadded:: 1.4
-
-Create a new server capability.
+Create a new :term:`Server Capability`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -89,7 +86,7 @@ Create a new server capability.
 
 Request Structure
 -----------------
-:name:     The name of the server capability
+:name: The name of the :term:`Server Capability`
 
 .. code-block:: http
 	:caption: Request Example
@@ -108,8 +105,8 @@ Request Structure
 
 Response Structure
 ------------------
-:name:        The name of this server capability
-:lastUpdated: The date and time at which this server capability was last updated, in ISO-like format
+:name:        The name of this :term:`Server Capability`
+:lastUpdated: The date and time at which this :term:`Server Capability` was last updated, in ISO-like format
 
 .. code-block:: http
 	:caption: Response Example
@@ -141,9 +138,7 @@ Response Structure
 
 ``DELETE``
 ==========
-.. versionadded:: 1.4
-
-Deletes a specific server capability.
+Deletes a specific :term:`Server Capability`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -154,11 +149,11 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
-	|    Name    | Required |                Description                                                                                                     |
-	+============+==========+================================================================================================================================+
-	|    name    | yes      | The name of the server capability to be deleted                                                                                |
-	+------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
+	+------+----------+---------------------------------------------------------+
+	| Name | Required | Description                                             |
+	+======+==========+=========================================================+
+	| name | yes      | The name of the :term:`Server Capability` to be deleted |
+	+------+----------+---------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

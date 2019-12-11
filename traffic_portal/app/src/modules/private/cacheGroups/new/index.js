@@ -28,7 +28,9 @@ module.exports = angular.module('trafficPortal.private.cacheGroups.new', [])
                         controller: 'FormNewCacheGroupController',
                         resolve: {
                             cacheGroup: function() {
-                                return {};
+                                return {
+                                    localizationMethods: [ 'CZ', 'GEO' ]
+                                };
                             },
                             types: function(typeService) {
                                 return typeService.getTypes({ useInTable: 'cachegroup' });

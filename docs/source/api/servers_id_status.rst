@@ -18,8 +18,6 @@
 *************************
 ``servers/{{ID}}/status``
 *************************
-.. deprecated:: 1.1
-	Use the ``PUT`` method of :ref:`to-api-servers-id` instead.
 
 ``PUT``
 =======

@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
@@ -79,7 +80,7 @@ type MakeCfgFunc func(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, f
 //
 func WithProfileData(w http.ResponseWriter, r *http.Request, makeCfg func(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string) (string, error)) {
 	addHdr := true
-	WithProfileDataHdr(w, r, addHdr, tc.ContentTypeTextPlain, makeCfg)
+	WithProfileDataHdr(w, r, addHdr, rfc.ContentTypeTextPlain, makeCfg)
 }
 
 func WithProfileDataHdr(w http.ResponseWriter, r *http.Request, addHdr bool, contentType string, makeCfg func(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string) (string, error)) {
@@ -137,7 +138,7 @@ func WithProfileDataHdr(w http.ResponseWriter, r *http.Request, addHdr bool, con
 	}
 
 	if contentType != "" {
-		w.Header().Set(tc.ContentType, contentType)
+		w.Header().Set(rfc.ContentType, contentType)
 	}
 	w.Write([]byte(hdr + text))
 }

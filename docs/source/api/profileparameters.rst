@@ -21,8 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	To get the :term:`Profiles` associated with a particular :term:`Parameter`, use the ``param`` query parameter of :ref:`to-api-profiles` instead. To see the :term:`Parameters` associated with a particular :term:`Profile`, refer to the ``params`` key in the response of a ``GET`` request to :ref:`to-api-profiles-id` instead.
 
 Retrieves all :term:`Parameter`/:term:`Profile` assignments.
 

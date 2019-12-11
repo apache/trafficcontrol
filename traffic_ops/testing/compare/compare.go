@@ -266,11 +266,11 @@ func handlePlainTextResponse(responses *[]result, route string) {
 		log.Printf("Identical results (%d bytes) from %s\n", len(result0), route)
 	} else {
 		writeAllResults(route,
-		                result0Str,
-		                (*responses)[0].TO,
-		                result1Str,
-		                (*responses)[1].TO,
-		                checkOrderDiffs(scrubbedResult0, scrubbedResult1))
+			result0Str,
+			(*responses)[0].TO,
+			result1Str,
+			(*responses)[1].TO,
+			checkOrderDiffs(scrubbedResult0, scrubbedResult1))
 	}
 }
 

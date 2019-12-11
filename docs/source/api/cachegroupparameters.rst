@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Extract information about :term:`Parameters` associated with :term:`Cache Groups`
+Extract information about the :ref:`cache-group-parameters` associated with :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -33,11 +33,11 @@ No available parameters
 
 Response Structure
 ------------------
-:cachegroupParameters: An array of identifying information for :term:`Parameters` assigned to :term:`Cache Group` :term:`Profiles`
+:cachegroupParameters: An array of identifying information for the :ref:`cache-group-parameters` of :term:`Cache Groups`
 
-	:parameter:    The :term:`Parameter`'s :ref:`parameter-id`
+	:cachegroup:   A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
 	:last_updated: Date and time of last modification in an ISO-like format
-	:cachegroup:   Name of the :term:`Cache Group`
+	:parameter:    An integer that is the :term:`Parameter`'s :ref:`parameter-id`
 
 .. code-block:: http
 	:caption: Response Example
@@ -78,8 +78,8 @@ Request Structure
 -----------------
 The request data can take the form of either a single object or an array of one or more objects.
 
-:cacheGroupId: Integral, unique identifier for the :term:`Cache Group` to which a :term:`Parameter` is being assigned
-:parameterId:  Integral, unique identifier for the :term:`Parameter` being assigned
+:cacheGroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` to which a :term:`Parameter` is being assigned
+:parameterId:  An integer that is the :ref:`parameter-id` of the :term:`Parameter` being assigned
 
 .. code-block:: http
 	:caption: Request Example
@@ -99,9 +99,9 @@ The request data can take the form of either a single object or an array of one 
 
 Response Structure
 ------------------
-:parameter:    Integral, unique identifier of the :term:`Parameter`
+:cachegroup:   A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
 :last_updated: Date and time of last modification in an ISO-like format
-:cachegroup:   Name of the :term:`Cache Group`
+:parameter:    An integer that is the :term:`Parameter`'s :ref:`parameter-id`
 
 .. code-block:: http
  	:caption: Response Example

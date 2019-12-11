@@ -21,10 +21,8 @@
 
 ``GET``
 =======
-Retrieves a specific region
+Retrieves a specific :term:`Region`.
 
-.. deprecated:: 1.1
-	Use the ``id`` query parameter of a ``GET`` request to the :ref:`to-api-regions` endpoint
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -91,11 +89,11 @@ Response Structure
 
 ``PUT``
 =======
-Updates a region
+Updates a :term:`Region`.
 
-	Authentication Required: Yes
-
-	Role(s) Required: admin or oper
+:Auth. Required: Yes
+:Role(s) Required: "admin" or "operator"
+:Response Type: Object
 
 Request Structure
 -----------------

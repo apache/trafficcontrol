@@ -52,7 +52,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editProfile(p.id)" ng-repeat="p in ::profiles" context-menu="contextMenuItems">
-                <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+                <td name="name" data-search="^{{::p.name}}$">{{::p.name}}</td>
                 <td data-search="^{{::p.type}}$">{{::p.type}}</td>
                 <td data-search="^{{::p.routingDisabled}}$">{{::p.routingDisabled}}</td>
                 <td data-search="^{{::p.description}}$">{{::p.description}}</td>

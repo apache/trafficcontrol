@@ -55,6 +55,7 @@ func init() {
 func main() {
 	showVersion := flag.Bool("version", false, "Show version and exit")
 	showPlugins := flag.Bool("plugins", false, "Show the list of plugins and exit")
+	showRoutes := flag.Bool("api-routes", false, "Show the list of API routes and exit")
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
@@ -66,6 +67,29 @@ func main() {
 	}
 	if *showPlugins {
 		fmt.Println(strings.Join(plugin.List(), "\n"))
+		os.Exit(0)
+	}
+	if *showRoutes {
+		fake := routing.ServerData{Config: config.NewFakeConfig()}
+		routes, _, _, _ := routing.Routes(fake)
+		if len(*configFileName) != 0 {
+			cfg, err := config.LoadCdnConfig(*configFileName)
+			if err != nil {
+				fmt.Printf("Loading cdn config from '%s': %v", *configFileName, err)
+				os.Exit(1)
+			}
+			perlRoutes := routing.GetRouteIDMap(cfg.PerlRoutes)
+			disabledRoutes := routing.GetRouteIDMap(cfg.DisabledRoutes)
+			for _, r := range routes {
+				_, isBypassedToPerl := perlRoutes[r.ID]
+				_, isDisabled := disabledRoutes[r.ID]
+				fmt.Printf("id=%d\tmethod=%s\tversion=%.1f\tpath=%s\tcan_bypass_to_perl=%t\tis_bypassed_to_perl=%t\tis_disabled=%t\n", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl, isBypassedToPerl, isDisabled)
+			}
+		} else {
+			for _, r := range routes {
+				fmt.Printf("id=%d\tmethod=%s\tversion=%.1f\tpath=%s\tcan_bypass_to_perl=%t\n", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl)
+			}
+		}
 		os.Exit(0)
 	}
 	if len(os.Args) < 2 {

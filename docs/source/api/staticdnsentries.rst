@@ -36,11 +36,11 @@ Request Structure
 	+===================+==========+============================================================================================================================================+
 	| address           | no       | Return only static DNS entries that operate on this address/:abbr:`CNAME (Canonical Name)`                                                 |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| cachegroup        | no       | Return only static DNS entries assigned to this :term:`Cache Group`                                                                        |
+	| cachegroup        | no       | Return only static DNS entries assigned to the :term:`Cache Group` that has this :ref:`cache-group-name`                                   |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| cachegroupId      | no       | Return only static DNS entries assigned to the :term:`Cache Group` identified by this integral, unique identifier                          |
+	| cachegroupId      | no       | Return only static DNS entries assigned to the :term:`Cache Group` that has this :ref:`cache-group-id`                                     |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| deliveryservice   | no       | Return only static DNS entries that apply within the domain of the :term:`Delivery Service` with this 'xml_id'                             |
+	| deliveryservice   | no       | Return only static DNS entries that apply within the domain of the :term:`Delivery Service` with this :ref:`ds-xmlid`                      |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
 	| deliveryserviceId | no       | Return only static DNS entries that apply within the domain of the :term:`Delivery Service` identified by this integral, unique identifier |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
@@ -75,12 +75,12 @@ Request Structure
 
 Response Structure
 ------------------
-:address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
-:cachegroup:        An optional string containing the name of a Cache Group which will service this static DNS entry
+:address:    If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
+:cachegroup: An optional string containing the :ref:`Name of a Cache Group <cache-group-name>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
-:cachegroupId:      An optional, integral, unique identifier of a Cache Group which will service this static DNS entry
+:cachegroupId: An optional, integer that is the :ref:`ID of a Cache Group <cache-group-id>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
@@ -88,9 +88,9 @@ Response Structure
 :deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
 :id:                An integral, unique identifier for this static DNS entry
-:ttl:               The Time To Live (TTL) of this static DNS entry in seconds
+:ttl:               The :abbr:`TTL (Time To Live)` of this static DNS entry in seconds
 :type:              The name of the type of this static DNS entry
-:typeId:            The integral, unique identifier of the type of this static DNS entry
+:typeId:            The integral, unique identifier of the :term:`Type` of this static DNS entry
 
 .. code-block:: http
 	:caption: Response Example
@@ -135,15 +135,15 @@ Creates a new, static DNS entry.
 
 Request Structure
 -----------------
-:address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
-:cachegroupId:      An optional, integral, unique identifier of a Cache Group which will service this static DNS entry
+:address:      If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
+:cachegroupId: An optional, integer that is the :ref:`ID of a Cache Group <cache-group-id>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
 :deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
-:host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
-:ttl:               The Time To Live (TTL) of this static DNS entry in seconds
-:typeId:            The integral, unique identifier of the type of this static DNS entry
+:host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the :abbr:`FQDN (Fully Qualified Domain Name)` which shall resolve to ``address``
+:ttl:               The :term:`TTL (Time To Live)` of this static DNS entry in seconds
+:typeId:            The integral, unique identifier of the :term:`Type` of this static DNS entry
 
 .. code-block:: http
 	:caption: Request Example
@@ -167,11 +167,11 @@ Request Structure
 Response Structure
 ------------------
 :address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
-:cachegroup:        An optional string containing the name of a Cache Group which will service this static DNS entry
+:cachegroup: An optional string containing the :ref:`Name of a Cache Group <cache-group-name>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
-:cachegroupId:      An optional, integral, unique identifier of a Cache Group which will service this static DNS entry
+:cachegroupId: An optional, integer that is the :ref:`ID of a Cache Group <cache-group-id>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
@@ -179,9 +179,9 @@ Response Structure
 :deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
 :id:                An integral, unique identifier for this static DNS entry
-:ttl:               The Time To Live (TTL) of this static DNS entry in seconds
-:type:              The name of the type of this static DNS entry
-:typeId:            The integral, unique identifier of the type of this static DNS entry
+:ttl:               The :abbr:`TTL (Time To Live)` of this static DNS entry in seconds
+:type:              The name of the :term:`Type` of this static DNS entry
+:typeId:            The integral, unique identifier of the :term:`Type` of this static DNS entry
 
 .. code-block:: http
 	:caption: Response Example
@@ -224,9 +224,9 @@ Response Structure
 
 Updates a static DNS entry.
 
-Authentication Required: Yes
-
-Role(s) Required: admin or oper
+:Auth. Required:   Yes
+:Role(s) Required: "admin" or "operator"
+:Response Type:    Object
 
 Request Structure
 -----------------
@@ -239,14 +239,14 @@ Request Structure
 	+------+-------------------------------------------------------------------+
 
 :address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
-:cachegroupId:      An optional, integral, unique identifier of a Cache Group which will service this static DNS entry
+:cachegroupId: An optional, integer that is the :ref:`ID of a Cache Group <cache-group-id>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
 :deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
-:ttl:               The Time To Live (TTL) of this static DNS entry in seconds
-:typeId:            The integral, unique identifier of the type of this static DNS entry
+:ttl:               The :abbr:`TTL (Time To Live)` of this static DNS entry in seconds
+:typeId:            The integral, unique identifier of the :term:`Type` of this static DNS entry
 
 .. code-block:: http
 	:caption: Request Example
@@ -269,22 +269,22 @@ Request Structure
 
 Response Structure
 ------------------
-:address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
-:cachegroup:        An optional string containing the name of a Cache Group which will service this static DNS entry
+:address:    If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server, otherwise it is the IP address to which ``host`` shall be resolved
+:cachegroup: An optional string containing the :ref:`Name of a Cache Group <cache-group-name>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
-:cachegroupId:      An optional, integral, unique identifier of a Cache Group which will service this static DNS entry
+:cachegroupId: An optional, integer that is the :ref:`ID of a Cache Group <cache-group-id>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
 :deliveryservice:   The name of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
-:host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
+:host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the :abbr:`FQDN (Fully Qualified Domain Name)` which shall resolve to ``address``
 :id:                An integral, unique identifier for this static DNS entry
-:ttl:               The Time To Live (TTL) of this static DNS entry in seconds
-:type:              The name of the type of this static DNS entry
-:typeId:            The integral, unique identifier of the type of this static DNS entry
+:ttl:               The :abbr:`TTL (Time To Live)` of this static DNS entry in seconds
+:type:              The name of the :term:`Type` of this static DNS entry
+:typeId:            The integral, unique identifier of the :term:`Type` of this static DNS entry
 
 .. code-block:: http
 	:caption: Response Example

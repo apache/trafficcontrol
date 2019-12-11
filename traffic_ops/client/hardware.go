@@ -29,6 +29,8 @@ func (to *Session) Hardware(limit int) ([]tc.Hardware, error) {
 	return h, err
 }
 
+// GetHardware fetches an array of Hardware up to as many as 'limit' specifies.
+// Deprecated: Hardware is deprecated and will not be exposed through the API in the future.
 func (to *Session) GetHardware(limit int) ([]tc.Hardware, ReqInf, error) {
 	url := "/api/1.2/hwinfo.json"
 	if limit > 0 {

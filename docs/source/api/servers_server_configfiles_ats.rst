@@ -27,7 +27,7 @@ Gets a list of the configuration files used by ``server``
 
 :Auth. Required: Yes
 :Roles Required: "operations"
-:Response Type:  **NOT PRESENT** - endpoint returns custom application/json response
+:Response Type:  **NOT PRESENT** - endpoint returns custom :mimetype:`application/json` response
 
 Request Structure
 -----------------

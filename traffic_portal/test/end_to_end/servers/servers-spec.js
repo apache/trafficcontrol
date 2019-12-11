@@ -61,7 +61,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.domainName.sendKeys(mockVals.domainName);
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
 		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
-		commonFunctions.selectDropdownbyNum(pageData.type, 1);
+		element(by.css("#type [label='EDGE']")).click();
 		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
 		pageData.interfaceName.sendKeys(mockVals.interfaceName);
 		pageData.ipAddress.sendKeys(mockVals.ipAddress);
@@ -115,6 +115,20 @@ describe('Traffic Portal Servers Test Suite', function() {
 		element.all(by.css('tbody tr')).then(function(totalRows) {
 			expect(totalRows.length).toBe(1);
 		});
+	});
+
+	it('should navigate back to the new server and view the delivery services assigned to the server', function() {
+		console.log('Managing the delivery services of ' + mockVals.hostName);
+		browser.navigate().back();
+		pageData.moreBtn.click();
+		pageData.viewDeliveryServicesMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/[0-9]+/delivery-services");
+	});
+
+	it('should ensure you cannot clone delivery service assignments because there are no delivery services assigned to the server', function() {
+		console.log('Ensure you cannot clone delivery service assignments for ' + mockVals.hostName);
+		pageData.moreBtn.click();
+		expect(element(by.css('.clone-ds-assignments')).isPresent()).toEqual(false);
 	});
 
 	it('should navigate back to the new server and delete it', function() {

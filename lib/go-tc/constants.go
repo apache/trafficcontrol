@@ -28,12 +28,6 @@ const NilTenantError = ErrorConstant("tenancy is enabled but request tenantID is
 const TenantUserNotAuthError = ErrorConstant("user not authorized for requested tenant")
 const TenantDSUserNotAuthError = ErrorConstant("user not authorized for requested delivery service tenant")
 
-const ApplicationJson = "application/json"
-const Gzip = "gzip"
-const ContentType = "Content-Type"
-const ContentEncoding = "Content-Encoding"
-const ContentTypeTextPlain = "text/plain"
-
 type AlertLevel int
 
 const (

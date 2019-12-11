@@ -61,7 +61,7 @@ func (s *ServerInfo) IsTopLevelCache() bool {
 }
 
 func HeaderCommentWithTOVersionStr(name string, nameVersionStr string) string {
-	return "# DO NOT EDIT - Generated for " + name + " by " + nameVersionStr + " on " + time.Now().Format(HeaderCommentDateFormat) + "\n"
+	return "# DO NOT EDIT - Generated for " + name + " by " + nameVersionStr + " on " + time.Now().UTC().Format(HeaderCommentDateFormat) + "\n"
 }
 
 func GetNameVersionStringFromToolNameAndURL(toolName string, url string) string {

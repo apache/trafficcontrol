@@ -25,13 +25,13 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
 func GetPlugin(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, tc.ContentTypeTextPlain, makePlugin)
+	WithProfileData(w, r, rfc.ContentTypeTextPlain, makePlugin)
 }
 
 func makePlugin(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {

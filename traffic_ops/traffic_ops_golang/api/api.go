@@ -38,6 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
 	influx "github.com/influxdata/influxdb/client/v2"
@@ -106,7 +107,7 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(respBts)
+	w.Write(append(respBts, '\n'))
 }
 
 // HandleErr handles an API error, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
@@ -147,8 +148,8 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 	}
 	log.Debugln(userErr.Error())
 	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, statusCode))
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Write(append(respBts, '\n'))
 }
 
 // RespWriter is a helper to allow a one-line response, for endpoints with a function that returns the object that needs to be written and an error.
@@ -190,8 +191,8 @@ func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel,
 		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Write(append(respBts, '\n'))
 }
 
 // WriteRespAlertObj Writes the given alert, and the given response object.
@@ -215,8 +216,49 @@ func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLev
 		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Write(append(respBts, '\n'))
+}
+
+func WriteAlerts(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts) {
+	if respWritten(r) {
+		log.Errorf("WriteAlerts called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	resp, err := json.Marshal(alerts)
+	if err != nil {
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
+		return
+	}
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.WriteHeader(code)
+	w.Write(append(resp, '\n'))
+}
+
+func WriteAlertsObj(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts, obj interface{}) {
+	if respWritten(r) {
+		log.Errorf("WriteAlertsObj called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	resp := struct {
+		tc.Alerts
+		Response interface{} `json:"response"`
+	}{
+		Alerts:   alerts,
+		Response: obj,
+	}
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
+		return
+	}
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.WriteHeader(code)
+	w.Write(append(respBts, '\n'))
 }
 
 // IntParams parses integer parameters, and returns map of the given params, or an error if any integer param is not an integer. The intParams may be nil if no integer parameters are required. Note this does not check existence; if an integer paramter is required, it should be included in the requiredParams given to NewInfo.
@@ -394,6 +436,13 @@ func (inf *APIInfo) Close() {
 // SendMail is a convenience method used to call SendMail using an APIInfo structure's configuration.
 func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
 	return SendMail(to, msg, inf.Config)
+}
+
+// IsResourceAuthorizedToCurrentUser is a convenience method used to call
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant.IsResourceAuthorizedToUserTx
+// using an APIInfo structure to provide the current user and database transaction.
+func (inf *APIInfo) IsResourceAuthorizedToCurrentUser(resourceTenantID int) (bool, error) {
+	return tenant.IsResourceAuthorizedToUserTx(resourceTenantID, inf.User, inf.Tx.Tx)
 }
 
 // SendMail sends an email msg to the address identified by to. The msg parameter should be an

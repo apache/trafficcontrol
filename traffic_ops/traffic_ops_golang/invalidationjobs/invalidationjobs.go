@@ -29,6 +29,7 @@ import "strings"
 import "time"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/lib/go-rfc"
 import "github.com/apache/trafficcontrol/lib/go-log"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -275,7 +276,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	if err := job.Validate(inf.Tx.Tx); err != nil {
 		response := tc.Alerts{
 			[]tc.Alert{
@@ -521,7 +522,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
+	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
 	w.Write(append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+"content invalidation job: #"+strconv.FormatUint(*job.ID, 10), inf.User, inf.Tx.Tx)
@@ -607,7 +608,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
+	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
 	w.Write(append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)

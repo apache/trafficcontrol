@@ -109,7 +109,7 @@ if (useSSL) {
     // from the list of supported protocols that SSLv23_method supports.
     //
     var sslOptions = {};
-    sslOptions['secureOptions'] = constants.SSL_OP_NO_SSLv3;
+    sslOptions['secureOptions'] = constants.SSL_OP_NO_TLSv1;
 
     sslOptions['key'] = fs.readFileSync(config.ssl.key);
     sslOptions['cert'] = fs.readFileSync(config.ssl.cert);

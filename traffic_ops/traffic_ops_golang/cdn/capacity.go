@@ -83,8 +83,8 @@ func getCapacity(tx *sql.Tx) (CapacityResp, error) {
 type CapacityResp struct {
 	AvailablePercent   float64 `json:"availablePercent"`
 	UnavailablePercent float64 `json:"unavailablePercent"`
-	UtilizedPercent    float64 `json:utilizedPercent"`
-	MaintenancePercent float64 `json:maintenancePercent"`
+	UtilizedPercent    float64 `json:"utilizedPercent"`
+	MaintenancePercent float64 `json:"maintenancePercent"`
 }
 
 type CapData struct {

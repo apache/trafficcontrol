@@ -665,6 +665,16 @@ A boolean value that defines whether or not :ref:`Regional Geoblocking <regional
 
 .. tip:: :ref:`Regional Geoblocking <regionalgeo-qht>` is configured primarily with respect to Canadian postal codes, so unless specifically Canadian regions should be allowed/disallowed to access content, `Geo Limit`_ is probably a better setting for controlling access to content according to geographic location.
 
+.. _ds-required-capabilities:
+
+Required Capabilities
+---------------------
+.. versionadded:: ATCv4
+
+A Delivery Service can be associated with :term:`Server Capabilities` that it requires :term:`cache servers` serving its content to have. When one or more :term:`Server Capability` is required by a Delivery Service, it will block the assignment of :term:`cache servers` to it that do not have those :term:`Server Capabilities`. Additionally, the :term:`Edge-tier Cache Servers` assigned to a Delivery Service that requires a :term:`Server Capability` will only request content they do not have cached from :term:`Mid-tier Cache Servers` which also have this :term:`Server Capability`.
+
+Typically, a required :term:`Server Capability` is represented merely by the name of said :term:`Server Capability`. In fact, there's nothing more to a :term:`Server Capability` than its name; it's the responsibility of CDN operators to ensure that they are assigned and required properly. There is no mechanism to detect whether or not a :term:`cache server` has a given :term:`Server Capability`, it must be assigned manually.
+
 .. _ds-routing-name:
 
 Routing Name
@@ -887,7 +897,7 @@ A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site O
 	| mso.parent_retry                            | `parent_retry`_                                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
 	|                                             |                                                                            | "unavailable server retries", or both.                                              |
 	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| mso.simple_retry_response_codes             | **UNKNOWN**                                                                | **UNKOWN** - supposedly defines HTTP response codes from an :term:`origin server`   |
+	| mso.simple_retry_response_codes             | **UNKNOWN**                                                                | **UNKNOWN** - supposedly defines HTTP response codes from an :term:`origin server`  |
 	|                                             |                                                                            | that necessitate a "simple retry".                                                  |
 	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| mso.unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |

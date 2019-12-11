@@ -22,8 +22,7 @@
 
 ``POST``
 ========
-
-Authentication of a user by exchanging a code for an encrypted JSON Web Token from an OAuth service. Traffic Ops will ``POST`` to the authCodeTokenUrl to exchange the code for an encrypted JSON Web Token.  It will then decode and validate the token, validate the key set domain, and send back a session cookie.
+Authentication of a user by exchanging a code for an encrypted JSON Web Token from an OAuth service. Traffic Ops will ``POST`` to the ``authCodeTokenUrl`` to exchange the code for an encrypted JSON Web Token.  It will then decode and validate the token, validate the key set domain, and send back a session cookie.
 
 :Auth. Required: No
 :Roles Required: None

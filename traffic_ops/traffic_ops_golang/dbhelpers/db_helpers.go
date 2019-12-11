@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -60,6 +61,33 @@ WHERE federation_deliveryservice.deliveryservice IN (
 	FROM federation_tmuser
 	WHERE federation_tmuser.tm_user = $2
 )
+`
+
+const getUserByEmailQuery = `
+SELECT u.id,
+       u.username,
+       u.public_ssh_key,
+       u.role,
+       r.name as rolename,
+       u.company,
+       u.email,
+       u.full_name,
+       u.new_user,
+       u.address_line1,
+       u.address_line2,
+       u.city,
+       u.state_or_province,
+       u.phone_number,
+       u.postal_code,
+       u.country,
+       u.registration_sent,
+       u.tenant_id,
+       t.name as tenant,
+       u.last_updated
+FROM tm_user u
+LEFT JOIN tenant t ON u.tenant_id = t.id
+LEFT JOIN role r ON u.role = r.id
+WHERE u.email=$1
 `
 
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
@@ -516,4 +544,17 @@ func GetFederationIDForUserIDByXMLID(tx *sql.Tx, userID int, xmlid string) (uint
 		return 0, false, fmt.Errorf("Getting Federation ID for user #%d by DS XMLID '%s': %v", userID, xmlid, err)
 	}
 	return id, true, nil
+}
+
+// GetUserByEmail retrieves the user with the given email. If no such user exists, the boolean
+// returned will be 'false', while the error indicates unexpected errors that occurred when querying.
+func GetUserByEmail(tx *sqlx.Tx, email string) (tc.User, bool, error) {
+	var u tc.User
+	if err := tx.QueryRowx(getUserByEmailQuery, email).StructScan(&u); err != nil {
+		if err == sql.ErrNoRows {
+			return u, false, nil
+		}
+		return u, false, err
+	}
+	return u, true, nil
 }

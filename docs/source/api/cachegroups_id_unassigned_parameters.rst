@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Gets all the :term:`Parameters` *not* associated with a specific :term:`Cache Group`
+Gets all the :term:`Parameters` that are *not* a specific :ref:`Cache Group's parameters <cache-group-parameters>`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -52,11 +52,11 @@ Request Structure
 
 .. table:: Request Path Parameters
 
-	+------------------+----------+---------------------------------------------------------+
-	|       Name       | Required | Description                                             |
-	+==================+==========+=========================================================+
-	| ``id``           | yes      | An integral, unique identifier of a :term:`Cache Group` |
-	+------------------+----------+---------------------------------------------------------+
+	+--------+----------+----------------------------------------------------+
+	| Name   | Required | Description                                        |
+	+========+==========+====================================================+
+	| ``id`` | yes      | The :ref:`cache-group-id` of a :term:`Cache Group` |
+	+--------+----------+----------------------------------------------------+
 
 
 Response Structure
