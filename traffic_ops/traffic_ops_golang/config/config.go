@@ -48,6 +48,7 @@ type Config struct {
 	ConfigPortal           `json:"portal"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
+	ConfigGenISO           ConfigGenISO   `json:"geniso"`
 	// NOTE: don't care about any other fields for now..
 	RiakAuthOptions  *riak.AuthOptions
 	RiakEnabled      bool
@@ -131,6 +132,11 @@ type ConfigSMTP struct {
 	Enabled  bool   `json:"enabled"`
 	Password string `json:"password"`
 	User     string `json:"user"`
+}
+
+// ConfigGenISO contains configuration options for the system ISO generation.
+type ConfigGenISO struct {
+	ISORootPath string `json:"iso_root_path"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
