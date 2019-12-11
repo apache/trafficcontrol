@@ -69,6 +69,8 @@ func mockISOCmd(cmd *exec.Cmd, forceError bool, cmdOutput string) *exec.Cmd {
 // TestHelperMockCmd is a special test case that is meant to be invoked
 // by a subprocess, e.g. go test -run=TestHelperMockCmd.
 //
+// Described in detail at: https://npf.io/2015/06/testing-exec-command/
+//
 // In order for the test to act like a subprocess, the GO_HELPER_CMD environment
 // variable must be set, otherwise the test is skipped. Use the mockISOCmd to
 // assist with modifying an existing exec.Cmd to use this helper.

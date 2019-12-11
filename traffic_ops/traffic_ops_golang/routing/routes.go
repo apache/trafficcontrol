@@ -234,6 +234,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//ISO
 		{1.1, http.MethodGet, `osversions(/|\.json)?$`, iso.GetOSVersions, auth.PrivLevelReadOnly, Authenticated, nil, 576088657, perlBypass},
+		{2.0, http.MethodPost, `isos(/|\.json)?$`, iso.ISOs, auth.PrivLevelOperations, Authenticated, nil, 576088658, perlBypass},
 
 		//User: CRUD
 		{1.1, http.MethodGet, `users/?(\.json)?$`, api.ReadHandler(&user.TOUser{}), auth.PrivLevelReadOnly, Authenticated, nil, 1491929900, noPerlBypass},
