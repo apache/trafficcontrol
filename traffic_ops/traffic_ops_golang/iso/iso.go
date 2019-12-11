@@ -175,7 +175,7 @@ func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.
 	}
 
 	// Create changelog entry
-	api.CreateChangeLogBuildMsg(
+	err = api.CreateChangeLogBuildMsg(
 		api.ApiChange,
 		api.Created,
 		user,
@@ -184,6 +184,10 @@ func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.
 		ir.fqdn(),
 		map[string]interface{}{"OS": ir.OSVersionDir},
 	)
+	if err != nil {
+		// At this point, it's not possible to modify the HTTP response.
+		log.Errorf("error creating changelog entry: %v", err)
+	}
 }
 
 // writeRespErrorAlerts writes to w an Alerts JSON response with
