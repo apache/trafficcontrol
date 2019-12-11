@@ -33,6 +33,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
@@ -138,8 +139,8 @@ func TestISOS(t *testing.T) {
 				// TODO: Validate response code. Because of how api.HandleErr works, it's
 				// not possible to see the actual response code in the response recorder.
 
-				// Validate Content-Type header
-				if got, expected := gotResp.Header().Get(httpHeaderContentType), tc.ApplicationJson; got != expected {
+				// Validate Content-Type header, which should be JSON for this error condition.
+				if got, expected := gotResp.Header().Get(httpHeaderContentType), rfc.ApplicationJSON; got != expected {
 					t.Errorf("header %q = %q; expected: %q", httpHeaderContentType, got, expected)
 				} else {
 					t.Logf("header %q = %q", httpHeaderContentType, got)
@@ -151,7 +152,7 @@ func TestISOS(t *testing.T) {
 					t.Fatalf("unable to decode body into expected JSON structure: %v", err)
 				}
 
-				t.Logf("alert: %#v", expectedResp)
+				t.Logf("response: %#v", expectedResp)
 			},
 		},
 	}
