@@ -1,3 +1,4 @@
+// Package iso provides support for generating ISO images.
 package iso
 
 /*
@@ -25,12 +26,47 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/jmoiron/sqlx"
+)
+
+// Various directories and filenames related to ISO generation.
+const (
+	cfgDefaultDir   = "/var/www/files"  // Default directory containing config file
+	cfgFilename     = "osversions.json" // The JSON config file containing mapping of OS names to directories
+	cfgFilenamePerl = "osversions.cfg"  // Config file name in the Perl version
+
+	// This is the directory name inside each OS directory where
+	// configuration files are placed.
+	ksCfgDir = "ks_scripts"
+
+	// Configuration files that are generated inside the ks_scripts directory.
+	ksCfgNetwork     = "network.cfg"
+	ksCfgMgmtNetwork = "mgmt_network.cfg"
+	ksCfgPassword    = "password.cfg"
+	ksCfgDisk        = "disk.cfg"
+	ksStateOut       = "state.out"
+
+	ksAltCommand = "generate" // Optional executable that is invoked instead of mkisofs
+)
+
+// Various database columns and values.
+const (
+	ksFilesParamName       = "kickstart.files.location"
+	ksFilesParamConfigFile = "mkisofs"
+)
+
+// Various HTTP-related values.
+const (
+	httpHeaderContentDisposition = "Content-Disposition"
+	httpHeaderContentType        = "Content-Type"
+	httpHeaderContentDownload    = "application/download"
 )
 
 // ISOs handler is responsible for generating and returning an ISO image,
@@ -73,76 +109,100 @@ func ISOs(w http.ResponseWriter, req *http.Request) {
 	}
 	defer inf.Close()
 
+	// Decode request body into isoRequest instance.
 	var ir isoRequest
 	if err := json.NewDecoder(req.Body).Decode(&ir); err != nil {
 		api.HandleErr(w, req, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to process request"), err)
 		return
 	}
 
+	isos(inf.Tx, w, req, ir)
+}
+
+// cmdOverwriteCtxKey is used in an http.Request's context
+// to set a cmd override value.
+var cmdOverwriteCtxKey struct{}
+
+func isos(tx *sqlx.Tx, w http.ResponseWriter, req *http.Request, ir isoRequest) {
+	// Ensure isoRequest is valid.
 	if errMsgs := ir.validate(); len(errMsgs) > 0 {
-		respData := struct {
-			tc.Alerts `json:"alerts"`
-		}{
-			Alerts: tc.CreateAlerts(tc.ErrorLevel, errMsgs...),
-		}
-
-		body, err := json.Marshal(respData)
-		if err != nil {
-			statusCode := http.StatusInternalServerError
-			api.HandleErr(w, req, nil, statusCode, errors.New(http.StatusText(statusCode)), errors.New("marshalling JSON: "+err.Error()))
-			return
-		}
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(body)
+		writeRespErrorAlerts(w, req, errMsgs)
 		return
 	}
 
-	stream := ir.Stream.val
+	// TODO: ensure the ir.osversions is a valid option/directory
 
-	// TODO: Avoid allowing user input to determine part of destination.
-	isoDest := filepath.Join(
-		inf.Config.ConfigGenISO.ISORootPath,
-		"iso",
-		fmt.Sprintf("%s-%s.iso", ir.fqdn(), ir.OSVersionDir),
-	)
-	if err := os.MkdirAll(filepath.Dir(isoDest), 0777); err != nil {
+	isoFilename := fmt.Sprintf("%s-%s.iso", ir.fqdn(), ir.OSVersionDir)
+
+	ksDir, err := kickstarterDir(tx, ir.OSVersionDir)
+	if err != nil {
 		statusCode := http.StatusInternalServerError
-		api.HandleErr(w, req, inf.Tx.Tx, statusCode, errors.New(http.StatusText(statusCode)), errors.New("error creating iso dir: "+err.Error()))
+		userErr := errors.New("unable to determine kickstarter directory")
+		api.HandleErr(w, req, tx.Tx, statusCode, userErr, err)
 		return
 	}
 
-	if stream {
-		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filepath.Base(isoDest)))
-		w.Header().Set("Content-Type", "application/download")
+	cfgDir := filepath.Join(ksDir, ksCfgDir)
+	log.Infof("cfg_dir: %s", cfgDir)
 
-		if err := genISO(w, inf.Tx, ir, isoDest); err != nil {
-			statusCode := http.StatusInternalServerError
-			api.HandleErr(w, req, inf.Tx.Tx, statusCode, errors.New(http.StatusText(statusCode)), errors.New("error streaming iso: "+err.Error()))
-		}
-		return
-	}
-
-	if err := genISO(w, inf.Tx, ir, isoDest); err != nil {
+	genISOCmd, err := newStreamISOCmd(ksDir)
+	if err != nil {
 		statusCode := http.StatusInternalServerError
-		api.HandleErr(w, req, inf.Tx.Tx, statusCode, errors.New(http.StatusText(statusCode)), errors.New("error creating iso: "+err.Error()))
+		userErr := errors.New("unable to initialize genISO command")
+		api.HandleErr(w, req, tx.Tx, statusCode, userErr, err)
+		return
+	}
+	defer genISOCmd.cleanup()
+
+	// Allow for the request context to carry a modifier function that can change the
+	// genISOCmd's command. This is used for testing.
+	if cmdMod, ok := req.Context().Value(cmdOverwriteCtxKey).(func(in *exec.Cmd) *exec.Cmd); ok {
+		genISOCmd.cmd = cmdMod(genISOCmd.cmd)
 	}
 
-	resp := struct {
-		ISOURL  string `json:"isoURL"`
-		ISOName string `json:"isoName"`
+	log.Infof("Using %s ISO generation command: %s", genISOCmd.cmdType, genISOCmd.String())
+
+	if err = writeKSCfgs(cfgDir, ir, genISOCmd.String()); err != nil {
+		statusCode := http.StatusInternalServerError
+		userErr := errors.New("unable to create kickstarter files")
+		api.HandleErr(w, req, tx.Tx, statusCode, userErr, err)
+		return
+	}
+
+	w.Header().Set(httpHeaderContentDisposition, fmt.Sprintf("attachment; filename=%q", isoFilename))
+	w.Header().Set(httpHeaderContentType, httpHeaderContentDownload)
+
+	if err = genISOCmd.stream(w); err != nil {
+		statusCode := http.StatusInternalServerError
+		api.HandleErr(w, req, tx.Tx, statusCode, errors.New(http.StatusText(statusCode)), fmt.Errorf("error streaming iso: %v", err))
+	}
+}
+
+// writeRespErrorAlerts writes to w an Alerts JSON response with
+// an error level. Note: api.WriteRespAlertObj could not be used here
+// because it accepts a single "alert", whereas this response
+// may contain multiple alerts.
+func writeRespErrorAlerts(w http.ResponseWriter, req *http.Request, errMsgs []string) {
+	respData := struct {
+		tc.Alerts `json:"alerts"`
 	}{
-		ISOURL:  "http://path.com/iso.iso",
-		ISOName: filepath.Base(isoDest),
+		Alerts: tc.CreateAlerts(tc.ErrorLevel, errMsgs...),
 	}
 
-	api.WriteRespAlertObj(w, req, tc.SuccessLevel, "Generate ISO was successful.", resp)
+	body, err := json.Marshal(respData)
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+		api.HandleErr(w, req, nil, statusCode, errors.New(http.StatusText(statusCode)), errors.New("marshalling JSON: "+err.Error()))
+		return
+	}
+
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.WriteHeader(http.StatusBadRequest)
+	w.Write(body)
 }
 
-func isos(w http.ResponseWriter, req *http.Request) (tc.AlertLevel, string, interface{}, error) {
-	return tc.SuccessLevel, "this is the message", new(interface{}), nil
-}
-
+// isoRequest represents the JSON object clients use to
+// request an ISO be generated.
 type isoRequest struct {
 	OSVersionDir  string  `json:"osversionDir"`
 	HostName      string  `json:"hostName"`
@@ -217,6 +277,13 @@ func (i *isoRequest) validate() []string {
 		if len(i.IPGateway) == 0 {
 			addErr("ipGateway is required if DHCP is no")
 		}
+	}
+
+	// If stream is not set (isSet == false), then it's
+	// assumed to be part of the API v2.0 request which does
+	// not include this field (streaming = true always).
+	if i.Stream.isSet && !i.Stream.val {
+		addErr("stream has been deprecated and must now not be set, or be set to true")
 	}
 
 	return errs

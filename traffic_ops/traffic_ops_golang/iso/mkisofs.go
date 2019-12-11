@@ -34,120 +34,108 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/jmoiron/sqlx"
 )
 
 const (
-	ksCfgNetwork     = "network.cfg"
-	ksCfgMgmtNetwork = "mgmt_network.cfg"
-	ksCfgPassword    = "password.cfg"
-	ksCfgDisk        = "disk.cfg"
-	ksStateOut       = "state.out"
+	mkisofsBin = "mkisofs" // name of the binary that's used in the default case to generate an ISO
 )
 
-func genISO(w io.Writer, tx *sqlx.Tx, r isoRequest, isoDest string) error {
-	streamISO := r.Stream.val
-
-	ksDir, err := kickstarterDir(tx, r.OSVersionDir)
-	if err != nil {
-		return err
-	}
-	cfgDir := filepath.Join(ksDir, ksCfgDir)
-	log.Infof("cfg_dir: %s", cfgDir)
-
-	if err = writeKSCfgs(cfgDir, r); err != nil {
-		return err
-	}
-
-	if streamISO {
-		cmd := newStreamISOCmd(ksDir, isoDest)
-		log.Infof("Using %s ISO generation command: %s", cmd.cmdType, cmd.String())
-
-		// Create state.out
-		stateOut := fmt.Sprintf("Dir== %s\n%s\n", ksDir, cmd.String())
-		if err = ioutil.WriteFile(filepath.Join(cfgDir, ksStateOut), []byte(stateOut), 0666); err != nil {
-			return err
-		}
-
-		return cmd.stream(w)
-	}
-
-	cmd := newSaveISOCmd(ksDir, isoDest)
-	log.Infof("Using %s ISO generation command: %s", cmd.cmdType, cmd.String())
-
-	// Create state.out
-	stateOut := fmt.Sprintf("Dir== %s\n%s\n", ksDir, cmd.String())
-	if err = ioutil.WriteFile(filepath.Join(cfgDir, ksStateOut), []byte(stateOut), 0666); err != nil {
-		return err
-	}
-
-	result, err := cmd.save()
-	log.Infoln(result)
-
-	return err
-}
-
-func newStreamISOCmd(ksDir, isoDest string) *streamISOCmd {
-	s := streamISOCmd{
-		isoDest: isoDest,
-	}
+// newStreamISOCmd returns a instantiated streamISOCmd. The given ksDir
+// is expected to be the root directory containing the kickstarter files
+// of the desired OS. It will detect a custom `generate` executable if present,
+// otherwise will use the default `mkisofs` command.
+func newStreamISOCmd(ksDir string) (*streamISOCmd, error) {
+	var s streamISOCmd
 
 	if customExec := customGenISOPath(ksDir); customExec != "" {
+		// The custom script must accept a single argument: The path
+		// where it will write the ISO. Here we create a temporary
+		// directory for this purpose.
+		tmpDir, err := ioutil.TempDir("", "genISO")
+		if err != nil {
+			return nil, err
+		}
+		s.isoDest = filepath.Join(tmpDir, "tmp.iso")
+
 		s.cmdType = "custom"
-		s.cmd = exec.Command(customExec, isoDest)
-		s.isSavedToDisk = true
-	} else {
-		s.cmdType = "default"
-		s.cmd = exec.Command(
-			"mkisofs",
-			"-joliet-long",
-			"-input-charset", "utf-8",
-			"-b", "isolinux/isolinux.bin",
-			"-c", "isolinux/boot.cat",
-			"-no-emul-boot",
-			"-boot-load-size", "4",
-			"-boot-info-table",
-			"-R",
-			"-J",
-			"-v",
-			"-T",
-			ksDir,
-		)
+		s.cmd = exec.Command(customExec, s.isoDest)
+
+		return &s, nil
 	}
 
-	return &s
+	s.cmdType = "default"
+	s.cmd = exec.Command(
+		mkisofsBin,
+		"-joliet-long",
+		"-input-charset", "utf-8",
+		"-b", "isolinux/isolinux.bin",
+		"-c", "isolinux/boot.cat",
+		"-no-emul-boot",
+		"-boot-load-size", "4",
+		"-boot-info-table",
+		"-R",
+		"-J",
+		"-v",
+		"-T",
+		ksDir,
+	)
+
+	return &s, nil
 }
 
+// streamISOCmd encapsulate the logic for executing the ISO
+// generation command.
 type streamISOCmd struct {
-	cmd           *exec.Cmd
-	cmdType       string
-	isSavedToDisk bool
-	isoDest       string
+	cmd     *exec.Cmd
+	cmdType string // Description of command: "default" or "custom"
+
+	// If empty, then cmd writes to STDOUT. Othewrise, cmd writes the
+	// ISO to this path.
+	isoDest string
 }
 
+// String returns the command that the stream method
+// will execute.
 func (s *streamISOCmd) String() string {
+	// Note: Go 1.13 adds exec.Cmd#String method
 	return strings.Join(s.cmd.Args, " ")
 }
 
+// cleanup should be defered after calling newStreamISOCmd.
+// It removes any temporary resources created.
+func (s *streamISOCmd) cleanup() error {
+	if s.isoDest == "" {
+		return nil
+	}
+	return os.RemoveAll(filepath.Dir(s.isoDest))
+}
+
+// stream writes to w the ISO data. Callers should
+// always use this method and not the other more
+// specific stream methods.
 func (s *streamISOCmd) stream(w io.Writer) error {
-	if s.isSavedToDisk {
+	if s.isoDest != "" {
 		return s.streamFromFile(w)
 	}
 
 	return s.streamStdout(w)
 }
 
+// streamStdout invokes the command and pipes its STDOUT
+// to w.
 func (s *streamISOCmd) streamStdout(w io.Writer) error {
 	s.cmd.Stdout = w
 	return s.cmd.Run()
 }
 
+// streamFromFile invokes the command and expects the ISO
+// to be written to isoDest. It then copies the contents
+// of that file to w.
 func (s *streamISOCmd) streamFromFile(w io.Writer) error {
 	if err := s.cmd.Run(); err != nil {
 		return err
 	}
-	defer os.Remove(s.isoDest)
 
 	isoFd, err := os.Open(s.isoDest)
 	if err != nil {
@@ -159,60 +147,18 @@ func (s *streamISOCmd) streamFromFile(w io.Writer) error {
 	return err
 }
 
-func newSaveISOCmd(ksDir, isoDest string) *saveISOCmd {
-	var s saveISOCmd
-
-	if customExec := customGenISOPath(ksDir); customExec != "" {
-		s.cmdType = "custom"
-		s.cmd = exec.Command(customExec, isoDest)
-	} else {
-		s.cmdType = "default"
-		s.cmd = exec.Command(
-			"mkisofs",
-			"-o", isoDest, // output to file instead of STDOUT
-			"-joliet-long",
-			"-input-charset", "utf-8",
-			"-b", "isolinux/isolinux.bin",
-			"-c", "isolinux/boot.cat",
-			"-no-emul-boot",
-			"-boot-load-size", "4",
-			"-boot-info-table",
-			"-R",
-			"-J",
-			"-v",
-			"-T",
-			ksDir,
-		)
-	}
-
-	return &s
-}
-
-type saveISOCmd struct {
-	cmd     *exec.Cmd
-	cmdType string
-}
-
-func (s *saveISOCmd) String() string {
-	return strings.Join(s.cmd.Args, " ")
-}
-
-func (s *saveISOCmd) save() (string, error) {
-	result, err := s.cmd.CombinedOutput()
-	return string(result), err
-}
-
+// customGenISOPath returns the complete path to an alternative executable
+// for generating the ISO. If not found, an empty string is returned.
+// In order to be valid, the script/executable must:
+// - Be inside the ksDir and named "generate"
+// - Be executable (by somebody)
+// - Accept a single argument indicating where the resulting ISO image should be saved (not
+//   verified by this function)
 func customGenISOPath(dir string) string {
-	// Allow for a custom script to be used instead of the default command.
-	// The script must:
-	// - Be inside the ksDir and named "generate"
-	// - Be executable (by somebody)
-	// - Accept a single argument indicating where the resulting ISO image should be saved
-
-	customPath := filepath.Join(dir, "generate")
+	customPath := filepath.Join(dir, ksAltCommand)
 	stat, err := os.Stat(customPath)
 
-	// Check if file exists and is executable
+	// Check if file exists and is executable.
 	const executablePermBits = 0111
 	if err == nil && stat.Mode().Perm()&executablePermBits != 0 {
 		return customPath
@@ -243,11 +189,24 @@ func kickstarterDir(tx *sqlx.Tx, osVersionDir string) (string, error) {
 
 // writeKSCfgs writes to the given directory the various Kickstart
 // configuration files using the data from the given isoRequest.
-func writeKSCfgs(dir string, r isoRequest) error {
+// The cmd string is used to log to a file the command that will
+// be executed to create the ISO.
+func writeKSCfgs(dir string, r isoRequest, cmd string) error {
 	nameservers, err := readDefaultUnixResolve()
 	if err != nil {
 		return err
 	}
+
+	// Create state.out
+
+	stateFd, err := os.Create(filepath.Join(dir, ksStateOut))
+	if err != nil {
+		return err
+	}
+	if _, err = fmt.Fprintf(stateFd, "Dir== %s\n%s\n", dir, cmd); err != nil {
+		return err
+	}
+	defer stateFd.Close()
 
 	// Create network.cfg
 

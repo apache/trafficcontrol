@@ -22,11 +22,9 @@ package iso
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -36,143 +34,94 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func TestGenISO(t *testing.T) {
-	t.Run("standard-to-file", func(t *testing.T) {
-		m := newMkiso("/var/ks", "/tmp/image.iso", false)
-		m.cmd = mockCmd(m.cmd)
+func TestStreamISOCmd_stdout(t *testing.T) {
+	s, err := newStreamISOCmd("/tmp/nothing/here")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		var out bytes.Buffer
-		if err := m.do(&out); err != nil {
-			t.Fatal(err)
-		}
+	// No custom/generate executable exists in the given directory,
+	// so isoDest should be blank meaning the command will write to
+	// STDOUT.
+	if s.isoDest != "" {
+		t.Fatalf("isoDest = %q; expected blank string", s.isoDest)
+	}
 
-		if l := out.Len(); l > 0 {
-			t.Fatalf("mkiso.do(w) wrote %d bytes to w; expected 0", l)
-		}
-	})
+	// Store the command for later comparison
+	expected := s.String()
 
-	t.Run("standard-stream", func(t *testing.T) {
-		m := newMkiso("/var/ks", "/tmp/image.iso", true)
-		m.cmd = mockCmd(m.cmd)
+	// Modify the command to use the mock command helper
+	s.cmd = mockISOCmd(s.cmd, false, "")
 
-		var out bytes.Buffer
-		if err := m.do(&out); err != nil {
-			t.Fatal(err)
-		}
+	// stream will invoke the command. It's expected
+	// to receive back an echo of the given command.
+	var b bytes.Buffer
+	if err = s.stream(&b); err != nil {
+		t.Fatal(err)
+	}
+	got := b.String()
 
-		if l := out.Len(); l < 0 {
-			t.Fatalf("mkiso.do(w) wrote %d bytes to w; expected > 0", l)
-		}
-		t.Logf("command: %q", out.String())
-	})
-
-	t.Run("custom-to-file", func(t *testing.T) {
-		dir, err := ioutil.TempDir("", "TestGenISO")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dir)
-
-		// Create custom executable that should be used instead of mkisofs
-		fd, err := os.OpenFile(filepath.Join(dir, "generate"), os.O_CREATE|os.O_EXCL, 0777)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer fd.Close()
-
-		m := newMkiso(dir, "/tmp/image.iso", false)
-		m.cmd = mockCmd(m.cmd)
-
-		var out bytes.Buffer
-		if err := m.do(&out); err != nil {
-			t.Fatal(err)
-		}
-
-		if l := out.Len(); l > 0 {
-			t.Fatalf("mkiso.do(w) wrote %d bytes to w; expected 0", l)
-		}
-	})
-
-	t.Run("custom-stream", func(t *testing.T) {
-		dir, err := ioutil.TempDir("", "TestGenISO")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer os.RemoveAll(dir)
-
-		// Create custom executable that should be used instead of mkisofs
-		fd, err := os.OpenFile(filepath.Join(dir, "generate"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer fd.Close()
-
-		if _, err = fmt.Fprint(fd, t.Name()); err != nil {
-			t.Fatal(err)
-		}
-
-		m := newMkiso(dir, fd.Name(), true)
-		m.cmd = mockCmd(m.cmd)
-
-		var out bytes.Buffer
-		if err := m.do(&out); err != nil {
-			t.Fatal(err)
-		}
-
-		if l := out.Len(); l < 0 {
-			t.Fatalf("mkiso.do(w) wrote %d bytes to w; expected > 0", l)
-		}
-		t.Logf("command: %q", out.String())
-	})
+	if got != expected {
+		t.Fatalf("got: %q; expected: %q", got, expected)
+	}
+	t.Logf("got: %q", b.String())
 }
 
-// mockCmd returns a modified version of the given Cmd
-// so that when run, the command actually invokes the
-// TestHelperMockCmd test. See TestHelperMockCmd for
-// more details on its behavior.
-func mockCmd(cmd *exec.Cmd) *exec.Cmd {
-	args := []string{
-		"-test.run=TestHelperMockCmd",
-		"--",
+func TestStreamISOCmd_file(t *testing.T) {
+	// Create scratch directory
+	dir, err := ioutil.TempDir("", t.Name())
+	if err != nil {
+		t.Fatal(err)
 	}
-	args = append(args, cmd.Args...)
+	defer os.RemoveAll(dir)
 
-	// os.Args[0] is the invokation of this test binary
-	mocked := exec.Command(os.Args[0], args...)
+	// Create custom executable that should be used instead of mkisofs
+	fd, err := os.OpenFile(filepath.Join(dir, ksAltCommand), os.O_CREATE|os.O_EXCL, 0777)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fd.Close()
 
-	env := cmd.Env
-	env = append(cmd.Env, "GO_HELPER_PROCESS=1")
-	mocked.Env = env
-
-	return mocked
-}
-
-func TestHelperMockCmd(t *testing.T) {
-	if os.Getenv("GO_HELPER_PROCESS") != "1" {
-		return
+	s, err := newStreamISOCmd(dir)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	var respCode int
-	if os.Getenv("GO_FORCE_ERROR") == "1" {
-		respCode = 1
+	// Ensure that the custom executable was found. The custom executable
+	// is expected to write the ISO image to a temporary file, which is what
+	// isoDest represents.
+	if s.isoDest == "" {
+		t.Fatalf("isoDest = %q; expected non-blank string", s.isoDest)
 	}
+	t.Logf("isoDest = %q", s.isoDest)
 
-	// Set args to all arguments past '--'.
-	var args []string
-	for i, v := range os.Args {
-		if v == "--" {
-			args = os.Args[i+1:]
-			break
-		}
+	expected := s.String()
+
+	// Modify the command to use the mock command helper
+	s.cmd = mockISOCmd(s.cmd, false, s.isoDest)
+
+	// stream will invoke the command. It's expected
+	// to receive back an echo of the given command.
+	var b bytes.Buffer
+	if err = s.stream(&b); err != nil {
+		t.Fatal(err)
 	}
+	got := b.String()
 
-	out := os.Stdout
-	if respCode != 0 {
-		out = os.Stderr
+	if got != expected {
+		t.Fatalf("got: %q; expected: %q", got, expected)
 	}
+	t.Logf("got: %q", b.String())
 
-	fmt.Fprintf(out, strings.Join(args, " "))
-	os.Exit(respCode)
+	// cleanup should remove the isoDest directory
+	s.cleanup()
+	isoDir := filepath.Dir(s.isoDest)
+
+	_, err = os.Stat(isoDir)
+	if !os.IsNotExist(err) {
+		t.Fatalf("stat of %q expected to receive NotExist error; got %v", isoDir, err)
+	}
+	t.Logf("stat of %q (expected): %v", isoDir, err)
 }
 
 func TestKickstarterDir(t *testing.T) {
@@ -252,14 +201,17 @@ func TestWriteKSCfgs(t *testing.T) {
 
 	cases := []struct {
 		name  string
+		cmd   string
 		input isoRequest
 	}{
 		{
 			"empty",
+			"",
 			isoRequest{},
 		},
 		{
 			"complete",
+			"/usr/local/bin mkisofs arg1 -opt1 -opt2",
 			isoRequest{
 				RootPass:      "password",
 				Disk:          "sda1",
@@ -290,12 +242,13 @@ func TestWriteKSCfgs(t *testing.T) {
 			}
 			defer os.RemoveAll(dir)
 
-			if err := writeKSCfgs(dir, tc.input); err != nil {
+			if err := writeKSCfgs(dir, tc.input, tc.cmd); err != nil {
 				t.Fatalf("writeKSCfgs(%q, isoRequest) failed: %v", dir, err)
 			}
 			t.Logf("writeKSCfgs(%q, isoRequest):", dir)
 
 			expectedFiles := []string{
+				ksStateOut,
 				ksCfgNetwork,
 				ksCfgMgmtNetwork,
 				ksCfgPassword,
