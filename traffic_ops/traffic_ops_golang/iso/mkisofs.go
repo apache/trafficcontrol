@@ -375,7 +375,7 @@ func (c *configWriter) addIP(name string, ip net.IP) {
 // "yes" / "no" values.
 func (c *configWriter) addBoolStr(name string, b boolStr) {
 	var v string
-	if b.val {
+	if bv, _ := b.val(); bv {
 		v = "yes"
 	} else {
 		v = "no"

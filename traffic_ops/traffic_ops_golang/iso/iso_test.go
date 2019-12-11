@@ -448,23 +448,23 @@ func TestBoolStr_UnmarshalText(t *testing.T) {
 	}{
 		{
 			`no`,
-			boolStr{isSet: true, val: false},
+			boolStr{isSet: true, v: false},
 		},
 		{
 			`No`,
-			boolStr{isSet: true, val: false},
+			boolStr{isSet: true, v: false},
 		},
 		{
 			`YES`,
-			boolStr{isSet: true, val: true},
+			boolStr{isSet: true, v: true},
 		},
 		{
 			`other`,
-			boolStr{isSet: false, val: false},
+			boolStr{isSet: false, v: false},
 		},
 		{
 			``,
-			boolStr{isSet: false, val: false},
+			boolStr{isSet: false, v: false},
 		},
 	}
 

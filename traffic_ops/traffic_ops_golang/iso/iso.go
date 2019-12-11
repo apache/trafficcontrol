@@ -279,7 +279,7 @@ func (i *isoRequest) validate() []string {
 			addErr("mgmtIpGateway is required when mgmtIpAddress is provided")
 		}
 	}
-	if i.DHCP.isSet && !i.DHCP.val {
+	if v, ok := i.DHCP.val(); ok && !v {
 		if len(i.IPAddr) == 0 {
 			addErr("ipAddress is required if DHCP is no")
 		}
@@ -294,7 +294,7 @@ func (i *isoRequest) validate() []string {
 	// If stream is not set (isSet == false), then it's
 	// assumed to be part of the API v2.0 request which does
 	// not include this field (streaming = true always).
-	if i.Stream.isSet && !i.Stream.val {
+	if v, ok := i.Stream.val(); ok && !v {
 		addErr("stream has been deprecated and must now not be set, or be set to true")
 	}
 
@@ -309,7 +309,7 @@ func (i *isoRequest) validate() []string {
 // 'isSet' will be true.
 type boolStr struct {
 	isSet bool // false if UnmarshalText is given an unrecognized value
-	val   bool
+	v     bool
 }
 
 // UnmarshalText decodes strings representing boolean values.
@@ -318,11 +318,17 @@ type boolStr struct {
 func (b *boolStr) UnmarshalText(text []byte) error {
 	switch strings.ToLower(string(text)) {
 	case "yes", "true", "1":
-		b.val = true
+		b.v = true
 		b.isSet = true
 	case "no", "false", "0":
-		b.val = false
+		b.v = false
 		b.isSet = true
 	}
 	return nil
+}
+
+// val returns the boolean value and whether
+// the value was set or not.
+func (b *boolStr) val() (value, ok bool) {
+	return b.v, b.isSet
 }
