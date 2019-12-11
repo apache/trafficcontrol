@@ -18,8 +18,6 @@
 ******************************
 ``parameters/{{ID}}/profiles``
 ******************************
-.. deprecated:: 1.1
-	Use the ``param`` query parameter of :ref:`to-api-profiles` instead.
 
 ``GET``
 =======

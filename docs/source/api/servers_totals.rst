@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves a count of each type of server across all CDNs.
+Retrieves a count of each :term:`Type` of server across all CDNs.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -34,7 +34,7 @@ No parameters available.
 Response Structure
 ------------------
 :count: The number of servers of this type configured in this instance of Traffic Ops
-:type:  The name of the type servers herein counted
+:type:  The name of the :term:`Type` servers herein counted
 
 .. code-block:: http
 	:caption: Response Example

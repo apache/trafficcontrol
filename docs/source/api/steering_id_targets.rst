@@ -68,13 +68,13 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService:   The 'xml_id' of the steering :term:`Delivery Service`
+:deliveryService:   A string that is the :ref:`ds-xmlid` of the steering :term:`Delivery Service`
 :deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
-:target:            The 'xml_id' of this target :term:`Delivery Service`
+:target:            A string that is the :ref:`ds-xmlid` of this target :term:`Delivery Service`
 :targetId:          An integral, unique identifier for this target :term:`Delivery Service`
 :type:              The routing type of this target :term:`Delivery Service`
-:typeId:            An integral, unique identifier for the routing type of this target :term:`Delivery Service`
-:value:             The 'weight' attributed to this steering target
+:typeId:            An integral, unique identifier for the :ref:`routing type <ds-types>` of this target :term:`Delivery Service`
+:value:             The 'weight' attributed to this steering target as an integer
 
 .. code-block:: http
 	:caption: Response Example
@@ -144,13 +144,13 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService:   The 'xml_id' of the steering :term:`Delivery Service`
+:deliveryService:   A string that is the :ref:`ds-xmlid` of the steering :term:`Delivery Service`
 :deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
-:target:            The 'xml_id' of the newly added target :term:`Delivery Service`
-:targetId:          An integral, unique identifier for the newly added target :term:`Delivery Service`
-:type:              The routing type of the newly added target :term:`Delivery Service`
-:typeId:            An integral, unique identifier for the routing type of the newly added target :term:`Delivery Service`
-:value:             The 'weight' attributed to the new steering target
+:target:            A string that is the :ref:`ds-xmlid` of this target :term:`Delivery Service`
+:targetId:          An integral, unique identifier for this target :term:`Delivery Service`
+:type:              The routing type of this target :term:`Delivery Service`
+:typeId:            An integral, unique identifier for the :ref:`routing type <ds-types>` of this target :term:`Delivery Service`
+:value:             The 'weight' attributed to this steering target as an integer
 
 .. code-block:: http
 	:caption: Response Example

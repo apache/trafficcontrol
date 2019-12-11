@@ -18,8 +18,6 @@
 *************************************
 ``servers/hostname/{{name}}/details``
 *************************************
-.. deprecated:: 1.1
-	Use the ``hostName`` query parameter of the :ref:`to-api-servers` endpoint instead.
 
 ``GET``
 =======
@@ -41,24 +39,23 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:       The name of the Cache Group to which this server belongs
+:cachegroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
 :cdnName:          Name of the CDN to which the server belongs
 :deliveryservices: An array of integral, unique identifiers for :term:`Delivery Services` to which this server belongs
-:domainName:       The domain part of the server's Fully Qualified Domain Name (FQDN)
+:domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :guid:             An identifier used to uniquely identify the server
 
-	.. deprecated:: 1.1
-		This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
 :hostName:         The (short) hostname of the server
 :httpsPort:        The port on which the server listens for incoming HTTPS connections/requests
 :id:               An integral, unique identifier for this server
-:iloIpAddress:     The IPv4 address of the server's Integrated Lights-Out (ILO) service\ [1]_
-:iloIpGateway:     The IPv4 gateway address of the server's ILO service\ [1]_
-:iloIpNetmask:     The IPv4 subnet mask of the server's ILO service\ [1]_
-:iloPassword:      The password of the of the server's ILO service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' role(s)
-:iloUsername:      The user name for the server's ILO service\ [1]_
-:interfaceMtu:     The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
+:iloIpAddress:     The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpGateway:     The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpNetmask:     The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloPassword:      The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
+:iloUsername:      The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:interfaceMtu:     The :abbr:`MTU (Maximum Transmission Unit)` to configured on ``interfaceName``
 :interfaceName:    The name of the primary network interface used by the server
 :ip6Address:       The IPv6 address and subnet mask of ``interfaceName``
 :ip6Gateway:       The IPv6 address of the gateway used by ``interfaceName``

@@ -21,9 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.4
-	As a username is needed to log in, any administrator or application must necessarily know the current username at any given time. Thus, use the ``username`` query parameter of a ``GET`` request to :ref:`to-api-users` instead.
-
 Retrieves the profile for the authenticated user.
 
 :Auth. Required: Yes

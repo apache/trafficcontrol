@@ -19,9 +19,6 @@
 ``deliveryservices/{{ID}}/state``
 *********************************
 
-.. deprecated:: 1.1
-	Use :ref:`to-api-cachegroup_fallbacks` instead to configure Cache Group fallbacks
-
 ``GET``
 =======
 Retrieves the fail-over state for a :term:`Delivery Service`.
