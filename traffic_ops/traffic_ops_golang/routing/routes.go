@@ -198,6 +198,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Database dumps
 		{1.1, http.MethodGet, `dbdump/?`, dbdump.DBDump, auth.PrivLevelAdmin, Authenticated, nil, 274016647, perlBypass},
 
+		{1.1, http.MethodGet, `cdns/{name}/health/?(\.json)?$`, cdn.GetNameHealth, auth.PrivLevelReadOnly, Authenticated, nil, 1135348194, perlBypass},
+		{1.1, http.MethodGet, `cdns/health/?(\.json)?$`, cdn.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 1085381134, perlBypass},
+
 		//Division: CRUD
 		{1.1, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 1085181534, noPerlBypass},
 		{1.1, http.MethodGet, `divisions/{id}$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 1241497902, noPerlBypass},
