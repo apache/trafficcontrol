@@ -60,16 +60,11 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("no server with id '%v' found", serverID), nil)
 		return
 	}
 
-	api.WriteResp(w, r, tc.ServerQueueUpdate{
-		ServerID: util.JSONIntStr(serverID),
-		Action:   reqObj.Action,
-	})
-
-	api.CreateChangeLogBuildMsg(
+	err = api.CreateChangeLogBuildMsg(
 		api.ApiChange,
 		api.Updated,
 		inf.User,
@@ -78,8 +73,20 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprint(serverID),
 		map[string]interface{}{"id": serverID},
 	)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("writing changelog: %v", err))
+		return
+	}
+
+	api.WriteResp(w, r, tc.ServerQueueUpdate{
+		ServerID: util.JSONIntStr(serverID),
+		Action:   reqObj.Action,
+	})
 }
 
+// queueUpdate sets the upd_pending column of a server to the value of queue. It
+// returns true if the identified server exists and was updated and false if no
+// server was updated either because it doesn't exist or there was an error.
 func queueUpdate(tx *sql.Tx, serverID int64, queue bool) (bool, error) {
 	const query = `UPDATE server SET upd_pending = $1 WHERE id = $2`
 
