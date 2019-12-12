@@ -85,8 +85,9 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 	}
 
 	// use existing CRUD helpers to get the existing profile
-	inf.Params = make(map[string]string)
-	inf.Params["name"] = p.ExistingName
+	inf.Params = map[string]string{
+		"name": p.ExistingName,
+	}
 	toProfile := &TOProfile{
 		api.APIInfoImpl{
 			ReqInfo: inf,
@@ -136,8 +137,9 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 
 func copyParameters(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 	// use existing ProfileParameter CRUD helpers to find parameters for the existing profile
-	inf.Params = make(map[string]string)
-	inf.Params["profileId"] = fmt.Sprintf("%d", p.ExistingID)
+	inf.Params = map[string]string{
+		"profileId": fmt.Sprintf("%d", p.ExistingID),
+	}
 
 	toParam := &profileparameter.TOProfileParameter{
 		api.APIInfoImpl{

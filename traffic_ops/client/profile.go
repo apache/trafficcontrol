@@ -119,7 +119,7 @@ func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	return data.Response, reqInf, err
 }
 
-// GetProfileByID gET a Profile by the Profile ID
+// GetProfileByID GET a Profile by the Profile ID
 func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", v13Profiles, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
