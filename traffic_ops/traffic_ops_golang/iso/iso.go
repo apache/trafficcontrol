@@ -108,7 +108,7 @@ func ISOs(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	isos(inf.Tx, inf.User, w, req, ir)
+	isos(w, req, inf.Tx, inf.User, ir)
 }
 
 // cmdOverwriteCtxKey is used in an http.Request's context
@@ -117,14 +117,27 @@ var cmdOverwriteCtxKey struct{}
 
 // isos performs the majority of work for the /isos endpoint handler. It is separated out from
 // the exported handler for testability.
-func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.Request, ir isoRequest) {
+func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.CurrentUser, ir isoRequest) {
 	// Ensure isoRequest is valid.
 	if errMsgs := ir.validate(); len(errMsgs) > 0 {
 		writeRespErrorAlerts(w, req, errMsgs)
 		return
 	}
 
-	// TODO: ensure the ir.osversions is a valid option/directory
+	// Ensure that the given OSVersionDir is defined in the osversions.json config
+	// file as a valid directory. This directory is later referenced for ISO creation
+	// and therefore must an allowed value.
+	if ok, err := ir.validateOSDir(tx); err != nil {
+		statusCode := http.StatusInternalServerError
+		userErr := errors.New("unable to read osversions configuration")
+		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
+		return
+	} else if !ok {
+		statusCode := http.StatusBadRequest
+		err := fmt.Errorf("invalid OS version directory: %q", ir.OSVersionDir)
+		api.HandleErr(w, req, tx.Tx, statusCode, err, err)
+		return
+	}
 
 	// Determine the kickstart root directory, which is either a default
 	// value or may be overridden by a database/Parameter entry.
@@ -166,6 +179,7 @@ func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.
 	}
 
 	isoFilename := fmt.Sprintf("%s-%s.iso", ir.fqdn(), ir.OSVersionDir)
+	isoFilename = strings.ReplaceAll(isoFilename, "/", "_")
 
 	w.Header().Set(httpHeaderContentDisposition, fmt.Sprintf("attachment; filename=%q", isoFilename))
 	w.Header().Set(httpHeaderContentType, httpHeaderContentDownload)
@@ -189,7 +203,7 @@ func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.
 	)
 	if err != nil {
 		// At this point, it's not possible to modify the HTTP response.
-		log.Errorf("error creating changelog entry: %v", err)
+		log.Errorf("error creating changelog entry for ISO creation: %v", err)
 	}
 }
 
@@ -298,6 +312,27 @@ func (i *isoRequest) validate() []string {
 	}
 
 	return errs
+}
+
+// validateOSDir ensures that the OSDir value corresponds to a
+// valid directory, as determined by the osversions.json config
+// file. Since this directory is acted upon during ISO generation,
+// it's important that it be valid.
+func (i *isoRequest) validateOSDir(tx *sqlx.Tx) (bool, error) {
+	validOSVersions, err := getOSVersions(tx)
+	if err != nil {
+		return false, fmt.Errorf("unable to read osversions configuration: %v", err)
+	}
+
+	var isValid bool
+	for _, validOSDir := range validOSVersions {
+		if i.OSVersionDir == validOSDir {
+			isValid = true
+			break
+		}
+	}
+
+	return isValid, nil
 }
 
 // boolStr is used to decode boolean strings (e.g. "yes") as

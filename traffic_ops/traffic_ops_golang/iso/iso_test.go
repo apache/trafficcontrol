@@ -34,7 +34,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	libtc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -147,7 +147,7 @@ func TestISOS(t *testing.T) {
 				}
 
 				// Validate that the response body is a JSON-encoded tc.Alerts object.
-				var expectedResp tc.Alerts
+				var expectedResp libtc.Alerts
 				if err := json.NewDecoder(gotResp.Body).Decode(&expectedResp); err != nil {
 					t.Fatalf("unable to decode body into expected JSON structure: %v", err)
 				}
@@ -170,14 +170,25 @@ func TestISOS(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error creating tempdir: %v", err)
 			}
-			// Clean up temp dir + file
+			// Clean up temp dir
 			defer os.RemoveAll(tmpDir)
+			// Create expected directory structure
 			if err = os.MkdirAll(filepath.Join(tmpDir, tc.input.OSVersionDir, ksCfgDir), 0777); err != nil {
 				t.Fatal(err)
 			}
 
-			// Setup mock DB row such that the kickstarterDir function will
-			// return tmpDir instead of the default /var/www/files directory.
+			// Create osversions.json file, which is read by validateOSDir method
+			osVersions, err := json.Marshal(libtc.OSVersionsResponse{"test": tc.input.OSVersionDir})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = ioutil.WriteFile(filepath.Join(tmpDir, cfgFilename), osVersions, 0777); err != nil {
+				t.Fatal(err)
+			}
+
+			// Setup mock DB row such that the kickstarterDir and getOSVersions
+			// functions will use tmpDir instead of the default /var/www/files
+			// directory.
 			mockDB, mock, err := sqlmock.New()
 			if err != nil {
 				t.Fatalf(err.Error())
@@ -192,16 +203,18 @@ func TestISOS(t *testing.T) {
 			// Setup mock DB to return row for SELECT query on parameter table.
 			mock.ExpectBegin()
 			cols := []string{"value"}
-			rows := sqlmock.NewRows(cols)
-			rows = rows.AddRow(tmpDir)
+			// Mock 2 SELECT responses, 1 for the getOSVersions function
+			// and another for the kickstarterDir function. Both expect
+			// the same result, i.e. the temp directory.
+			rows := sqlmock.NewRows(cols).AddRow(tmpDir)
 			mock.ExpectQuery("SELECT").WillReturnRows(rows)
-			mock.ExpectCommit()
+			rows = sqlmock.NewRows(cols).AddRow(tmpDir)
+			mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
 			tx, err := db.BeginTxx(dbCtx, nil)
 			if err != nil {
 				t.Fatalf("BeginTxx() err: %v", err)
 			}
-			defer tx.Commit()
 
 			// END setup mock DB row
 
@@ -219,7 +232,7 @@ func TestISOS(t *testing.T) {
 			}
 
 			var user auth.CurrentUser
-			isos(tx, &user, w, req, tc.input)
+			isos(w, req, tx, &user, tc.input)
 
 			// pass or fail the test by inspecting the response recorder
 			tc.validator(t, w)
@@ -245,7 +258,7 @@ func TestWriteRespErrorAlerts(t *testing.T) {
 		t.Errorf("got response code %d; expected %d", got, expected)
 	}
 
-	var gotResp tc.Alerts
+	var gotResp libtc.Alerts
 	if err := json.NewDecoder(w.Body).Decode(&gotResp); err != nil {
 		t.Fatalf("unable to decode response body into expected JSON structure: %v", err)
 	}
@@ -257,7 +270,7 @@ func TestWriteRespErrorAlerts(t *testing.T) {
 	}
 
 	for i, v := range errMsgs {
-		if got, expected := gotResp.Alerts[i].Level, tc.ErrorLevel.String(); got != expected {
+		if got, expected := gotResp.Alerts[i].Level, libtc.ErrorLevel.String(); got != expected {
 			t.Errorf("got response with alerts[%d].Level = %s; expected %s", i, got, expected)
 		}
 		if got, expected := gotResp.Alerts[i].Text, v; got != expected {
@@ -521,4 +534,92 @@ func TestBoolStr_UnmarshalText(t *testing.T) {
 			t.Logf("got %+v", got)
 		})
 	}
+}
+
+func TestISORequest_validateOSDir(t *testing.T) {
+	const (
+		validDir1  = "VALID-OS-DIR"
+		validDir2  = "ANOTHER-VALID-OS-DIR"
+		invalidDir = "INVALID-OS-DIR"
+	)
+
+	cases := []struct {
+		input    isoRequest
+		expected bool
+	}{
+		{
+			isoRequest{OSVersionDir: validDir1},
+			true,
+		},
+		{
+			isoRequest{OSVersionDir: validDir2},
+			true,
+		},
+		{
+			isoRequest{OSVersionDir: invalidDir},
+			false,
+		},
+	}
+
+	tmpDir, err := ioutil.TempDir("", t.Name())
+	if err != nil {
+		t.Fatalf("error creating tempdir: %v", err)
+	}
+	// Clean up temp dir
+	defer os.RemoveAll(tmpDir)
+
+	// Create osversions.json file, which is read by validateOSDir method, with
+	// valid directories
+	osVersions, err := json.Marshal(libtc.OSVersionsResponse{
+		"valid-1": validDir1,
+		"valid-2": validDir2,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = ioutil.WriteFile(filepath.Join(tmpDir, cfgFilename), osVersions, 0777); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.input.OSVersionDir, func(t *testing.T) {
+			// Setup mock DB row such that the getOSVersions function will use tmpDir
+			// instead of the default /var/www/files directory.
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+			defer mockDB.Close()
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
+
+			dbCtx, cancel := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+			defer cancel()
+
+			// Setup mock DB to return row for SELECT query on parameter table.
+			mock.ExpectBegin()
+			cols := []string{"value"}
+			rows := sqlmock.NewRows(cols).AddRow(tmpDir)
+			mock.ExpectQuery("SELECT").WillReturnRows(rows)
+
+			tx, err := db.BeginTxx(dbCtx, nil)
+			if err != nil {
+				t.Fatalf("BeginTxx() err: %v", err)
+			}
+
+			// END setup mock DB row
+
+			got, err := tc.input.validateOSDir(tx)
+			if err != nil {
+				t.Fatalf("unexpected error calling validateOSDir: %v", err)
+			}
+
+			if got != tc.expected {
+				t.Fatalf("validateOSDir() got %v; expected %v", got, tc.expected)
+			}
+			t.Logf("validateOSDir() got %v", got)
+		})
+	}
+
 }
