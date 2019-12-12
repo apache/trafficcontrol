@@ -306,9 +306,10 @@ func (i *isoRequest) validate() []string {
 
 	// If stream is not set (isSet == false), then it's
 	// assumed to be part of the API v2.0 request which does
-	// not include this field (streaming = true always).
+	// not include this field (streaming = true always). Otherwise
+	// if present, assert that it's true.
 	if v, ok := i.Stream.val(); ok && !v {
-		addErr("stream has been deprecated and must now not be set, or be set to true")
+		addErr("stream=no has been deprecated, please use stream=true")
 	}
 
 	return errs
