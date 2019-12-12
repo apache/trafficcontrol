@@ -311,6 +311,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Server status
 		{1.1, http.MethodPut, `servers/{id}/status$`, server.UpdateStatusHandler, auth.PrivLevelOperations, Authenticated, nil, 776663851, perlBypass},
+		{1.1, http.MethodPost, `servers/{id}/queue_update$`, server.QueueUpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 9189471, perlBypass},
 
 		//Server: CRUD
 		{1.1, http.MethodGet, `servers/?(\.json)?$`, api.ReadHandler(&server.TOServer{}), auth.PrivLevelReadOnly, Authenticated, nil, 1720959285, noPerlBypass},
