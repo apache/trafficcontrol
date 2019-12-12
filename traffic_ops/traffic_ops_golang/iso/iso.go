@@ -179,7 +179,8 @@ func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.Curr
 	}
 
 	isoFilename := fmt.Sprintf("%s-%s.iso", ir.fqdn(), ir.OSVersionDir)
-	isoFilename = strings.ReplaceAll(isoFilename, "/", "_")
+	// strings.ReplaceAll was added in Go 1.12
+	isoFilename = strings.Replace(isoFilename, "/", "_", -1)
 
 	w.Header().Set(httpHeaderContentDisposition, fmt.Sprintf("attachment; filename=%q", isoFilename))
 	w.Header().Set(httpHeaderContentType, httpHeaderContentDownload)
