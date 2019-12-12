@@ -159,14 +159,6 @@ func TestISOS(t *testing.T) {
 
 	tmpDirPrefix := t.Name()
 
-	mockDB, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
-	defer db.Close()
-
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -186,6 +178,13 @@ func TestISOS(t *testing.T) {
 
 			// Setup mock DB row such that the kickstarterDir function will
 			// return tmpDir instead of the default /var/www/files directory.
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+			defer mockDB.Close()
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
 
 			dbCtx, cancel := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
 			defer cancel()
@@ -225,6 +224,45 @@ func TestISOS(t *testing.T) {
 			// pass or fail the test by inspecting the response recorder
 			tc.validator(t, w)
 		})
+	}
+}
+
+func TestWriteRespErrorAlerts(t *testing.T) {
+	w := httptest.NewRecorder()
+	req, err := http.NewRequest(http.MethodPost, "/isos", nil) // The path doesn't matter here
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	errMsgs := []string{
+		"error 1",
+		"another error",
+	}
+
+	writeRespErrorAlerts(w, req, errMsgs)
+
+	if got, expected := w.Code, http.StatusBadRequest; got != expected {
+		t.Errorf("got response code %d; expected %d", got, expected)
+	}
+
+	var gotResp tc.Alerts
+	if err := json.NewDecoder(w.Body).Decode(&gotResp); err != nil {
+		t.Fatalf("unable to decode response body into expected JSON structure: %v", err)
+	}
+
+	t.Logf("got response: %v", gotResp)
+
+	if got, expected := len(gotResp.Alerts), len(errMsgs); got != expected {
+		t.Fatalf("got %d error messages; expected %d", got, expected)
+	}
+
+	for i, v := range errMsgs {
+		if got, expected := gotResp.Alerts[i].Level, tc.ErrorLevel.String(); got != expected {
+			t.Errorf("got response with alerts[%d].Level = %s; expected %s", i, got, expected)
+		}
+		if got, expected := gotResp.Alerts[i].Text, v; got != expected {
+			t.Errorf("got response with alerts[%d].Text = %s; expected %s", i, got, expected)
+		}
 	}
 }
 

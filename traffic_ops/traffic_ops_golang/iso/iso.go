@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
@@ -102,7 +103,8 @@ func ISOs(w http.ResponseWriter, req *http.Request) {
 	// Decode request body into isoRequest instance.
 	var ir isoRequest
 	if err := json.NewDecoder(req.Body).Decode(&ir); err != nil {
-		api.HandleErr(w, req, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to process request"), err)
+		userErr := errors.New("unable to decode JSON request")
+		api.HandleErr(w, req, inf.Tx.Tx, http.StatusBadRequest, userErr, fmt.Errorf("%v: %v", userErr, err))
 		return
 	}
 
@@ -123,8 +125,6 @@ func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.
 	}
 
 	// TODO: ensure the ir.osversions is a valid option/directory
-
-	isoFilename := fmt.Sprintf("%s-%s.iso", ir.fqdn(), ir.OSVersionDir)
 
 	// Determine the kickstart root directory, which is either a default
 	// value or may be overridden by a database/Parameter entry.
@@ -165,6 +165,8 @@ func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.
 		return
 	}
 
+	isoFilename := fmt.Sprintf("%s-%s.iso", ir.fqdn(), ir.OSVersionDir)
+
 	w.Header().Set(httpHeaderContentDisposition, fmt.Sprintf("attachment; filename=%q", isoFilename))
 	w.Header().Set(httpHeaderContentType, httpHeaderContentDownload)
 
@@ -196,16 +198,12 @@ func isos(tx *sqlx.Tx, user *auth.CurrentUser, w http.ResponseWriter, req *http.
 // because it accepts a single "alert", whereas this response
 // may contain multiple alerts.
 func writeRespErrorAlerts(w http.ResponseWriter, req *http.Request, errMsgs []string) {
-	respData := struct {
-		tc.Alerts `json:"alerts"`
-	}{
-		Alerts: tc.CreateAlerts(tc.ErrorLevel, errMsgs...),
-	}
+	alerts := tc.CreateAlerts(tc.ErrorLevel, errMsgs...)
 
-	body, err := json.Marshal(respData)
+	body, err := json.Marshal(alerts)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
-		api.HandleErr(w, req, nil, statusCode, errors.New(http.StatusText(statusCode)), errors.New("marshalling JSON: "+err.Error()))
+		api.HandleErr(w, req, nil, statusCode, errors.New(http.StatusText(statusCode)), fmt.Errorf("error marshalling JSON: %v", err))
 		return
 	}
 
@@ -217,24 +215,24 @@ func writeRespErrorAlerts(w http.ResponseWriter, req *http.Request, errMsgs []st
 // isoRequest represents the JSON object clients use to
 // request an ISO be generated.
 type isoRequest struct {
-	OSVersionDir  string  `json:"osversionDir"`
-	HostName      string  `json:"hostName"`
-	DomainName    string  `json:"domainName"`
-	RootPass      string  `json:"rootPass"`
-	DHCP          boolStr `json:"dhcp"`
-	IPAddr        net.IP  `json:"ipAddress"`
-	IPNetmask     net.IP  `json:"ipNetmask"`
-	IPGateway     net.IP  `json:"ipGateway"`
-	IP6Address    net.IP  `json:"ip6Address"`
-	IP6Gateway    net.IP  `json:"ip6Gateway"`
-	InterfaceName string  `json:"interfaceName"`
-	InterfaceMTU  int     `json:"interfaceMtu"`
-	Disk          string  `json:"disk"`
-	MgmtIPAddress net.IP  `json:"mgmtIpAddress"`
-	MgmtIPNetmask net.IP  `json:"mgmtIpNetmask"`
-	MgmtIPGateway net.IP  `json:"mgmtIpGateway"`
-	MgmtInterface string  `json:"mgmtInterface"`
-	Stream        boolStr `json:"stream"`
+	OSVersionDir  string          `json:"osversionDir"`
+	HostName      string          `json:"hostName"`
+	DomainName    string          `json:"domainName"`
+	RootPass      string          `json:"rootPass"`
+	DHCP          boolStr         `json:"dhcp"`
+	IPAddr        net.IP          `json:"ipAddress"`
+	IPNetmask     net.IP          `json:"ipNetmask"`
+	IPGateway     net.IP          `json:"ipGateway"`
+	IP6Address    net.IP          `json:"ip6Address"`
+	IP6Gateway    net.IP          `json:"ip6Gateway"`
+	InterfaceName string          `json:"interfaceName"`
+	InterfaceMTU  util.JSONIntStr `json:"interfaceMtu"`
+	Disk          string          `json:"disk"`
+	MgmtIPAddress net.IP          `json:"mgmtIpAddress"`
+	MgmtIPNetmask net.IP          `json:"mgmtIpNetmask"`
+	MgmtIPGateway net.IP          `json:"mgmtIpGateway"`
+	MgmtInterface string          `json:"mgmtInterface"`
+	Stream        boolStr         `json:"stream"`
 }
 
 func (i *isoRequest) fqdn() string {

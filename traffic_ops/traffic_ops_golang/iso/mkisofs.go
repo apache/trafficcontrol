@@ -31,7 +31,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -282,7 +281,7 @@ func writeNetworkCfg(w io.Writer, r isoRequest, nameservers []string) error {
 	} else {
 		cfg.addOpt("DEVICE", r.InterfaceName)
 	}
-	cfg.addOpt("MTU", strconv.Itoa(r.InterfaceMTU))
+	cfg.addOpt("MTU", r.InterfaceMTU.String())
 	cfg.addOpt("NAMESERVER", strings.Join(nameservers, ","))
 	cfg.addOpt("HOSTNAME", r.fqdn())
 	cfg.addOpt("NETWORKING_IPV6", "yes")
