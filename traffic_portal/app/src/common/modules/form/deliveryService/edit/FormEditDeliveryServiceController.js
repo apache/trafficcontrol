@@ -78,14 +78,17 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 									promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
 									// set the status to 'complete'
 									promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
-									// and finally navigate to the /delivery-services page
-									messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], true);
-									locationUtils.navigateToPath('/delivery-services');
 								}
-							// then, if all that works, delete the ds	
+							// then, if all that works, delete the ds and navigate to the /delivery-services page
 							).then(
 								function() {
-									deliveryServiceService.deleteDeliveryService(deliveryService);
+									deliveryServiceService.deleteDeliveryService(deliveryService).
+										then(
+											function() {
+												messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], true);
+												locationUtils.navigateToPath('/delivery-services');
+											}
+										);
 								}
 							);
 					}
