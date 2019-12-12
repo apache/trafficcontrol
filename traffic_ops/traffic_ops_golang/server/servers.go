@@ -39,7 +39,7 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 )
@@ -223,9 +223,12 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 `
 		// depending on ds type, also need to add mids
-		dsType, err := deliveryservice.GetDeliveryServiceType(dsID, tx.Tx)
+		dsType, exists, err := deliveryservice.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
-			return nil, err, nil, http.StatusBadRequest
+			return nil, nil, err, http.StatusInternalServerError
+		}
+		if !exists {
+			return nil, errors.New("a deliveryservice with id '" + strconv.Itoa(dsID) + "' was not found"), nil, http.StatusBadRequest
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
