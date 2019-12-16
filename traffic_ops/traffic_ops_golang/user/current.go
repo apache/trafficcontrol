@@ -133,7 +133,7 @@ u.tenant_id,
 u.username
 FROM tm_user as u
 LEFT JOIN role as r ON r.id = u.role
-LEFT JOIN tenant as t ON t.id = u.tenant_id
+INNER JOIN tenant as t ON t.id = u.tenant_id
 WHERE u.id=$1
 `
 	u := tc.UserCurrent{}
