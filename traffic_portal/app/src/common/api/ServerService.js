@@ -234,7 +234,6 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result;
             },
             function(err) {
-                console.error(err);
                 throw err;
             }
         );

@@ -25,7 +25,6 @@ var TrafficPortalService = function($http, messageModel, ENV) {
                 return result;
             },
             function(err) {
-                console.error(err);
                 throw err;
             }
         );

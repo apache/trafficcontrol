@@ -34,7 +34,7 @@ var ChangeLogService = function($http, $rootScope, ENV) {
 		$rootScope.$broadcast('changeLogService::getChangeLogs');
 		return $http.get(ENV.api['root'] + 'logs', {params: queryParams}).then(
 			function(result) {
-				return result;
+				return result.data.response;
 			},
 			function(err) {
 				throw err;

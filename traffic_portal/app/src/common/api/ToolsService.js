@@ -25,7 +25,7 @@ var ToolsService = function($http, messageModel, ENV) {
 					return result.data.response;
 				},
 				function(err) {
-					console.error(err);
+					throw err;
 				}
 			);
 	};
@@ -46,6 +46,7 @@ var ToolsService = function($http, messageModel, ENV) {
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};

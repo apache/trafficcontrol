@@ -25,7 +25,6 @@ var CapabilityService = function($http, messageModel, ENV) {
 				return result.data.response;
 			},
 			function(err) {
-				console.error(err);
 				throw err;
 			}
 		);
@@ -37,7 +36,6 @@ var CapabilityService = function($http, messageModel, ENV) {
 				return result.data.response[0];
 			},
 			function(err) {
-				console.error(err);
 				throw err;
 			}
 		);

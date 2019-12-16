@@ -36,7 +36,6 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response[0];
             },
             function (err) {
-                console.error(err);
                 throw err;
             }
         );
@@ -114,7 +113,6 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
                 throw err;
             }
         );
