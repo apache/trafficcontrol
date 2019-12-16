@@ -69,7 +69,7 @@ func CopyProfileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
-	// check if the newPrfoile already exists
+	// check if the newProfile already exists
 	ok, err := tc.ProfileExistsByName(p.Name, inf.Tx.Tx)
 	if ok {
 		return errorDetails{
@@ -79,7 +79,7 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 	}
 	if err != nil {
 		return errorDetails{
-			userErr: err,
+			sysErr:  err,
 			errCode: http.StatusInternalServerError,
 		}
 	}
