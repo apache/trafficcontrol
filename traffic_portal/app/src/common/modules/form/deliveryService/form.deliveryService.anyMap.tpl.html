@@ -103,8 +103,7 @@ under the License.
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required>
                                 <option disabled hidden value="">Select...</option>
-                                <option ng-value="true">Active</option>
-                                <option ng-value="false">Not Active</option>
+                                <option ng-value="true">Active</option> <!--- there is only one valid option as you cannot inactivate any map delivery services --->
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.active, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.active != dsCurrent.active">
