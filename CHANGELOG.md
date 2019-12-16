@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [4.0.0] - 2019-12-16
 ### Added
 - Traffic Router: TR now generates a self-signed certificate at startup and uses it as the default TLS cert.
   The default certificate is used whenever a client attempts an SSL handshake for an SNI host which does not match
@@ -183,6 +183,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[Unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...HEAD
+[Unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...HEAD
+[4.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...RELEASE-4.0.0
 [3.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.2.0...RELEASE-3.0.0
 [2.2.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.1.0...RELEASE-2.2.0
