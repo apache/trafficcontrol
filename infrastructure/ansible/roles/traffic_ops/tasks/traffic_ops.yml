@@ -108,6 +108,7 @@
     - production/riak.conf
     - cdn.conf
     - ldap.conf
+    - influxdb.conf
   notify: Restart Traffic Ops
 
 - name: Upgrade TODB
