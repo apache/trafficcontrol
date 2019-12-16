@@ -259,12 +259,12 @@ under the License.
                 <legend ng-class="{'fieldset-error': cacheConfig.$invalid}" ng-click="showCacheConfig = !showCacheConfig">Cache Configuration Settings <i class="fa" ng-class="showCacheConfig ? 'fa-caret-down' : 'fa-caret-up'"></i></legend>
                 <ng-form name="cacheConfig" ng-show="showCacheConfig">
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.remapText), 'has-feedback': hasError(cacheConfig.remapText)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="remapText">Raw remap text<div class="helptooltip">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="remapText">Raw remap text *<div class="helptooltip">
                             <div class="helptext">For HTTP and DNS Delivery Services, this will get added to the end of the remap line verbatim on cache servers. For ANY_MAP Delivery Services this is the entire remap line.</div>
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" rows="3"></textarea>
+                            <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" rows="3" required></textarea>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.remapText}}</pre>
