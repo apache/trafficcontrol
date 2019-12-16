@@ -268,7 +268,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user)
 }
 
-func updateUser(u *tc.User, tx *sql.Tx, cp bool) error {
+func updateUser(u *tc.User, tx *sql.Tx, changePassword bool) error {
 	row := tx.QueryRow(replaceCurrentQuery,
 		u.AddressLine1,
 		u.AddressLine2,
@@ -314,7 +314,7 @@ func updateUser(u *tc.User, tx *sql.Tx, cp bool) error {
 		return err
 	}
 
-	if cp {
+	if changePassword {
 		_, err = tx.Exec(replacePasswordQuery, u.ConfirmLocalPassword, u.LocalPassword, u.ID)
 		if err != nil {
 			return fmt.Errorf("resetting password: %v", err)
