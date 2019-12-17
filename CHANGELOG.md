@@ -118,6 +118,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Deprecated/Removed
 - Traffic Ops Golang Endpoints
+  - /api/1.1/cachegroup_fallbacks
   - /api_capabilities `POST`
 
 ## [3.0.0] - 2018-10-30
