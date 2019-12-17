@@ -16,45 +16,57 @@ package v14
 */
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 )
 
 func TestAPICapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{}, func() {
-		GetTestAPICapabilities(t)
-	})
-}
-
-func GetTestAPICapabilities(t *testing.T) {
 	testCases := []struct {
 		description string
 		capability  string
 		order       string
+		first       string
 		count       int
-		err         string
 	}{
 		{
-			description: "Successfully get all API Capabilities",
-			capability:  "",
-			order:       "",
-			count:       4,
-			err:         "",
+			description: "Successfully get all asns-write API Capabilities",
+			capability:  "asns-write",
+			count:       3,
+		},
+		{
+			description: "Successfully get all asns-read API Capabilities",
+			capability:  "asns-read",
+			count:       2,
+		},
+		{
+			description: "Successfully get all cache-groups-read API Capabilities",
+			capability:  "cache-groups-read",
+			count:       9,
+		},
+		{
+			description: "Successfully get all API Capabilities in order of HTTP Method",
+			order:       "httpMethod",
+			first:       "GET",
 		},
 	}
 
 	for _, c := range testCases {
-		caps, _, err := TOSession.GetAPICapabilities(c.capability, c.order)
+		t.Run(c.description, func(t *testing.T) {
+			caps, _, err := TOSession.GetAPICapabilities(c.capability, c.order)
 
-		fmt.Printf("\nerror is: %v\n", err)
-		if err != nil && !strings.Contains(err.Error(), c.err) {
-			t.Fatalf("error: expected error result %v, want: %v", err, c.err)
-		}
+			if err != nil {
+				t.Fatalf("error: expected error result: %v", err)
+			}
 
-		if len(caps.Response) != c.count {
-			t.Fatalf("error: expected len(caps) to be %d, got %d", c.count, len(caps.Response))
-		}
+			if c.count != 0 && len(caps.Response) != c.count {
+				t.Fatalf("error: expected len(caps) to be %d, got %d", c.count, len(caps.Response))
+			}
+
+			if c.order != "" {
+				if c.first != caps.Response[0].HTTPMethod {
+					t.Fatalf("error: expected first element to be %s, got %s", c.first, caps.Response[0].HTTPMethod)
+				}
+			}
+		})
 	}
 
 }

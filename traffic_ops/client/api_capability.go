@@ -1,7 +1,9 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -24,23 +26,29 @@ import (
 // GetAPICapabilities retrieves all (or filtered) api_capability from Traffic Ops.
 func (to *Session) GetAPICapabilities(capability string, order string) (tc.APICapabilityResponse, ReqInf, error) {
 	var (
-		vals = url.Values{}
-		resp tc.APICapabilityResponse
+		vals   = url.Values{}
+		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
+		resp   tc.APICapabilityResponse
 	)
 
-	// if capability != nil {
-	vals.Set("capability", capability)
-	// }
+	if capability != "" {
+		vals.Set("capability", capability)
+	}
 
-	// if order != nil {
-	vals.Set("orderby", order)
-	// }
+	if order != "" {
+		vals.Set("orderby", order)
+	}
 
-	//path := fmt.Sprintf("%s/api_capabilities?%s", apiBase, vals.Encode())
-	path := fmt.Sprintf("%s/api_capabilities", apiBase)
-	fmt.Println("*** path:", path, "&&&")
+	path := fmt.Sprintf("%s/api_capabilities?%s", apiBase, vals.Encode())
+	httpResp, remoteAddr, err := to.request(http.MethodGet, path, nil)
+	reqInf.RemoteAddr = remoteAddr
 
-	inf, err := get(to, path, &resp)
+	if err != nil {
+		return tc.APICapabilityResponse{}, reqInf, err
+	}
+	defer httpResp.Body.Close()
 
-	return resp, inf, err
+	err = json.NewDecoder(httpResp.Body).Decode(&resp)
+
+	return resp, reqInf, err
 }

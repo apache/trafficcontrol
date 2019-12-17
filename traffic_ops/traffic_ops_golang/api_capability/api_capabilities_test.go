@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -63,10 +62,7 @@ func TestGetAPICapabilities(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	//reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
-
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{}}
-	results, userErr, sysErr := getAPICapabilities(reqInfo.Tx, reqInfo.Params)
+	results, userErr, sysErr := getAPICapabilities(db.MustBegin(), map[string]string{})
 
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)

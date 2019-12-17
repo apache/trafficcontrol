@@ -50,12 +50,12 @@ func GetAPICapabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteResp(w, r, tc.APICapabilityResponse{Response: results})
+	api.WriteResp(w, r, results)
 	return
 }
 
 func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapability, error, error) {
-	selectQuery := `SELECT * FROM api_capability`
+	selectQuery := `SELECT id, http_method, route, capability, last_updated FROM api_capability`
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"id":          dbhelpers.WhereColumnInfo{"id", api.IsInt},
 		"capability":  dbhelpers.WhereColumnInfo{"capability", nil},
