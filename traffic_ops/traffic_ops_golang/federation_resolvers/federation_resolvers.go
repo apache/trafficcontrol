@@ -161,7 +161,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	userErr, sysErr, statusCode, alert, respObj := delete(inf)
+	userErr, sysErr, statusCode, alert, respObj := deleteFederationResolver(inf)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
@@ -170,7 +170,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alert.Text, respObj)
 }
 
-func delete(inf *api.APIInfo) (error, error, int, tc.Alert, tc.FederationResolver) {
+func deleteFederationResolver(inf *api.APIInfo) (error, error, int, tc.Alert, tc.FederationResolver) {
 	var userErr error
 	var sysErr error
 	var statusCode = http.StatusOK
@@ -209,7 +209,7 @@ func DeleteByID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	userErr, sysErr, statusCode, alert, respObj := delete(inf)
+	userErr, sysErr, statusCode, alert, respObj := deleteFederationResolver(inf)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
