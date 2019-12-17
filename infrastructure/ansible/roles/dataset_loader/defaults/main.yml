@@ -304,21 +304,83 @@ dl_ds_default_servers:
   server.kabletown.invalid:
     tcpPort: 80
     httpsPort: 443
-    xmppId:
-    xmppPasswd:
-    ip6Address:
-    ip6Gateway:
-    rack: M2
-    mgmtIpAddress:
-    mgmtIpNetmask:
-    mgmtIpGateway:
-    iloIpAddress:
-    iloIpNetmask:
-    iloIpGateway:
-    iloUsername:
-    iloPassword:
+    rack: M1
     routerHostName: 1hop.router.kabletown.invalid
     routerPortName: 1/1/1/1
+  riak.kabletown.invalid:
+    tcpPort: 8087 # Note: this is actually wired in via TO cdn.conf if it ever needs to be different, it's adjusted here for human clarity.  It's also the Riak protobuf port, not http rest port which is defaulted to 8098 and probably disabled.
+    httpsPort: 8088 # Note: this isn't actually used anywhere, it's just for human clarity.  This is the default for the rest https interface for things like SOLR or curl.
+    rack: M2
+    routerHostName: 2hop.router.kabletown.invalid
+    routerPortName: 2/1/1/1
+  influxdb.kabletown.invalid:
+    tcpPort: 8086 # Note: This is used by TO as a fallback on https or http
+    httpsPort: 8086 # Note: This is used by TO for https connections
+    rack: M3
+    routerHostName: 3hop.router.kabletown.invalid
+    routerPortName: 3/1/1/1
+  traffic_monitor.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by traffic_stats and traffic router
+    httpsPort: 443 # Note: This may be used by traffic_stats and traffic router
+    rack: M4
+    routerHostName: 4hop.router.kabletown.invalid
+    routerPortName: 4/1/1/1
+  atsec.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by traffic_monitor for astats
+    httpsPort: 443 # Note: This may be used by traffic_monitor for astats
+    rack: M4
+    routerHostName: 4hop.router.kabletown.invalid
+    routerPortName: 4/1/1/1
+  atsmid.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by traffic_monitor for astats
+    httpsPort: 443 # Note: This may be used by traffic_monitor for astats
+    rack: M5
+    routerHostName: 5hop.router.kabletown.invalid
+    routerPortName: 5/1/1/1
+  grove.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by traffic_monitor for astats
+    httpsPort: 443 # Note: This may be used by traffic_monitor for astats
+    rack: M6
+    routerHostName: 6hop.router.kabletown.invalid
+    routerPortName: 6/1/1/1
+  fakeorigin.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by TO ATS Config generation for Multi-site origins
+    rack: M6
+    routerHostName: 6hop.router.kabletown.invalid
+    routerPortName: 6/1/1/1
+  mso_parent_alias.kabletown.invalid:
+    tcpPort: 80 # Note: This may be used by TO ATS Config generation for Multi-site origins
+    rack: M7
+    routerHostName: 7hop.router.kabletown.invalid
+    routerPortName: 7/1/1/1
+  traffic_opsdb.kabletown.invalid:
+    tcpPort: 5432 # Note: This is actually wired in via TO config files, but is here for human clarity
+    rack: M8
+    routerHostName: 8hop.router.kabletown.invalid
+    routerPortName: 8/1/1/1
+  traffic_ops.kabletown.invalid:
+    tcpPort: 80 # Note: This is actually wired in via TO config files, but is here for human clarity
+    httpsPort: 443 # Note: This is actually wired in via TO config files, but is here for human clarity
+    rack: M9
+    routerHostName: 9hop.router.kabletown.invalid
+    routerPortName: 9/1/1/1
+  traffic_portal.kabletown.invalid:
+    httpsPort: 443 # Note: This is actually wired in via TP config files, but is here for human clarity
+    rack: M10
+    routerHostName: 10hop.router.kabletown.invalid
+    routerPortName: 10/1/1/1
+  traffic_router.kabletown.invalid:
+    tcpPort: 80 # Note: This is actually wired in via TR server.xml config file, but is here for human clarity.  Note that default port 53 is also used for DNS.
+    httpsPort: 443 # Note: This is actually wired in via TR server.xml config file, but is here for human clarity.  Note that default port 53 is also used for DNS.
+    rack: M11
+    routerHostName: 11hop.router.kabletown.invalid
+    routerPortName: 11/1/1/1
+  influxrelay.kabletown.invalid:
+    tcpPort: 9086 # Note: This is actually wired in via influx-relay config files, but is here for human clarity
+    httpsPort: 9087 # Note: This is actually wired in via influx-relay config files, but is here for human clarity
+    rack: M12
+    routerHostName: 12hop.router.kabletown.invalid
+    routerPortName: 12/1/1/1
 
 # TO Profiles (non-template) and associated parameters
 dl_ds_merged_profiles: "{{ dl_ds_default_profiles }}"
