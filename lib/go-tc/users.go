@@ -143,8 +143,7 @@ type CurrentUserUpdateRequestUser struct {
 }
 
 // UnmarshalAndValidate validates the request and returns a User into which the request's information
-// has been unmarshalled. This allows many fields to be "null", but explicitly checks that they are
-// present in the JSON payload.
+// has been unmarshalled.
 func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 	errs := []error{}
 	if u.AddressLine1 != nil {
@@ -171,15 +170,6 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 		}
 	}
 
-	if u.LocalPasswd != nil && *u.LocalPasswd != "" {
-		if u.ConfirmLocalPasswd == nil || *u.ConfirmLocalPasswd == "" {
-			errs = append(errs, errors.New("confirmLocalPasswd: required when changing password"))
-		} else if *u.LocalPasswd != *u.ConfirmLocalPasswd {
-			errs = append(errs, errors.New("localPasswd and confirmLocalPasswd do not match"))
-		}
-	} else if u.ConfirmLocalPasswd != nil && *u.ConfirmLocalPasswd != "" {
-		errs = append(errs, errors.New("localPasswd: required when changing password"))
-	}
 	user.ConfirmLocalPassword = u.ConfirmLocalPasswd
 	user.LocalPassword = u.LocalPasswd
 

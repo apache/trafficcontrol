@@ -244,7 +244,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPost, `users/?(\.json)?$`, api.CreateHandler(&user.TOUser{}), auth.PrivLevelOperations, Authenticated, nil, 876244816, noPerlBypass},
 
 		{1.1, http.MethodGet, `user/current/?(\.json)?$`, user.Current, auth.PrivLevelReadOnly, Authenticated, nil, 1610701614, noPerlBypass},
-		{1.1, http.MethodPut, `user/current(/|\.json)?$`, user.ReplaceCurrent, auth.PrivLevelReadOnly, Authenticated, nil, 420, perlBypasss},
+		{1.1, http.MethodPut, `user/current(/|\.json)?$`, user.ReplaceCurrent, auth.PrivLevelReadOnly, Authenticated, nil, 420, perlBypass},
 
 		//Parameter: CRUD
 		{1.1, http.MethodGet, `parameters/?(\.json)?$`, api.ReadHandler(&parameter.TOParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 2012554292, noPerlBypass},

@@ -37,9 +37,14 @@ import (
 
 const replacePasswordQuery = `
 UPDATE tm_user
-SET confirm_local_passwd=$1,
-    local_passwd=$2,
-WHERE id=$3
+SET local_passwd=$1,
+WHERE id=$2
+`
+
+const replaceConfirmPasswordQuery = `
+UPDATE tm_user
+SET confirm_local_passwd=$1
+WHERE id=$2
 `
 
 const replaceCurrentQuery = `
@@ -184,10 +189,22 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	changePasswd := false
+	changeConfirmPasswd := false
 
 	// obfuscate passwords (UnmarshalAndValidate checks for equality with ConfirmLocalPassword)
 	// TODO: check for valid password via bad password list like Perl did? User creation doesn't...
 	if user.LocalPassword != nil && *user.LocalPassword != "" {
+		if ok, err := auth.IsGoodPassword(*user.LocalPassword); !ok {
+			errCode = http.StatusBadRequest
+			if err != nil {
+				userErr = err
+			} else {
+				userErr = fmt.Errorf("Unacceptable password")
+			}
+			api.HandleErr(w, r, tx, errCode, userErr, nil)
+			return
+		}
+
 		hashPass, err := auth.DerivePassword(*user.LocalPassword)
 		if err != nil {
 			sysErr = fmt.Errorf("Hashing new password: %v", err)
@@ -197,7 +214,19 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		}
 		changePasswd = true
 		user.LocalPassword = util.StrPtr(hashPass)
+	}
+
+	// Perl did this although it serves no known purpose
+	if user.ConfirmLocalPassword != nil && *user.ConfirmLocalPassword != "" {
+		hashPass, err := auth.DerivePassword(*user.ConfirmLocalPassword)
+		if err != nil {
+			sysErr = fmt.Errorf("Hashing new 'confirm' password: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			return
+		}
 		user.ConfirmLocalPassword = util.StrPtr(hashPass)
+		changeConfirmPasswd = true
 	}
 
 	if *user.Role != inf.User.Role {
@@ -258,7 +287,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err = updateUser(&user, tx, changePasswd); err != nil {
+	if err = updateUser(&user, tx, changePasswd, changeConfirmPasswd); err != nil {
 		errCode = http.StatusInternalServerError
 		sysErr = fmt.Errorf("Updating user: %v", err)
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
@@ -268,7 +297,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user)
 }
 
-func updateUser(u *tc.User, tx *sql.Tx, changePassword bool) error {
+func updateUser(u *tc.User, tx *sql.Tx, changePassword bool, changeConfirmPasswd bool) error {
 	row := tx.QueryRow(replaceCurrentQuery,
 		u.AddressLine1,
 		u.AddressLine2,
@@ -315,9 +344,16 @@ func updateUser(u *tc.User, tx *sql.Tx, changePassword bool) error {
 	}
 
 	if changePassword {
-		_, err = tx.Exec(replacePasswordQuery, u.ConfirmLocalPassword, u.LocalPassword, u.ID)
+		_, err = tx.Exec(replacePasswordQuery, u.LocalPassword, u.ID)
 		if err != nil {
 			return fmt.Errorf("resetting password: %v", err)
+		}
+	}
+
+	if changeConfirmPasswd {
+		_, err = tx.Exec(replaceConfirmPasswordQuery, u.ConfirmLocalPassword, u.ID)
+		if err != nil {
+			return fmt.Errorf("resetting confirm password: %v", err)
 		}
 	}
 

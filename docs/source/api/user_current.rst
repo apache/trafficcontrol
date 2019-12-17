@@ -122,7 +122,7 @@ Request Structure
 	:addressLine2:       An additional address field for e.g. apartment number
 	:city:               The name of the city wherein the user resides
 	:company:            The name of the company for which the user works
-	:confirmLocalPasswd: The 'confirm' field in a new user's password specification - must match ``localPasswd``. This is optional; when ``localPasswd`` is not present in the request, this need not be present
+	:confirmLocalPasswd: An optional 'confirm' field in a new user's password specification. This has no known effect and in fact *doesn't even need to match* ``localPasswd``
 	:country:            The name of the country wherein the user resides
 	:email:              The user's email address\ [#notnull]_
 
