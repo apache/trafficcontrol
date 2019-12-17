@@ -33,6 +33,7 @@ module.exports = function(){
 	this.orgServerFqdn=element(by.name('orgServerFqdn'));
 	this.protocol=element(by.name('protocol'));
 	this.longDesc=element(by.name('longDesc'));
+	this.remapText=element(by.name('remapText'));
 	this.createButton=element(by.buttonText('Create'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));

@@ -93,6 +93,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
 		// set cdn
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
+		// set raw remap text
+		pageData.remapText.sendKeys('raw remap text');
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
