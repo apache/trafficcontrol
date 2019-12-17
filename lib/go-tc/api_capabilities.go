@@ -28,13 +28,7 @@ type APICapability struct {
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
-// APICapabilityRequest represents an HTTP request to view the index of API Capabilities.
-type APICapabilityRequest struct {
-	Capability string `json:"capability"`
-	OrderBy    string `json:"orderby"`
-}
-
-// APICapabilityResponse represents an HTTP response to an APICapabilityRequest.
+// APICapabilityResponse represents an HTTP response to an API Capability request.
 type APICapabilityResponse struct {
 	Response []APICapability `json:"response"`
 }

@@ -56,6 +56,12 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
+	err = SetupAPICapabilities(db)
+	if err != nil {
+		fmt.Printf("\nError setting up api_capability %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
 	err = SetupCapabilities(db)
 	if err != nil {
 		fmt.Printf("\nError setting up capabilities %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -120,6 +126,20 @@ INSERT INTO role (name, description, priv_level) VALUES ('steering','Steering Us
 INSERT INTO role (name, description, priv_level) VALUES ('federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
 `
 	err := execSQL(db, sqlStmt, "role")
+	if err != nil {
+		return fmt.Errorf("exec failed %v", err)
+	}
+	return nil
+}
+
+func SetupAPICapabilities(db *sql.DB) error {
+	sqlStmt := `
+INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', 'asns', 'asns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', 'asns/*', 'asns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('POST', 'asns', 'asns-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('PUT', 'asns/*', 'asns-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+`
+	err := execSQL(db, sqlStmt, "api_capability")
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
