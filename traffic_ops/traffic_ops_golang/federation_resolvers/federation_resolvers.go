@@ -197,9 +197,9 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
 
 	alertMsg := fmt.Sprintf("Federation resolver deleted [ IP = %s ] with id: %d", *result.IPAddress, *result.ID)
-	alert = tc.Alert {
+	alert = tc.Alert{
 		Level: tc.SuccessLevel.String(),
-		Text: alertMsg,
+		Text:  alertMsg,
 	}
 
 	return userErr, sysErr, statusCode, alert, result
@@ -224,13 +224,13 @@ func DeleteByID(w http.ResponseWriter, r *http.Request) {
 	var resp = struct {
 		tc.Alerts
 		Response *tc.FederationResolver `json:"response,omitempty"`
-	} {
+	}{
 		tc.Alerts{
 			Alerts: []tc.Alert{
 				alert,
 				tc.Alert{
 					Level: tc.WarnLevel.String(),
-					Text: "This endpoint is deprecated, please use '/federation_resolvers' instead",
+					Text:  "This endpoint is deprecated, please use '/federation_resolvers' instead",
 				},
 			},
 		},
