@@ -89,7 +89,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inf.Version.Major < 2 && inf.Version.Minor < 4 {
+	if inf.Version.Major == 1 && inf.Version.Minor < 4 {
 		fr.LastUpdated = nil
 		fr.Type = nil
 	}
@@ -237,7 +237,7 @@ func DeleteByID(w http.ResponseWriter, r *http.Request) {
 		&respObj,
 	}
 
-	if inf.Version.Major < 2 && inf.Version.Minor < 4 {
+	if inf.Version.Major == 1 && inf.Version.Minor < 4 {
 		resp.Response = nil
 	}
 
