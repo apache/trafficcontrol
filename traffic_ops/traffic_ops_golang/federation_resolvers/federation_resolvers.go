@@ -1,3 +1,5 @@
+// Package federation_resolvers contains handler logic for the /federation_resolvers and
+// /federation_resolvers/{{ID}} endpoints.
 package federation_resolvers
 
 /*
@@ -64,6 +66,7 @@ RETURNING federation_resolver.id,
           ) AS type
 `
 
+// Create is the handler for POST requests to /federation_resolvers.
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -98,6 +101,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, fr)
 }
 
+// Read is the handler for GET requests to /federation_resolvers (and /federation_resolvers/{{ID}}).
 func Read(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -152,6 +156,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, resolvers)
 }
 
+// Delete is the handler for DELETE requests to /federation_resolvers.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
@@ -200,6 +205,7 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 	return userErr, sysErr, statusCode, alert, result
 }
 
+// DeleteByID is the handler for DELETE requests to /federation_resolvers/{{ID}}.
 func DeleteByID(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
