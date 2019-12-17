@@ -1,30 +1,4 @@
 {
-	"api_capabilities": [
-		{
-			"id": 1,
-			"http_method": "GET",
-			"route": "asns",
-			"capability": "asns-read"
-		},
-		{
-			"id": 2,
-			"http_method": "POST",
-			"route": "asns/*",
-			"capability": "asns-write"
-		},
-		{
-			"id": 3,
-			"http_method": "PUT",
-			"route": "asns/*",
-			"capability": "asns-write"
-		},
-		{
-			"id": 4,
-			"http_method": "DELETE",
-			"route": "asns/*",
-			"capability": "asns-write"
-		}
-	],
     "asns": [
         {
             "asn": 8888,

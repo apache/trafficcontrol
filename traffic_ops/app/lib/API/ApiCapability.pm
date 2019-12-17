@@ -168,6 +168,7 @@ sub create {
 
 	my $insert = $self->db->resultset('ApiCapability')->create($values);
 	my $rs     = $insert->insert();
+	my $alt = "[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities.html#post]"
 	if ($rs) {
 		my $response;
 		$response->{id}          = $rs->id;
@@ -180,10 +181,10 @@ sub create {
 			"Created API-Capability mapping: '$response->{httpMethod}', '$response->{httpRoute}', '$response->{capability}' for id: " . $response->{id},
 			"APICHANGE" );
 
-		return $self->success( $response, "API-Capability mapping was created." );
+		return $self->with_deprecation("API-Capability mapping was created.", "success", 200, $alt);
 	}
 	else {
-		return $self->alert("API-Capability mapping creation failed.");
+		return $self->with_deprecation("API-Capability mapping creation failed.", "error", 500, $alt);
 	}
 }
 

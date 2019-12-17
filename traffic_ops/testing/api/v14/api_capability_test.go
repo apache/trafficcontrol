@@ -43,6 +43,11 @@ func TestAPICapabilities(t *testing.T) {
 			count:       9,
 		},
 		{
+			description: "Fail to get any API Capabilities with a bogus capability",
+			capability:  "foo",
+			count:       0,
+		},
+		{
 			description: "Successfully get all API Capabilities in order of HTTP Method",
 			order:       "httpMethod",
 			first:       "GET",
