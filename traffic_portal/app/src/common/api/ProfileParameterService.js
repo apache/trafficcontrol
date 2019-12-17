@@ -35,7 +35,6 @@ var ProfileParameterService = function($http, messageModel, ENV) {
 	this.linkProfileParameters = function(profile, params) {
 		return $http.post(ENV.api['root'] + 'profileparameter', { profileId: profile.id, paramIds: params, replace: true }).then(
 			function(result) {
-				messageModel.setMessages([ { level: 'success', text: 'Parameters linked to profile' } ], false);
 				return result;
 			},
 			function(err) {
