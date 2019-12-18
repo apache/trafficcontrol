@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [unreleased]
+### Added
+
+### Changed
+
+### Deprecated/Removed
+- The TO API `servers/totals` endpoint is now deprecated
+
 ## [4.0.0] - 2019-12-16
 ### Added
 - Traffic Router: TR now generates a self-signed certificate at startup and uses it as the default TLS cert.

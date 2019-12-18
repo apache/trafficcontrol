@@ -18,6 +18,7 @@
 ******************
 ``servers/totals``
 ******************
+.. deprecated:: 1.1
 
 ``GET``
 =======
@@ -53,7 +54,12 @@ Response Structure
 	Whole-Content-Sha512: J4wy8zf+LX44/qWIbvziWHCcDZpUJ9GOpOVUVqPbVHUCh1V19o8FnE7T+V0639n9Xyw9k10NcaGIqASA+O9Rzg==
 	Content-Length: 305
 
-	{ "response": [
+	{	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated"
+		}],
+		"response": [
 		{
 			"count": 1,
 			"type": "EDGE"
