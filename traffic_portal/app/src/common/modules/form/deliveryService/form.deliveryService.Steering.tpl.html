@@ -332,25 +332,23 @@ under the License.
                             </aside>
                         </div>
                     </div>
-
-					<div class="form-group" ng-class="{'has-error': hasError(routingConfig.ecsEnabled), 'has-feedback': hasError(routingConfig.ecsEnabled)}">
-						<label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ecsEnabled">EDNS0 Client Subnet Enabled *<div class="helptooltip">
-							<div class="helptext">Disabled by default, enabling this enables EDNS0 client subnet on the Delivery Service level.</div>
-							</div>
-						</label>
-						<div class="col-md-10 col-sm-10 col-xs-12">
-							<select id="ecsEnabled" name="ecsEnabled" class="form-control" ng-model="deliveryService.ecsEnabled" required>
-								<option ng-value="true">Enabled</option>
-								<option ng-value="false">Disabled</option>
-							</select>
-							<small class="input-error" ng-show="hasPropertyError(routingConfig.ecsEnabled, 'required')">Required</small>
-							<aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ecsEnabled != dsCurrent.ecsEnabled">
-								<h3>Current Value</h3>
-								<pre>{{::dsCurrent.ecsEnabled ? 'Enabled' : 'Disabled'}}</pre>
-							</aside>
-						</div>
-					</div>
-
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.ecsEnabled), 'has-feedback': hasError(routingConfig.ecsEnabled)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ecsEnabled">EDNS0 Client Subnet Enabled *<div class="helptooltip">
+                            <div class="helptext">Disabled by default, enabling this enables EDNS0 client subnet on the Delivery Service level.</div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="ecsEnabled" name="ecsEnabled" class="form-control" ng-model="deliveryService.ecsEnabled" required>
+                                <option ng-value="true">Enabled</option>
+                                <option ng-value="false">Disabled</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.ecsEnabled, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ecsEnabled != dsCurrent.ecsEnabled">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.ecsEnabled ? 'Enabled' : 'Disabled'}}</pre>
+                            </aside>
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoProvider), 'has-feedback': hasError(routingConfig.geoProvider)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoProvider">Geolocation Provider *<div class="helptooltip">
                             <div class="helptext">Choose which Geolocation database provider - company that collects data on the location of IP addresses - to use.</div>
