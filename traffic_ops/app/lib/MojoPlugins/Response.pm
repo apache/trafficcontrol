@@ -119,6 +119,19 @@ sub register {
 		}
 	);
 
+	# Success (200) - With a JSON response and a deprecated message
+	$app->renderer->add_helper(
+		success_deprecate => sub {
+			my $self    = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $data    = shift || confess("Please supply a response body hash.");
+
+			my $builder ||= MojoPlugins::Response::Builder->new($self, @_);
+			my @alerts_response = ({$LEVEL_KEY => $WARNING_LEVEL, $TEXT_KEY => "This endpoint is deprecated"});
+
+			return $self->render( $STATUS_KEY => 200, $JSON_KEY => { $ALERTS_KEY => \@alerts_response, $RESPONSE_KEY => $data } );
+		}
+	);
+
 	$app->renderer->add_helper(
 		deprecation => sub {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
