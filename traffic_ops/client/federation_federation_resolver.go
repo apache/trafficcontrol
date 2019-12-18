@@ -41,11 +41,12 @@ func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFe
 }
 
 // AssignFederationFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) AssignFederationFederationResolver(fedID int, ids []int, replace bool) (tc.AssignFederationFederationResolversResponse, ReqInf, error) {
+func (to *Session) AssignFederationFederationResolver(fedID int, resolverIDs []int, replace bool) (tc.AssignFederationFederationResolversResponse, ReqInf, error) {
 	var (
-		req = tc.AssignFederationResolversRequest{
+		path = fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, fedID)
+		req  = tc.AssignFederationResolversRequest{
 			Replace:        replace,
-			FedResolverIDs: ids,
+			FedResolverIDs: resolverIDs,
 		}
 		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
 		resp   tc.AssignFederationFederationResolversResponse
@@ -56,7 +57,6 @@ func (to *Session) AssignFederationFederationResolver(fedID int, ids []int, repl
 		return resp, reqInf, err
 	}
 
-	path := fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, fedID) //, req)
 	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
