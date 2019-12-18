@@ -78,6 +78,8 @@ Go Implementation Requirements
 
 All Go code dependencies are managed through the :atc-file:`vendor/` directory and should thus be available without any extra work - and any new dependencies should be properly "vendored" into that same, top-level directory. Some dependencies have been "vendored" into :atc-file:`traffic_ops/vendor` and :atc-file:`traffic_ops/traffic_ops_golang/vendor` but the preferred location for new dependencies is under that top-level :atc-file:`vendor/` directory.
 
+Per the Go language standard's authoritative source's recommendation, all sub-packages of ``golang.org/x`` are treated as a part of the compiler, and so need not ever be "vendored" as though they were an external dependency. These dependencies are not listed explicitly here, so it is strongly advised that they be fetched using :manpage:`goget(1)` rather than downloaded by hand.
+
 .. tip:: All new dependencies need to be subject to community review to ensure necessity (because it will be added in its entirety to the repository, after all) and license compliance via `the developer mailing list <mailto:dev@trafficcontrol.apache.org>`.
 
 Traffic Ops Project Tree Overview
@@ -521,11 +523,50 @@ DELETE
 GET
 	Retrieves a representation of some resource. This should *always* be used for read-only operations and note that the requesting client **never** expects the state of the server to change as a result of a request using the GET method.
 POST
-	Requests that the server process some passed data. This is used most commonly to create new objects on the server, but can also be used more generally e.g. with a request for regenerating encryption keys. Although this isn't strictly creating new API resources, it does change the state of the server and so this is more appropriate that GET.
+	Requests that the server process some passed data. This is used most commonly to create new objects on the server, but can also be used more generally e.g. with a request for regenerating encryption keys. Although this isn't strictly creating new API resources, it does change the state of the server and so this is more appropriate than GET.
 PUT
-	Places a new representation of some resource on the server. This is typically used for updating existing objects. For creating *new* representations/objects, use POST instead.
+	Places a new representation of some resource on the server. This is typically used for updating existing objects. For creating *new* representations/objects, use POST instead. When using PUT note that clients expect it to be :dfn:`idempotent`, meaning that subsequent identical PUT requests should result in the same server state. What this means is that it's standard to require that *all* of the information defining a resource be provided for each request even if the vast majority of it isn't changing.
 
-The HEAD and OPTIONS request methods have default implementations for any properly defined :ref:`to-api` route, and so should almost never be defined explicitly.
+The HEAD and OPTIONS request methods have default implementations for any properly defined :ref:`to-api` route, and so should almost never be defined explicitly. Other request methods (e.g. CONNECT) are currently unused and ought to stay that way for the time being.
+
+.. note:: Utilizing the PATCH method is unfeasible at the time of this writing but progress toward supporting it is being made, albeit slowly in the face of other priorities.
+
+.. seealso:: The :abbr:`MDN (Mozilla Developer Network)`'s `documentation on the various HTTP request methods <https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods>`_.
+
+The final step of creating any :ref:`to-api` endpoint is to write documentation for it. When doing so, be sure to follow *all* of the guidelines laid out in :ref:`docs-guide`. *If documentation doesn't exist for new functionality then it has accomplished* **nothing** *because no one using Traffic Control will know it exists*. Omitted documentation is how a project winds up with a dozen different API endpoints that all do essentially the same thing.
+
+Framework Options
+-----------------
+The Traffic Ops code base offers two basic frameworks for defining a new endpoint. Either one may be used at the author's discretion (or even neither if desired and appropriate - though that seems unlikely).
+
+Generic "CRUDer"
+""""""""""""""""
+The "Generic 'CRUDer'", as it's known, is a pattern of API endpoint development that principally involves defining a ``type`` that implements the `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.CRUDer interface <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#CRUDer>`_. A description of what that entails is best left to the actual GoDoc documentation.
+
+.. seealso:: The `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericCreate <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericCreate>`_, `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericDelete <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericDelete>`_, `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericRead <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericRead>`_, and `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericUpdate <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericUpdate>`_ helpers are often used to provide the default operations of creating, deleting, reading, and updating objects, respectively. When the API endpoint being written is only meant to perform these basic operations on an object or objects stored in the database, these should be totally sufficient.
+
+This method offers a lot of functionality "out-of-the-box" as compared to the `APIInfo`_ method, but because of that is also restrictive. For example, it is not possible to write an endpoint that returns data not encoded as JSON using this method. That's an uncommon use-case, but not unheard-of.
+
+This method is best used for basic creation, reading, update, and deletion operations performed on simple objects with no structural differences across API versions.
+
+APIInfo
+"""""""
+Endpoint handlers can also be defined by simply implementing the `net/http.HandlerFunc <https://godoc.org/net/http#HandlerFunc>`_ interface. The `net/http.Request <https://godoc.org/net/http#Request>`_ reference passed into such handlers provides identifying information for the authenticated user (where applicable) in its context.
+
+To easily obtain the information needed to identify a user and their associated permissions, as well as server configuration information and a database transaction handle, authors should use the `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.NewInfo <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#NewInfo>`_ function which will return all of that information in a single structure as well as any errors encountered during the process and an appropriate HTTP response code in case of such errors.
+
+This method offers fine control over the endpoint's logic, but tends to be much more verbose than the endpoints written using the `Generic "CRUDer"`_ method. For example, a handler for retrieving an object from the database and returning it to the requesting client encoded as JSON can be twenty or more lines of code, whereas a single call to `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericCreate <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericCreate>`_ provides equivalent functionality.
+
+This method is best used when requests are meant to have extensive side-effects, are performed on unusually structured objects, need fine control of the HTTP headers/options, or operate on objects that have different structures or meanings across API versions.
+
+Rewriting a Perl Endpoint
+-------------------------
+When rewriting endpoints from Perl, some special considerations must be taken.
+
+- Any rules and guidelines herein outlined that are broken by the Perl handler *must* also be broken in the rewritten Go handler to maintain compatibility within the API. New features can be added in the latest unreleased version of the API so long as they are appropriately documented, but avoid the temptation to fix things that seem broken. Such changes are best left to re-implementation of the API in a subsequent major version. The exceptions to this rule are if the broken behavior constitutes a security vulnerability (in which case be sure to follow the instructions on `the Apache Software Foundation security page <https://www.apache.org/security/>`_) or if it happens the event of a server or client error. For example, many Perl handlers will spit out an HTML page in the event of a server-side error while the standard behavior of the :ref:`to-api` in such cases is to return the appropriate HTTP response code and a response body containing a JSON-encoded ``alerts`` object describing the nature of the error.
+- Mark newly rewritten endpoints in their :atc-file:`traffic_ops/traffic_ops_golang/routing/routes.go` definition with ``perlBypass`` to ensure that upon upgrading it is possible to configure the server to fall back on the Perl implementation. That way, any erroneous rewrites that wind up in production environments can be quickly bypassed in favor of the old, known-to-be-working version.
+- The Perl handlers support any combination of optional trailing ``/`` and ``.json`` on endpoint routes, and rewritten route definitions ought to support that. For example, the endpoint ``/foo`` can with equal validity from the Perl implementation's perspective as ``/foo.json``, ``/foo/``, ``/foo.json/`` (for some reason), and even (horrendously) as ``/foo/.json``.
+- It's possible that a route definition for the newly rewritten route already exists, explicitly defining a proxy to the Perl implementation using ``handlerToFunc(proxyHandler)`` to avoid collisions with later-defined routes. These will need to be deleted in order for the route to be properly handled.
 
 Extensions
 ==========
