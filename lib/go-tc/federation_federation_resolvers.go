@@ -19,24 +19,24 @@ package tc
  * under the License.
  */
 
-// FederationFederationResolversResponse represents an API response of association between a federation and a federation_resolver.
+// FederationFederationResolversResponse represents an API response containing Federation Resolvers for a given Federation.
 type FederationFederationResolversResponse struct {
 	Response []FederationResolver `json:"response"`
 }
 
-// AssignFederationFederationResolvers represents an API response of federation_resolver assignment to a federation.
+// AssignFederationFederationResolvers represents an API response for assigning a Federation Resolver to a Federation.
 type AssignFederationFederationResolversResponse struct {
 	Response AssignFederationResolversRequest `json:"response"`
 	Alerts
 }
 
-// AssignFederationResolversRequest represents an API request/response for assigning federation_resolvers to a federation.
+// AssignFederationResolversRequest represents an API request/response for assigning Federation Resolvers to a Federation.
 type AssignFederationResolversRequest struct {
 	Replace        bool  `json:"replace"`
 	FedResolverIDs []int `json:"fedResolverIds"`
 }
 
-// FederationFederationResolver represents an entry in federation_federation_resolvers.
+// FederationFederationResolver represents an association between a Federation and a Federation Resolver.
 type FederationFederationResolver struct {
 	Federation         int `json:"federation"`
 	FederationResolver int `json:"federation_resolver"`

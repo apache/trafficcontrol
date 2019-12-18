@@ -118,6 +118,10 @@ func GetTestCDNFederations(t *testing.T) {
 
 func AssignTestFederationFederationResolvers(t *testing.T) {
 	// Setup
+	if len(fedIDs) < 1 {
+		t.Fatal("no federations to test")
+	}
+
 	frCnt := len(testData.FederationResolvers)
 	if frCnt < 1 {
 		t.Fatal("no federation resolvers to test")
@@ -131,7 +135,7 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 		t.Fatalf("Wrong number of Federation Resolvers from GET, want %d got %d", frCnt, len(frs))
 	}
 
-	var frIDs []int
+	frIDs := make([]int, 0, len(frs))
 	for _, fr := range frs {
 		frIDs = append(frIDs, int(*fr.ID))
 	}
@@ -154,32 +158,34 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 		{
 			description: "Successfully assign multiple federation_resolver to a federation",
 			fedID:       fedIDs[0],
-			resolverIDs: frIDs[1:3],
+			resolverIDs: frIDs[1:frCnt],
 			replace:     false,
 			err:         "",
 		},
 		{
 			description: "Successfully replace all federation_resolver for a federation",
 			fedID:       fedIDs[0],
-			resolverIDs: frIDs[0:3],
+			resolverIDs: frIDs[0:frCnt],
 			replace:     true,
 			err:         "",
 		},
 		{
 			description: "Fail to assign federation_resolver to a federation when federation does not exist",
-			fedID:       fedIDs[0] - 1,
+			fedID:       -1,
 			resolverIDs: frIDs[0:0],
 			replace:     false,
-			err:         "database exception: querying federation name from id: sql: no rows in result set",
+			err:         "Resource not found",
 		},
 	}
 
 	for _, c := range testCases {
-		_, _, err := TOSession.AssignFederationFederationResolver(c.fedID, c.resolverIDs, c.replace)
+		t.Run(c.description, func(t *testing.T) {
+			_, _, err := TOSession.AssignFederationFederationResolver(c.fedID, c.resolverIDs, c.replace)
 
-		if err != nil && !strings.Contains(err.Error(), c.err) {
-			t.Fatalf("error: expected error result %v, want: %v", err, c.err)
-		}
+			if err != nil && !strings.Contains(err.Error(), c.err) {
+				t.Fatalf("error: expected error result %v, want: %v", err, c.err)
+			}
+		})
 	}
 
 }
@@ -193,7 +199,7 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 		{
 			description: "successfully get federation_federation_resolvers for a federation with some",
 			fedID:       fedIDs[0],
-			count:       3,
+			count:       4,
 		},
 		{
 			description: "successfully get federation_federation_resolvers for a federation without any",
@@ -203,13 +209,15 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 	}
 
 	for _, c := range testCases {
-		resp, _, err := TOSession.GetFederationFederationResolversByID(c.fedID)
-		if err != nil {
-			t.Fatalf("Error getting federation federation resolvers by federation id: %d, err: %s", c.fedID, err.Error())
-		}
-		if len(resp.Response) != c.count {
-			t.Fatalf("expected result set of length %d, got %d", c.count, len(resp.Response))
-		}
+		t.Run(c.description, func(t *testing.T) {
+			resp, _, err := TOSession.GetFederationFederationResolversByID(c.fedID)
+			if err != nil {
+				t.Fatalf("Error getting federation federation resolvers by federation id: %d, err: %s", c.fedID, err.Error())
+			}
+			if len(resp.Response) != c.count {
+				t.Fatalf("expected result set of length %d, got %d", c.count, len(resp.Response))
+			}
+		})
 	}
 }
 

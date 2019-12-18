@@ -29,6 +29,11 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
+const deleteFederationFederationResolversQuery = `
+DELETE FROM federation_federation_resolver ffr
+WHERE ffr.federation = $1
+`
+
 // GetFederationFederationResolversHandler returns a subset of federation_resolvers belonging to the federation ID supplied.
 func GetFederationFederationResolversHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -48,7 +53,7 @@ func GetFederationFederationResolversHandler(w http.ResponseWriter, r *http.Requ
 	api.WriteResp(w, r, frs)
 }
 
-// AssignFederationResolversToFederation associates one or more federation_resolver to the federation ID supplied.
+// AssignFederationResolversToFederationHandler associates one or more federation_resolver to the federation ID supplied.
 func AssignFederationResolversToFederationHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -66,23 +71,30 @@ func AssignFederationResolversToFederationHandler(w http.ResponseWriter, r *http
 	fedID := inf.IntParams["id"]
 	name, _, err := dbhelpers.GetFederationNameFromID(fedID, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("database exception: %v", err), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))
 		return
 	}
 
 	if reqObj.Replace {
 		if _, err := inf.Tx.Tx.Exec(deleteFederationFederationResolversQuery, fedID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("database exception: %v", err), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))
 			return
 		}
 	}
 
 	for _, id := range reqObj.FedResolverIDs {
 		if _, err := inf.Tx.Tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("database exception: %v", err), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))
 			return
 		}
 	}
+
+	api.CreateChangeLogRawTx(
+		api.ApiChange,
+		fmt.Sprintf("FEDERATION: %s, ID: %d, ACTION: Assign Federation Resolvers %v to Federation", name, fedID, reqObj.FedResolverIDs),
+		inf.User,
+		inf.Tx.Tx,
+	)
 
 	api.WriteRespAlertObj(
 		w, r, tc.SuccessLevel,

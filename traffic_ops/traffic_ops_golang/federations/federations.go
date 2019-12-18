@@ -58,11 +58,6 @@ VALUES ($1, $2)
 ON CONFLICT DO NOTHING
 `
 
-const deleteFederationFederationResolversQuery = `
-DELETE FROM federation_federation_resolver ffr
-WHERE ffr.federation = $1
-`
-
 const deleteCurrentUserFederationResolversQuery = `
 DELETE FROM federation_resolver
 WHERE federation_resolver.id IN (
