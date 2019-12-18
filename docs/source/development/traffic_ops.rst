@@ -570,6 +570,18 @@ When rewriting endpoints from Perl, some special considerations must be taken.
 
 Extensions
 ==========
+Both the Perl and Go implementation support different kinds of extensions.
+
+What's typically meant by "extension" in the context of Traffic Ops is a :ref:`to-check-ext` which provides data for server "checks" which can be viewed in Traffic Portal under :menuselection:`Monitor --> Cache Checks`. This type of extension need not know nor even care which implementation it is being used with, as it interacts with Traffic Ops through the :ref:`to-api`. These are described in `Legacy Perl Extensions`_ as their description remains rather Perl-centric, but in principle their operation is not limited to the context of the Perl Implementation.
+
+Both Perl and Go also support overrides or new definitions for non-standard :ref:`to-api` routes. It is strongly recommended that no Perl-based extensions of this type be written, but for posterity they are described in `Legacy Perl Extensions`_. The Go implementation refers to this type of "extension" as a "plugin," and they are described in `Go Plugins`_.
+
+Go Plugins
+----------
+A plugin is defined by a Go source file in the :atc-file:`traffic_ops/traffic_ops_golang/plugin` directory, which is expected to be named :file:`{plugin name}.go`. A plugin is registered to Traffic Ops by a call to :to-godoc:`plugin.AddPlugin`.
+
+Legacy Perl Extensions
+----------------------
 Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a customizable manner. There are two types of extensions:
 
 :ref:`to-check-ext`
@@ -584,7 +596,7 @@ Extensions are managed using the ``$TO_HOME/bin/extensions`` command line script
 
 
 Extensions at Runtime
----------------------
+"""""""""""""""""""""
 The search path for :ref:`to-datasource-ext` depends on the configuration of the ``PERL5LIB`` environment variable, which is pre-configured in the Traffic Ops start scripts. All :ref:`to-check-ext` must be located in ``$TO_HOME/bin/checks``
 
 	.. code-block:: bash
@@ -595,12 +607,12 @@ The search path for :ref:`to-datasource-ext` depends on the configuration of the
 To prevent :ref:`to-datasource-ext` namespace collisions within Traffic Ops all :ref:`to-datasource-ext` should follow the package naming convention '``Extensions::<ExtensionName>``'
 
 ``TrafficOpsRoutes.pm``
------------------------
+"""""""""""""""""""""""
 Traffic Ops accesses each extension through the addition of a URL route as a custom hook. These routes will be defined in a file called ``TrafficOpsRoutes.pm`` that should be present in the top directory of your Extension. The routes that are defined should follow the `Mojolicious route conventions <https://mojolicious.org/perldoc/Mojolicious/Guides/Routing#Routes>`_.
 
 
 Development Configuration
---------------------------
+"""""""""""""""""""""""""
 To incorporate any custom :ref:`to-datasource-ext` during development set your ``PERL5LIB`` environment variable with any number of colon-separated directories with the understanding that the ``PERL5LIB`` search order is from left to right through this list. Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojolicious Route and doesn't look any further, which allows for the developer to override Traffic Ops functionality.
 
 .. [#perltest] As progress continues on moving Traffic Ops to run entirely in Go, the number of passing tests has steadily decreased. This means that the tests are not a reliable way to test Traffic Ops, as they are expected to fail more and more as functionality is stripped from the Perl codebase.
