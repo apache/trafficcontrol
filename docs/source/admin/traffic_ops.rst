@@ -303,6 +303,8 @@ The main :program:`traffic_ops_golang` binary and the `Legacy Perl Script`_ use 
 Configuration Files
 -------------------
 
+.. _cdn.conf:
+
 cdn.conf
 """"""""
 This file deals with the configuration parameters of running Traffic Ops itself. It is a JSON-format set of options and their respective values. For the `Legacy Perl Script`_ to work with this file, it must be in its default location at :file:`/opt/traffic_ops/app/conf/cdn.conf`, but `traffic_ops_golang`_ will use whatever file is specified by its :option:`--cfg` option. The keys of the file are described below.

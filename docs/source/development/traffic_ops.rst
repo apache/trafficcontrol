@@ -541,9 +541,9 @@ The Traffic Ops code base offers two basic frameworks for defining a new endpoin
 
 Generic "CRUDer"
 """"""""""""""""
-The "Generic 'CRUDer'", as it's known, is a pattern of API endpoint development that principally involves defining a ``type`` that implements the `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.CRUDer interface <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#CRUDer>`_. A description of what that entails is best left to the actual GoDoc documentation.
+The "Generic 'CRUDer'", as it's known, is a pattern of API endpoint development that principally involves defining a ``type`` that implements the :to-godoc:`api.CRUDer` interface. A description of what that entails is best left to the actual GoDoc documentation.
 
-.. seealso:: The `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericCreate <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericCreate>`_, `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericDelete <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericDelete>`_, `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericRead <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericRead>`_, and `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericUpdate <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericUpdate>`_ helpers are often used to provide the default operations of creating, deleting, reading, and updating objects, respectively. When the API endpoint being written is only meant to perform these basic operations on an object or objects stored in the database, these should be totally sufficient.
+.. seealso:: The :to-godoc:`api.GenericCreate`, :to-godoc:`api.GenericDelete`, :to-godoc:`api.GenericRead`, and :to-godoc:`api.GenericUpdate` helpers are often used to provide the default operations of creating, deleting, reading, and updating objects, respectively. When the API endpoint being written is only meant to perform these basic operations on an object or objects stored in the database, these should be totally sufficient.
 
 This method offers a lot of functionality "out-of-the-box" as compared to the `APIInfo`_ method, but because of that is also restrictive. For example, it is not possible to write an endpoint that returns data not encoded as JSON using this method. That's an uncommon use-case, but not unheard-of.
 
@@ -551,11 +551,11 @@ This method is best used for basic creation, reading, update, and deletion opera
 
 APIInfo
 """""""
-Endpoint handlers can also be defined by simply implementing the `net/http.HandlerFunc <https://godoc.org/net/http#HandlerFunc>`_ interface. The `net/http.Request <https://godoc.org/net/http#Request>`_ reference passed into such handlers provides identifying information for the authenticated user (where applicable) in its context.
+Endpoint handlers can also be defined by simply implementing the :godoc:`net/http.HandlerFunc` interface. The :godoc:`net/http.Request` reference passed into such handlers provides identifying information for the authenticated user (where applicable) in its context.
 
-To easily obtain the information needed to identify a user and their associated permissions, as well as server configuration information and a database transaction handle, authors should use the `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.NewInfo <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#NewInfo>`_ function which will return all of that information in a single structure as well as any errors encountered during the process and an appropriate HTTP response code in case of such errors.
+To easily obtain the information needed to identify a user and their associated permissions, as well as server configuration information and a database transaction handle, authors should use the :to-godoc:`api.NewInfo` function which will return all of that information in a single structure as well as any errors encountered during the process and an appropriate HTTP response code in case of such errors.
 
-This method offers fine control over the endpoint's logic, but tends to be much more verbose than the endpoints written using the `Generic "CRUDer"`_ method. For example, a handler for retrieving an object from the database and returning it to the requesting client encoded as JSON can be twenty or more lines of code, whereas a single call to `github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericCreate <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api#GenericCreate>`_ provides equivalent functionality.
+This method offers fine control over the endpoint's logic, but tends to be much more verbose than the endpoints written using the `Generic "CRUDer"`_ method. For example, a handler for retrieving an object from the database and returning it to the requesting client encoded as JSON can be twenty or more lines of code, whereas a single call to :to-godoc:`api.GenericCreate` provides equivalent functionality.
 
 This method is best used when requests are meant to have extensive side-effects, are performed on unusually structured objects, need fine control of the HTTP headers/options, or operate on objects that have different structures or meanings across API versions.
 
@@ -578,7 +578,29 @@ Both Perl and Go also support overrides or new definitions for non-standard :ref
 
 Go Plugins
 ----------
-A plugin is defined by a Go source file in the :atc-file:`traffic_ops/traffic_ops_golang/plugin` directory, which is expected to be named :file:`{plugin name}.go`. A plugin is registered to Traffic Ops by a call to :to-godoc:`plugin.AddPlugin`.
+A plugin is defined by a Go source file in the :atc-file:`traffic_ops/traffic_ops_golang/plugin` directory, which is expected to be named :file:`{plugin name}.go`. A plugin is registered to Traffic Ops by a call to :to-godoc:`plugin.AddPlugin` in the source file's special ``init`` function.
+
+A plugin is only enabled at runtime if its name is present in the :ref:`cdn.conf` file's ``traffic_ops_golang.plugins`` array.
+
+Each plugin may also define any, all, or none of the lifecycle hooks provided: ``load``, ``startup``, and ``onRequest``
+
+load
+	The ``load`` function of a plugin, if defined, needs to implement the :to-godoc:`plugin.LoadFunc` interface, and will be run when the server starts and after configuration has been loaded. It will be passed the plugins own configuration as it was defined in the :ref:`cdn.conf` file's ``traffic_ops_golang.plugin_config`` map.
+onRequest
+	The ``onRequest`` function of a plugin, if defined, needs to implement the :to-godoc:`plugin.OnRequestFunc` interface, and will be called on **every** request made to the :ref:`to-api`. Because of this, it's imperative that the function exit as soon as possible. Note that once one plugin reports that it has served the request, no others will be tried. The order in which plugins are tried is defined by their order in the ``traffic_ops_golang.plugins`` array of the :ref:`cdn.conf` configuration file.
+
+		.. seealso:: It's very common for this function to behave like a :ref:`to-api` endpoint, so when writing a plugin it may be useful to review `Writing New Endpoints`_.
+startup
+	Like ``load``, the ``startup`` function of a plugin, if defined, will be called when the server starts and after configuration has been loaded. *Unlike* ``load``, however, this function should implement the :to-godoc:`plugin.StartupFunc` interface and will be passed in the entirety of the server's configuration, including its own configuration and any shared plugin configuration data as defined in the :ref:`cdn.conf` file's ``traffic_ops_golang.plugin_shared_config`` map.
+
+Example
+"""""""
+An example "Hello World" plugin that serves the ``/_hello`` request path by just writing "Hello World" in the body of a 200 OK response back to the client is provided in :atc-file:`traffic_ops/traffic_ops_golang/plugin/hello_world.go`:
+
+.. literalinclude:: ../../../traffic_ops/traffic_ops_golang/plugin/hello_world.go
+	:language: go
+	:linenos:
+	:tab-width: 4
 
 Legacy Perl Extensions
 ----------------------
