@@ -35,9 +35,3 @@ type AssignFederationResolversRequest struct {
 	Replace        bool  `json:"replace"`
 	FedResolverIDs []int `json:"fedResolverIds"`
 }
-
-// FederationFederationResolver represents an association between a Federation and a Federation Resolver.
-type FederationFederationResolver struct {
-	Federation         int `json:"federation"`
-	FederationResolver int `json:"federation_resolver"`
-}
