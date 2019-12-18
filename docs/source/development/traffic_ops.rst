@@ -76,6 +76,10 @@ Go Implementation Requirements
 - `Go 1.11 <http://golang.org/doc/install>`_
 - If the system's Go compiler doesn't provide it implicitly, also note that all Go code in the :abbr:`ATC (Apache Traffic Control)` repository should be formatted using `gofmt <https://golang.org/cmd/gofmt/>`_
 
+All Go code dependencies are managed through the :atc-file:`vendor/` directory and should thus be available without any extra work - and any new dependencies should be properly "vendored" into that same, top-level directory. Some dependencies have been "vendored" into :atc-file:`traffic_ops/vendor` and :atc-file:`traffic_ops/traffic_ops_golang/vendor` but the preferred location for new dependencies is under that top-level :atc-file:`vendor/` directory.
+
+.. tip:: All new dependencies need to be subject to community review to ensure necessity (because it will be added in its entirety to the repository, after all) and license compliance via `the developer mailing list <mailto:dev@trafficcontrol.apache.org>`.
+
 Traffic Ops Project Tree Overview
 =================================
 - :atc-file:`traffic_ops/` - The root of the Traffic Ops project
@@ -319,7 +323,7 @@ The integration tests are run using :manpage:`go-test(1)`, with two configuratio
 
 .. option:: --cfg CONFIG
 
-	Specify the path to a configuration file for the tests. If not specified, it will attempt to read a file named ``traffic-ops-test.config`` in the working directory.
+	Specify the path to the `Test Configuration File`_. If not specified, it will attempt to read a file named ``traffic-ops-test.conf`` in the working directory.
 
 	.. seealso:: `Configuring the Integration Tests`_ for a detailed explanation of the format of this configuration file.
 .. option:: --fixtures FIXTURES
@@ -375,6 +379,10 @@ Configuration is mainly done through the configuration file passed as :option:`-
 
 	If set, will define the URL at which the Traffic Ops instance is running - including port number.
 
+.. envvar:: TO_USER_ADMIN
+
+	If set, will define the name of a user with the "admin" :term:`Role` that will be created by the tests\ [#existinguser]_.
+
 .. envvar:: TO_USER_DISALLOWED
 
 	If set, will define the name of a user with the "disallowed" :term:`Role` that will be created by the tests\ [#existinguser]_.
@@ -405,27 +413,119 @@ Configuration is mainly done through the configuration file passed as :option:`-
 
 	If set, will define the name of a user with the "read-only" :term:`Role` that will be created by the tests\ [#existinguser]_.
 
+Test Configuration File
+'''''''''''''''''''''''
+The configuration file for the tests (defined by :option:`--cfg`) is a JSON-encoded object with the following properties.
 
-The KableTown CDN example
--------------------------
-The integration tests will load an example CDN with most of the features of Traffic Control being used. This is mostly for testing purposes, but can also be used as an example of how to configure certain features. To load the KableTown CDN example and access it:
+.. warning:: Many of these configuration options are overridden by variables in the execution environment. Where this is a problem, there is an associated warning. In general, this issue is tracked by :issue:`3975`.
 
-#. Be sure the integration tests have been run
-#. Start the Traffic Ops server. The :envvar:`MOJO_MODE` environment variable should be set to the name of the environment that has been loaded.
+:default: An object containing sub-objects relating to default configuration settings for connecting to external resources during testing
 
-	.. code-block:: bash
-		:caption: Example Startup
+	:logLocations: An object containing key/value pairs where the keys are log levels and each associated value is the file location to which logs of that level will be written. The allowed values respect the `reserved special names used by the github.com/apache/trafficcontrol/lib/go-log package <https://godoc.org/github.com/apache/trafficcontrol/lib/go-log#pkg-constants>`_. Omitted keys are treated as though their values were ``null``, in which case that level is written to `/dev/null`. The allowed keys are:
 
-		export MOJO_MODE=integration
-		cd app/
-		bin/start.pl
+		- debug
+		- error
+		- event
+		- info
+		- warning
 
-#. Using a web browser, navigate to the address Traffic Ops is serving, e.g. ``http://127.0.0.1:3000`` for default settings
-#. For the initial log in:
+	:session: An object containing key/value pairs that define the default settings used by Traffic Ops "session" connections
 
-	:User name: ``admin``
-	:Password: ``password``
+		:timeoutInSecs: At the time of this writing this is the only meaningful configuration option that may be present under ``session``. It specifies the timeouts used by client connections during testing as an integer number of seconds. The default if not specified (or overridden) is 0, meaning no limit.
 
+			.. warning:: This configuration is overridden by :envvar:`SESSION_TIMEOUT_IN_SECS`.
+
+:trafficOps: An object containing information that defines the running Traffic Ops instance to use in testing.
+
+	:password: This password will be used for all created users used by the test suite - it does not need to be the password of any pre-existing user. The default if not specified (or overridden) is an empty string, which may or may not cause problems.
+
+		.. warning:: This is overridden by :envvar:`TO_USER_PASSWORD`.
+
+	:URL: The network location of the running Traffic Ops server, including schema, hostname and optionally port number e.g. ``https://localhost:6443``.
+
+		.. warning:: This is overridden by :envvar:`TO_URL`.
+
+
+	:users: An object containing key-value pairs where the keys are the names of :term:`Roles` and the values are the usernames of users that will be created with the associated :term:`Role` for testing purposes. *There are very few good reasons why the values should not just be the same as the keys*. The default for any missing (and not overridden) key is the empty string which is *won't* work so please don't leave any undefined. The allowed keys are:
+
+		- admin
+
+			.. warning:: The value of this key is overridden by :envvar:`TO_USER_ADMIN`.
+
+		- disallowed
+
+			.. warning:: The value of this key is overridden by :envvar:`TO_USER_DISALLOWED`.
+
+		- extension
+
+			.. warning:: The value of this key is overridden by :envvar:`TO_USER_EXTENSION`.
+
+		- federation
+
+			.. warning:: The value of this key is overridden by :envvar:`TO_USER_FEDERATION`.
+
+		- operations
+
+			.. warning:: The value of this key is overridden by :envvar:`TO_USER_OPERATIONS`.
+
+		- portal
+
+			.. warning:: The value of this key is overridden by :envvar:`TO_USER_PORTAL`.
+
+		- readOnly
+
+			.. warning:: The value of this key is overridden by :envvar:`TO_USER_READ_ONLY`.
+
+:trafficOpsDB: An object containing information that defines the database to use in testing\ [#integrationdb]_.
+
+	:dbname: The name of the database to which the tests will connect\ [#integrationdb]_.
+
+		.. warning:: This is overridden by :envvar:`TODB_NAME`.
+
+	:description: An utterly cosmetic option that need not exist at all which, if set, gives a description of the database to which the tests will connect. This has no effect except possibly changing one line of debug output.
+
+		.. warning:: This is overridden by :envvar:`TODB_DESCRIPTION`
+
+	:hostname: The :abbr:`FQDN (Fully Qualified Domain Name)` of the server on which the database is running\ [#integrationdb]_
+
+		.. warning:: This is overridden by :envvar:`TODB_HOSTNAME`.
+
+	:password: The password to use when authenticating with the database
+
+		.. warning:: This is overridden by :envvar:`TODB_PASSWORD`.
+
+	:port: The port on which the database listens for connections\ [#integrationdb]_ - as a **string**
+
+		.. warning:: This is overridden by :envvar:`TODB_PORT`.
+
+	:type: The "type" of database being used\ [#integrationdb]_. This should **never** be set to anything besides ``"Pg"``, anything else results in undefined behavior (although it's equally possible that it simply won't have any effect).
+
+		.. warning:: This is overridden by :envvar:`TODB_TYPE`.
+
+	:ssl: An optional boolean value that defines whether or not the database uses SSL encryption for its connections - default if not specified (or overridden) is ``false``
+
+		.. warning:: This is overridden by :envvar:`TODB_SSL`.
+
+	:user: The name of the user as whom to authenticate with the database
+
+		.. warning:: This is overridden by :envvar:`TODB_USER`.
+
+Writing New Endpoints
+=====================
+All new :ref:`to-api` endpoints should be written in Go, so writing endpoints for the Perl implementation is not discussed here. Furthermore, most new endpoints are accompanied by database schema changes which necessitate a new migration under :atc-file:`traffic_ops/app/db/migrations` and database best-practices are not discussed in this section.
+
+The first thing to consider when writing a new endpoint is what the requests it will serve will look like. It's recommended that new endpoints avoid using "path parameters" when possible, and instead try to utilize request bodies and/or query string parameters. For example, instead of ``/foos/{{ID}}`` consider simply ``/foos`` with a supported ``id`` query parameter. The request *methods* should be restricted to the following, and respect each method's associated meaning.
+
+DELETE
+	Removes a resource or one or more of its representations from the server. This should **always** be the method used when deleting objects.
+GET
+	Retrieves a representation of some resource. This should *always* be used for read-only operations and note that the requesting client **never** expects the state of the server to change as a result of a request using the GET method.
+POST
+	Requests that the server process some passed data. This is used most commonly to create new objects on the server, but can also be used more generally e.g. with a request for regenerating encryption keys. Although this isn't strictly creating new API resources, it does change the state of the server and so this is more appropriate that GET.
+PUT
+	Places a new representation of some resource on the server. This is typically used for updating existing objects. For creating *new* representations/objects, use POST instead.
+
+The HEAD and OPTIONS request methods have default implementations for any properly defined :ref:`to-api` route, and so should almost never be defined explicitly.
 
 Extensions
 ==========
