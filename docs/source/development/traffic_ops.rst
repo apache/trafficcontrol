@@ -78,7 +78,7 @@ Go Implementation Requirements
 
 All Go code dependencies are managed through the :atc-file:`vendor/` directory and should thus be available without any extra work - and any new dependencies should be properly "vendored" into that same, top-level directory. Some dependencies have been "vendored" into :atc-file:`traffic_ops/vendor` and :atc-file:`traffic_ops/traffic_ops_golang/vendor` but the preferred location for new dependencies is under that top-level :atc-file:`vendor/` directory.
 
-Per the Go language standard's authoritative source's recommendation, all sub-packages of ``golang.org/x`` are treated as a part of the compiler, and so need not ever be "vendored" as though they were an external dependency. These dependencies are not listed explicitly here, so it is strongly advised that they be fetched using :manpage:`goget(1)` rather than downloaded by hand.
+Per the Go language standard's authoritative source's recommendation, all sub-packages of ``golang.org/x`` are treated as a part of the compiler, and so need not ever be "vendored" as though they were an external dependency. These dependencies are not listed explicitly here, so it is strongly advised that they be fetched using :manpage:`go-get(1)` rather than downloaded by hand.
 
 .. tip:: All new dependencies need to be subject to community review to ensure necessity (because it will be added in its entirety to the repository, after all) and license compliance via `the developer mailing list <mailto:dev@trafficcontrol.apache.org>`.
 
@@ -261,14 +261,23 @@ Installing The Developer Environment
 ====================================
 To install the Traffic Ops Developer environment:
 
-#. Clone the `Traffic Control repository <https://github.com/apache/trafficcontrol>`_ from GitHub.
+#. Clone the `Traffic Control repository <https://github.com/apache/trafficcontrol>`_ from GitHub. In most cases it is best to clone this directly into :file:`{GOPATH}/src/github.com/apache/trafficcontrol`, as otherwise the Go implementation will not function properly.
 #. Install the local dependencies using `Carton <https://metacpan.org/release/Carton>`_.
 
-	.. code-block:: shell
-		:caption: Install Development Dependencies
+	.. code-block:: bash
+		:caption: Install Perl Dependencies
 
+		# assuming current working directory is the repository root
 		cd traffic_ops/app
 		carton
+
+#. Install any required Go dependencies - the suggested method is using :manpage:`go-get(1)`.
+
+	.. code-block:: bash
+		:caption: Install Go Development Dependencies
+
+		# assuming current working directory is the repository root
+		go get -v ./lib/... ./traffic_ops/traffic_ops_golang/...
 
 #. Set up a role (user) in PostgreSQL
 
@@ -276,10 +285,6 @@ To install the Traffic Ops Developer environment:
 
 
 #. Use the ``reset`` and ``upgrade`` :option:`command`\ s of :program:`admin` (see :ref:`database-management` for usage) to set up the ``traffic_ops`` database(s).
-#. (Optional) To load the 'KableTown' example/testing data set into the tables, use the :file:`app/bin/db/setup_kabletown.pl` script.
-
-	.. note:: To ensure proper paths to Perl libraries and resource files, ``setup_kabletown.pl`` should be run from within the ``app/`` directory.
-
 #. Run the :atc-file:`traffic_ops/install/bin/postinstall` script, it will prompt for information like the default user login credentials
 #. To run Traffic Ops, follow the instructions in :ref:`to-running`.
 
