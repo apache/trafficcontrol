@@ -174,7 +174,7 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 			fedID:       -1,
 			resolverIDs: frIDs[0:0],
 			replace:     false,
-			err:         "Resource not found",
+			err:         "Internal Server Error",
 		},
 	}
 
@@ -194,17 +194,17 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 	testCases := []struct {
 		description string
 		fedID       int
-		count       int
+		hasRecords  bool
 	}{
 		{
 			description: "successfully get federation_federation_resolvers for a federation with some",
 			fedID:       fedIDs[0],
-			count:       4,
+			hasRecords:  true,
 		},
 		{
 			description: "successfully get federation_federation_resolvers for a federation without any",
 			fedID:       fedIDs[1],
-			count:       0,
+			hasRecords:  false,
 		},
 	}
 
@@ -214,8 +214,8 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error getting federation federation resolvers by federation id: %d, err: %s", c.fedID, err.Error())
 			}
-			if len(resp.Response) != c.count {
-				t.Fatalf("expected result set of length %d, got %d", c.count, len(resp.Response))
+			if len(resp.Response) == 0 && c.hasRecords {
+				t.Fatalf("expected federation of ID %d to have associated federation resolvers, but had 0", c.fedID)
 			}
 		})
 	}
