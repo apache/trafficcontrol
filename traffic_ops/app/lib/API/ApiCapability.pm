@@ -168,7 +168,7 @@ sub create {
 
 	my $insert = $self->db->resultset('ApiCapability')->create($values);
 	my $rs     = $insert->insert();
-	my $alt = "[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities.html#post]"
+	my $alt = "[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities.html#post]";
 	if ($rs) {
 		my $response;
 		$response->{id}          = $rs->id;
