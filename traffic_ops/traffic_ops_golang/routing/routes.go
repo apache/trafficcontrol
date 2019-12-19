@@ -127,7 +127,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 	routes := []Route{
 		// 1.1 and 1.2 routes are simply a Go replacement for the equivalent Perl route. They may or may not conform with the API guidelines (https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
-		// 1.3 routes exist only in a Go. There is NO equivalent Perl route. They should conform with the API guidelines (https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
+		// 1.3 routes exist only in Go. There is NO equivalent Perl route. They should conform with the API guidelines (https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
 
 		// NOTE: Route IDs are immutable and unique. DO NOT change the ID of an existing Route; otherwise, existing
 		// configurations may break. New Route IDs can be any integer between 0 and 2147483647 (inclusive), as long as
