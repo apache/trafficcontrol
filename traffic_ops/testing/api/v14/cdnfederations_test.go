@@ -118,13 +118,13 @@ func GetTestCDNFederations(t *testing.T) {
 
 func AssignTestFederationFederationResolvers(t *testing.T) {
 	// Setup
-	if len(fedIDs) < 1 {
-		t.Fatal("no federations to test")
+	if len(fedIDs) < 2 {
+		t.Fatal("not enough federations to test")
 	}
 
 	frCnt := len(testData.FederationResolvers)
-	if frCnt < 1 {
-		t.Fatal("no federation resolvers to test")
+	if frCnt < 2 {
+		t.Fatal("not enough federation resolvers to test")
 	}
 
 	frs, _, err := TOSession.GetFederationResolvers()
@@ -174,7 +174,7 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 			fedID:       -1,
 			resolverIDs: frIDs[0:0],
 			replace:     false,
-			err:         "Internal Server Error",
+			err:         "no such Federation",
 		},
 	}
 
@@ -191,6 +191,10 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 }
 
 func GetTestFederationFederationResolvers(t *testing.T) {
+	if len(fedIDs) < 2 {
+		t.Fatal("not enough federations to test")
+	}
+
 	testCases := []struct {
 		description string
 		fedID       int

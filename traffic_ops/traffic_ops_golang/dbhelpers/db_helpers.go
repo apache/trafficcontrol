@@ -319,7 +319,8 @@ func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNNa
 }
 
 // GetFederationResolversByFederationID fetches all of the federation resolvers currently assigned to a federation.
-func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.FederationResolver, bool, error) {
+// In the event of an error, it will return an empty slice and the error.
+func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) (resolvers []tc.FederationResolver, err error) {
 	qry := `
 		SELECT
 		  fr.ip_address,
@@ -333,14 +334,16 @@ func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.Federatio
 		  ffr.federation = $1
 	`
 	rows, err := tx.Query(qry, fedID)
+	if err == sql.ErrNoRows {
+		return resolvers, nil
+	}
 	if err != nil {
-		return nil, false, fmt.Errorf(
+		return resolvers, fmt.Errorf(
 			"error querying federation_resolvers by federation ID [%d]: %s", fedID, err.Error(),
 		)
 	}
 	defer rows.Close()
 
-	resolvers := []tc.FederationResolver{}
 	for rows.Next() {
 		fr := tc.FederationResolver{}
 		err := rows.Scan(
@@ -349,19 +352,22 @@ func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.Federatio
 			&fr.ID,
 		)
 		if err != nil {
-			return nil, false, fmt.Errorf(
+			return resolvers, fmt.Errorf(
 				"error scanning federation_resolvers rows for federation ID [%d]: %s", fedID, err.Error(),
 			)
 		}
 		resolvers = append(resolvers, fr)
 	}
-	return resolvers, true, nil
+	return resolvers, nil
 }
 
-// GetFederationNameFromID returns the federation's name.
+// GetFederationNameFromID returns the federation's name, whether a federation with ID exists, or any error.
 func GetFederationNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	var name string
 	if err := tx.QueryRow(`SELECT cname from federation where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
 		return name, false, fmt.Errorf(
 			"error querying federation name from id [%d]: %s", id, err.Error(),
 		)

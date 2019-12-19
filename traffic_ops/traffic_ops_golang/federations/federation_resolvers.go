@@ -44,9 +44,9 @@ func GetFederationFederationResolversHandler(w http.ResponseWriter, r *http.Requ
 	defer inf.Close()
 
 	fedID := inf.IntParams["id"]
-	frs, _, err := dbhelpers.GetFederationResolversByFederationID(inf.Tx.Tx, fedID)
+	frs, err := dbhelpers.GetFederationResolversByFederationID(inf.Tx.Tx, fedID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, fmt.Errorf("database exception: %v", err), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))
 		return
 	}
 
@@ -64,14 +64,18 @@ func AssignFederationResolversToFederationHandler(w http.ResponseWriter, r *http
 
 	var reqObj tc.AssignFederationResolversRequest
 	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, fmt.Errorf("malformed JSON: %v", err), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("malformed JSON: %v", err), nil)
 		return
 	}
 
 	fedID := inf.IntParams["id"]
-	name, _, err := dbhelpers.GetFederationNameFromID(fedID, inf.Tx.Tx)
+	name, ok, err := dbhelpers.GetFederationNameFromID(fedID, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("'%d': no such Federation", fedID), nil)
 		return
 	}
 
