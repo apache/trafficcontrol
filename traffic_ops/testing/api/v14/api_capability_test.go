@@ -25,27 +25,27 @@ func TestAPICapabilities(t *testing.T) {
 		capability  string
 		order       string
 		first       string
-		count       int
+		hasRecords  bool
 	}{
 		{
 			description: "Successfully get all asns-write API Capabilities",
 			capability:  "asns-write",
-			count:       3,
+			hasRecords:  true,
 		},
 		{
 			description: "Successfully get all asns-read API Capabilities",
 			capability:  "asns-read",
-			count:       2,
+			hasRecords:  true,
 		},
 		{
 			description: "Successfully get all cache-groups-read API Capabilities",
 			capability:  "cache-groups-read",
-			count:       9,
+			hasRecords:  true,
 		},
 		{
 			description: "Fail to get any API Capabilities with a bogus capability",
 			capability:  "foo",
-			count:       0,
+			hasRecords:  false,
 		},
 		{
 			description: "Successfully get all API Capabilities in order of HTTP Method",
@@ -59,11 +59,11 @@ func TestAPICapabilities(t *testing.T) {
 			caps, _, err := TOSession.GetAPICapabilities(c.capability, c.order)
 
 			if err != nil {
-				t.Fatalf("error: expected error result: %v", err)
+				t.Fatalf("error retrieving API capabilities: %s", err.Error())
 			}
 
-			if c.count != 0 && len(caps.Response) != c.count {
-				t.Fatalf("error: expected len(caps) to be %d, got %d", c.count, len(caps.Response))
+			if len(caps.Response) == 0 && c.hasRecords {
+				t.Fatalf("error: expected capability %s to have records, but found 0", c.capability)
 			}
 
 			if c.order != "" {

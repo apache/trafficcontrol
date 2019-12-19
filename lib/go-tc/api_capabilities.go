@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// APICapability represents a Traffic Ops API route.
+// APICapability represents an association between a Traffic Ops API route and a required capability.
 type APICapability struct {
 	ID          int       `json:"id" db:"id"`
 	HTTPMethod  string    `json:"httpMethod" db:"http_method"`

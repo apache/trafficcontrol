@@ -117,7 +117,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Portal - Turn off TLSv1
 
 ### Deprecated/Removed
-- Traffic Ops Golang Endpoints
+- Traffic Ops API Endpoints
   - /api/1.1/cachegroup_fallbacks
   - /api_capabilities `POST`
 

@@ -1,4 +1,4 @@
-package api_capability
+package apicapability
 
 import (
 	"testing"
@@ -62,7 +62,7 @@ func TestGetAPICapabilities(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	results, userErr, sysErr := getAPICapabilities(db.MustBegin(), map[string]string{})
+	results, _, userErr, sysErr := getAPICapabilities(db.MustBegin(), map[string]string{})
 
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)

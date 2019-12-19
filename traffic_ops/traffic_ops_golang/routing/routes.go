@@ -35,7 +35,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api_capability"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apicapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apiriak"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn"
@@ -135,7 +135,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// it's unique.
 
 		// API Capability
-		{1.1, http.MethodGet, `api_capabilities/?(\.json)?$`, api_capability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 1813206589, perlBypass},
+		{1.1, http.MethodGet, `api_capabilities/?(\.json)?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 1813206589, perlBypass},
 
 		//ASN: CRUD
 		{1.2, http.MethodGet, `asns/?(\.json)?$`, api.ReadHandler(&asn.TOASNV11{}), auth.PrivLevelReadOnly, Authenticated, nil, 473877722, noPerlBypass},

@@ -1,11 +1,11 @@
-package api_capability
+package apicapability
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -30,6 +30,9 @@ import (
  * under the License.
  */
 
+// GetAPICapabilitiesHandler implements an http handler that returns
+// API Capabilities. In the event a capability parameter is supplied,
+// it will return only those with an exact match.
 func GetAPICapabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -38,15 +41,9 @@ func GetAPICapabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	results, usrErr, sysErr := getAPICapabilities(inf.Tx, inf.Params)
-
-	if usrErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, usrErr, nil)
-		return
-	}
-
-	if sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, sysErr)
+	results, errCode, usrErr, sysErr := getAPICapabilities(inf.Tx, inf.Params)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, usrErr, sysErr)
 		return
 	}
 
@@ -54,7 +51,8 @@ func GetAPICapabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapability, error, error) {
+func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapability, int, error, error) {
+	var err error
 	selectQuery := `SELECT id, http_method, route, capability, last_updated FROM api_capability`
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"id":          dbhelpers.WhereColumnInfo{"id", api.IsInt},
@@ -68,25 +66,22 @@ func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapabili
 		dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
 
 	if len(errs) > 0 {
-		return nil, errors.New(
-			fmt.Sprintf(
-				"query exception: could not build api_capbility query with params: %v, error: %s",
-				params,
-				errs[0].Error(),
-			),
-		), nil
+		err = util.JoinErrs(errs)
+		return nil, http.StatusInternalServerError, nil, fmt.Errorf(
+			"query exception: could not build api_capbility query with params: %v, error: %v",
+			params,
+			err,
+		)
 	}
 
 	query := selectQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, errors.New(
-			fmt.Sprintf(
-				"db exception: could not execute api_capbility query with params: %v, error: %s",
-				params,
-				err.Error(),
-			),
-		), nil
+		return nil, http.StatusInternalServerError, nil, fmt.Errorf(
+			"db exception: could not execute api_capbility query with params: %v, error: %v",
+			params,
+			err,
+		)
 	}
 	defer rows.Close()
 
@@ -101,10 +96,12 @@ func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapabili
 			&ac.LastUpdated,
 		)
 		if err != nil {
-			return nil, nil, errors.New(fmt.Sprintf("api capability read: scanning: %s", err.Error()))
+			return nil, http.StatusInternalServerError, nil, fmt.Errorf(
+				"api capability read: scanning: %v", err,
+			)
 		}
 		apiCaps = append(apiCaps, ac)
 	}
 
-	return apiCaps, nil, nil
+	return apiCaps, 0, nil, nil
 }
