@@ -2447,6 +2447,17 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request(u'put', u'user/current', (u'1.1', u'1.2', u'1.3', u'1.4'))
+	def replace_authenticated_user(self, data=None):
+		"""
+		Updates the currently authenticated user.
+		:ref:`to-api-user-current`
+		:param data: The new user information which will replace the current user's user information.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	@api_request(u'get', u'user/current/jobs', (u'1.1', u'1.2', u'1.3',))
 	def get_authenticated_user_jobs(self):
 		"""

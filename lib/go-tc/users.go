@@ -20,10 +20,15 @@ package tc
  */
 
 import "database/sql"
+import "encoding/json"
 import "errors"
+import "fmt"
 
 import "github.com/apache/trafficcontrol/lib/go-rfc"
 import "github.com/apache/trafficcontrol/lib/go-util"
+
+import "github.com/go-ozzo/ozzo-validation"
+import "github.com/go-ozzo/ozzo-validation/is"
 
 // UserCredentials contains Traffic Ops login credentials
 type UserCredentials struct {
@@ -90,10 +95,11 @@ type commonUserFields struct {
 
 // User fields in v14 have been updated to be nullable
 type User struct {
-	Username         *string    `json:"username" db:"username"`
-	RegistrationSent *TimeNoMod `json:"registrationSent" db:"registration_sent"`
-	LocalPassword    *string    `json:"localPasswd,omitempty" db:"local_passwd"`
-	RoleName         *string    `json:"roleName,omitempty" db:"rolename"`
+	Username             *string    `json:"username" db:"username"`
+	RegistrationSent     *TimeNoMod `json:"registrationSent" db:"registration_sent"`
+	LocalPassword        *string    `json:"localPasswd,omitempty" db:"local_passwd"`
+	ConfirmLocalPassword *string    `json:"confirmLocalPasswd,omitempty" db:"confirm_local_passwd"`
+	RoleName             *string    `json:"roleName,omitempty" db:"-"`
 	commonUserFields
 }
 
@@ -103,6 +109,165 @@ type UserCurrent struct {
 	LocalUser *bool   `json:"localUser"`
 	RoleName  *string `json:"roleName"`
 	commonUserFields
+}
+
+// CurrentUserUpdateRequest differs from a regular User/UserCurrent in that many of its fields are
+// *parsed* but not *unmarshaled*. This allows a handler to distinguish between "null" and
+// "undefined" values.
+type CurrentUserUpdateRequest struct {
+	// User, for whatever reason, contains all of the actual data.
+	User CurrentUserUpdateRequestUser `json:"user"`
+}
+
+// CurrentUserUpdateRequestUser holds all of the actual data in a request to update the current user.
+type CurrentUserUpdateRequestUser struct {
+	AddressLine1       json.RawMessage `json:"addressLine1"`
+	AddressLine2       json.RawMessage `json:"addressLine2"`
+	City               json.RawMessage `json:"city"`
+	Company            json.RawMessage `json:"company"`
+	ConfirmLocalPasswd *string         `json:"confirmLocalPasswd"`
+	Country            json.RawMessage `json:"country"`
+	Email              json.RawMessage `json:"email"`
+	FullName           json.RawMessage `json:"fullName"`
+	GID                json.RawMessage `json:"gid"`
+	ID                 json.RawMessage `json:"id"`
+	LocalPasswd        *string         `json:"localPasswd"`
+	PhoneNumber        json.RawMessage `json:"phoneNumber"`
+	PostalCode         json.RawMessage `json:"postalCode"`
+	PublicSSHKey       json.RawMessage `json:"publicSshKey"`
+	Role               json.RawMessage `json:"role"`
+	StateOrProvince    json.RawMessage `json:"stateOrProvince"`
+	TenantID           json.RawMessage `json:"tenantId"`
+	UID                json.RawMessage `json:"uid"`
+	Username           json.RawMessage `json:"username"`
+}
+
+// UnmarshalAndValidate validates the request and returns a User into which the request's information
+// has been unmarshalled.
+func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
+	errs := []error{}
+	if u.AddressLine1 != nil {
+		if err := json.Unmarshal(u.AddressLine1, &user.AddressLine1); err != nil {
+			errs = append(errs, fmt.Errorf("addressLine1: %v", err))
+		}
+	}
+
+	if u.AddressLine2 != nil {
+		if err := json.Unmarshal(u.AddressLine2, &user.AddressLine2); err != nil {
+			errs = append(errs, fmt.Errorf("addressLine2: %v", err))
+		}
+	}
+
+	if u.City != nil {
+		if err := json.Unmarshal(u.City, &user.City); err != nil {
+			errs = append(errs, fmt.Errorf("city: %v", err))
+		}
+	}
+
+	if u.Company != nil {
+		if err := json.Unmarshal(u.Company, &user.Company); err != nil {
+			errs = append(errs, fmt.Errorf("company: %v", err))
+		}
+	}
+
+	user.ConfirmLocalPassword = u.ConfirmLocalPasswd
+	user.LocalPassword = u.LocalPasswd
+
+	if u.Country != nil {
+		if err := json.Unmarshal(u.Country, &user.Country); err != nil {
+			errs = append(errs, fmt.Errorf("country: %v", err))
+		}
+	}
+
+	if u.Email != nil {
+		if err := json.Unmarshal(u.Email, &user.Email); err != nil {
+			errs = append(errs, fmt.Errorf("email: %v", err))
+		} else if err = validation.Validate(*user.Email, is.Email); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if u.FullName != nil {
+		if err := json.Unmarshal(u.FullName, &user.FullName); err != nil {
+			errs = append(errs, fmt.Errorf("fullName: %v", err))
+		} else if user.FullName == nil || *user.FullName == "" {
+			// Perl enforced this
+			errs = append(errs, fmt.Errorf("fullName: cannot be set to 'null' or empty string"))
+		}
+	}
+
+	if u.GID != nil {
+		if err := json.Unmarshal(u.GID, &user.GID); err != nil {
+			errs = append(errs, fmt.Errorf("gid: %v", err))
+		}
+	}
+
+	if u.ID != nil {
+		var uid int
+		if err := json.Unmarshal(u.ID, &uid); err != nil {
+			errs = append(errs, fmt.Errorf("id: %v", err))
+		} else if user.ID != nil && *user.ID != uid {
+			errs = append(errs, errors.New("id: cannot change user id"))
+		} else {
+			user.ID = &uid
+		}
+	}
+
+	if u.PhoneNumber != nil {
+		if err := json.Unmarshal(u.PhoneNumber, &user.PhoneNumber); err != nil {
+			errs = append(errs, fmt.Errorf("phoneNumber: %v", err))
+		}
+	}
+
+	if u.PostalCode != nil {
+		if err := json.Unmarshal(u.PostalCode, &user.PostalCode); err != nil {
+			errs = append(errs, fmt.Errorf("postalCode: %v", err))
+		}
+	}
+
+	if u.PublicSSHKey != nil {
+		if err := json.Unmarshal(u.PublicSSHKey, &user.PublicSSHKey); err != nil {
+			errs = append(errs, fmt.Errorf("publicSshKey: %v", err))
+		}
+	}
+
+	if u.Role != nil {
+		if err := json.Unmarshal(u.Role, &user.Role); err != nil {
+			errs = append(errs, fmt.Errorf("role: %v", err))
+		} else if user.Role == nil {
+			errs = append(errs, errors.New("role: cannot be null"))
+		}
+	}
+
+	if u.StateOrProvince != nil {
+		if err := json.Unmarshal(u.StateOrProvince, &user.StateOrProvince); err != nil {
+			errs = append(errs, fmt.Errorf("stateOrProvince: %v", err))
+		}
+	}
+
+	if u.TenantID != nil {
+		if err := json.Unmarshal(u.TenantID, &user.TenantID); err != nil {
+			errs = append(errs, fmt.Errorf("tenantID: %v", err))
+		} else if user.TenantID == nil {
+			errs = append(errs, errors.New("tenantID: cannot be null"))
+		}
+	}
+
+	if u.UID != nil {
+		if err := json.Unmarshal(u.UID, &user.UID); err != nil {
+			errs = append(errs, fmt.Errorf("uid: %v", err))
+		}
+	}
+
+	if u.Username != nil {
+		if err := json.Unmarshal(u.Username, &user.Username); err != nil {
+			errs = append(errs, fmt.Errorf("username: %v"))
+		} else if user.Username == nil || *user.Username == "" {
+			errs = append(errs, errors.New("username: cannot be null or empty string"))
+		}
+	}
+
+	return util.JoinErrs(errs)
 }
 
 // ------------------- Response structs -------------------- //
