@@ -75,7 +75,7 @@ func AssignFederationResolversToFederationHandler(w http.ResponseWriter, r *http
 		return
 	}
 	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("'%d': no such Federation", fedID), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("'%d': no such Federation", fedID), nil)
 		return
 	}
 

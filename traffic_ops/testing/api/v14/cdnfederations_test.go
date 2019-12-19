@@ -174,7 +174,7 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 			fedID:       -1,
 			resolverIDs: frIDs[0:0],
 			replace:     false,
-			err:         "no such Federation",
+			err:         "Resource not found",
 		},
 	}
 
