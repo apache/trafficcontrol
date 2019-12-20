@@ -261,7 +261,7 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 
 	if u.Username != nil {
 		if err := json.Unmarshal(u.Username, &user.Username); err != nil {
-			errs = append(errs, fmt.Errorf("username: %v"))
+			errs = append(errs, fmt.Errorf("username: %v", err))
 		} else if user.Username == nil || *user.Username == "" {
 			errs = append(errs, errors.New("username: cannot be null or empty string"))
 		}
