@@ -32,12 +32,12 @@ import (
  * under the License.
  */
 
-// ProfilesResponse ...
+// ProfilesResponse is a list of profiles returned by GET requests.
 type ProfilesResponse struct {
 	Response []Profile `json:"response"`
 }
 
-// A Single Profile Response for Update and Create to depict what changed
+// ProfileResponse is a single Profile Response for Update and Create to depict what changed
 // swagger:response ProfileResponse
 // in: body
 type ProfileResponse struct {
@@ -59,45 +59,35 @@ type Profile struct {
 	Parameters      []ParameterNullable `json:"params,omitempty"`
 }
 
+// ProfileNullable allows all fields to be 'null'
 type ProfileNullable struct {
-
-	// Unique identifier for the Profile
-	//
-	ID *int `json:"id" db:"id"`
-
-	// LastUpdated
-	//
-	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-
-	// The Profile name
-	//
-	Name *string `json:"name" db:"name"`
-
-	// The Profile Description
-	//
-	Description *string `json:"description" db:"description"`
-
-	// The CDN name associated with the Profile
-	//
-	CDNName *string `json:"cdnName" db:"cdn_name"`
-
-	// The CDN id associated with the Profile
-	//
-	CDNID *int `json:"cdn" db:"cdn"`
-
-	// Enables
-	//
-	RoutingDisabled *bool `json:"routingDisabled" db:"routing_disabled"`
-
-	// The Type name associated with the Profile
-	//
-	Type *string `json:"type" db:"type"`
-
-	// Parameters associated to the profile
-	//
-	Parameters []ParameterNullable `json:"params,omitempty"`
+	ID              *int                `json:"id" db:"id"`
+	LastUpdated     *TimeNoMod          `json:"lastUpdated" db:"last_updated"`
+	Name            *string             `json:"name" db:"name"`
+	Description     *string             `json:"description" db:"description"`
+	CDNName         *string             `json:"cdnName" db:"cdn_name"`
+	CDNID           *int                `json:"cdn" db:"cdn"`
+	RoutingDisabled *bool               `json:"routingDisabled" db:"routing_disabled"`
+	Type            *string             `json:"type" db:"type"`
+	Parameters      []ParameterNullable `json:"params,omitempty"`
 }
 
+// ProfileCopy contains details about the profile created from an existing profile.
+type ProfileCopy struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	ExistingID   int    `json:"idCopyFrom"`
+	ExistingName string `json:"profileCopyFrom"`
+	Description  string `json:"description"`
+}
+
+// ProfileCopyResponse represents the API response when a profile is copied
+type ProfileCopyResponse struct {
+	Response ProfileCopy `json:"response"`
+	Alerts
+}
+
+// ProfileTrimmed ...
 type ProfileTrimmed struct {
 	Name string `json:"name"`
 }
@@ -142,6 +132,7 @@ type ProfileImportResponse struct {
 	Alerts
 }
 
+// ProfileImportResponseObj contains data about the profile being imported
 type ProfileImportResponseObj struct {
 	ProfileExportImportNullable
 	ID *int `json:"id"`

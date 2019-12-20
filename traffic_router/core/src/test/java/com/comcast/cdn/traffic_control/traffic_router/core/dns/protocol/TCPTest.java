@@ -33,6 +33,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +57,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 @PrepareForTest({AbstractProtocol.class, Message.class})
 public class TCPTest {
     private Socket socket;
-    private ExecutorService executorService;
+    private ThreadPoolExecutor executorService;
+    private ExecutorService cancelService;
+    private LinkedBlockingQueue queue;
     private NameServer nameServer;
 
     private TCP tcp;
@@ -67,17 +71,22 @@ public class TCPTest {
     public void setUp() throws Exception {
         ServerSocket serverSocket = mock(ServerSocket.class);
         socket = mock(Socket.class);
-        executorService = mock(ExecutorService.class);
+        executorService = mock(ThreadPoolExecutor.class);
+        cancelService = mock(ExecutorService.class);
         nameServer = mock(NameServer.class);
+        queue = mock(LinkedBlockingQueue.class);
         tcp = new TCP();
         tcp.setServerSocket(serverSocket);
         tcp.setExecutorService(executorService);
+        tcp.setCancelService(cancelService);
         tcp.setNameServer(nameServer);
 
         in = mock(ByteArrayInputStream.class);
         client = InetAddress.getLocalHost();
         when(socket.getInetAddress()).thenReturn(client);
         when(socket.getInputStream()).thenReturn(in);
+        when(executorService.getQueue()).thenReturn(queue);
+        when(queue.size()).thenReturn(0);
     }
 
     @Test
@@ -87,7 +96,7 @@ public class TCPTest {
 
     @Test
     public void testSubmit() {
-        final Runnable r = mock(Runnable.class);
+        final SocketHandler r = mock(SocketHandler.class);
         tcp.submit(r);
         verify(executorService).submit(r);
     }

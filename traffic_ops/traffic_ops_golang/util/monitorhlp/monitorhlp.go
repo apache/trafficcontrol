@@ -27,9 +27,11 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	tmcache "github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
@@ -119,4 +121,22 @@ func GetCRConfig(monitorFQDN string, client *http.Client) (tc.CRConfig, error) {
 		return tc.CRConfig{}, errors.New("decoding CRConfig from monitor '" + monitorFQDN + "': " + err.Error())
 	}
 	return crs, nil
+}
+
+// GetCacheStats gets the cache stats from the given monitor. The stats parameters is which stats to get; if stats is empty or nil, all stats are fetched.
+func GetCacheStats(monitorFQDN string, client *http.Client, stats []string) (tmcache.Stats, error) {
+	path := `/publish/CacheStats?hc=1`
+	if len(stats) > 0 {
+		path += `&stats=` + strings.Join(stats, `,`)
+	}
+	resp, err := client.Get("http://" + monitorFQDN + path)
+	if err != nil {
+		return tmcache.Stats{}, errors.New("getting CacheStats from Monitor '" + monitorFQDN + "': " + err.Error())
+	}
+	defer resp.Body.Close()
+	cacheStats := tmcache.Stats{}
+	if err := json.NewDecoder(resp.Body).Decode(&cacheStats); err != nil {
+		return tmcache.Stats{}, errors.New("decoding CacheStats from monitor '" + monitorFQDN + "': " + err.Error())
+	}
+	return cacheStats, nil
 }
