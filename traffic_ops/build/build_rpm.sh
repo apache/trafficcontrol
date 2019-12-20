@@ -49,25 +49,30 @@ function initBuildArea() {
 
 	# compile traffic_ops_golang
 	pushd traffic_ops_golang
-	go build -v -ldflags "-X main.version=traffic_ops-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION} -B 0x`git rev-parse HEAD`" || \
+	go_build=(go build -v );
+	if [[ "$DEBUG_BUILD" == true ]]; then
+		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
+		go_build+=(-gcflags 'all=-N -l');
+	fi;
+	"${go_build[@]}" -ldflags "-X main.version=traffic_ops-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION} -B 0x$(git rev-parse HEAD)" || \
                 { echo "Could not build traffic_ops_golang binary"; exit 1; }
 	popd
 
 	# compile db/admin
 	pushd app/db
-	go build -v -o admin || \
+	"${go_build[@]}" -o admin || \
                 { echo "Could not build db/admin binary"; exit 1; }
 	popd
 
 	# compile TO profile converter
 	pushd install/bin/convert_profile
-	go build -v || \
+	"${go_build[@]}" || \
                 { echo "Could not build convert_profile binary"; exit 1; }
 	popd
 
 	# compile atstccfg
 	pushd ort/atstccfg
-	go build -v -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=${TC_VERSION}" || \
+	"${go_build[@]}" -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=${TC_VERSION}" || \
                 { echo "Could not build atstccfg binary"; exit 1; }
 	popd
 
@@ -91,6 +96,7 @@ function initBuildArea() {
 		 { echo "Could not create tar archive $to_ort_dest: $?"; exit 1; }
 
 	export PLUGINS=$(grep -l -P '(?<!func )AddPlugin\(' ${TO_DIR}/traffic_ops_golang/plugin/*.go | xargs -I '{}' basename {} '.go')
+
 	echo "The build area has been initialized."
 }
 
