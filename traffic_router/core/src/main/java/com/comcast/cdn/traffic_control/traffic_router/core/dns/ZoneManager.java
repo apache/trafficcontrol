@@ -503,7 +503,6 @@ public class ZoneManager extends Resolver {
 		final CacheRegister data = tr.getCacheRegister();
 		final Map<String, List<Record>> zoneMap = new HashMap<String, List<Record>>();
 		final Map<String, DeliveryService> dsMap = new HashMap<String, DeliveryService>();
-		final String tld = getTopLevelDomain().toString(true); // Name.toString(true) - omit the trailing dot
 
 		for (final DeliveryService ds : data.getDeliveryServices().values()) {
 			final String domain = ds.getDomain();
@@ -520,7 +519,7 @@ public class ZoneManager extends Resolver {
 
 	private static void loadZoneCacheFromDsMap(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap,
 			final CacheRegister data, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc,
-			final List<Runnable> generationTasks, BlockingQueue<Runnable> primingTasks) throws java.io.IOException {
+			final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks) throws java.io.IOException {
 		final Map<String, List<Record>> superDomains = populateZoneMap(zoneMap, dsMap, data);
 		final List<Record> superRecords = fillZones(zoneMap, dsMap, tr, zc, dzc, generationTasks, primingTasks);
 		final List<Record> upstreamRecords = fillZones(superDomains, dsMap, tr, superRecords, zc, dzc, generationTasks, primingTasks);
@@ -616,17 +615,18 @@ public class ZoneManager extends Resolver {
 			LOGGER.fatal("Unable to create zone: " + ex.getMessage(), ex);
 		}
 
-		primeZoneCache(domain, name, list, records, tr, zc, dzc, generationTasks, primingTasks, ds);
+		primeZoneCache(domain, list, records, tr, zc, dzc, generationTasks, primingTasks, ds);
 
 		return records;
 	}
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
-	private static void primeZoneCache(final String domain, final Name name, final List<Record> list, final List<Record> dsRecords, final TrafficRouter tr,
+	private static void primeZoneCache(final String domain, final List<Record> list, final List<Record> dsRecords, final TrafficRouter tr,
 			final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks,
 			final BlockingQueue<Runnable> primingTasks, final DeliveryService ds) {
 		generationTasks.add(() -> {
 			try {
+				final Name name = newName(domain);
 				final Zone zone = zc.get(getSignatureManager().generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
 				final CacheRegister data = tr.getCacheRegister();
 				final JsonNode config = data.getConfig();
@@ -644,6 +644,8 @@ public class ZoneManager extends Resolver {
 				}
 			} catch (ExecutionException ex) {
 				LOGGER.fatal("Unable to load zone into cache: " + ex.getMessage(), ex);
+			} catch (IOException ioe) {
+				LOGGER.fatal("Unable to load zone into cache: " + ioe.getMessage(), ioe);
 			}
 		});
 	}
