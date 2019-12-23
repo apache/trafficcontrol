@@ -146,36 +146,77 @@ func UserSelfUpdateTest(t *testing.T) {
 
 	resp, _, err := TOSession.GetUserByUsername("opsuser")
 	if err != nil {
-		t.Errorf("cannot GET user by name: 'opsuser', %v", err)
+		t.Fatalf("cannot GET user by name: 'opsuser', %v\n", err)
+	}
+	if len(resp) < 1 {
+		t.Fatalf("no users returned when requesting user 'opsuser'")
 	}
 	user := resp[0]
 
-	fullName := "Oops-man"
-	email := "operator@example.com"
-	user.FullName = &fullName
-	user.Email = &email
+	if user.ID == nil {
+		t.Fatalf("user 'opsuser' has a null or missing ID - cannot proceed")
+	}
+
+	user.FullName = util.StrPtr("Oops-man")
+	user.Email = util.StrPtr("operator@not.example.com")
 
 	var updateResp *tc.UpdateUserResponse
 	updateResp, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
 	if err != nil {
-		t.Errorf("cannot UPDATE user by id: %v - %v", err, updateResp)
+		t.Fatalf("cannot UPDATE user by id: %v - %v\n", err, updateResp)
 	}
 
 	// Make sure it got updated
 	resp2, _, err := TOSession.GetUserByID(*user.ID)
 	if err != nil {
-		t.Errorf("cannot GET user by id: '%d', %v", *user.ID, err)
+		t.Fatalf("cannot GET user by id: '%d', %v\n", *user.ID, err)
+	}
+	if len(resp2) < 1 {
+		t.Fatalf("no results returned when requesting user #%d", *user.ID)
 	}
 	updatedUser := resp2[0]
 
-	if updatedUser.FullName == nil || updatedUser.Email == nil {
-		t.Error("user was not correctly updated, field is null")
+	if updatedUser.FullName == nil {
+		t.Errorf("user was not correctly updated, FullName is null or missing")
+	} else if *updatedUser.FullName != "Oops-man" {
+		t.Errorf("results do not match actual: '%s', expected: 'Oops-man'\n", *updatedUser.FullName)
 	}
-	if *updatedUser.FullName != fullName {
-		t.Errorf("results do not match actual: %s, expected: %s", *updatedUser.FullName, fullName)
+
+	if updatedUser.Email == nil {
+		t.Errorf("user was not correctly updated, Email is null or missing")
+	} else if *updatedUser.Email != "operator@not.example.com" {
+		t.Errorf("results do not match actual: '%s', expected: 'operator@not.example.com'\n", *updatedUser.Email)
 	}
-	if *updatedUser.Email != email {
-		t.Errorf("results do not match acutal: %s, expected: %s", *updatedUser.Email, email)
+
+
+	// Same thing using /user/current
+	user.FullName = util.StrPtr("ops-man")
+	user.Email = util.StrPtr("operator@example.com")
+	updateResp, _, err = opsTOClient.UpdateCurrentUser(user)
+	if err != nil {
+		t.Fatalf("error updating current user: %v - %v", err, updateResp)
+	}
+
+	// Make sure it got updated
+	resp2, _, err = TOSession.GetUserByID(*user.ID)
+	if err != nil {
+		t.Fatalf("error getting user #%d: %v", *user.ID, err)
+	}
+
+	if len(resp2) < 1 {
+		t.Fatalf("no user returned when requesting user #%d", *user.ID)
+	}
+
+	if resp2[0].FullName == nil {
+		t.Errorf("FullName missing or null after update")
+	} else if *resp2[0].FullName != "ops-man" {
+		t.Errorf("Expected FullName to be 'ops-man', but it was '%s'", *resp2[0].FullName)
+	}
+
+	if resp2[0].Email == nil {
+		t.Errorf("Email missing or null after update")
+	} else if *resp2[0].Email != "operator@example.com" {
+		t.Errorf("Expected Email to be restored to 'operator@example.com', but it was '%s'", *resp2[0].Email)
 	}
 }
 

@@ -229,3 +229,15 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 
 	return &tm, nil
 }
+
+type HealthData struct {
+	TotalOffline uint64                 `json:"totalOffline"`
+	TotalOnline  uint64                 `json:"totalOnline"`
+	CacheGroups  []HealthDataCacheGroup `json:"cachegroups"`
+}
+
+type HealthDataCacheGroup struct {
+	Offline int64          `json:"offline"`
+	Online  int64          `json:"online"`
+	Name    CacheGroupName `json:"name"`
+}

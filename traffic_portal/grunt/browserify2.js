@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -42,8 +42,7 @@ module.exports = {
                                 'bootstrap-sass-official/assets/javascripts/bootstrap.min.js',
                                 'es5-shim/es5-shim.min.js',
                                 'jquery/jquery.min.js',
-                                'json3/lib/json3.min.js',
-                                'restangular/dist/restangular.min.js'
+                                'json3/lib/json3.min.js'
                             ]
                     },
                     {
@@ -104,8 +103,7 @@ module.exports = {
                                 'bootstrap-sass-official/assets/javascripts/bootstrap.js',
                                 'es5-shim/es5-shim.js',
                                 'jquery/jquery.js',
-                                'json3/lib/json3.js',
-                                'restangular/dist/restangular.js'
+                                'json3/lib/json3.js'
                             ]
                     },
                     {

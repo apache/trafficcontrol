@@ -275,7 +275,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.Customer, validation.Required),
 		validation.Field(&details.DeepCachingType, validation.By(
 			func(t interface{}) error {
-				if t == nil {
+				if t == (*DeepCachingType)(nil) {
 					return errors.New("deepCachingType: required")
 				}
 				if *t.(*DeepCachingType) == DeepCachingTypeInvalid {
@@ -285,7 +285,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 			})),
 		validation.Field(&details.DeliveryProtocol, validation.By(
 			func(p interface{}) error {
-				if p == nil {
+				if p == (*Protocol)(nil) {
 					return errors.New("deliveryProtocol: required")
 				}
 				if *p.(*Protocol) == ProtocolInvalid {
@@ -295,28 +295,28 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 			})),
 		validation.Field(&details.HasNegativeCachingCustomization, validation.By(
 			func(h interface{}) error {
-				if h == nil {
+				if h == (*bool)(nil) {
 					return errors.New("hasNegativeCachingCustomization: required")
 				}
 				return nil
 			})),
 		validation.Field(&details.HasOriginACLWhitelist, validation.By(
 			func(h interface{}) error {
-				if h == nil {
+				if h == (*bool)(nil) {
 					return errors.New("hasNegativeCachingCustomization: required")
 				}
 				return nil
 			})),
 		validation.Field(&details.HasOriginDynamicRemap, validation.By(
 			func(h interface{}) error {
-				if h == nil {
+				if h == (*bool)(nil) {
 					return errors.New("hasNegativeCachingCustomization: required")
 				}
 				return nil
 			})),
 		validation.Field(&details.HasSignedURLs, validation.By(
 			func(h interface{}) error {
-				if h == nil {
+				if h == (*bool)(nil) {
 					return errors.New("hasNegativeCachingCustomization: required")
 				}
 				return nil
@@ -324,7 +324,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.MaxLibrarySizeEstimate, validation.Required),
 		validation.Field(&details.OriginHeaders, validation.By(
 			func(h interface{}) error {
-				if h == nil {
+				if h == (*OriginHeaders)(nil) {
 					return nil
 				}
 				if len(*h.(*OriginHeaders)) < 1 {
@@ -341,7 +341,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.RoutingName, validation.Required),
 		validation.Field(&details.RoutingType, validation.By(
 			func(t interface{}) error {
-				if t == nil || *(t.(*DSType)) == "" {
+				if t == (*DSType)(nil) || *(t.(*DSType)) == "" {
 					return errors.New("routingType: required")
 				}
 				*t.(*DSType) = DSTypeFromString(string(*t.(*DSType)))
