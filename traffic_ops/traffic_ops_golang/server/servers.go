@@ -228,7 +228,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 			return nil, nil, err, http.StatusInternalServerError
 		}
 		if !exists {
-			return nil, errors.New("a deliveryservice with id '" + strconv.Itoa(dsID) + "' was not found"), nil, http.StatusBadRequest
+			return nil, fmt.Errorf("a deliveryservice with id %v was not found", dsID), nil, http.StatusBadRequest
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)

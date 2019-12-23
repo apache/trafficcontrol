@@ -82,6 +82,9 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 func CreateTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	data := testData.DeliveryServicesRequiredCapabilities
+	if len(data) == 0 {
+		t.Fatal("there must be at least one test ds required capability defined")
+	}
 	ds1 := helperGetDeliveryServiceID(t, data[0].XMLID)
 	amDS := helperGetDeliveryServiceID(t, util.StrPtr("anymap-ds"))
 	testCases := []struct {
@@ -299,6 +302,9 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 	t.Helper()
+	if xmlID == nil {
+		t.Fatal("xml id must not be nil")
+	}
 	ds, _, err := TOSession.GetDeliveryServiceByXMLID(*xmlID)
 	if err != nil {
 		t.Fatal(err)
