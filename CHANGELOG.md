@@ -48,6 +48,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/federations/:id/users/:userID
   - /api/1.2/current_stats
   - /api/1.1/osversions
+  - /api/1.1/api_capabilities `GET`
   - /api/1.1/user/current `PUT`
 
 - Traffic Router: Added a tunable bounded queue to support DNS request processing.
@@ -128,7 +129,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Removed Traffic Portal dependency on Restangular
 
 ### Deprecated/Removed
-- The TO API `cachegroup_fallbacks` endpoint is now deprecated
+- Traffic Ops API Endpoints
+  - /api/1.1/cachegroup_fallbacks
+  - /api_capabilities `POST`
 
 ## [3.0.0] - 2018-10-30
 ### Added
