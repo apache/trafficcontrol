@@ -29,7 +29,6 @@ func TestCDNFederations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServices, CDNFederations}, func() {
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
-		GetTestFederationFederationResolvers(t)
 	})
 }
 
@@ -174,7 +173,7 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 			fedID:       -1,
 			resolverIDs: frIDs[0:0],
 			replace:     false,
-			err:         "Resource not found",
+			err:         "no such Federation",
 		},
 	}
 
