@@ -99,20 +99,6 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
         );
     };
 
-    this.updateCurrentUser = function(user) {
-        return $http.post(ENV.api['root'] + "user/current/update", { user: user }).then(
-            function(result) {
-                userModel.setUser(user);
-                messageModel.setMessages([ { level: 'success', text: 'Current user updated' } ], false);
-                return result;
-            },
-            function(err) {
-                messageModel.setMessages([ { level: 'error', text: 'Current user updated failed' } ], false);
-                throw err;
-            }
-        );
-    };
-
     this.registerUser = function(registration) {
         return $http.post(ENV.api['root'] + "users/register", registration).then(
             function(result) {
