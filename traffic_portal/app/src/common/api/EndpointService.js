@@ -31,7 +31,7 @@ var EndpointService = function($http, ENV, locationUtils, messageModel) {
 	};
 
 	this.getEndpoint = function(id) {
-		return $http.get(ENV.api['root'] + 'api_capabilities/' + id).then(
+		return $http.get(ENV.api['root'] + 'api_capabilities', {params: {id: id}}).then(
 			function (result) {
 				return result.data.response[0];
 			},
