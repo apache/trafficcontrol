@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var EndpointService = function($http, ENV, locationUtils, messageModel) {
+var EndpointService = function($http, ENV) {
 
 	this.getEndpoints = function(queryParams) {
 		return $http.get(ENV.api['root'] + 'api_capabilities', {params: queryParams}).then(
@@ -30,61 +30,7 @@ var EndpointService = function($http, ENV, locationUtils, messageModel) {
 		);
 	};
 
-	this.getEndpoint = function(id) {
-		return $http.get(ENV.api['root'] + 'api_capabilities', {params: {id: id}}).then(
-			function (result) {
-				return result.data.response[0];
-			},
-			function (err) {
-				throw err;
-			}
-		);
-	};
-
-	// todo: this functionality needs to be removed as the endpoint will be deprecated
-	this.createEndpoint = function(endpoint) {
-		return $http.post(ENV.api['root'] + 'api_capabilities', endpoint).then(
-			function(result) {
-				messageModel.setMessages([{level: 'success', text: 'Endpoint created'}], true);
-				locationUtils.navigateToPath('/endpoints');
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
-
-	// todo: this functionality needs to be removed as the endpoint will be deprecated
-	this.updateEndpoint = function(endpoint) {
-		return $http.put(ENV.api['root'] + 'api_capabilities/' + endpoint.id, endpoint).then(
-			function(result) {
-				messageModel.setMessages([{level: 'success', text: 'Endpoint updated'}], false);
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
-
-	// todo: this functionality needs to be removed as the endpoint will be deprecated
-	this.deleteEndpoint = function(id) {
-		return $http.delete(ENV.api['root'] + 'api_capabilities/' + id).then(
-			function(result) {
-				messageModel.setMessages([{level: 'success', text: 'Endpoint deleted'}], true);
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, true);
-				throw err;
-			}
-		);
-	};
-
 };
 
-EndpointService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
+EndpointService.$inject = ['$http', 'ENV'];
 module.exports = EndpointService;
