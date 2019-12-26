@@ -55,6 +55,7 @@ var ParameterService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateParameter = function(parameter) {
         return $http.put(ENV.api['root'] + 'parameters/' + parameter.id, parameter).then(
             function(result) {
@@ -68,6 +69,7 @@ var ParameterService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteParameter = function(id) {
         return $http.delete(ENV.api['root'] + "parameters/" + id).then(
             function(result) {

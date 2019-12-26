@@ -55,6 +55,7 @@ var DivisionService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateDivision = function(division) {
         return $http.put(ENV.api['root'] + 'divisions/' + division.id, division).then(
             function(result) {
@@ -67,6 +68,7 @@ var DivisionService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteDivision = function(id) {
         return $http.delete(ENV.api['root'] + 'divisions/' + id).then(
                 function(result) {

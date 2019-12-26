@@ -82,6 +82,7 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateUser = function(user) {
         return $http.put(ENV.api['root'] + "users/" + user.id, user).then(
             function(result) {
