@@ -320,7 +320,7 @@ func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNNa
 
 // GetFederationResolversByFederationID fetches all of the federation resolvers currently assigned to a federation.
 // In the event of an error, it will return an empty slice and the error.
-func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) (resolvers []tc.FederationResolver, err error) {
+func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.FederationResolver, error) {
 	qry := `
 		SELECT
 		  fr.ip_address,
@@ -332,18 +332,17 @@ func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) (resolvers []tc
 		  JOIN type frt on fr.type = frt.id
 		WHERE
 		  ffr.federation = $1
+		ORDER BY fr.ip_address
 	`
 	rows, err := tx.Query(qry, fedID)
-	if err == sql.ErrNoRows {
-		return resolvers, nil
-	}
 	if err != nil {
-		return resolvers, fmt.Errorf(
+		return nil, fmt.Errorf(
 			"error querying federation_resolvers by federation ID [%d]: %s", fedID, err.Error(),
 		)
 	}
 	defer rows.Close()
 
+	resolvers := []tc.FederationResolver{}
 	for rows.Next() {
 		fr := tc.FederationResolver{}
 		err := rows.Scan(

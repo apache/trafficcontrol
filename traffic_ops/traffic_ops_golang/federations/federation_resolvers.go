@@ -51,6 +51,7 @@ func GetFederationFederationResolversHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	api.WriteResp(w, r, frs)
+	return
 }
 
 // AssignFederationResolversToFederationHandler associates one or more federation_resolver to the federation ID supplied.
