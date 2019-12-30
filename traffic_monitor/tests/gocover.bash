@@ -14,20 +14,25 @@
 
 #----------------------------------------
 set -e
-touch result.txt
-packages=( "$@" )
+
 coverage_out=()
 i=1
-for pkg in ${packages[@]} ; do
-    for d in $(go list $pkg | grep -v vendor); do
-        file="$i.out"
-        go test -v -coverprofile=$file $d | tee -a result.txt
-        if [ -f $file ]; then
-            coverage_out+=( $file )
-        fi
-        ((i++))
-    done
+
+for d in $(go list ./... ../lib/... | grep -v vendor); do
+	file="$i.out"
+	go test -v -coverprofile="$file" "$d"
+	if [ -f "$file" ]; then
+		coverage_out+=($file)
+	fi
+	((i++))
 done
+
 gocovmerge ${coverage_out[*]} > coverage.out
 go tool cover -func=coverage.out
-cat result.txt | go-junit-report --package-name=golang.test.tm --set-exit-code > /junit/golang.test.tm.xml
+go-junit-report --package-name=golang.test.tm --set-exit-code > /junit/golang.test.tm.xml
+touch coverage_out1
+for pkg in $(go list ./... ../lib/... | grep -v ); do
+	tmp="$(mktemp)"
+	go test -v -coverprofile covProfile "$pkg" > "$tmp"
+	mv -f "$tmp" coverage_out1
+done
