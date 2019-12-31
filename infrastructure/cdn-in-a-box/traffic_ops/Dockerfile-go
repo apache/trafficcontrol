@@ -26,7 +26,8 @@ FROM centos:7 as trafficops-extract
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 COPY $TRAFFIC_OPS_RPM /
 
-RUN mkdir /etc/cron.d && \
+RUN set -o nounset && \
+    mkdir /etc/cron.d && \
     rpm --install --nodeps --verbose --hash "/$(basename $TRAFFIC_OPS_RPM)" && \
     rm -r /etc/cron.d "/$(basename $TRAFFIC_OPS_RPM)"
 
