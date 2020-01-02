@@ -23,7 +23,7 @@ package tc
 type APICapability struct {
 	ID          int       `json:"id" db:"id"`
 	HTTPMethod  string    `json:"httpMethod" db:"http_method"`
-	Route       string    `json:"route" db:"route"`
+	Route       string    `json:"httpRoute" db:"route"`
 	Capability  string    `json:"capability" db:"capability"`
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
