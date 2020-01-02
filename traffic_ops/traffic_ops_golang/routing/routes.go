@@ -35,6 +35,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apicapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apiriak"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn"
@@ -132,6 +133,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// NOTE: Route IDs are immutable and unique. DO NOT change the ID of an existing Route; otherwise, existing
 		// configurations may break. New Route IDs can be any integer between 0 and 2147483647 (inclusive), as long as
 		// it's unique.
+
+		// API Capability
+		{1.1, http.MethodGet, `api_capabilities/?(\.json)?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 1813206589, perlBypass},
 
 		//ASN: CRUD
 		{1.2, http.MethodGet, `asns/?(\.json)?$`, api.ReadHandler(&asn.TOASNV11{}), auth.PrivLevelReadOnly, Authenticated, nil, 473877722, noPerlBypass},
@@ -526,6 +530,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// Federation Resolvers
 		{1.1, http.MethodPost, `federation_resolvers(/|\.json)?$`, federation_resolvers.Create, auth.PrivLevelAdmin, Authenticated, nil, 1134373661, perlBypass},
 		{1.1, http.MethodGet, `federation_resolvers(/|\.json)?$`, federation_resolvers.Read, auth.PrivLevelReadOnly, Authenticated, nil, 556608759, perlBypass},
+		{1.1, http.MethodPost, `federations/{id}/federation_resolvers(/|\.json)?$`, federations.AssignFederationResolversToFederationHandler, auth.PrivLevelAdmin, Authenticated, nil, 556608760, perlBypass},
+		{1.1, http.MethodGet, `federations/{id}/federation_resolvers(/|\.json)?$`, federations.GetFederationFederationResolversHandler, auth.PrivLevelReadOnly, Authenticated, nil, 556608761, perlBypass},
 
 		// Federations Users
 		{1.1, http.MethodPost, `federations/{id}/users/?(\.json)?$`, federations.PostUsers, auth.PrivLevelAdmin, Authenticated, nil, 1779334930, perlBypass},
