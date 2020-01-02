@@ -129,9 +129,14 @@ Built: %(date) by %{getenv: USER}
 	  cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/public/routing  app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
     fi
 
-    # upgrade
-    if [ "$1" == "2" ]; then
-        systemctl stop traffic_ops || true # Don't exit with an error if we are in an unprivileged Docker container and can't use systemctl
+    # 2 means upgrade
+    [ $1 -ne 2 ] && exit
+    # check whether systemd is running
+    if systemctl daemon-reload; then
+        # stop service before starting the uninstall
+        systemctl stop traffic_ops
+    else
+        echo 'WARNING: systemctl failed - not stopping Traffic Ops!' > /dev/stderr
     fi
 
 %post
@@ -183,9 +188,14 @@ Built: %(date) by %{getenv: USER}
 
 %preun
 
-if [ "$1" = "0" ]; then
+# 0 means uninstall
+[ $1 -ne 0 ] && exit
+# check whether systemd is running
+if systemctl daemon-reload; then
     # stop service before starting the uninstall
-    systemctl stop traffic_ops || true # Don't exit with an error if we are in an unprivileged Docker container and can't use systemctl
+    systemctl stop traffic_ops
+else
+    echo 'WARNING: systemctl failed - not stopping Traffic Ops!' > /dev/stderr
 fi
 
 %postun
