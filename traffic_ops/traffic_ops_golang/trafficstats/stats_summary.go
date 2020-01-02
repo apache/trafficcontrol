@@ -65,12 +65,9 @@ func getLastSummaryDate(w http.ResponseWriter, r *http.Request, inf *api.APIInfo
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	if len(statsSummaries) < 1 {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("no stats summary available to grab last updated time"), nil)
-		return
-	}
-	resp := tc.StatsSummaryLastUpdated{
-		SummaryTime: statsSummaries[0].SummaryTime,
+	resp := tc.StatsSummaryLastUpdated{}
+	if len(statsSummaries) >= 1 {
+		resp.SummaryTime = &statsSummaries[0].SummaryTime
 	}
 	api.WriteResp(w, r, resp)
 }

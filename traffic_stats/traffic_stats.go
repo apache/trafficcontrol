@@ -507,8 +507,10 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated(util.StrPtr("daily_maxgbps"))
 	if err != nil {
 		errHndlr(err, ERROR)
+	} else if lastSummaryTimeResponse.Response.SummaryTime == nil {
+		errHndlr(errors.New("unable to get last updated stats summary timestamp: daily_maxgbps stats summary not reported yet"), WARN)
 	} else {
-		runningConfig.LastSummaryTime = lastSummaryTimeResponse.Response.SummaryTime
+		runningConfig.LastSummaryTime = *lastSummaryTimeResponse.Response.SummaryTime
 	}
 
 	configChan <- runningConfig

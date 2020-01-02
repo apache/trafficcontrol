@@ -110,8 +110,6 @@ func GetTestStatsSummaries(t *testing.T) {
 			if len(tc.expectedStatsSummaries) == 0 && len(tsr.Response) != 0 {
 				t.Fatalf("expected to recieve no stats summaries but received %v", len(tsr.Response))
 			}
-			t.Log(tsr.Response)
-
 			for _, ess := range tc.expectedStatsSummaries {
 				found := false
 				for _, ss := range tsr.Response {
@@ -134,6 +132,7 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 		stat              *string
 		errExpected       bool
 		expectedTimestamp time.Time
+		nullTimeStamp     bool
 	}
 	testCases := []testCase{
 		testCase{
@@ -143,9 +142,10 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 			expectedTimestamp: latestTime,
 		},
 		testCase{
-			description: "non-existant stat name",
-			stat:        util.StrPtr("bogus"),
-			errExpected: true,
+			description:   "non-existant stat name",
+			stat:          util.StrPtr("bogus"),
+			errExpected:   false,
+			nullTimeStamp: true,
 		},
 	}
 	for _, ss := range testStatsSummaries {
@@ -167,8 +167,10 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 			if !tc.errExpected && err != nil {
 				t.Fatalf("received unexpected error getting stats_summary latest updated timestamp: %v", err)
 			}
-
-			if !tc.errExpected && !tsr.Response.SummaryTime.Equal(tc.expectedTimestamp) {
+			if !tc.errExpected && tc.nullTimeStamp && tsr.Response.SummaryTime != nil {
+				t.Fatalf("expected to get null on latest timestamp but instead got %v", tsr.Response.SummaryTime)
+			}
+			if !tc.errExpected && !tc.nullTimeStamp && !tsr.Response.SummaryTime.Equal(tc.expectedTimestamp) {
 				t.Fatalf("received latest timestamp %v does not match up to expected timestamp %v", tsr.Response.SummaryTime, tc.expectedTimestamp)
 			}
 		})
