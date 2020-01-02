@@ -94,8 +94,11 @@ RUN yum install -y /$(basename $TRAFFIC_OPS_RPM) && \
 RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
 
-ADD infrastructure/cdn-in-a-box/traffic_ops/run.sh \
+ADD infrastructure/cdn-in-a-box/enroller/server_template.json \
+    infrastructure/cdn-in-a-box/traffic_ops/run.sh \
+    infrastructure/cdn-in-a-box/traffic_ops/config.sh \
     infrastructure/cdn-in-a-box/traffic_ops/adduser.pl \
+    infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
     infrastructure/cdn-in-a-box/traffic_ops/generate-certs.sh \
     infrastructure/cdn-in-a-box/traffic_ops/trafficops-init.sh \
     infrastructure/cdn-in-a-box/variables.env \
