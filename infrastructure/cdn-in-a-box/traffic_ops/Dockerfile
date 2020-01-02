@@ -26,11 +26,50 @@ FROM trafficops-go
 EXPOSE 443
 ENV MOJO_MODE production
 
-RUN yum -y install \
+RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+    rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
+    rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG && \
+    yum -y update ca-certificates && \
+    yum-config-manager --add-repo https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64 && \
+    yum install -y \
+        epel-release \
+        pgdg-redhat-latest && \
+    yum install -y \
+        bind-utils \
+        cpanminus \
+        expat-devel \
+        gcc-c++ \
+        gettext \
+        git \
+        golang \
         iproute \
+        jq \
+        libcurl \
+        libcurl-devel \
+        libidn-devel \
         libpcap-devel \
         mkisofs \
-        perl-DBIx-Connector && \
+        net-tools \
+        nmap-ncat \
+        openssl \
+        openssl-devel \
+        perl \
+        perl-core \
+        perl-Crypt-ScryptKDF \
+        perl-DBD-Pg \
+        perl-DBI \
+        perl-DBIx-Connector \
+        perl-Digest-SHA1 \
+        perl-JSON \
+        perl-JSON-PP \
+        perl-libwww-perl \
+        perl-TermReadKey \
+        perl-Test-CPAN-Meta \
+        perl-WWW-Curl \
+        postgresql96 \
+        postgresql96-devel \
+        postgresql96-libs \
+        tar &&\
     yum -y clean all && mkdir -p /opt/traffic_ops/app/public
 
 ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffic_ops/app/public/
