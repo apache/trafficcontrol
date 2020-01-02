@@ -3,6 +3,8 @@ package tc
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 /*
@@ -33,21 +35,21 @@ type StatsSummaryResponse struct {
 
 // StatsSummary ...
 type StatsSummary struct {
-	ID              int       `json:"-"  db:"id"`
-	CDNName         string    `json:"cdnName"  db:"cdn_name"`
-	DeliveryService string    `json:"deliveryServiceName"  db:"deliveryservice_name"`
-	StatName        string    `json:"statName"  db:"stat_name"`
-	StatValue       float64   `json:"statValue"  db:"stat_value"`
-	SummaryTime     time.Time `json:"summaryTime"  db:"summary_time"`
-	StatDate        time.Time `json:"statDate"  db:"stat_date"`
+	ID              int        `json:"-"  db:"id"`
+	CDNName         string     `json:"cdnName"  db:"cdn_name"`
+	DeliveryService string     `json:"deliveryServiceName"  db:"deliveryservice_name"`
+	StatName        string     `json:"statName"  db:"stat_name"`
+	StatValue       float64    `json:"statValue"  db:"stat_value"`
+	SummaryTime     time.Time  `json:"summaryTime"  db:"summary_time"`
+	StatDate        *time.Time `json:"statDate"  db:"stat_date"`
 }
 
 // UnmarshalJSON Customized Unmarshal to force date format on statDate
 func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 	type Alias StatsSummary
 	resp := struct {
-		SummaryTime string `json:"summaryTime"`
-		StatDate    string `json:"statDate"`
+		SummaryTime string  `json:"summaryTime"`
+		StatDate    *string `json:"statDate"`
 		*Alias
 	}{
 		Alias: (*Alias)(ss),
@@ -56,10 +58,14 @@ func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	ss.StatDate, err = time.Parse(dateFormat, resp.StatDate)
-	if err != nil {
-		return err
+	if resp.StatDate != nil {
+		statDate, err := time.Parse(dateFormat, *resp.StatDate)
+		if err != nil {
+			return err
+		}
+		ss.StatDate = &statDate
 	}
+
 	ss.SummaryTime, err = time.Parse(time.RFC3339, resp.SummaryTime)
 	if err == nil {
 		return nil
@@ -71,15 +77,18 @@ func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 // UnmarshalJSON Customized Marshal to force date format on statDate
 func (ss StatsSummary) MarshalJSON() ([]byte, error) {
 	type Alias StatsSummary
-	return json.Marshal(&struct {
-		StatDate    string `json:"statDate"`
-		SummaryTime string `json:"summaryTime"`
+	resp := struct {
+		StatDate    *string `json:"statDate"`
+		SummaryTime string  `json:"summaryTime"`
 		Alias
 	}{
 		SummaryTime: ss.SummaryTime.Format(TimeLayout),
-		StatDate:    ss.StatDate.Format(dateFormat),
 		Alias:       (Alias)(ss),
-	})
+	}
+	if ss.StatDate != nil {
+		resp.StatDate = util.StrPtr(ss.StatDate.Format(dateFormat))
+	}
+	return json.Marshal(&resp)
 }
 
 // StatsSummaryLastUpdated ...
@@ -93,6 +102,23 @@ func (ss StatsSummaryLastUpdated) MarshalJSON() ([]byte, error) {
 	}{
 		SummaryTime: ss.SummaryTime.Format(TimeLayout),
 	})
+}
+
+// UnmarshalJSON Customized Unmarshal to force timestamp format
+func (ss *StatsSummaryLastUpdated) UnmarshalJSON(data []byte) error {
+	resp := struct {
+		SummaryTime string `json:"summaryTime"`
+	}{}
+	err := json.Unmarshal(data, &resp)
+	if err != nil {
+		return err
+	}
+	ss.SummaryTime, err = time.Parse(time.RFC3339, resp.SummaryTime)
+	if err == nil {
+		return nil
+	}
+	ss.SummaryTime, err = time.Parse(TimeLayout, resp.SummaryTime)
+	return err
 }
 
 // StatsSummaryLastUpdatedResponse ...

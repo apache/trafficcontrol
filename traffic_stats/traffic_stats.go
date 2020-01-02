@@ -320,7 +320,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 					statsSummary.StatName = "daily_maxgbps"
 					statsSummary.StatValue = value
 					statsSummary.SummaryTime = time.Now()
-					statsSummary.StatDate = statTime
+					statsSummary.StatDate = &statTime
 					go writeSummaryStats(config, statsSummary)
 
 					//write to influxdb
@@ -380,7 +380,7 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 			statsSummary.StatName = "daily_bytesserved"
 			statsSummary.StatValue = bytesServedTB
 			statsSummary.SummaryTime = time.Now()
-			statsSummary.StatDate = startTime
+			statsSummary.StatDate = &startTime
 			go writeSummaryStats(config, statsSummary)
 			//write to Influxdb
 			tags := map[string]string{"cdn": cdn, "deliveryservice": "all"}
