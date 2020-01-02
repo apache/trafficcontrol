@@ -133,7 +133,7 @@ Built: %(date) by %{getenv: USER}
     [ $1 -ne 2 ] && exit
     # check whether systemd is running
     if systemctl daemon-reload; then
-        # stop service before starting the uninstall
+        # stop service before starting the upgrade
         systemctl stop traffic_ops
     else
         echo 'WARNING: systemctl failed - not stopping Traffic Ops!' > /dev/stderr
