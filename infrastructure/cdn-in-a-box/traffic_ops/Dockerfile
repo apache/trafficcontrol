@@ -74,26 +74,17 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 
 ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffic_ops/app/public/
 
-WORKDIR /opt/traffic_ops/app
-
-ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
-RUN cpanm -l ./local Carton && \
-    POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton  && \
-    rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile
-RUN ./install_goose.sh
-
-# Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
-ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
-ADD $TRAFFIC_OPS_RPM /
-RUN yum install -y /$(basename $TRAFFIC_OPS_RPM) && \
+# Override TRAFFIC_OPS_RPM arg in Dockerfile-go to use a different RPM using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
+RUN yum -y reinstall /$(basename $TRAFFIC_OPS_RPM) && \
     rm /$(basename $TRAFFIC_OPS_RPM) && \
     yum -y clean all && \
     rm /opt/traffic_ops/app/bin/traffic_ops_golang
 
-# Run carton again, in case the cpanfile included in the RPM differs from the one used earlier in the
-# build (should never happen - Perl is supposed to be going away)
-RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton && \
+WORKDIR /opt/traffic_ops/app
+RUN cpanm -l ./local Carton && \
+    POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton  && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
+RUN /opt/traffic_ops/install/bin/install_goose.sh
 
 COPY infrastructure/cdn-in-a-box/traffic_ops/run.sh \
     infrastructure/cdn-in-a-box/traffic_ops/adduser.pl \
