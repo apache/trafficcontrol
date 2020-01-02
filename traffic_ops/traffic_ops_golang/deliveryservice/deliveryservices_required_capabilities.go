@@ -251,7 +251,7 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 	}
 
 	if !dsType.IsHTTP() && !dsType.IsDNS() {
-		return errors.New("Invalid DS type. Only DNS and HTTP DSes can have required capabilities"), nil, http.StatusBadRequest
+		return errors.New("Invalid DS type. Only DNS and HTTP delivery services can have required capabilities"), nil, http.StatusBadRequest
 	}
 
 	usrErr, sysErr, rCode := rc.ensureDSServerCap()
