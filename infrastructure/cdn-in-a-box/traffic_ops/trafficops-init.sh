@@ -81,11 +81,11 @@ load_data_from() {
     for d in $endpoints; do
         [[ -d $d ]] || continue
         # Let containers know to write out server.json
-        if [[ "$d" = "deliveryservice_servers" ]] ; then 
+        if [[ "$d" = "deliveryservice_servers" ]] ; then
            touch "$ENROLLER_DIR/initial-load-done"
            sync
-        fi 
-        for f in "$d"/*.json; do 
+        fi
+        for f in "$d"/*.json; do
             echo "Loading $f"
             delayfor "$f"
             envsubst "$vars" <$f  > "$ENROLLER_DIR"/$f
@@ -102,7 +102,7 @@ load_data_from() {
 load_data_from /traffic_ops_data
 
 # Copy the free MaxMind GeoLite DB to TrafficOps public directory
-tar -C /var/tmp -zxpvf /GeoLite2-City.tar.gz
-geo_dir=$(find /var/tmp -maxdepth 1 -type d -name GeoLite2-City\*)
-gzip -c "$geo_dir/GeoLite2-City.mmdb" > "$TO_DIR/public/GeoLite2-City.mmdb.gz"
-chown trafops:trafops "$TO_DIR/public/GeoLite2-City.mmdb.gz"
+# tar -C /var/tmp -zxpvf /GeoLite2-City.tar.gz
+# geo_dir=$(find /var/tmp -maxdepth 1 -type d -name GeoLite2-City\*)
+# gzip -c "$geo_dir/GeoLite2-City.mmdb" > "$TO_DIR/public/GeoLite2-City.mmdb.gz"
+# chown trafops:trafops "$TO_DIR/public/GeoLite2-City.mmdb.gz"
