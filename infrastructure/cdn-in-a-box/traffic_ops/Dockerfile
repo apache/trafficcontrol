@@ -21,7 +21,7 @@
 ############################################################
 
 
-FROM trafficops-go
+FROM centos:7
 
 EXPOSE 443
 ENV MOJO_MODE production
