@@ -24,7 +24,6 @@ FROM centos:7
 
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
-ENV TRAFFIC_OPS_RPM=$TRAFFIC_OPS_RPM
 COPY $TRAFFIC_OPS_RPM /
 
 RUN mkdir /etc/cron.d && \
