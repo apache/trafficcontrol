@@ -31,6 +31,7 @@ func TestProfiles(t *testing.T) {
 		GetTestProfiles(t)
 		GetTestProfilesWithParameters(t)
 		ImportProfile(t)
+		CopyProfile(t)
 	})
 }
 
@@ -51,6 +52,77 @@ func CreateBadProfiles(t *testing.T) {
 
 		if err == nil {
 			t.Errorf("Creating bad profile succeeded: %+v\nResponse is %+v", pr, resp)
+		}
+	}
+}
+
+func CopyProfile(t *testing.T) {
+	testCases := []struct {
+		description  string
+		profile      tc.ProfileCopy
+		expectedResp string
+		err          string
+	}{
+		{
+			description: "copy profile",
+			profile: tc.ProfileCopy{
+				Name:         "profile-2",
+				ExistingName: "EDGE1",
+			},
+			expectedResp: "created new profile [profile-2] from existing profile [EDGE1]",
+		},
+		{
+			description: "existing profile does not exist",
+			profile: tc.ProfileCopy{
+				Name:         "profile-3",
+				ExistingName: "bogus",
+			},
+			err: "profile with name bogus does not exist",
+		},
+		{
+			description: "new profile already exists",
+			profile: tc.ProfileCopy{
+				Name:         "EDGE2",
+				ExistingName: "EDGE1",
+			},
+			err: "profile with name EDGE2 already exists",
+		},
+	}
+
+	var newProfileNames []string
+	for _, c := range testCases {
+		t.Run(c.description, func(t *testing.T) {
+			resp, _, err := TOSession.CopyProfile(c.profile)
+			if c.err != "" {
+				if err != nil && !strings.Contains(err.Error(), c.err) {
+					t.Fatalf("got err= %s; expected err= %s", err, c.err)
+				}
+			} else if err != nil {
+				t.Fatalf("got err= %s; expected err= nil", err)
+			}
+
+			if err == nil {
+				if got, want := resp.Alerts.ToStrings()[0], c.expectedResp; got != want {
+					t.Fatalf("got= %s; expected= %s", got, want)
+				}
+
+				newProfileNames = append(newProfileNames, c.profile.Name)
+			}
+		})
+	}
+
+	// Cleanup profiles
+	for _, name := range newProfileNames {
+		profiles, _, err := TOSession.GetProfileByName(name)
+		if err != nil {
+			t.Fatalf("got err= %s; expected err= nil", err)
+		}
+		if len(profiles) == 0 {
+			t.Errorf("could not GET profile %+v: not found", name)
+		}
+		_, _, err = TOSession.DeleteProfileByID(profiles[0].ID)
+		if err != nil {
+			t.Fatalf("got err= %s; expected err= nil", err)
 		}
 	}
 }

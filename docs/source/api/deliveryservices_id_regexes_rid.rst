@@ -34,7 +34,7 @@ Request Structure
 	+------+-----------------------------------------------------------------------------------+
 	| Name |                Description                                                        |
 	+======+===================================================================================+
-	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being inspected   |
+	| ID   | The integral, unique identifier of the :term:`Delivery Service` being inspected   |
 	+------+-----------------------------------------------------------------------------------+
 	| rID  | The integral, unique identifier of the routing regular expression being inspected |
 	+------+-----------------------------------------------------------------------------------+

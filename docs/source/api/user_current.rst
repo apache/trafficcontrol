@@ -21,10 +21,9 @@
 
 ``GET``
 =======
-.. deprecated:: 1.4
-	As a username is needed to log in, any administrator or application must necessarily know the current username at any given time. Thus, use the ``username`` query parameter of a ``GET`` request to :ref:`to-api-users` instead.
+.. caution:: As a username is needed to log in, any administrator or application must necessarily know the current username at any given time. Thus it's generally better to use the ``username`` query parameter of a ``GET`` request to :ref:`to-api-users` instead.
 
-Retrieves the profile for the authenticated user.
+Retrieves the details of the authenticated user.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -43,20 +42,20 @@ Response Structure
 :country:          The name of the country wherein the user resides
 :email:            The user's email address
 :fullName:         The user's full name, e.g. "John Quincy Adams"
-:gid:              A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
+:gid:              A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user
 :id:               An integral, unique identifier for this user
-:lastUpdated:      The date and time at which the user was last modified, in ISO format
+:lastUpdated:      The date and time at which the user was last modified, in an ISO-like format
 :newUser:          A meta field with no apparent purpose that is usually ``null`` unless explicitly set during creation or modification of a user via some API endpoint
 :phoneNumber:      The user's phone number
 :postalCode:       The postal code of the area in which the user resides
 :publicSshKey:     The user's public key used for the SSH protocol
 :registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
-:role:             The integral, unique identifier of the highest-privilege role assigned to this user
-:rolename:         The name of the highest-privilege role assigned to this user
+:role:             The integral, unique identifier of the highest-privilege :term:`Role` assigned to this user
+:rolename:         The name of the highest-privilege :term:`Role` assigned to this user
 :stateOrProvince:  The name of the state or province where this user resides
-:tenant:           The name of the tenant to which this user belongs
-:tenantId:         The integral, unique identifier of the tenant to which this user belongs
-:uid:              A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - now it is always ``null``
+:tenant:           The name of the :term:`Tenant` to which this user belongs
+:tenantId:         The integral, unique identifier of the :term:`Tenant` to which this user belongs
+:uid:              A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user
 :username:         The user's username
 
 .. code-block:: http
@@ -101,8 +100,7 @@ Response Structure
 
 ``PUT``
 =======
-.. deprecated:: 1.4
-	Use the ``PUT`` method of the :ref:`to-api-users` instead.
+.. warning:: Assuming the current user's integral, unique identifier is known, it's generally better to use the ``PUT`` method of the :ref:`to-api-users` instead.
 
 .. warning:: Users that login via LDAP pass-back cannot be modified
 
@@ -110,34 +108,39 @@ Updates the date for the authenticated user.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Response Type:  ``undefined``
+:Response Type:  Object
+
+	.. versionchanged:: ATCv4
+		Starting in ATC version 4, all API versions respond to this endpoint with the updated user information. Prior to that, no response object was returned at all.
+
 
 Request Structure
 -----------------
-:addressLine1:       An optional field which should contain the user's address - including street name and number
-:addressLine2:       An optional field which should contain an additional address field for e.g. apartment number
-:city:               An optional field which should contain the name of the city wherein the user resides
-:company:            An optional field which should contain the name of the company for which the user works
-:confirmLocalPasswd: The 'confirm' field in a new user's password specification - must match ``localPasswd``
-:country:            An optional field which should contain the name of the country wherein the user resides
-:email:              The user's email address
+:user: The entire request must be inside a top-level "user" key for legacy reasons
 
-	.. versionchanged:: 1.4
-		Prior to version 1.4, the email was validated using the `Email::Valid Perl package <https://metacpan.org/pod/Email::Valid>`_ but is now validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that neither method can actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
+	:addressLine1:       The user's address - including street name and number
+	:addressLine2:       An additional address field for e.g. apartment number
+	:city:               The name of the city wherein the user resides
+	:company:            The name of the company for which the user works
+	:confirmLocalPasswd: An optional 'confirm' field in a new user's password specification. This has no known effect and in fact *doesn't even need to match* ``localPasswd``
+	:country:            The name of the country wherein the user resides
+	:email:              The user's email address\ [#notnull]_
 
-:fullName:        The user's full name, e.g. "John Quincy Adams"
-:localPasswd:     The user's password
-:newUser:         An optional meta field with no apparent purpose - don't use this
-:phoneNumber:     An optional field which should contain the user's phone number
-:postalCode:      An optional field which should contain the user's postal code
-:publicSshKey:    An optional field which should contain the user's public encryption key used for the SSH protocol
-:role:            The number that corresponds to the highest permission role which will be permitted to the user
-:stateOrProvince: An optional field which should contain the name of the state or province in which the user resides
-:tenantId:        The integral, unique identifier of the tenant to which the new user shall belong
+		.. versionchanged:: ATCv4
+			Prior to version ATCv4, the email was validated using the `Email::Valid Perl package <https://metacpan.org/pod/Email::Valid>`_ but is now validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that neither method can actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
 
-	.. note:: This field is optional if and only if tenancy is not enabled in Traffic Control
-
-:username: The user's new username
+	:fullName:        The user's full name, e.g. "John Quincy Adams"
+	:gid:             A legacy field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - please don't use this
+	:id:              The user's integral, unique, identifier - this cannot be changed\ [#notnull]_
+	:localPasswd:     Optionally, the user's password. This should never be given if it will not be changed. An empty string or ``null`` can be used to explicitly specify no change.
+	:phoneNumber:     The user's phone number
+	:postalCode:      The user's postal code
+	:publicSshKey:    The user's public encryption key used for the SSH protocol
+	:role:            The integral, unique identifier of the highest permission :term:`Role` which will be permitted to the user - this cannot be altered from the user's current :term:`Role`\ [#notnull]_
+	:stateOrProvince: The state or province in which the user resides
+	:tenantId:        The integral, unique identifier of the :term:`Tenant` to which the new user shall belong\ [#tenancy]_\ [#notnull]_
+	:uid:             A legacy field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - please don't use this
+	:username:        The user's new username\ [#notnull]_
 
 .. code-block:: http
 	:caption: Request Example
@@ -147,49 +150,100 @@ Request Structure
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 483
+	Content-Length: 465
 	Content-Type: application/json
 
 	{ "user": {
-		"addressLine1": "not a real address",
-		"addressLine2": "not a real address either",
-		"city": "not a real city",
-		"company": "not a real company",
-		"country": "not a real country",
-		"email": "not@real.email",
-		"fullName": "Not a real fullName",
-		"phoneNumber": "not a real phone number",
-		"postalCode": "not a real postal code",
-		"publicSshKey": "not a real ssh key",
-		"stateOrProvince": "not a real state or province",
-		"tenantId": 1,
+		"addressLine1": null,
+		"addressLine2": null,
+		"city": null,
+		"company": null,
+		"country": null,
+		"email": "admin@infra.trafficops.ciab.test",
+		"fullName": null,
+		"gid": null,
+		"id": 2,
+		"phoneNumber": null,
+		"postalCode": null,
+		"publicSshKey": null,
 		"role": 1,
+		"stateOrProvince": null,
+		"tenantId": 1,
+		"uid": null,
 		"username": "admin"
 	}}
 
 Response Structure
 ------------------
+:addressLine1:     The user's address - including street name and number
+:addressLine2:     An additional address field for e.g. apartment number
+:city:             The name of the city wherein the user resides
+:company:          The name of the company for which the user works
+:country:          The name of the country wherein the user resides
+:email:            The user's email address
+:fullName:         The user's full name, e.g. "John Quincy Adams"
+:gid:              A legacy field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user
+:id:               An integral, unique identifier for this user
+:lastUpdated:      The date and time at which the user was last modified, in an ISO-like format
+:newUser:          A meta field with no apparent purpose
+:phoneNumber:      The user's phone number
+:postalCode:       The postal code of the area in which the user resides
+:publicSshKey:     The user's public key used for the SSH protocol
+:registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
+:role:             The integral, unique identifier of the highest-privilege :term:`Role` assigned to this user
+:rolename:         The name of the highest-privilege :term:`Role` assigned to this user
+:stateOrProvince:  The name of the state or province where this user resides
+:tenant:           The name of the :term:`Tenant` to which this user belongs
+:tenantId:         The integral, unique identifier of the :term:`Tenant` to which this user belongs
+:uid:              A legacy field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user
+:username:         The user's username
 
 .. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
 	Date: Thu, 13 Dec 2018 21:05:49 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: sHFqZQ4Cv7IIWaIejoAvM2Fr/HSupcX3D16KU/etjw+4jcK9EME3Bq5ohLC+eQ52BDCKW2Ra+AC3TfFtworJww==
-	Content-Length: 79
+	Content-Length: 478
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "User profile was successfully updated"
+			"text": "User profile was successfully updated",
+			"level": "success"
 		}
-	]}
+	],
+	"response": {
+		"addressLine1": null,
+		"addressLine2": null,
+		"city": null,
+		"company": null,
+		"country": null,
+		"email": "admin@infra.trafficops.ciab.test",
+		"fullName": null,
+		"gid": null,
+		"id": 2,
+		"lastUpdated": "2019-10-08 20:14:25+00",
+		"newUser": false,
+		"phoneNumber": null,
+		"postalCode": null,
+		"publicSshKey": null,
+		"registrationSent": null,
+		"role": 1,
+		"roleName": "admin",
+		"stateOrProvince": null,
+		"tenant": "root",
+		"tenantId": 1,
+		"uid": null,
+		"username": "admin"
+	}}
+
+.. [#notnull] This field cannot be ``null``.
+.. [#tenancy] This endpoint respects tenancy; a user cannot assign itself to a :term:`Tenant` that is not the same :term:`Tenant` to which it was previously assigned or a descendant thereof.

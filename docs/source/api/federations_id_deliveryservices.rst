@@ -42,7 +42,7 @@ Request Structure
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 	| Name      | Required | Description                                                                                                                          |
 	+===========+==========+======================================================================================================================================+
-	| dsID      | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                     |
+	| dsID      | no       | Show only the :term:`Delivery Service` identified by this integral, unique identifier                                                |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                        |
 	|           |          | array                                                                                                                                |

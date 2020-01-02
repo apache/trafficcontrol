@@ -27,39 +27,30 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/plugin"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-const AppName = "atstccfg"
-const Version = "0.1"
-const UserAgent = AppName + "/" + Version
-
-const APIVersion = "1.2"
-const TempSubdir = AppName + "_cache"
-const TempCookieFileName = "cookies"
-const TOCookieName = "mojolicious"
-
-const ExitCodeSuccess = 0
-const ExitCodeErrGeneric = 1
-const ExitCodeNotFound = 104
-const ExitCodeBadRequest = 100
-
-type TCCfg struct {
-	Cfg
-	TOClient **toclient.Session
-}
-
 func main() {
-	cfg, err := GetCfg()
+	cfg, err := config.GetCfg()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Getting config: "+err.Error()+"\n")
-		os.Exit(ExitCodeErrGeneric)
+		os.Exit(config.ExitCodeErrGeneric)
+	}
+
+	if cfg.ListPlugins {
+		fmt.Println(strings.Join(plugin.List(), "\n"))
+		os.Exit(0)
 	}
 
 	if cfg.PrintGeneratedFiles {
 		fmt.Println(strings.Join(GetGeneratedFilesList(), "\n"))
-		os.Exit(ExitCodeSuccess)
+		os.Exit(config.ExitCodeSuccess)
 	}
+
+	plugins := plugin.Get(cfg)
+	plugins.OnStartup(plugin.StartupData{Cfg: cfg})
 
 	log.Infoln("URL: '" + cfg.TOURL.String() + "' User: '" + cfg.TOUser + "' Pass len: '" + strconv.Itoa(len(cfg.TOPass)) + "'")
 	log.Infoln("TempDir: '" + cfg.TempDir + "'")
@@ -68,26 +59,31 @@ func main() {
 	log.Infoln("TO FQDN: '" + toFQDN + "'")
 	log.Infoln("TO URL: '" + cfg.TOURL.String() + "'")
 
-	toClient, err := GetClient(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TempDir, cfg.CacheFileMaxAge, cfg.TOTimeout, cfg.TOInsecure)
+	toClient, err := toreq.GetClient(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TempDir, cfg.CacheFileMaxAge, cfg.TOTimeout, cfg.TOInsecure)
 	if err != nil {
 		log.Errorln("Logging in to Traffic Ops: " + err.Error())
-		os.Exit(ExitCodeErrGeneric)
+		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	tccfg := TCCfg{Cfg: cfg, TOClient: &toClient}
+	tccfg := config.TCCfg{Cfg: cfg, TOClient: &toClient}
+
+	onReqData := plugin.OnRequestData{Cfg: tccfg}
+	if handled := plugins.OnRequest(onReqData); handled {
+		return
+	}
 
 	cfgFile, code, err := GetConfigFile(tccfg)
 	log.Infof("GetConfigFile returned %v %v\n", code, err)
 	if err != nil {
 		log.Errorln("Getting config file '" + cfg.TOURL.String() + "': " + err.Error())
 		if code == 0 {
-			code = ExitCodeErrGeneric
+			code = config.ExitCodeErrGeneric
 		}
 		log.Infof("GetConfigFile exiting with code %v\n", code)
 		os.Exit(code)
 	}
 	fmt.Println(cfgFile)
-	os.Exit(ExitCodeSuccess)
+	os.Exit(config.ExitCodeSuccess)
 }
 
 func GetGeneratedFilesList() []string {
@@ -108,7 +104,7 @@ func GetGeneratedFilesList() []string {
 func HTTPCodeToExitCode(httpCode int) int {
 	switch httpCode {
 	case http.StatusNotFound:
-		return ExitCodeNotFound
+		return config.ExitCodeNotFound
 	}
-	return ExitCodeErrGeneric
+	return config.ExitCodeErrGeneric
 }

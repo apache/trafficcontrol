@@ -30,6 +30,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -462,7 +463,7 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 		return
 	}
 
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write(append(respBts, '\n'))
 }
 

@@ -18,14 +18,11 @@
 ****************************************************
 ``cachegroups/{{parameter ID}}/parameter/available``
 ****************************************************
-.. deprecated:: 1.1
-	Use :ref:`to-api-cachegroupparameters` instead
-
-.. caution:: This endpoint does not appear to work, and thus its use is strongly discouraged!
+.. danger:: This endpoint does not appear to work, and thus its use is strongly discouraged!
 
 ``GET``
 =======
-Gets a list of :term:`Cache Groups` which are available to have a specific :term:`Parameter` assigned to them
+Gets a list of :term:`Cache Groups` which are available to have a specific :term:`Parameter` assigned to them.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -36,15 +33,15 @@ Request Structure
 .. table:: Request Path Parameters
 
 	+------------------+----------+--------------------------------------------------------------+
-	|       Name       | Required | Description                                                  |
+	| Name             | Required | Description                                                  |
 	+==================+==========+==============================================================+
 	| ``parameter ID`` | yes      | The :ref:`parameter-id` of the :term:`Parameter` of interest |
 	+------------------+----------+--------------------------------------------------------------+
 
 Response Structure
 ------------------
-:id:   An integral, unique identifier for the :term:`Cache Group`
-:name: The name of the :term:`Cache Group`
+:id:   An integer that is the :ref:`Cache Group's ID <cache-group-id>`
+:name: A string that is the :ref:`Cache Group's name <cache-group-name>`
 
 .. code-block:: json
 	:caption: Response Example

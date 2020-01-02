@@ -51,23 +51,14 @@ under the License.
                     <hr class="divider"/>
                     <li role="menuitem"><a ng-click="viewCharts()">View Charts</a></li>
                     <hr class="divider"/>
-                    <li role="menuitem"><a ng-click="viewJobs()">Manage Invalidation Requests</a></li>
-                    <li role="menuitem"><a ng-click="viewRegexes()">Manage Regexes</a></li>
                     <li role="menuitem"><a ng-click="viewCapabilities()">Manage Required Server Capabilities</a></li>
                     <li role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
-                    <li role="menuitem"><a ng-click="viewStaticDnsEntries()">Manage Static DNS Entries</a></li>
                 </ul>
             </div>
         </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
-        <div id="deliveryServiceURLs">
-            <fieldset ng-if="!settings.isNew && !settings.isRequest">
-                <legend>Delivery Service URL(s)</legend>
-                <p ng-repeat="url in deliveryService.exampleURLs"><a href="{{::url}}" target="_blank">{{::url}}</a> </p>
-            </fieldset>
-        </div>
         <form id="deliveryServiceForm" name="deliveryServiceForm" class="form-horizontal form-label-left">
             <fieldset>
                 <legend ng-class="{'fieldset-error': generalConfig.$invalid}" ng-click="showGeneralConfig = !showGeneralConfig">General Configuration Settings <i class="fa" ng-class="showGeneralConfig ? 'fa-caret-down' : 'fa-caret-up'"></i></legend>
@@ -112,8 +103,7 @@ under the License.
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required>
                                 <option disabled hidden value="">Select...</option>
-                                <option ng-value="true">Active</option>
-                                <option ng-value="false">Not Active</option>
+                                <option ng-value="true">Active</option> <!--- there is only one valid option as you cannot inactivate any map delivery services --->
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.active, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.active != dsCurrent.active">
@@ -268,12 +258,12 @@ under the License.
                 <legend ng-class="{'fieldset-error': cacheConfig.$invalid}" ng-click="showCacheConfig = !showCacheConfig">Cache Configuration Settings <i class="fa" ng-class="showCacheConfig ? 'fa-caret-down' : 'fa-caret-up'"></i></legend>
                 <ng-form name="cacheConfig" ng-show="showCacheConfig">
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.remapText), 'has-feedback': hasError(cacheConfig.remapText)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="remapText">Raw remap text<div class="helptooltip">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="remapText">Raw remap text *<div class="helptooltip">
                             <div class="helptext">For HTTP and DNS Delivery Services, this will get added to the end of the remap line verbatim on cache servers. For ANY_MAP Delivery Services this is the entire remap line.</div>
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" rows="3"></textarea>
+                            <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" rows="3" required></textarea>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.remapText}}</pre>
@@ -305,135 +295,6 @@ under the License.
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cacheurl != dsCurrent.cacheurl">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.cacheurl}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                </ng-form>
-            </fieldset>
-            <fieldset>
-                <legend ng-class="{'fieldset-error': routingConfig.$invalid}" ng-click="showRoutingConfig = !showRoutingConfig">Routing Configuration Settings <i class="fa" ng-class="showRoutingConfig ? 'fa-caret-down' : 'fa-caret-up'"></i></legend>
-                <ng-form name="routingConfig" ng-show="showRoutingConfig">
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.regionalGeoBlocking), 'has-feedback': hasError(routingConfig.regionalGeoBlocking)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="regionalGeoBlocking">Regional Geoblocking *<div class="helptooltip">
-                            <div class="helptext">
-                                Define regional geo-blocking rules for Delivery Services in a JSON format and set this to 'Enabled' to use "Regional Geoblocking". <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/regionalgeo.html" target="_blank">See Regional Geo-blocking</a>
-                            </div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="regionalGeoBlocking" name="regionalGeoBlocking" class="form-control" ng-model="deliveryService.regionalGeoBlocking" required>
-                                <option ng-value="true">Enabled</option>
-                                <option ng-value="false" selected>Disabled</option>
-                            </select>
-                            <small class="input-error" ng-show="hasPropertyError(routingConfig.regionalGeoBlocking, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">
-                                <h3>Current Value</h3>
-                                <pre>{{::dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoProvider), 'has-feedback': hasError(routingConfig.geoProvider)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoProvider">Geolocation Provider *<div class="helptooltip">
-                            <div class="helptext">Choose which Geolocation database provider - company that collects data on the location of IP addresses - to use.</div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="geoProvider" name="geoProvider" class="form-control" ng-model="deliveryService.geoProvider" required>
-                                <option ng-value="0" selected>MaxMind</option>
-                                <option ng-value="1">Neustar</option>
-                            </select>
-                            <small class="input-error" ng-show="hasPropertyError(routingConfig.geoProvider, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoProvider != dsCurrent.geoProvider">
-                                <h3>Current Value</h3>
-                                <pre>{{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoLimit), 'has-feedback': hasError(routingConfig.geoLimit)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimit">Geo Limit *<div class="helptooltip">
-                            <div class="helptext">
-                                Some services are intended to be limited by geography. The possible settings are:
-                                <br>
-                                <br>
-                                <dl>
-                                    <dt>None</dt><dd>Do not limit by geography.</dd>
-                                    <dt>Coverage Zone File only</dt><dd>If the requesting IP is not in the Coverage Zone File, do not serve the request.</dd>
-                                    <dt>Coverage Zone File and Country Code(s)</dt><dd>If the requesting IP is not in the Coverage Zone File or not in the United States, do not serve the request.</dd>
-                                </dl>
-                            </div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="geoLimit" name="geoLimit" class="form-control" ng-model="deliveryService.geoLimit" required>
-                                <option ng-value="0" selected>None</option>
-                                <option ng-value="1">Coverage Zone File only</option>
-                                <option ng-value="2">Coverage Zone File and Country Code(s)</option>
-                            </select>
-                            <small class="input-error" ng-show="hasPropertyError(routingConfig.geoLimit, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimit != dsCurrent.geoLimit">
-                                <h3>Current Value</h3>
-                                <pre>{{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoLimitCountries), 'has-feedback': hasError(routingConfig.geoLimitCountries)}" ng-show="deliveryService.geoLimit === 1 || deliveryService.geoLimit === 2">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitCountries">Geo Limit Countries<div class="helptooltip">
-                            <div class="helptext">How (if at all) is this service to be limited by geography. Example Country Codes: <abbr title="Canada">CA</abbr>, <abbr title="India">IN</abbr>, <abbr title="Puerto Rico">PR</abbr>.</div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="geoLimitCountries" name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" maxlength="255" pattern="[A-Z]+(,[A-Z]+)*">
-                            <small class="input-error" ng-show="hasPropertyError(routingConfig.geoLimitCountries, 'maxlength')">Too Long</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">
-                                <h3>Current Value</h3>
-                                <pre>{{::dsCurrent.geoLimitCountries}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoLimitRedirectURL), 'has-feedback': hasError(routingConfig.geoLimitRedirectURL)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitRedirectURL">Geo Limit Redirect URL<div class="helptooltip">
-                            <div class="helptext">
-                                Traffic Router will redirect to this URL when Geo Limit check fails.
-                                <br>
-                                <br>
-                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
-                            </div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="geoLimitRedirectURL" name="geoLimitRedirectURL" title="Must be a valid URL" type="url" class="form-control" ng-model="deliveryService.geoLimitRedirectURL">
-                            <small class="input-error invalid-URL-error">Invalid URL</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">
-                                <h3>Current Value</h3>
-                                <pre>{{::dsCurrent.geoLimitRedirectURL}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.ccrDnsTtl), 'has-feedback': hasError(routingConfig.ccrDnsTtl)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ccrDnsTtl">Delivery Service DNS TTL<div class="helptooltip">
-                            <div class="helptext">The <abbr title="Time To Live">TTL</abbr> on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.</div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="ccrDnsTtl" name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" step="1" min="0">
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">
-                                <h3>Current Value</h3>
-                                <pre>{{::dsCurrent.ccrDnsTtl}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.trRequestHeaders), 'has-feedback': hasError(routingConfig.trRequestHeaders)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trRequestHeaders">Traffic Router Log Request Headers<div class="helptooltip">
-                            <div class="helptext">
-                                List of header keys. One header key per line. Listed headers will be included in Traffic Router access log entries under the <samp>rh=</samp> token.
-                            </div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="trRequestHeaders" name="trRequestHeaders" class="form-control" ng-model="deliveryService.trRequestHeaders" rows="3"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">
-                                <h3>Current Value</h3>
-                                <pre>{{::dsCurrent.trRequestHeaders}}</pre>
                             </aside>
                         </div>
                     </div>

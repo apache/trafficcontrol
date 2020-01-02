@@ -21,10 +21,7 @@
 
 ``GET``
 =======
-Retrieves information about a specific physical location
-
-.. deprecated:: 1.1
-	Use the ``id`` query parameter of the :ref:`to-api-phys_locations` endpoint instead
+Retrieves information about a specific :term:`Physical Location`
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -121,7 +118,7 @@ Response Structure
 
 ``PUT``
 =======
-Updates a physical location
+Updates a :term:`Physical Location`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -131,11 +128,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+--------------------------------------------------------------------------+
-	| Name |                Description                                               |
-	+======+==========================================================================+
-	|  ID  | The integral, unique identifier of the physical location being modified  |
-	+------+--------------------------------------------------------------------------+
+	+------+----------------------------------------------------------------------------------+
+	| Name | Description                                                                      |
+	+======+==================================================================================+
+	| ID   | The integral, unique identifier of the :term:`Physical Location` being modified  |
+	+------+----------------------------------------------------------------------------------+
 
 :address:   The physical location's street address
 :city:      The name of the city in which the physical location lies
@@ -234,7 +231,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes a physical location
+Deletes a :term:`Physical Location`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -244,11 +241,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+--------------------------------------------------------------------------+
-	| Name |                Description                                               |
-	+======+==========================================================================+
-	|  ID  | The integral, unique identifier of the physical location being modified  |
-	+------+--------------------------------------------------------------------------+
+	+------+--------------------------------------------------------------------------------+
+	| Name | Description                                                                    |
+	+======+================================================================================+
+	| ID   | The integral, unique identifier of the :term:`Physical Location` being deleted |
+	+------+--------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

@@ -105,6 +105,9 @@ Response Structure
 
 ``POST``
 ========
+.. deprecated:: 1.1
+    This endpoint does not have an alternative. API Capabilities must be seeded when new endpoints are created.
+
 Create an API-capability mapping.
 
 :Auth. Required: Yes

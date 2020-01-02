@@ -18,12 +18,12 @@
 *****************
 ``types/trimmed``
 *****************
-.. deprecated:: 1.1
-	A type is not a large object. Just get the names from :ref:`to-api-types` instead.
 
 ``GET``
 =======
-Retrieves only the names of all of the types of things configured in Traffic Ops. Yes, that is as specific as a description of a 'type' can be.
+Retrieves only the names of all of the :term:`Types` of things configured in Traffic Ops. Yes, that is as specific as a description of a 'type' can be.
+
+.. warning:: This endpoint is of limited use because it doesn't tell you what the type of each :term:`Type` is, which describes the types of objects that it can describe. No, I did not just have a stroke while writing this.
 
 :Auth. Required: Yes
 :Roles Required: None

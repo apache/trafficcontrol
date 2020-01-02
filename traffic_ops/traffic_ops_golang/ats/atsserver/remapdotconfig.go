@@ -25,7 +25,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
@@ -88,6 +88,6 @@ func GetServerConfigRemap(w http.ResponseWriter, r *http.Request) {
 
 	txt := atscfg.MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
 
-	w.Header().Set(tc.ContentType, tc.ContentTypeTextPlain)
+	w.Header().Set(rfc.ContentType, rfc.ContentTypeTextPlain)
 	io.WriteString(w, txt)
 }

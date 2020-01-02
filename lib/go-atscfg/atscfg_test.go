@@ -233,3 +233,14 @@ func TestGetConfigFile(t *testing.T) {
 		t.Errorf("Expected %s.   Got %s", expected, cfgFile)
 	}
 }
+
+func TestHeaderCommentUTC(t *testing.T) {
+	objName := "foo"
+	toolName := "bar"
+	toURL := "url"
+
+	txt := GenericHeaderComment(objName, toolName, toURL)
+	if !strings.Contains(txt, " UTC ") {
+		t.Error("Expected header comment to print time in UTC, actual '" + txt + "'")
+	}
+}

@@ -1,3 +1,5 @@
+// Package routing defines the HTTP routes for Traffic Ops and provides tools to
+// register those routes with appropriate middleware.
 package routing
 
 /*
@@ -34,15 +36,13 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 
 	"github.com/jmoiron/sqlx"
 )
 
 // RoutePrefix ...
 const RoutePrefix = "^api" // TODO config?
-
-// Middleware ...
-type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc
 
 // Route ...
 type Route struct {
@@ -53,7 +53,7 @@ type Route struct {
 	Handler           http.HandlerFunc
 	RequiredPrivLevel int
 	Authenticated     bool
-	Middlewares       []Middleware
+	Middlewares       []middleware.Middleware
 	ID                int  // unique ID for referencing this Route
 	CanBypassToPerl   bool // if true, this Route can be passed through to Perl
 }
@@ -70,11 +70,7 @@ type RawRoute struct {
 	Handler           http.HandlerFunc
 	RequiredPrivLevel int
 	Authenticated     bool
-	Middlewares       []Middleware
-}
-
-func getDefaultMiddleware(secret string, requestTimeout time.Duration) []Middleware {
-	return []Middleware{getWrapAccessLog(secret), timeOutWrapper(requestTimeout), wrapHeaders, wrapPanicRecover}
+	Middlewares       []middleware.Middleware
 }
 
 // ServerData ...
@@ -113,10 +109,10 @@ type PathHandler struct {
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
 // Returns the map of routes, and a map of API versions served.
-func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRouteIDs []int, perlHandler http.HandlerFunc, authBase AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[float64]struct{}) {
+func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRouteIDs []int, perlHandler http.HandlerFunc, authBase middleware.AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[float64]struct{}) {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
-	requestTimeout := time.Second * time.Duration(60)
+	requestTimeout := middleware.DefaultRequestTimeout
 	if reqTimeOutSeconds > 0 {
 		requestTimeout = time.Second * time.Duration(reqTimeOutSeconds)
 	}
@@ -139,16 +135,16 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRout
 			if isPerlRoute {
 				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: perlHandler})
 			} else if isDisabledRoute {
-				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: wrapAccessLog(authBase.secret, DisabledRouteHandler())})
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.WrapAccessLog(authBase.Secret, middleware.DisabledRouteHandler())})
 			} else {
-				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.Use(r.Handler, middlewares)})
 			}
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
 	for _, r := range rawRoutes {
 		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
-		m[r.Method] = append(m[r.Method], PathHandler{Path: r.Path, Handler: use(r.Handler, middlewares)})
+		m[r.Method] = append(m[r.Method], PathHandler{Path: r.Path, Handler: middleware.Use(r.Handler, middlewares)})
 		log.Infof("adding raw route %v %v\n", r.Method, r.Path)
 	}
 
@@ -160,9 +156,9 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRout
 	return m, versionSet
 }
 
-func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int, requestTimeout time.Duration) []Middleware {
+func getRouteMiddleware(middlewares []middleware.Middleware, authBase middleware.AuthBase, authenticated bool, privLevel int, requestTimeout time.Duration) []middleware.Middleware {
 	if middlewares == nil {
-		middlewares = getDefaultMiddleware(authBase.secret, requestTimeout)
+		middlewares = middleware.GetDefault(authBase.Secret, requestTimeout)
 	}
 	if authenticated { // a privLevel of zero is an unauthenticated endpoint.
 		authWrapper := authBase.GetWrapper(privLevel)
@@ -255,7 +251,7 @@ func Handler(
 	}
 
 	if IsRequestAPIAndUnknownVersion(r, versions) {
-		h := wrapAccessLog(cfg.Secrets[0], NotImplementedHandler())
+		h := middleware.WrapAccessLog(cfg.Secrets[0], middleware.NotImplementedHandler())
 		h.ServeHTTP(w, r)
 		return
 	}
@@ -293,21 +289,15 @@ func RegisterRoutes(d ServerData) error {
 		return err
 	}
 
-	authBase := AuthBase{secret: d.Config.Secrets[0], override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
+	authBase := middleware.AuthBase{Secret: d.Config.Secrets[0], Override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
 	routes, versions := CreateRouteMap(routeSlice, rawRoutes, d.PerlRoutes, d.DisabledRoutes, handlerToFunc(catchall), authBase, d.RequestTimeout)
+
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, w, r)
 	})
 	return nil
-}
-
-func use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
-	for i := len(middlewares) - 1; i >= 0; i-- { //apply them in reverse order so they are used in a natural order.
-		h = middlewares[i](h)
-	}
-	return h
 }
 
 // nextReqIDGetter returns a function for getting incrementing identifiers. The returned func is safe for calling with multiple goroutines. Note the returned identifiers will not be unique after the max uint64 value.

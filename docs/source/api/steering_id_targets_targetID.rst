@@ -21,10 +21,7 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	Use the ``target`` query parameter of a ``GET`` request to the :ref:`to-api-steering-id-targets` endpoint instead.
-
-Get a single target for a specific STEERING :term:`Delivery Service`.
+Get a single target for a specific STEERING-:ref:`ds-types` :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -64,13 +61,13 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService:   The 'xml_id' of the steering :term:`Delivery Service`
+:deliveryService:   A string that is the :ref:`ds-xmlid` of the steering :term:`Delivery Service`
 :deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
-:target:            The 'xml_id' of this target :term:`Delivery Service`
+:target:            A string that is the :ref:`ds-xmlid` of this target :term:`Delivery Service`
 :targetId:          An integral, unique identifier for this target :term:`Delivery Service`
 :type:              The routing type of this target :term:`Delivery Service`
-:typeId:            An integral, unique identifier for the routing type of this target :term:`Delivery Service`
-:value:             The 'weight' attributed to this steering target
+:typeId:            An integral, unique identifier for the :ref:`routing type <ds-types>` of this target :term:`Delivery Service`
+:value:             The 'weight' attributed to this steering target as an integer
 
 .. code-block:: http
 	:caption: Response Example
@@ -119,7 +116,7 @@ Request Structure
 	| targetID | The integral, unique identifier of a :term:`Delivery Service` which is a target of the :term:`Delivery Service` identified by ``ID`` |
 	+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 
-:typeId: The integral, unique identifier of the routing type of the target :term:`Delivery Service`
+:typeId: The integral, unique identifier of the :ref:`routing type <ds-types>` of the target :term:`Delivery Service`
 :value:  The 'weight' which shall be attributed to the target :term:`Delivery Service`
 
 .. code-block:: http
@@ -140,13 +137,13 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService:   The 'xml_id' of the steering :term:`Delivery Service`
+:deliveryService:   A string that is the :ref:`ds-xmlid` of the steering :term:`Delivery Service`
 :deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
-:target:            The 'xml_id' of this target :term:`Delivery Service`
+:target:            A string that is the :ref:`ds-xmlid` of this target :term:`Delivery Service`
 :targetId:          An integral, unique identifier for this target :term:`Delivery Service`
-:type:              The new routing type of this target :term:`Delivery Service`
-:typeId:            An integral, unique identifier for the new routing type of this target :term:`Delivery Service`
-:value:             The new 'weight' attributed to this steering target
+:type:              The routing type of this target :term:`Delivery Service`
+:typeId:            An integral, unique identifier for the :ref:`routing type <ds-types>` of this target :term:`Delivery Service`
+:value:             The 'weight' attributed to this steering target as an integer
 
 .. code-block:: http
 	:caption: Response Example
