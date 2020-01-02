@@ -131,7 +131,7 @@ Built: %(date) by %{getenv: USER}
 
     # upgrade
     if [ "$1" == "2" ]; then
-	systemctl stop traffic_ops
+        systemctl stop traffic_ops || true # Don't exit with an error if we are in an unprivileged Docker container and can't use systemctl
     fi
 
 %post
@@ -185,7 +185,7 @@ Built: %(date) by %{getenv: USER}
 
 if [ "$1" = "0" ]; then
     # stop service before starting the uninstall
-    systemctl stop traffic_ops
+    systemctl stop traffic_ops || true # Don't exit with an error if we are in an unprivileged Docker container and can't use systemctl
 fi
 
 %postun
