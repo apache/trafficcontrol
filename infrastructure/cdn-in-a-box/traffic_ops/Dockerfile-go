@@ -35,7 +35,7 @@ RUN mkdir /etc/cron.d && \
 	yum -y install jq bind-utils net-tools gettext perl-JSON-PP nmap-ncat openssl postgresql96 && \
 	yum clean all
 
-ADD infrastructure/cdn-in-a-box/enroller/server_template.json \
+COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
     infrastructure/cdn-in-a-box/traffic_ops/config.sh \
     infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \
     infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
