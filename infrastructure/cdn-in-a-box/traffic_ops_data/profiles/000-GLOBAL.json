@@ -20,14 +20,14 @@
       "value": "CDN-In-A-Box"
     },
     {
-      "value": "https://trafficops.infra.ciab.test/GeoLiteCity.dat.gz",
+      "value": "https://trafficops.infra.ciab.test/GeoLite2-City.mmdb.gz",
       "configFile": "CRConfig.json",
       "name": "geolocation.polling.url"
     },
     {
       "name": "geolocation6.polling.url",
       "configFile": "CRConfig.json",
-      "value": "https://trafficops.infra.ciab.test/GeoLiteCity.dat.gz"
+      "value": "https://trafficops.infra.ciab.test/GeoLite2-City.mmdb.gz"
     },
     {
       "value": "Traffic Ops",
