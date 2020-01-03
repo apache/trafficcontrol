@@ -571,6 +571,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPut, `steering/{deliveryservice}/targets/{target}/?(\.json)?$`, api.UpdateHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil, 1438608295, noPerlBypass},
 		{1.1, http.MethodDelete, `steering/{deliveryservice}/targets/{target}/?(\.json)?$`, api.DeleteHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil, 2088021515, noPerlBypass},
 
+		// Stats Summary
+		{1.1, http.MethodGet, `stats_summary/?(\.json)?$`, trafficstats.GetStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380498598, perlBypass},
+
 		//Pattern based consistent hashing endpoint
 		{1.4, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil, 1960755076, noPerlBypass},
 

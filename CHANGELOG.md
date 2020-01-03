@@ -48,6 +48,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/federations/:id/users/:userID
   - /api/1.2/current_stats
   - /api/1.1/osversions
+  - /api/1.1/stats_summary `GET`
   - /api/1.1/api_capabilities `GET`
   - /api/1.1/user/current `PUT`
   - /api/1.1/federations/:id/federation_resolvers `(GET, POST)`
