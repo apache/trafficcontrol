@@ -163,7 +163,7 @@ public class NameServer {
 	}
 
 	@SuppressWarnings({"PMD.UseStringBufferForStringAppends"})
-	private boolean isDeliveryServiceEcsEnabled(final Name name) { //, int qtype, InetAddress clientAddress) {
+	private boolean isDeliveryServiceEcsEnabled(final Name name) {
 		boolean isEnabled = false;
 
 		for (final DeliveryService ds : ecsEnabledDses) {

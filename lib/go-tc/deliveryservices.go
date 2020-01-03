@@ -158,13 +158,16 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceNullableV14 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
+type DeliveryServiceNullableV15 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
 
 type DeliveryServiceNullable struct {
+	DeliveryServiceNullableV14
+	EcsEnabled bool `json:"ecsEnabled" db:"ecs_enabled"`
+}
+type DeliveryServiceNullableV14 struct {
 	DeliveryServiceNullableV13
 	ConsistentHashRegex       *string  `json:"consistentHashRegex"`
 	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
-	EcsEnabled                bool     `json:"ecsEnabled" db:"ecs_enabled"`
 	MaxOriginConnections      *int     `json:"maxOriginConnections" db:"max_origin_connections"`
 }
 

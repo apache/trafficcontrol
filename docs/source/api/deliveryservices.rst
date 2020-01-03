@@ -92,7 +92,7 @@ Response Structure
 :dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
 :ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 
-	.. versionadded:: 1.4
+	.. versionadded:: 1.5
 
 :edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
 :exampleURLs:       An array of :ref:`ds-example-urls`
