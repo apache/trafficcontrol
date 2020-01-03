@@ -26,7 +26,7 @@
 Retrieves the health of all :term:`Cache Groups` assigned to a particular :term:`Delivery Service`
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [#tenancy]_
+:Roles Required: None\ [#tenancy]_
 :Response Type:  Object
 
 Request Structure
@@ -80,4 +80,4 @@ Response Structure
 		]
 	}}
 
-.. [#tenancy] Users will only be able to see :term:`Cache Group` health details for the :term:`Delivery Services` their :term:`Tenant` is allowed to see.
+.. [#tenancy] Users of any :term:`Role` may request this endpoint, however they will only be able to see :term:`Cache Group` health details for the :term:`Delivery Services` their :term:`Tenant` is allowed to see. That is, *unless* they happen to have the "operations" or "admin" :term:`Role`, in which case tenancy restrictions are ignored.
