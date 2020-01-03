@@ -80,4 +80,4 @@ Response Structure
 		]
 	}}
 
-.. [#tenancy] Users of any :term:`Role` may request this endpoint, however they will only be able to see :term:`Cache Group` health details for the :term:`Delivery Services` their :term:`Tenant` is allowed to see. That is, *unless* they happen to have the "operations" or "admin" :term:`Role`, in which case tenancy restrictions are ignored.
+.. [#tenancy] Users will only be able to see :term:`Cache Group` health details for the :term:`Delivery Services` their :term:`Tenant` is allowed to see.

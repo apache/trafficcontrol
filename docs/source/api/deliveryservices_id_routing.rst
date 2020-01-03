@@ -89,4 +89,4 @@ Response Structure
 		"staticRoute": 0
 	}}
 
-.. [#tenancy] Users of any :term:`Role` can request this endpoint, however they  will only be able to view routing details for the :term:`Delivery Services` their :term:`Tenant` is allowed to see. That is, *unless* they happen to have the "operations" or "admin" :term:`Role`, in which case tenancy restrictions are ignored.
+.. [#tenancy] Users will only be able to view routing details for the :term:`Delivery Services` their :term:`Tenant` is allowed to see.
