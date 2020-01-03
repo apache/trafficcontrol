@@ -1,0 +1,12 @@
+# To use this dockerignore:
+# - Set these environment variables: COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1
+# - Use a docker version of 19.03.0 or higher (Docker Desktop >=2.1.0.1)
+# For more information, see:
+# - https://github.com/moby/buildkit/pull/901
+# - https://github.com/docker/compose/pull/6865
+# - https://docs.docker.com/develop/develop-images/build_enhancements/
+*
+!infrastructure/cdn-in-a-box/
+!traffic_ops/app/cpanfile
+!traffic_ops/install/bin/install_goose.sh
+!traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz
