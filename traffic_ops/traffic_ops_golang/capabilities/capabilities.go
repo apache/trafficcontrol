@@ -103,7 +103,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var cap tc.Capability
 	if err := decoder.Decode(&cap); err != nil {
-		sysErr = fmt.Errorf("Decoding request body: %v")
+		sysErr = fmt.Errorf("Decoding request body: %v", err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
