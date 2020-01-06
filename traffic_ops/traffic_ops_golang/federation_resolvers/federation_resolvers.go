@@ -237,7 +237,7 @@ func DeleteByID(w http.ResponseWriter, r *http.Request) {
 		&respObj,
 	}
 
-	if inf.Version.Major == 1 && inf.Version.Minor < 4 {
+	if inf.Version.Major == 1 && inf.Version.Minor < 5 {
 		resp.Response = nil
 	}
 

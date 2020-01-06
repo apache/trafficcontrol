@@ -176,7 +176,7 @@ Response Structure
 ==========
 Deletes a federation resolver.
 
-.. versionadded:: 1.4
+.. versionadded:: 1.5
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -195,7 +195,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.4/federation_resolvers?id=4 HTTP/1.1
+	DELETE /api/1.5/federation_resolvers?id=4 HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*

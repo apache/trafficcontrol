@@ -18,7 +18,7 @@
 *******************************
 ``federation_resolvers/{{ID}}``
 *******************************
-.. deprecated:: 1.4
+.. deprecated:: 1.5
 
 
 ``DELETE``
@@ -29,7 +29,7 @@ Deletes a federation resolver.
 :Roles Required: "admin"
 :Response Type:  Object
 
-	.. versionchanged:: 1.4
+	.. versionchanged:: 1.5
 		Older versions of this endpoint did not return a ``response`` object (i.e. it was ``undefined``).
 
 Request Structure
