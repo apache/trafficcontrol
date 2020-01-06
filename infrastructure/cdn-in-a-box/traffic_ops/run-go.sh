@@ -35,7 +35,10 @@
 
 # Check that env vars are set
 
-set -x
+# Setting the monitor shell option enables job control, which we need in order
+# to bring traffic_ops_golang back to the foreground.
+set -o xtrace -o monitor;
+
 envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS)
 for v in $envvars
 do
@@ -67,7 +70,8 @@ touch /var/log/traffic_ops/traffic_ops.log
 # enroll in the background so traffic_ops_golang can run in foreground
 TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
-./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF -riakcfg $RIAKCONF &
+traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF -riakcfg $RIAKCONF);
+"${traffic_ops_golang_command[@]}" &
 
 to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 
@@ -101,4 +105,5 @@ if [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]]; then
   to-auto-snapqueue $AUTO_SNAPQUEUE_SERVERS $CDN_NAME
 fi
 
-exec tail -f /dev/null
+fg '"${traffic_ops_golang_command[@]}"'; # Bring traffic_ops_golang to foreground
+fg; # Bring to-enroll to foreground if it is still running
