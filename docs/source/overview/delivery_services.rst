@@ -189,6 +189,12 @@ This field in general contains the contents of the a configuration file used by 
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
 
+.. _ds-ecs:
+
+EDNS0 Client Subnet Enabled
+---------------------------
+A boolean value that controls whether or not EDNS0 client subnet is enabled on this Delivery Service by Traffic Router. When creating a Delivery Service in Traffic Portal, this will default to "false".
+
 .. _ds-example-urls:
 
 Example URLs

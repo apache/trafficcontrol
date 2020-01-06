@@ -121,6 +121,7 @@ type CRConfigDeliveryService struct {
 	TTLs                      *CRConfigTTL                          `json:"ttls,omitempty"`
 	MaxDNSIPsForLocation      *int                                  `json:"maxDnsIpsForLocation,omitempty"`
 	IP6RoutingEnabled         *bool                                 `json:"ip6RoutingEnabled,string,omitempty"`
+	EcsEnabled                *bool                                 `json:"ecsEnabled,string,omitempty"`
 	RoutingName               *string                               `json:"routingName,omitempty"`
 	BypassDestination         map[string]*CRConfigBypassDestination `json:"bypassDestination,omitempty"`
 	DeepCachingType           *DeepCachingType                      `json:"deepCachingType"`
