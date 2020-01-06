@@ -143,7 +143,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Capability created.", cap)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "Capability created.")
+	alerts.AddNewAlert(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
+
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, cap)
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CAPABILITY: %s, ACTION: Created", cap.Name), inf.User, tx)
 }
 
