@@ -18,7 +18,7 @@
 ********************
 ``api_capabilities``
 ********************
-Deals with the capabilities that may be associated with API endpoints and methods. These capabilities are assigned to "roles", of which a user may have one or more. Capabilities support "wildcarding" or "globbing" using asterisks to group multiple routes into a single capability
+Deals with the capabilities that may be associated with API endpoints and methods. These capabilities are assigned to :term:`Roles`, of which a user may have one or more. Capabilities support "wildcarding" or "globbing" using asterisks to group multiple routes into a single capability
 
 ``GET``
 =======
@@ -105,6 +105,9 @@ Response Structure
 
 ``POST``
 ========
+.. deprecated:: 1.1
+    This endpoint does not have an alternative. API Capabilities must be seeded when new endpoints are created.
+
 Create an API-capability mapping.
 
 :Auth. Required: Yes

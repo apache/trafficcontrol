@@ -20,12 +20,10 @@ package cachesstats
  */
 
 import (
-	"crypto/tls"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -33,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/monitorhlp"
 )
 
 func Get(w http.ResponseWriter, r *http.Request) {
@@ -56,25 +55,9 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 		return nil, errors.New("getting monitors: " + err.Error())
 	}
 
-	monitorForwardProxy, monitorForwardProxyExists, err := getGlobalParam(tx, MonitorProxyParameter)
+	client, err := monitorhlp.GetClient(tx)
 	if err != nil {
-		return nil, errors.New("getting global monitor proxy parameter: " + err.Error())
-	}
-
-	client := &http.Client{Timeout: MonitorRequestTimeout}
-	if monitorForwardProxyExists {
-		proxyURI, err := url.Parse(monitorForwardProxy)
-		if err != nil {
-			return nil, errors.New("monitor forward proxy '" + monitorForwardProxy + "' in parameter '" + MonitorProxyParameter + "' not a URI: " + err.Error())
-		}
-		clientTransport := &http.Transport{Proxy: http.ProxyURL(proxyURI)}
-		if proxyURI.Scheme == "https" {
-			// TM does not support HTTP/2 and golang when connecting to https will use HTTP/2 by default causing a conflict
-			// The result will be an unsupported scheme error
-			// Setting TLSNextProto to any empty map will disable using HTTP/2 per https://golang.org/src/net/http/doc.go
-			clientTransport.TLSNextProto = make(map[string]func(authority string, c *tls.Conn) http.RoundTripper)
-		}
-		client = &http.Client{Timeout: MonitorRequestTimeout, Transport: clientTransport}
+		return nil, errors.New("getting monitor client: " + err.Error())
 	}
 
 	cacheData, err := getCacheData(tx)
@@ -91,7 +74,7 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 		success := false
 		errs := []error{}
 		for _, monitorFQDN := range monitorFQDNs {
-			crStates, err := getCRStates(monitorFQDN, client)
+			crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
 			if err != nil {
 				errs = append(errs, errors.New("getting CRStates for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
 				continue
@@ -197,31 +180,7 @@ func addStats(cacheData []CacheData, stats CacheStats) []CacheData {
 	return cacheData
 }
 
-// CRStates contains the Monitor CRStates needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
-type CRStates struct {
-	Caches map[tc.CacheName]Available `json:"caches"`
-}
-
-type Available struct {
-	IsAvailable bool `json:"isAvailable"`
-}
-
-func getCRStates(monitorFQDN string, client *http.Client) (CRStates, error) {
-	path := `/publish/CrStates`
-	resp, err := client.Get("http://" + monitorFQDN + path)
-	if err != nil {
-		return CRStates{}, errors.New("getting CRStates from Monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	defer resp.Body.Close()
-
-	crs := CRStates{}
-	if err := json.NewDecoder(resp.Body).Decode(&crs); err != nil {
-		return CRStates{}, errors.New("decoding CRStates from monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	return crs, nil
-}
-
-func addHealth(cacheData []CacheData, crStates CRStates) []CacheData {
+func addHealth(cacheData []CacheData, crStates tc.CRStates) []CacheData {
 	if crStates.Caches == nil {
 		return cacheData // TODO warn?
 	}

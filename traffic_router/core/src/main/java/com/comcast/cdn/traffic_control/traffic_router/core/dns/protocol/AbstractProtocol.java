@@ -25,27 +25,27 @@ import org.xbill.DNS.Section;
 import org.xbill.DNS.WireParseException;
 
 import java.net.InetAddress;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
+@SuppressWarnings("PMD.MoreThanOneLogger")
 public abstract class AbstractProtocol implements Protocol {
     private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
+    private static final Logger LOGGER = Logger.getLogger(AbstractProtocol.class);
 
     private static final int NUM_SECTIONS = 4;
     protected boolean shutdownRequested;
-    private ExecutorService executorService;
+    private ThreadPoolExecutor executorService;
+    private ExecutorService cancelService;
     private NameServer nameServer;
     private int taskTimeout = 5000; // default
+    private int queueDepth = 1000; // default
 
     /**
      * Gets executorService.
      * 
      * @return the executorService
      */
-    public ExecutorService getExecutorService() {
+    public ThreadPoolExecutor getExecutorService() {
         return executorService;
     }
 
@@ -64,7 +64,7 @@ public abstract class AbstractProtocol implements Protocol {
      * @param executorService
      *            the executorService to set
      */
-    public void setExecutorService(final ExecutorService executorService) {
+    public void setExecutorService(final ThreadPoolExecutor executorService) {
         this.executorService = executorService;
     }
 
@@ -82,6 +82,7 @@ public abstract class AbstractProtocol implements Protocol {
     public void shutdown() {
         shutdownRequested = true;
         executorService.shutdownNow();
+        cancelService.shutdownNow();
     }
 
     /**
@@ -143,9 +144,30 @@ public abstract class AbstractProtocol implements Protocol {
      * @param job
      *            the handler to be executed
      */
-	protected void submit(final Runnable job) {
-		final Future<?> handler = executorService.submit(job);
-		executorService.submit(new Runnable() {
+	protected void submit(final SocketHandler job) {
+		final int queueLength = executorService.getQueue().size();
+		Future<?> handler;
+
+		if ((queueDepth > 0 && queueLength >= queueDepth) || (queueDepth == 0 && queueLength > 0)) {
+			LOGGER.warn(
+				String.format("%s request thread pool full and queue depth limit reached (%d >= %d); discarding request",
+				this.getClass().getSimpleName(), queueLength, queueDepth)
+			);
+
+			// causes the underlying SocketHandler inner class of each implementing protocol to call a cleanup() method
+			job.cancel();
+
+			// add to the cancellation thread pool instead of the task executor pool
+			handler = cancelService.submit(job);
+		} else {
+			handler = executorService.submit(job);
+		}
+
+		cancelService.submit(getCanceler(handler));
+	}
+
+	private Runnable getCanceler(final Future<?> handler) {
+		return new Runnable() {
 			public void run() {
 				try {
 					handler.get(getTaskTimeout(), TimeUnit.MILLISECONDS);
@@ -153,7 +175,7 @@ public abstract class AbstractProtocol implements Protocol {
 					handler.cancel(true);
 				}
 			}
-		});
+		};
 	}
 
     private Message createServerFail(final Message query) {
@@ -176,5 +198,17 @@ public abstract class AbstractProtocol implements Protocol {
 
 	public void setTaskTimeout(final int taskTimeout) {
 		this.taskTimeout = taskTimeout;
+	}
+
+	public void setQueueDepth(final int queueDepth) {
+		this.queueDepth = queueDepth;
+	}
+
+	public ExecutorService getCancelService() {
+		return cancelService;
+	}
+
+	public void setCancelService(final ExecutorService cancelService) {
+		this.cancelService = cancelService;
 	}
 }

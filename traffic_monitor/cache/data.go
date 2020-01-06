@@ -96,6 +96,23 @@ func (t *ResultStatVal) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&v)
 }
 
+func (t *ResultStatVal) UnmarshalJSON(data []byte) error {
+	v := struct {
+		Val  string `json:"value"`
+		Time int64  `json:"time"`
+		Span uint64 `json:"span"`
+	}{}
+	json := jsoniter.ConfigFastest // TODO make configurable
+	err := json.Unmarshal(data, &v)
+	if err != nil {
+		return err
+	}
+	t.Time = time.Unix(0, v.Time*1000000)
+	t.Val = v.Val
+	t.Span = v.Span
+	return nil
+}
+
 func pruneStats(history []ResultStatVal, limit uint64) []ResultStatVal {
 	if uint64(len(history)) > limit {
 		history = history[:limit-1]

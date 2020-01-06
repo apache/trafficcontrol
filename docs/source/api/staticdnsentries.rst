@@ -142,7 +142,7 @@ Request Structure
 
 :deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the :abbr:`FQDN (Fully Qualified Domain Name)` which shall resolve to ``address``
-:ttl:               The :term:`TTL (Time To Live)` of this static DNS entry in seconds
+:ttl:               The :abbr:`TTL (Time To Live)` of this static DNS entry in seconds
 :typeId:            The integral, unique identifier of the :term:`Type` of this static DNS entry
 
 .. code-block:: http

@@ -133,20 +133,24 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 	}
 
 	hostingDSes := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{}
+
+	isMid := strings.HasPrefix(server.Type, tc.MidTypePrefix)
+
 	for _, ds := range dses {
 		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify
 			continue
 		}
 
-		if !ServerHostingDotConfigMidIncludeInactive && !*ds.Active {
+		if !*ds.Active && ((!isMid && !ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !ServerHostingDotConfigMidIncludeInactive)) {
 			continue
 		}
+
 		if *ds.CDNID != server.CDNID {
 			continue
 		}
 
-		if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+		if isMid {
 			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) {
 				continue
 			}
