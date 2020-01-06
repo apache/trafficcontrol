@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Ops Endpoints
+  - /api/1.5/stats_summary `POST`
 
 ### Changed
 

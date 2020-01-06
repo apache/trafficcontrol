@@ -150,7 +150,7 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 	}
 	for _, ss := range testStatsSummaries {
 		testCases = append(testCases, testCase{
-			description:       fmt.Sprintf("latest updated timestamp for - %v", ss.StatName),
+			description:       fmt.Sprintf("latest updated timestamp for - %v", *ss.StatName),
 			stat:              ss.StatName,
 			errExpected:       false,
 			expectedTimestamp: ss.SummaryTime,
@@ -175,5 +175,4 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 			}
 		})
 	}
-
 }

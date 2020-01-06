@@ -179,7 +179,7 @@ Last Updated Summary Stat
 	}}
 
 ``POST``
-.. versionadded:: 1.4
+.. versionadded:: 1.4.1
 
 Post a stats summary for a given stat.
 
@@ -207,7 +207,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/stats_summary HTTP/1.1
+	POST /api/1.5/stats_summary HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -216,12 +216,12 @@ Request Structure
 	Content-Type: application/json
 
 	{
-        "cdnName": "CDN-in-a-Box",
-        "deliveryServiceName": "all",
-        "statName": "daily_maxgbps",
-        "statValue": 10,
-        "summaryTime": "2019-12-05 00:03:57+00",
-        "statDate": "2019-12-05"
+		"cdnName": "CDN-in-a-Box",
+		"deliveryServiceName": "all",
+		"statName": "daily_maxgbps",
+		"statValue": 10,
+		"summaryTime": "2019-12-05 00:03:57+00",
+		"statDate": "2019-12-05"
 	}
 
 Response Structure
@@ -241,11 +241,9 @@ Response Structure
 	Date: Thu, 06 Dec 2018 02:14:45 GMT
 	Content-Length: 97
 
-	{
-		"alerts": [
-			{
-				"text": "Stats Summary was successfully created",
-				"level": "success"
-			}
-		]
+	{ "alerts": [
+		{
+			"text": "Stats Summary was successfully created",
+			"level": "success"
+		}]
 	}

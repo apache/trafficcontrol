@@ -70,38 +70,30 @@ func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if resp.StatDate != nil {
-		statDate, err := parseStatDate(*resp.StatDate)
+		statDate, err := parseTime(*resp.StatDate)
 		if err != nil {
 			return errors.New("invalid timestamp given for statDate")
 		}
 		ss.StatDate = &statDate
 	}
 
-	ss.SummaryTime, err = parseSummaryTime(resp.SummaryTime)
+	ss.SummaryTime, err = parseTime(resp.SummaryTime)
 	if err != nil {
 		return errors.New("invalid timestamp given for summaryTime")
 	}
 	return nil
 }
 
-func parseStatDate(sd string) (time.Time, error) {
-	rt, err := time.Parse(time.RFC3339, sd)
+func parseTime(ts string) (time.Time, error) {
+	rt, err := time.Parse(time.RFC3339, ts)
 	if err == nil {
 		return rt, err
 	}
-	rt, err = time.Parse(TimeLayout, sd)
+	rt, err = time.Parse(TimeLayout, ts)
 	if err == nil {
 		return rt, err
 	}
-	return time.Parse(dateFormat, sd)
-}
-
-func parseSummaryTime(st string) (time.Time, error) {
-	rt, err := time.Parse(time.RFC3339, st)
-	if err == nil {
-		return rt, err
-	}
-	return time.Parse(TimeLayout, st)
+	return time.Parse(dateFormat, ts)
 }
 
 // UnmarshalJSON Customized Marshal to force date format on statDate
