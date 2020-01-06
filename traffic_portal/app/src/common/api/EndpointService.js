@@ -31,7 +31,7 @@ var EndpointService = function($http, ENV, locationUtils, messageModel) {
 	};
 
 	this.getEndpoint = function(id) {
-		return $http.get(ENV.api['root'] + 'api_capabilities/' + id).then(
+		return $http.get(ENV.api['root'] + 'api_capabilities', {params: {id: id}}).then(
 			function (result) {
 				return result.data.response[0];
 			},
@@ -41,6 +41,7 @@ var EndpointService = function($http, ENV, locationUtils, messageModel) {
 		);
 	};
 
+	// todo: this functionality needs to be removed as the endpoint will be deprecated
 	this.createEndpoint = function(endpoint) {
 		return $http.post(ENV.api['root'] + 'api_capabilities', endpoint).then(
 			function(result) {
@@ -55,6 +56,7 @@ var EndpointService = function($http, ENV, locationUtils, messageModel) {
 		);
 	};
 
+	// todo: this functionality needs to be removed as the endpoint will be deprecated
 	this.updateEndpoint = function(endpoint) {
 		return $http.put(ENV.api['root'] + 'api_capabilities/' + endpoint.id, endpoint).then(
 			function(result) {
@@ -68,6 +70,7 @@ var EndpointService = function($http, ENV, locationUtils, messageModel) {
 		);
 	};
 
+	// todo: this functionality needs to be removed as the endpoint will be deprecated
 	this.deleteEndpoint = function(id) {
 		return $http.delete(ENV.api['root'] + 'api_capabilities/' + id).then(
 			function(result) {
@@ -80,7 +83,6 @@ var EndpointService = function($http, ENV, locationUtils, messageModel) {
 			}
 		);
 	};
-
 
 };
 
