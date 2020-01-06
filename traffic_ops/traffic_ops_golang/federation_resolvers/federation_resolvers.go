@@ -26,6 +26,7 @@ import "encoding/json"
 import "fmt"
 import "net/http"
 
+import "github.com/apache/trafficcontrol/lib/go-rfc"
 import "github.com/apache/trafficcontrol/lib/go-tc"
 import "github.com/apache/trafficcontrol/lib/go-util"
 
@@ -190,7 +191,8 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 		} else {
 			userErr, sysErr, statusCode = api.ParseDBError(err)
 		}
-		return userErr, sysErr, statusCode, alert, result
+
+		return alert, result, userErr, sysErr, statusCode
 	}
 
 	changeLogMsg := fmt.Sprintf("FEDERATION_RESOLVER: %s, ID: %d, ACTION: Deleted", *result.IPAddress, *result.ID)
@@ -202,7 +204,7 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 		Text:  alertMsg,
 	}
 
-	return userErr, sysErr, statusCode, alert, result
+	return alert, result, userErr, sysErr, statusCode
 }
 
 // DeleteByID is the handler for DELETE requests to /federation_resolvers/{{ID}}.
@@ -249,7 +251,7 @@ func DeleteByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.WriteHeader(statusCode)
 	w.Write(append(respBts, '\n'))
 }
