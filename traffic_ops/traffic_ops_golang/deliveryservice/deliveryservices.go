@@ -1472,15 +1472,15 @@ func getDSTenantIDByName(tx *sql.Tx, ds tc.DeliveryServiceName) (*int, bool, err
 }
 
 // GetDeliveryServiceType returns the type of the deliveryservice.
-func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, error) {
+func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, bool, error) {
 	var dsType tc.DSType
 	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
 		if err == sql.ErrNoRows {
-			return tc.DSTypeInvalid, errors.New("a deliveryservice with id '" + strconv.Itoa(dsID) + "' was not found")
+			return tc.DSTypeInvalid, false, nil
 		}
-		return tc.DSTypeInvalid, errors.New("querying type from delivery service: " + err.Error())
+		return tc.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
 	}
-	return dsType, nil
+	return dsType, true, nil
 }
 
 // GetXMLID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.

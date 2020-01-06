@@ -241,6 +241,19 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 		return nil, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error()), http.StatusInternalServerError
 	}
 
+	// Ensure DS type is only of HTTP*, DNS* types
+	dsType, dsExists, err := GetDeliveryServiceType(*rc.DeliveryServiceID, rc.APIInfo().Tx.Tx)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	if !dsExists {
+		return errors.New("a deliveryservice with id '" + strconv.Itoa(*rc.DeliveryServiceID) + "' was not found"), nil, http.StatusNotFound
+	}
+
+	if !dsType.IsHTTP() && !dsType.IsDNS() {
+		return errors.New("Invalid DS type. Only DNS and HTTP delivery services can have required capabilities"), nil, http.StatusBadRequest
+	}
+
 	usrErr, sysErr, rCode := rc.ensureDSServerCap()
 	if usrErr != nil || sysErr != nil {
 		return usrErr, sysErr, rCode
