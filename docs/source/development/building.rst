@@ -48,7 +48,7 @@ Usage
 
 Options
 
--q      Quiet mode. Supresses output.
+-q      Quiet mode. Suppresses output.
 -v      Verbose mode. Lists all build output.
 -l      List available projects.
 

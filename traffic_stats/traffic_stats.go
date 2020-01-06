@@ -320,7 +320,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 					statsSummary.StatName = util.StrPtr("daily_maxgbps")
 					statsSummary.StatValue = util.FloatPtr(value)
 					statsSummary.SummaryTime = time.Now()
-					statsSummary.StatDate = statTime
+					statsSummary.StatDate = &statTime
 					go writeSummaryStats(config, statsSummary)
 
 					//write to influxdb
@@ -380,7 +380,7 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 			statsSummary.StatName = util.StrPtr("daily_bytesserved")
 			statsSummary.StatValue = util.FloatPtr(bytesServedTB)
 			statsSummary.SummaryTime = time.Now()
-			statsSummary.StatDate = startTime
+			statsSummary.StatDate = &startTime
 			go writeSummaryStats(config, statsSummary)
 			//write to Influxdb
 			tags := map[string]string{"cdn": cdn, "deliveryservice": "all"}
@@ -507,8 +507,10 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated(util.StrPtr("daily_maxgbps"))
 	if err != nil {
 		errHndlr(err, ERROR)
+	} else if lastSummaryTimeResponse.Response.SummaryTime == nil {
+		errHndlr(errors.New("unable to get last updated stats summary timestamp: daily_maxgbps stats summary not reported yet"), WARN)
 	} else {
-		runningConfig.LastSummaryTime = lastSummaryTimeResponse.Response.SummaryTime
+		runningConfig.LastSummaryTime = *lastSummaryTimeResponse.Response.SummaryTime
 	}
 
 	configChan <- runningConfig

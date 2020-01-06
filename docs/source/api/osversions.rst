@@ -22,7 +22,7 @@
 
 ``GET``
 =======
-Gets all available Operating System (OS) versions for ISO generation, as well as the name of the directory where the "kickstarter" files are found.
+Gets all available :abbr:`OS (Operating System)` versions for ISO generation, as well as the name of the directory where the "kickstarter" files are found.
 
 :Auth. Required: Yes
 :Roles Required: None

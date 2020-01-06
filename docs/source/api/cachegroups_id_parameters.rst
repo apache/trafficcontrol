@@ -18,10 +18,11 @@
 *********************************
 ``cachegroups/{{ID}}/parameters``
 *********************************
-Gets all the :term:`Parameters` associated with a :term:`Cache Group`
 
 ``GET``
 =======
+Gets all of a :ref:`Cache Group's parameters <cache-group-parameters>`.
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -33,7 +34,7 @@ Request Structure
 	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| Name        | Required | Description                                                                                                   |
 	+=============+==========+===============================================================================================================+
-	| parameterId | no       | Show only the :term:`Parameter` with the given ID                                                             |
+	| parameterId | no       | Show only the :term:`Parameter` with the given :ref:`parameter-id`                                            |
 	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|             |          | array                                                                                                         |
@@ -54,7 +55,7 @@ Request Structure
 	+-----------+----------------------------------------------------------+
 	| Parameter | Description                                              |
 	+===========+==========================================================+
-	| ID        | The integral, unique identifier of a :term:`Cache Group` |
+	| ID        | The :ref:`cache-group-id` of a :term:`Cache Group`       |
 	+-----------+----------------------------------------------------------+
 
 

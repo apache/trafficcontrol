@@ -23,7 +23,7 @@
 
 ``POST``
 ========
-Generates a new Key-Signing Key (KSK) for a specific CDN.
+Generates a new :abbr:`KSK (Key-Signing Key)` for a specific CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -33,21 +33,14 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+----------+---------------------------------------------------------+
-	| Name | Required | Description                                             |
-	+======+==========+=========================================================+
-	| name | yes      | The name of the CDN for which the KSK will be generated |
-	+------+----------+---------------------------------------------------------+
+	+------+----------+-----------------------------------------------------------------------------------+
+	| Name | Required | Description                                                                       |
+	+======+==========+===================================================================================+
+	| name | yes      | The name of the CDN for which the :abbr:`KSK (Key-Signing Key)` will be generated |
+	+------+----------+-----------------------------------------------------------------------------------+
 
-.. table:: Request Data Parameters
-
-	+--------------------+----------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| Name               | Required | Type    | Description                                                                                                                                            |
-	+====================+==========+=========+========================================================================================================================================================+
-	| ``expirationDays`` | yes      | integer | The number of days until the newly generated KSK expires                                                                                               |
-	+--------------------+----------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| ``effectiveDate``  | no       | string  | The time at which the newly generated KSK becomes effective, in `RFC3339 <https://tools.ietf.org/html/rfc3339>`_ format - defaults to the current time |
-	+--------------------+----------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+:expirationDays: The integral number of days until the newly generated :abbr:`KSK (Key-Signing Key)` expires
+:effectiveDate:  An optional string containing the date and time at which the newly generated :abbr:`KSK (Key-Signing Key)` becomes effective, in :RFC:`3339` format. Defaults to the current time if not specified
 
 Response Structure
 ------------------

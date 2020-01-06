@@ -129,30 +129,30 @@ Summary Stats
 
 	{ "response": [
 		{
-            "cdnName": "CDN-in-a-Box",
-            "deliveryServiceName": "all",
-            "statName": "daily_maxgbps",
-            "statValue": 5,
-            "summaryTime": "2019-11-19 00:04:06+00",
-            "statDate": "2019-11-19
-        },
+			"cdnName": "CDN-in-a-Box",
+			"deliveryServiceName": "all",
+			"statName": "daily_maxgbps",
+			"statValue": 5,
+			"summaryTime": "2019-11-19 00:04:06+00",
+			"statDate": "2019-11-19"
+		},
 		{
-            "cdnName": "CDN-in-a-Box",
-            "deliveryServiceName": "all",
-            "statName": "daily_maxgbps",
-            "statValue": 3,
-            "summaryTime": "2019-11-18 00:04:06+00",
-            "statDate": "2019-11-18"
-        },
-        {
-            "cdnName": "CDN-in-a-Box",
-            "deliveryServiceName": "all",
-            "statName": "daily_bytesserved",
-            "statValue": 1000,
-            "summaryTime": "2019-11-19 00:04:06+00",
-            "statDate": "2019-11-19"
-        }
-    ]}
+			"cdnName": "CDN-in-a-Box",
+			"deliveryServiceName": "all",
+			"statName": "daily_maxgbps",
+			"statValue": 3,
+			"summaryTime": "2019-11-18 00:04:06+00",
+			"statDate": "2019-11-18"
+		},
+		{
+			"cdnName": "CDN-in-a-Box",
+			"deliveryServiceName": "all",
+			"statName": "daily_bytesserved",
+			"statValue": 1000,
+			"summaryTime": "2019-11-19 00:04:06+00",
+			"statDate": "2019-11-19"
+		}
+	]}
 
 Last Updated Summary Stat
 """""""""""""""""""""""""
@@ -174,14 +174,11 @@ Last Updated Summary Stat
 	Date: Mon, 10 Dec 2018 20:56:59 GMT
 	Content-Length: 150
 
-	{ "response":
-		{
-			"summaryTime": "2019-11-19 00:04:06+00"
-		}
-	}
+	{ "response": {
+		"summaryTime": "2019-11-19 00:04:06+00"
+	}}
 
 ``POST``
-========
 .. versionadded:: 1.4
 
 Post a stats summary for a given stat.

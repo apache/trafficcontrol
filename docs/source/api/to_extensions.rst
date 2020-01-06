@@ -54,7 +54,7 @@ Response Structure
 
 	.. note:: This field has meaning only for "Check Extensions"
 
-:type:    The type of extension - there are a set number of allowed values which are not recorded anywhere at the time of this writing
+:type:    The :term:`Type` of extension - there are a set number of allowed values which are not recorded anywhere at the time of this writing
 :version: A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http
@@ -130,7 +130,7 @@ Request Structure
 
 	.. note:: This field has meaning only for "Check Extensions"
 
-:type:    The type of extension - there are a set number of allowed values which are not recorded anywhere at the time of this writing
+:type:    The :term:`Type` of extension - there are a set number of allowed values which are not recorded anywhere at the time of this writing
 :version: A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http

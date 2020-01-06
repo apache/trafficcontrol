@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the aggregate routing percentages of Cache Groups assigned to any CDN.
+Retrieves the aggregate routing percentages of :term:`Cache Groups` assigned to any CDN.
 
 :Auth. Required: Yes
 :Roles Required: None

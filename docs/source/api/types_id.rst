@@ -21,9 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	Use the ``id`` query parameter of a ``GET`` request to the :ref:`to-api-types` endpoint instead.
-
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array

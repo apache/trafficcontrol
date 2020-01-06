@@ -21,8 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	Refer to the ``params`` key in the response of :ref:`to-api-profiles-id` instead
 
 Retrieves all :term:`Parameters` assigned to the :term:`Profile`.
 
@@ -111,8 +109,6 @@ Response Structure
 
 ``POST``
 ========
-.. deprecated:: 1.1
-	Use :ref:`to-api-profiles-name-name-parameters` instead
 
 Associates :term:`Parameters` to a :term:`Profile`. If the :term:`Parameter` does not exist, creates it and associates it to the :term:`Profile`. If the :term:`Parameter` already exists, associates it to the :term:`Profile`. If the :term:`Parameter` is already associated with the :term:`Profile`, keep the association.
 

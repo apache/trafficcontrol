@@ -24,7 +24,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
@@ -54,6 +54,6 @@ func GetSetDSCPDotConfig(w http.ResponseWriter, r *http.Request) {
 	dscpNumStr := inf.Params["dscp"] // TODO verify is a number? Perl doesn't
 
 	txt := atscfg.MakeSetDSCPDotConfig(cdnName, toToolName, toURL, dscpNumStr)
-	w.Header().Set(tc.ContentType, tc.ContentTypeTextPlain)
+	w.Header().Set(rfc.ContentType, rfc.ContentTypeTextPlain)
 	w.Write([]byte(txt))
 }

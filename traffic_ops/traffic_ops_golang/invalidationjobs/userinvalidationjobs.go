@@ -27,6 +27,7 @@ import "strconv"
 import "time"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/lib/go-rfc"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 const userReadQuery = `
@@ -130,7 +131,7 @@ func CreateUserJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
 	w.WriteHeader(http.StatusOK)
 	w.Write(append(resp, '\n'))
@@ -208,6 +209,6 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("encoding user jobs response: %v", err))
 		return
 	}
-	w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
+	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
 	w.Write(append(resp, '\n'))
 }

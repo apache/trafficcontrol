@@ -29,6 +29,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
@@ -202,7 +203,7 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+xmlID+", ID: "+strconv.Itoa(dsID)+", ACTION: Stored URI signing keys to a delivery service", inf.User, inf.Tx.Tx)
-	w.Header().Set("Content-Type", tc.ApplicationJson)
+	w.Header().Set("Content-Type", rfc.ApplicationJSON)
 	w.Write(data)
 }
 

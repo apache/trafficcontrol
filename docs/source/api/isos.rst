@@ -40,7 +40,7 @@ Request Structure
 :domainName:    The domain part of the system image's Fully Qualified Domain Name (FQDN)
 :hostName:      The host name part of the system image's FQDN
 :interfaceMtu:  A number that specifies the Maximum Transmission Unit (MTU) for the system image's network interface card - the only valid values of which I'm aware are 1500 or 9000, and this should almost always just be 1500
-:interfaceName: An optional string naming the network interface to be used by the generated system image e.g. "bond0", "eth0", etc. If the special name "bond0" is used, a Link Aggregation Control Protocol (LACP) binding configuration will be created and included in the system image
+:interfaceName: An optional string naming the network interface to be used by the generated system image e.g. "bond0", "eth0", etc. If the special name "bond0" is used, an :abbr:`LACP (Link Aggregation Control Protocol)` binding configuration will be created and included in the system image
 
 	.. seealso:: `The Link Aggregation Wikipedia page <https://en.wikipedia.org/wiki/Link_aggregation>`_\ .
 

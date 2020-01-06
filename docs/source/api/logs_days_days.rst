@@ -19,9 +19,6 @@
 ``logs/{{days}}/days``
 **********************
 
-.. deprecated:: 1.1
-	Use :ref:`to-api-logs` with the 'days' query parameter instead
-
 ``GET``
 =======
 Fetches a list of changes that have been made to the Traffic Control system in the past ``days`` days

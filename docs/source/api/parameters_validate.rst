@@ -18,8 +18,6 @@
 ***********************
 ``parameters/validate``
 ***********************
-.. deprecated:: 1.1
-	To check for the existence of a :term:`Parameter` with a specific :ref:`parameter-name`, :ref:`parameter-value` etc., use the query parameters of the :ref:`to-api-parameters` endpoint instead.
 
 ``POST``
 ========

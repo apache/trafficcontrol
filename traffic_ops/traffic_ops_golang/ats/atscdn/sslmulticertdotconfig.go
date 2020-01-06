@@ -25,6 +25,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
@@ -60,7 +61,7 @@ func GetSSLMultiCertDotConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	txt := atscfg.MakeSSLMultiCertDotConfig(cdnName, toToolName, toURL, dses)
-	w.Header().Set(tc.ContentType, tc.ContentTypeTextPlain)
+	w.Header().Set(rfc.ContentType, rfc.ContentTypeTextPlain)
 	w.Write([]byte(txt))
 }
 

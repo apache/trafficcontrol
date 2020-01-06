@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
@@ -72,7 +73,7 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write([]byte(`{"response":` + snapshot + `}`))
 }
 
@@ -94,7 +95,7 @@ func SnapshotGetMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write([]byte(`{"response":` + snapshot + `}`))
 }
 
@@ -116,7 +117,7 @@ func SnapshotOldGetHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write([]byte(snapshot))
 }
 

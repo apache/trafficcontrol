@@ -40,11 +40,11 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     The name of the Cache Group to which the server belongs
-:cachegroupId:   An integral, unique identifier for the Cache Group to which the server belongs
+:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:          An integral, unique identifier the CDN to which the server belongs
 :cdnName:        The name of the CDN to which the server belongs
-:domainName:     The domain name part of the Fully Qualified Domain Name (FQDN) of the server
+:domainName:     The domain name part of the :abbr:`FQDN (Fully Qualified Domain Name)` of the server
 :guid:           Optionally represents an identifier used to uniquely identify the server
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS requests - 443 in most cases
@@ -54,7 +54,7 @@ Response Structure
 :iloIpNetmask:   The IPv4 subnet mask of the lights-out-management port\ [2]_
 :iloPassword:    The password of the of the lights-out-management user - displays as ``******`` unless the requesting user has the 'admin' role)\ [2]_
 :iloUsername:    The user name for lights-out-management\ [2]_
-:interfaceMtu:   The Maximum Transmission Unit (MTU) to configure for ``interfaceName``
+:interfaceMtu:   The :abbr:`MTU (Maximum Transmission Unit)` to configure for ``interfaceName``
 
 	.. seealso:: `The Wikipedia article on Maximum Transmission Unit <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
 
@@ -69,8 +69,8 @@ Response Structure
 :mgmtIpGateway:  The IPv4 gateway of the server's management port
 :mgmtIpNetmask:  The IPv4 subnet mask of the server's management port
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status (will be empty if not offline)
-:physLocation:   The name of the physical location at which the server resides
-:physLocationId: An integral, unique identifier for the physical location at which the server resides
+:physLocation:   The name of the :term:`Physical Location` at which the server resides
+:physLocationId: An integral, unique identifier for the :term:`Physical Location` at which the server resides
 :profile:        The :ref:`profile-name` of the :term:`Profile` assigned to this server
 :profileDesc:    A :ref:`profile-description` of the :term:`Profile` assigned to this server
 :profileId:      The :ref:`profile-id` of the :term:`Profile` assigned to this server

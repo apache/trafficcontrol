@@ -121,9 +121,8 @@ under the License.
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Enabled Localization Methods</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input type="checkbox" name="CZEnabled" ng-model="localizationMethods.CZ"> Coverage Zone File</input><br>
-                    <input type="checkbox" name="DeepCZEnabled" ng-model="localizationMethods.DEEP_CZ"> Deep Coverage Zone File</input><br>
-                    <input type="checkbox" name="GeoEnabled" ng-model="localizationMethods.GEO"> Geo-IP Database</input>
+                    <input type="checkbox" name="CZEnabled" ng-checked="hasLocalizationMethod('CZ')" ng-click="toggleLocalizationMethod('CZ')"> Coverage Zone File</input><br>
+                    <input type="checkbox" name="GeoEnabled" ng-checked="hasLocalizationMethod('GEO')" ng-click="toggleLocalizationMethod('GEO')"> Geo-IP Database</input>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.fallbacks), 'has-feedback': hasError(cacheGroupForm.fallbacks)}" ng-hide="!isEdgeLoc(cacheGroup.typeId)">

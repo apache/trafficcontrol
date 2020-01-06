@@ -27,7 +27,7 @@ import "os/exec"
 import "time"
 
 import "github.com/apache/trafficcontrol/lib/go-log"
-import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/lib/go-rfc"
 
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
@@ -91,7 +91,7 @@ func DBDump(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(tc.ContentType, "application/octet-stream;type=pg_dump-data")
+	w.Header().Set(rfc.ContentType, "application/octet-stream;type=pg_dump-data")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename()))
 	if out[len(out)-1] != '\n' {
 		out = append(out, '\n')

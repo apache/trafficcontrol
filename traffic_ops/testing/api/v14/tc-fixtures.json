@@ -2540,16 +2540,14 @@
             "deliveryServiceName": "all",
             "statName": "daily_maxgbps",
             "statValue": 5,
-            "summaryTime": "2019-01-01T00:00:00-06:00",
-            "statDate": "2019-01-01"
+            "summaryTime": "2019-01-01T00:00:00-06:00"
         },
         {
             "cdnName": "cdn1",
             "deliveryServiceName": "all",
             "statName": "daily_bytesserved",
             "statValue": 1000,
-            "summaryTime": "2019-01-01T00:00:00-06:00",
-            "statDate": "2019-01-01"
+            "summaryTime": "2019-01-01T00:00:00-06:00"
         }
     ]
 }

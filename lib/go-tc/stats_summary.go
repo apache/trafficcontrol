@@ -39,12 +39,12 @@ type StatsSummaryResponse struct {
 
 // StatsSummary ...
 type StatsSummary struct {
-	CDNName         *string   `json:"cdnName"  db:"cdn_name"`
-	DeliveryService *string   `json:"deliveryServiceName"  db:"deliveryservice_name"`
-	StatName        *string   `json:"statName"  db:"stat_name"`
-	StatValue       *float64  `json:"statValue"  db:"stat_value"`
-	SummaryTime     time.Time `json:"summaryTime"  db:"summary_time"`
-	StatDate        time.Time `json:"statDate"  db:"stat_date"`
+	CDNName         *string    `json:"cdnName"  db:"cdn_name"`
+	DeliveryService *string    `json:"deliveryServiceName"  db:"deliveryservice_name"`
+	StatName        *string    `json:"statName"  db:"stat_name"`
+	StatValue       *float64   `json:"statValue"  db:"stat_value"`
+	SummaryTime     time.Time  `json:"summaryTime"  db:"summary_time"`
+	StatDate        *time.Time `json:"statDate"  db:"stat_date"`
 }
 
 func (ss StatsSummary) Validate(tx *sql.Tx) error {
@@ -59,8 +59,8 @@ func (ss StatsSummary) Validate(tx *sql.Tx) error {
 func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 	type Alias StatsSummary
 	resp := struct {
-		SummaryTime string `json:"summaryTime"`
-		StatDate    string `json:"statDate"`
+		SummaryTime string  `json:"summaryTime"`
+		StatDate    *string `json:"statDate"`
 		*Alias
 	}{
 		Alias: (*Alias)(ss),
@@ -69,10 +69,12 @@ func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-
-	ss.StatDate, err = parseStatDate(resp.StatDate)
-	if err != nil {
-		return errors.New("invalid timestamp given for statDate")
+	if resp.StatDate != nil {
+		statDate, err := parseStatDate(*resp.StatDate)
+		if err != nil {
+			return errors.New("invalid timestamp given for statDate")
+		}
+		ss.StatDate = &statDate
 	}
 
 	ss.SummaryTime, err = parseSummaryTime(resp.SummaryTime)
@@ -95,8 +97,6 @@ func parseStatDate(sd string) (time.Time, error) {
 }
 
 func parseSummaryTime(st string) (time.Time, error) {
-	// var rt time.Time
-	// var err error
 	rt, err := time.Parse(time.RFC3339, st)
 	if err == nil {
 		return rt, err
@@ -107,42 +107,56 @@ func parseSummaryTime(st string) (time.Time, error) {
 // UnmarshalJSON Customized Marshal to force date format on statDate
 func (ss StatsSummary) MarshalJSON() ([]byte, error) {
 	type Alias StatsSummary
-	return json.Marshal(&struct {
-		StatDate    string `json:"statDate"`
-		SummaryTime string `json:"summaryTime"`
+	resp := struct {
+		StatDate    *string `json:"statDate"`
+		SummaryTime string  `json:"summaryTime"`
 		Alias
 	}{
 		SummaryTime: ss.SummaryTime.Format(TimeLayout),
-		StatDate:    ss.StatDate.Format(dateFormat),
 		Alias:       (Alias)(ss),
-	})
+	}
+	if ss.StatDate != nil {
+		resp.StatDate = util.StrPtr(ss.StatDate.Format(dateFormat))
+	}
+	return json.Marshal(&resp)
 }
 
 // StatsSummaryLastUpdated ...
 type StatsSummaryLastUpdated struct {
-	SummaryTime time.Time `json:"summaryTime"  db:"summary_time"`
+	SummaryTime *time.Time `json:"summaryTime"  db:"summary_time"`
 }
 
 func (ss StatsSummaryLastUpdated) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		SummaryTime string `json:"summaryTime"`
-	}{
-		SummaryTime: ss.SummaryTime.Format(TimeLayout),
-	})
+	resp := struct {
+		SummaryTime *string `json:"summaryTime"`
+	}{}
+	if ss.SummaryTime != nil {
+		resp.SummaryTime = util.StrPtr(ss.SummaryTime.Format(TimeLayout))
+	}
+	return json.Marshal(&resp)
 }
 
-// UnmarshalJSON Customized Unmarshal to force date format on summaryTime
-func (ssl *StatsSummaryLastUpdated) UnmarshalJSON(data []byte) error {
+// UnmarshalJSON Customized Unmarshal to force timestamp format
+func (ss *StatsSummaryLastUpdated) UnmarshalJSON(data []byte) error {
 	resp := struct {
-		SummaryTime string `json:"summaryTime"`
+		SummaryTime *string `json:"summaryTime"`
 	}{}
 	err := json.Unmarshal(data, &resp)
 	if err != nil {
 		return err
 	}
-	ssl.SummaryTime, err = time.Parse(TimeLayout, resp.SummaryTime)
-	return err
-
+	if resp.SummaryTime != nil {
+		var summaryTime time.Time
+		summaryTime, err = time.Parse(time.RFC3339, *resp.SummaryTime)
+		if err == nil {
+			ss.SummaryTime = &summaryTime
+			return nil
+		}
+		summaryTime, err = time.Parse(TimeLayout, *resp.SummaryTime)
+		ss.SummaryTime = &summaryTime
+		return err
+	}
+	return nil
 }
 
 // StatsSummaryLastUpdatedResponse ...

@@ -17,6 +17,7 @@ package v14
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -28,6 +29,13 @@ func TestCDNFederations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServices, CDNFederations}, func() {
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
+	})
+}
+
+func TestFederationFederationResolvers(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServices, CDNFederations, FederationResolvers}, func() {
+		AssignTestFederationFederationResolvers(t)
+		GetTestFederationFederationResolvers(t)
 	})
 }
 
@@ -104,6 +112,115 @@ func GetTestCDNFederations(t *testing.T) {
 		}
 		bytes, _ := json.Marshal(data)
 		log.Debugf("GET Response: %s\n", bytes)
+	}
+}
+
+func AssignTestFederationFederationResolvers(t *testing.T) {
+	// Setup
+	if len(fedIDs) < 2 {
+		t.Fatal("not enough federations to test")
+	}
+
+	frCnt := len(testData.FederationResolvers)
+	if frCnt < 2 {
+		t.Fatal("not enough federation resolvers to test")
+	}
+
+	frs, _, err := TOSession.GetFederationResolvers()
+	if err != nil {
+		t.Fatalf("Unexpected error getting Federation Resolvers: %v", err)
+	}
+	if len(frs) != frCnt {
+		t.Fatalf("Wrong number of Federation Resolvers from GET, want %d got %d", frCnt, len(frs))
+	}
+
+	frIDs := make([]int, 0, len(frs))
+	for _, fr := range frs {
+		frIDs = append(frIDs, int(*fr.ID))
+	}
+
+	// Test Cases
+	testCases := []struct {
+		description string
+		fedID       int
+		resolverIDs []int
+		replace     bool
+		err         string
+	}{
+		{
+			description: "Successfully assign one federation_resolver to a federation",
+			fedID:       fedIDs[0],
+			resolverIDs: frIDs[0:0],
+			replace:     false,
+			err:         "",
+		},
+		{
+			description: "Successfully assign multiple federation_resolver to a federation",
+			fedID:       fedIDs[0],
+			resolverIDs: frIDs[1:frCnt],
+			replace:     false,
+			err:         "",
+		},
+		{
+			description: "Successfully replace all federation_resolver for a federation",
+			fedID:       fedIDs[0],
+			resolverIDs: frIDs[0:frCnt],
+			replace:     true,
+			err:         "",
+		},
+		{
+			description: "Fail to assign federation_resolver to a federation when federation does not exist",
+			fedID:       -1,
+			resolverIDs: frIDs[0:0],
+			replace:     false,
+			err:         "no such Federation",
+		},
+	}
+
+	for _, c := range testCases {
+		t.Run(c.description, func(t *testing.T) {
+			_, _, err := TOSession.AssignFederationFederationResolver(c.fedID, c.resolverIDs, c.replace)
+
+			if err != nil && !strings.Contains(err.Error(), c.err) {
+				t.Fatalf("error: expected error result %v, want: %v", err, c.err)
+			}
+		})
+	}
+
+}
+
+func GetTestFederationFederationResolvers(t *testing.T) {
+	if len(fedIDs) < 2 {
+		t.Fatal("not enough federations to test")
+	}
+
+	testCases := []struct {
+		description string
+		fedID       int
+		hasRecords  bool
+	}{
+		{
+			description: "successfully get federation_federation_resolvers for a federation with some",
+			fedID:       fedIDs[0],
+			hasRecords:  true,
+		},
+		{
+			description: "successfully get federation_federation_resolvers for a federation without any",
+			fedID:       fedIDs[1],
+			hasRecords:  false,
+		},
+	}
+
+	for _, c := range testCases {
+		t.Run(c.description, func(t *testing.T) {
+			resp, _, err := TOSession.GetFederationFederationResolversByID(c.fedID)
+			if err != nil {
+				t.Fatalf("Error getting federation federation resolvers by federation id: %d, err: %s", c.fedID, err.Error())
+			}
+			if len(resp.Response) == 0 && c.hasRecords {
+				t.Fatalf("expected federation of ID %d to have associated federation resolvers, but had 0", c.fedID)
+			}
+		})
 	}
 }
 

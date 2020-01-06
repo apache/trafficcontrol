@@ -43,48 +43,29 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
         $location.path($location.path() + '/static-dns-entries');
     };
 
+    $scope.hasLocalizationMethod = function(method) {
+        return $scope.cacheGroup.localizationMethods.includes(method);
+    };
+
+    $scope.toggleLocalizationMethod = function toggleSelection(method) {
+        $scope.cacheGroupForm.$setDirty(); // required to enable the update button
+        const index = $scope.cacheGroup.localizationMethods.indexOf(method);
+        if (index > -1) {
+            $scope.cacheGroup.localizationMethods.splice(index, 1);
+        } else {
+            $scope.cacheGroup.localizationMethods.push(method);
+        }
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
-    $scope.localizationMethods = {
-        DEEP_CZ: false,
-        CZ: false,
-        GEO: false
-    };
-
     $scope.cacheGroupFallbackOptions = [];
 
     $scope.selectedCacheGroupFallbackOptions = [];
-
-    $scope.setLocalizationMethods = function(cacheGroup) {
-        var methods = [];
-        var keys = Object.keys($scope.localizationMethods);
-        for (var i = 0; i < keys.length; i++) {
-            if ($scope.localizationMethods[keys[i]]) {
-                methods.push(keys[i]);
-            }
-        }
-        cacheGroup.localizationMethods = methods;
-    };
-
-    var initLocalizationMethods = function() {
-        // by default, no explicitly enabled methods means ALL are enabled
-        if (!cacheGroup.localizationMethods) {
-            var keys = Object.keys($scope.localizationMethods);
-            for (var i = 0; i < keys.length; i++) {
-                $scope.localizationMethods[keys[i]] = true;
-            }
-            return;
-        }
-        for (var i = 0; i < cacheGroup.localizationMethods.length; i++) {
-            if ($scope.localizationMethods.hasOwnProperty(cacheGroup.localizationMethods[i])) {
-                $scope.localizationMethods[cacheGroup.localizationMethods[i]] = true;
-            }
-        }
-    };
 
     var initCacheGroupFallbackGeo = function() {
         if (cacheGroup.fallbackToClosest == null || cacheGroup.fallbackToClosest === '') {
@@ -114,7 +95,7 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
         }
     };
 
-    $scope.fallbackSelected = '';
+    $scope.fallbackSelected = null;
 
     $scope.draggedFallback = '';
 
@@ -142,7 +123,7 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
                 break;
             }
         }
-        $scope.fallbackSelected = '';
+        $scope.fallbackSelected = null;
     };
 
     $scope.updateForNewType = function() {
@@ -157,7 +138,6 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
     };
 
     $scope.save = function(cacheGroup) {
-        $scope.setLocalizationMethods(cacheGroup);
         cacheGroupService.createCacheGroup(cacheGroup);
         $scope.cacheGroupFallbackUpdated = false;
     };
@@ -217,7 +197,6 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
     };
 
     var init = function () {
-        initLocalizationMethods();
         $scope.getFallbackOptions();
         initCacheGroupFallbackGeo();
     };
