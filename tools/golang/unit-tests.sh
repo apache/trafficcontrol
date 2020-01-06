@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ covertmp="$(mktemp)"
 for pkg in $(go list ./lib/... ./traffic_monitor/... ./traffic_stats/... ./traffic_ops/traffic_ops_golang/... ./traffic_ops/ort/atstccfg/... | grep -v "/vendor/"); do
 	tmp="$(mktemp)"
 	go test -v --coverprofile="$tmp" "$pkg" | tee -a result.txt
-	if [[ -f "$tmp" ]]; then
+	if [ -f "$tmp" ]; then
 		gocovmerge coverprofile "$tmp" > "$covertmp"
 		cp -f "$covertmp" coverprofile
 		rm "$tmp"
