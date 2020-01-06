@@ -42,4 +42,10 @@ CMD ["golangci-lint", "run", "./..."]
 
 FROM base AS unit
 
-CMD sh -c 'go test $(go list ./... | grep -v  -e experimental -e "test/router" -e "api/v1")'
+VOLUME ["/junit"]
+
+RUN go get github.com/wadey/gocovmerge &&\
+    go get -u github.com/jstemmer/go-junit-report &&\
+    go get -v ./...
+
+CMD /go/src/github.com/apache/trafficcontrol/tools/golang/unit-tests.sh
