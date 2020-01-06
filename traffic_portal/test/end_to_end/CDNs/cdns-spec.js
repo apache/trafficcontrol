@@ -27,7 +27,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 	const myDomainName = myNewCDN + '.com';
 	const mydnssec = false;
 	const myKskDays = commonFunctions.random(365);
-	var ec = protractor.ExpectedConditions;
+	const ec = protractor.ExpectedConditions;
 
 	it('should go to the CDNs page', function() {
 		console.log("Go to the CDNs page");
