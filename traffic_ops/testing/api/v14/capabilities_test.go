@@ -42,10 +42,8 @@ var staticCapabilities = []tc.Capability {
 }
 
 func TestCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{Capabilities}, func() {
-		ReplaceTestCapability(t)
-		GetTestCapabilities(t)
-	})
+	CreateTestCapabilities(t)
+	GetTestCapabilities(t)
 }
 
 func CreateTestCapabilities(t *testing.T) {
@@ -105,52 +103,5 @@ func GetTestCapabilities(t *testing.T) {
 
 	for c,_ := range capMap {
 		t.Errorf("Capability '%s' existed in the test data but didn't appear in the response!", c)
-	}
-}
-
-func ReplaceTestCapability(t *testing.T) {
-	if len(testData.Capabilities) < 1 {
-		t.Fatalf("No test capabilities!")
-	}
-
-	c := testData.Capabilities[0]
-	c.Name += "TEST"
-	c.Description += "REPLACE TEST"
-
-	alerts, _, err := TOSession.ReplaceCapabilityByName(testData.Capabilities[0].Name, c)
-	log.Debugln("alerts:", alerts)
-	if err != nil {
-		t.Fatalf("Failed to replace capability %s: %v", testData.Capabilities[0].Name, err)
-	}
-
-	// The old one shouldn't exist anymore
-	resp, _, err := TOSession.GetCapability(testData.Capabilities[0].Name)
-	if err == nil {
-		t.Errorf("Expected an error, but got response: %v", resp)
-	}
-
-	// ... but the new one should
-	resp, _, err = TOSession.GetCapability(c.Name)
-	if err != nil {
-		t.Errorf("Expected to get new capability, error: %v", err)
-	}
-
-	// Now we need to replace it again, so the DELETE can catch it
-	alerts, _, err = TOSession.ReplaceCapabilityByName(c.Name, testData.Capabilities[0])
-	log.Debugln("alerts:", alerts)
-	if err != nil {
-		t.Errorf("Failed to re-replace capability: %s", err)
-	}
-
-	log.Debugln("response:", resp)
-}
-
-func DeleteTestCapabilities(t *testing.T) {
-	for _,c := range testData.Capabilities {
-		resp, _, err := TOSession.DeleteCapability(c.Name)
-		log.Debugln("Response: ", c.Name, " ", resp)
-		if err != nil {
-			t.Errorf("could not delete capability: %v", err)
-		}
 	}
 }

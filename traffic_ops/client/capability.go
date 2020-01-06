@@ -46,32 +46,6 @@ func (to *Session) CreateCapability(c tc.Capability) (tc.Alerts, ReqInf, error) 
 	return alerts, reqInf, err
 }
 
-// ReplaceCapabilityByName replaces the capability named 'name' with the one passed as 'c'.
-func (to *Session) ReplaceCapabilityByName(name string, c tc.Capability) (tc.Alerts, ReqInf, error) {
-	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-
-	reqBody, err := json.Marshal(c)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-
-	var v url.Values
-	v.Add("name", name)
-	endpoint := API_v14_CAPABILITIES + "?" + v.Encode()
-
-	var resp *http.Response
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, endpoint, reqBody)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, err
-}
-
 // GetCapabilities retrieves all capabilities.
 func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_v14_CAPABILITIES, nil)
@@ -107,22 +81,4 @@ func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
 	}
 
 	return data.Response[0], reqInf, nil
-}
-
-// DeleteCapability deletes the capability named 'c'.
-func (to *Session) DeleteCapability(c string) (alerts tc.Alerts, reqInf ReqInf, err error) {
-	reqInf.CacheHitStatus = CacheHitStatusMiss
-	var v url.Values
-	v.Add("name", c)
-	endpoint := API_v14_CAPABILITIES + "?" + v.Encode()
-
-	var resp *http.Response
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodDelete, endpoint, nil)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return
 }
