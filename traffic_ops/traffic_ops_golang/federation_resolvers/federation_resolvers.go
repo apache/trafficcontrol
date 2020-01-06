@@ -232,7 +232,7 @@ func DeleteByID(w http.ResponseWriter, r *http.Request) {
 				alert,
 				tc.Alert{
 					Level: tc.WarnLevel.String(),
-					Text:  "This endpoint is deprecated, please use '/federation_resolvers' instead",
+					Text:  "This endpoint is deprecated, please use the 'id' query parameter of '/federation_resolvers' instead",
 				},
 			},
 		},
@@ -251,7 +251,7 @@ func DeleteByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Header().Set(rfc.ContentType, rfc.MIME_JSON.String())
 	w.WriteHeader(statusCode)
 	w.Write(append(respBts, '\n'))
 }
