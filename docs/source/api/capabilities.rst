@@ -112,12 +112,12 @@ Request Structure
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 108
+	Content-Length: 73
 	Content-Type: application/json
 
 	{
-		"name": "test",
-		"description": "This is only a test. If this were a real capability, it might do something"
+		"name": "testquest",
+		"description": "A test capability for API examples"
 	}
 
 Response Structure
@@ -134,22 +134,25 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
-	Whole-Content-Sha512: A1rjpDy+O+oooYeer2j09pCEDpPEFk/nt8/AaJye2sLkfy93MtquCsB/Rlgz7sCYputd/EPOPDyi2WkN8UB1Rw==
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 07 Jan 2020 20:06:18 GMT; Max-Age=3600; HttpOnly
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 15 Aug 2019 17:18:03 GMT
-	Content-Length: 219
+	Date: Tue, 07 Jan 2020 19:06:18 GMT
+	Content-Length: 225
 
 	{ "alerts": [
 		{
 			"text": "Capability created.",
 			"level": "success"
+		},
+		{
+			"text": "This endpoint is deprecated, and will be removed in the future",
+			"level": "warning"
 		}
 	],
 	"response": {
-		"description": "This is only a test. If this were a real capability, it might do something",
-		"lastUpdated": "2019-08-15 17:18:03+00",
-		"name": "test"
+		"description": "A test capability for API examples",
+		"lastUpdated": "2020-01-07 19:06:18+00",
+		"name": "testquest"
 	}}
