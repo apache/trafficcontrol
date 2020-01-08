@@ -21,14 +21,24 @@ package cfgfile
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
 func GetConfigFileCDNRegexRemap(cfg config.TCCfg, cdnNameOrID string, fileName string) (string, error) {
+	configSuffix := `.config`
+	if !strings.HasPrefix(fileName, atscfg.RegexRemapPrefix) || !strings.HasSuffix(fileName, configSuffix) {
+		return `{"alerts":[{"level":"error","text":"Error - regex remap file '` + fileName + `' not of the form 'regex_remap_*.config! Please file a bug with Traffic Control, this should never happen."}]}`, config.ErrBadRequest
+	}
+	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, atscfg.RegexRemapPrefix), configSuffix)
+	if dsName == "" {
+		return `{"alerts":[{"level":"error","text":"Error - regex remap file '` + fileName + `' has no delivery service name!"}]}`, config.ErrBadRequest
+	}
+
 	cdnName, err := toreq.GetCDNNameFromCDNNameOrID(cfg, cdnNameOrID)
 	if err != nil {
 		return "", errors.New("getting CDN name from '" + cdnNameOrID + "': " + err.Error())
@@ -49,11 +59,22 @@ func GetConfigFileCDNRegexRemap(cfg config.TCCfg, cdnNameOrID string, fileName s
 		return "", errors.New("getting delivery services: " + err.Error())
 	}
 
-	log.Errorf("DEBUG gcfcrr dses %+v\n", len(dses))
+	// only send the requested DS to atscfg. The atscfg.Make will work correctly even if we send it other DSes, but this will prevent atscfg.DeliveryServicesToCDNDSes from logging errors about AnyMap and Steering DSes without origins.
+	ds := tc.DeliveryServiceNullable{}
+	for _, dsesDS := range dses {
+		if dsesDS.XMLID == nil {
+			continue // TODO log?
+		}
+		if *dsesDS.XMLID != dsName {
+			continue
+		}
+		ds = dsesDS
+	}
+	if ds.ID == nil {
+		return `{"alerts":[{"level":"error","text":"Error - delivery service '` + dsName + `' not found! Do you have a regex_remap_*.config location Parameter for a delivery service that doesn't exist?"}]}`, config.ErrNotFound
+	}
 
-	cfgDSes := atscfg.DeliveryServicesToCDNDSes(dses)
-
-	log.Errorf("DEBUG gcfcrr cfgdses %+v\n", len(cfgDSes))
+	cfgDSes := atscfg.DeliveryServicesToCDNDSes([]tc.DeliveryServiceNullable{ds})
 
 	txt := atscfg.MakeRegexRemapDotConfig(cdnName, toToolName, toURL, fileName, cfgDSes)
 	return txt, nil
