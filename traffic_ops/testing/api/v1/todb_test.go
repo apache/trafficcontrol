@@ -280,7 +280,7 @@ INSERT INTO to_extension (name, version, info_url, isactive, script_file, server
 func Teardown(db *sql.DB) error {
 
 	sqlStmt := `
-	DELETE FROM capability;
+	DELETE FROM api_capability;
 	DELETE FROM deliveryservices_required_capability;
 	DELETE FROM server_server_capability;
 	DELETE FROM server_server_capability;
@@ -295,6 +295,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM deliveryservice_tmuser;
 	DELETE FROM tm_user;
 	DELETE FROM role;
+	DELETE FROM capability;
 	ALTER SEQUENCE role_id_seq RESTART WITH 1;
 	DELETE FROM deliveryservice_regex;
 	DELETE FROM regex;
