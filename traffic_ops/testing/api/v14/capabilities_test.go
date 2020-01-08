@@ -39,6 +39,18 @@ var staticCapabilities = []tc.Capability {
 		Name: "cdn-read",
 		Description: "View CDN configuration",
 	},
+	tc.Capability {
+		Name: "asns-read",
+		Description: "Read ASNs",
+	},
+	tc.Capability {
+		Name: "asns-write",
+		Description: "Write ASNs",
+	},
+	tc.Capability {
+		Name: "cache-groups-read",
+		Description: "Read CGs",
+	},
 }
 
 func TestCapabilities(t *testing.T) {
