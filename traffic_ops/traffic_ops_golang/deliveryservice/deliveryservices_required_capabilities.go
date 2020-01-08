@@ -254,7 +254,12 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 		return errors.New("Invalid DS type. Only DNS and HTTP delivery services can have required capabilities"), nil, http.StatusBadRequest
 	}
 
-	usrErr, sysErr, rCode := rc.ensureDSServerCap()
+	usrErr, sysErr, rCode := rc.checkServerCap()
+	if usrErr != nil || sysErr != nil {
+		return usrErr, sysErr, rCode
+	}
+
+	usrErr, sysErr, rCode = rc.ensureDSServerCap()
 	if usrErr != nil || sysErr != nil {
 		return usrErr, sysErr, rCode
 	}
@@ -276,6 +281,25 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 		return nil, fmt.Errorf("%s create: no %s was inserted, no rows was returned", rc.GetType(), rc.GetType()), http.StatusInternalServerError
 	} else if rowsAffected > 1 {
 		return nil, fmt.Errorf("too many rows returned from %s insert", rc.GetType()), http.StatusInternalServerError
+	}
+
+	return nil, nil, http.StatusOK
+}
+
+func (rc *RequiredCapability) checkServerCap() (error, error, int) {
+	tx := rc.APIInfo().Tx
+
+	// Get server capability name
+	name := ""
+	if err := tx.QueryRow(`
+		SELECT name 
+		FROM server_capability 
+		WHERE name = $1`, rc.RequiredCapability).Scan(&name); err != nil && err != sql.ErrNoRows{
+		return nil, fmt.Errorf("querying server capability for name '%v': %v", rc.RequiredCapability, err), http.StatusInternalServerError
+	}
+
+	if len(name) == 0 {
+		return fmt.Errorf("server_capability not found"), nil, http.StatusNotFound
 	}
 
 	return nil, nil, http.StatusOK
