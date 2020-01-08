@@ -137,6 +137,9 @@ func SetupCapabilities(db *sql.DB) error {
 INSERT INTO capability (name, description) VALUES ('all-read','Full read access') ON CONFLICT DO NOTHING;
 INSERT INTO capability (name, description) VALUES ('all-write','Full write access') ON CONFLICT DO NOTHING;
 INSERT INTO capability (name, description) VALUES ('cdn-read','View CDN configuration') ON CONFLICT DO NOTHING;
+INSERT INTO capability (name, description) VALUES ('asns-read', 'Read ASNs') ON CONFLICT DO NOTHING;
+INSERT INTO capability (name, description) VALUES ('asns-write', 'Write ASNs') ON CONFLICT DO NOTHING;
+INSERT INTO capability (name, description) VALUES ('cache-groups-read', 'Read CGs') ON CONFLICT DO NOTHING;
 `
 	err := execSQL(db, sqlStmt, "capability")
 	if err != nil {
