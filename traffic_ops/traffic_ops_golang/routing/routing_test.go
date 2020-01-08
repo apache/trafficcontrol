@@ -33,6 +33,7 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 )
 
 type key int
@@ -134,7 +135,7 @@ func TestCompileRoutes(t *testing.T) {
 		t.Error("error fetching routes: ", err.Error())
 	}
 
-	authBase := AuthBase{secret: d.Secrets[0], override: nil}
+	authBase := middleware.AuthBase{Secret: d.Secrets[0], Override: nil}
 	routes, versions := CreateRouteMap(routeSlice, nil, nil, nil, nil, authBase, 1)
 	if len(routes) == 0 {
 		t.Error("no routes handler defined")
@@ -189,7 +190,7 @@ func TestRoutes(t *testing.T) {
 }
 
 func TestCreateRouteMap(t *testing.T) {
-	authBase := AuthBase{"secret", func(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	authBase := middleware.AuthBase{"secret", func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			ctx := context.WithValue(r.Context(), AuthWasCalled, "true")
 			handlerFunc(w, r.WithContext(ctx))
@@ -228,9 +229,9 @@ func TestCreateRouteMap(t *testing.T) {
 	routes := []Route{
 		{1.2, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil, 0, false},
 		{1.2, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil, 1, false},
-		{1.2, http.MethodGet, `path3`, PathThreeHandler, 0, false, []Middleware{}, 2, false},
-		{1.2, http.MethodGet, `path4`, PathFourHandler, 0, false, []Middleware{}, 3, true},
-		{1.2, http.MethodGet, `path5`, PathFiveHandler, 0, false, []Middleware{}, 4, false},
+		{1.2, http.MethodGet, `path3`, PathThreeHandler, 0, false, []middleware.Middleware{}, 2, false},
+		{1.2, http.MethodGet, `path4`, PathFourHandler, 0, false, []middleware.Middleware{}, 3, true},
+		{1.2, http.MethodGet, `path5`, PathFiveHandler, 0, false, []middleware.Middleware{}, 4, false},
 	}
 
 	perlRoutesIDs := []int{3}

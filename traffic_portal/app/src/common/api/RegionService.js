@@ -54,6 +54,7 @@ var RegionService = function($http, ENV, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateRegion = function(region) {
         return $http.put(ENV.api['root'] + 'regions/' + region.id, region).then(
             function(result) {
@@ -67,6 +68,7 @@ var RegionService = function($http, ENV, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteRegion = function(id) {
         return $http.delete(ENV.api['root'] + "regions/" + id).then(
             function(result) {

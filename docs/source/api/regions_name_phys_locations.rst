@@ -18,12 +18,10 @@
 ***************************************
 ``regions/:region_name/phys_locations``
 ***************************************
-.. deprecated:: 1.1
-	Instead specify the ``regionId`` field in the body of a ``POST`` request to :ref:`to-api-phys_locations`.
 
 ``POST``
 ========
-Creates a new physical location within the specified region.
+Creates a new :term:`Physical Location` within the specified :term:`region`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"

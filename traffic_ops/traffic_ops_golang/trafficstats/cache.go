@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	influx "github.com/influxdata/influxdb/client/v2"
@@ -178,9 +179,9 @@ func GetCacheStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if c.Unix {
-		w.Header().Set(tc.ContentType, jsonWithUnixTimestamps.String())
+		w.Header().Set(rfc.ContentType, jsonWithUnixTimestamps.String())
 	} else {
-		w.Header().Set(tc.ContentType, jsonWithRFCTimestamps.String())
+		w.Header().Set(rfc.ContentType, jsonWithRFCTimestamps.String())
 	}
 	w.Header().Set(http.CanonicalHeaderKey("vary"), http.CanonicalHeaderKey("Accept"))
 	w.Write(append(respBts, '\n'))

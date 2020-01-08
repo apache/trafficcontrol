@@ -24,7 +24,7 @@
 Retrieves routing method statistics for a particular :term:`Delivery Service`
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [#tenancy]_
+:Roles Required: None\ [#tenancy]_
 :Response Type:  Object
 
 Request Structure

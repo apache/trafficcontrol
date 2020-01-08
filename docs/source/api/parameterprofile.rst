@@ -18,8 +18,6 @@
 ********************
 ``parameterprofile``
 ********************
-.. deprecated:: 1.1
-	Use :ref:`to-api-profileparameters` instead.
 
 ``POST``
 ========

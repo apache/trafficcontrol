@@ -114,6 +114,7 @@ SELECT d.xml_id,
        d.dns_bypass_cname,
        d.http_bypass_fqdn,
        d.ipv6_routing_enabled,
+       d.ecs_enabled,
        d.deep_caching_type,
        d.tr_request_headers,
        d.tr_response_headers,
@@ -165,6 +166,7 @@ AND d.active = true
 		dnsBypassCName := sql.NullString{}
 		httpBypassFQDN := sql.NullString{}
 		ip6RoutingEnabled := sql.NullBool{}
+		ecsEnabled := sql.NullBool{}
 		deepCachingType := sql.NullString{}
 		trRequestHeaders := sql.NullString{}
 		trResponseHeaders := sql.NullString{}
@@ -193,6 +195,7 @@ AND d.active = true
 			&dnsBypassCName,
 			&httpBypassFQDN,
 			&ip6RoutingEnabled,
+			&ecsEnabled,
 			&deepCachingType,
 			&trRequestHeaders,
 			&trResponseHeaders,
@@ -375,6 +378,7 @@ AND d.active = true
 		}
 
 		ds.IP6RoutingEnabled = &ip6RoutingEnabled.Bool // No Valid check, false if null
+		ds.EcsEnabled = &ecsEnabled.Bool               // No Valid check, false if null
 
 		if trResponseHeaders.Valid && trResponseHeaders.String != "" {
 			trResponseHeaders.String = strings.Replace(trResponseHeaders.String, "__RETURN__", "\n", -1)

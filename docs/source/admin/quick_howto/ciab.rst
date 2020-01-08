@@ -93,9 +93,9 @@ When the CDN is to be shut down, it is often best to do so using ``sudo docker-c
 
 variables.env
 """""""""""""
-.. include:: ../../../../infrastructure/cdn-in-a-box/variables.env
-	:code: shell
-	:start-line: 16
+.. literalinclude:: ../../../../infrastructure/cdn-in-a-box/variables.env
+	:language: shell
+	:lines: 17-
 	:tab-width: 4
 
 .. note:: While these port settings can be changed without hampering the function of the CDN in a Box system, note that changing a port without also changing the matching port-mapping in :file:`infrastructure/cdn-in-a-box/docker-compose.yml` for the affected service *will* make it unreachable from the host.

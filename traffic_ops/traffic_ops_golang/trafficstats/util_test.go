@@ -24,6 +24,7 @@ import "testing"
 import "time"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/lib/go-rfc"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 func TestTSConfigFromRequest(t *testing.T) {
@@ -54,7 +55,7 @@ func TestTSConfigFromRequest(t *testing.T) {
 	if e != nil {
 		t.Fatalf("Failed to build test request: %v", e)
 	}
-	r.Header.Add(tc.ContentType, tc.ApplicationJson)
+	r.Header.Add(rfc.ContentType, rfc.ApplicationJSON)
 
 	cfg, code, err := tsConfigFromRequest(r, &inf)
 	if err != nil {

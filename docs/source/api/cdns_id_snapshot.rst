@@ -18,8 +18,6 @@
 ************************
 ``cdns/{{ID}}/snapshot``
 ************************
-.. deprecated:: 1.1
-	Use :ref:`to-api-snapshot-name` instead.
 
 ``PUT``
 =======

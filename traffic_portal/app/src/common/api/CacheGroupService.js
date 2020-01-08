@@ -55,6 +55,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateCacheGroup = function(cacheGroup) {
         return $http.put(ENV.api['root'] + 'cachegroups/' + cacheGroup.id, cacheGroup).then(
             function(result) {
@@ -68,6 +69,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteCacheGroup = function(id) {
         return $http.delete(ENV.api['root'] + "cachegroups/" + id).then(
             function(result) {

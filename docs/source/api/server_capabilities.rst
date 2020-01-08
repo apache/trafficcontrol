@@ -18,11 +18,10 @@
 ***********************
 ``server_capabilities``
 ***********************
+.. versionadded:: 1.4
 
 ``GET``
 =======
-.. versionadded:: 1.4
-
 Retrieves :term:`Server Capabilities`.
 
 :Auth. Required: Yes
@@ -79,8 +78,6 @@ Response Structure
 
 ``POST``
 ========
-.. versionadded:: 1.4
-
 Create a new :term:`Server Capability`.
 
 :Auth. Required: Yes
@@ -141,8 +138,6 @@ Response Structure
 
 ``DELETE``
 ==========
-.. versionadded:: 1.4
-
 Deletes a specific :term:`Server Capability`.
 
 :Auth. Required: Yes

@@ -38,11 +38,10 @@ func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 }
 
 func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
-	dses, _ := getServersAndDSes(t)
 	sscs := testData.ServerServerCapabilities
 
 	testCases := []struct {
-		ds          tc.DeliveryService
+		ds          string
 		serverName  string
 		ssc         tc.ServerServerCapability
 		description string
@@ -50,24 +49,22 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		capability  tc.DeliveryServicesRequiredCapability
 	}{
 		{
-			ds:          dses[1],
 			serverName:  "atlanta-edge-01",
 			description: "missing requirements for server -> DS assignment",
 			err:         errors.New(`Caching server cannot be assigned to this delivery service without having the required delivery service capabilities`),
 			ssc:         sscs[0],
 			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  &dses[1].ID,
+				DeliveryServiceID:  helperGetDeliveryServiceID(t, util.StrPtr("ds-test-minor-versions")),
 				RequiredCapability: sscs[1].ServerCapability,
 			},
 		},
 		{
-			ds:          dses[0],
 			serverName:  "atlanta-mid-01",
 			description: "successful server -> DS assignment",
 			err:         nil,
 			ssc:         sscs[1],
 			capability: tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  &dses[0].ID,
+				DeliveryServiceID:  helperGetDeliveryServiceID(t, util.StrPtr("ds3")),
 				RequiredCapability: sscs[1].ServerCapability,
 			},
 		},
@@ -75,7 +72,6 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 
 	for _, ctc := range testCases {
 		t.Run(ctc.description, func(t *testing.T) {
-
 			servers, _, err := TOSession.GetServerByHostName(ctc.serverName)
 			if err != nil {
 				t.Fatalf("cannot GET Server by hostname: %v", err)
@@ -93,7 +89,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 				t.Fatalf("could not POST the server capability %v to server %v: %v", *ctc.ssc.ServerCapability, *ctc.ssc.Server, err)
 			}
 
-			_, got := TOSession.CreateDeliveryServiceServers(ctc.ds.ID, []int{server.ID}, true)
+			_, got := TOSession.CreateDeliveryServiceServers(*ctc.capability.DeliveryServiceID, []int{server.ID}, true)
 			if (ctc.err == nil && got != nil) || (ctc.err != nil && !strings.Contains(got.Error(), ctc.err.Error())) {
 				t.Fatalf("expected ctc.err to contain %v, got %v", ctc.err, got)
 			}

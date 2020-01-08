@@ -34,10 +34,22 @@ Request Structure
 	.. versionchanged:: 1.4
 		Prior to version 1.4, the email was validated using the `Email::Valid Perl package <https://metacpan.org/pod/Email::Valid>`_ but is now validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that neither method can actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
 
-:role:     The integral, unique identifier of the highest permissions role which will be afforded to the new user
-:tenantId: An optional field containing the integral, unique identifier of the tenant to which the new user will belong
+:role:     The integral, unique identifier of the highest permissions :term:`Role` which will be afforded to the new user
 
-	.. note:: This field is optional if and only if tenancy is not enabled in Traffic Ops.
+	.. versionchanged:: ACTv4.0
+		Prior to ATC version 4.0, this endpoint allowed for the registration of users with arbitrary
+		:term:`Roles`. It now restricts the allowed values to identifiers for :term:`Roles` with at
+		most the same permissions level as the requesting user.
+
+:tenantId: An optional field containing the integral, unique identifier of the :term:`Tenant` to which the new user will belong
+
+	.. versionchanged:: ACTv4.0
+		Prior to ATC version 4.0, this endpoint allowed for the registration of users with arbitrary
+		:term:`Tenants`. It now restricts the allowed values to identifiers for :term:`Tenants`
+		within the requesting user's :term:`Tenant`'s permissions.
+
+	.. versionchanged:: ATCv4.0
+		As tenancy is no longer truly optional, this field is no longer optional.
 
 .. code-block:: http
 	:caption: Request Example

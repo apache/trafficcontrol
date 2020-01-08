@@ -62,16 +62,18 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 		ChangeType: &u,
 		Status:     &st,
 		DeliveryService: &tc.DeliveryServiceNullable{
-			DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
-				DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
-					DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
-						XMLID:       &s,
-						CDNID:       &i,
-						LogsEnabled: &b,
-						DSCP:        nil,
-						GeoLimit:    &i,
-						Active:      &b,
-						TypeID:      &i,
+			DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
+				DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
+					DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
+						DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
+							XMLID:       &s,
+							CDNID:       &i,
+							LogsEnabled: &b,
+							DSCP:        nil,
+							GeoLimit:    &i,
+							Active:      &b,
+							TypeID:      &i,
+						},
 					},
 				},
 			},

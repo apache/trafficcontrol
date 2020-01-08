@@ -26,14 +26,14 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
 func GetURISigning(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, tc.ApplicationJson, uriSigningDotConfig)
+	WithProfileData(w, r, rfc.ApplicationJSON, uriSigningDotConfig)
 }
 
 func uriSigningDotConfig(tx *sql.Tx, cfg *config.Config, _ ats.ProfileData, fileName string) (string, error) {

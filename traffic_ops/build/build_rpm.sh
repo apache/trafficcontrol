@@ -71,7 +71,7 @@ function initBuildArea() {
                 { echo "Could not build atstccfg binary"; exit 1; }
 	popd
 
-	rsync -av doc etc install "$to_dest"/ || \
+	rsync -av etc install "$to_dest"/ || \
 		 { echo "Could not copy to $to_dest: $?"; exit 1; }
 	rsync -av app/{bin,conf,cpanfile,db,lib,public,script,templates} "$to_dest"/app/ || \
 		 { echo "Could not copy to $to_dest/app: $?"; exit 1; }

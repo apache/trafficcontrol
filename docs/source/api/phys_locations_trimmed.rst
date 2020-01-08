@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves only the names of physical locations
+Retrieves only the names of :term:`Physical Locations`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -33,7 +33,7 @@ No parameters available
 
 Response Structure
 ------------------
-:name: The name of the physical location
+:name: The name of the :term:`Physical Location`
 
 .. code-block:: http
 	:caption: Response Example

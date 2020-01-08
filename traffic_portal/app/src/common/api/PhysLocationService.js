@@ -55,6 +55,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updatePhysLocation = function(physLocation) {
         return $http.put(ENV.api['root'] + 'phys_locations/' + physLocation.id, physLocation).then(
             function(result) {
@@ -68,6 +69,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deletePhysLocation = function(id) {
         return $http.delete(ENV.api['root'] + 'phys_locations/' + id).then(
             function(result) {

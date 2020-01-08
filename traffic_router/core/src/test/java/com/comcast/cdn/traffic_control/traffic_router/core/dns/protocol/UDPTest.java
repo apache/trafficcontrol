@@ -29,6 +29,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
@@ -55,7 +57,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 public class UDPTest {
 
     private DatagramSocket datagramSocket;
-    private ExecutorService executorService;
+    private ThreadPoolExecutor executorService;
+    private ExecutorService cancelService;
+    private LinkedBlockingQueue queue;
     private NameServer nameServer;
 
     private UDP udp;
@@ -63,12 +67,18 @@ public class UDPTest {
     @Before
     public void setUp() throws Exception {
         datagramSocket = mock(DatagramSocket.class);
-        executorService = mock(ExecutorService.class);
+        executorService = mock(ThreadPoolExecutor.class);
+        cancelService = mock(ExecutorService.class);
+        queue = mock(LinkedBlockingQueue.class);
         nameServer = mock(NameServer.class);
         udp = new UDP();
         udp.setDatagramSocket(datagramSocket);
         udp.setExecutorService(executorService);
+        udp.setCancelService(cancelService);
         udp.setNameServer(nameServer);
+
+        when(executorService.getQueue()).thenReturn(queue);
+        when(queue.size()).thenReturn(0);
     }
 
     @Test
@@ -96,8 +106,8 @@ public class UDPTest {
     }
 
     @Test
-    public void testSubmit() {
-        final Runnable r = mock(Runnable.class);
+    public void testSubmit() throws Exception {
+        final SocketHandler r = mock(SocketHandler.class);
         udp.submit(r);
         verify(executorService).submit(r);
     }

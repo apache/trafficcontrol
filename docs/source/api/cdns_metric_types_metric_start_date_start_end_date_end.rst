@@ -19,14 +19,12 @@
 ``cdns/metric_types/{{metric}}/start_date/{{start}}/end_date/{{end}}``
 **********************************************************************
 
-.. caution:: This API endpoint *does* **not** *work*. It isn't implemented in Traffic Ops, and is not expected to be added at any point in the near future. See `GitHub issue #2309 <https://github.com/apache/trafficcontrol/issues/2309>`_ for more information.
+.. danger:: This API endpoint *does* **not** *work*. It isn't implemented in Traffic Ops, and is not expected to be added at any point in the near future. See :issue:`2309` for more information.
 
-.. deprecated:: 1.2
-	Use Traffic Stats or :ref:`to-api-cache_stats` instead
 
 ``GET``
 =======
-Retrieves edge metrics of one or all Cache Groups.
+Retrieves :term:`Edge-tier` metrics of one or all :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: None

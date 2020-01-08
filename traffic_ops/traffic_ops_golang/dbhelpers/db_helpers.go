@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -60,6 +61,61 @@ WHERE federation_deliveryservice.deliveryservice IN (
 	FROM federation_tmuser
 	WHERE federation_tmuser.tm_user = $2
 )
+`
+
+const getUserByEmailQuery = `
+SELECT u.id,
+       u.username,
+       u.public_ssh_key,
+       u.role,
+       r.name as rolename,
+       u.company,
+       u.email,
+       u.full_name,
+       u.new_user,
+       u.address_line1,
+       u.address_line2,
+       u.city,
+       u.state_or_province,
+       u.phone_number,
+       u.postal_code,
+       u.country,
+       u.registration_sent,
+       u.tenant_id,
+       t.name as tenant,
+       u.last_updated
+FROM tm_user u
+LEFT JOIN tenant t ON u.tenant_id = t.id
+LEFT JOIN role r ON u.role = r.id
+WHERE u.email=$1
+`
+const getUserByIDQuery = `
+SELECT tm_user.address_line1,
+       tm_user.address_line2,
+       tm_user.city,
+       tm_user.company,
+       tm_user.country,
+       tm_user.email,
+       tm_user.full_name,
+       tm_user.gid,
+       tm_user.id,
+       tm_user.new_user,
+       tm_user.phone_number,
+       tm_user.postal_code,
+       tm_user.public_ssh_key,
+       tm_user.registration_sent,
+       tm_user.role,
+       role.name AS role_name,
+       tm_user.state_or_province,
+       tenant.name AS tenant,
+       tm_user.tenant_id,
+       tm_user.token,
+       tm_user.uid,
+       tm_user.username
+FROM tm_user
+LEFT OUTER JOIN role ON role.id = tm_user.role
+LEFT OUTER JOIN tenant ON tenant.id = tm_user.tenant_id
+WHERE tm_user.id = $1
 `
 
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
@@ -248,6 +304,74 @@ func GetDSTenantIDFromXMLID(tx *sql.Tx, xmlid string) (int, bool, error) {
 		return -1, false, fmt.Errorf("Fetching Tenant ID for DS %s: %v", xmlid, err)
 	}
 	return id, true, nil
+}
+
+func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNName, bool, error) {
+	dsName := tc.DeliveryServiceName("")
+	cdnName := tc.CDNName("")
+	if err := tx.QueryRow(`SELECT ds.xml_id, cdn.name FROM deliveryservice ds JOIN cdn ON cdn.id = ds.cdn_id WHERE ds.id = $1`, id).Scan(&dsName, &cdnName); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DeliveryServiceName(""), tc.CDNName(""), false, nil
+		}
+		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying: " + err.Error())
+	}
+	return dsName, cdnName, true, nil
+}
+
+// GetFederationResolversByFederationID fetches all of the federation resolvers currently assigned to a federation.
+// In the event of an error, it will return an empty slice and the error.
+func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.FederationResolver, error) {
+	qry := `
+		SELECT
+		  fr.ip_address,
+		  frt.name as resolver_type,
+		  ffr.federation_resolver
+		FROM
+		  federation_federation_resolver ffr
+		  JOIN federation_resolver fr ON ffr.federation_resolver = fr.id
+		  JOIN type frt on fr.type = frt.id
+		WHERE
+		  ffr.federation = $1
+		ORDER BY fr.ip_address
+	`
+	rows, err := tx.Query(qry, fedID)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error querying federation_resolvers by federation ID [%d]: %s", fedID, err.Error(),
+		)
+	}
+	defer rows.Close()
+
+	resolvers := []tc.FederationResolver{}
+	for rows.Next() {
+		fr := tc.FederationResolver{}
+		err := rows.Scan(
+			&fr.IPAddress,
+			&fr.Type,
+			&fr.ID,
+		)
+		if err != nil {
+			return resolvers, fmt.Errorf(
+				"error scanning federation_resolvers rows for federation ID [%d]: %s", fedID, err.Error(),
+			)
+		}
+		resolvers = append(resolvers, fr)
+	}
+	return resolvers, nil
+}
+
+// GetFederationNameFromID returns the federation's name, whether a federation with ID exists, or any error.
+func GetFederationNameFromID(id int, tx *sql.Tx) (string, bool, error) {
+	var name string
+	if err := tx.QueryRow(`SELECT cname from federation where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return name, false, fmt.Errorf(
+			"error querying federation name from id [%d]: %s", id, err.Error(),
+		)
+	}
+	return name, true, nil
 }
 
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
@@ -516,4 +640,74 @@ func GetFederationIDForUserIDByXMLID(tx *sql.Tx, userID int, xmlid string) (uint
 		return 0, false, fmt.Errorf("Getting Federation ID for user #%d by DS XMLID '%s': %v", userID, xmlid, err)
 	}
 	return id, true, nil
+}
+
+// GetUserByEmail retrieves the user with the given email. If no such user exists, the boolean
+// returned will be 'false', while the error indicates unexpected errors that occurred when querying.
+func GetUserByEmail(tx *sqlx.Tx, email string) (tc.User, bool, error) {
+	var u tc.User
+	if err := tx.QueryRowx(getUserByEmailQuery, email).StructScan(&u); err != nil {
+		if err == sql.ErrNoRows {
+			return u, false, nil
+		}
+		return u, false, err
+	}
+	return u, true, nil
+}
+
+// GetGlobalParam returns the global parameter with the requested name, whether it existed, and any error
+func GetGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
+	val := ""
+	if err := tx.QueryRow(`SELECT value FROM parameter WHERE config_file = 'global' and name = $1`, name).Scan(&val); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying global parameter '" + name + "': " + err.Error())
+	}
+	return val, true, nil
+}
+
+// UsernameExists reports whether or not the the given username exists as a user in the database to
+// which the passed transaction refers. If anything goes wrong when checking the existence of said
+// user, the error is directly returned to the caller. Note that in that case, no real meaning
+// should be assigned to the returned boolean value.
+func UsernameExists(uname string, tx *sql.Tx) (bool, error) {
+	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM tm_user WHERE tm_user.username=$1)`, uname)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+// GetUserByID returns the user with the requested ID if one exists. The second return value is a
+// boolean indicating whether said user actually did exist, and the third contains any error
+// encountered along the way.
+func GetUserByID(id int, tx *sql.Tx) (tc.User, bool, error) {
+	row := tx.QueryRow(getUserByIDQuery, id)
+	var u tc.User
+	err := row.Scan(&u.AddressLine1,
+		&u.AddressLine2,
+		&u.City,
+		&u.Company,
+		&u.Country,
+		&u.Email,
+		&u.FullName,
+		&u.GID,
+		&u.ID,
+		&u.NewUser,
+		&u.PhoneNumber,
+		&u.PostalCode,
+		&u.PublicSSHKey,
+		&u.RegistrationSent,
+		&u.Role,
+		&u.RoleName,
+		&u.StateOrProvince,
+		&u.Tenant,
+		&u.TenantID,
+		&u.Token,
+		&u.UID,
+		&u.Username)
+	if err == sql.ErrNoRows {
+		return u, false, nil
+	}
+	return u, true, err
 }

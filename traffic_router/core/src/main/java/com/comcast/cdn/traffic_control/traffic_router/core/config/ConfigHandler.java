@@ -226,6 +226,7 @@ public class ConfigHandler {
 				steeringWatcher.configure(config);
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				trafficRouterManager.getNameServer().setEcsEnable(JsonUtils.optBoolean(config, "ecsEnable", false));
+				trafficRouterManager.getNameServer().setEcsEnabledDses(deliveryServices.stream().filter(DeliveryService::isEcsEnabled).collect(Collectors.toSet()));
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.get("requestHeaders")));
 				trafficRouterManager.getTrafficRouter().configurationChanged();
 

@@ -257,14 +257,33 @@
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
-	<bean id="UDPRequestHandlerExecutorService" class="java.util.concurrent.Executors"
+	<bean id="UDPBlockingQueue" class="java.util.concurrent.LinkedBlockingQueue" />
+	<bean id="TCPBlockingQueue" class="java.util.concurrent.LinkedBlockingQueue" />
+
+	<bean id="UDPCancelExecutorService" class="java.util.concurrent.Executors"
 		factory-method="newFixedThreadPool">
 		<constructor-arg index="0" value="$[dns.max-threads:1000]" />
 	</bean>
 
-	<bean id="TCPRequestHandlerExecutorService" class="java.util.concurrent.Executors"
+	<bean id="TCPCancelExecutorService" class="java.util.concurrent.Executors"
 		factory-method="newFixedThreadPool">
 		<constructor-arg index="0" value="$[dns.max-threads:1000]" />
+	</bean>
+
+	<bean id="UDPRequestHandlerExecutorService" class="java.util.concurrent.ThreadPoolExecutor">
+		<constructor-arg index="0" type="int" value="$[dns.max-threads:1000]" />
+		<constructor-arg index="1" type="int" value="$[dns.max-threads:1000]" />
+		<constructor-arg index="2" type="long" value="0" />
+		<constructor-arg index="3" type="java.util.concurrent.TimeUnit" value="MILLISECONDS" />
+		<constructor-arg index="4" ref="UDPBlockingQueue" />
+	</bean>
+
+	<bean id="TCPRequestHandlerExecutorService" class="java.util.concurrent.ThreadPoolExecutor">
+		<constructor-arg index="0" type="int" value="$[dns.max-threads:1000]" />
+		<constructor-arg index="1" type="int" value="$[dns.max-threads:1000]" />
+		<constructor-arg index="2" type="long" value="0" />
+		<constructor-arg index="3" type="java.util.concurrent.TimeUnit" value="MILLISECONDS" />
+		<constructor-arg index="4" ref="TCPBlockingQueue" />
 	</bean>
 
 	<bean id="ServerSocket" class="java.net.ServerSocket">
@@ -275,7 +294,9 @@
 	<bean id="TCP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.TCP">
 		<property name="serverSocket" ref="ServerSocket" />
 		<property name="executorService" ref="TCPRequestHandlerExecutorService" />
+		<property name="cancelService" ref="TCPCancelExecutorService" />
 		<property name="nameServer" ref="NameServer" />
+		<property name="queueDepth" value="$[dns.queue-depth:1000]" />
 		<property name="readTimeout" value="$[dns.tcp.timeout.read:3000]" />
 		<property name="taskTimeout" value="$[dns.tcp.timeout.task:5000]" />
 	</bean>
@@ -287,7 +308,9 @@
 	<bean id="UDP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.UDP">
 		<property name="datagramSocket" ref="DatagramSocket" />
 		<property name="executorService" ref="UDPRequestHandlerExecutorService" />
+		<property name="cancelService" ref="UDPCancelExecutorService" />
 		<property name="nameServer" ref="NameServer" />
+		<property name="queueDepth" value="$[dns.queue-depth:1000]" />
 		<property name="taskTimeout" value="$[dns.udp.timeout.task:5000]" />
 	</bean>
 
