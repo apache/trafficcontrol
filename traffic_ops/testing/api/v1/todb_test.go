@@ -68,6 +68,12 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
+	err = SetupAPICapabilities(db)
+	if err != nil {
+		fmt.Printf("\nError setting up APICapabilities %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
 	err = SetupTenants(db)
 	if err != nil {
 		fmt.Printf("\nError setting up tenant %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -133,6 +139,20 @@ INSERT INTO capability (name, description) VALUES ('all-write','Full write acces
 INSERT INTO capability (name, description) VALUES ('cdn-read','View CDN configuration') ON CONFLICT DO NOTHING;
 `
 	err := execSQL(db, sqlStmt, "capability")
+	if err != nil {
+		return fmt.Errorf("exec failed %v", err)
+	}
+	return nil
+}
+
+func SetupAPICapabilities(db *sql.DB) error {
+	sqlStmt := `
+INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', '/asns', 'asns-read') ON CONFLICT DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('POST', '/asns', 'asns-write') ON CONFLICT DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', '/cachegroups', 'cache-groups-read') ON CONFLICT DO NOTHING;
+`
+
+	err := execSQL(db, sqlStmt, "api_capability")
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
