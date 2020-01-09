@@ -185,9 +185,6 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 
 	dsIDs := []int{}
 	for _, ds := range deliveryServices {
-		if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
-			continue
-		}
 		if ds.ID == nil {
 			// TODO log error?
 			continue
@@ -210,6 +207,7 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 		dssMap[*dss.DeliveryService] = struct{}{}
 	}
 
+	dsNames := map[tc.DeliveryServiceName]struct{}{}
 	uriSignedDSes := []tc.DeliveryServiceName{}
 	for _, ds := range deliveryServices {
 		if ds.ID == nil {
@@ -218,14 +216,14 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 		if ds.XMLID == nil {
 			continue // TODO log?
 		}
-		if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
-			continue
-		}
 		if _, ok := dssMap[*ds.ID]; !ok {
 			continue
 		}
-		uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(*ds.XMLID))
+		dsNames[tc.DeliveryServiceName(*ds.XMLID)] = struct{}{}
+		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURISigning {
+			uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(*ds.XMLID))
+		}
 	}
 
-	return atscfg.MakeMetaConfig(tc.CacheName(serverHostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams), nil
+	return atscfg.MakeMetaConfig(tc.CacheName(serverHostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames), nil
 }

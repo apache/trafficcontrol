@@ -76,7 +76,13 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txt := atscfg.MakeMetaConfig(serverName, server, tmParams.URL, tmParams.ReverseProxyURL, locationParams, uriSignedDSes, scopeParams)
+	dsNames, err := ats.GetDSNames(inf.Tx.Tx, server.HostName, server.Port)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetConfigMetaData getting server ds names: "+err.Error()))
+		return
+	}
+
+	txt := atscfg.MakeMetaConfig(serverName, server, tmParams.URL, tmParams.ReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames)
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write([]byte(txt))
 }

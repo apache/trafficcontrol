@@ -48,6 +48,7 @@ func MakeMetaConfig(
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
+	dsNames map[tc.DeliveryServiceName]struct{},
 ) string {
 	if tmURL == "" {
 		log.Errorln("ats.GetConfigMetadata: global tm.url parameter missing or empty! Setting empty in meta config!")
@@ -83,7 +84,26 @@ func MakeMetaConfig(
 		}
 	}
 
+locationParamsFor:
 	for cfgFile, cfgParams := range locationParams {
+		if strings.HasSuffix(cfgFile, ".config") {
+			dsConfigFilePrefixes := []string{
+				"hdr_rw_",
+				"regex_remap_",
+				"url_sig_",
+				"uri_signing_",
+			}
+			for _, prefix := range dsConfigFilePrefixes {
+				if strings.HasPrefix(cfgFile, prefix) {
+					dsName := strings.TrimSuffix(strings.TrimPrefix(cfgFile, prefix), ".config")
+					if _, ok := dsNames[tc.DeliveryServiceName(dsName)]; !ok {
+						log.Warnln("Server Profile had 'location' Parameter '" + cfgFile + "', but delivery Service '" + dsName + "' is not assigned to this Server! Not including in meta config!")
+						continue locationParamsFor
+					}
+				}
+			}
+		}
+
 		atsCfg := tc.ATSConfigMetaDataConfigFile{
 			FileNameOnDisk: cfgParams.FileNameOnDisk,
 			Location:       cfgParams.Location,

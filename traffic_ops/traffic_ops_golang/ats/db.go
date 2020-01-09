@@ -749,6 +749,36 @@ WHERE
 	return dses, nil
 }
 
+// GetDSNames returns a set of delivery service names which have the given server assigned, and any error.
+func GetDSNames(tx *sql.Tx, serverHostName string, serverPort int) (map[tc.DeliveryServiceName]struct{}, error) {
+	qry := `
+SELECT
+  ds.xml_id
+FROM
+  deliveryservice ds
+  JOIN deliveryservice_server dss ON ds.id = dss.deliveryservice
+  JOIN server s ON s.id = dss.server
+WHERE
+  s.host_name = $1
+  AND s.tcp_port = $2
+`
+	rows, err := tx.Query(qry, serverHostName, serverPort)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	dses := map[tc.DeliveryServiceName]struct{}{}
+	for rows.Next() {
+		ds := tc.DeliveryServiceName("")
+		if err := rows.Scan(&ds); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		dses[ds] = struct{}{}
+	}
+	return dses, nil
+}
+
 type TMParams struct {
 	URL             string
 	ReverseProxyURL string
