@@ -24,6 +24,8 @@ import (
 
 func TestATSConfigMeta(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+		defer DeleteTestDeliveryServiceServersCreated(t)
+		CreateTestDeliveryServiceServers(t)
 		GetTestATSConfigMeta(t)
 	})
 }
@@ -49,9 +51,9 @@ func GetTestATSConfigMeta(t *testing.T) {
 	}
 
 	expected := tc.ATSConfigMetaDataConfigFile{
-		FileNameOnDisk: "hdr_rw_mid_anymap-ds.config",
+		FileNameOnDisk: "hdr_rw_ds1.config",
 		Location:       "/remap/config/location/parameter",
-		APIURI:         "cdns/cdn1/configfiles/ats/hdr_rw_mid_anymap-ds.config", // expected suffix; config gen doesn't care about API version
+		APIURI:         "cdns/cdn1/configfiles/ats/hdr_rw_ds1.config", // expected suffix; config gen doesn't care about API version
 		URL:            "",
 		Scope:          "cdns",
 	}

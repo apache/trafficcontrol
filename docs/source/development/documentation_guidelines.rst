@@ -202,7 +202,7 @@ File names should reflect the request path of the endpoint, e.g. a file for an e
 
 Extension
 ---------
-The :abbr:`ATC (Apache Traffic Control)` documentation provides an extension to the standard roles and directives offered by Sphinx, located at :file:`docs/source/_ext/atc.py`. It provides the following roles and directives:
+The :abbr:`ATC (Apache Traffic Control)` documentation provides an extension to the standard roles and directives offered by Sphinx, located at :atc-file:`docs/source/_ext/atc.py`. It provides the following roles and directives:
 
 impl-detail
 	An admonition directive used to contain implementation-specific notes on a subject.
@@ -225,3 +225,10 @@ pr
 	A text role that can be used to easily link to GitHub Pull Requests for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:pr:`1```" renders as :pr:`1`.
 pull-request
 	A synonym for ``pr``
+
+godoc
+	A text role that can be used to easily link to the documentation for any Go package, type, or function/method (grouped constants/variables not supported). For example, "``:godoc:`net/http.HandlerFunc```" renders as :godoc:`net/http.HandlerFunc`.
+atc-godoc
+	This is provided for convenience, and is identical to ``:godoc:`` except that it is assumed to be relative to the Apache Traffic Control project. For example, ``:atc-godoc:`lib/go-rfc.MimeType.Quality``` renders as :atc-godoc:`lib/go-rfc.MimeType.Quality`.
+to-godoc
+	This is provided for convenience, and is identical to ``:godoc:`` except that it is assumed to be relative to the :atc-godoc:`traffic_ops/traffic_ops_golang` package. For example, ``:to-godoc:`api.APIInfo``` renders as :to-godoc:`api.APIInfo`.

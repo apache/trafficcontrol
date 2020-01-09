@@ -360,6 +360,10 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         },
         {
             text: 'Manage Required Server Capabilities',
+            displayed: function ($itemScope) {
+                // only show for DNS* or HTTP* delivery services
+                return ($itemScope.ds.type.indexOf('DNS') != -1 || $itemScope.ds.type.indexOf('HTTP') != -1);
+            },
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/required-server-capabilities?type=' + $itemScope.ds.type);
             }

@@ -82,6 +82,7 @@ func randDS() tc.CRConfigDeliveryService {
 	ttlNS := "3600"
 	ttlSOA := "86400"
 	geoProviderStr := GeoProviderMaxmindStr
+	ecsEnabled := false
 	return tc.CRConfigDeliveryService{
 		AnonymousBlockingEnabled:  &falseStrPtr,
 		CoverageZoneOnly:          false,
@@ -113,6 +114,7 @@ func randDS() tc.CRConfigDeliveryService {
 			RetrySeconds:   &ttlRetry,
 		},
 		SSLEnabled: false,
+		EcsEnabled: &ecsEnabled,
 		TTL:        ttl,
 		TTLs: &tc.CRConfigTTL{
 			ASeconds:    &ttlStr,
@@ -178,6 +180,7 @@ func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryS
 		"dns_bypass_cname",
 		"http_bypass_fqdn",
 		"ipv6_routing_enabled",
+		"ecs_enabled",
 		"deep_caching_type",
 		"tr_request_headers",
 		"tr_response_headers",
@@ -210,6 +213,7 @@ func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryS
 			"",
 			*ds.BypassDestination["HTTP"].FQDN,
 			*ds.IP6RoutingEnabled,
+			*ds.EcsEnabled,
 			nil,
 			"",
 			"",

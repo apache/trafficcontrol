@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 - Traffic Ops Endpoints
   - /api/1.5/stats_summary `POST`
+- Added a boolean to delivery service in Traffic Portal and Traffic Ops to enable EDNS0 client subnet at the delivery service level and include it in the cr-config.
+- Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
 
 ### Changed
 
@@ -78,6 +80,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops now supports a "sortOrder" query parameter on some endpoints to return API responses in descending order
 - Traffic Ops now uses a consistent format for audit logs across all Go endpoints
 - Added cache-side config generator, atstccfg, installed with ORT. Includes all configs. Includes a plugin system.
+- Fixed ATS config generation to omit regex remap, header rewrite, URL Sig, and URI Signing files for delivery services not assigned to that server.
 - In Traffic Portal, all tables now include a 'CSV' link to enable the export of table data in CSV format.
 - Pylint configuration now enforced (present in [a file in the Python client directory](./traffic_control/clients/python/pylint.rc))
 - Added an optional SMTP server configuration to the TO configuration file, api now has unused abilitiy to send emails

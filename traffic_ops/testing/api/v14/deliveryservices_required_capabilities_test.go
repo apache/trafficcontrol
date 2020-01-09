@@ -33,7 +33,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	data := testData.DeliveryServicesRequiredCapabilities
-	ds1 := helperGetDeliveryServiceID(t, data[0])
+	ds1 := helperGetDeliveryServiceID(t, data[0].XMLID)
 
 	testCases := []struct {
 		description string
@@ -82,8 +82,11 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 func CreateTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	data := testData.DeliveryServicesRequiredCapabilities
-	ds1 := helperGetDeliveryServiceID(t, data[0])
-
+	if len(data) == 0 {
+		t.Fatal("there must be at least one test ds required capability defined")
+	}
+	ds1 := helperGetDeliveryServiceID(t, data[0].XMLID)
+	amDS := helperGetDeliveryServiceID(t, util.StrPtr("anymap-ds"))
 	testCases := []struct {
 		description string
 		capability  tc.DeliveryServicesRequiredCapability
@@ -115,9 +118,16 @@ func CreateTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 			},
 		},
 		{
-			description: fmt.Sprintf("assign a deliveryservice to a required capability with an invalid deliver service id; deliveryServiceID: -1, requiredCapability: %s", *data[0].RequiredCapability),
+			description: fmt.Sprintf("assign a deliveryservice to a required capability with an invalid delivery service id; deliveryServiceID: -1, requiredCapability: %s", *data[0].RequiredCapability),
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID:  util.IntPtr(-1),
+				RequiredCapability: data[0].RequiredCapability,
+			},
+		},
+		{
+			description: "assign a deliveryservice to a required capability with an invalid deliveryservice type",
+			capability: tc.DeliveryServicesRequiredCapability{
+				DeliveryServiceID:  amDS,
 				RequiredCapability: data[0].RequiredCapability,
 			},
 		},
@@ -137,7 +147,7 @@ func CreateTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 		t.Run(fmt.Sprintf("assign a deliveryservice to a required capability; deliveryServiceID: %d, requiredCapability: %s", dsID, capability), func(t *testing.T) {
 			cap := tc.DeliveryServicesRequiredCapability{
-				DeliveryServiceID:  helperGetDeliveryServiceID(t, td),
+				DeliveryServiceID:  helperGetDeliveryServiceID(t, td.XMLID),
 				RequiredCapability: td.RequiredCapability,
 			}
 
@@ -290,14 +300,17 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	}
 }
 
-func helperGetDeliveryServiceID(t *testing.T, capability tc.DeliveryServicesRequiredCapability) *int {
+func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 	t.Helper()
-	ds, _, err := TOSession.GetDeliveryServiceByXMLID(*capability.XMLID)
+	if xmlID == nil {
+		t.Fatal("xml id must not be nil")
+	}
+	ds, _, err := TOSession.GetDeliveryServiceByXMLID(*xmlID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(ds) != 1 {
-		t.Fatalf("cannot GET deliveyservice by xml id: %v. Response did not include record.", *capability.XMLID)
+		t.Fatalf("cannot GET deliveyservice by xml id: %v. Response did not include record.", *xmlID)
 	}
 	return &ds[0].ID
 }

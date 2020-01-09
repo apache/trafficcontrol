@@ -195,7 +195,8 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| CoverageZoneJsonURL                     | CRConfig.xml                 | The location (URL) where a :term:`Coverage Zone Map` may be found.                                                                    |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| ecsEnable                               | CRConfig.json                | Boolean value to enable or disable ENDS0 client subnet extensions.                                                                    |
+	| ecsEnable                               | CRConfig.json                | Boolean value to enable or disable EDNS0 client subnet extensions.                                                                    |
+	|                                         |                              | This is a universal value for the CDN but can be set on the :term:`Delivery Service` level through the :ref:`ds-ecs` field.           |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url                 | CRConfig.json                | The location (URL) where a geographic IP mapping database may be found.                                                               |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -539,7 +540,7 @@ DNS Specifics
 	+=======+=================================================================================+===================================================================================================+
 	| xn    | The ID from the client DNS request header                                       | a whole number between 0 and 65535 (inclusive)                                                    |
 	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
-	| rhi   | The IP address of the resolver when ENDS0 client subnet extensions are enabled. | An IPv4 or IPv6 string, or dash if request is for resolver only and no client subnet is present   |
+	| rhi   | The IP address of the resolver when EDNS0 client subnet extensions are enabled. | An IPv4 or IPv6 string, or dash if request is for resolver only and no client subnet is present   |
 	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
 	| fqdn  | The qname field from the client DNS request message (i.e. the                   | A series of DNS labels/domains separated by '.' characters and ending with a '.' character        |
 	|       | :abbr:`FQDN (Fully Qualified Domain Name)` the client is requesting be          |                                                                                                   |

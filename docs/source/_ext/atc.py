@@ -107,6 +107,67 @@ def atc_file_role(unused_typ,
 	refnode = nodes.reference(text, '', litnode, refuri=FILE_URI % text)
 	return [refnode], []
 
+# -- GoDoc role (absolute) ---------------------------------------------------
+GODOC_URI = "https://godoc.org/"
+def godoc_role(unused_typ,
+               unused_rawtext,
+               text,
+               unused_lineno,
+               unused_inliner,
+               options=None,
+               content=None):
+	if options is None:
+		options = {}
+	if content is None:
+		content = []
+
+	text = utils.unescape(text)
+	litnode = nodes.literal(text, text)
+	refnode = nodes.reference(text, '', litnode, refuri=GODOC_URI + text.replace('.', '#', 1))
+	return [refnode], []
+
+# -- GoDoc role (atc-relative) ----------------------------------------------
+ATC_GODOC_PREFIX = "github.com/apache/trafficcontrol/"
+ATC_GODOC_URI = GODOC_URI + ATC_GODOC_PREFIX
+def atc_godoc_role(unused_typ,
+                   unused_rawtext,
+                   text,
+                   unused_lineno,
+                   unused_inliner,
+                   options=None,
+                   content=None):
+	if options is None:
+		options = {}
+	if content is None:
+		content = []
+
+	text = utils.unescape(text)
+	literaltext = ATC_GODOC_PREFIX + text
+	litnode = nodes.literal(literaltext, literaltext)
+	refnode = nodes.reference(text, '', litnode, refuri=ATC_GODOC_URI + text.replace('.', '#', 1))
+	return [refnode], []
+
+# -- GoDoc role (to-relative) -----------------------------------------------
+TO_GODOC_PREFIX = ATC_GODOC_PREFIX + "traffic_ops/traffic_ops_golang/"
+TO_GODOC_URI = GODOC_URI + TO_GODOC_PREFIX
+def to_godoc_role(unused_typ,
+                  unused_rawtext,
+                  text,
+                  unused_lineno,
+                  unused_inliner,
+                  options=None,
+                  content=None):
+	if options is None:
+		options = {}
+	if content is None:
+		content = []
+
+	text = utils.unescape(text)
+	literaltext = TO_GODOC_PREFIX + text
+	litnode = nodes.literal(literaltext, literaltext)
+	refnode = nodes.reference(text, '', litnode, refuri=TO_GODOC_URI + text.replace('.', '#', 1))
+	return [refnode], []
+
 
 def setup(app: object) -> dict:
 	app.add_node(impl,
@@ -118,9 +179,12 @@ def setup(app: object) -> dict:
 	app.add_role("pr", pr_role)
 	app.add_role("pull-request", pr_role)
 	app.add_role("atc-file", atc_file_role)
+	app.add_role("godoc", godoc_role)
+	app.add_role("atc-godoc", atc_godoc_role)
+	app.add_role("to-godoc", to_godoc_role)
 
 	return {
-		'version': '0.1',
+		'version': '0.2',
 		'parallel_read_safe': True,
 		'parallel_write_safe': True,
 	}

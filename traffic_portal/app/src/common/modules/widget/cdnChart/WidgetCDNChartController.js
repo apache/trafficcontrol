@@ -168,7 +168,11 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 	};
 
 	var registerResizeListener = function() {
-		$(window).resize(plotChart);
+		$(window).bind("resize", plotChart);
+	};
+
+	var unregisterResizeListener = function() {
+		$(window).unbind("resize", plotChart);
 	};
 
 	var plotChart = function() {
@@ -187,6 +191,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 
 	$scope.$on("$destroy", function() {
 		killIntervals();
+		unregisterResizeListener();
 	});
 
 	angular.element(document).ready(function () {

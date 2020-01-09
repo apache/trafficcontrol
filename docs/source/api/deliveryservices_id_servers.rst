@@ -25,7 +25,7 @@
 Retrieves properties of Edge-Tier servers assigned to a :term:`Delivery Service`.
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [1]_
+:Roles Required: None
 :Response Type:  Array
 
 Request Structure
@@ -49,11 +49,11 @@ Response Structure
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS requests - 443 in most cases
 :id:             An integral, unique identifier for the server
-:iloIpAddress:   The IPv4 address of the lights-out-management port\ [2]_
-:iloIpGateway:   The IPv4 gateway address of the lights-out-management port\ [2]_
-:iloIpNetmask:   The IPv4 subnet mask of the lights-out-management port\ [2]_
-:iloPassword:    The password of the of the lights-out-management user - displays as ``******`` unless the requesting user has the 'admin' role)\ [2]_
-:iloUsername:    The user name for lights-out-management\ [2]_
+:iloIpAddress:   The IPv4 address of the lights-out-management port\ [#ilowikipedia]_
+:iloIpGateway:   The IPv4 gateway address of the lights-out-management port\ [#ilowikipedia]_
+:iloIpNetmask:   The IPv4 subnet mask of the lights-out-management port\ [#ilowikipedia]_
+:iloPassword:    The password of the of the lights-out-management user - displays as ``******`` unless the requesting user has the 'admin' role)\ [#ilowikipedia]_
+:iloUsername:    The user name for lights-out-management\ [#ilowikipedia]_
 :interfaceMtu:   The :abbr:`MTU (Maximum Transmission Unit)` to configure for ``interfaceName``
 
 	.. seealso:: `The Wikipedia article on Maximum Transmission Unit <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
@@ -151,5 +151,4 @@ Response Structure
 	]}
 
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to the see servers associated with *any* :term:`Delivery Services`, whereas any other user will only be able to see the servers associated with :term:`Delivery Services` their Tenant is allowed to see.
-.. [2] See `the Wikipedia article on Out-of-Band Management <https://en.wikipedia.org/wiki/Out-of-band_management>`_ for more information.
+.. [#ilowikipedia] See `the Wikipedia article on Out-of-Band Management <https://en.wikipedia.org/wiki/Out-of-band_management>`_ for more information.

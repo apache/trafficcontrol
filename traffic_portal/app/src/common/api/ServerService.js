@@ -55,6 +55,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateServer = function(server) {
         return $http.put(ENV.api['root'] + 'servers/' + server.id, server).then(
             function(result) {
@@ -68,6 +69,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteServer = function(id) {
         return $http.delete(ENV.api['root'] + "servers/" + id).then(
             function(result) {

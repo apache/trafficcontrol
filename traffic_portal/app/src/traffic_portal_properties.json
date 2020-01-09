@@ -132,7 +132,8 @@
           "signingAlgorithm": null,
           "ccrDnsTtl": 30,
           "regionalGeoBlocking": false,
-          "anonymousBlockingEnabled": false
+          "anonymousBlockingEnabled": false,
+          "ecsEnabled": false
         },
         "HTTP": {
           "routingName": "cdn",
@@ -153,7 +154,8 @@
           "signingAlgorithm": null,
           "ccrDnsTtl": 3600,
           "anonymousBlockingEnabled": false,
-          "consistentHashQueryParams": []
+          "consistentHashQueryParams": [],
+          "ecsEnabled": false
         },
         "STEERING": {
           "dscp": 0,
@@ -164,7 +166,8 @@
           "geoLimit": 0,
           "regionalGeoBlocking": false,
           "ccrDnsTtl": 30,
-          "anonymousBlockingEnabled": false
+          "anonymousBlockingEnabled": false,
+          "ecsEnabled": false
         }
       },
       "charts": {

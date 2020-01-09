@@ -136,24 +136,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(pageData.displayName.getText() === "Updated display name");
 	});
 
-	it('should add a required server capability to the ANY_MAP delivery service', function() {
-		console.log('Adding required server capability to ' + mockVals.anyMapXmlId);
-		pageData.moreBtn.click();
-		pageData.viewCapabilitiesMenuItem.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/required-server-capabilities");
-		pageData.addCapabilityBtn.click();
-		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
-		commonFunctions.selectDropdownbyNum(pageData.selectFormDropdown, 1);
-		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
-		pageData.selectFormSubmitButton.click();
-		element.all(by.css('tbody tr')).then(function(totalRows) {
-			expect(totalRows.length).toBe(1);
-		});
-	});
-
 	it('should navigate back to the ANY_MAP delivery service and delete it', function() {
 		console.log('Deleting ' + mockVals.anyMapXmlId);
-		pageData.dsLink.click();
 		pageData.deleteButton.click();
 		pageData.confirmWithNameInput.sendKeys(mockVals.anyMapXmlId);
 		pageData.deletePermanentlyButton.click();
@@ -401,24 +385,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(pageData.displayName.getText() === "Updated display name");
 	});
 
-	it('should add a required server capability to the STEERING delivery service', function() {
-		console.log('Adding required server capability to ' + mockVals.steeringXmlId);
-		pageData.moreBtn.click();
-		pageData.viewCapabilitiesMenuItem.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/required-server-capabilities");
-		pageData.addCapabilityBtn.click();
-		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
-		commonFunctions.selectDropdownbyNum(pageData.selectFormDropdown, 1);
-		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
-		pageData.selectFormSubmitButton.click();
-		element.all(by.css('tbody tr')).then(function(totalRows) {
-			expect(totalRows.length).toBe(1);
-		});
-	});
-
 	it('should navigate back to the STEERING delivery service and delete it', function() {
 		console.log('Deleting ' + mockVals.steeringXmlId);
-		pageData.dsLink.click();
 		pageData.deleteButton.click();
 		pageData.confirmWithNameInput.sendKeys(mockVals.steeringXmlId);
 		pageData.deletePermanentlyButton.click();
