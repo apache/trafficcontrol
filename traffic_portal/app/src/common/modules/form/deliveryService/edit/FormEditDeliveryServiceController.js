@@ -202,10 +202,13 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 				if (options.status.id == $scope.COMPLETE) {
 					createDeliveryServiceUpdateRequest(dsRequest, options.comment, true).then(
 						function() {
-							deliveryServiceService.updateDeliveryService(deliveryService);
-						}).then(function() {
-							$state.reload(); // reloads all the resolves for the view
-							messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
+							deliveryServiceService.updateDeliveryService(deliveryService).
+								then(
+									function() {
+										$state.reload(); // reloads all the resolves for the view
+										messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
+									}
+								);
 						}).catch(function(fault) {
 							$anchorScroll(); // scrolls window to top
 							messageModel.setMessages(fault.data.alerts, false);
