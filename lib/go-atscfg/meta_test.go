@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -80,6 +81,26 @@ func TestMakeMetaConfig(t *testing.T) {
 			FileNameOnDisk: "uri_signing_mydsname.config",
 			Location:       "/my/location/",
 		},
+		"uri_signing_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "uri_signing_nonexistentds.config",
+			Location:       "/my/location/",
+		},
+		"regex_remap_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "regex_remap_nonexistentds.config",
+			Location:       "/my/location/",
+		},
+		"url_sig_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "url_sig_nonexistentds.config",
+			Location:       "/my/location/",
+		},
+		"hdr_rw_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "hdr_rw_nonexistentds.config",
+			Location:       "/my/location/",
+		},
+		"hdr_rw_mid_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "hdr_rw_mid_nonexistentds.config",
+			Location:       "/my/location/",
+		},
 		"unknown.config": ConfigProfileParams{
 			FileNameOnDisk: "unknown.config",
 			Location:       "/my/location/",
@@ -90,10 +111,11 @@ func TestMakeMetaConfig(t *testing.T) {
 		},
 	}
 	uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
+	dses := map[tc.DeliveryServiceName]struct{}{"mydsname": {}}
 
 	scopeParams := map[string]string{"custom.config": string(tc.ATSConfigMetaDataConfigFileScopeProfiles)}
 
-	txt := MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams)
+	txt := MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
 
 	cfg := tc.ATSConfigMetaData{}
 	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
@@ -223,7 +245,7 @@ func TestMakeMetaConfig(t *testing.T) {
 	}
 
 	server.Type = "MID"
-	txt = MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams)
+	txt = MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
 	cfg = tc.ATSConfigMetaData{}
 	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
 		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
@@ -236,5 +258,8 @@ func TestMakeMetaConfig(t *testing.T) {
 			t.Errorf("expected cache.config on a Mid to be scope '%v', actual '%v'", expected, cfgFile.Scope)
 		}
 		break
+	}
+	if strings.Contains(txt, "nonexistentds") {
+		t.Errorf("expected location parameters for nonexistent delivery services to not be added to config, actual '%v'", txt)
 	}
 }
