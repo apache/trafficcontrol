@@ -93,7 +93,7 @@ type User struct {
 	Username         *string    `json:"username" db:"username"`
 	RegistrationSent *TimeNoMod `json:"registrationSent" db:"registration_sent"`
 	LocalPassword    *string    `json:"localPasswd,omitempty" db:"local_passwd"`
-	RoleName         *string    `json:"roleName,omitempty" db:"rolename"`
+	RoleName         *string    `json:"roleName,omitempty" db:"-"`
 	commonUserFields
 }
 
