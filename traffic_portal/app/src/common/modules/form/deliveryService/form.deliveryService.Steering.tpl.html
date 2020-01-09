@@ -443,7 +443,7 @@ under the License.
                             </aside>
                         </div>
                     </div>
-                     <div class="form-group" ng-class="{'has-error': hasError(routingConfig.regionalGeoBlocking), 'has-feedback': hasError(routingConfig.regionalGeoBlocking)}">
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.regionalGeoBlocking), 'has-feedback': hasError(routingConfig.regionalGeoBlocking)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="regionalGeoBlocking">Regional Geoblocking *<div class="helptooltip">
                             <div class="helptext">
                                 Define regional geo-blocking rules for Delivery Services in a JSON format and set this to 'Enabled' to use "Regional Geoblocking". <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/regionalgeo.html" target="_blank">See Regional Geo-blocking</a>
@@ -459,6 +459,36 @@ under the License.
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.trResponseHeaders), 'has-feedback': hasError(routingConfig.trResponseHeaders)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trResponseHeaders">Traffic Router Additional Response Headers<div class="helptooltip">
+                            <div class="helptext">
+                                List of header name:value pairs. One name:value pair per line. Listed pairs will be included in all Traffic Router HTTP(S) responses.
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="trResponseHeaders" name="trResponseHeaders" class="form-control" ng-model="deliveryService.trResponseHeaders" rows="3"></textarea>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.trResponseHeaders != dsCurrent.trResponseHeaders">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.trResponseHeaders}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.trRequestHeaders), 'has-feedback': hasError(routingConfig.trRequestHeaders)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trRequestHeaders">Traffic Router Log Request Headers<div class="helptooltip">
+                            <div class="helptext">
+                                List of header keys. One header key per line. Listed headers will be included in Traffic Router access log entries under the <samp>rh=</samp> token.
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="trRequestHeaders" name="trRequestHeaders" class="form-control" ng-model="deliveryService.trRequestHeaders" rows="3"></textarea>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.trRequestHeaders}}</pre>
                             </aside>
                         </div>
                     </div>
