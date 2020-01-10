@@ -21,6 +21,7 @@ package tmcheck
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -81,7 +82,7 @@ func ValidateDSStatsData(dsStats *dsdata.StatsOld, crconfig *tc.CRConfig) error 
 		if !hasCaches(dsName, crconfig) {
 			continue
 		}
-		if _, ok := dsStats.DeliveryService[tc.DeliveryServiceName(dsName)]; !ok {
+		if _, ok := dsStats.DeliveryService[enum.DeliveryServiceName(dsName)]; !ok {
 			return fmt.Errorf("Delivery Service %v in CRConfig but not DSStats", dsName)
 		}
 	}
@@ -107,15 +108,15 @@ func AllMonitorsDSStatsValidator(
 	interval time.Duration,
 	includeOffline bool,
 	grace time.Duration,
-	onErr func(tc.TrafficMonitorName, error),
-	onResumeSuccess func(tc.TrafficMonitorName),
-	onCheck func(tc.TrafficMonitorName, error),
+	onErr func(enum.TrafficMonitorName, error),
+	onResumeSuccess func(enum.TrafficMonitorName),
+	onCheck func(enum.TrafficMonitorName, error),
 ) {
 	AllValidator(toClient, interval, includeOffline, grace, onErr, onResumeSuccess, onCheck, ValidateAllMonitorsDSStats)
 }
 
 // ValidateAllMonitorDSStats validates, for all monitors in the given Traffic Ops, DSStats contains all Delivery Services in the CRConfig.
-func ValidateAllMonitorsDSStats(toClient *to.Session, includeOffline bool) (map[tc.TrafficMonitorName]error, error) {
+func ValidateAllMonitorsDSStats(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error) {
 	servers, err := GetMonitors(toClient, includeOffline)
 	if err != nil {
 		return nil, err
@@ -123,16 +124,16 @@ func ValidateAllMonitorsDSStats(toClient *to.Session, includeOffline bool) (map[
 
 	crConfigs := GetCRConfigs(GetCDNs(servers), toClient)
 
-	errs := map[tc.TrafficMonitorName]error{}
+	errs := map[enum.TrafficMonitorName]error{}
 	for _, server := range servers {
-		crConfig := crConfigs[tc.CDNName(server.CDNName)]
+		crConfig := crConfigs[enum.CDNName(server.CDNName)]
 		if err := crConfig.Err; err != nil {
-			errs[tc.TrafficMonitorName(server.HostName)] = fmt.Errorf("getting CRConfig: %v", err)
+			errs[enum.TrafficMonitorName(server.HostName)] = fmt.Errorf("getting CRConfig: %v", err)
 			continue
 		}
 
 		uri := fmt.Sprintf("http://%s.%s", server.HostName, server.DomainName)
-		errs[tc.TrafficMonitorName(server.HostName)] = ValidateDSStatsWithCRConfig(uri, crConfig.CRConfig, toClient)
+		errs[enum.TrafficMonitorName(server.HostName)] = ValidateDSStatsWithCRConfig(uri, crConfig.CRConfig, toClient)
 	}
 	return errs, nil
 }

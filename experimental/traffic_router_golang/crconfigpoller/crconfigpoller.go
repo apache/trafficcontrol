@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 	"time"
 
@@ -75,9 +76,9 @@ func createCGSearcher(crc *tc.CRConfig) (cgsrch.Ths, error) {
 
 // createNextCacher creates and returns a NextCacher, which can be used to get the next cache to use for each Delivery Service (e.g. via round-robin, consistent hash, etc).
 func createNextCacher(crc *tc.CRConfig) nextcache.NextCacher {
-	dses := make([]tc.DeliveryServiceName, 0, len(crc.DeliveryServices))
+	dses := make([]enum.DeliveryServiceName, 0, len(crc.DeliveryServices))
 	for ds, _ := range crc.DeliveryServices {
-		dses = append(dses, tc.DeliveryServiceName(ds))
+		dses = append(dses, enum.DeliveryServiceName(ds))
 	}
 	return nextcache.New(dses)
 }

@@ -22,12 +22,12 @@ package atsserver
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
@@ -90,7 +90,7 @@ func GetHostingDotConfig(w http.ResponseWriter, r *http.Request) {
 
 // GetServerHostingOrigins returns the list of origins on delivery services assigned to the given server, to be used in the ATS config file.
 // It returns only LIVE_NATNL delivery services, for mids; and only LIVE and LIVE_NATNL services for edges.
-func GetServerHostingOrigins(tx *sql.Tx, serverName tc.CacheName, serverType tc.CacheType) ([]string, error) {
+func GetServerHostingOrigins(tx *sql.Tx, serverName enum.CacheName, serverType enum.CacheType) ([]string, error) {
 	qry := `
 SELECT
   DISTINCT(SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')) as org_server_fqdn
@@ -100,12 +100,12 @@ FROM
   JOIN server s on s.id = dss.server
   LEFT JOIN origin o on (o.deliveryservice = ds.id AND o.is_primary)
 `
-	if strings.HasPrefix(string(serverType), tc.MidTypePrefix) {
+	if strings.HasPrefix(string(serverType), enum.MidTypePrefix) {
 		// Note mids only include active DSes, but edges include inactive DSes as well.
 		qry += `
 WHERE
   s.cdn_id = (select cdn_id from server where host_name = $1)
-  AND ds.type IN (SELECT id FROM type WHERE name like '%` + tc.DSTypeLiveNationalSuffix + `')
+  AND ds.type IN (SELECT id FROM type WHERE name like '%` + enum.DSTypeLiveNationalSuffix + `')
   AND ds.active = true
   AND ds.cdn_id = s.cdn_id
 `
@@ -114,7 +114,7 @@ WHERE
 WHERE
   s.host_name = $1
   AND ds.cdn_id = s.cdn_id
-  AND ds.type IN (SELECT id FROM type WHERE (name LIKE '%` + tc.DSTypeLiveSuffix + `' OR name LIKE '%` + tc.DSTypeLiveNationalSuffix + `'))
+  AND ds.type IN (SELECT id FROM type WHERE (name LIKE '%` + enum.DSTypeLiveSuffix + `' OR name LIKE '%` + enum.DSTypeLiveNationalSuffix + `'))
 `
 	}
 	// Note the 'ds.cdn_id = s.cdn_id' in the query shouldn't be necessary, but it is, because there's no DB constraint.

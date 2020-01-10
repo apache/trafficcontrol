@@ -22,11 +22,11 @@ package atscdn
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
@@ -67,13 +67,13 @@ func GetSSLMultiCertDotConfig(w http.ResponseWriter, r *http.Request) {
 
 type SSLMultiCertDSInfo struct {
 	Protocol    int
-	Type        tc.DSType
+	Type        enum.DSType
 	RoutingName string
 	CDNDomain   string
 }
 
-func GetSSLMultiCertDSesInfo(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]SSLMultiCertDSInfo, error) {
-	dses := map[tc.DeliveryServiceName]SSLMultiCertDSInfo{}
+func GetSSLMultiCertDSesInfo(tx *sql.Tx, cdn enum.CDNName) (map[enum.DeliveryServiceName]SSLMultiCertDSInfo, error) {
+	dses := map[enum.DeliveryServiceName]SSLMultiCertDSInfo{}
 	qry := `
 SELECT
   ds.xml_id,
@@ -95,7 +95,7 @@ WHERE
 	defer rows.Close()
 
 	for rows.Next() {
-		dsName := tc.DeliveryServiceName("")
+		dsName := enum.DeliveryServiceName("")
 		ds := SSLMultiCertDSInfo{}
 		if err := rows.Scan(&dsName, &ds.Protocol, &ds.Type, &ds.RoutingName, &ds.CDNDomain); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
@@ -105,7 +105,7 @@ WHERE
 	return dses, nil
 }
 
-func GetSSLMultiCertDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]atscfg.SSLMultiCertDS, error) {
+func GetSSLMultiCertDSes(tx *sql.Tx, cdn enum.CDNName) (map[enum.DeliveryServiceName]atscfg.SSLMultiCertDS, error) {
 	dsInfos, err := GetSSLMultiCertDSesInfo(tx, cdn)
 	if err != nil {
 		return nil, errors.New("getting dses info: " + err.Error())
@@ -121,7 +121,7 @@ func GetSSLMultiCertDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName
 		return nil, errors.New("getting matchlists: " + err.Error())
 	}
 
-	dses := map[tc.DeliveryServiceName]atscfg.SSLMultiCertDS{}
+	dses := map[enum.DeliveryServiceName]atscfg.SSLMultiCertDS{}
 	for dsName, dsInfo := range dsInfos {
 		ds := atscfg.SSLMultiCertDS{Type: dsInfo.Type, Protocol: dsInfo.Protocol}
 		matchList, ok := matchLists[string(dsName)]

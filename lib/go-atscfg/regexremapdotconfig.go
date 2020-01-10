@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -33,8 +34,8 @@ type CDNDS struct {
 	RegexRemap    string
 }
 
-func DeliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullable) map[tc.DeliveryServiceName]CDNDS {
-	sDSes := map[tc.DeliveryServiceName]CDNDS{}
+func DeliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullable) map[enum.DeliveryServiceName]CDNDS {
+	sDSes := map[enum.DeliveryServiceName]CDNDS{}
 	for _, ds := range dses {
 		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil {
 			if ds.XMLID == nil {
@@ -51,22 +52,22 @@ func DeliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullable) map[tc.Deliver
 		if ds.CacheURL != nil {
 			sds.CacheURL = *ds.CacheURL
 		}
-		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sds
+		sDSes[enum.DeliveryServiceName(*ds.XMLID)] = sds
 	}
 	return sDSes
 }
 
 func MakeRegexRemapDotConfig(
-	cdnName tc.CDNName,
+	cdnName enum.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	fileName string,
-	dses map[tc.DeliveryServiceName]CDNDS,
+	dses map[enum.DeliveryServiceName]CDNDS,
 ) string {
 	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
 
 	// TODO verify prefix and suffix exist, and warn if they don't? Perl doesn't
-	dsName := tc.DeliveryServiceName(strings.TrimSuffix(strings.TrimPrefix(fileName, "regex_remap_"), ".config"))
+	dsName := enum.DeliveryServiceName(strings.TrimSuffix(strings.TrimPrefix(fileName, "regex_remap_"), ".config"))
 
 	ds, ok := dses[dsName]
 	if !ok {

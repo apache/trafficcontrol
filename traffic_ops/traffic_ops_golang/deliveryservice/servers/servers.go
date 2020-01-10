@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"strings"
@@ -688,7 +689,7 @@ func updateQuery() string {
 type DSInfo struct {
 	ID                   int
 	Name                 string
-	Type                 tc.DSType
+	Type                 enum.DSType
 	EdgeHeaderRewrite    *string
 	MidHeaderRewrite     *string
 	RegexRemap           *string
@@ -722,7 +723,7 @@ WHERE
 		}
 		return DSInfo{}, false, fmt.Errorf("querying delivery service server ds info '%v': %v", id, err)
 	}
-	di.Type = tc.DSTypeFromString(string(di.Type))
+	di.Type = enum.DSTypeFromString(string(di.Type))
 	return di, true, nil
 }
 
@@ -751,6 +752,6 @@ WHERE
 		}
 		return DSInfo{}, false, fmt.Errorf("querying delivery service server ds info by name '%v': %v", dsName, err)
 	}
-	di.Type = tc.DSTypeFromString(string(di.Type))
+	di.Type = enum.DSTypeFromString(string(di.Type))
 	return di, true, nil
 }

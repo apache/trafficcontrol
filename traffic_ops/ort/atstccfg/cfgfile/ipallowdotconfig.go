@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -57,8 +58,8 @@ func GetConfigFileServerIPAllowDotConfig(cfg config.TCCfg, serverNameOrID string
 		return "", errors.New("server '" + serverNameOrID + " not found in servers")
 	}
 
-	serverName := tc.CacheName(server.HostName)
-	serverType := tc.CacheType(server.Type)
+	serverName := enum.CacheName(server.HostName)
+	serverType := enum.CacheType(server.Type)
 
 	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
 	if err != nil {
@@ -108,12 +109,12 @@ func GetConfigFileServerIPAllowDotConfig(cfg config.TCCfg, serverNameOrID string
 		}
 	}
 
-	childServers := map[tc.CacheName]atscfg.IPAllowServer{}
+	childServers := map[enum.CacheName]atscfg.IPAllowServer{}
 	for _, sv := range servers {
 		if _, ok := childCGs[sv.Cachegroup]; !ok {
 			continue
 		}
-		childServers[tc.CacheName(sv.HostName)] = atscfg.IPAllowServer{IPAddress: sv.IPAddress, IP6Address: sv.IP6Address}
+		childServers[enum.CacheName(sv.HostName)] = atscfg.IPAllowServer{IPAddress: sv.IPAddress, IP6Address: sv.IP6Address}
 	}
 
 	txt := atscfg.MakeIPAllowDotConfig(serverName, serverType, toToolName, toURL, fileParams, childServers)

@@ -22,6 +22,7 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/lib/pq"
@@ -99,9 +100,9 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		}
 		if len(latlon.LocalizationMethods) == 0 {
 			// to keep current default behavior when localizationMethods is unset/empty, enable all current localization methods
-			latlon.LocalizationMethods = []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ}
+			latlon.LocalizationMethods = []enum.LocalizationMethod{enum.LocalizationMethodGeo, enum.LocalizationMethodCZ, enum.LocalizationMethodDeepCZ}
 		}
-		if ttype == tc.RouterTypeName {
+		if ttype == enum.RouterTypeName {
 			routerLocs[cachegroup] = latlon
 		} else {
 			latlon.BackupLocations.FallbackToClosest = fallbackToClosest

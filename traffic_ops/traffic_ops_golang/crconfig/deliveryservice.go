@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 	"strings"
 	"time"
@@ -129,7 +130,7 @@ LEFT OUTER JOIN profile AS p ON p.id = d.profile
 WHERE d.cdn_id = (select id FROM cdn WHERE name = $1)
 AND d.active = true
 `
-	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
+	q += fmt.Sprintf(" and t.name != '%s'", enum.DSTypeAnyMap)
 	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("querying deliveryservices: " + err.Error())
@@ -252,7 +253,7 @@ AND d.active = true
 
 		if deepCachingType.Valid {
 			// TODO change to omit Valid check, default to the default DeepCachingType (NEVER). I'm pretty sure that's what should happen, but the Valid check emulates the old Perl CRConfig generation
-			t := tc.DeepCachingTypeFromString(deepCachingType.String)
+			t := enum.DeepCachingTypeFromString(deepCachingType.String)
 			ds.DeepCachingType = &t
 		}
 
@@ -404,7 +405,7 @@ AND d.active = true
 			}
 		}
 
-		ds.StaticDNSEntries = staticDNSEntries[tc.DeliveryServiceName(xmlID)]
+		ds.StaticDNSEntries = staticDNSEntries[enum.DeliveryServiceName(xmlID)]
 
 		dses[xmlID] = ds
 	}
@@ -416,8 +417,8 @@ AND d.active = true
 	return dses, nil
 }
 
-func getStaticDNSEntries(cdn string, tx *sql.Tx) (map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, error) {
-	entries := map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry{}
+func getStaticDNSEntries(cdn string, tx *sql.Tx) (map[enum.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, error) {
+	entries := map[enum.DeliveryServiceName][]tc.CRConfigStaticDNSEntry{}
 
 	q := `
 select d.xml_id as ds, e.host as name, e.ttl, e.address as value, t.name as type
@@ -443,7 +444,7 @@ and d.active = true
 			return nil, errors.New("scanning static DNS entries: " + err.Error())
 		}
 		ttype = strings.Replace(ttype, "_RECORD", "", -1)
-		entries[tc.DeliveryServiceName(ds)] = append(entries[tc.DeliveryServiceName(ds)], tc.CRConfigStaticDNSEntry{Name: name, TTL: ttl, Value: value, Type: ttype})
+		entries[enum.DeliveryServiceName(ds)] = append(entries[enum.DeliveryServiceName(ds)], tc.CRConfigStaticDNSEntry{Name: name, TTL: ttl, Value: value, Type: ttype})
 	}
 	return entries, nil
 }

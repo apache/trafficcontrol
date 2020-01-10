@@ -22,33 +22,33 @@ package atsserver
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
 
-func GetServerNameAndTypeFromNameOrID(tx *sql.Tx, nameOrID string) (tc.CacheName, tc.CacheType, bool, error) {
+func GetServerNameAndTypeFromNameOrID(tx *sql.Tx, nameOrID string) (enum.CacheName, enum.CacheType, bool, error) {
 	if id, err := strconv.Atoi(nameOrID); err == nil {
 		return ats.GetServerNameAndTypeFromID(tx, id)
 	}
-	name := tc.CacheName(nameOrID)
+	name := enum.CacheName(nameOrID)
 	typ, ok, err := ats.GetServerTypeFromName(tx, name)
 	return name, typ, ok, err
 }
 
-func GetServerNameAndDomainFromNameOrID(tx *sql.Tx, nameOrID string) (tc.CacheName, string, bool, error) {
+func GetServerNameAndDomainFromNameOrID(tx *sql.Tx, nameOrID string) (enum.CacheName, string, bool, error) {
 	if id, err := strconv.Atoi(nameOrID); err == nil {
 		return ats.GetServerNameAndDomainFromID(tx, id)
 	}
-	name := tc.CacheName(nameOrID)
+	name := enum.CacheName(nameOrID)
 	typ, ok, err := ats.GetServerDomainFromName(tx, name)
 	return name, typ, ok, err
 }
 
-func GetServerCacheConfigData(tx *sql.Tx, serverName tc.CacheName, serverType tc.CacheType) (map[tc.DeliveryServiceName]atscfg.ServerCacheConfigDS, error) {
+func GetServerCacheConfigData(tx *sql.Tx, serverName enum.CacheName, serverType enum.CacheType) (map[enum.DeliveryServiceName]atscfg.ServerCacheConfigDS, error) {
 	qry := `
 SELECT
   ds.xml_id,
@@ -61,7 +61,7 @@ FROM
   JOIN deliveryservice_server dss on dss.deliveryservice = ds.id
   LEFT JOIN origin o on (o.deliveryservice = ds.id AND o.is_primary)
 `
-	if strings.HasPrefix(string(serverType), tc.MidTypePrefix) {
+	if strings.HasPrefix(string(serverType), enum.MidTypePrefix) {
 		// Note inactive DSes are omitted from Mids, but not Edges
 		// See https://github.com/apache/trafficcontrol/issues/3746
 		qry += `
@@ -77,7 +77,7 @@ WHERE
 	}
 
 	qry += `
-  AND dt.name = '` + string(tc.DSTypeHTTPNoCache) + `'
+  AND dt.name = '` + string(enum.DSTypeHTTPNoCache) + `'
 `
 
 	rows, err := tx.Query(qry, serverName)
@@ -86,14 +86,14 @@ WHERE
 	}
 	defer rows.Close()
 
-	dses := map[tc.DeliveryServiceName]atscfg.ServerCacheConfigDS{}
+	dses := map[enum.DeliveryServiceName]atscfg.ServerCacheConfigDS{}
 	for rows.Next() {
-		dsName := tc.DeliveryServiceName("")
+		dsName := enum.DeliveryServiceName("")
 		ds := atscfg.ServerCacheConfigDS{}
 		if err := rows.Scan(&dsName, &ds.OrgServerFQDN, &ds.Type); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
-		ds.Type = tc.DSTypeFromString(string(ds.Type))
+		ds.Type = enum.DSTypeFromString(string(ds.Type))
 		dses[dsName] = ds
 	}
 	return dses, nil

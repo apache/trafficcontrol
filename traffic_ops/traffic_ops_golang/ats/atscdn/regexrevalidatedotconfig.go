@@ -22,6 +22,7 @@ package atscdn
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"time"
@@ -56,7 +57,7 @@ func GetRegexRevalidateDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params, err := ats.GetProfileParamsByName(inf.Tx.Tx, tc.GlobalProfileName, atscfg.RegexRevalidateFileName)
+	params, err := ats.GetProfileParamsByName(inf.Tx.Tx, enum.GlobalProfileName, atscfg.RegexRevalidateFileName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting profile params by name: "+err.Error()))
 		return
@@ -79,7 +80,7 @@ func GetRegexRevalidateDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txt := atscfg.MakeRegexRevalidateDotConfig(tc.CDNName(cdnName), params, toToolName, toURL, jobs)
+	txt := atscfg.MakeRegexRevalidateDotConfig(enum.CDNName(cdnName), params, toToolName, toURL, jobs)
 	w.Header().Set(rfc.ContentType, rfc.ContentTypeTextPlain)
 	w.Write([]byte(txt))
 }

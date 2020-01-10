@@ -24,11 +24,11 @@ package cache
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
@@ -37,8 +37,8 @@ func init() {
 	AddStatsType("astats-dsnames", astatsParse, astatsdsnamesPrecompute)
 }
 
-func astatsdsnamesPrecompute(cache tc.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
-	stats := map[tc.DeliveryServiceName]*AStat{}
+func astatsdsnamesPrecompute(cache enum.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
+	stats := map[enum.DeliveryServiceName]*AStat{}
 	precomputed := PrecomputedData{}
 	var err error
 	if precomputed.OutBytes, err = astatsdsnamesOutBytes(system.ProcNetDev, system.InfName); err != nil {
@@ -62,7 +62,7 @@ func astatsdsnamesPrecompute(cache tc.CacheName, toData todata.TOData, rawStats 
 }
 
 // astatsdsnamesProcessStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-func astatsdsnamesProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsdsnamesProcessStat(server enum.CacheName, stats map[enum.DeliveryServiceName]*AStat, toData todata.TOData, stat string, value interface{}) (map[enum.DeliveryServiceName]*AStat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -80,7 +80,7 @@ func astatsdsnamesProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceN
 	}
 }
 
-func astatsdsnamesProcessStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsdsnamesProcessStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]*AStat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
@@ -92,12 +92,12 @@ func astatsdsnamesProcessStatPlugin(server tc.CacheName, stats map[tc.DeliverySe
 	}
 }
 
-func astatsdsnamesProcessStatPluginRemapStats(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsdsnamesProcessStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]*AStat, error) {
 	if len(statParts) < 3 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
 
-	ds := tc.DeliveryServiceName(statParts[0])
+	ds := enum.DeliveryServiceName(statParts[0])
 	statName := statParts[len(statParts)-1]
 
 	if _, ok := toData.DeliveryServiceTypes[ds]; !ok {

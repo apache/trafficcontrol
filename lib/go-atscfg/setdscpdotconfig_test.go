@@ -20,14 +20,13 @@ package atscfg
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestMakeSetDSCPDotConfig(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
+	cdnName := enum.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 	dscpNumStr := "42"
@@ -53,7 +52,7 @@ func TestMakeSetDSCPDotConfig(t *testing.T) {
 }
 
 func TestMakeSetDSCPDotConfigNonNumber(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
+	cdnName := enum.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 	dscpNumStr := "42a"

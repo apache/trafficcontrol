@@ -17,6 +17,7 @@ package v14
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"reflect"
 	"testing"
 
@@ -144,7 +145,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	}
 
 	// test localizationMethods
-	expectedMethods := []tc.LocalizationMethod{tc.LocalizationMethodGeo}
+	expectedMethods := []enum.LocalizationMethod{enum.LocalizationMethodGeo}
 	cg.LocalizationMethods = &expectedMethods
 	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {

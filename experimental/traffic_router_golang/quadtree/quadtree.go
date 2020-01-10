@@ -21,12 +21,11 @@ package quadtree
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"math"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-type ObjT tc.CacheGroupName
+type ObjT enum.CacheGroupName
 
 type DataT struct {
 	Lat float64 // top

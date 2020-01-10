@@ -22,6 +22,7 @@ package httpsrvr
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net"
 	"net/http"
 	"strconv"
@@ -113,7 +114,7 @@ func getHandler(
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		cg := tc.CacheGroupName(cgDat.Obj)
+		cg := enum.CacheGroupName(cgDat.Obj)
 
 		srvrs, err := availSrvrs.Get(dsName, cg)
 		if err != nil {

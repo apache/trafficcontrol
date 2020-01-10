@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"time"
@@ -109,14 +110,14 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 // TODO in the next API version, add totals in their own JSON objects, not amidst the cachegroup keys.
 func addTotals(data []CacheData) []CacheData {
 	all := "ALL"
-	cachegroups := map[tc.CacheGroupName]CacheData{}
-	total := CacheData{Profile: all, Status: all, Healthy: true, HostName: tc.CacheName(all), CacheGroup: tc.CacheGroupName(all)}
+	cachegroups := map[enum.CacheGroupName]CacheData{}
+	total := CacheData{Profile: all, Status: all, Healthy: true, HostName: enum.CacheName(all), CacheGroup: enum.CacheGroupName(all)}
 	for _, d := range data {
-		cg := cachegroups[tc.CacheGroupName(d.CacheGroup)]
+		cg := cachegroups[enum.CacheGroupName(d.CacheGroup)]
 		cg.CacheGroup = d.CacheGroup
 		cg.Connections += d.Connections
 		cg.KBPS += d.KBPS
-		cachegroups[tc.CacheGroupName(d.CacheGroup)] = cg
+		cachegroups[enum.CacheGroupName(d.CacheGroup)] = cg
 		total.Connections += d.Connections
 		total.KBPS += d.KBPS
 	}
@@ -124,7 +125,7 @@ func addTotals(data []CacheData) []CacheData {
 		cg.Profile = all
 		cg.Status = all
 		cg.Healthy = true
-		cg.HostName = tc.CacheName(all)
+		cg.HostName = enum.CacheName(all)
 		data = append(data, cg)
 	}
 	data = append(data, total)
@@ -133,7 +134,7 @@ func addTotals(data []CacheData) []CacheData {
 
 // CRStates contains the Monitor CacheStats needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
 type CacheStats struct {
-	Caches map[tc.CacheName]CacheStat `json:"caches"`
+	Caches map[enum.CacheName]CacheStat `json:"caches"`
 }
 
 type CacheStat struct {
@@ -196,14 +197,14 @@ func addHealth(cacheData []CacheData, crStates tc.CRStates) []CacheData {
 }
 
 type CacheData struct {
-	HostName    tc.CacheName      `json:"hostname"`
-	CacheGroup  tc.CacheGroupName `json:"cachegroup"`
-	Status      string            `json:"status"`
-	Profile     string            `json:"profile"`
-	IP          *string           `json:"ip"`
-	Healthy     bool              `json:"healthy"`
-	KBPS        uint64            `json:"kbps"`
-	Connections uint64            `json:"connections"`
+	HostName    enum.CacheName      `json:"hostname"`
+	CacheGroup  enum.CacheGroupName `json:"cachegroup"`
+	Status      string              `json:"status"`
+	Profile     string              `json:"profile"`
+	IP          *string             `json:"ip"`
+	Healthy     bool                `json:"healthy"`
+	KBPS        uint64              `json:"kbps"`
+	Connections uint64              `json:"connections"`
 }
 
 const CacheProfilePrefixEdge = "EDGE"
@@ -253,7 +254,7 @@ func getMonitorForwardProxy(tx *sql.Tx) (string, error) {
 }
 
 // getCDNMonitors returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.
-func getCDNMonitorFQDNs(tx *sql.Tx) (map[tc.CDNName][]string, error) {
+func getCDNMonitorFQDNs(tx *sql.Tx) (map[enum.CDNName][]string, error) {
 	qry := `
 SELECT
   s.host_name,
@@ -266,7 +267,7 @@ FROM
   JOIN status st ON st.id = s.status
   JOIN cdn c ON c.id = s.cdn_id
 WHERE
-  t.name = '` + tc.MonitorTypeName + `'
+  t.name = '` + enum.MonitorTypeName + `'
   AND st.name = '` + MonitorOnlineStatus + `'
 `
 	rows, err := tx.Query(qry)
@@ -274,12 +275,12 @@ WHERE
 		return nil, errors.New("querying monitors: " + err.Error())
 	}
 	defer rows.Close()
-	monitors := map[tc.CDNName][]string{}
+	monitors := map[enum.CDNName][]string{}
 	for rows.Next() {
 		host := ""
 		domain := ""
 		port := sql.NullInt64{}
-		cdn := tc.CDNName("")
+		cdn := enum.CDNName("")
 		if err := rows.Scan(&host, &domain, &port, &cdn); err != nil {
 			return nil, errors.New("scanning monitors: " + err.Error())
 		}

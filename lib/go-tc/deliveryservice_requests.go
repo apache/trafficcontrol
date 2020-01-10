@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"html/template"
 	"strconv"
 	"strings"
@@ -171,9 +172,9 @@ type DeliveryServiceRequestDetails struct {
 	// Customer is the requesting customer - typically this is a Tenant.
 	Customer string `json:"customer"`
 	// DeepCachingType represents whether or not the Delivery Service should use Deep Caching.
-	DeepCachingType *DeepCachingType `json:"deepCachingType"`
+	DeepCachingType *enum.DeepCachingType `json:"deepCachingType"`
 	// Delivery Protocol is the protocol clients should use to connect to the Delivery Service.
-	DeliveryProtocol *Protocol `json:"deliveryProtocol"`
+	DeliveryProtocol *enum.Protocol `json:"deliveryProtocol"`
 	// HasNegativeCachingCustomization indicates whether or not the resulting Delivery Service should
 	// customize the use of negative caching. When this is `true`, NegativeCachingCustomizationNote
 	// should be consulted for instructions on the customization.
@@ -239,7 +240,7 @@ type DeliveryServiceRequestDetails struct {
 	RoutingName string `json:"routingName"`
 	// RoutingType is the type of routing Traffic Router should perform for the requested Delivery
 	// Service.
-	RoutingType *DSType `json:"routingType"`
+	RoutingType *enum.DSType `json:"routingType"`
 	// ServiceAliases is an optional list of alternative names for the requested Delivery Service.
 	ServiceAliases []string `json:"serviceAliases"`
 	// ServiceDesc is a basic description of the requested Delivery Service.
@@ -275,20 +276,20 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.Customer, validation.Required),
 		validation.Field(&details.DeepCachingType, validation.By(
 			func(t interface{}) error {
-				if t == (*DeepCachingType)(nil) {
+				if t == (*enum.DeepCachingType)(nil) {
 					return errors.New("deepCachingType: required")
 				}
-				if *t.(*DeepCachingType) == DeepCachingTypeInvalid {
+				if *t.(*enum.DeepCachingType) == enum.DeepCachingTypeInvalid {
 					return errors.New("deepCachingType: invalid Deep Caching Type")
 				}
 				return nil
 			})),
 		validation.Field(&details.DeliveryProtocol, validation.By(
 			func(p interface{}) error {
-				if p == (*Protocol)(nil) {
+				if p == (*enum.Protocol)(nil) {
 					return errors.New("deliveryProtocol: required")
 				}
-				if *p.(*Protocol) == ProtocolInvalid {
+				if *p.(*enum.Protocol) == enum.ProtocolInvalid {
 					return errors.New("deliveryProtocol: invalid Protocol")
 				}
 				return nil
@@ -341,11 +342,11 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.RoutingName, validation.Required),
 		validation.Field(&details.RoutingType, validation.By(
 			func(t interface{}) error {
-				if t == (*DSType)(nil) || *(t.(*DSType)) == "" {
+				if t == (*enum.DSType)(nil) || *(t.(*enum.DSType)) == "" {
 					return errors.New("routingType: required")
 				}
-				*t.(*DSType) = DSTypeFromString(string(*t.(*DSType)))
-				if *t.(*DSType) == DSTypeInvalid {
+				*t.(*enum.DSType) = enum.DSTypeFromString(string(*t.(*enum.DSType)))
+				if *t.(*enum.DSType) == enum.DSTypeInvalid {
 					return errors.New("routingType: invalid Routing Type")
 				}
 				return nil

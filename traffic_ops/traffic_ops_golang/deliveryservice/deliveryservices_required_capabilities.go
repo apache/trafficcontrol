@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"strings"
@@ -375,7 +376,7 @@ func (rc *RequiredCapability) isTenantAuthorized() (bool, error) {
 			return false, err
 		}
 	case rc.XMLID != nil:
-		existingID, _, err = getDSTenantIDByName(rc.APIInfo().Tx.Tx, tc.DeliveryServiceName(*rc.XMLID))
+		existingID, _, err = getDSTenantIDByName(rc.APIInfo().Tx.Tx, enum.DeliveryServiceName(*rc.XMLID))
 		if err != nil {
 			return false, err
 		}

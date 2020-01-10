@@ -22,11 +22,11 @@ package monitoring
 import (
 	"database/sql"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 	"github.com/lib/pq"
@@ -198,7 +198,7 @@ WHERE cdn.name = $1`
 			return nil, nil, nil, err
 		}
 
-		if ttype.String == tc.MonitorTypeName {
+		if ttype.String == enum.MonitorTypeName {
 			monitors = append(monitors, Monitor{
 				BasicServer: BasicServer{
 					Profile:    profile.String,
@@ -227,7 +227,7 @@ WHERE cdn.name = $1`
 				Type:          ttype.String,
 				HashID:        hashID.String,
 			})
-		} else if ttype.String == tc.RouterTypeName {
+		} else if ttype.String == enum.RouterTypeName {
 			routers = append(routers, Router{
 				Type:    ttype.String,
 				Profile: profile.String,
@@ -383,7 +383,7 @@ FROM parameter pr
 JOIN profile p ON p.name LIKE '%s%%'
 JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
 WHERE pr.config_file = '%s'
-`, tc.MonitorProfilePrefix, MonitorConfigFile)
+`, enum.MonitorProfilePrefix, MonitorConfigFile)
 
 	rows, err := tx.Query(query)
 	if err != nil {

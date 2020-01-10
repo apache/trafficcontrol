@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -75,7 +76,7 @@ func GetConfigFileCDNCacheURL(cfg config.TCCfg, cdnNameOrID string, fileName str
 			continue // TODO warn
 		}
 		// ANY_MAP and STEERING DSes don't have origins, and thus can't be put into the cacheurl config.
-		if ds.Type != nil && (*ds.Type == tc.DSTypeAnyMap || *ds.Type == tc.DSTypeSteering) {
+		if ds.Type != nil && (*ds.Type == enum.DSTypeAnyMap || *ds.Type == enum.DSTypeSteering) {
 			continue
 		}
 		if len(dssMap[*ds.ID]) == 0 {

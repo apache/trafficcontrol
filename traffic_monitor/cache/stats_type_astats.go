@@ -31,12 +31,12 @@ package cache
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"io"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/json-iterator/go"
@@ -46,7 +46,7 @@ func init() {
 	AddStatsType("astats", astatsParse, astatsPrecompute)
 }
 
-func astatsParse(cache tc.CacheName, rdr io.Reader) (error, map[string]interface{}, AstatsSystem) {
+func astatsParse(cache enum.CacheName, rdr io.Reader) (error, map[string]interface{}, AstatsSystem) {
 	if rdr == nil {
 		log.Warnln(string(cache) + " handle reader nil")
 		return errors.New("handler got nil reader"), nil, AstatsSystem{}
@@ -58,8 +58,8 @@ func astatsParse(cache tc.CacheName, rdr io.Reader) (error, map[string]interface
 	return err, astats.Ats, astats.System
 }
 
-func astatsPrecompute(cache tc.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
-	stats := map[tc.DeliveryServiceName]*AStat{}
+func astatsPrecompute(cache enum.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
+	stats := map[enum.DeliveryServiceName]*AStat{}
 
 	precomputed := PrecomputedData{}
 	var err error
@@ -106,7 +106,7 @@ func astatsOutBytes(procNetDev, iface string) (int64, error) {
 }
 
 // astatsProcessStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-func astatsProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsProcessStat(server enum.CacheName, stats map[enum.DeliveryServiceName]*AStat, toData todata.TOData, stat string, value interface{}) (map[enum.DeliveryServiceName]*AStat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -124,7 +124,7 @@ func astatsProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceName]*AS
 	}
 }
 
-func astatsProcessStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsProcessStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]*AStat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
@@ -136,7 +136,7 @@ func astatsProcessStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceNa
 	}
 }
 
-func astatsProcessStatPluginRemapStats(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsProcessStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]*AStat, error) {
 	if len(statParts) < 3 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}

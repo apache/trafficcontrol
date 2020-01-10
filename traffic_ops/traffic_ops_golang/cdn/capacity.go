@@ -24,6 +24,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -75,7 +76,7 @@ type CapData struct {
 	Capacity    float64
 }
 
-func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (CapacityResp, error) {
+func getMonitorsCapacity(tx *sql.Tx, monitors map[enum.CDNName][]string) (CapacityResp, error) {
 	monitorForwardProxy, monitorForwardProxyExists, err := getGlobalParam(tx, MonitorProxyParameter)
 	if err != nil {
 		return CapacityResp{}, errors.New("getting global monitor proxy parameter: " + err.Error())
@@ -119,7 +120,7 @@ func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (Capacity
 // getCapacityData attempts to get the CDN capacity from each monitor. If one fails, it tries the next.
 // The first monitor for which all data requests succeed is used.
 // Only if all monitors for a CDN fail is an error returned, from the last monitor tried.
-func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]float64, client *http.Client) (CapData, error) {
+func getCapacityData(monitors map[enum.CDNName][]string, thresholds map[string]float64, client *http.Client) (CapData, error) {
 	cap := CapData{}
 	for cdn, monitorFQDNs := range monitors {
 		err := error(nil)
@@ -162,19 +163,19 @@ func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crCon
 			log.Warnln("addCapacity got cache with nil values! Skipping!")
 			continue
 		}
-		if !strings.HasPrefix(*cache.ServerType, string(tc.CacheTypeEdge)) {
+		if !strings.HasPrefix(*cache.ServerType, string(enum.CacheTypeEdge)) {
 			continue
 		}
 		if len(stats.KBPS) < 1 || len(stats.MaxKBPS) < 1 {
 			continue
 		}
-		if string(*cache.ServerStatus) == string(tc.CacheStatusReported) || string(*cache.ServerStatus) == string(tc.CacheStatusOnline) {
+		if string(*cache.ServerStatus) == string(enum.CacheStatusReported) || string(*cache.ServerStatus) == string(enum.CacheStatusOnline) {
 			if crStates.Caches[cacheName].IsAvailable {
 				cap.Available += float64(stats.KBPS[0].Value)
 			} else {
 				cap.Unavailable += float64(stats.KBPS[0].Value)
 			}
-		} else if string(*cache.ServerStatus) == string(tc.CacheStatusAdminDown) {
+		} else if string(*cache.ServerStatus) == string(enum.CacheStatusAdminDown) {
 			cap.Maintenance += float64(stats.KBPS[0].Value)
 		} else {
 			continue // don't add capacity for OFFLINE or other statuses
@@ -220,7 +221,7 @@ AND pa.name = 'health.threshold.availableBandwidthInKbps'
 
 // CacheStats contains the Monitor CacheStats needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
 type CacheStats struct {
-	Caches map[tc.CacheName]CacheStat `json:"caches"`
+	Caches map[enum.CacheName]CacheStat `json:"caches"`
 }
 
 type CacheStat struct {
@@ -250,26 +251,26 @@ func getCacheStats(monitorFQDN string, client *http.Client, stats []string, cach
 }
 
 // getCDNMonitors returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.
-func getCDNMonitorFQDNs(tx *sql.Tx) (map[tc.CDNName][]string, error) {
+func getCDNMonitorFQDNs(tx *sql.Tx) (map[enum.CDNName][]string, error) {
 	rows, err := tx.Query(`
 SELECT s.host_name, s.domain_name, s.tcp_port, c.name as cdn
 FROM server as s
 JOIN type as t ON s.type = t.id
 JOIN status as st ON st.id = s.status
 JOIN cdn as c ON c.id = s.cdn_id
-WHERE t.name = '` + tc.MonitorTypeName + `'
+WHERE t.name = '` + enum.MonitorTypeName + `'
 AND st.name = '` + MonitorOnlineStatus + `'
 `)
 	if err != nil {
 		return nil, errors.New("querying monitors: " + err.Error())
 	}
 	defer rows.Close()
-	monitors := map[tc.CDNName][]string{}
+	monitors := map[enum.CDNName][]string{}
 	for rows.Next() {
 		host := ""
 		domain := ""
 		port := sql.NullInt64{}
-		cdn := tc.CDNName("")
+		cdn := enum.CDNName("")
 		if err := rows.Scan(&host, &domain, &port, &cdn); err != nil {
 			return nil, errors.New("scanning monitors: " + err.Error())
 		}

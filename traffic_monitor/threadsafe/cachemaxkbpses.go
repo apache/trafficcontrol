@@ -20,9 +20,9 @@ package threadsafe
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"sync"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 )
 
@@ -34,7 +34,7 @@ type CacheKbpses struct {
 
 // NewCacheAvailableStatus creates and returns a new CacheAvailableStatus, initializing internal pointer values.
 func NewCacheKbpses() CacheKbpses {
-	v := cache.Kbpses(map[tc.CacheName]int64{})
+	v := cache.Kbpses(map[enum.CacheName]int64{})
 	return CacheKbpses{m: &sync.RWMutex{}, v: &v}
 }
 

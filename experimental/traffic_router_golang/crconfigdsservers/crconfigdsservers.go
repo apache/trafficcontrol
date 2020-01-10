@@ -1,7 +1,7 @@
 package crconfigdsservers
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 )
 
 /*
@@ -24,7 +24,7 @@ import (
  *
  */
 
-type DSServers map[tc.DeliveryServiceName]DSServer
+type DSServers map[enum.DeliveryServiceName]DSServer
 
 type DSServer struct {
 	// TODO handle Steering

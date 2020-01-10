@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 	"strings"
 
@@ -62,7 +63,7 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 		return "", errors.New("server '" + serverNameOrID + " not found in servers")
 	}
 
-	serverName := tc.CacheName(server.HostName)
+	serverName := enum.CacheName(server.HostName)
 
 	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
 	if err != nil {
@@ -96,12 +97,12 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 		return "", errors.New("getting delivery services: " + err.Error())
 	}
 
-	cdnServers := map[tc.CacheName]tc.Server{}
+	cdnServers := map[enum.CacheName]tc.Server{}
 	for _, sv := range servers {
 		if sv.CDNID != server.CDNID {
 			continue
 		}
-		cdnServers[tc.CacheName(sv.HostName)] = sv
+		cdnServers[enum.CacheName(sv.HostName)] = sv
 	}
 
 	serverIDs := []int{}
@@ -132,9 +133,9 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 		dsServerMap[*dss.DeliveryService][*dss.Server] = struct{}{}
 	}
 
-	hostingDSes := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{}
+	hostingDSes := map[enum.DeliveryServiceName]tc.DeliveryServiceNullable{}
 
-	isMid := strings.HasPrefix(server.Type, tc.MidTypePrefix)
+	isMid := strings.HasPrefix(server.Type, enum.MidTypePrefix)
 
 	for _, ds := range dses {
 		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
@@ -151,7 +152,7 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 		}
 
 		if isMid {
-			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) {
+			if !strings.HasSuffix(string(*ds.Type), enum.DSTypeLiveNationalSuffix) {
 				continue
 			}
 
@@ -160,7 +161,7 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 				continue
 			}
 		} else {
-			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveSuffix) {
+			if !strings.HasSuffix(string(*ds.Type), enum.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), enum.DSTypeLiveSuffix) {
 				continue
 			}
 
@@ -174,7 +175,7 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 			}
 		}
 
-		hostingDSes[tc.DeliveryServiceName(*ds.XMLID)] = ds
+		hostingDSes[enum.DeliveryServiceName(*ds.XMLID)] = ds
 	}
 
 	originSet := map[string]struct{}{}

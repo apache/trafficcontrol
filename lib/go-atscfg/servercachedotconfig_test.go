@@ -20,57 +20,56 @@ package atscfg
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestMakeServerCacheDotConfig(t *testing.T) {
-	serverName := tc.CacheName("server0")
+	serverName := enum.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	dses := map[tc.DeliveryServiceName]ServerCacheConfigDS{
+	dses := map[enum.DeliveryServiceName]ServerCacheConfigDS{
 		"ds0": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds0.example.test/path",
-			Type:          tc.DSTypeHTTP,
+			Type:          enum.DSTypeHTTP,
 		},
 		"ds1": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds1.example.test:42/path",
-			Type:          tc.DSTypeDNS,
+			Type:          enum.DSTypeDNS,
 		},
 		"ds2": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds2.example.test:42",
-			Type:          tc.DSTypeHTTP,
+			Type:          enum.DSTypeHTTP,
 		},
 		"ds3": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds3.example.test",
-			Type:          tc.DSTypeHTTP,
+			Type:          enum.DSTypeHTTP,
 		},
 		"ds4": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds4.example.test/",
-			Type:          tc.DSTypeHTTP,
+			Type:          enum.DSTypeHTTP,
 		},
 		"ds5": ServerCacheConfigDS{
 			OrgServerFQDN: "http://ds5.example.test:1234/",
-			Type:          tc.DSTypeHTTP,
+			Type:          enum.DSTypeHTTP,
 		},
 		"ds6": ServerCacheConfigDS{
 			OrgServerFQDN: "ds6.example.test",
-			Type:          tc.DSTypeHTTP,
+			Type:          enum.DSTypeHTTP,
 		},
 		"ds7": ServerCacheConfigDS{
 			OrgServerFQDN: "ds7.example.test:80",
-			Type:          tc.DSTypeHTTP,
+			Type:          enum.DSTypeHTTP,
 		},
 		"ds8": ServerCacheConfigDS{
 			OrgServerFQDN: "ds8.example.test:8080/path",
-			Type:          tc.DSTypeHTTP,
+			Type:          enum.DSTypeHTTP,
 		},
 		"ds-nocache": ServerCacheConfigDS{
 			OrgServerFQDN: "http://ds-nocache.example.test",
-			Type:          tc.DSTypeHTTPNoCache,
+			Type:          enum.DSTypeHTTPNoCache,
 		},
 	}
 

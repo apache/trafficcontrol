@@ -21,11 +21,11 @@ package atscdn
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/jmoiron/sqlx"
@@ -65,7 +65,7 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txt := atscfg.MakeHeaderRewriteDotConfig(tc.CDNName(cdnName), toToolName, toURL, ds, assignedEdges)
+	txt := atscfg.MakeHeaderRewriteDotConfig(enum.CDNName(cdnName), toToolName, toURL, ds, assignedEdges)
 	w.Header().Set(rfc.ContentType, rfc.ContentTypeTextPlain)
 	w.Write([]byte(txt))
 }
@@ -104,7 +104,7 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txt := atscfg.MakeHeaderRewriteMidDotConfig(tc.CDNName(cdnName), toToolName, toURL, ds, assignedMids)
+	txt := atscfg.MakeHeaderRewriteMidDotConfig(enum.CDNName(cdnName), toToolName, toURL, ds, assignedMids)
 
 	w.Header().Set(rfc.ContentType, rfc.ContentTypeTextPlain)
 	w.Write([]byte(txt))
@@ -157,7 +157,7 @@ WHERE
 		if err := rows.Scan(&s.Status, &s.HostName, &s.DomainName, &s.Port); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
-		s.Status = tc.CacheStatusFromString(string(s.Status))
+		s.Status = enum.CacheStatusFromString(string(s.Status))
 
 		servers = append(servers, s)
 	}
@@ -197,7 +197,7 @@ WHERE s.cachegroup IN (
 		if err := rows.Scan(&s.Status, &s.HostName, &s.DomainName, &s.Port); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
-		s.Status = tc.CacheStatusFromString(string(s.Status))
+		s.Status = enum.CacheStatusFromString(string(s.Status))
 
 		servers = append(servers, s)
 	}

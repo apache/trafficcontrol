@@ -21,6 +21,7 @@ package cachegroup
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"reflect"
 	"strings"
 	"testing"
@@ -45,10 +46,10 @@ func getTestCacheGroups() []tc.CacheGroup {
 		Longitude:                   90.7,
 		ParentCachegroupID:          2,
 		SecondaryParentCachegroupID: 2,
-		LocalizationMethods: []tc.LocalizationMethod{
-			tc.LocalizationMethodDeepCZ,
-			tc.LocalizationMethodCZ,
-			tc.LocalizationMethodGeo,
+		LocalizationMethods: []enum.LocalizationMethod{
+			enum.LocalizationMethodDeepCZ,
+			enum.LocalizationMethodCZ,
+			enum.LocalizationMethodGeo,
 		},
 		Type:        "EDGE_LOC",
 		TypeID:      6,
@@ -69,10 +70,10 @@ func getTestCacheGroups() []tc.CacheGroup {
 		Longitude:                   90.7,
 		ParentCachegroupID:          1,
 		SecondaryParentCachegroupID: 1,
-		LocalizationMethods: []tc.LocalizationMethod{
-			tc.LocalizationMethodDeepCZ,
-			tc.LocalizationMethodCZ,
-			tc.LocalizationMethodGeo,
+		LocalizationMethods: []enum.LocalizationMethod{
+			enum.LocalizationMethodDeepCZ,
+			enum.LocalizationMethodCZ,
+			enum.LocalizationMethodGeo,
 		},
 		Type:        "MID_LOC",
 		TypeID:      7,
@@ -212,7 +213,7 @@ func TestValidate(t *testing.T) {
 	sn := "not!a!valid!shortname"
 	la := -190.0
 	lo := -190.0
-	lm := []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodInvalid}
+	lm := []enum.LocalizationMethod{enum.LocalizationMethodGeo, enum.LocalizationMethodInvalid}
 	ty := "EDGE_LOC"
 	ti := 6
 	lu := tc.TimeNoMod{Time: time.Now()}
@@ -252,7 +253,7 @@ func TestValidate(t *testing.T) {
 	sn = `awesome-cachegroup`
 	la = 90.0
 	lo = 90.0
-	lm = []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ}
+	lm = []enum.LocalizationMethod{enum.LocalizationMethodGeo, enum.LocalizationMethodCZ, enum.LocalizationMethodDeepCZ}
 	c = TOCacheGroup{
 		api.APIInfoImpl{&reqInfo},
 		tc.CacheGroupNullable{

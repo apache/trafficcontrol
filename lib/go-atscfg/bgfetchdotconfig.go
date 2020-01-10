@@ -20,11 +20,11 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 )
 
 func MakeBGFetchDotConfig(
-	cdnName tc.CDNName,
+	cdnName enum.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 ) string {

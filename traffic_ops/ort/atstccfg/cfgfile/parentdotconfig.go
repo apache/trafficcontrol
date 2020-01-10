@@ -22,6 +22,7 @@ package cfgfile
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/url"
 	"os"
 	"strconv"
@@ -118,18 +119,18 @@ func GetConfigFileServerParentDotConfig(cfg config.TCCfg, serverNameOrID string)
 	}
 
 	serverInfo := atscfg.ServerInfo{
-		CacheGroupID:                  server.CachegroupID,
-		CDN:                           tc.CDNName(server.CDNName),
-		CDNID:                         server.CDNID,
-		DomainName:                    server.DomainName,
-		HostName:                      server.HostName,
-		ID:                            server.ID,
-		IP:                            server.IPAddress,
-		ParentCacheGroupID:            parentCGID,
-		ParentCacheGroupType:          parentCGType,
-		ProfileID:                     atscfg.ProfileID(server.ProfileID),
-		ProfileName:                   server.Profile,
-		Port:                          server.TCPPort,
+		CacheGroupID:         server.CachegroupID,
+		CDN:                  enum.CDNName(server.CDNName),
+		CDNID:                server.CDNID,
+		DomainName:           server.DomainName,
+		HostName:             server.HostName,
+		ID:                   server.ID,
+		IP:                   server.IPAddress,
+		ParentCacheGroupID:   parentCGID,
+		ParentCacheGroupType: parentCGType,
+		ProfileID:            atscfg.ProfileID(server.ProfileID),
+		ProfileName:          server.Profile,
+		Port:                 server.TCPPort,
 		SecondaryParentCacheGroupID:   secondaryParentCGID,
 		SecondaryParentCacheGroupType: secondaryParentCGType,
 		Type:                          server.Type,
@@ -146,7 +147,7 @@ func GetConfigFileServerParentDotConfig(cfg config.TCCfg, serverNameOrID string)
 				return "", errors.New("cachegroup type is nil!")
 			}
 
-			if *cg.Type != tc.CacheGroupOriginTypeName {
+			if *cg.Type != enum.CacheGroupOriginTypeName {
 				continue
 			}
 			parentCacheGroups[*cg.Name] = struct{}{}
@@ -183,12 +184,12 @@ func GetConfigFileServerParentDotConfig(cfg config.TCCfg, serverNameOrID string)
 		if _, ok := parentCacheGroups[sv.Cachegroup]; !ok {
 			continue
 		}
-		if sv.Type != tc.OriginTypeName &&
-			!strings.HasPrefix(sv.Type, tc.EdgeTypePrefix) &&
-			!strings.HasPrefix(sv.Type, tc.MidTypePrefix) {
+		if sv.Type != enum.OriginTypeName &&
+			!strings.HasPrefix(sv.Type, enum.EdgeTypePrefix) &&
+			!strings.HasPrefix(sv.Type, enum.MidTypePrefix) {
 			continue
 		}
-		if sv.Status != string(tc.CacheStatusReported) && sv.Status != string(tc.CacheStatusOnline) {
+		if sv.Status != string(enum.CacheStatusReported) && sv.Status != string(enum.CacheStatusOnline) {
 			continue
 		}
 		cgServers[sv.ID] = sv
@@ -414,12 +415,12 @@ func GetConfigFileServerParentDotConfig(cfg config.TCCfg, serverNameOrID string)
 			continue
 		}
 
-		xmlID := tc.DeliveryServiceName(*tcDS.XMLID)
+		xmlID := enum.DeliveryServiceName(*tcDS.XMLID)
 		originFQDN := *tcDS.OrgServerFQDN
 		qStringIgnore := 0
 		multiSiteOrigin := false
 		originShield := ""
-		dsType := tc.DSTypeFromString("")
+		dsType := enum.DSTypeFromString("")
 		if tcDS.QStringIgnore != nil {
 			qStringIgnore = *tcDS.QStringIgnore
 		}
@@ -436,7 +437,7 @@ func GetConfigFileServerParentDotConfig(cfg config.TCCfg, serverNameOrID string)
 		ds := atscfg.ParentConfigDSTopLevel{
 			ParentConfigDS: atscfg.ParentConfigDS{
 				Name:            xmlID,
-				QStringIgnore:   tc.QStringIgnore(qStringIgnore),
+				QStringIgnore:   enum.QStringIgnore(qStringIgnore),
 				OriginFQDN:      originFQDN,
 				MultiSiteOrigin: multiSiteOrigin,
 				OriginShield:    originShield,
@@ -509,7 +510,7 @@ func GetConfigFileServerParentDotConfig(cfg config.TCCfg, serverNameOrID string)
 			Capabilities: serverCapabilities[cgServer.ID],
 		}
 
-		if cgServer.Type == tc.OriginTypeName {
+		if cgServer.Type == enum.OriginTypeName {
 			for dsID, _ := range parentServerDSes[cgServer.ID] { // map[serverID][]dsID
 				orgURI := dsOrigins[dsID]
 				if orgURI == nil {

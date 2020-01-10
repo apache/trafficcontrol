@@ -21,6 +21,7 @@ package manager
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"sort"
 	"strings"
 	"time"
@@ -55,7 +56,7 @@ func StartStateCombiner(events health.ThreadsafeEvents, peerStates peer.CRStates
 	}
 
 	go func() {
-		overrideMap := map[tc.CacheName]bool{}
+		overrideMap := map[enum.CacheName]bool{}
 		for range combineStateChan {
 			drain(combineStateChan)
 			combineCrStates(events, true, peerStates, localStates.Get(), combinedStates, overrideMap, toData.Get())
@@ -65,7 +66,7 @@ func StartStateCombiner(events health.ThreadsafeEvents, peerStates peer.CRStates
 	return combinedStates, combineState
 }
 
-func combineCacheState(cacheName tc.CacheName, localCacheState tc.IsAvailable, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
+func combineCacheState(cacheName enum.CacheName, localCacheState tc.IsAvailable, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TOData) {
 	overrideCondition := ""
 	available := false
 	override := overrideMap[cacheName]
@@ -118,17 +119,17 @@ func combineCacheState(cacheName tc.CacheName, localCacheState tc.IsAvailable, e
 }
 
 func combineDSState(
-	deliveryServiceName tc.DeliveryServiceName,
+	deliveryServiceName enum.DeliveryServiceName,
 	localDeliveryService tc.CRStatesDeliveryService,
 	events health.ThreadsafeEvents,
 	peerOptimistic bool,
 	peerStates peer.CRStatesPeersThreadsafe,
 	localStates tc.CRStates,
 	combinedStates peer.CRStatesThreadsafe,
-	overrideMap map[tc.CacheName]bool,
+	overrideMap map[enum.CacheName]bool,
 	toData todata.TOData,
 ) {
-	deliveryService := tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []tc.CacheGroupName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
+	deliveryService := tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []enum.CacheGroupName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
 	if localDeliveryService.IsAvailable {
 		deliveryService.IsAvailable = true
 	}
@@ -183,7 +184,7 @@ func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates tc.
 	}
 }
 
-func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
+func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TOData) {
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates, localStates, combinedStates, overrideMap, toData)
 	}
@@ -197,7 +198,7 @@ func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerSt
 }
 
 // CacheNameSlice is a slice of cache names, which fulfills the `sort.Interface` interface.
-type CacheGroupNameSlice []tc.CacheGroupName
+type CacheGroupNameSlice []enum.CacheGroupName
 
 func (p CacheGroupNameSlice) Len() int           { return len(p) }
 func (p CacheGroupNameSlice) Less(i, j int) bool { return p[i] < p[j] }
@@ -205,10 +206,10 @@ func (p CacheGroupNameSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // intersection returns strings in both a and b.
 // Note this modifies a and b. Specifically, it sorts them. If that isn't acceptable, pass copies of your real data.
-func intersection(a []tc.CacheGroupName, b []tc.CacheGroupName) []tc.CacheGroupName {
+func intersection(a []enum.CacheGroupName, b []enum.CacheGroupName) []enum.CacheGroupName {
 	sort.Sort(CacheGroupNameSlice(a))
 	sort.Sort(CacheGroupNameSlice(b))
-	c := []tc.CacheGroupName{} // important to initialize, so JSON is `[]` not `null`
+	c := []enum.CacheGroupName{} // important to initialize, so JSON is `[]` not `null`
 	for _, s := range a {
 		i := sort.Search(len(b), func(i int) bool { return b[i] >= s })
 		if i < len(b) && b[i] == s {

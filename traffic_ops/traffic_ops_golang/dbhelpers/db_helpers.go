@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 	"strings"
 
@@ -280,13 +281,13 @@ func GetPrivLevelFromRoleID(tx *sql.Tx, id int) (int, bool, error) {
 }
 
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
-func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
-	name := tc.DeliveryServiceName("")
+func GetDSNameFromID(tx *sql.Tx, id int) (enum.DeliveryServiceName, bool, error) {
+	name := enum.DeliveryServiceName("")
 	if err := tx.QueryRow(`SELECT xml_id FROM deliveryservice WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
-			return tc.DeliveryServiceName(""), false, nil
+			return enum.DeliveryServiceName(""), false, nil
 		}
-		return tc.DeliveryServiceName(""), false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
+		return enum.DeliveryServiceName(""), false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
 	}
 	return name, true, nil
 }
@@ -307,9 +308,9 @@ func GetDSTenantIDFromXMLID(tx *sql.Tx, xmlid string) (int, bool, error) {
 }
 
 // returns returns the delivery service name and cdn, whether it existed, and any error.
-func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNName, bool, error) {
-	name := tc.DeliveryServiceName("")
-	cdn := tc.CDNName("")
+func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (enum.DeliveryServiceName, enum.CDNName, bool, error) {
+	name := enum.DeliveryServiceName("")
+	cdn := enum.CDNName("")
 	if err := tx.QueryRow(`
 SELECT ds.xml_id, cdn.name
 FROM deliveryservice as ds
@@ -317,9 +318,9 @@ JOIN cdn on cdn.id = ds.cdn_id
 WHERE ds.id = $1
 `, id).Scan(&name, &cdn); err != nil {
 		if err == sql.ErrNoRows {
-			return tc.DeliveryServiceName(""), tc.CDNName(""), false, nil
+			return enum.DeliveryServiceName(""), enum.CDNName(""), false, nil
 		}
-		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
+		return enum.DeliveryServiceName(""), enum.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
 	}
 	return name, cdn, true, nil
 }
@@ -452,7 +453,7 @@ func CDNExists(cdnName string, tx *sql.Tx) (bool, error) {
 	return true, nil
 }
 
-func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
+func GetCDNNameFromID(tx *sql.Tx, id int64) (enum.CDNName, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
@@ -460,11 +461,11 @@ func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 		}
 		return "", false, errors.New("querying CDN ID: " + err.Error())
 	}
-	return tc.CDNName(name), true, nil
+	return enum.CDNName(name), true, nil
 }
 
 // GetCDNDomainFromName returns the domain, whether the cdn exists, and any error.
-func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) {
+func GetCDNDomainFromName(tx *sql.Tx, cdnName enum.CDNName) (string, bool, error) {
 	domain := ""
 	if err := tx.QueryRow(`SELECT domain_name FROM cdn WHERE name = $1`, cdnName).Scan(&domain); err != nil {
 		if err == sql.ErrNoRows {
@@ -584,8 +585,8 @@ func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
 	return name, true, nil
 }
 
-func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}, error) {
-	dses := map[tc.DeliveryServiceName]struct{}{}
+func GetCDNDSes(tx *sql.Tx, cdn enum.CDNName) (map[enum.DeliveryServiceName]struct{}, error) {
+	dses := map[enum.DeliveryServiceName]struct{}{}
 	qry := `SELECT xml_id from deliveryservice where cdn_id = (select id from cdn where name = $1)`
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
@@ -594,7 +595,7 @@ func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}
 	defer rows.Close()
 
 	for rows.Next() {
-		ds := tc.DeliveryServiceName("")
+		ds := enum.DeliveryServiceName("")
 		if err := rows.Scan(&ds); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
@@ -603,8 +604,8 @@ func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}
 	return dses, nil
 }
 
-func GetCDNs(tx *sql.Tx) (map[tc.CDNName]struct{}, error) {
-	cdns := map[tc.CDNName]struct{}{}
+func GetCDNs(tx *sql.Tx) (map[enum.CDNName]struct{}, error) {
+	cdns := map[enum.CDNName]struct{}{}
 	qry := `SELECT name from cdn;`
 	rows, err := tx.Query(qry)
 	if err != nil {
@@ -613,7 +614,7 @@ func GetCDNs(tx *sql.Tx) (map[tc.CDNName]struct{}, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		cdn := tc.CDNName("")
+		cdn := enum.CDNName("")
 		if err := rows.Scan(&cdn); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
@@ -640,7 +641,7 @@ func GetParam(tx *sql.Tx, name string, configFile string) (string, bool, error) 
 }
 
 // GetCacheGroupNameFromID Get Cache Group name from a given ID
-func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
+func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (enum.CacheGroupName, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
@@ -648,7 +649,7 @@ func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, err
 		}
 		return "", false, errors.New("querying cachegroup ID: " + err.Error())
 	}
-	return tc.CacheGroupName(name), true, nil
+	return enum.CacheGroupName(name), true, nil
 }
 
 // GetFederationIDForUserIDByXMLID retrieves the ID of the Federation assigned to the user defined by

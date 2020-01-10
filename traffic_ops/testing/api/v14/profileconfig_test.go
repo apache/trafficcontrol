@@ -16,6 +16,7 @@ package v14
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/url"
 	"strconv"
 	"strings"
@@ -65,7 +66,7 @@ func GetTestProfileDotConfig(t *testing.T) {
 
 	server := tc.Server{ID: -1}
 	for _, potentialServer := range servers {
-		if potentialServer.Type != string(tc.CacheTypeEdge) {
+		if potentialServer.Type != string(enum.CacheTypeEdge) {
 			continue
 		}
 		server = potentialServer

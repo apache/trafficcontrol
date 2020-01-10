@@ -20,6 +20,7 @@ package peer
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"io"
 	"time"
 
@@ -40,7 +41,7 @@ func NewHandler() Handler {
 
 // Result contains the data parsed from polling a peer Traffic Monitor.
 type Result struct {
-	ID           tc.TrafficMonitorName
+	ID           enum.TrafficMonitorName
 	Available    bool
 	Errors       []error
 	PeerStates   tc.CRStates
@@ -52,7 +53,7 @@ type Result struct {
 // Handle handles a response from a polled Traffic Monitor peer, parsing the data and forwarding it to the ResultChannel.
 func (handler Handler) Handle(id string, r io.Reader, format string, reqTime time.Duration, reqEnd time.Time, err error, pollID uint64, pollFinished chan<- uint64) {
 	result := Result{
-		ID:           tc.TrafficMonitorName(id),
+		ID:           enum.TrafficMonitorName(id),
 		Available:    false,
 		Errors:       []error{},
 		PollID:       pollID,

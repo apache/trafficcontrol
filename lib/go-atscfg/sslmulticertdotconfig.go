@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -27,13 +28,13 @@ import (
 )
 
 type SSLMultiCertDS struct {
-	Type        tc.DSType
+	Type        enum.DSType
 	Protocol    int
 	ExampleURLs []string
 }
 
-func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceNullable) map[tc.DeliveryServiceName]SSLMultiCertDS {
-	sDSes := map[tc.DeliveryServiceName]SSLMultiCertDS{}
+func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceNullable) map[enum.DeliveryServiceName]SSLMultiCertDS {
+	sDSes := map[enum.DeliveryServiceName]SSLMultiCertDS{}
 	for _, ds := range dses {
 		if ds.Type == nil || ds.Protocol == nil || ds.XMLID == nil {
 			if ds.XMLID == nil {
@@ -43,16 +44,16 @@ func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceNullable) map[t
 			}
 			continue
 		}
-		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = SSLMultiCertDS{Type: *ds.Type, Protocol: *ds.Protocol, ExampleURLs: ds.ExampleURLs}
+		sDSes[enum.DeliveryServiceName(*ds.XMLID)] = SSLMultiCertDS{Type: *ds.Type, Protocol: *ds.Protocol, ExampleURLs: ds.ExampleURLs}
 	}
 	return sDSes
 }
 
 func MakeSSLMultiCertDotConfig(
-	cdnName tc.CDNName,
+	cdnName enum.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
-	dses map[tc.DeliveryServiceName]SSLMultiCertDS,
+	dses map[enum.DeliveryServiceName]SSLMultiCertDS,
 ) string {
 	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
 

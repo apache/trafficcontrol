@@ -20,13 +20,12 @@ package atscfg
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func MakeSetDSCPDotConfig(
-	cdnName tc.CDNName,
+	cdnName enum.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	dscpNumStr string,

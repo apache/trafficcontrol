@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 	"strings"
 
@@ -60,7 +61,7 @@ func GetConfigFileServerCacheDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		return "", errors.New("server '" + serverNameOrID + " not found in servers")
 	}
 
-	if !strings.HasPrefix(string(server.Type), tc.MidTypePrefix) {
+	if !strings.HasPrefix(string(server.Type), enum.MidTypePrefix) {
 		// emulates Perl
 		return "", errors.New("Error - incorrect file scope for route used.  Please use the profiles route.")
 	}
@@ -70,7 +71,7 @@ func GetConfigFileServerCacheDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		return "", errors.New("getting delivery services: " + err.Error())
 	}
 
-	dsData := map[tc.DeliveryServiceName]atscfg.ServerCacheConfigDS{}
+	dsData := map[enum.DeliveryServiceName]atscfg.ServerCacheConfigDS{}
 	for _, ds := range dses {
 		if ds.XMLID == nil || ds.Active == nil || ds.OrgServerFQDN == nil || ds.Type == nil {
 			// TODO orgserverfqdn is nil for some DSes - MSO? Verify.
@@ -80,10 +81,10 @@ func GetConfigFileServerCacheDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		if !ServerCacheDotConfigIncludeInactiveDSes && !*ds.Active {
 			continue
 		}
-		dsData[tc.DeliveryServiceName(*ds.XMLID)] = atscfg.ServerCacheConfigDS{OrgServerFQDN: *ds.OrgServerFQDN, Type: *ds.Type}
+		dsData[enum.DeliveryServiceName(*ds.XMLID)] = atscfg.ServerCacheConfigDS{OrgServerFQDN: *ds.OrgServerFQDN, Type: *ds.Type}
 	}
 
-	serverName := tc.CacheName(server.HostName)
+	serverName := enum.CacheName(server.HostName)
 
 	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
 	if err != nil {

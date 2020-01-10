@@ -20,6 +20,7 @@ package manager
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"os"
 	"runtime"
 	"time"
@@ -42,12 +43,12 @@ func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 	return history
 }
 
-func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[tc.CacheName]struct{} {
+func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[enum.CacheName]struct{} {
 	monitorConfig := monitorConfigTS.Get()
-	caches := map[tc.CacheName]struct{}{}
+	caches := map[enum.CacheName]struct{}{}
 	for cacheName := range localStates.GetCaches() {
 		// ONLINE and OFFLINE caches are not polled.
-		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.ServerStatus == string(tc.CacheStatusOnline) || ts.ServerStatus == string(tc.CacheStatusOffline) {
+		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.ServerStatus == string(enum.CacheStatusOnline) || ts.ServerStatus == string(enum.CacheStatusOffline) {
 			continue
 		}
 		caches[cacheName] = struct{}{}
@@ -74,16 +75,16 @@ func StartStatHistoryManager(
 	statResultHistory := threadsafe.NewResultStatHistory()
 	statMaxKbpses := threadsafe.NewCacheKbpses()
 	lastStatDurations := threadsafe.NewDurationMap()
-	lastStatEndTimes := map[tc.CacheName]time.Time{}
+	lastStatEndTimes := map[enum.CacheName]time.Time{}
 	lastStats := threadsafe.NewLastStats()
 	dsStats := threadsafe.NewDSStats()
 	unpolledCaches := threadsafe.NewUnpolledCaches()
 	localCacheStatus := threadsafe.NewCacheAvailableStatus()
 
-	precomputedData := map[tc.CacheName]cache.PrecomputedData{}
+	precomputedData := map[enum.CacheName]cache.PrecomputedData{}
 
-	lastResults := map[tc.CacheName]cache.Result{}
-	overrideMap := map[tc.CacheName]bool{}
+	lastResults := map[enum.CacheName]cache.Result{}
+	overrideMap := map[enum.CacheName]bool{}
 
 	haveCachesChanged := func() bool {
 		select {
@@ -243,16 +244,16 @@ func processStatResults(
 	toData todata.TOData,
 	errorCount threadsafe.Uint,
 	dsStats threadsafe.DSStats,
-	lastStatEndTimes map[tc.CacheName]time.Time,
+	lastStatEndTimes map[enum.CacheName]time.Time,
 	lastStatDurationsThreadsafe threadsafe.DurationMap,
 	unpolledCaches threadsafe.UnpolledCaches,
 	mc tc.TrafficMonitorConfigMap,
-	precomputedData map[tc.CacheName]cache.PrecomputedData,
-	lastResults map[tc.CacheName]cache.Result,
+	precomputedData map[enum.CacheName]cache.PrecomputedData,
+	lastResults map[enum.CacheName]cache.Result,
 	localStates peer.CRStatesThreadsafe,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
-	overrideMap map[tc.CacheName]bool,
+	overrideMap map[enum.CacheName]bool,
 	combineState func(),
 ) {
 	if len(results) == 0 {

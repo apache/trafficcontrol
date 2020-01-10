@@ -22,6 +22,7 @@ package steering
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -62,13 +63,13 @@ func findSteering(tx *sql.Tx) ([]tc.Steering, error) {
 		return nil, err
 	}
 
-	steerings := map[tc.DeliveryServiceName]tc.Steering{}
+	steerings := map[enum.DeliveryServiceName]tc.Steering{}
 
 	for _, data := range steeringData {
 		if _, ok := steerings[data.DeliveryService]; !ok {
 			steerings[data.DeliveryService] = tc.Steering{
 				DeliveryService: data.DeliveryService,
-				ClientSteering:  data.DSType == tc.DSTypeClientSteering,
+				ClientSteering:  data.DSType == enum.DSTypeClientSteering,
 				Filters:         []tc.SteeringFilter{},         // Initialize, so JSON produces `[]` not `null` if there are no filters.
 				Targets:         []tc.SteeringSteeringTarget{}, // Initialize, so JSON produces `[]` not `null` if there are no targets.
 			}
@@ -81,15 +82,15 @@ func findSteering(tx *sql.Tx) ([]tc.Steering, error) {
 
 		target := tc.SteeringSteeringTarget{DeliveryService: data.TargetName}
 		switch data.Type {
-		case tc.SteeringTypeOrder:
+		case enum.SteeringTypeOrder:
 			target.Order = int32(data.Value)
-		case tc.SteeringTypeWeight:
+		case enum.SteeringTypeWeight:
 			target.Weight = int32(data.Value)
-		case tc.SteeringTypeGeoOrder:
+		case enum.SteeringTypeGeoOrder:
 			target.GeoOrder = util.IntPtr(data.Value)
 			target.Latitude = util.FloatPtr(primaryOriginCoords[data.TargetID].Lat)
 			target.Longitude = util.FloatPtr(primaryOriginCoords[data.TargetID].Lon)
-		case tc.SteeringTypeGeoWeight:
+		case enum.SteeringTypeGeoWeight:
 			target.Weight = int32(data.Value)
 			target.GeoOrder = util.IntPtr(0)
 			target.Latitude = util.FloatPtr(primaryOriginCoords[data.TargetID].Lat)
@@ -107,13 +108,13 @@ func findSteering(tx *sql.Tx) ([]tc.Steering, error) {
 }
 
 type SteeringData struct {
-	DeliveryService tc.DeliveryServiceName
+	DeliveryService enum.DeliveryServiceName
 	SteeringID      int
-	TargetName      tc.DeliveryServiceName
+	TargetName      enum.DeliveryServiceName
 	TargetID        int
 	Value           int
-	Type            tc.SteeringType
-	DSType          tc.DSType
+	Type            enum.SteeringType
+	DSType          enum.DSType
 }
 
 func steeringDataTargetIDs(data []SteeringData) []int {
@@ -180,7 +181,7 @@ ORDER BY
   ds.type,
   dsr.set_number
 `
-	rows, err := tx.Query(qry, pq.Array(dsIDs), tc.DSMatchTypeSteeringRegex)
+	rows, err := tx.Query(qry, pq.Array(dsIDs), enum.DSMatchTypeSteeringRegex)
 	if err != nil {
 		return nil, errors.New("querying steering regexes: " + err.Error())
 	}

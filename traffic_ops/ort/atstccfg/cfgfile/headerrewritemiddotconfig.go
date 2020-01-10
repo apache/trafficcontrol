@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -99,15 +100,15 @@ func GetConfigFileCDNHeaderRewriteMid(cfg config.TCCfg, cdnNameOrID string, file
 		return "", errors.New("getting cachegroups: " + err.Error())
 	}
 
-	serverCGs := map[tc.CacheGroupName]struct{}{}
+	serverCGs := map[enum.CacheGroupName]struct{}{}
 	for _, sv := range servers {
-		if tc.CDNName(sv.CDNName) != cdnName {
+		if enum.CDNName(sv.CDNName) != cdnName {
 			continue
 		}
-		if tc.CacheStatus(sv.Status) != tc.CacheStatusReported && tc.CacheStatus(sv.Status) != tc.CacheStatusOnline {
+		if enum.CacheStatus(sv.Status) != enum.CacheStatusReported && enum.CacheStatus(sv.Status) != enum.CacheStatusOnline {
 			continue
 		}
-		serverCGs[tc.CacheGroupName(sv.Cachegroup)] = struct{}{}
+		serverCGs[enum.CacheGroupName(sv.Cachegroup)] = struct{}{}
 	}
 
 	parentCGs := map[string]struct{}{} // names of cachegroups which are parent cachegroups of the cachegroup of any edge assigned to the given DS
@@ -118,7 +119,7 @@ func GetConfigFileCDNHeaderRewriteMid(cfg config.TCCfg, cdnNameOrID string, file
 		if cg.ParentName == nil {
 			continue // TODO warn?
 		}
-		if _, ok := serverCGs[tc.CacheGroupName(*cg.Name)]; !ok {
+		if _, ok := serverCGs[enum.CacheGroupName(*cg.Name)]; !ok {
 			continue
 		}
 		parentCGs[*cg.ParentName] = struct{}{}

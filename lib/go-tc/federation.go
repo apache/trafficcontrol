@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -87,7 +88,7 @@ type FederationMapping struct {
 // getting assigned to it).
 type AllDeliveryServiceFederationsMapping struct {
 	Mappings        []FederationResolverMapping `json:"mappings"`
-	DeliveryService DeliveryServiceName         `json:"deliveryService"`
+	DeliveryService enum.DeliveryServiceName    `json:"deliveryService"`
 }
 
 // IsAllFederations implements the IAllFederation interface. Always returns true.
@@ -95,7 +96,7 @@ func (a AllDeliveryServiceFederationsMapping) IsAllFederations() bool { return t
 
 // AllFederation is the JSON object returned by /api/1.x/federations?all&cdnName=my-cdn-name
 type AllFederationCDN struct {
-	CDNName *CDNName `json:"cdnName"`
+	CDNName *enum.CDNName `json:"cdnName"`
 }
 
 // IsAllFederations implements the IAllFederation interface. Always returns true.

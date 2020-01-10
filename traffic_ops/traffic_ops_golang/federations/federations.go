@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -95,16 +96,16 @@ func Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func addResolvers(allFederations []tc.IAllFederation, feds []FedInfo, fedsResolvers map[int][]FedResolverInfo) []tc.IAllFederation {
-	dsFeds := map[tc.DeliveryServiceName][]tc.FederationResolverMapping{}
+	dsFeds := map[enum.DeliveryServiceName][]tc.FederationResolverMapping{}
 	for _, fed := range feds {
 		mapping := tc.FederationResolverMapping{}
 		mapping.TTL = util.IntPtr(fed.TTL)
 		mapping.CName = util.StrPtr(fed.CName)
 		for _, resolver := range fedsResolvers[fed.ID] {
 			switch resolver.Type {
-			case tc.FederationResolverType4:
+			case enum.FederationResolverType4:
 				mapping.Resolve4 = append(mapping.Resolve4, resolver.IP)
-			case tc.FederationResolverType6:
+			case enum.FederationResolverType6:
 				mapping.Resolve6 = append(mapping.Resolve6, resolver.IP)
 			default:
 				log.Warnf("federations addResolvers got invalid resolver type for federation '%v', skipping\n", fed.ID)
@@ -131,11 +132,11 @@ type FedInfo struct {
 	ID    int
 	TTL   int
 	CName string
-	DS    tc.DeliveryServiceName
+	DS    enum.DeliveryServiceName
 }
 
 type FedResolverInfo struct {
-	Type tc.FederationResolverType
+	Type enum.FederationResolverType
 	IP   string
 }
 
@@ -167,7 +168,7 @@ WHERE
 		if err := rows.Scan(&fedID, &fType, &f.IP); err != nil {
 			return nil, errors.New("all federations resolvers scanning: " + err.Error())
 		}
-		f.Type = tc.FederationResolverTypeFromString(fType)
+		f.Type = enum.FederationResolverTypeFromString(fType)
 		feds[fedID] = append(feds[fedID], f)
 	}
 	return feds, nil
@@ -292,14 +293,14 @@ func addFederationResolverMappingsForCurrentUser(u *auth.CurrentUser, tx *sql.Tx
 func addFederationResolverMappingsToFederation(res tc.ResolverMapping, xmlid string, fed uint, tx *sql.Tx) (string, error) {
 	var resp string
 	if len(res.Resolve4) > 0 {
-		inserted, err := addFederationResolver(res.Resolve4, tc.FederationResolverType4, fed, tx)
+		inserted, err := addFederationResolver(res.Resolve4, enum.FederationResolverType4, fed, tx)
 		if err != nil {
 			return "", err
 		}
 		resp = strings.Join(inserted, ", ")
 	}
 	if len(res.Resolve6) > 0 {
-		inserted, err := addFederationResolver(res.Resolve6, tc.FederationResolverType6, fed, tx)
+		inserted, err := addFederationResolver(res.Resolve6, enum.FederationResolverType6, fed, tx)
 		if err != nil {
 			return "", err
 		}
@@ -309,7 +310,7 @@ func addFederationResolverMappingsToFederation(res tc.ResolverMapping, xmlid str
 }
 
 // adds federation resolvers of a specific type to the given federation
-func addFederationResolver(res []string, t tc.FederationResolverType, fedID uint, tx *sql.Tx) ([]string, error) {
+func addFederationResolver(res []string, t enum.FederationResolverType, fedID uint, tx *sql.Tx) ([]string, error) {
 	inserted := []string{}
 	for _, r := range res {
 		var ip string

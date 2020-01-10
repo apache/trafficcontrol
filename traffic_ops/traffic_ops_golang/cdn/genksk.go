@@ -22,6 +22,7 @@ package cdn
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"time"
@@ -47,7 +48,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	cdnName := tc.CDNName(inf.Params["name"])
+	cdnName := enum.CDNName(inf.Params["name"])
 	req := tc.CDNGenerateKSKReq{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
@@ -114,7 +115,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 }
 
 // getKSKParams returns the CDN's profile's tld.ttls.DNSKEY and DNSKEY.effective.multiplier parameters. If either parameter doesn't exist, nil is returned.
-func getKSKParams(tx *sql.Tx, cdn tc.CDNName) (*uint64, *uint64, error) {
+func getKSKParams(tx *sql.Tx, cdn enum.CDNName) (*uint64, *uint64, error) {
 	qry := `
 WITH cdn_profile_id AS (
   SELECT

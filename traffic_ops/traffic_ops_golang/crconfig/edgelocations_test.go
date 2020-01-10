@@ -21,6 +21,7 @@ package crconfig
 
 import (
 	"context"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"reflect"
 	"testing"
 	"time"
@@ -35,24 +36,24 @@ func ExpectedMakeLocations() (map[string]tc.CRConfigLatitudeLongitude, map[strin
 			"cache0": tc.CRConfigLatitudeLongitude{
 				Lat:                 *randFloat64(),
 				Lon:                 *randFloat64(),
-				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodCZ},
+				LocalizationMethods: []enum.LocalizationMethod{enum.LocalizationMethodCZ},
 			},
 			"cache1": tc.CRConfigLatitudeLongitude{
 				Lat:                 *randFloat64(),
 				Lon:                 *randFloat64(),
-				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodCZ},
+				LocalizationMethods: []enum.LocalizationMethod{enum.LocalizationMethodCZ},
 			},
 		},
 		map[string]tc.CRConfigLatitudeLongitude{
 			"router0": tc.CRConfigLatitudeLongitude{
 				Lat:                 *randFloat64(),
 				Lon:                 *randFloat64(),
-				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ},
+				LocalizationMethods: []enum.LocalizationMethod{enum.LocalizationMethodGeo, enum.LocalizationMethodCZ, enum.LocalizationMethodDeepCZ},
 			},
 			"router1": tc.CRConfigLatitudeLongitude{
 				Lat:                 *randFloat64(),
 				Lon:                 *randFloat64(),
-				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ},
+				LocalizationMethods: []enum.LocalizationMethod{enum.LocalizationMethodGeo, enum.LocalizationMethodCZ, enum.LocalizationMethodDeepCZ},
 			},
 		}
 }

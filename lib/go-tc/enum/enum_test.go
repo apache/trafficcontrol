@@ -1,4 +1,4 @@
-package tc
+package enum
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,6 +21,7 @@ package tc
 
 import (
 	"encoding/json"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"testing"
 )
 
@@ -62,7 +63,7 @@ func TestDeepCachingType(t *testing.T) {
 	}
 
 	// make sure we get the right default when marshalled within a new delivery service
-	var ds DeliveryService
+	var ds tc.DeliveryService
 	_, err := json.MarshalIndent(ds, ``, `  `)
 	if err != nil {
 		t.Errorf(err.Error())

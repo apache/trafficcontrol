@@ -22,6 +22,7 @@ package cdn
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 
@@ -37,7 +38,7 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	cdnName := tc.CDNName(inf.Params["name"])
+	cdnName := enum.CDNName(inf.Params["name"])
 	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
@@ -61,14 +62,14 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted CDN", inf.User, inf.Tx.Tx)
 }
 
-func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {
+func deleteCDNByName(tx *sql.Tx, name enum.CDNName) error {
 	if _, err := tx.Exec(`DELETE FROM cdn WHERE name = $1`, name); err != nil {
 		return errors.New("deleting cdns: " + err.Error())
 	}
 	return nil
 }
 
-func cdnUnused(tx *sql.Tx, name tc.CDNName) (bool, error) {
+func cdnUnused(tx *sql.Tx, name enum.CDNName) (bool, error) {
 	useCount := 0
 	if err := tx.QueryRow(`
 WITH cdn_id as (

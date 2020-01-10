@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"strings"
@@ -84,7 +85,7 @@ type CapData struct {
 	Capacity    float64
 }
 
-func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (CapacityResp, error) {
+func getCapacity(tx *sql.Tx, ds enum.DeliveryServiceName, cdn enum.CDNName) (CapacityResp, error) {
 	monitors, err := monitorhlp.GetURLs(tx)
 	if err != nil {
 		return CapacityResp{}, errors.New("getting monitor URLs: " + err.Error())
@@ -134,7 +135,7 @@ func getCapacity(tx *sql.Tx, ds tc.DeliveryServiceName, cdn tc.CDNName) (Capacit
 const StatNameKBPS = "kbps"
 const StatNameMaxKBPS = "maxKbps"
 
-func addCapacity(cap CapData, ds tc.DeliveryServiceName, cacheStats tmcache.Stats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64) CapData {
+func addCapacity(cap CapData, ds enum.DeliveryServiceName, cacheStats tmcache.Stats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64) CapData {
 	for cacheName, stats := range cacheStats.Caches {
 		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
@@ -144,7 +145,7 @@ func addCapacity(cap CapData, ds tc.DeliveryServiceName, cacheStats tmcache.Stat
 		if _, ok := cache.DeliveryServices[string(ds)]; !ok {
 			continue
 		}
-		if cache.ServerType == nil || !strings.HasPrefix(string(*cache.ServerType), string(tc.CacheTypeEdge)) {
+		if cache.ServerType == nil || !strings.HasPrefix(string(*cache.ServerType), string(enum.CacheTypeEdge)) {
 			continue
 		}
 		if len(stats[StatNameKBPS]) < 1 || len(stats[StatNameMaxKBPS]) < 1 {
@@ -170,13 +171,13 @@ func addCapacity(cap CapData, ds tc.DeliveryServiceName, cacheStats tmcache.Stat
 			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CRConfig Profile is nil, skipping")
 			continue
 		}
-		if tc.CacheStatus(*cache.ServerStatus) == tc.CacheStatusReported || tc.CacheStatus(*cache.ServerStatus) == tc.CacheStatusOnline {
+		if enum.CacheStatus(*cache.ServerStatus) == enum.CacheStatusReported || enum.CacheStatus(*cache.ServerStatus) == enum.CacheStatusOnline {
 			if crStates.Caches[cacheName].IsAvailable {
 				cap.Available += kbps
 			} else {
 				cap.Unavailable += kbps
 			}
-		} else if tc.CacheStatus(*cache.ServerStatus) == tc.CacheStatusAdminDown {
+		} else if enum.CacheStatus(*cache.ServerStatus) == enum.CacheStatusAdminDown {
 			cap.Maintenance += kbps
 		} else {
 			continue // don't add capacity for OFFLINE or other statuses

@@ -22,6 +22,7 @@ package deliveryservice
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strings"
 
@@ -76,9 +77,9 @@ ORDER BY dsr.set_number
 	defer rows.Close()
 
 	matches := []tc.DeliveryServicePatterns{}
-	matchRegexes := map[tc.DeliveryServiceName][]string{}
+	matchRegexes := map[enum.DeliveryServiceName][]string{}
 	for rows.Next() {
-		ds := tc.DeliveryServiceName("")
+		ds := enum.DeliveryServiceName("")
 		remapText := (*string)(nil)
 		pattern := ""
 		if err := rows.Scan(&ds, &remapText, &pattern); err != nil {
@@ -97,8 +98,8 @@ ORDER BY dsr.set_number
 }
 
 // dsNameToUnderscores changes delivery service name (xml_id) hyphens to underscores, to emulate the behavior of the old Perl Traffic Ops API.
-func dsNameToUnderscores(ds tc.DeliveryServiceName) tc.DeliveryServiceName {
-	return tc.DeliveryServiceName(strings.Replace(string(ds), `-`, `_`, -1))
+func dsNameToUnderscores(ds enum.DeliveryServiceName) enum.DeliveryServiceName {
+	return enum.DeliveryServiceName(strings.Replace(string(ds), `-`, `_`, -1))
 }
 
 func remapToMatch(regex string) string {

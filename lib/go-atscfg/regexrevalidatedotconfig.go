@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"sort"
 	"strconv"
 	"strings"
@@ -57,7 +58,7 @@ func (jb Jobs) Less(i, j int) bool {
 }
 
 func MakeRegexRevalidateDotConfig(
-	cdnName tc.CDNName,
+	cdnName enum.CDNName,
 	params map[string][]string, // params on profile GLOBAL fileName RegexRevalidateFileName
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)

@@ -22,29 +22,30 @@ package tc
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 type SteeringTarget struct {
-	DeliveryService   DeliveryServiceName `json:"deliveryService" db:"deliveryservice_name"`
-	DeliveryServiceID int                 `json:"deliveryServiceId" db:"deliveryservice"`
-	Target            DeliveryServiceName `json:"target" db:"target_name"`
-	TargetID          int                 `json:"targetId" db:"target"`
-	Type              string              `json:"type" db:"type"`      // TODO enum?
-	TypeID            int                 `json:"typeId" db:"type_id"` // TODO enum?
-	Value             util.JSONIntStr     `json:"value" db:"value"`
+	DeliveryService   enum.DeliveryServiceName `json:"deliveryService" db:"deliveryservice_name"`
+	DeliveryServiceID int                      `json:"deliveryServiceId" db:"deliveryservice"`
+	Target            enum.DeliveryServiceName `json:"target" db:"target_name"`
+	TargetID          int                      `json:"targetId" db:"target"`
+	Type              string                   `json:"type" db:"type"`      // TODO enum?
+	TypeID            int                      `json:"typeId" db:"type_id"` // TODO enum?
+	Value             util.JSONIntStr          `json:"value" db:"value"`
 }
 
 type SteeringTargetNullable struct {
-	DeliveryService   *DeliveryServiceName `json:"deliveryService" db:"deliveryservice_name"`
-	DeliveryServiceID *uint64              `json:"deliveryServiceId" db:"deliveryservice"`
-	Target            *DeliveryServiceName `json:"target" db:"target_name"`
-	TargetID          *uint64              `json:"targetId" db:"target"`
-	Type              *string              `json:"type" db:"type_name"` // TODO enum?
-	TypeID            *int                 `json:"typeId" db:"type_id"` // TODO enum?
-	Value             *util.JSONIntStr     `json:"value" db:"value"`
+	DeliveryService   *enum.DeliveryServiceName `json:"deliveryService" db:"deliveryservice_name"`
+	DeliveryServiceID *uint64                   `json:"deliveryServiceId" db:"deliveryservice"`
+	Target            *enum.DeliveryServiceName `json:"target" db:"target_name"`
+	TargetID          *uint64                   `json:"targetId" db:"target"`
+	Type              *string                   `json:"type" db:"type_name"` // TODO enum?
+	TypeID            *int                      `json:"typeId" db:"type_id"` // TODO enum?
+	Value             *util.JSONIntStr          `json:"value" db:"value"`
 }
 
 func (st SteeringTargetNullable) Validate(tx *sql.Tx) error {

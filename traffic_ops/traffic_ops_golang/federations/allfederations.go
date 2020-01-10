@@ -22,6 +22,7 @@ package federations
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -41,7 +42,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	allFederations := []tc.IAllFederation{}
 
 	if cdnParam, ok := inf.Params["cdnName"]; ok {
-		cdnName := tc.CDNName(cdnParam)
+		cdnName := enum.CDNName(cdnParam)
 		feds, err = getAllFederationsForCDN(inf.Tx.Tx, cdnName)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.GetAll getting all federations: "+err.Error()))
@@ -97,7 +98,7 @@ ORDER BY
 	return feds, nil
 }
 
-func getAllFederationsForCDN(tx *sql.Tx, cdn tc.CDNName) ([]FedInfo, error) {
+func getAllFederationsForCDN(tx *sql.Tx, cdn enum.CDNName) ([]FedInfo, error) {
 	qry := `
 SELECT
   fds.federation,

@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -114,18 +115,18 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 	}
 
 	serverInfo := atscfg.ServerInfo{
-		CacheGroupID:                  server.CachegroupID,
-		CDN:                           tc.CDNName(server.CDNName),
-		CDNID:                         server.CDNID,
-		DomainName:                    server.DomainName,
-		HostName:                      server.HostName,
-		ID:                            server.ID,
-		IP:                            server.IPAddress,
-		ParentCacheGroupID:            parentCGID,
-		ParentCacheGroupType:          parentCGType,
-		ProfileID:                     atscfg.ProfileID(server.ProfileID),
-		ProfileName:                   server.Profile,
-		Port:                          server.TCPPort,
+		CacheGroupID:         server.CachegroupID,
+		CDN:                  enum.CDNName(server.CDNName),
+		CDNID:                server.CDNID,
+		DomainName:           server.DomainName,
+		HostName:             server.HostName,
+		ID:                   server.ID,
+		IP:                   server.IPAddress,
+		ParentCacheGroupID:   parentCGID,
+		ParentCacheGroupType: parentCGType,
+		ProfileID:            atscfg.ProfileID(server.ProfileID),
+		ProfileName:          server.Profile,
+		Port:                 server.TCPPort,
 		SecondaryParentCacheGroupID:   secondaryParentCGID,
 		SecondaryParentCacheGroupType: secondaryParentCGType,
 		Type:                          server.Type,
@@ -207,8 +208,8 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 		dssMap[*dss.DeliveryService] = struct{}{}
 	}
 
-	dsNames := map[tc.DeliveryServiceName]struct{}{}
-	uriSignedDSes := []tc.DeliveryServiceName{}
+	dsNames := map[enum.DeliveryServiceName]struct{}{}
+	uriSignedDSes := []enum.DeliveryServiceName{}
 	for _, ds := range deliveryServices {
 		if ds.ID == nil {
 			continue
@@ -219,11 +220,11 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 		if _, ok := dssMap[*ds.ID]; !ok {
 			continue
 		}
-		dsNames[tc.DeliveryServiceName(*ds.XMLID)] = struct{}{}
-		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURISigning {
-			uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(*ds.XMLID))
+		dsNames[enum.DeliveryServiceName(*ds.XMLID)] = struct{}{}
+		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == enum.SigningAlgorithmURISigning {
+			uriSignedDSes = append(uriSignedDSes, enum.DeliveryServiceName(*ds.XMLID))
 		}
 	}
 
-	return atscfg.MakeMetaConfig(tc.CacheName(serverHostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames), nil
+	return atscfg.MakeMetaConfig(enum.CacheName(serverHostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames), nil
 }

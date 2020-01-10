@@ -22,6 +22,7 @@ package cdn
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"strings"
@@ -58,7 +59,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	cdnName := *req.Key
 
-	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdnName))
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, enum.CDNName(cdnName))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+cdnName+"': "+err.Error()))
 		return
@@ -67,7 +68,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdnDomain, cdnExists, err := dbhelpers.GetCDNDomainFromName(inf.Tx.Tx, tc.CDNName(cdnName))
+	cdnDomain, cdnExists, err := dbhelpers.GetCDNDomainFromName(inf.Tx.Tx, enum.CDNName(cdnName))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("create DNSSEC keys: getting CDN domain: "+err.Error()))
 		return
@@ -263,7 +264,7 @@ func generateStoreDNSSECKeys(
 type CDNDS struct {
 	Name        string
 	Protocol    *int
-	Type        tc.DSType
+	Type        enum.DSType
 	RoutingName string
 }
 
@@ -288,8 +289,8 @@ WHERE cdn.name = $1
 		if err := rows.Scan(&ds.Name, &ds.Protocol, &dsTypeStr, &ds.RoutingName); err != nil {
 			return nil, errors.New("scanning cdn delivery services: " + err.Error())
 		}
-		dsType := tc.DSTypeFromString(dsTypeStr)
-		if dsType == tc.DSTypeInvalid {
+		dsType := enum.DSTypeFromString(dsTypeStr)
+		if dsType == enum.DSTypeInvalid {
 			return nil, errors.New("got invalid delivery service type '" + dsTypeStr + "'")
 		}
 		ds.Type = dsType
@@ -313,7 +314,7 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := inf.Params["name"]
-	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, enum.CDNName(key))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()))
 		return
@@ -331,7 +332,7 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 }
 
 // getCDNIDFromName returns the CDN's ID if a CDN with the given name exists
-func getCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
+func getCDNIDFromName(tx *sql.Tx, name enum.CDNName) (int, bool, error) {
 	id := 0
 	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {

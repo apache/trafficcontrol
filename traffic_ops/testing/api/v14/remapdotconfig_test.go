@@ -16,6 +16,7 @@ package v14
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/url"
 	"strconv"
 	"strings"
@@ -69,7 +70,7 @@ func GetTestRemapDotConfig(t *testing.T) {
 			continue
 		}
 
-		if ds.Type != tc.DSTypeAnyMap {
+		if ds.Type != enum.DSTypeAnyMap {
 			break
 		}
 	}

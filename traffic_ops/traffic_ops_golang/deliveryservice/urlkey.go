@@ -23,6 +23,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -99,7 +100,7 @@ func GetURLKeysByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds := tc.DeliveryServiceName(inf.Params["name"])
+	ds := enum.DeliveryServiceName(inf.Params["name"])
 
 	dsTenantID, ok, err := getDSTenantIDByName(inf.Tx.Tx, ds)
 	if err != nil {
@@ -143,8 +144,8 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds := tc.DeliveryServiceName(inf.Params["name"])
-	copyDS := tc.DeliveryServiceName(inf.Params["copy-name"])
+	ds := enum.DeliveryServiceName(inf.Params["name"])
+	copyDS := enum.DeliveryServiceName(inf.Params["copy-name"])
 
 	dsTenantID, ok, err := getDSTenantIDByName(inf.Tx.Tx, ds)
 	if err != nil {
@@ -222,7 +223,7 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds := tc.DeliveryServiceName(inf.Params["name"])
+	ds := enum.DeliveryServiceName(inf.Params["name"])
 
 	dsTenantID, ok, err := getDSTenantIDByName(inf.Tx.Tx, ds)
 	if err != nil {

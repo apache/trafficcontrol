@@ -21,6 +21,7 @@ package datareq
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"math"
 	"math/rand"
 	"testing"
@@ -62,20 +63,20 @@ func randBool() bool {
 	return rand.Int()%2 == 0
 }
 
-func getMockLastHealthTimes() map[tc.CacheName]time.Duration {
-	mockTimes := map[tc.CacheName]time.Duration{}
+func getMockLastHealthTimes() map[enum.CacheName]time.Duration {
+	mockTimes := map[enum.CacheName]time.Duration{}
 	numCaches := 10
 	for i := 0; i < numCaches; i++ {
-		mockTimes[tc.CacheName(randStr())] = time.Duration(rand.Int())
+		mockTimes[enum.CacheName(randStr())] = time.Duration(rand.Int())
 	}
 	return mockTimes
 }
 
 func getMockCRStatesDeliveryService() tc.CRStatesDeliveryService {
 	numCGs := 10
-	disabledLocations := []tc.CacheGroupName{}
+	disabledLocations := []enum.CacheGroupName{}
 	for i := 0; i < numCGs; i++ {
-		disabledLocations = append(disabledLocations, tc.CacheGroupName(randStr()))
+		disabledLocations = append(disabledLocations, enum.CacheGroupName(randStr()))
 	}
 
 	return tc.CRStatesDeliveryService{
@@ -89,12 +90,12 @@ func getMockPeerStates() peer.CRStatesThreadsafe {
 
 	numCaches := 10
 	for i := 0; i < numCaches; i++ {
-		ps.SetCache(tc.CacheName(randStr()), tc.IsAvailable{IsAvailable: randBool()})
+		ps.SetCache(enum.CacheName(randStr()), tc.IsAvailable{IsAvailable: randBool()})
 	}
 
 	numDSes := 10
 	for i := 0; i < numDSes; i++ {
-		ps.SetDeliveryService(tc.DeliveryServiceName(randStr()), getMockCRStatesDeliveryService())
+		ps.SetDeliveryService(enum.DeliveryServiceName(randStr()), getMockCRStatesDeliveryService())
 	}
 	return ps
 }
@@ -103,7 +104,7 @@ func getRandDuration() time.Duration {
 	return time.Duration(rand.Int63())
 }
 
-func getRandResult(name tc.TrafficMonitorName) peer.Result {
+func getRandResult(name enum.TrafficMonitorName) peer.Result {
 	peerStates := getMockPeerStates()
 	return peer.Result{
 		ID:         name,
@@ -121,10 +122,10 @@ func getMockCRStatesPeers() peer.CRStatesPeersThreadsafe {
 
 	ps.SetTimeout(getRandDuration())
 
-	randPeers := map[tc.TrafficMonitorName]struct{}{}
+	randPeers := map[enum.TrafficMonitorName]struct{}{}
 	numPeers := 10
 	for i := 0; i < numPeers; i++ {
-		randPeers[tc.TrafficMonitorName(randStr())] = struct{}{}
+		randPeers[enum.TrafficMonitorName(randStr())] = struct{}{}
 	}
 	ps.SetPeers(randPeers)
 

@@ -22,13 +22,13 @@ package atsserver
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 
@@ -183,12 +183,12 @@ func GetATSMajorVersion(tx *sql.Tx, serverProfileID int) (int, error) {
 }
 
 type ParentConfigDS struct {
-	Name            tc.DeliveryServiceName
-	QStringIgnore   tc.QStringIgnore
+	Name            enum.DeliveryServiceName
+	QStringIgnore   enum.QStringIgnore
 	OriginFQDN      string
 	MultiSiteOrigin bool
 	OriginShield    string
-	Type            tc.DSType
+	Type            enum.DSType
 
 	QStringHandling string
 }
@@ -206,7 +206,7 @@ func ParentConfigDSQuerySelect() string {
 	return `
 SELECT
   ds.xml_id,
-  COALESCE(ds.qstring_ignore, ` + tc.QStringIgnoreUseInCacheKeyAndPassUp.String() + `),
+  COALESCE(ds.qstring_ignore, ` + enum.QStringIgnoreUseInCacheKeyAndPassUp.String() + `),
   COALESCE((SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
     FROM origin o
     WHERE o.deliveryservice = ds.id
@@ -257,7 +257,7 @@ func ParentConfigDSQueryTopLevel() string {
 		ParentConfigDSQueryOrder
 }
 
-func getParentConfigDSTopLevel(tx *sql.Tx, cdnName tc.CDNName) ([]atscfg.ParentConfigDSTopLevel, error) {
+func getParentConfigDSTopLevel(tx *sql.Tx, cdnName enum.CDNName) ([]atscfg.ParentConfigDSTopLevel, error) {
 	dses, err := getParentConfigDSRaw(tx, ParentConfigDSQueryTopLevel(), []interface{}{cdnName})
 	if err != nil {
 		return nil, errors.New("getting top level raw parent config ds: " + err.Error())
@@ -343,7 +343,7 @@ func getParentConfigDSRaw(tx *sql.Tx, qry string, qryParams []interface{}) ([]at
 			log.Errorf("parent.config generation: getting parent config ds: server %+v has no origin, skipping!\n", d.Name)
 			continue
 		}
-		d.Type = tc.DSTypeFromString(string(d.Type))
+		d.Type = enum.DSTypeFromString(string(d.Type))
 		for _, cap := range requiredCaps {
 
 			d.RequiredCapabilities[atscfg.ServerCapability(cap)] = struct{}{}
@@ -468,16 +468,16 @@ func getParentConfigDSParamsTopLevel(tx *sql.Tx, dses []atscfg.ParentConfigDSTop
 	return dses, nil
 }
 
-func getParentConfigDSParamsRaw(tx *sql.Tx, qry string, dsNames []string) (map[tc.DeliveryServiceName]map[string]string, error) {
+func getParentConfigDSParamsRaw(tx *sql.Tx, qry string, dsNames []string) (map[enum.DeliveryServiceName]map[string]string, error) {
 	rows, err := tx.Query(qry, pq.Array(dsNames))
 	if err != nil {
 		return nil, errors.New("querying: " + err.Error())
 	}
 	defer rows.Close()
 
-	params := map[tc.DeliveryServiceName]map[string]string{}
+	params := map[enum.DeliveryServiceName]map[string]string{}
 	for rows.Next() {
-		dsName := tc.DeliveryServiceName("")
+		dsName := enum.DeliveryServiceName("")
 		pName := ""
 		pVal := ""
 		if err := rows.Scan(&dsName, &pName, &pVal); err != nil {
@@ -524,7 +524,7 @@ WITH parent_cachegroup_ids AS (
   SELECT cg.id as v
   FROM cachegroup cg
   JOIN type on type.id = cg.type
-  WHERE type.name = '` + tc.CacheGroupOriginTypeName + `'
+  WHERE type.name = '` + enum.CacheGroupOriginTypeName + `'
 )
 `
 	} else {
@@ -564,8 +564,8 @@ FROM
   JOIN status st ON st.id = s.status
 WHERE
   cg.id IN (SELECT v FROM parent_cachegroup_ids)
-  AND (stype.name = '` + tc.OriginTypeName + `' OR stype.name LIKE '` + tc.EdgeTypePrefix + `%' OR stype.name LIKE '` + tc.MidTypePrefix + `%')
-  AND (st.name = '` + string(tc.CacheStatusReported) + `' OR st.name = '` + string(tc.CacheStatusOnline) + `')
+  AND (stype.name = '` + enum.OriginTypeName + `' OR stype.name LIKE '` + enum.EdgeTypePrefix + `%' OR stype.name LIKE '` + enum.MidTypePrefix + `%')
+  AND (st.name = '` + string(enum.CacheStatusReported) + `' OR st.name = '` + string(enum.CacheStatusOnline) + `')
   AND cdn.name = $1
 `
 
@@ -635,7 +635,7 @@ WHERE
 	}
 
 	for _, cgServer := range cgServers {
-		if cgServer.TypeName == tc.OriginTypeName {
+		if cgServer.TypeName == enum.OriginTypeName {
 			dses := cgServerDSes[cgServer.ServerID]
 			for _, ds := range dses {
 				orgURI := dsOrigins[ds]

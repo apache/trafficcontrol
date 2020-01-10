@@ -20,20 +20,19 @@ package atscfg
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestMakeRegexRemapDotConfig(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
+	cdnName := enum.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
 	fileName := "regex_remap_myds.config"
 
-	dses := map[tc.DeliveryServiceName]CDNDS{
+	dses := map[enum.DeliveryServiceName]CDNDS{
 		"myds": CDNDS{
 			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 			QStringIgnore: 0,
@@ -69,13 +68,13 @@ func TestMakeRegexRemapDotConfig(t *testing.T) {
 }
 
 func TestMakeRegexRemapDotConfigUnusedDS(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
+	cdnName := enum.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
 	fileName := "regex_remap_myds.config"
 
-	dses := map[tc.DeliveryServiceName]CDNDS{
+	dses := map[enum.DeliveryServiceName]CDNDS{
 		"myds": CDNDS{
 			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 			QStringIgnore: 0,
@@ -127,13 +126,13 @@ func TestMakeRegexRemapDotConfigUnusedDS(t *testing.T) {
 }
 
 func TestMakeRegexRemapDotConfigReplaceReturns(t *testing.T) {
-	cdnName := tc.CDNName("mycdn")
+	cdnName := enum.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
 	fileName := "regex_remap_myds.config"
 
-	dses := map[tc.DeliveryServiceName]CDNDS{
+	dses := map[enum.DeliveryServiceName]CDNDS{
 		"myds": CDNDS{
 			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 			QStringIgnore: 0,

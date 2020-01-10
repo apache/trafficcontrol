@@ -21,6 +21,7 @@ package crconfig
 
 import (
 	"context"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -217,14 +218,14 @@ func TestGetAllServers(t *testing.T) {
 	}
 }
 
-func ExpectedGetServerDSNames() map[tc.CacheName][]tc.DeliveryServiceName {
-	return map[tc.CacheName][]tc.DeliveryServiceName{
-		"cache0": []tc.DeliveryServiceName{"ds0", "ds1"},
-		"cache1": []tc.DeliveryServiceName{"ds0", "ds1"},
+func ExpectedGetServerDSNames() map[enum.CacheName][]enum.DeliveryServiceName {
+	return map[enum.CacheName][]enum.DeliveryServiceName{
+		"cache0": []enum.DeliveryServiceName{"ds0", "ds1"},
+		"cache1": []enum.DeliveryServiceName{"ds0", "ds1"},
 	}
 }
 
-func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[tc.CacheName][]tc.DeliveryServiceName, cdn string) {
+func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[enum.CacheName][]enum.DeliveryServiceName, cdn string) {
 	rows := sqlmock.NewRows([]string{"host_name", "xml_id"})
 	for cache, dses := range expected {
 		for _, ds := range dses {
@@ -270,8 +271,8 @@ func TestGetServerDSNames(t *testing.T) {
 	}
 }
 
-func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]tc.DeliveryServiceName) map[tc.CacheName]map[string][]string {
-	e := map[tc.CacheName]map[string][]string{}
+func ExpectedGetServerDSes(expectedGetServerDSNames map[enum.CacheName][]enum.DeliveryServiceName) map[enum.CacheName]map[string][]string {
+	e := map[enum.CacheName]map[string][]string{}
 	for cache, dses := range expectedGetServerDSNames {
 		e[cache] = map[string][]string{}
 		for _, ds := range dses {
@@ -281,7 +282,7 @@ func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]tc.Delive
 	return e
 }
 
-func MockGetServerDSes(mock sqlmock.Sqlmock, expected map[tc.CacheName]map[string][]string, cdn string) {
+func MockGetServerDSes(mock sqlmock.Sqlmock, expected map[enum.CacheName]map[string][]string, cdn string) {
 	rows := sqlmock.NewRows([]string{"ds", "ds_type", "routing_name", "pattern"})
 	dsmap := map[string][]string{}
 	for _, dses := range expected {

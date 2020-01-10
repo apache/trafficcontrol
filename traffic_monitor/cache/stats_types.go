@@ -20,9 +20,9 @@ package cache
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"io"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
@@ -53,11 +53,11 @@ type StatsTypeDecoder struct {
 }
 
 // StatsTypeParser takes the bytes returned from the cache's stats endpoint, along with the cache name, and returns the map of raw stats (whose names must be strings, and values may be any primitive type but MUST be float64 if they are used by a Parameter Threshold) and System information.
-type StatsTypeParser func(cache tc.CacheName, r io.Reader) (error, map[string]interface{}, AstatsSystem)
+type StatsTypeParser func(cache enum.CacheName, r io.Reader) (error, map[string]interface{}, AstatsSystem)
 
 // StatsTypePrecomputer takes the cache name, the time the given stats were received, the Traffic Ops data, and the raw stats and system information created by Parse, and returns the PrecomputedData. Note this will only be called for Stats polls, not Health polls. Note errors should be returned in PrecomputedData.Errors
 //
-type StatsTypePrecomputer func(cache tc.CacheName, toData todata.TOData, stats map[string]interface{}, system AstatsSystem) PrecomputedData
+type StatsTypePrecomputer func(cache enum.CacheName, toData todata.TOData, stats map[string]interface{}, system AstatsSystem) PrecomputedData
 
 // StatsTypeDecoders holds the functions for parsing cache stats. This is not const, because Go doesn't allow constant maps. This is populated on startup, and MUST NOT be modified after startup.
 var StatsTypeDecoders = map[string]StatsTypeDecoder{}

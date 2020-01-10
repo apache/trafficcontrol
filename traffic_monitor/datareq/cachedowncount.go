@@ -20,6 +20,7 @@
 package datareq
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -32,10 +33,10 @@ func srvAPICacheDownCount(localStates peer.CRStatesThreadsafe, monitorConfig thr
 }
 
 // cacheOfflineCount returns the total reported caches marked down, excluding status offline and admin_down.
-func cacheDownCount(caches map[tc.CacheName]tc.IsAvailable, toServers map[string]tc.TrafficServer) int {
+func cacheDownCount(caches map[enum.CacheName]tc.IsAvailable, toServers map[string]tc.TrafficServer) int {
 	count := 0
 	for cache, available := range caches {
-		if !available.IsAvailable && tc.CacheStatusFromString(toServers[string(cache)].ServerStatus) == tc.CacheStatusReported {
+		if !available.IsAvailable && enum.CacheStatusFromString(toServers[string(cache)].ServerStatus) == enum.CacheStatusReported {
 			count++
 		}
 	}

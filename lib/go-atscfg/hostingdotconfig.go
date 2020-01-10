@@ -20,10 +20,9 @@ package atscfg
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 	"strings"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const HostingConfigFileName = `hosting.config`
@@ -34,7 +33,7 @@ const ParamDrivePrefix = "Drive_Prefix"
 const ParamRAMDrivePrefix = "RAM_Drive_Prefix"
 
 func MakeHostingDotConfig(
-	serverName tc.CacheName,
+	serverName enum.CacheName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	params map[string]string, // map[name]value - config file should always be storage.config

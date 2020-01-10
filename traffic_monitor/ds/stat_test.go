@@ -22,6 +22,7 @@ package ds
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"math"
 	"math/rand"
 	"testing"
@@ -45,12 +46,12 @@ func TestCreateStats(t *testing.T) {
 	events := health.NewThreadsafeEvents(maxEvents)
 	localCRStates := peer.NewCRStatesThreadsafe()
 
-	dses := []tc.DeliveryServiceName{}
+	dses := []enum.DeliveryServiceName{}
 	for ds, _ := range toData.DeliveryServiceServers {
 		dses = append(dses, ds)
 	}
 
-	caches := []tc.CacheName{}
+	caches := []enum.CacheName{}
 	for cache, _ := range toData.ServerDeliveryServices {
 		caches = append(caches, cache)
 	}
@@ -74,17 +75,17 @@ func TestCreateStats(t *testing.T) {
 
 	lastStatsThs.Set(*lastStatsCopy)
 
-	cgMap := map[tc.CacheGroupName]struct{}{}
+	cgMap := map[enum.CacheGroupName]struct{}{}
 	for _, cg := range toData.ServerCachegroups {
 		cgMap[cg] = struct{}{}
 	}
 
-	tpMap := map[tc.CacheType]struct{}{}
+	tpMap := map[enum.CacheType]struct{}{}
 	for _, tp := range toData.ServerTypes {
 		tpMap[tp] = struct{}{}
 	}
 
-	caMap := map[tc.CacheName]struct{}{}
+	caMap := map[enum.CacheName]struct{}{}
 	for ca, _ := range toData.ServerDeliveryServices {
 		caMap[ca] = struct{}{}
 	}
@@ -239,25 +240,25 @@ func compareAStatToStatCacheStats(expected *cache.AStat, actual *dsdata.StatCach
 	return ""
 }
 
-func getMockMonitorDSNoThresholds(name tc.DeliveryServiceName) tc.TMDeliveryService {
+func getMockMonitorDSNoThresholds(name enum.DeliveryServiceName) tc.TMDeliveryService {
 	return tc.TMDeliveryService{
 		XMLID:              string(name),
 		TotalTPSThreshold:  math.MaxInt64,
-		ServerStatus:       string(tc.CacheStatusReported),
+		ServerStatus:       string(enum.CacheStatusReported),
 		TotalKbpsThreshold: math.MaxInt64,
 	}
 }
 
-func getMockMonitorDSLowThresholds(name tc.DeliveryServiceName) tc.TMDeliveryService {
+func getMockMonitorDSLowThresholds(name enum.DeliveryServiceName) tc.TMDeliveryService {
 	return tc.TMDeliveryService{
 		XMLID:              string(name),
 		TotalTPSThreshold:  1,
-		ServerStatus:       string(tc.CacheStatusReported),
+		ServerStatus:       string(enum.CacheStatusReported),
 		TotalKbpsThreshold: 1,
 	}
 }
 
-func getMockMonitorConfig(dses []tc.DeliveryServiceName) tc.TrafficMonitorConfigMap {
+func getMockMonitorConfig(dses []enum.DeliveryServiceName) tc.TrafficMonitorConfigMap {
 	mc := tc.TrafficMonitorConfigMap{
 		TrafficServer:   map[string]tc.TrafficServer{},
 		CacheGroup:      map[string]tc.TMCacheGroup{},
@@ -282,43 +283,43 @@ func getMockTOData() todata.TOData {
 	numCacheDSes := numDSes / 3
 	numCGs := 20
 
-	types := []tc.CacheType{tc.CacheTypeEdge, tc.CacheTypeEdge, tc.CacheTypeEdge, tc.CacheTypeEdge, tc.CacheTypeEdge, tc.CacheTypeMid}
+	types := []enum.CacheType{enum.CacheTypeEdge, enum.CacheTypeEdge, enum.CacheTypeEdge, enum.CacheTypeEdge, enum.CacheTypeEdge, enum.CacheTypeMid}
 
-	caches := []tc.CacheName{}
+	caches := []enum.CacheName{}
 	for i := 0; i < numCaches; i++ {
-		caches = append(caches, tc.CacheName(randStr()))
+		caches = append(caches, enum.CacheName(randStr()))
 	}
 
-	dses := []tc.DeliveryServiceName{}
+	dses := []enum.DeliveryServiceName{}
 	for i := 0; i < numDSes; i++ {
-		dses = append(dses, tc.DeliveryServiceName(randStr()))
+		dses = append(dses, enum.DeliveryServiceName(randStr()))
 	}
 
-	cgs := []tc.CacheGroupName{}
+	cgs := []enum.CacheGroupName{}
 	for i := 0; i < numCGs; i++ {
-		cgs = append(cgs, tc.CacheGroupName(randStr()))
+		cgs = append(cgs, enum.CacheGroupName(randStr()))
 	}
 
-	serverDSes := map[tc.CacheName][]tc.DeliveryServiceName{}
+	serverDSes := map[enum.CacheName][]enum.DeliveryServiceName{}
 	for _, ca := range caches {
 		for i := 0; i < numCacheDSes; i++ {
 			serverDSes[ca] = append(serverDSes[ca], dses[rand.Intn(len(dses))])
 		}
 	}
 
-	dsServers := map[tc.DeliveryServiceName][]tc.CacheName{}
+	dsServers := map[enum.DeliveryServiceName][]enum.CacheName{}
 	for server, dses := range serverDSes {
 		for _, ds := range dses {
 			dsServers[ds] = append(dsServers[ds], server)
 		}
 	}
 
-	serverCGs := map[tc.CacheName]tc.CacheGroupName{}
+	serverCGs := map[enum.CacheName]enum.CacheGroupName{}
 	for _, cache := range caches {
 		serverCGs[cache] = cgs[rand.Intn(len(cgs))]
 	}
 
-	serverTypes := map[tc.CacheName]tc.CacheType{}
+	serverTypes := map[enum.CacheName]enum.CacheType{}
 	for _, cache := range caches {
 		serverTypes[cache] = types[rand.Intn(len(types))]
 	}
@@ -331,8 +332,8 @@ func getMockTOData() todata.TOData {
 	return *tod
 }
 
-func randCachesPrecomputedData(caches []tc.CacheName, toData todata.TOData) map[tc.CacheName]cache.PrecomputedData {
-	prc := map[tc.CacheName]cache.PrecomputedData{}
+func randCachesPrecomputedData(caches []enum.CacheName, toData todata.TOData) map[enum.CacheName]cache.PrecomputedData {
+	prc := map[enum.CacheName]cache.PrecomputedData{}
 	for _, ca := range caches {
 		prc[ca] = randPrecomputedData(toData)
 	}
@@ -354,8 +355,8 @@ func randPrecomputedData(toData todata.TOData) cache.PrecomputedData {
 	}
 }
 
-func randDsStats(toData todata.TOData) map[tc.DeliveryServiceName]*cache.AStat {
-	a := map[tc.DeliveryServiceName]*cache.AStat{}
+func randDsStats(toData todata.TOData) map[enum.DeliveryServiceName]*cache.AStat {
+	a := map[enum.DeliveryServiceName]*cache.AStat{}
 	for ds, _ := range toData.DeliveryServiceServers {
 		a[ds] = randAStat()
 	}

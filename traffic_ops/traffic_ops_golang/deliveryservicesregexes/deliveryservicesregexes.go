@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 
@@ -56,8 +57,8 @@ JOIN type as rt ON r.type = rt.id
 		return
 	}
 	defer rows.Close()
-	dsRegexes := map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex{}
-	dsTenants := map[tc.DeliveryServiceName]*int{}
+	dsRegexes := map[enum.DeliveryServiceName][]tc.DeliveryServiceRegex{}
+	dsTenants := map[enum.DeliveryServiceName]*int{}
 	for rows.Next() {
 		// if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
 		// 	next;
@@ -71,12 +72,12 @@ JOIN type as rt ON r.type = rt.id
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("scanning deliveryserviceregexes: "+err.Error()))
 			return
 		}
-		dsRegexes[tc.DeliveryServiceName(dsName)] = append(dsRegexes[tc.DeliveryServiceName(dsName)], tc.DeliveryServiceRegex{
+		dsRegexes[enum.DeliveryServiceName(dsName)] = append(dsRegexes[enum.DeliveryServiceName(dsName)], tc.DeliveryServiceRegex{
 			Type:      typeName,
 			SetNumber: setNumber,
 			Pattern:   pattern,
 		})
-		dsTenants[tc.DeliveryServiceName(dsName)] = dsTenantID
+		dsTenants[enum.DeliveryServiceName(dsName)] = dsTenantID
 	}
 
 	if dsRegexes, err = filterAuthorizedDSRegexes(inf.Tx.Tx, inf.User, dsRegexes, dsTenants); err != nil {
@@ -406,7 +407,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "deliveryservice_regex was deleted.")
 }
 
-func filterAuthorizedDSRegexes(tx *sql.Tx, user *auth.CurrentUser, dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex, dsTenants map[tc.DeliveryServiceName]*int) (map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex, error) {
+func filterAuthorizedDSRegexes(tx *sql.Tx, user *auth.CurrentUser, dsRegexes map[enum.DeliveryServiceName][]tc.DeliveryServiceRegex, dsTenants map[enum.DeliveryServiceName]*int) (map[enum.DeliveryServiceName][]tc.DeliveryServiceRegex, error) {
 	for ds, tenantID := range dsTenants {
 		if tenantID == nil {
 			continue

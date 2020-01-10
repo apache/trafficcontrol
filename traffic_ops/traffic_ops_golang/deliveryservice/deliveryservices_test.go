@@ -20,6 +20,7 @@ package deliveryservice
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"reflect"
 	"testing"
 
@@ -54,8 +55,8 @@ func TestMakeExampleURLs(t *testing.T) {
 	expected := []string{
 		`http://routing-name.ds-name.domain-name.invalid`,
 	}
-	matches := []tc.DeliveryServiceMatch{tc.DeliveryServiceMatch{Type: tc.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`}}
-	actual := MakeExampleURLs(util.IntPtr(0), tc.DSTypeHTTP, "routing-name", matches, "domain-name.invalid")
+	matches := []tc.DeliveryServiceMatch{tc.DeliveryServiceMatch{Type: enum.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`}}
+	actual := MakeExampleURLs(util.IntPtr(0), enum.DSTypeHTTP, "routing-name", matches, "domain-name.invalid")
 	if len(expected) != len(actual) {
 		t.Fatalf("MakeExampleURLs urls expected %v, actual %v", len(expected), len(actual))
 	} else if !reflect.DeepEqual(expected, actual) {
@@ -67,10 +68,10 @@ func TestMakeExampleURLs(t *testing.T) {
 		`http://fqdn.ds-name.invalid`,
 	}
 	matches = []tc.DeliveryServiceMatch{
-		tc.DeliveryServiceMatch{Type: tc.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`},
-		tc.DeliveryServiceMatch{Type: tc.DSMatchTypeHostRegex, SetNumber: 1, Pattern: `fqdn.ds-name.invalid`},
+		tc.DeliveryServiceMatch{Type: enum.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`},
+		tc.DeliveryServiceMatch{Type: enum.DSMatchTypeHostRegex, SetNumber: 1, Pattern: `fqdn.ds-name.invalid`},
 	}
-	actual = MakeExampleURLs(util.IntPtr(0), tc.DSTypeDNS, "routing-name", matches, "domain-name.invalid")
+	actual = MakeExampleURLs(util.IntPtr(0), enum.DSTypeDNS, "routing-name", matches, "domain-name.invalid")
 	if len(expected) != len(actual) {
 		t.Fatalf("MakeExampleURLs urls expected %v actual %v", len(expected), len(actual))
 	}
@@ -85,10 +86,10 @@ func TestMakeExampleURLs(t *testing.T) {
 		`https://fqdn.ds-name.invalid`,
 	}
 	matches = []tc.DeliveryServiceMatch{
-		tc.DeliveryServiceMatch{Type: tc.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`},
-		tc.DeliveryServiceMatch{Type: tc.DSMatchTypeHostRegex, SetNumber: 1, Pattern: `fqdn.ds-name.invalid`},
+		tc.DeliveryServiceMatch{Type: enum.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`},
+		tc.DeliveryServiceMatch{Type: enum.DSMatchTypeHostRegex, SetNumber: 1, Pattern: `fqdn.ds-name.invalid`},
 	}
-	actual = MakeExampleURLs(util.IntPtr(2), tc.DSTypeDNS, "routing-name", matches, "domain-name.invalid")
+	actual = MakeExampleURLs(util.IntPtr(2), enum.DSTypeDNS, "routing-name", matches, "domain-name.invalid")
 	if len(expected) != len(actual) {
 		t.Fatalf("MakeExampleURLs urls expected %v actual %v", len(expected), len(actual))
 	}
@@ -105,11 +106,11 @@ func TestMakeExampleURLs(t *testing.T) {
 		`https://fqdn.two.ds-name.invalid`,
 	}
 	matches = []tc.DeliveryServiceMatch{
-		tc.DeliveryServiceMatch{Type: tc.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`},
-		tc.DeliveryServiceMatch{Type: tc.DSMatchTypeHostRegex, SetNumber: 1, Pattern: `fqdn.ds-name.invalid`},
-		tc.DeliveryServiceMatch{Type: tc.DSMatchTypeHostRegex, SetNumber: 1, Pattern: `fqdn.two.ds-name.invalid`},
+		tc.DeliveryServiceMatch{Type: enum.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`},
+		tc.DeliveryServiceMatch{Type: enum.DSMatchTypeHostRegex, SetNumber: 1, Pattern: `fqdn.ds-name.invalid`},
+		tc.DeliveryServiceMatch{Type: enum.DSMatchTypeHostRegex, SetNumber: 1, Pattern: `fqdn.two.ds-name.invalid`},
 	}
-	actual = MakeExampleURLs(util.IntPtr(2), tc.DSTypeDNS, "different-routing-name", matches, "different-domain-name.invalid")
+	actual = MakeExampleURLs(util.IntPtr(2), enum.DSTypeDNS, "different-routing-name", matches, "different-domain-name.invalid")
 	if len(expected) != len(actual) {
 		t.Fatalf("MakeExampleURLs urls expected %v actual %v", len(expected), len(actual))
 	}
@@ -121,9 +122,9 @@ func TestMakeExampleURLs(t *testing.T) {
 		`https://routing-name.ds-name.domain-name.invalid`,
 	}
 	matches = []tc.DeliveryServiceMatch{
-		tc.DeliveryServiceMatch{Type: tc.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`},
+		tc.DeliveryServiceMatch{Type: enum.DSMatchTypeHostRegex, SetNumber: 0, Pattern: `\.*ds-name\.*`},
 	}
-	actual = MakeExampleURLs(util.IntPtr(1), tc.DSTypeDNS, "routing-name", matches, "domain-name.invalid")
+	actual = MakeExampleURLs(util.IntPtr(1), enum.DSTypeDNS, "routing-name", matches, "domain-name.invalid")
 	if len(expected) != len(actual) {
 		t.Fatalf("MakeExampleURLs urls expected %v actual %v", len(expected), len(actual))
 	}

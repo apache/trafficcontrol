@@ -22,11 +22,11 @@ package atscdn
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
@@ -70,8 +70,8 @@ func GetCacheURLDotConfig(w http.ResponseWriter, r *http.Request) {
 // TODO test for nil origin, nil qstring ignore
 // TODO test performance - we could break up the cacheurl configs, as this is only needed
 
-func GetCacheURLDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]atscfg.CacheURLDS, error) {
-	dses := map[tc.DeliveryServiceName]atscfg.CacheURLDS{}
+func GetCacheURLDSes(tx *sql.Tx, cdn enum.CDNName) (map[enum.DeliveryServiceName]atscfg.CacheURLDS, error) {
+	dses := map[enum.DeliveryServiceName]atscfg.CacheURLDS{}
 	qry := `
 SELECT
   ds.xml_id,
@@ -96,7 +96,7 @@ WHERE
 	defer rows.Close()
 
 	for rows.Next() {
-		dsName := tc.DeliveryServiceName("")
+		dsName := enum.DeliveryServiceName("")
 		ds := atscfg.CacheURLDS{}
 		if err := rows.Scan(&dsName, &ds.QStringIgnore, &ds.OrgServerFQDN, &ds.CacheURL); err != nil {
 			return nil, errors.New("scanning: " + err.Error())

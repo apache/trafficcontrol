@@ -21,9 +21,9 @@ package tmcheck
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	to "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
@@ -62,24 +62,24 @@ func AllMonitorsQueryIntervalValidator(
 	interval time.Duration,
 	includeOffline bool,
 	grace time.Duration,
-	onErr func(tc.TrafficMonitorName, error),
-	onResumeSuccess func(tc.TrafficMonitorName),
-	onCheck func(tc.TrafficMonitorName, error),
+	onErr func(enum.TrafficMonitorName, error),
+	onResumeSuccess func(enum.TrafficMonitorName),
+	onCheck func(enum.TrafficMonitorName, error),
 ) {
 	AllValidator(toClient, interval, includeOffline, grace, onErr, onResumeSuccess, onCheck, ValidateAllMonitorsQueryInterval)
 }
 
 // ValidateAllMonitorsQueryInterval validates, for all monitors in the given Traffic Ops, an acceptable query interval 95th percentile.
-func ValidateAllMonitorsQueryInterval(toClient *to.Session, includeOffline bool) (map[tc.TrafficMonitorName]error, error) {
+func ValidateAllMonitorsQueryInterval(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error) {
 	servers, err := GetMonitors(toClient, includeOffline)
 	if err != nil {
 		return nil, err
 	}
 
-	errs := map[tc.TrafficMonitorName]error{}
+	errs := map[enum.TrafficMonitorName]error{}
 	for _, server := range servers {
 		uri := fmt.Sprintf("http://%s.%s", server.HostName, server.DomainName)
-		errs[tc.TrafficMonitorName(server.HostName)] = ValidateQueryInterval(uri, toClient)
+		errs[enum.TrafficMonitorName(server.HostName)] = ValidateQueryInterval(uri, toClient)
 	}
 	return errs, nil
 }

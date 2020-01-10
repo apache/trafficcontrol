@@ -21,11 +21,10 @@ package atscfg
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const InvalidID = -1
@@ -37,18 +36,18 @@ const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 type ServerCapability string
 
 type ServerInfo struct {
-	CacheGroupID                  int
-	CDN                           tc.CDNName
-	CDNID                         int
-	DomainName                    string
-	HostName                      string
-	HTTPSPort                     int
-	ID                            int
-	IP                            string
-	ParentCacheGroupID            int
-	ParentCacheGroupType          string
-	ProfileID                     ProfileID
-	ProfileName                   string
+	CacheGroupID         int
+	CDN                  enum.CDNName
+	CDNID                int
+	DomainName           string
+	HostName             string
+	HTTPSPort            int
+	ID                   int
+	IP                   string
+	ParentCacheGroupID   int
+	ParentCacheGroupType string
+	ProfileID            ProfileID
+	ProfileName          string
 	Port                          int
 	SecondaryParentCacheGroupID   int
 	SecondaryParentCacheGroupType string
@@ -56,8 +55,8 @@ type ServerInfo struct {
 }
 
 func (s *ServerInfo) IsTopLevelCache() bool {
-	return (s.ParentCacheGroupType == tc.CacheGroupOriginTypeName || s.ParentCacheGroupID == InvalidID) &&
-		(s.SecondaryParentCacheGroupType == tc.CacheGroupOriginTypeName || s.SecondaryParentCacheGroupID == InvalidID)
+	return (s.ParentCacheGroupType == enum.CacheGroupOriginTypeName || s.ParentCacheGroupID == InvalidID) &&
+		(s.SecondaryParentCacheGroupType == enum.CacheGroupOriginTypeName || s.SecondaryParentCacheGroupID == InvalidID)
 }
 
 func HeaderCommentWithTOVersionStr(name string, nameVersionStr string) string {

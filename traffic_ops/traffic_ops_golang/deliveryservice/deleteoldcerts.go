@@ -23,12 +23,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
@@ -46,7 +46,7 @@ import (
 //
 // If certificate deletion is already being processed by a goroutine, another delete will be queued, and this immediately returns nil. Only one delete will ever be queued.
 //
-func DeleteOldCerts(db *sql.DB, tx *sql.Tx, cfg *config.Config, cdn tc.CDNName) error {
+func DeleteOldCerts(db *sql.DB, tx *sql.Tx, cfg *config.Config, cdn enum.CDNName) error {
 	if !cfg.RiakEnabled {
 		log.Infoln("deleting old delivery service certificates: Riak is not enabled, returning without cleaning up old certificates.")
 		return nil
@@ -63,7 +63,7 @@ func DeleteOldCerts(db *sql.DB, tx *sql.Tx, cfg *config.Config, cdn tc.CDNName) 
 }
 
 // deleteOldDSCerts deletes the HTTPS certificates in Riak of delivery services which have been deleted in Traffic Ops.
-func deleteOldDSCerts(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdn tc.CDNName) error {
+func deleteOldDSCerts(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdn enum.CDNName) error {
 	dsKeys, err := riaksvc.GetCDNSSLKeysDSNames(tx, authOpts, riakPort, cdn)
 	if err != nil {
 		return errors.New("getting riak ds keys: " + err.Error())
@@ -98,7 +98,7 @@ func deleteOldDSCerts(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cd
 }
 
 // deleteOldDSCertsDB takes a db, and creates a transaction to pass to deleteOldDSCerts.
-func deleteOldDSCertsDB(db *sql.DB, dbTimeout time.Duration, riakOpts *riak.AuthOptions, riakPort *uint, cdn tc.CDNName) {
+func deleteOldDSCertsDB(db *sql.DB, dbTimeout time.Duration, riakOpts *riak.AuthOptions, riakPort *uint, cdn enum.CDNName) {
 	dbCtx, cancelTx := context.WithTimeout(context.Background(), dbTimeout)
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
@@ -115,15 +115,15 @@ func deleteOldDSCertsDB(db *sql.DB, dbTimeout time.Duration, riakOpts *riak.Auth
 	txCommit = true
 }
 
-var oldCertDeleters = OldCertDeleters{D: map[tc.CDNName]*OldCertDeleter{}}
+var oldCertDeleters = OldCertDeleters{D: map[enum.CDNName]*OldCertDeleter{}}
 
 type OldCertDeleters struct {
-	D map[tc.CDNName]*OldCertDeleter
+	D map[enum.CDNName]*OldCertDeleter
 	M sync.Mutex
 }
 
 // startOldCertDeleter tells the old cert deleter goroutine to start another delete job, creating the goroutine if it doesn't exist.
-func startOldCertDeleter(db *sql.DB, tx *sql.Tx, dbTimeout time.Duration, riakOpts *riak.AuthOptions, riakPort *uint, cdn tc.CDNName) {
+func startOldCertDeleter(db *sql.DB, tx *sql.Tx, dbTimeout time.Duration, riakOpts *riak.AuthOptions, riakPort *uint, cdn enum.CDNName) {
 	oldCertDeleter := getOrCreateOldCertDeleter(cdn)
 	oldCertDeleter.Once.Do(func() {
 		go doOldCertDeleter(oldCertDeleter.Start, oldCertDeleter.Die, db, dbTimeout, riakOpts, riakPort, cdn)
@@ -135,7 +135,7 @@ func startOldCertDeleter(db *sql.DB, tx *sql.Tx, dbTimeout time.Duration, riakOp
 	}
 }
 
-func getOrCreateOldCertDeleter(cdn tc.CDNName) *OldCertDeleter {
+func getOrCreateOldCertDeleter(cdn enum.CDNName) *OldCertDeleter {
 	oldCertDeleters.M.Lock()
 	defer oldCertDeleters.M.Unlock()
 	oldCertDeleter, ok := oldCertDeleters.D[cdn]
@@ -185,7 +185,7 @@ func newOldCertDeleter() *OldCertDeleter {
 	}
 }
 
-func doOldCertDeleter(do chan struct{}, die chan struct{}, db *sql.DB, dbTimeout time.Duration, riakOpts *riak.AuthOptions, riakPort *uint, cdn tc.CDNName) {
+func doOldCertDeleter(do chan struct{}, die chan struct{}, db *sql.DB, dbTimeout time.Duration, riakOpts *riak.AuthOptions, riakPort *uint, cdn enum.CDNName) {
 	for {
 		select {
 		case <-do:

@@ -23,12 +23,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
@@ -134,7 +134,7 @@ WHERE
 	return params, nil
 }
 
-func GetServerProfileParamData(tx *sql.Tx, serverName tc.CacheName, configFile string) (map[string]string, error) {
+func GetServerProfileParamData(tx *sql.Tx, serverName enum.CacheName, configFile string) (map[string]string, error) {
 	qry := `
 SELECT
   p.name,
@@ -175,7 +175,7 @@ WHERE
 
 // GetATSMajorVersion returns the major version of the given profile's package trafficserver parameter.
 // If no parameter exists, this does not return an error, but rather logs a warning and uses DefaultATSVersion.
-func GetATSMajorVersionFromServerName(tx *sql.Tx, serverName tc.CacheName) (int, error) {
+func GetATSMajorVersionFromServerName(tx *sql.Tx, serverName enum.CacheName) (int, error) {
 	atsVersion, _, err := GetServerProfileParamValue(tx, serverName, "package", "trafficserver")
 	if err != nil {
 		return 0, errors.New("getting profile param value: " + err.Error())
@@ -247,7 +247,7 @@ WHERE
 		if err := rows.Scan(&d.Type, &d.OriginFQDN); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
-		d.Type = tc.DSTypeFromString(string(d.Type))
+		d.Type = enum.DSTypeFromString(string(d.Type))
 		dses = append(dses, d)
 	}
 	return dses, nil
@@ -279,7 +279,7 @@ WHERE
 
 // GetServerProfileParamValue gets the value of a parameter assigned to a server's Profile, by name and config file.
 // Returns the parameter, whether it existed, and any error.
-func GetServerProfileParamValue(tx *sql.Tx, serverName tc.CacheName, configFile string, name string) (string, bool, error) {
+func GetServerProfileParamValue(tx *sql.Tx, serverName enum.CacheName, configFile string, name string) (string, bool, error) {
 	qry := `
 SELECT
   p.value
@@ -394,7 +394,7 @@ WHERE
 }
 
 type DSData struct {
-	Type       tc.DSType
+	Type       enum.DSType
 	OriginFQDN *string
 }
 
@@ -428,14 +428,14 @@ WHERE
 		if err := rows.Scan(&d.Type, &d.OriginFQDN); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
-		d.Type = tc.DSTypeFromString(string(d.Type))
+		d.Type = enum.DSTypeFromString(string(d.Type))
 		dses = append(dses, d)
 	}
 	return dses, nil
 }
 
 func GetRemapDSData(tx *sql.Tx, serverInfo *atscfg.ServerInfo) ([]atscfg.RemapConfigDSData, error) {
-	if tc.CacheTypeFromString(serverInfo.Type) == tc.CacheTypeMid {
+	if enum.CacheTypeFromString(serverInfo.Type) == enum.CacheTypeMid {
 		return GetRemapDSDataForMid(tx, serverInfo)
 	} else {
 		return GetRemapDSDataForEdge(tx, serverInfo)
@@ -517,7 +517,7 @@ func GetRemapDSDataForMid(tx *sql.Tx, serverInfo *atscfg.ServerInfo) ([]atscfg.R
 		if !RemapDotConfigIncludeInactiveDeliveryServices && !d.Active {
 			continue
 		}
-		d.Type = tc.DSTypeFromString(string(d.Type))
+		d.Type = enum.DSTypeFromString(string(d.Type))
 		dses = append(dses, d)
 	}
 	return dses, nil
@@ -540,15 +540,15 @@ func GetRemapDSDataForEdge(tx *sql.Tx, server *atscfg.ServerInfo) ([]atscfg.Rema
 		if !RemapDotConfigIncludeInactiveDeliveryServices && !d.Active {
 			continue
 		}
-		d.Type = tc.DSTypeFromString(string(d.Type))
+		d.Type = enum.DSTypeFromString(string(d.Type))
 		dses = append(dses, d)
 	}
 	return dses, nil
 }
 
-func GetServerNameFromID(tx *sql.Tx, id int) (tc.CacheName, bool, error) {
+func GetServerNameFromID(tx *sql.Tx, id int) (enum.CacheName, bool, error) {
 	qry := `SELECT s.host_name FROM server s WHERE s.id = $1`
-	name := tc.CacheName("")
+	name := enum.CacheName("")
 	if err := tx.QueryRow(qry, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
@@ -561,7 +561,7 @@ func GetServerNameFromID(tx *sql.Tx, id int) (tc.CacheName, bool, error) {
 // GetServerNameFromNameOrID returns the server name from a parameter which may be the name or ID.
 // This also checks and verifies the existence of the given server, and returns an appropriate user error if it doesn't exist.
 // Returns the name, any user error, any system error, and any error code.
-func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (tc.CacheName, error, error, int) {
+func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (enum.CacheName, error, error, int) {
 	if serverID, err := strconv.Atoi(serverNameOrID); err == nil {
 		serverName, ok, err := dbhelpers.GetServerNameFromID(tx, serverID)
 		if err != nil {
@@ -569,10 +569,10 @@ func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (tc.CacheName,
 		} else if !ok {
 			return "", errors.New("server not found"), nil, http.StatusNotFound
 		}
-		return tc.CacheName(serverName), nil, nil, http.StatusOK
+		return enum.CacheName(serverName), nil, nil, http.StatusOK
 	}
 
-	serverName := tc.CacheName(serverNameOrID)
+	serverName := enum.CacheName(serverNameOrID)
 	if _, ok, err := dbhelpers.GetServerIDFromName(string(serverName), tx); err != nil {
 		return "", nil, fmt.Errorf("checking server name '%v' existence: %v", serverName, err), http.StatusInternalServerError
 	} else if !ok {
@@ -587,7 +587,7 @@ func GetServerInfoByID(tx *sql.Tx, id int) (*atscfg.ServerInfo, bool, error) {
 }
 
 // GetServerInfoByHost returns the necessary info about the server, whether the server exists, and any error.
-func GetServerInfoByHost(tx *sql.Tx, host tc.CacheName) (*atscfg.ServerInfo, bool, error) {
+func GetServerInfoByHost(tx *sql.Tx, host enum.CacheName) (*atscfg.ServerInfo, bool, error) {
 	return getServerInfo(tx, ServerInfoQuery()+` WHERE s.host_name = $1 `, []interface{}{host})
 }
 
@@ -719,7 +719,7 @@ WHERE
 }
 
 // GetServerURISignedDSes returns a list of delivery service names which have the given server assigned and have URI signing enabled, and any error.
-func GetServerURISignedDSes(tx *sql.Tx, serverHostName string, serverPort int) ([]tc.DeliveryServiceName, error) {
+func GetServerURISignedDSes(tx *sql.Tx, serverHostName string, serverPort int) ([]enum.DeliveryServiceName, error) {
 	qry := `
 SELECT
   ds.xml_id
@@ -738,9 +738,9 @@ WHERE
 	}
 	defer rows.Close()
 
-	dses := []tc.DeliveryServiceName{}
+	dses := []enum.DeliveryServiceName{}
 	for rows.Next() {
-		ds := tc.DeliveryServiceName("")
+		ds := enum.DeliveryServiceName("")
 		if err := rows.Scan(&ds); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
@@ -750,7 +750,7 @@ WHERE
 }
 
 // GetDSNames returns a set of delivery service names which have the given server assigned, and any error.
-func GetDSNames(tx *sql.Tx, serverHostName string, serverPort int) (map[tc.DeliveryServiceName]struct{}, error) {
+func GetDSNames(tx *sql.Tx, serverHostName string, serverPort int) (map[enum.DeliveryServiceName]struct{}, error) {
 	qry := `
 SELECT
   ds.xml_id
@@ -768,9 +768,9 @@ WHERE
 	}
 	defer rows.Close()
 
-	dses := map[tc.DeliveryServiceName]struct{}{}
+	dses := map[enum.DeliveryServiceName]struct{}{}
 	for rows.Next() {
-		ds := tc.DeliveryServiceName("")
+		ds := enum.DeliveryServiceName("")
 		if err := rows.Scan(&ds); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
@@ -805,7 +805,7 @@ func GetScopeParameters(tx *sql.Tx) (map[string]string, error) {
 }
 
 // GetServerNameAndTypeFromID returns the server's name, type, whether it exists, and any error.
-func GetServerNameAndTypeFromID(tx *sql.Tx, id int) (tc.CacheName, tc.CacheType, bool, error) {
+func GetServerNameAndTypeFromID(tx *sql.Tx, id int) (enum.CacheName, enum.CacheType, bool, error) {
 	qry := `
 SELECT
   s.host_name,
@@ -816,19 +816,19 @@ FROM
 WHERE
   s.id = $1
 `
-	name := tc.CacheName("")
-	typ := tc.CacheType("")
+	name := enum.CacheName("")
+	typ := enum.CacheType("")
 	if err := tx.QueryRow(qry, id).Scan(&name, &typ); err != nil {
 		if err == sql.ErrNoRows {
-			return "", tc.CacheType(""), false, nil
+			return "", enum.CacheType(""), false, nil
 		}
-		return "", tc.CacheType(""), false, errors.New("querying: " + err.Error())
+		return "", enum.CacheType(""), false, errors.New("querying: " + err.Error())
 	}
 	return name, typ, true, nil
 }
 
 // GetServerNameAndTypeFromID returns the server's name, type, whether it exists, and any error.
-func GetServerTypeFromName(tx *sql.Tx, name tc.CacheName) (tc.CacheType, bool, error) {
+func GetServerTypeFromName(tx *sql.Tx, name enum.CacheName) (enum.CacheType, bool, error) {
 	qry := `
 SELECT
   tp.name
@@ -838,7 +838,7 @@ FROM
 WHERE
   s.host_name = $1
 `
-	typ := tc.CacheType("")
+	typ := enum.CacheType("")
 	if err := tx.QueryRow(qry, name).Scan(&typ); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
@@ -849,7 +849,7 @@ WHERE
 }
 
 // GetServerNameAndDomainFromID returns the server's name, domain, whether it exists, and any error.
-func GetServerNameAndDomainFromID(tx *sql.Tx, id int) (tc.CacheName, string, bool, error) {
+func GetServerNameAndDomainFromID(tx *sql.Tx, id int) (enum.CacheName, string, bool, error) {
 	qry := `
 SELECT
   s.host_name,
@@ -859,7 +859,7 @@ FROM
 WHERE
   s.id = $1
 `
-	name := tc.CacheName("")
+	name := enum.CacheName("")
 	domain := ""
 	if err := tx.QueryRow(qry, id).Scan(&name, &domain); err != nil {
 		if err == sql.ErrNoRows {
@@ -871,7 +871,7 @@ WHERE
 }
 
 // GetServerNameAndDomainFromID returns the server's name, domain, whether it exists, and any error.
-func GetServerDomainFromName(tx *sql.Tx, name tc.CacheName) (string, bool, error) {
+func GetServerDomainFromName(tx *sql.Tx, name enum.CacheName) (string, bool, error) {
 	qry := `
 SELECT
   s.domain_name

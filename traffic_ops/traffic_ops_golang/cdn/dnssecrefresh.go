@@ -23,6 +23,7 @@ import (
 	// "context"
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc/enum"
 	"net/http"
 	"strconv"
 	"sync/atomic"
@@ -121,7 +122,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 		doCommit = false
 		return
 	}
-	exampleURLs := map[tc.DeliveryServiceName][]string{}
+	exampleURLs := map[enum.DeliveryServiceName][]string{}
 	for ds, inf := range dsInfo {
 		exampleURLs[ds] = deliveryservice.MakeExampleURLs(inf.Protocol, inf.Type, inf.RoutingName, dsMatchlists[string(ds)], inf.CDNDomain)
 	}
@@ -266,7 +267,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 }
 
 type DNSSECKeyRefreshCDNInfo struct {
-	CDNName                    tc.CDNName
+	CDNName                    enum.CDNName
 	CDNDomain                  string
 	DNSSECEnabled              bool
 	TLDTTLsDNSKEY              *uint64
@@ -276,7 +277,7 @@ type DNSSECKeyRefreshCDNInfo struct {
 
 // getDNSSECKeyRefreshParams returns returns the CDN's profile's tld.ttls.DNSKEY, DNSKEY.effective.multiplier, and DNSKEY.generation.multiplier parameters. If either parameter doesn't exist, nil is returned.
 // If a CDN exists, but has no parameters, it is returned as a key in the map with a nil value.
-func getDNSSECKeyRefreshParams(tx *sql.Tx) (map[tc.CDNName]DNSSECKeyRefreshCDNInfo, error) {
+func getDNSSECKeyRefreshParams(tx *sql.Tx) (map[enum.CDNName]DNSSECKeyRefreshCDNInfo, error) {
 	qry := `
 WITH cdn_profile_ids AS (
   SELECT
@@ -311,9 +312,9 @@ GROUP BY pi.cdn_name, pi.cdn_dnssec_enabled
 	}
 	defer rows.Close()
 
-	params := map[tc.CDNName]DNSSECKeyRefreshCDNInfo{}
+	params := map[enum.CDNName]DNSSECKeyRefreshCDNInfo{}
 	for rows.Next() {
-		cdnName := tc.CDNName("")
+		cdnName := enum.CDNName("")
 		cdnDomain := ""
 		dnssecEnabled := false
 		name := util.StrPtr("")
@@ -357,15 +358,15 @@ GROUP BY pi.cdn_name, pi.cdn_dnssec_enabled
 }
 
 type DNSSECKeyRefreshDSInfo struct {
-	DSName      tc.DeliveryServiceName
-	Type        tc.DSType
+	DSName      enum.DeliveryServiceName
+	Type        enum.DSType
 	Protocol    *int
-	CDNName     tc.CDNName
+	CDNName     enum.CDNName
 	CDNDomain   string
 	RoutingName string
 }
 
-func getDNSSECKeyRefreshDSInfo(tx *sql.Tx, cdns []string) (map[tc.DeliveryServiceName]DNSSECKeyRefreshDSInfo, error) {
+func getDNSSECKeyRefreshDSInfo(tx *sql.Tx, cdns []string) (map[enum.DeliveryServiceName]DNSSECKeyRefreshDSInfo, error) {
 	qry := `
 SELECT
   ds.xml_id,
@@ -387,7 +388,7 @@ WHERE
 	}
 	defer rows.Close()
 
-	dsInf := map[tc.DeliveryServiceName]DNSSECKeyRefreshDSInfo{}
+	dsInf := map[enum.DeliveryServiceName]DNSSECKeyRefreshDSInfo{}
 	for rows.Next() {
 		i := DNSSECKeyRefreshDSInfo{}
 		if err := rows.Scan(&i.DSName, &i.Type, &i.Protocol, &i.CDNName, &i.CDNDomain, &i.RoutingName); err != nil {
