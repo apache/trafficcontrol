@@ -19,10 +19,10 @@
     network links in /sys/class/net/*, then emits a ks.cfg network line.
     '''
 
+from __future__ import print_function
 import os
 import re
 
-from __future__ import print_function
 
 global TO_LOG
 # This "logs" to stdout which is captured during kickstart
@@ -170,8 +170,7 @@ def useable_interfaces(net_devs, nc, iface_speed):
         #  if not it is anyway.
         # Thus we are doing a bond of some sort.
         # This gives us the fastest interfaces first:
-        speeds = net_devs.keys()
-        speeds.sort(reverse=True)
+        speeds = [k for k in sorted(net_devs.keys(), reverse=True)]
         fastest = speeds[0]
         # Walk through "speeds" and take the first one that has more than one
         # interface. This will only set iface_list if there are 2 or more interfaces:
