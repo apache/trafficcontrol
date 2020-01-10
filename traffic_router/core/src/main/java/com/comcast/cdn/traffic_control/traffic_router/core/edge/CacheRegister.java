@@ -15,13 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.edge;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -74,20 +68,8 @@ public class CacheRegister {
 		return new ArrayList<TrafficRouterLocation>(edgeTrafficRouterLocations.values());
 	}
 
-	public void setEdgeTrafficRouterCount() {
-		int count = 0;
-
-		for (final TrafficRouterLocation location : getEdgeTrafficRouterLocations()) {
-			final List<Node> trafficRouters = location.getTrafficRouters();
-
-			if (trafficRouters == null) {
-				continue;
-			}
-
-			count += trafficRouters.size();
-		}
-
-		edgeTrafficRouterCount = count;
+	private void setEdgeTrafficRouterCount(final int count) {
+		this.edgeTrafficRouterCount = count;
 	}
 
 	public int getEdgeTrafficRouterCount() {
@@ -117,11 +99,22 @@ public class CacheRegister {
 		}
 	}
 
-	public void setEdgeTrafficRouterLocations(final Set<TrafficRouterLocation> locations) {
+	public void setEdgeTrafficRouterLocations(final Collection<TrafficRouterLocation> locations) {
+		int count = 0;
+
 		edgeTrafficRouterLocations.clear();
+
 		for (final TrafficRouterLocation newLoc : locations) {
 			edgeTrafficRouterLocations.put(newLoc.getId(), newLoc);
+
+			final List<Node> trafficRouters = newLoc.getTrafficRouters();
+
+			if (trafficRouters != null) {
+				count += trafficRouters.size();
+			}
 		}
+
+		setEdgeTrafficRouterCount(count);
 	}
 
 	public boolean hasEdgeTrafficRouters() {

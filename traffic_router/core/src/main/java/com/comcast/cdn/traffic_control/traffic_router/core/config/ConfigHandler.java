@@ -883,10 +883,11 @@ public class ConfigHandler {
 		return locations;
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private void parseEdgeTrafficRouterLocations(final JsonNode jo, final CacheRegister cacheRegister) throws JsonUtilsException {
 		final String locationKey = "location";
 		final JsonNode trafficRouterJo = JsonUtils.getJsonNode(jo, "contentRouters");
-		final Set<TrafficRouterLocation> locations = new HashSet<TrafficRouterLocation>(trafficRouterJo.size());
+		final Map<Geolocation, TrafficRouterLocation> locations = new HashMap<>();
 		final JsonNode trafficRouterLocJo = jo.get("trafficRouterLocations");
 
 		if (trafficRouterLocJo == null) {
@@ -899,46 +900,49 @@ public class ConfigHandler {
 		for (final Iterator<String> trafficRouterNames = trafficRouterJo.fieldNames(); trafficRouterNames.hasNext();) {
     		final String trafficRouterName = trafficRouterNames.next();
 			final JsonNode trafficRouter = trafficRouterJo.get(trafficRouterName);
+
+			// define here to log invalid ip/ip6 input on catch below
+			String ip = null;
+			String ip6 = null;
+
 			try {
 				final String trLoc = JsonUtils.getString(trafficRouter, locationKey);
 				final Location cl = allLocations.get(trLoc);
 
 				if (cl != null) {
-					LOGGER.info("Edge Traffic Router " + trafficRouterName + " @ " + trLoc + "; " + cl.getGeolocation().toString());
-					locations.add(new TrafficRouterLocation(trLoc, cl.getGeolocation()));
-				} else {
-					LOGGER.error("No trafficRouterLocations configured for " + trLoc + "; unable to use Edge Traffic Router " + trafficRouterName);
-				}
+					TrafficRouterLocation trafficRouterLocation = locations.get(cl.getGeolocation());
 
-			} catch (JsonUtilsException e) {
-				LOGGER.warn(e,e);
-			}
-		}
+					if (trafficRouterLocation == null) {
+						trafficRouterLocation = new TrafficRouterLocation(trLoc, cl.getGeolocation());
+						locations.put(cl.getGeolocation(), trafficRouterLocation);
+					}
 
-		cacheRegister.setEdgeTrafficRouterLocations(locations);
+					final JsonNode status = trafficRouter.get("status");
 
-		for (final Iterator<String> trafficRouterNames = trafficRouterJo.fieldNames(); trafficRouterNames.hasNext();) {
-			final String trafficRouterName = trafficRouterNames.next();
-			final JsonNode trafficRouter = trafficRouterJo.get(trafficRouterName);
-			final String location = JsonUtils.getString(trafficRouter, locationKey);
-			final TrafficRouterLocation trafficRouterLocation = cacheRegister.getEdgeTrafficRouterLocation(location);
+					if (status == null || (!"ONLINE".equals(status.asText()) && !"REPORTED".equals(status.asText()))) {
+						LOGGER.warn(String.format("Skipping Edge Traffic Router %s due to %s status", trafficRouterName, status));
+						continue;
+					} else {
+						LOGGER.info(String.format("Edge Traffic Router %s %s @ %s; %s", status, trafficRouterName, trLoc, cl.getGeolocation().toString()));
+					}
 
-			if (trafficRouterLocation != null) {
-				final Node edgeTrafficRouter = new Node(trafficRouterName, trafficRouterName, JsonUtils.optInt(jo, "hashCount"));
-				final String ip = JsonUtils.getString(trafficRouter, "ip");
-				final String ip6 = JsonUtils.optString(trafficRouter, "ip6");
-				edgeTrafficRouter.setFqdn(JsonUtils.getString(trafficRouter, "fqdn"));
-				edgeTrafficRouter.setPort(JsonUtils.getInt(trafficRouter, "port"));
-
-				try {
+					final Node edgeTrafficRouter = new Node(trafficRouterName, trafficRouterName, JsonUtils.optInt(jo, "hashCount"));
+					ip = JsonUtils.getString(trafficRouter, "ip");
+					ip6 = JsonUtils.optString(trafficRouter, "ip6");
+					edgeTrafficRouter.setFqdn(JsonUtils.getString(trafficRouter, "fqdn"));
+					edgeTrafficRouter.setPort(JsonUtils.getInt(trafficRouter, "port"));
 					edgeTrafficRouter.setIpAddress(ip, ip6, 0);
 					trafficRouterLocation.addTrafficRouter(trafficRouterName, edgeTrafficRouter);
-				} catch (UnknownHostException ex) {
-					LOGGER.warn(ex + " : " + ip);
+				} else {
+					LOGGER.error("No Location found for " + trLoc + "; unable to use Edge Traffic Router " + trafficRouterName);
 				}
+			} catch (JsonUtilsException e) {
+				LOGGER.warn(e, e);
+			} catch (UnknownHostException ex) {
+				LOGGER.warn(String.format("%s; input was ip=%s, ip6=%s", ex, ip, ip6), ex);
 			}
 		}
 
-		cacheRegister.setEdgeTrafficRouterCount();
+		cacheRegister.setEdgeTrafficRouterLocations(locations.values());
 	}
 }
