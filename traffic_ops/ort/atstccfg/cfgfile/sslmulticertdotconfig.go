@@ -23,6 +23,7 @@ import (
 	"errors"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
@@ -48,7 +49,16 @@ func GetConfigFileCDNSSLMultiCertDotConfig(cfg config.TCCfg, cdnNameOrID string)
 		return "", errors.New("getting delivery services: " + err.Error())
 	}
 
-	cfgDSes := atscfg.DeliveryServicesToSSLMultiCertDSes(dses)
+	filteredDSes := []tc.DeliveryServiceNullable{}
+	for _, ds := range dses {
+		// ANY_MAP and STEERING DSes don't have origins, and thus can't be put into the ssl config.
+		if ds.Type != nil && (*ds.Type == tc.DSTypeAnyMap || *ds.Type == tc.DSTypeSteering) {
+			continue
+		}
+		filteredDSes = append(filteredDSes, ds)
+	}
+
+	cfgDSes := atscfg.DeliveryServicesToSSLMultiCertDSes(filteredDSes)
 
 	txt := atscfg.MakeSSLMultiCertDotConfig(cdnName, toToolName, toURL, cfgDSes)
 	return txt, nil
