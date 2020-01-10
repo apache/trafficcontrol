@@ -17,7 +17,7 @@
     under the License.
 -->
 
-barfoo
+foo
 
 [![Build Status](https://builds.apache.org/buildStatus/icon?job=trafficcontrol-master-build)](https://builds.apache.org/job/trafficcontrol-master-build/) [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
 
