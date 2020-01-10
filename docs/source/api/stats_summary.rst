@@ -101,7 +101,7 @@ Summary Stats
 
 :cdnName:             The CDN name for which the summary stat was taken for
 
-	.. note:: If the ``cdn`` is equal to ``all`` it represents summary_stats across all delivery services within the given CDN
+	.. note:: If the ``cdn`` is equal to ``all`` it represents summary_stats across all delivery services across all CDNs
 
 :deliveryServiceName: The :term:`Delivery Service` display name for which the summary stat was taken for
 
@@ -179,7 +179,9 @@ Last Updated Summary Stat
 	}}
 
 ``POST``
-.. versionadded:: 1.4.1
+========
+
+.. versionadded:: 1.5
 
 Post a stats summary for a given stat.
 
@@ -202,7 +204,7 @@ Request Structure
 :summaryTime:         Timestamp of summary, in an ISO-like format
 :statDate:            Date stat was taken, in :rfc:`3339` format
 
-	.. note:: All fields are required besides ``cdnName`` and ``deliveryServiceName`` which will default to ``all`` if not given
+.. note:: ``statName``, ``statValue`` and ``summaryTime`` are required. If ``cdnName`` and ``deliveryServiceName`` are not given they will default to ``all``.
 
 .. code-block:: http
 	:caption: Request Example
