@@ -23,7 +23,6 @@ import (
 	"errors"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
@@ -62,8 +61,6 @@ func GetConfigFileCDNCacheURL(cfg config.TCCfg, cdnNameOrID string, fileName str
 		return "", errors.New("getting delivery service servers: " + err.Error())
 	}
 
-	log.Errorf("gcfccu dss: %v\n", len(dss))
-
 	dssMap := map[int][]int{} // map[dsID]serverID
 	for _, dss := range dss {
 		if dss.Server == nil || dss.DeliveryService == nil {
@@ -76,6 +73,10 @@ func GetConfigFileCDNCacheURL(cfg config.TCCfg, cdnNameOrID string, fileName str
 	for _, ds := range dses {
 		if ds.ID == nil {
 			continue // TODO warn
+		}
+		// ANY_MAP and STEERING DSes don't have origins, and thus can't be put into the cacheurl config.
+		if ds.Type != nil && (*ds.Type == tc.DSTypeAnyMap || *ds.Type == tc.DSTypeSteering) {
+			continue
 		}
 		if len(dssMap[*ds.ID]) == 0 {
 			continue
