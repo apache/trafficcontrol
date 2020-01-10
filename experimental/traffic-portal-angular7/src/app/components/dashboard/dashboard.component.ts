@@ -85,7 +85,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	}
 
 	sort () {
-		this.filteredDSes = this.deliveryServices.map(x=>[x.id, fuzzyScore(x.displayName, this.fuzzControl.value)]).filter(x=>x[1] !== Infinity).sort(
+		this.filteredDSes = this.deliveryServices.map(x=>[x, fuzzyScore(x.displayName, this.fuzzControl.value)]).filter(x=>x[1] !== Infinity).sort(
 			(a, b) => {
 				if (a[1] > b[1]) {
 					return 1;
@@ -95,7 +95,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 				}
 				return 0;
 			}
-		).map(x=>x[0]);
+		).map(x=>x[0]) as DeliveryService[];
 	}
 
 	/**
