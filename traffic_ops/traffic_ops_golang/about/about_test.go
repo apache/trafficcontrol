@@ -50,4 +50,5 @@ func TestSplitRPMVersion(t *testing.T) {
 			t.Errorf("expected commitHash '%s', got '%s'", h, e[4])
 		}
 	}
+    t.Errorf("test failure")
 }
