@@ -207,6 +207,11 @@ Arguments and Flags
 	that :program:`traffic_ops_ort` cannot be run using the new call signature unless this value is
 	defined, either on the command line or in the execution environment.
 
+.. option:: --hostname HOSTNAME
+
+	Causes ORT to request configuration information for the server named ``HOSTNAME`` instead of
+	detecting the server's actual hostname. This is primarily useful for testing purposes.
+
 Environment Variables
 ---------------------
 .. envvar:: TO_URL
@@ -325,7 +330,7 @@ Module Contents
 ===============
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__  = "Brennan Fieck"
 
 import argparse
@@ -452,6 +457,9 @@ def main() -> int:
 	                    help="wait a random number between 0 and <dispersion> before starting.",
 	                    type=int,
 	                    default=300)
+	parser.add_argument("--hostname",
+	                    help="Pretend to be a server with the provided hostname instead of using "
+	                         "this server's actual hostname in communications with Traffic Ops")
 	parser.add_argument("--login_dispersion",
 	                    help="wait a random number between 0 and <login_dispersion> before login.",
 	                    type=int,
