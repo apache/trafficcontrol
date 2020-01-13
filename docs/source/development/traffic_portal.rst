@@ -47,5 +47,7 @@ Installing The Traffic Portal Developer Environment
 #. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
 #. Modify ``traffic_portal/conf/config.js``:
   #. Valid SSL certificates and keys are needed for Traffic Portal to run. Generate these (e.g. using `this SuperUser answer <https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information#answer-226229>`_) and update ``ssl``.
-  #. Modify ``api``, ``files``, ``log`` as appropriate
+  #. Modify ``api.base_url`` to point to your Traffic Ops API endpoint.
+  #. Modify ``files.static`` to be ``./app/dist/public``.
+  #. Modify ``log.stream`` to be ``./server/log/access.log``.
 #. Navigate to http(s)://localhost:[port|sslPort defined in ``traffic_portal/conf/config.js``]
