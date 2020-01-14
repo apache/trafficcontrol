@@ -21,7 +21,7 @@ package cfgfile
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -88,7 +88,7 @@ func GetConfigFileProfileCacheDotConfig(cfg config.TCCfg, profileNameOrID string
 		if ds.ID == nil || ds.Type == nil || ds.OrgServerFQDN == nil {
 			continue // TODO warn? err?
 		}
-		if *ds.Type == enum.DSTypeInvalid {
+		if *ds.Type == tce.DSTypeInvalid {
 			continue // TODO warn? err?
 		}
 		if *ds.OrgServerFQDN == "" {

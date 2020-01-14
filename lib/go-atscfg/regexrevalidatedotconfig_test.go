@@ -20,7 +20,7 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 	"time"
@@ -29,7 +29,7 @@ import (
 )
 
 func TestMakeRegexRevalidateDotConfig(t *testing.T) {
-	cdnName := enum.CDNName("mycdn")
+	cdnName := tce.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 

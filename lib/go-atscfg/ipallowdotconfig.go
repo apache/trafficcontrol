@@ -20,7 +20,7 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net"
 	"strconv"
 	"strings"
@@ -57,12 +57,12 @@ const DefaultCoalesceNumberV6 = 5
 // The childServers is a list of servers which are children for this Mid-tier server. This should be empty for Edge servers.
 // More specifically, it should be the list of edges whose cachegroup's parent_cachegroup or secondary_parent_cachegroup is the cachegroup of this Mid server.
 func MakeIPAllowDotConfig(
-	serverName enum.CacheName,
-	serverType enum.CacheType,
+	serverName tce.CacheName,
+	serverType tce.CacheType,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	params map[string][]string, // map[name]value - config file should always be ip_allow.config
-	childServers map[enum.CacheName]IPAllowServer,
+	childServers map[tce.CacheName]IPAllowServer,
 ) string {
 	ipAllowData := []IPAllowData{}
 	const ActionAllow = "ip_allow"
@@ -133,7 +133,7 @@ func MakeIPAllowDotConfig(
 	}
 
 	// for edges deny "PUSH|PURGE|DELETE", allow everything else to everyone.
-	isMid := strings.HasPrefix(string(serverType), enum.MidTypePrefix)
+	isMid := strings.HasPrefix(string(serverType), tce.MidTypePrefix)
 	if !isMid {
 		ipAllowData = append(ipAllowData, IPAllowData{
 			Src:    `0.0.0.0-255.255.255.255`,

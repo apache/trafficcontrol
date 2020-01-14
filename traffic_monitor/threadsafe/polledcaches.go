@@ -20,7 +20,7 @@ package threadsafe
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"sync"
 	"time"
 
@@ -32,9 +32,9 @@ import (
 // UnpolledCaches is a structure containing a map of caches which have yet to be polled, which is threadsafe for multiple readers and one writer.
 // This could be made lock-free, if the performance was necessary
 type UnpolledCaches struct {
-	unpolledCaches *map[enum.CacheName]struct{}
-	seenCaches     *map[enum.CacheName]time.Time
-	allCaches      *map[enum.CacheName]struct{}
+	unpolledCaches *map[tce.CacheName]struct{}
+	seenCaches     *map[tce.CacheName]time.Time
+	allCaches      *map[tce.CacheName]struct{}
 	initialized    *bool
 	m              *sync.RWMutex
 }
@@ -44,22 +44,22 @@ func NewUnpolledCaches() UnpolledCaches {
 	b := false
 	return UnpolledCaches{
 		m:              &sync.RWMutex{},
-		unpolledCaches: &map[enum.CacheName]struct{}{},
-		allCaches:      &map[enum.CacheName]struct{}{},
-		seenCaches:     &map[enum.CacheName]time.Time{},
+		unpolledCaches: &map[tce.CacheName]struct{}{},
+		allCaches:      &map[tce.CacheName]struct{}{},
+		seenCaches:     &map[tce.CacheName]time.Time{},
 		initialized:    &b,
 	}
 }
 
 // UnpolledCaches returns a map of caches not yet polled. Callers MUST NOT modify. If mutation is necessary, copy the map
-func (t *UnpolledCaches) UnpolledCaches() map[enum.CacheName]struct{} {
+func (t *UnpolledCaches) UnpolledCaches() map[tce.CacheName]struct{} {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return *t.unpolledCaches
 }
 
 // setUnpolledCaches sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
-func (t *UnpolledCaches) setUnpolledCaches(v map[enum.CacheName]struct{}) {
+func (t *UnpolledCaches) setUnpolledCaches(v map[tce.CacheName]struct{}) {
 	t.m.Lock()
 	*t.initialized = true
 	*t.unpolledCaches = v
@@ -67,14 +67,14 @@ func (t *UnpolledCaches) setUnpolledCaches(v map[enum.CacheName]struct{}) {
 }
 
 // setUnpolledCaches sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
-func (t *UnpolledCaches) setSeenCaches(v map[enum.CacheName]time.Time) {
+func (t *UnpolledCaches) setSeenCaches(v map[tce.CacheName]time.Time) {
 	t.m.Lock()
 	*t.seenCaches = v
 	t.m.Unlock()
 }
 
 // SetNewCaches takes a list of new caches, which may overlap with the existing caches, diffs them, removes any `unpolledCaches` which aren't in the new list, and sets the list of `polledCaches` (which is only used by this func) to the `newCaches`. This is threadsafe with one writer, along with `setUnpolledCaches`.
-func (t *UnpolledCaches) SetNewCaches(newCaches map[enum.CacheName]struct{}) {
+func (t *UnpolledCaches) SetNewCaches(newCaches map[tce.CacheName]struct{}) {
 	unpolledCaches := copyCaches(t.UnpolledCaches())
 	allCaches := copyCaches(*t.allCaches) // not necessary to lock `allCaches`, as the single-writer is the only thing that accesses it.
 	seenCaches := copyCachesTime(*t.seenCaches)
@@ -108,16 +108,16 @@ func (t *UnpolledCaches) Any() bool {
 }
 
 // copyCaches performs a deep copy of the given map.
-func copyCaches(a map[enum.CacheName]struct{}) map[enum.CacheName]struct{} {
-	b := map[enum.CacheName]struct{}{}
+func copyCaches(a map[tce.CacheName]struct{}) map[tce.CacheName]struct{} {
+	b := map[tce.CacheName]struct{}{}
 	for k := range a {
 		b[k] = struct{}{}
 	}
 	return b
 }
 
-func copyCachesTime(a map[enum.CacheName]time.Time) map[enum.CacheName]time.Time {
-	b := map[enum.CacheName]time.Time{}
+func copyCachesTime(a map[tce.CacheName]time.Time) map[tce.CacheName]time.Time {
+	b := map[tce.CacheName]time.Time{}
 	for k, v := range a {
 		b[k] = v
 	}

@@ -20,7 +20,7 @@ package cache
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -43,7 +43,7 @@ func (f DummyFilterNever) UseStat(name string) bool {
 	return false
 }
 
-func (f DummyFilterNever) UseCache(name enum.CacheName) bool {
+func (f DummyFilterNever) UseCache(name tce.CacheName) bool {
 	return false
 }
 

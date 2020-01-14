@@ -3,7 +3,7 @@ package tc
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 	"strings"
 )
@@ -238,7 +238,7 @@ type HealthData struct {
 }
 
 type HealthDataCacheGroup struct {
-	Offline int64               `json:"offline"`
-	Online  int64               `json:"online"`
-	Name    enum.CacheGroupName `json:"name"`
+	Offline int64              `json:"offline"`
+	Online  int64              `json:"online"`
+	Name    tce.CacheGroupName `json:"name"`
 }

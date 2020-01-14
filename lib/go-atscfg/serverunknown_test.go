@@ -20,13 +20,13 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
 
 func TestMakeServerUnknown(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	serverDomain := "example.test"
 	toToolName := "toName"
 	toURL := "to.url.example.test"

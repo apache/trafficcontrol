@@ -21,7 +21,7 @@ package cfgfile
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"sort"
 	"strconv"
 	"strings"
@@ -64,7 +64,7 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 
 	serverName := server.HostName
 
-	cdn, err := toreq.GetCDN(cfg, enum.CDNName(server.CDNName))
+	cdn, err := toreq.GetCDN(cfg, tce.CDNName(server.CDNName))
 	if err != nil {
 		return "", errors.New("getting cdn '" + string(server.CDNName) + "': " + err.Error())
 	}
@@ -112,7 +112,7 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		dsIDs = append(dsIDs, *ds.ID)
 	}
 
-	isMid := strings.HasPrefix(server.Type, string(enum.CacheTypeMid))
+	isMid := strings.HasPrefix(server.Type, string(tce.CacheTypeMid))
 
 	serverIDs := ([]int)(nil)
 	if !isMid {
@@ -164,10 +164,10 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		return "", errors.New("getting delivery service regexes: " + err.Error())
 	}
 
-	dsRegexMap := map[enum.DeliveryServiceName][]tc.DeliveryServiceRegex{}
+	dsRegexMap := map[tce.DeliveryServiceName][]tc.DeliveryServiceRegex{}
 	for _, dsRegex := range dsRegexes {
 		sort.Sort(DeliveryServiceRegexesSortByTypeThenSetNum(dsRegex.Regexes))
-		dsRegexMap[enum.DeliveryServiceName(dsRegex.DSName)] = dsRegex.Regexes
+		dsRegexMap[tce.DeliveryServiceName(dsRegex.DSName)] = dsRegex.Regexes
 	}
 
 	remapConfigDSData := []atscfg.RemapConfigDSData{}
@@ -177,7 +177,7 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		}
 		// TODO sort by DS ID? the old Perl query does, but it shouldn't be necessary, except for determinism.
 		// TODO warn if no regexes?
-		for _, dsRegex := range dsRegexMap[enum.DeliveryServiceName(*ds.XMLID)] {
+		for _, dsRegex := range dsRegexMap[tce.DeliveryServiceName(*ds.XMLID)] {
 			remapConfigDSData = append(remapConfigDSData, atscfg.RemapConfigDSData{
 				ID:                       *ds.ID,
 				Type:                     *ds.Type,
@@ -342,7 +342,7 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 
 	serverInfo := &atscfg.ServerInfo{
 		CacheGroupID:                  server.CachegroupID,
-		CDN:                           enum.CDNName(server.CDNName),
+		CDN:                           tce.CDNName(server.CDNName),
 		CDNID:                         server.CDNID,
 		DomainName:                    serverCDNDomain, // note this is intentionally the CDN domain, not the server domain. It's what's remapped to.
 		HostName:                      server.HostName,
@@ -359,7 +359,7 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		Type:                          server.Type,
 	}
 
-	txt := atscfg.MakeRemapDotConfig(enum.CacheName(serverName), toToolName, toURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData)
+	txt := atscfg.MakeRemapDotConfig(tce.CacheName(serverName), toToolName, toURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData)
 	return txt, nil
 }
 

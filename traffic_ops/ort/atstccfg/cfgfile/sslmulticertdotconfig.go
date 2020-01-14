@@ -21,7 +21,7 @@ package cfgfile
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -53,7 +53,7 @@ func GetConfigFileCDNSSLMultiCertDotConfig(cfg config.TCCfg, cdnNameOrID string)
 	filteredDSes := []tc.DeliveryServiceNullable{}
 	for _, ds := range dses {
 		// ANY_MAP and STEERING DSes don't have origins, and thus can't be put into the ssl config.
-		if ds.Type != nil && (*ds.Type == enum.DSTypeAnyMap || *ds.Type == enum.DSTypeSteering) {
+		if ds.Type != nil && (*ds.Type == tce.DSTypeAnyMap || *ds.Type == tce.DSTypeSteering) {
 			continue
 		}
 		filteredDSes = append(filteredDSes, ds)

@@ -21,7 +21,7 @@ package datareq
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"math"
 	"math/rand"
 	"testing"
@@ -63,20 +63,20 @@ func randBool() bool {
 	return rand.Int()%2 == 0
 }
 
-func getMockLastHealthTimes() map[enum.CacheName]time.Duration {
-	mockTimes := map[enum.CacheName]time.Duration{}
+func getMockLastHealthTimes() map[tce.CacheName]time.Duration {
+	mockTimes := map[tce.CacheName]time.Duration{}
 	numCaches := 10
 	for i := 0; i < numCaches; i++ {
-		mockTimes[enum.CacheName(randStr())] = time.Duration(rand.Int())
+		mockTimes[tce.CacheName(randStr())] = time.Duration(rand.Int())
 	}
 	return mockTimes
 }
 
 func getMockCRStatesDeliveryService() tc.CRStatesDeliveryService {
 	numCGs := 10
-	disabledLocations := []enum.CacheGroupName{}
+	disabledLocations := []tce.CacheGroupName{}
 	for i := 0; i < numCGs; i++ {
-		disabledLocations = append(disabledLocations, enum.CacheGroupName(randStr()))
+		disabledLocations = append(disabledLocations, tce.CacheGroupName(randStr()))
 	}
 
 	return tc.CRStatesDeliveryService{
@@ -90,12 +90,12 @@ func getMockPeerStates() peer.CRStatesThreadsafe {
 
 	numCaches := 10
 	for i := 0; i < numCaches; i++ {
-		ps.SetCache(enum.CacheName(randStr()), tc.IsAvailable{IsAvailable: randBool()})
+		ps.SetCache(tce.CacheName(randStr()), tc.IsAvailable{IsAvailable: randBool()})
 	}
 
 	numDSes := 10
 	for i := 0; i < numDSes; i++ {
-		ps.SetDeliveryService(enum.DeliveryServiceName(randStr()), getMockCRStatesDeliveryService())
+		ps.SetDeliveryService(tce.DeliveryServiceName(randStr()), getMockCRStatesDeliveryService())
 	}
 	return ps
 }
@@ -104,7 +104,7 @@ func getRandDuration() time.Duration {
 	return time.Duration(rand.Int63())
 }
 
-func getRandResult(name enum.TrafficMonitorName) peer.Result {
+func getRandResult(name tce.TrafficMonitorName) peer.Result {
 	peerStates := getMockPeerStates()
 	return peer.Result{
 		ID:         name,
@@ -122,10 +122,10 @@ func getMockCRStatesPeers() peer.CRStatesPeersThreadsafe {
 
 	ps.SetTimeout(getRandDuration())
 
-	randPeers := map[enum.TrafficMonitorName]struct{}{}
+	randPeers := map[tce.TrafficMonitorName]struct{}{}
 	numPeers := 10
 	for i := 0; i < numPeers; i++ {
-		randPeers[enum.TrafficMonitorName(randStr())] = struct{}{}
+		randPeers[tce.TrafficMonitorName(randStr())] = struct{}{}
 	}
 	ps.SetPeers(randPeers)
 

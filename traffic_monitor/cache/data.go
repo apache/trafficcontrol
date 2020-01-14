@@ -21,7 +21,7 @@ package cache
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"time"
 
 	"github.com/json-iterator/go"
@@ -43,11 +43,11 @@ type AvailableStatus struct {
 }
 
 // CacheAvailableStatuses is the available status of each cache.
-type AvailableStatuses map[enum.CacheName]AvailableStatus
+type AvailableStatuses map[tce.CacheName]AvailableStatus
 
 // Copy copies this CacheAvailableStatuses. It does not modify, and thus is safe for multiple reader goroutines.
 func (a AvailableStatuses) Copy() AvailableStatuses {
-	b := AvailableStatuses(map[enum.CacheName]AvailableStatus{})
+	b := AvailableStatuses(map[tce.CacheName]AvailableStatus{})
 	for k, v := range a {
 		b[k] = v
 	}
@@ -55,7 +55,7 @@ func (a AvailableStatuses) Copy() AvailableStatuses {
 }
 
 // ResultHistory is a map of cache names, to an array of result history from each cache.
-type ResultHistory map[enum.CacheName][]Result
+type ResultHistory map[tce.CacheName][]Result
 
 func copyResult(a []Result) []Result {
 	b := make([]Result, len(a), len(a))
@@ -120,11 +120,11 @@ func pruneStats(history []ResultStatVal, limit uint64) []ResultStatVal {
 }
 
 // TODO determine if anything ever needs more than the latest, and if not, change ResultInfo to not be a slice.
-type ResultInfoHistory map[enum.CacheName][]ResultInfo
+type ResultInfoHistory map[tce.CacheName][]ResultInfo
 
 // ResultInfo contains all the non-stat result info. This includes the cache ID, any errors, the time of the poll, the request time duration, Astats System (Vitals), Poll ID, and Availability.
 type ResultInfo struct {
-	ID          enum.CacheName
+	ID          tce.CacheName
 	Error       error
 	Time        time.Time
 	RequestTime time.Duration
@@ -173,7 +173,7 @@ func (a ResultInfoHistory) Add(r Result, limit uint64) {
 }
 
 // Kbpses is the kbps values of each cache.
-type Kbpses map[enum.CacheName]int64
+type Kbpses map[tce.CacheName]int64
 
 func (a Kbpses) Copy() Kbpses {
 	b := Kbpses{}

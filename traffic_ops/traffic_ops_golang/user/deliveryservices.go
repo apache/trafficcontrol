@@ -22,7 +22,7 @@ package user
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -198,7 +198,7 @@ WHERE dsu.tm_user_id = $1
 			return nil, errors.New("scanning user delivery services : " + err.Error())
 		}
 		if ds.DeepCachingType != nil {
-			*ds.DeepCachingType = enum.DeepCachingTypeFromString(string(*ds.DeepCachingType))
+			*ds.DeepCachingType = tce.DeepCachingTypeFromString(string(*ds.DeepCachingType))
 		}
 		dses = append(dses, ds)
 	}

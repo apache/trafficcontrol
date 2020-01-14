@@ -20,7 +20,7 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 
@@ -28,7 +28,7 @@ import (
 )
 
 func TestMakeRemapDotConfig(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -86,7 +86,7 @@ func TestMakeRemapDotConfig(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -129,7 +129,7 @@ func TestMakeRemapDotConfig(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -187,7 +187,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -212,7 +212,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMid(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -270,7 +270,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -309,7 +309,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -367,7 +367,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -392,7 +392,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -450,7 +450,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -475,7 +475,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -533,7 +533,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -561,7 +561,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname2"),
 			MultiSiteOrigin:          util.StrPtr("mymso2"),
 			Pattern:                  util.StrPtr("myregexpattern2"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain2"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum2"),
 			OriginShield:             util.StrPtr("myoriginshield2"),
@@ -586,7 +586,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -644,7 +644,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -692,7 +692,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -750,7 +750,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -789,7 +789,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 6
@@ -840,14 +840,14 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
 			SigningAlgorithm:         util.StrPtr("url_sig"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -893,7 +893,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 5
@@ -944,14 +944,14 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
 			SigningAlgorithm:         util.StrPtr("url_sig"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -997,7 +997,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -1051,14 +1051,14 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
 			SigningAlgorithm:         util.StrPtr("url_sig"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1105,7 +1105,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -1153,20 +1153,20 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 			OriginFQDN:               util.StrPtr("origin.example.test"),
 			MidHeaderRewrite:         util.StrPtr(""),
 			CacheURL:                 util.StrPtr("mycacheurl"), // cacheurl, so it gets added twice, also with qstring
-			RangeRequestHandling:     util.IntPtr(int(enum.RangeRequestHandlingCacheRangeRequest)),
+			RangeRequestHandling:     util.IntPtr(int(tce.RangeRequestHandlingCacheRangeRequest)),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
 			SigningAlgorithm:         util.StrPtr("url_sig"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1205,7 +1205,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -1263,7 +1263,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1291,7 +1291,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1316,7 +1316,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigAnyMap(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -1374,7 +1374,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1402,7 +1402,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1438,7 +1438,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -1524,7 +1524,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypePathRegex)), // non-host regex should not be included
+			RegexType:                util.StrPtr(string(tce.DSMatchTypePathRegex)), // non-host regex should not be included
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1552,7 +1552,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeSteeringRegex)), // non-host regex should not be included
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeSteeringRegex)), // non-host regex should not be included
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1580,7 +1580,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHeaderRegex)), // non-host regex should not be included
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHeaderRegex)), // non-host regex should not be included
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1664,7 +1664,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1692,7 +1692,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1720,7 +1720,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  nil, // nil pattern shouldn't be included
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1748,7 +1748,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1776,7 +1776,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   nil, // nil domain shouldn't be included
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
@@ -1802,7 +1802,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -1860,12 +1860,12 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`.*\.mypattern\..*`), // common host regex syntax, should be replaced
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPAndHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPAndHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -1903,7 +1903,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -1961,12 +1961,12 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`.*\.mypattern\..*`), // common host regex syntax, should be replaced
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTP)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTP)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2004,7 +2004,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2062,12 +2062,12 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`.*\.mypattern\..*`), // common host regex syntax, should be replaced
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2105,7 +2105,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2163,12 +2163,12 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`.*\.mypattern\..*`), // common host regex syntax, should be replaced
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2206,7 +2206,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2264,12 +2264,12 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`myliteralpattern__http__foo`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2303,7 +2303,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2361,12 +2361,12 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2400,7 +2400,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2458,12 +2458,12 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2497,7 +2497,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2555,12 +2555,12 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2598,7 +2598,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2656,12 +2656,12 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2699,7 +2699,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2757,12 +2757,12 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2800,7 +2800,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2858,12 +2858,12 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2896,7 +2896,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -2954,12 +2954,12 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -2992,7 +2992,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -3050,12 +3050,12 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3088,7 +3088,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -3146,12 +3146,12 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3184,7 +3184,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -3242,12 +3242,12 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3280,7 +3280,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -3331,19 +3331,19 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreDropAtEdge)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreDropAtEdge)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3374,7 +3374,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -3425,19 +3425,19 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3472,7 +3472,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	// Currently, if there's both a QString cachekey inclusion, and a cache key parameter,
 	// the make func adds both, and logs a warning.
 
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -3523,19 +3523,19 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3569,7 +3569,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -3620,19 +3620,19 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3662,7 +3662,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 5 // ats <6 uses cacheurl, not cache key
@@ -3713,19 +3713,19 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3762,7 +3762,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 
 	// Currently, the make func should log an error if the QString results in a cacheurl plugin, and there's also a cacheurl, but it should generate it anyway.
 
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 5 // ats <6 uses cacheurl, not cache key
@@ -3813,19 +3813,19 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3866,7 +3866,7 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 
 	// Currently, the make func should log an error if the QString results in a cacheurl plugin, and there's also a cacheurl, but it should generate it anyway.
 
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 5 // ats <6 uses cacheurl, not cache key
@@ -3917,19 +3917,19 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -3967,7 +3967,7 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 }
 
 func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4018,19 +4018,19 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4060,7 +4060,7 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4114,19 +4114,19 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4168,7 +4168,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4222,19 +4222,19 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr("myregexremap"),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4268,7 +4268,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4322,19 +4322,19 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4364,7 +4364,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4418,19 +4418,19 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4464,7 +4464,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4512,25 +4512,25 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingDontCache),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingDontCache),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4564,7 +4564,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4612,25 +4612,25 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingBackgroundFetch),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingBackgroundFetch),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4664,7 +4664,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4712,25 +4712,25 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingCacheRangeRequest),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingCacheRangeRequest),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4764,7 +4764,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4812,25 +4812,25 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingCacheRangeRequest),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingCacheRangeRequest),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             nil,
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4860,7 +4860,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -4908,25 +4908,25 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingCacheRangeRequest),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingCacheRangeRequest),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(-42),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -4956,7 +4956,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -5004,25 +5004,25 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingCacheRangeRequest),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingCacheRangeRequest),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(0),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -5052,7 +5052,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -5100,25 +5100,25 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingCacheRangeRequest),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingCacheRangeRequest),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(314159),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -5152,7 +5152,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -5200,25 +5200,25 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingCacheRangeRequest),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingCacheRangeRequest),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(314159),
 			DSCP:                     0,
 			RoutingName:              util.StrPtr("myroutingname"),
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`.*\.mypattern\..*`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -5248,7 +5248,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -5296,25 +5296,25 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingCacheRangeRequest),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingCacheRangeRequest),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(314159),
 			DSCP:                     0,
 			RoutingName:              nil,
 			MultiSiteOrigin:          util.StrPtr("mymso"),
 			Pattern:                  util.StrPtr(`.*\.mypattern\..*`),
-			RegexType:                util.StrPtr(string(enum.DSMatchTypeHostRegex)),
+			RegexType:                util.StrPtr(string(tce.DSMatchTypeHostRegex)),
 			Domain:                   util.StrPtr("mydomain"),
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},
@@ -5334,7 +5334,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	atsMajorVersion := 7
@@ -5382,13 +5382,13 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 			OriginFQDN:               util.StrPtr("myorigin"),
 			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
 			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(enum.RangeRequestHandlingCacheRangeRequest),
+			RangeRequestHandling:     util.IntPtr(tce.RangeRequestHandlingCacheRangeRequest),
 			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
 			RemapText:                util.StrPtr("myremaptext"),
 			EdgeHeaderRewrite:        nil,
 			SigningAlgorithm:         util.StrPtr("foo"),
 			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
+			QStringIgnore:            util.IntPtr(int(tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
 			RegexRemap:               util.StrPtr(""),
 			FQPacingRate:             util.IntPtr(314159),
 			DSCP:                     0,
@@ -5400,7 +5400,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(enum.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tce.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 		},

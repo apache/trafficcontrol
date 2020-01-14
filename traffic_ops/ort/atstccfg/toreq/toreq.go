@@ -23,7 +23,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -323,7 +323,7 @@ func GetConfigFileParameters(cfg config.TCCfg, configFile string) ([]tc.Paramete
 	return params, nil
 }
 
-func GetCDN(cfg config.TCCfg, cdnName enum.CDNName) (tc.CDN, error) {
+func GetCDN(cfg config.TCCfg, cdnName tce.CDNName) (tc.CDN, error) {
 	cdn := tc.CDN{}
 	err := GetCachedJSON(cfg, "cdn_"+string(cdnName)+".json", &cdn, func(obj interface{}) error {
 		toCDNs, reqInf, err := (*cfg.TOClient).GetCDNByName(string(cdnName))
@@ -563,7 +563,7 @@ func GetProfileNameFromProfileNameOrID(cfg config.TCCfg, profileNameOrID string)
 	return profileName, nil
 }
 
-func GetCDNNameFromCDNNameOrID(cfg config.TCCfg, cdnNameOrID string) (enum.CDNName, error) {
+func GetCDNNameFromCDNNameOrID(cfg config.TCCfg, cdnNameOrID string) (tce.CDNName, error) {
 	cdnName := cdnNameOrID
 	if cdnID, err := strconv.Atoi(cdnNameOrID); err == nil {
 		cdn, err := GetCDNByID(cfg, cdnID)
@@ -575,5 +575,5 @@ func GetCDNNameFromCDNNameOrID(cfg config.TCCfg, cdnNameOrID string) (enum.CDNNa
 		}
 		cdnName = cdn.Name
 	}
-	return enum.CDNName(cdnName), nil
+	return tce.CDNName(cdnName), nil
 }

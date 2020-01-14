@@ -16,7 +16,7 @@ package v14
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 	"strings"
 	"testing"
@@ -45,13 +45,13 @@ func getFirstDnsOrHttpDeliveryService(t *testing.T) *tc.DeliveryServiceNullable 
 
 	for _, ds := range dses {
 		switch *ds.Type {
-		case enum.DSTypeDNS:
-		case enum.DSTypeDNSLive:
-		case enum.DSTypeDNSLiveNational:
-		case enum.DSTypeHTTP:
-		case enum.DSTypeHTTPLive:
-		case enum.DSTypeHTTPLiveNational:
-		case enum.DSTypeHTTPNoCache:
+		case tce.DSTypeDNS:
+		case tce.DSTypeDNSLive:
+		case tce.DSTypeDNSLiveNational:
+		case tce.DSTypeHTTP:
+		case tce.DSTypeHTTPLive:
+		case tce.DSTypeHTTPLiveNational:
+		case tce.DSTypeHTTPNoCache:
 		default:
 			continue
 		}

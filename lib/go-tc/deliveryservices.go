@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"regexp"
 	"strings"
 
@@ -93,35 +93,35 @@ type DeliveryService struct {
 
 type DeliveryServiceV13 struct {
 	DeliveryServiceV11
-	DeepCachingType   enum.DeepCachingType `json:"deepCachingType"`
-	FQPacingRate      int                  `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm  string               `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant            string               `json:"tenant"`
-	TRRequestHeaders  string               `json:"trRequestHeaders,omitempty"`
-	TRResponseHeaders string               `json:"trResponseHeaders,omitempty"`
+	DeepCachingType   tce.DeepCachingType `json:"deepCachingType"`
+	FQPacingRate      int                 `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm  string              `json:"signingAlgorithm" db:"signing_algorithm"`
+	Tenant            string              `json:"tenant"`
+	TRRequestHeaders  string              `json:"trRequestHeaders,omitempty"`
+	TRResponseHeaders string              `json:"trResponseHeaders,omitempty"`
 }
 
 // DeliveryService ...
 // TODO move contents to DeliveryServiceV12, fix references, and remove
 type DeliveryServiceV11 struct {
-	Active                   bool                 `json:"active"`
-	AnonymousBlockingEnabled bool                 `json:"anonymousBlockingEnabled"`
-	CacheURL                 string               `json:"cacheurl"`
-	CCRDNSTTL                int                  `json:"ccrDnsTtl"`
-	CDNID                    int                  `json:"cdnId"`
-	CDNName                  string               `json:"cdnName"`
-	CheckPath                string               `json:"checkPath"`
-	DeepCachingType          enum.DeepCachingType `json:"deepCachingType"`
-	DisplayName              string               `json:"displayName"`
-	DNSBypassCname           string               `json:"dnsBypassCname"`
-	DNSBypassIP              string               `json:"dnsBypassIp"`
-	DNSBypassIP6             string               `json:"dnsBypassIp6"`
-	DNSBypassTTL             int                  `json:"dnsBypassTtl"`
-	DSCP                     int                  `json:"dscp"`
-	EdgeHeaderRewrite        string               `json:"edgeHeaderRewrite"`
-	ExampleURLs              []string             `json:"exampleURLs"`
-	GeoLimit                 int                  `json:"geoLimit"`
-	GeoProvider              int                  `json:"geoProvider"`
+	Active                   bool                `json:"active"`
+	AnonymousBlockingEnabled bool                `json:"anonymousBlockingEnabled"`
+	CacheURL                 string              `json:"cacheurl"`
+	CCRDNSTTL                int                 `json:"ccrDnsTtl"`
+	CDNID                    int                 `json:"cdnId"`
+	CDNName                  string              `json:"cdnName"`
+	CheckPath                string              `json:"checkPath"`
+	DeepCachingType          tce.DeepCachingType `json:"deepCachingType"`
+	DisplayName              string              `json:"displayName"`
+	DNSBypassCname           string              `json:"dnsBypassCname"`
+	DNSBypassIP              string              `json:"dnsBypassIp"`
+	DNSBypassIP6             string              `json:"dnsBypassIp6"`
+	DNSBypassTTL             int                 `json:"dnsBypassTtl"`
+	DSCP                     int                 `json:"dscp"`
+	EdgeHeaderRewrite        string              `json:"edgeHeaderRewrite"`
+	ExampleURLs              []string            `json:"exampleURLs"`
+	GeoLimit                 int                 `json:"geoLimit"`
+	GeoProvider              int                 `json:"geoProvider"`
 	GlobalMaxMBPS            int                    `json:"globalMaxMbps"`
 	GlobalMaxTPS             int                    `json:"globalMaxTps"`
 	HTTPBypassFQDN           string                 `json:"httpBypassFqdn"`
@@ -143,20 +143,20 @@ type DeliveryServiceV11 struct {
 	OrgServerFQDN            string                 `json:"orgServerFqdn"`
 	ProfileDesc              string                 `json:"profileDescription"`
 	ProfileID                int                    `json:"profileId,omitempty"`
-	ProfileName              string               `json:"profileName"`
-	Protocol                 int                  `json:"protocol"`
-	QStringIgnore            int                  `json:"qstringIgnore"`
-	RangeRequestHandling     int                  `json:"rangeRequestHandling"`
-	RegexRemap               string               `json:"regexRemap"`
-	RegionalGeoBlocking      bool                 `json:"regionalGeoBlocking"`
-	RemapText                string               `json:"remapText"`
-	RoutingName              string               `json:"routingName"`
-	Signed                   bool                 `json:"signed"`
-	TypeID                   int                  `json:"typeId"`
-	Type                     enum.DSType          `json:"type"`
-	TRResponseHeaders        string               `json:"trResponseHeaders"`
-	TenantID                 int                  `json:"tenantId"`
-	XMLID                    string               `json:"xmlId"`
+	ProfileName              string              `json:"profileName"`
+	Protocol                 int                 `json:"protocol"`
+	QStringIgnore            int                 `json:"qstringIgnore"`
+	RangeRequestHandling     int                 `json:"rangeRequestHandling"`
+	RegexRemap               string              `json:"regexRemap"`
+	RegionalGeoBlocking      bool                `json:"regionalGeoBlocking"`
+	RemapText                string              `json:"remapText"`
+	RoutingName              string              `json:"routingName"`
+	Signed                   bool                `json:"signed"`
+	TypeID                   int                 `json:"typeId"`
+	Type                     tce.DSType          `json:"type"`
+	TRResponseHeaders        string              `json:"trResponseHeaders"`
+	TenantID                 int                 `json:"tenantId"`
+	XMLID                    string              `json:"xmlId"`
 }
 
 type DeliveryServiceNullableV15 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
@@ -174,12 +174,12 @@ type DeliveryServiceNullableV14 struct {
 
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
-	DeepCachingType   *enum.DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate      *int                  `json:"fqPacingRate" db:"fq_pacing_rate"`
-	SigningAlgorithm  *string               `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant            *string               `json:"tenant"`
-	TRResponseHeaders *string               `json:"trResponseHeaders"`
-	TRRequestHeaders  *string               `json:"trRequestHeaders"`
+	DeepCachingType   *tce.DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
+	FQPacingRate      *int                 `json:"fqPacingRate" db:"fq_pacing_rate"`
+	SigningAlgorithm  *string              `json:"signingAlgorithm" db:"signing_algorithm"`
+	Tenant            *string              `json:"tenant"`
+	TRResponseHeaders *string              `json:"trResponseHeaders"`
+	TRRequestHeaders  *string              `json:"trRequestHeaders"`
 }
 
 type DeliveryServiceNullableV12 struct {
@@ -232,20 +232,20 @@ type DeliveryServiceNullableV11 struct {
 	ProfileDesc              *string                 `json:"profileDescription"`
 	ProfileID                *int                    `json:"profileId" db:"profile"`
 	ProfileName              *string                 `json:"profileName"`
-	Protocol                 *int         `json:"protocol" db:"protocol"`
-	QStringIgnore            *int         `json:"qstringIgnore" db:"qstring_ignore"`
-	RangeRequestHandling     *int         `json:"rangeRequestHandling" db:"range_request_handling"`
-	RegexRemap               *string      `json:"regexRemap" db:"regex_remap"`
-	RegionalGeoBlocking      *bool        `json:"regionalGeoBlocking" db:"regional_geo_blocking"`
-	RemapText                *string      `json:"remapText" db:"remap_text"`
-	RoutingName              *string      `json:"routingName" db:"routing_name"`
-	Signed                   bool         `json:"signed"`
-	SSLKeyVersion            *int         `json:"sslKeyVersion" db:"ssl_key_version"`
-	TenantID                 *int         `json:"tenantId" db:"tenant_id"`
-	Type                     *enum.DSType `json:"type"`
-	TypeID                   *int         `json:"typeId" db:"type"`
-	XMLID                    *string      `json:"xmlId" db:"xml_id"`
-	ExampleURLs              []string     `json:"exampleURLs"`
+	Protocol                 *int        `json:"protocol" db:"protocol"`
+	QStringIgnore            *int        `json:"qstringIgnore" db:"qstring_ignore"`
+	RangeRequestHandling     *int        `json:"rangeRequestHandling" db:"range_request_handling"`
+	RegexRemap               *string     `json:"regexRemap" db:"regex_remap"`
+	RegionalGeoBlocking      *bool       `json:"regionalGeoBlocking" db:"regional_geo_blocking"`
+	RemapText                *string     `json:"remapText" db:"remap_text"`
+	RoutingName              *string     `json:"routingName" db:"routing_name"`
+	Signed                   bool        `json:"signed"`
+	SSLKeyVersion            *int        `json:"sslKeyVersion" db:"ssl_key_version"`
+	TenantID                 *int        `json:"tenantId" db:"tenant_id"`
+	Type                     *tce.DSType `json:"type"`
+	TypeID                   *int        `json:"typeId" db:"type"`
+	XMLID                    *string     `json:"xmlId" db:"xml_id"`
+	ExampleURLs              []string    `json:"exampleURLs"`
 }
 
 func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {
@@ -331,7 +331,7 @@ func (ds *DeliveryServiceNullable) Sanitize() {
 	if ds.AnonymousBlockingEnabled == nil {
 		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	}
-	signedAlgorithm := enum.SigningAlgorithmURLSig
+	signedAlgorithm := tce.SigningAlgorithmURLSig
 	if ds.Signed && (ds.SigningAlgorithm == nil || *ds.SigningAlgorithm == "") {
 		ds.SigningAlgorithm = &signedAlgorithm
 	}
@@ -342,10 +342,10 @@ func (ds *DeliveryServiceNullable) Sanitize() {
 		ds.MaxOriginConnections = util.IntPtr(0)
 	}
 	if ds.DeepCachingType == nil {
-		s := enum.DeepCachingType("")
+		s := tce.DeepCachingType("")
 		ds.DeepCachingType = &s
 	}
-	*ds.DeepCachingType = enum.DeepCachingTypeFromString(string(*ds.DeepCachingType))
+	*ds.DeepCachingType = tce.DeepCachingTypeFromString(string(*ds.DeepCachingType))
 }
 
 func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
@@ -366,7 +366,7 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 		"consistentHashQueryParams": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
 				ds := dsi.(*DeliveryServiceNullable)
-				if len(ds.ConsistentHashQueryParams) == 0 || enum.DSType(typeName).IsHTTP() {
+				if len(ds.ConsistentHashQueryParams) == 0 || tce.DSType(typeName).IsHTTP() {
 					return nil
 				}
 				return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
@@ -452,9 +452,9 @@ func (d *DeliveryServiceNullable) Scan(src interface{}) error {
 
 // DeliveryServiceMatch ...
 type DeliveryServiceMatch struct {
-	Type      enum.DSMatchType `json:"type"`
-	SetNumber int              `json:"setNumber"`
-	Pattern   string           `json:"pattern"`
+	Type      tce.DSMatchType `json:"type"`
+	SetNumber int             `json:"setNumber"`
+	Pattern   string          `json:"pattern"`
 }
 
 // DeliveryServiceAlert ...
@@ -523,8 +523,8 @@ type DeliveryServiceCapacity struct {
 type DeliveryServiceMatchesResp []DeliveryServicePatterns
 
 type DeliveryServicePatterns struct {
-	Patterns []string                 `json:"patterns"`
-	DSName   enum.DeliveryServiceName `json:"dsName"`
+	Patterns []string                `json:"patterns"`
+	DSName   tce.DeliveryServiceName `json:"dsName"`
 }
 
 type DeliveryServiceMatchesResponse struct {
@@ -589,9 +589,9 @@ type CachegroupPostDSReq struct {
 }
 
 type CacheGroupPostDSResp struct {
-	ID               util.JSONIntStr  `json:"id"`
-	ServerNames      []enum.CacheName `json:"serverNames"`
-	DeliveryServices []int64          `json:"deliveryServices"`
+	ID               util.JSONIntStr `json:"id"`
+	ServerNames      []tce.CacheName `json:"serverNames"`
+	DeliveryServices []int64         `json:"deliveryServices"`
 }
 
 type CacheGroupPostDSRespResponse struct {

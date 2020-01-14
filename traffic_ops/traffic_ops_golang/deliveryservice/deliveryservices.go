@@ -24,7 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strconv"
 	"strings"
@@ -230,7 +230,7 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	}
 
 	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
-	deepCachingType := enum.DeepCachingType("").String()
+	deepCachingType := tce.DeepCachingType("").String()
 	if ds.DeepCachingType != nil {
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
@@ -568,7 +568,7 @@ WHERE
 		return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service ID %d: %s", *dsV13.ID, err.Error())
 	}
 	if dsV13.DeepCachingType != nil {
-		*dsV13.DeepCachingType = enum.DeepCachingTypeFromString(string(*dsV13.DeepCachingType))
+		*dsV13.DeepCachingType = tce.DeepCachingTypeFromString(string(*dsV13.DeepCachingType))
 	}
 
 	res, status, userErr, sysErr := updateV13(w, r, inf, &dsV13)
@@ -676,7 +676,7 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	}
 
 	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
-	deepCachingType := enum.DeepCachingType("").String()
+	deepCachingType := tce.DeepCachingType("").String()
 	if ds.DeepCachingType != nil {
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
@@ -943,8 +943,8 @@ WHERE ds.id=$1
 	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsTypeStr, &routingName, &cdnDomain); err != nil {
 		return "", fmt.Errorf("querying delivery service %v host name: "+err.Error()+"\n", id)
 	}
-	dsType := enum.DSTypeFromString(dsTypeStr)
-	if dsType == enum.DSTypeInvalid {
+	dsType := tce.DSTypeFromString(dsTypeStr)
+	if dsType == tce.DSTypeInvalid {
 		return "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
 	}
 	matchLists, err := GetDeliveryServicesMatchLists([]string{xmlID}, tx)
@@ -962,13 +962,13 @@ WHERE ds.id=$1
 	return host, nil
 }
 
-func getTypeFromID(id int, tx *sql.Tx) (enum.DSType, error) {
+func getTypeFromID(id int, tx *sql.Tx) (tce.DSType, error) {
 	// TODO combine with getOldHostName, to only make one query?
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM type WHERE id = $1`, id).Scan(&name); err != nil {
 		return "", fmt.Errorf("querying type ID %v: "+err.Error()+"\n", id)
 	}
-	return enum.DSTypeFromString(name), nil
+	return tce.DSTypeFromString(name), nil
 }
 
 func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullable) error {
@@ -1032,7 +1032,7 @@ func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServi
 	return nil
 }
 
-func getDSType(tx *sql.Tx, xmlid string) (enum.DSType, bool, error) {
+func getDSType(tx *sql.Tx, xmlid string) (tce.DSType, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM type WHERE id = (select type from deliveryservice where xml_id = $1)`, xmlid).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
@@ -1040,7 +1040,7 @@ func getDSType(tx *sql.Tx, xmlid string) (enum.DSType, bool, error) {
 		}
 		return "", false, fmt.Errorf("querying deliveryservice type name: " + err.Error())
 	}
-	return enum.DSTypeFromString(name), true, nil
+	return tce.DSTypeFromString(name), true, nil
 }
 
 func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullable, error, error, int) {
@@ -1142,9 +1142,9 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 
 		dsCDNDomains[*ds.XMLID] = cdnDomain
 		if ds.DeepCachingType != nil {
-			*ds.DeepCachingType = enum.DeepCachingTypeFromString(string(*ds.DeepCachingType))
+			*ds.DeepCachingType = tce.DeepCachingTypeFromString(string(*ds.DeepCachingType))
 		}
-		ds.Signed = ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == enum.SigningAlgorithmURLSig
+		ds.Signed = ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tce.SigningAlgorithmURLSig
 
 		dses = append(dses, ds)
 	}
@@ -1191,7 +1191,7 @@ func updateSSLKeys(ds *tc.DeliveryServiceNullable, hostName string, tx *sql.Tx, 
 }
 
 // getHostName gets the host name used for delivery service requests. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
-func getHostName(dsProtocol *int, dsType enum.DSType, dsRoutingName string, dsMatchList []tc.DeliveryServiceMatch, cdnDomain string) (string, error) {
+func getHostName(dsProtocol *int, dsType tce.DSType, dsRoutingName string, dsMatchList []tc.DeliveryServiceMatch, cdnDomain string) (string, error) {
 	exampleURLs := MakeExampleURLs(dsProtocol, dsType, dsRoutingName, dsMatchList, cdnDomain)
 
 	exampleURL := ""
@@ -1239,7 +1239,7 @@ func getCDNNameDomainDNSSecEnabled(dsID int, tx *sql.Tx) (string, string, bool, 
 }
 
 // makeExampleURLs creates the example URLs for a delivery service. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
-func MakeExampleURLs(protocol *int, dsType enum.DSType, routingName string, matchList []tc.DeliveryServiceMatch, cdnDomain string) []string {
+func MakeExampleURLs(protocol *int, dsType tce.DSType, routingName string, matchList []tc.DeliveryServiceMatch, cdnDomain string) []string {
 	examples := []string{}
 	scheme := ""
 	scheme2 := ""
@@ -1263,7 +1263,7 @@ func MakeExampleURLs(protocol *int, dsType enum.DSType, routingName string, matc
 	dsIsDNS := dsType.IsDNS()
 	regexReplacer := strings.NewReplacer(`\`, ``, `.*`, ``, `.`, ``)
 	for _, match := range matchList {
-		if dsIsDNS || match.Type == enum.DSMatchTypeHostRegex {
+		if dsIsDNS || match.Type == tce.DSMatchTypeHostRegex {
 			host := regexReplacer.Replace(match.Pattern)
 			if match.SetNumber == 0 {
 				examples = append(examples, scheme+`://`+routingName+`.`+host+`.`+cdnDomain)
@@ -1276,7 +1276,7 @@ func MakeExampleURLs(protocol *int, dsType enum.DSType, routingName string, matc
 			if scheme2 != "" {
 				examples = append(examples, scheme2+`://`+match.Pattern)
 			}
-		} else if match.Type == enum.DSMatchTypePathRegex {
+		} else if match.Type == tce.DSMatchTypePathRegex {
 			examples = append(examples, match.Pattern)
 		}
 	}
@@ -1308,8 +1308,8 @@ ORDER BY dsr.set_number
 		if err := rows.Scan(&dsName, &matchTypeStr, &m.Pattern, &m.SetNumber); err != nil {
 			return nil, errors.New("scanning delivery service regexes: " + err.Error())
 		}
-		matchType := enum.DSMatchTypeFromString(matchTypeStr)
-		if matchType == enum.DSMatchTypeInvalid {
+		matchType := tce.DSMatchTypeFromString(matchTypeStr)
+		if matchType == tce.DSMatchTypeInvalid {
 			return nil, errors.New("getting delivery service regexes: got invalid delivery service match type '" + matchTypeStr + "'")
 		}
 		m.Type = matchType
@@ -1327,7 +1327,7 @@ const (
 
 // EnsureParams ensures the given delivery service's necessary parameters exist on profiles of servers assigned to the delivery service.
 // Note the edgeHeaderRewrite, midHeaderRewrite, regexRemap, and cacheURL may be nil, if the delivery service does not have those values.
-func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string, midHeaderRewrite *string, regexRemap *string, cacheURL *string, signingAlgorithm *string, dsType enum.DSType, maxOriginConns *int) error {
+func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string, midHeaderRewrite *string, regexRemap *string, cacheURL *string, signingAlgorithm *string, dsType tce.DSType, maxOriginConns *int) error {
 	if err := ensureHeaderRewriteParams(tx, dsID, xmlID, edgeHeaderRewrite, edgeTier, dsType, maxOriginConns); err != nil {
 		return errors.New("creating edge header rewrite parameters: " + err.Error())
 	}
@@ -1346,7 +1346,7 @@ func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string,
 	return nil
 }
 
-func ensureHeaderRewriteParams(tx *sql.Tx, dsID int, xmlID string, hdrRW *string, tier tierType, dsType enum.DSType, maxOriginConns *int) error {
+func ensureHeaderRewriteParams(tx *sql.Tx, dsID int, xmlID string, hdrRW *string, tier tierType, dsType tce.DSType, maxOriginConns *int) error {
 	configFile := "hdr_rw_" + xmlID + ".config"
 	if tier == midTier {
 		configFile = "hdr_rw_mid_" + xmlID + ".config"
@@ -1383,7 +1383,7 @@ ON CONFLICT DO NOTHING
 
 func ensureURLSigParams(tx *sql.Tx, dsID int, xmlID string, signingAlgorithm *string) error {
 	configFile := "url_sig_" + xmlID + ".config"
-	if signingAlgorithm == nil || *signingAlgorithm != enum.SigningAlgorithmURLSig {
+	if signingAlgorithm == nil || *signingAlgorithm != tce.SigningAlgorithmURLSig {
 		return deleteLocationParam(tx, configFile)
 	}
 	locationParamID, err := ensureLocation(tx, configFile)
@@ -1498,7 +1498,7 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullable) (*int, error) {
 		existingID, _, err := getDSTenantIDByID(tx, *ds.ID) // ignore exists return - if the DS is new, we only need to check the user input tenant
 		return existingID, err
 	}
-	existingID, _, err := getDSTenantIDByName(tx, enum.DeliveryServiceName(*ds.XMLID)) // ignore exists return - if the DS is new, we only need to check the user input tenant
+	existingID, _, err := getDSTenantIDByName(tx, tce.DeliveryServiceName(*ds.XMLID)) // ignore exists return - if the DS is new, we only need to check the user input tenant
 	return existingID, err
 }
 
@@ -1547,7 +1547,7 @@ func getDSTenantIDByID(tx *sql.Tx, id int) (*int, bool, error) {
 }
 
 // getDSTenantIDByName returns the tenant ID, whether the delivery service exists, and any error.
-func getDSTenantIDByName(tx *sql.Tx, ds enum.DeliveryServiceName) (*int, bool, error) {
+func getDSTenantIDByName(tx *sql.Tx, ds tce.DeliveryServiceName) (*int, bool, error) {
 	tenantID := (*int)(nil)
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where xml_id = $1`, ds).Scan(&tenantID); err != nil {
 		if err == sql.ErrNoRows {
@@ -1559,13 +1559,13 @@ func getDSTenantIDByName(tx *sql.Tx, ds enum.DeliveryServiceName) (*int, bool, e
 }
 
 // GetDeliveryServiceType returns the type of the deliveryservice.
-func GetDeliveryServiceType(dsID int, tx *sql.Tx) (enum.DSType, bool, error) {
-	var dsType enum.DSType
+func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tce.DSType, bool, error) {
+	var dsType tce.DSType
 	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
 		if err == sql.ErrNoRows {
-			return enum.DSTypeInvalid, false, nil
+			return tce.DSTypeInvalid, false, nil
 		}
-		return enum.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
+		return tce.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
 	}
 	return dsType, true, nil
 }

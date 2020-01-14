@@ -21,7 +21,7 @@ package atscfg
 
 import (
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -42,14 +42,14 @@ type ConfigProfileParams struct {
 const APIVersion = "1.4"
 
 func MakeMetaConfig(
-	serverHostName enum.CacheName,
+	serverHostName tce.CacheName,
 	server *ServerInfo,
 	tmURL string, // global tm.url Parameter
 	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
-	uriSignedDSes []enum.DeliveryServiceName,
+	uriSignedDSes []tce.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
-	dsNames map[enum.DeliveryServiceName]struct{},
+	dsNames map[tce.DeliveryServiceName]struct{},
 ) string {
 	if tmURL == "" {
 		log.Errorln("ats.GetConfigMetadata: global tm.url parameter missing or empty! Setting empty in meta config!")
@@ -97,7 +97,7 @@ locationParamsFor:
 			for _, prefix := range dsConfigFilePrefixes {
 				if strings.HasPrefix(cfgFile, prefix) {
 					dsName := strings.TrimSuffix(strings.TrimPrefix(cfgFile, prefix), ".config")
-					if _, ok := dsNames[enum.DeliveryServiceName(dsName)]; !ok {
+					if _, ok := dsNames[tce.DeliveryServiceName(dsName)]; !ok {
 						log.Warnln("Server Profile had 'location' Parameter '" + cfgFile + "', but delivery Service '" + dsName + "' is not assigned to this Server! Not including in meta config!")
 						continue locationParamsFor
 					}
@@ -143,7 +143,7 @@ locationParamsFor:
 
 func getServerScope(cfgFile string, serverType string, scopeParams map[string]string) tc.ATSConfigMetaDataConfigFileScope {
 	switch {
-	case cfgFile == "cache.config" && enum.CacheTypeFromString(serverType) == enum.CacheTypeMid:
+	case cfgFile == "cache.config" && tce.CacheTypeFromString(serverType) == tce.CacheTypeMid:
 		return tc.ATSConfigMetaDataConfigFileScopeServers
 	default:
 		return getScope(cfgFile, scopeParams)

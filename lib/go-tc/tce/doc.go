@@ -7,7 +7,7 @@
 // When adding new enum types, enums should be internally stored as strings, so they implicitly serialize as human-readable JSON, unless the performance or memory of integers is necessary (it almost certainly isn't). Enums should always have the "invalid" value as the empty string (or 0), so default-initialized enums are invalid.
 // Enums should always have a FromString() conversion function, to convert input data to enums. Conversion functions should usually be case-insensitive, and may ignore underscores or hyphens, depending on the use case.
 //
-package enum
+package tce
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

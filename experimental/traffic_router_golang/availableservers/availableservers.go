@@ -23,11 +23,11 @@ package availableservers
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"sync"
 )
 
-type AvailableServersMap map[enum.DeliveryServiceName]map[enum.CacheGroupName][]enum.CacheName
+type AvailableServersMap map[tce.DeliveryServiceName]map[tce.CacheGroupName][]tce.CacheName
 
 // AvailableServers provides access to the currently available servers, by Delivery Service and Cache Group. This is safe for access by multiple goroutines.
 type AvailableServers struct {
@@ -40,7 +40,7 @@ func New() AvailableServers {
 	return AvailableServers{p: &mp, m: &sync.RWMutex{}}
 }
 
-func (a *AvailableServers) Get(ds enum.DeliveryServiceName, cg enum.CacheGroupName) ([]enum.CacheName, error) {
+func (a *AvailableServers) Get(ds tce.DeliveryServiceName, cg tce.CacheGroupName) ([]tce.CacheName, error) {
 	a.m.RLock()
 	s := *a.p
 	a.m.RUnlock()
@@ -66,17 +66,17 @@ func (a *AvailableServers) Set(m AvailableServersMap) {
 func Test() {
 	a := New()
 
-	as := map[enum.DeliveryServiceName]map[enum.CacheGroupName][]enum.CacheName{}
-	as[enum.DeliveryServiceName("dsOne")] = map[enum.CacheGroupName][]enum.CacheName{}
+	as := map[tce.DeliveryServiceName]map[tce.CacheGroupName][]tce.CacheName{}
+	as[tce.DeliveryServiceName("dsOne")] = map[tce.CacheGroupName][]tce.CacheName{}
 
-	cs := as[enum.DeliveryServiceName("dsOne")]
-	cs[enum.CacheGroupName("cgOne")] = []enum.CacheName{"cacheOne", "cacheTwo"}
+	cs := as[tce.DeliveryServiceName("dsOne")]
+	cs[tce.CacheGroupName("cgOne")] = []tce.CacheName{"cacheOne", "cacheTwo"}
 
 	fmt.Printf("testAvailableServers as %+v\n", as)
 
 	a.Set(as)
 
-	newCs, err := a.Get(enum.DeliveryServiceName("dsOne"), enum.CacheGroupName("cgOne"))
+	newCs, err := a.Get(tce.DeliveryServiceName("dsOne"), tce.CacheGroupName("cgOne"))
 
 	if err != nil {
 		fmt.Println("testAvailableServers err ", err.Error())

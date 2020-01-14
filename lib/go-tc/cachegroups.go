@@ -20,7 +20,7 @@ package tc
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
@@ -41,39 +41,39 @@ type CacheGroupDetailResponse struct {
 
 // CacheGroup contains information about a given Cachegroup in Traffic Ops.
 type CacheGroup struct {
-	ID                          int                       `json:"id" db:"id"`
-	Name                        string                    `json:"name" db:"name"`
-	ShortName                   string                    `json:"shortName" db:"short_name"`
-	Latitude                    float64                   `json:"latitude" db:"latitude"`
-	Longitude                   float64                   `json:"longitude" db:"longitude"`
-	ParentName                  string                    `json:"parentCachegroupName" db:"parent_cachegroup_name"`
-	ParentCachegroupID          int                       `json:"parentCachegroupId" db:"parent_cachegroup_id"`
-	SecondaryParentName         string                    `json:"secondaryParentCachegroupName" db:"secondary_parent_cachegroup_name"`
-	SecondaryParentCachegroupID int                       `json:"secondaryParentCachegroupId" db:"secondary_parent_cachegroup_id"`
-	FallbackToClosest           bool                      `json:"fallbackToClosest" db:"fallback_to_closest"`
-	LocalizationMethods         []enum.LocalizationMethod `json:"localizationMethods" db:"localization_methods"`
-	Type                        string                    `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
-	TypeID                      int                       `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
-	LastUpdated                 TimeNoMod                 `json:"lastUpdated" db:"last_updated"`
-	Fallbacks                   []string                  `json:"fallbacks" db:"fallbacks"`
+	ID                          int                      `json:"id" db:"id"`
+	Name                        string                   `json:"name" db:"name"`
+	ShortName                   string                   `json:"shortName" db:"short_name"`
+	Latitude                    float64                  `json:"latitude" db:"latitude"`
+	Longitude                   float64                  `json:"longitude" db:"longitude"`
+	ParentName                  string                   `json:"parentCachegroupName" db:"parent_cachegroup_name"`
+	ParentCachegroupID          int                      `json:"parentCachegroupId" db:"parent_cachegroup_id"`
+	SecondaryParentName         string                   `json:"secondaryParentCachegroupName" db:"secondary_parent_cachegroup_name"`
+	SecondaryParentCachegroupID int                      `json:"secondaryParentCachegroupId" db:"secondary_parent_cachegroup_id"`
+	FallbackToClosest           bool                     `json:"fallbackToClosest" db:"fallback_to_closest"`
+	LocalizationMethods         []tce.LocalizationMethod `json:"localizationMethods" db:"localization_methods"`
+	Type                        string                   `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
+	TypeID                      int                      `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
+	LastUpdated                 TimeNoMod                `json:"lastUpdated" db:"last_updated"`
+	Fallbacks                   []string                 `json:"fallbacks" db:"fallbacks"`
 }
 
 type CacheGroupNullable struct {
-	ID                          *int                       `json:"id" db:"id"`
-	Name                        *string                    `json:"name" db:"name"`
-	ShortName                   *string                    `json:"shortName" db:"short_name"`
-	Latitude                    *float64                   `json:"latitude" db:"latitude"`
-	Longitude                   *float64                   `json:"longitude" db:"longitude"`
-	ParentName                  *string                    `json:"parentCachegroupName" db:"parent_cachegroup_name"`
-	ParentCachegroupID          *int                       `json:"parentCachegroupId" db:"parent_cachegroup_id"`
-	SecondaryParentName         *string                    `json:"secondaryParentCachegroupName" db:"secondary_parent_cachegroup_name"`
-	SecondaryParentCachegroupID *int                       `json:"secondaryParentCachegroupId" db:"secondary_parent_cachegroup_id"`
-	FallbackToClosest           *bool                      `json:"fallbackToClosest" db:"fallback_to_closest"`
-	LocalizationMethods         *[]enum.LocalizationMethod `json:"localizationMethods" db:"localization_methods"`
-	Type                        *string                    `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
-	TypeID                      *int                       `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
-	LastUpdated                 *TimeNoMod                 `json:"lastUpdated" db:"last_updated"`
-	Fallbacks                   *[]string                  `json:"fallbacks" db:"fallbacks"`
+	ID                          *int                      `json:"id" db:"id"`
+	Name                        *string                   `json:"name" db:"name"`
+	ShortName                   *string                   `json:"shortName" db:"short_name"`
+	Latitude                    *float64                  `json:"latitude" db:"latitude"`
+	Longitude                   *float64                  `json:"longitude" db:"longitude"`
+	ParentName                  *string                   `json:"parentCachegroupName" db:"parent_cachegroup_name"`
+	ParentCachegroupID          *int                      `json:"parentCachegroupId" db:"parent_cachegroup_id"`
+	SecondaryParentName         *string                   `json:"secondaryParentCachegroupName" db:"secondary_parent_cachegroup_name"`
+	SecondaryParentCachegroupID *int                      `json:"secondaryParentCachegroupId" db:"secondary_parent_cachegroup_id"`
+	FallbackToClosest           *bool                     `json:"fallbackToClosest" db:"fallback_to_closest"`
+	LocalizationMethods         *[]tce.LocalizationMethod `json:"localizationMethods" db:"localization_methods"`
+	Type                        *string                   `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
+	TypeID                      *int                      `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
+	LastUpdated                 *TimeNoMod                `json:"lastUpdated" db:"last_updated"`
+	Fallbacks                   *[]string                 `json:"fallbacks" db:"fallbacks"`
 }
 
 type CachegroupTrimmedName struct {
@@ -82,6 +82,6 @@ type CachegroupTrimmedName struct {
 
 type CachegroupQueueUpdatesRequest struct {
 	Action string           `json:"action"`
-	CDN    *enum.CDNName    `json:"cdn"`
+	CDN    *tce.CDNName     `json:"cdn"`
 	CDNID  *util.JSONIntStr `json:"cdnId"`
 }

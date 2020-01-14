@@ -16,7 +16,7 @@ package v14
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"testing"
 )
 
@@ -32,16 +32,16 @@ func GetTestDeliveryServiceMatches(t *testing.T) {
 		t.Errorf("cannot GET DeliveryService matches: %v", err)
 	}
 
-	dsMatchMap := map[enum.DeliveryServiceName][]string{}
+	dsMatchMap := map[tce.DeliveryServiceName][]string{}
 	for _, ds := range dsMatches {
 		dsMatchMap[ds.DSName] = ds.Patterns
 	}
 
 	for _, ds := range testData.DeliveryServices {
-		if ds.Type == enum.DSTypeAnyMap || len(ds.MatchList) == 0 {
+		if ds.Type == tce.DSTypeAnyMap || len(ds.MatchList) == 0 {
 			continue // ANY_MAP DSes don't require matchLists
 		}
-		if _, ok := dsMatchMap[enum.DeliveryServiceName(ds.XMLID)]; !ok {
+		if _, ok := dsMatchMap[tce.DeliveryServiceName(ds.XMLID)]; !ok {
 			t.Errorf("GET DeliveryService matches missing: %v", ds.XMLID)
 		}
 	}

@@ -20,7 +20,7 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
@@ -167,9 +167,9 @@ func TestServerInfoIsTopLevelCache(t *testing.T) {
 	{
 		s := &ServerInfo{
 			ParentCacheGroupID:            1,
-			ParentCacheGroupType:          enum.CacheGroupOriginTypeName,
+			ParentCacheGroupType:          tce.CacheGroupOriginTypeName,
 			SecondaryParentCacheGroupID:   1,
-			SecondaryParentCacheGroupType: enum.CacheGroupOriginTypeName,
+			SecondaryParentCacheGroupType: tce.CacheGroupOriginTypeName,
 		}
 		if !s.IsTopLevelCache() {
 			t.Errorf("expected server with parent and secondary parents with origin-type to be top level, actual not top level")
@@ -181,7 +181,7 @@ func TestServerInfoIsTopLevelCache(t *testing.T) {
 			ParentCacheGroupID:            1,
 			ParentCacheGroupType:          "not origin",
 			SecondaryParentCacheGroupID:   1,
-			SecondaryParentCacheGroupType: enum.CacheGroupOriginTypeName,
+			SecondaryParentCacheGroupType: tce.CacheGroupOriginTypeName,
 		}
 		if s.IsTopLevelCache() {
 			t.Errorf("expected server with parent valid ID and origin-type to be top level, actual top level")
@@ -191,7 +191,7 @@ func TestServerInfoIsTopLevelCache(t *testing.T) {
 	{
 		s := &ServerInfo{
 			ParentCacheGroupID:            1,
-			ParentCacheGroupType:          enum.CacheGroupOriginTypeName,
+			ParentCacheGroupType:          tce.CacheGroupOriginTypeName,
 			SecondaryParentCacheGroupID:   1,
 			SecondaryParentCacheGroupType: "not origin",
 		}
@@ -203,7 +203,7 @@ func TestServerInfoIsTopLevelCache(t *testing.T) {
 	{
 		s := &ServerInfo{
 			ParentCacheGroupID:            1,
-			ParentCacheGroupType:          enum.CacheGroupOriginTypeName,
+			ParentCacheGroupType:          tce.CacheGroupOriginTypeName,
 			SecondaryParentCacheGroupID:   -1,
 			SecondaryParentCacheGroupType: "not origin",
 		}
@@ -217,7 +217,7 @@ func TestServerInfoIsTopLevelCache(t *testing.T) {
 			ParentCacheGroupID:            -1,
 			ParentCacheGroupType:          "not origin",
 			SecondaryParentCacheGroupID:   1,
-			SecondaryParentCacheGroupType: enum.CacheGroupOriginTypeName,
+			SecondaryParentCacheGroupType: tce.CacheGroupOriginTypeName,
 		}
 		if !s.IsTopLevelCache() {
 			t.Errorf("expected server with parent invalid valid ID and secondary parent origin type to be top level, actual not top level")

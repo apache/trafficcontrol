@@ -22,7 +22,7 @@ package atsserver
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 	"strings"
 
@@ -30,25 +30,25 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
 
-func GetServerNameAndTypeFromNameOrID(tx *sql.Tx, nameOrID string) (enum.CacheName, enum.CacheType, bool, error) {
+func GetServerNameAndTypeFromNameOrID(tx *sql.Tx, nameOrID string) (tce.CacheName, tce.CacheType, bool, error) {
 	if id, err := strconv.Atoi(nameOrID); err == nil {
 		return ats.GetServerNameAndTypeFromID(tx, id)
 	}
-	name := enum.CacheName(nameOrID)
+	name := tce.CacheName(nameOrID)
 	typ, ok, err := ats.GetServerTypeFromName(tx, name)
 	return name, typ, ok, err
 }
 
-func GetServerNameAndDomainFromNameOrID(tx *sql.Tx, nameOrID string) (enum.CacheName, string, bool, error) {
+func GetServerNameAndDomainFromNameOrID(tx *sql.Tx, nameOrID string) (tce.CacheName, string, bool, error) {
 	if id, err := strconv.Atoi(nameOrID); err == nil {
 		return ats.GetServerNameAndDomainFromID(tx, id)
 	}
-	name := enum.CacheName(nameOrID)
+	name := tce.CacheName(nameOrID)
 	typ, ok, err := ats.GetServerDomainFromName(tx, name)
 	return name, typ, ok, err
 }
 
-func GetServerCacheConfigData(tx *sql.Tx, serverName enum.CacheName, serverType enum.CacheType) (map[enum.DeliveryServiceName]atscfg.ServerCacheConfigDS, error) {
+func GetServerCacheConfigData(tx *sql.Tx, serverName tce.CacheName, serverType tce.CacheType) (map[tce.DeliveryServiceName]atscfg.ServerCacheConfigDS, error) {
 	qry := `
 SELECT
   ds.xml_id,
@@ -61,7 +61,7 @@ FROM
   JOIN deliveryservice_server dss on dss.deliveryservice = ds.id
   LEFT JOIN origin o on (o.deliveryservice = ds.id AND o.is_primary)
 `
-	if strings.HasPrefix(string(serverType), enum.MidTypePrefix) {
+	if strings.HasPrefix(string(serverType), tce.MidTypePrefix) {
 		// Note inactive DSes are omitted from Mids, but not Edges
 		// See https://github.com/apache/trafficcontrol/issues/3746
 		qry += `
@@ -77,7 +77,7 @@ WHERE
 	}
 
 	qry += `
-  AND dt.name = '` + string(enum.DSTypeHTTPNoCache) + `'
+  AND dt.name = '` + string(tce.DSTypeHTTPNoCache) + `'
 `
 
 	rows, err := tx.Query(qry, serverName)
@@ -86,14 +86,14 @@ WHERE
 	}
 	defer rows.Close()
 
-	dses := map[enum.DeliveryServiceName]atscfg.ServerCacheConfigDS{}
+	dses := map[tce.DeliveryServiceName]atscfg.ServerCacheConfigDS{}
 	for rows.Next() {
-		dsName := enum.DeliveryServiceName("")
+		dsName := tce.DeliveryServiceName("")
 		ds := atscfg.ServerCacheConfigDS{}
 		if err := rows.Scan(&dsName, &ds.OrgServerFQDN, &ds.Type); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
-		ds.Type = enum.DSTypeFromString(string(ds.Type))
+		ds.Type = tce.DSTypeFromString(string(ds.Type))
 		dses[dsName] = ds
 	}
 	return dses, nil

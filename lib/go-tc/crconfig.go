@@ -1,6 +1,8 @@
 package tc
 
-import "github.com/apache/trafficcontrol/lib/go-tc/enum"
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
+)
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -126,7 +128,7 @@ type CRConfigDeliveryService struct {
 	EcsEnabled                *bool                                 `json:"ecsEnabled,string,omitempty"`
 	RoutingName               *string                               `json:"routingName,omitempty"`
 	BypassDestination         map[string]*CRConfigBypassDestination `json:"bypassDestination,omitempty"`
-	DeepCachingType           *enum.DeepCachingType                 `json:"deepCachingType"`
+	DeepCachingType           *tce.DeepCachingType                  `json:"deepCachingType"`
 	GeoEnabled                []CRConfigGeoEnabled                  `json:"geoEnabled,omitempty"`
 	GeoLimitRedirectURL       *string                               `json:"geoLimitRedirectURL,omitempty"`
 	StaticDNSEntries          []CRConfigStaticDNSEntry              `json:"staticDnsEntries,omitempty"`
@@ -163,10 +165,10 @@ type CRConfigBackupLocations struct {
 }
 
 type CRConfigLatitudeLongitude struct {
-	Lat                 float64                   `json:"latitude"`
-	Lon                 float64                   `json:"longitude"`
-	BackupLocations     CRConfigBackupLocations   `json:"backupLocations,omitempty"`
-	LocalizationMethods []enum.LocalizationMethod `json:"localizationMethods"`
+	Lat                 float64                  `json:"latitude"`
+	Lon                 float64                  `json:"longitude"`
+	BackupLocations     CRConfigBackupLocations  `json:"backupLocations,omitempty"`
+	LocalizationMethods []tce.LocalizationMethod `json:"localizationMethods"`
 }
 
 type CRConfigLatitudeLongitudeShort struct {

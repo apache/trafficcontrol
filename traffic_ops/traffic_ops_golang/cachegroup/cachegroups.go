@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strconv"
 	"strings"
@@ -199,7 +199,7 @@ func (cg TOCacheGroup) Validate() error {
 func (cg *TOCacheGroup) Create() (error, error, int) {
 
 	if cg.LocalizationMethods == nil {
-		cg.LocalizationMethods = &[]enum.LocalizationMethod{}
+		cg.LocalizationMethods = &[]tce.LocalizationMethod{}
 	}
 
 	if cg.Fallbacks == nil {
@@ -404,7 +404,7 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	cacheGroups := []interface{}{}
 	for rows.Next() {
 		var s TOCacheGroup
-		lms := make([]enum.LocalizationMethod, 0)
+		lms := make([]tce.LocalizationMethod, 0)
 		cgfs := make([]string, 0)
 		if err = rows.Scan(
 			&s.ID,
@@ -437,7 +437,7 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 func (cg *TOCacheGroup) Update() (error, error, int) {
 
 	if cg.LocalizationMethods == nil {
-		cg.LocalizationMethods = &[]enum.LocalizationMethod{}
+		cg.LocalizationMethods = &[]tce.LocalizationMethod{}
 	}
 
 	if cg.Fallbacks == nil {

@@ -20,29 +20,29 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
 
 func TestMakeSSLMultiCertDotConfig(t *testing.T) {
-	cdnName := enum.CDNName("mycdn")
+	cdnName := tce.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
-	dses := map[enum.DeliveryServiceName]SSLMultiCertDS{
+	dses := map[tce.DeliveryServiceName]SSLMultiCertDS{
 		"my-https-ds": SSLMultiCertDS{
-			Type:        enum.DSTypeHTTP,
+			Type:        tce.DSTypeHTTP,
 			Protocol:    1, // https and http
 			ExampleURLs: []string{"https://my-https-ds.example.net"},
 		},
 		"my-https-and-http-ds": SSLMultiCertDS{
-			Type:        enum.DSTypeHTTP,
+			Type:        tce.DSTypeHTTP,
 			Protocol:    2, // https and http
 			ExampleURLs: []string{"https://my-https-and-http-ds.example.net"},
 		},
 		"my-https-to-http-ds": SSLMultiCertDS{
-			Type:        enum.DSTypeHTTP,
+			Type:        tce.DSTypeHTTP,
 			Protocol:    3, // https to http
 			ExampleURLs: []string{"https://my-https-to-http-ds.example.net"},
 		},
@@ -75,13 +75,13 @@ func TestMakeSSLMultiCertDotConfig(t *testing.T) {
 }
 
 func TestMakeSSLMultiCertDotConfigHTTPDeliveryService(t *testing.T) {
-	cdnName := enum.CDNName("mycdn")
+	cdnName := tce.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
-	dses := map[enum.DeliveryServiceName]SSLMultiCertDS{
+	dses := map[tce.DeliveryServiceName]SSLMultiCertDS{
 		"myds": SSLMultiCertDS{
-			Type:        enum.DSTypeHTTP,
+			Type:        tce.DSTypeHTTP,
 			Protocol:    0, // http-only DSes have no SSL, should be excluded
 			ExampleURLs: []string{"https://myds.example.net"},
 		},

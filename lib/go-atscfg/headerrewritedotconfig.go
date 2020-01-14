@@ -21,7 +21,7 @@ package atscfg
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"math"
 	"regexp"
 	"strconv"
@@ -39,14 +39,14 @@ type HeaderRewriteDS struct {
 	ID                   int
 	MaxOriginConnections int
 	MidHeaderRewrite     string
-	Type                 enum.DSType
+	Type                 tce.DSType
 }
 
 type HeaderRewriteServer struct {
 	HostName   string
 	DomainName string
 	Port       int
-	Status     enum.CacheStatus
+	Status     tce.CacheStatus
 }
 
 func HeaderRewriteServersFromServers(servers []tc.ServerNullable) ([]HeaderRewriteServer, error) {
@@ -74,8 +74,8 @@ func HeaderRewriteServerFromServer(sv tc.ServerNullable) (HeaderRewriteServer, e
 	if sv.Status == nil {
 		return HeaderRewriteServer{}, errors.New("server status must not be nil")
 	}
-	status := enum.CacheStatusFromString(*sv.Status)
-	if status == enum.CacheStatusInvalid {
+	status := tce.CacheStatusFromString(*sv.Status)
+	if status == tce.CacheStatusInvalid {
 		return HeaderRewriteServer{}, errors.New("server status '" + *sv.Status + "' invalid")
 	}
 	return HeaderRewriteServer{Status: status, HostName: *sv.HostName, DomainName: *sv.DomainName, Port: *sv.TCPPort}, nil
@@ -91,8 +91,8 @@ func HeaderRewriteServerFromServerNotNullable(sv tc.Server) (HeaderRewriteServer
 	if sv.TCPPort == 0 {
 		return HeaderRewriteServer{}, errors.New("server port must not be nil")
 	}
-	status := enum.CacheStatusFromString(sv.Status)
-	if status == enum.CacheStatusInvalid {
+	status := tce.CacheStatusFromString(sv.Status)
+	if status == tce.CacheStatusInvalid {
 		return HeaderRewriteServer{}, errors.New("server status '" + sv.Status + "' invalid")
 	}
 	return HeaderRewriteServer{Status: status, HostName: sv.HostName, DomainName: sv.DomainName, Port: sv.TCPPort}, nil
@@ -130,7 +130,7 @@ func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullable) (HeaderRewriteDS, err
 }
 
 func MakeHeaderRewriteDotConfig(
-	cdnName enum.CDNName,
+	cdnName tce.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	ds HeaderRewriteDS,
@@ -142,7 +142,7 @@ func MakeHeaderRewriteDotConfig(
 	if ds.MaxOriginConnections > 0 && !ds.Type.UsesMidCache() {
 		dsOnlineEdgeCount := 0
 		for _, sv := range assignedEdges {
-			if sv.Status == enum.CacheStatusReported || sv.Status == enum.CacheStatusOnline {
+			if sv.Status == tce.CacheStatusReported || sv.Status == tce.CacheStatusOnline {
 				dsOnlineEdgeCount++
 			}
 		}

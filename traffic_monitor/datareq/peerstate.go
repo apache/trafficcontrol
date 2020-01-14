@@ -20,7 +20,7 @@
 package datareq
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"net/url"
 	"time"
@@ -37,7 +37,7 @@ import (
 // APIPeerStates contains the data to be returned for an API call to get the peer states of a Traffic Monitor. This contains common API data returned by most endpoints, and a map of peers, to caches' states.
 type APIPeerStates struct {
 	srvhttp.CommonAPIData
-	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
+	Peers map[tce.TrafficMonitorName]map[tce.CacheName][]CacheState `json:"peers"`
 }
 
 // CacheState represents the available state of a cache.
@@ -56,10 +56,10 @@ func srvPeerStates(params url.Values, errorCount threadsafe.Uint, path string, t
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
-func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]tc.CRStates, peersOnline map[enum.TrafficMonitorName]bool, filter *PeerStateFilter, params url.Values) APIPeerStates {
+func createAPIPeerStates(peerStates map[tce.TrafficMonitorName]tc.CRStates, peersOnline map[tce.TrafficMonitorName]bool, filter *PeerStateFilter, params url.Values) APIPeerStates {
 	apiPeerStates := APIPeerStates{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Peers:         map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
+		Peers:         map[tce.TrafficMonitorName]map[tce.CacheName][]CacheState{},
 	}
 
 	for peer, state := range peerStates {
@@ -70,7 +70,7 @@ func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]tc.CRStates, pee
 			continue
 		}
 		if _, ok := apiPeerStates.Peers[peer]; !ok {
-			apiPeerStates.Peers[peer] = map[enum.CacheName][]CacheState{}
+			apiPeerStates.Peers[peer] = map[tce.CacheName][]CacheState{}
 		}
 		peerState := apiPeerStates.Peers[peer]
 		for cache, available := range state.Caches {

@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strconv"
 
@@ -127,7 +127,7 @@ INSERT INTO deliveryservice_server (deliveryservice, server) (
 	return nil
 }
 
-func getCachegroupServers(tx *sql.Tx, cgID int64) ([]enum.CacheName, error) {
+func getCachegroupServers(tx *sql.Tx, cgID int64) ([]tce.CacheName, error) {
 	q := `
 SELECT server.host_name FROM server
 JOIN type on type.id = server.type
@@ -139,13 +139,13 @@ AND (type.name LIKE 'EDGE%' OR type.name LIKE 'ORG%')
 		return nil, errors.New("selecting cachegroup servers: " + err.Error())
 	}
 	defer rows.Close()
-	names := []enum.CacheName{}
+	names := []tce.CacheName{}
 	for rows.Next() {
 		name := ""
 		if err := rows.Scan(&name); err != nil {
 			return nil, errors.New("querying cachegroup server names: " + err.Error())
 		}
-		names = append(names, enum.CacheName(name))
+		names = append(names, tce.CacheName(name))
 	}
 	return names, nil
 }

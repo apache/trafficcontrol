@@ -22,7 +22,7 @@ package atsserver
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strings"
 
@@ -60,8 +60,8 @@ func GetIPAllowDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	childServers := map[enum.CacheName]atscfg.IPAllowServer{}
-	if strings.HasPrefix(string(serverType), enum.MidTypePrefix) {
+	childServers := map[tce.CacheName]atscfg.IPAllowServer{}
+	if strings.HasPrefix(string(serverType), tce.MidTypePrefix) {
 		if childServers, err = GetChildServers(inf.Tx.Tx, serverName); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting child servers from mid '"+string(serverName)+"': "+err.Error()))
 			return
@@ -75,7 +75,7 @@ func GetIPAllowDotConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetChildServers returns the child servers of the given Mid serverName. This should not be called with an Edge server.
-func GetChildServers(tx *sql.Tx, serverName enum.CacheName) (map[enum.CacheName]atscfg.IPAllowServer, error) {
+func GetChildServers(tx *sql.Tx, serverName tce.CacheName) (map[tce.CacheName]atscfg.IPAllowServer, error) {
 	qry := `
 SELECT
   s.host_name,
@@ -86,7 +86,7 @@ FROM
   JOIN type tp on tp.id = s.type
   JOIN cachegroup cg on cg.id = s.cachegroup
 WHERE
-  (tp.name = '` + enum.MonitorTypeName + `' OR tp.name LIKE '` + enum.EdgeTypePrefix + `%')
+  (tp.name = '` + tce.MonitorTypeName + `' OR tp.name LIKE '` + tce.EdgeTypePrefix + `%')
   AND cg.id IN (
     SELECT
       cg2.id
@@ -103,9 +103,9 @@ WHERE
 	}
 	defer rows.Close()
 
-	servers := map[enum.CacheName]atscfg.IPAllowServer{}
+	servers := map[tce.CacheName]atscfg.IPAllowServer{}
 	for rows.Next() {
-		svName := enum.CacheName("")
+		svName := tce.CacheName("")
 		sv := atscfg.IPAllowServer{}
 		if err := rows.Scan(&svName, &sv.IPAddress, &sv.IP6Address); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
@@ -115,7 +115,7 @@ WHERE
 	return servers, nil
 }
 
-func GetServerParams(tx *sql.Tx, serverName enum.CacheName, configFile string) (map[string][]string, error) {
+func GetServerParams(tx *sql.Tx, serverName tce.CacheName, configFile string) (map[string][]string, error) {
 	qry := `
 SELECT
   pa.name,

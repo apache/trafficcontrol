@@ -21,7 +21,7 @@ package cfgfile
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -57,7 +57,7 @@ func GetConfigFileServerUnknownConfig(cfg config.TCCfg, serverNameOrID string, f
 		return "", errors.New("server '" + serverNameOrID + " not found in servers")
 	}
 
-	serverName := enum.CacheName(server.HostName)
+	serverName := tce.CacheName(server.HostName)
 	serverDomain := server.DomainName
 
 	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)

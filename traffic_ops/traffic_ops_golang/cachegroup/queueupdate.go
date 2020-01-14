@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strconv"
 	"strings"
@@ -93,14 +93,14 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 }
 
 type QueueUpdatesResp struct {
-	CacheGroupName enum.CacheGroupName `json:"cachegroupName"`
-	Action         string              `json:"action"`
-	ServerNames    []enum.CacheName    `json:"serverNames"`
-	CDN            enum.CDNName        `json:"cdn"`
-	CacheGroupID   int64               `json:"cachegroupID"`
+	CacheGroupName tce.CacheGroupName `json:"cachegroupName"`
+	Action         string             `json:"action"`
+	ServerNames    []tce.CacheName    `json:"serverNames"`
+	CDN            tce.CDNName        `json:"cdn"`
+	CacheGroupID   int64              `json:"cachegroupID"`
 }
 
-func queueUpdates(tx *sql.Tx, cgID int64, cdn enum.CDNName, queue bool) ([]enum.CacheName, error) {
+func queueUpdates(tx *sql.Tx, cgID int64, cdn tce.CDNName, queue bool) ([]tce.CacheName, error) {
 	q := `
 UPDATE server SET upd_pending = $1
 WHERE server.cachegroup = $2
@@ -112,13 +112,13 @@ RETURNING server.host_name
 		return nil, errors.New("querying queue updates: " + err.Error())
 	}
 	defer rows.Close()
-	names := []enum.CacheName{}
+	names := []tce.CacheName{}
 	for rows.Next() {
 		name := ""
 		if err := rows.Scan(&name); err != nil {
 			return nil, errors.New("scanning queue updates: " + err.Error())
 		}
-		names = append(names, enum.CacheName(name))
+		names = append(names, tce.CacheName(name))
 	}
 	return names, nil
 }

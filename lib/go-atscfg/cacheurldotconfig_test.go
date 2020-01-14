@@ -20,19 +20,19 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
 
 func TestMakeCacheURLDotConfigWithDS(t *testing.T) {
-	cdnName := enum.CDNName("mycdn")
+	cdnName := tce.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
 	fileName := "cacheurl_myds.config"
 
-	dses := map[enum.DeliveryServiceName]CacheURLDS{
+	dses := map[tce.DeliveryServiceName]CacheURLDS{
 		"myds": CacheURLDS{
 			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 			QStringIgnore: 0,
@@ -62,13 +62,13 @@ func TestMakeCacheURLDotConfigWithDS(t *testing.T) {
 }
 
 func TestMakeCacheURLDotConfigGlobalFile(t *testing.T) {
-	cdnName := enum.CDNName("mycdn")
+	cdnName := tce.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
 	fileName := "cacheurl.config"
 
-	dses := map[enum.DeliveryServiceName]CacheURLDS{
+	dses := map[tce.DeliveryServiceName]CacheURLDS{
 		"myds": CacheURLDS{
 			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 			QStringIgnore: 1,
@@ -102,13 +102,13 @@ func TestMakeCacheURLDotConfigGlobalFile(t *testing.T) {
 }
 
 func TestMakeCacheURLDotConfigGlobalFileNoQStringIgnore(t *testing.T) {
-	cdnName := enum.CDNName("mycdn")
+	cdnName := tce.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
 	fileName := "cacheurl.config"
 
-	dses := map[enum.DeliveryServiceName]CacheURLDS{
+	dses := map[tce.DeliveryServiceName]CacheURLDS{
 		"myds": CacheURLDS{
 			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 			QStringIgnore: 0,
@@ -142,13 +142,13 @@ func TestMakeCacheURLDotConfigGlobalFileNoQStringIgnore(t *testing.T) {
 }
 
 func TestMakeCacheURLDotConfigQStringFile(t *testing.T) {
-	cdnName := enum.CDNName("mycdn")
+	cdnName := tce.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
 	fileName := "cacheurl_qstring.config"
 
-	dses := map[enum.DeliveryServiceName]CacheURLDS{
+	dses := map[tce.DeliveryServiceName]CacheURLDS{
 		"myds": CacheURLDS{
 			OrgServerFQDN: "https://myorigin.example.net", // DS "origin_server_fqdn" is actually a URL including the scheme, the name is wrong.
 			QStringIgnore: 0,

@@ -20,7 +20,7 @@ package health
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 	"time"
@@ -71,7 +71,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	mc := tc.TrafficMonitorConfigMap{
 		TrafficServer: map[string]tc.TrafficServer{
 			string(result.ID): {
-				ServerStatus: string(enum.CacheStatusReported),
+				ServerStatus: string(tce.CacheStatusReported),
 				Profile:      "myProfileName",
 			},
 		},
@@ -90,12 +90,12 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	}
 
 	toData := todata.TOData{
-		ServerTypes:            map[enum.CacheName]enum.CacheType{},
-		DeliveryServiceServers: map[enum.DeliveryServiceName][]enum.CacheName{},
-		ServerCachegroups:      map[enum.CacheName]enum.CacheGroupName{},
+		ServerTypes:            map[tce.CacheName]tce.CacheType{},
+		DeliveryServiceServers: map[tce.DeliveryServiceName][]tce.CacheName{},
+		ServerCachegroups:      map[tce.CacheName]tce.CacheGroupName{},
 	}
-	toData.ServerTypes[result.ID] = enum.CacheTypeEdge
-	toData.DeliveryServiceServers["myDS"] = []enum.CacheName{result.ID}
+	toData.ServerTypes[result.ID] = tce.CacheTypeEdge
+	toData.DeliveryServiceServers["myDS"] = []tce.CacheName{result.ID}
 	toData.ServerCachegroups[result.ID] = "myCG"
 
 	localCacheStatusThreadsafe := threadsafe.NewCacheAvailableStatus()
@@ -113,7 +113,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 		t.Fatalf("expected: localCacheStatus[cacheName], actual: missing")
 	} else if localCacheStatus.Available {
 		t.Fatalf("localCacheStatus.Available over kbps threshold expected: false, actual: true")
-	} else if localCacheStatus.Status != string(enum.CacheStatusReported) {
+	} else if localCacheStatus.Status != string(tce.CacheStatusReported) {
 		t.Fatalf("localCacheStatus.Status expected %v actual %v", "todo", localCacheStatus.Status)
 	} else if localCacheStatus.UnavailableStat != "availableBandwidthInKbps" {
 		t.Fatalf("localCacheStatus.UnavailableStat expected %v actual %v", "availableBandwidthInKbps", localCacheStatus.UnavailableStat)
@@ -138,7 +138,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 		t.Fatalf("expected: localCacheStatus[cacheName], actual: missing")
 	} else if localCacheStatus.Available {
 		t.Fatalf("localCacheStatus.Available over kbps threshold expected: false, actual: true")
-	} else if localCacheStatus.Status != string(enum.CacheStatusReported) {
+	} else if localCacheStatus.Status != string(tce.CacheStatusReported) {
 		t.Fatalf("localCacheStatus.Status expected %v actual %v", "tc.CacheStatusReported", localCacheStatus.Status)
 	} else if localCacheStatus.UnavailableStat != "availableBandwidthInKbps" {
 		t.Fatalf("localCacheStatus.UnavailableStat expected %v actual %v", "availableBandwidthInKbps", localCacheStatus.UnavailableStat)

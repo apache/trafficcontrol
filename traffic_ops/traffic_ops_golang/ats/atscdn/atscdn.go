@@ -22,7 +22,7 @@ package atscdn
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strconv"
 	"strings"
@@ -145,9 +145,9 @@ func WithProfileDataHdr(w http.ResponseWriter, r *http.Request, addHdr bool, con
 
 // GetCDNNameFromNameOrID takes a string which is a CDN name or ID, and returns the CDN name, whether the CDN exists, and any error.
 // Note if cdnNameOrID is the CDN name, it will not be checked for existence!
-func GetCDNNameFromNameOrID(tx *sql.Tx, nameOrID string) (enum.CDNName, bool, error) {
+func GetCDNNameFromNameOrID(tx *sql.Tx, nameOrID string) (tce.CDNName, bool, error) {
 	if cdnID, err := strconv.Atoi(nameOrID); err == nil {
 		return dbhelpers.GetCDNNameFromID(tx, int64(cdnID))
 	}
-	return enum.CDNName(nameOrID), true, nil
+	return tce.CDNName(nameOrID), true, nil
 }

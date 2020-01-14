@@ -22,7 +22,7 @@ package cdn
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strings"
 
@@ -56,7 +56,7 @@ func GetNameHealth(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	health, err := getNameHealth(inf.Tx.Tx, enum.CDNName(inf.Params["name"]))
+	health, err := getNameHealth(inf.Tx.Tx, tce.CDNName(inf.Params["name"]))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn name health: "+err.Error()))
 		return
@@ -73,7 +73,7 @@ func getHealth(tx *sql.Tx) (tc.HealthData, error) {
 	return getMonitorsHealth(tx, monitors)
 }
 
-func getNameHealth(tx *sql.Tx, name enum.CDNName) (tc.HealthData, error) {
+func getNameHealth(tx *sql.Tx, name tce.CDNName) (tc.HealthData, error) {
 	monitors, err := monitorhlp.GetURLs(tx)
 	if err != nil {
 		return tc.HealthData{}, errors.New("getting monitors: " + err.Error())
@@ -81,12 +81,12 @@ func getNameHealth(tx *sql.Tx, name enum.CDNName) (tc.HealthData, error) {
 	monitor, ok := monitors[name]
 	monitors = nil
 	if ok {
-		monitors = map[enum.CDNName]string{name: monitor}
+		monitors = map[tce.CDNName]string{name: monitor}
 	}
 	return getMonitorsHealth(tx, monitors)
 }
 
-func getMonitorsHealth(tx *sql.Tx, monitors map[enum.CDNName]string) (tc.HealthData, error) {
+func getMonitorsHealth(tx *sql.Tx, monitors map[tce.CDNName]string) (tc.HealthData, error) {
 	client, err := monitorhlp.GetClient(tx)
 	if err != nil {
 		return tc.HealthData{}, errors.New("getting monitor client: " + err.Error())
@@ -94,7 +94,7 @@ func getMonitorsHealth(tx *sql.Tx, monitors map[enum.CDNName]string) (tc.HealthD
 
 	totalOnline := uint64(0)
 	totalOffline := uint64(0)
-	cgData := map[enum.CacheGroupName]tc.HealthDataCacheGroup{}
+	cgData := map[tce.CacheGroupName]tc.HealthDataCacheGroup{}
 	for cdn, monitorFQDN := range monitors {
 		crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
 		// TODO on err, try another online monitor
@@ -117,24 +117,24 @@ func getMonitorsHealth(tx *sql.Tx, monitors map[enum.CDNName]string) (tc.HealthD
 }
 
 // addHealth adds the given cache states to the given data and totals, and returns the new data and totals
-func addHealth(data map[enum.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (map[enum.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64) {
+func addHealth(data map[tce.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (map[tce.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64) {
 	for cacheName, avail := range crStates.Caches {
 		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
 			continue
 		}
-		if cache.ServerStatus == nil || *cache.ServerStatus != tc.CRConfigServerStatus(enum.CacheStatusReported) {
+		if cache.ServerStatus == nil || *cache.ServerStatus != tc.CRConfigServerStatus(tce.CacheStatusReported) {
 			continue
 		}
-		if cache.ServerType == nil || !strings.HasPrefix(string(*cache.ServerType), string(enum.CacheTypeEdge)) {
+		if cache.ServerType == nil || !strings.HasPrefix(string(*cache.ServerType), string(tce.CacheTypeEdge)) {
 			continue
 		}
 		if cache.CacheGroup == nil {
 			continue // TODO warn?
 		}
 
-		cgHealth := data[enum.CacheGroupName(*cache.CacheGroup)]
-		cgHealth.Name = enum.CacheGroupName(*cache.CacheGroup)
+		cgHealth := data[tce.CacheGroupName(*cache.CacheGroup)]
+		cgHealth.Name = tce.CacheGroupName(*cache.CacheGroup)
 		if avail.IsAvailable {
 			cgHealth.Online++
 			totalOnline++
@@ -142,7 +142,7 @@ func addHealth(data map[enum.CacheGroupName]tc.HealthDataCacheGroup, totalOnline
 			cgHealth.Offline++
 			totalOffline++
 		}
-		data[enum.CacheGroupName(*cache.CacheGroup)] = cgHealth
+		data[tce.CacheGroupName(*cache.CacheGroup)] = cgHealth
 	}
 	return data, totalOnline, totalOffline
 }

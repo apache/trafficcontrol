@@ -23,7 +23,7 @@ package coveragezone
 import (
 	"encoding/json"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"io/ioutil"
 	"net"
 
@@ -32,9 +32,9 @@ import (
 
 // TODO put in lib/go-tc
 type JSONCoverageZones struct {
-	CoverageZones map[enum.CacheGroupName]JSONCoverageZoneCacheGroup `json:"coverageZones"`
-	CustomerName  string                                             `json:"customerName"`
-	Revision      string                                             `json:"revision"` // TODO change to Time with Marshal func?
+	CoverageZones map[tce.CacheGroupName]JSONCoverageZoneCacheGroup `json:"coverageZones"`
+	CustomerName  string                                            `json:"customerName"`
+	Revision      string                                            `json:"revision"` // TODO change to Time with Marshal func?
 }
 
 type JSONCoverageZoneCacheGroup struct {

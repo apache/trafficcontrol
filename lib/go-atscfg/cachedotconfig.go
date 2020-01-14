@@ -20,7 +20,7 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -28,7 +28,7 @@ import (
 )
 
 type ProfileDS struct {
-	Type       enum.DSType
+	Type       tce.DSType
 	OriginFQDN *string
 }
 
@@ -42,7 +42,7 @@ func MakeCacheDotConfig(
 ) string {
 	lines := map[string]struct{}{} // use a "set" for lines, to avoid duplicates, since we're looking up by profile
 	for _, ds := range profileDSes {
-		if ds.Type != enum.DSTypeHTTPNoCache {
+		if ds.Type != tce.DSTypeHTTPNoCache {
 			continue
 		}
 		if ds.OriginFQDN == nil || *ds.OriginFQDN == "" {

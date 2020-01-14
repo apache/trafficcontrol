@@ -20,56 +20,56 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
 
 func TestMakeServerCacheDotConfig(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 
-	dses := map[enum.DeliveryServiceName]ServerCacheConfigDS{
+	dses := map[tce.DeliveryServiceName]ServerCacheConfigDS{
 		"ds0": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds0.example.test/path",
-			Type:          enum.DSTypeHTTP,
+			Type:          tce.DSTypeHTTP,
 		},
 		"ds1": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds1.example.test:42/path",
-			Type:          enum.DSTypeDNS,
+			Type:          tce.DSTypeDNS,
 		},
 		"ds2": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds2.example.test:42",
-			Type:          enum.DSTypeHTTP,
+			Type:          tce.DSTypeHTTP,
 		},
 		"ds3": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds3.example.test",
-			Type:          enum.DSTypeHTTP,
+			Type:          tce.DSTypeHTTP,
 		},
 		"ds4": ServerCacheConfigDS{
 			OrgServerFQDN: "https://ds4.example.test/",
-			Type:          enum.DSTypeHTTP,
+			Type:          tce.DSTypeHTTP,
 		},
 		"ds5": ServerCacheConfigDS{
 			OrgServerFQDN: "http://ds5.example.test:1234/",
-			Type:          enum.DSTypeHTTP,
+			Type:          tce.DSTypeHTTP,
 		},
 		"ds6": ServerCacheConfigDS{
 			OrgServerFQDN: "ds6.example.test",
-			Type:          enum.DSTypeHTTP,
+			Type:          tce.DSTypeHTTP,
 		},
 		"ds7": ServerCacheConfigDS{
 			OrgServerFQDN: "ds7.example.test:80",
-			Type:          enum.DSTypeHTTP,
+			Type:          tce.DSTypeHTTP,
 		},
 		"ds8": ServerCacheConfigDS{
 			OrgServerFQDN: "ds8.example.test:8080/path",
-			Type:          enum.DSTypeHTTP,
+			Type:          tce.DSTypeHTTP,
 		},
 		"ds-nocache": ServerCacheConfigDS{
 			OrgServerFQDN: "http://ds-nocache.example.test",
-			Type:          enum.DSTypeHTTPNoCache,
+			Type:          tce.DSTypeHTTPNoCache,
 		},
 	}
 

@@ -20,13 +20,13 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
 
 func TestMakeHeaderRewriteDotConfig(t *testing.T) {
-	cdnName := enum.CDNName("mycdn")
+	cdnName := tce.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
@@ -35,17 +35,17 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 		ID:                   24,
 		MaxOriginConnections: 42,
 		MidHeaderRewrite:     "midrewrite",
-		Type:                 enum.DSTypeHTTPLive,
+		Type:                 tce.DSTypeHTTPLive,
 	}
 	assignedEdges := []HeaderRewriteServer{
 		HeaderRewriteServer{
-			Status: enum.CacheStatusReported,
+			Status: tce.CacheStatusReported,
 		},
 		HeaderRewriteServer{
-			Status: enum.CacheStatusOnline,
+			Status: tce.CacheStatusOnline,
 		},
 		HeaderRewriteServer{
-			Status: enum.CacheStatusOffline,
+			Status: tce.CacheStatusOffline,
 		},
 	}
 
@@ -69,7 +69,7 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 }
 
 func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
-	cdnName := enum.CDNName("mycdn")
+	cdnName := tce.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
 
@@ -78,17 +78,17 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 		ID:                   24,
 		MaxOriginConnections: 42,
 		MidHeaderRewrite:     "midrewrite",
-		Type:                 enum.DSTypeHTTP,
+		Type:                 tce.DSTypeHTTP,
 	}
 	assignedEdges := []HeaderRewriteServer{
 		HeaderRewriteServer{
-			Status: enum.CacheStatusReported,
+			Status: tce.CacheStatusReported,
 		},
 		HeaderRewriteServer{
-			Status: enum.CacheStatusOnline,
+			Status: tce.CacheStatusOnline,
 		},
 		HeaderRewriteServer{
-			Status: enum.CacheStatusOffline,
+			Status: tce.CacheStatusOffline,
 		},
 	}
 

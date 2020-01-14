@@ -1,6 +1,8 @@
 package tc
 
-import "github.com/apache/trafficcontrol/lib/go-tc/enum"
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
+)
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,22 +24,22 @@ import "github.com/apache/trafficcontrol/lib/go-tc/enum"
  */
 
 type Steering struct {
-	DeliveryService enum.DeliveryServiceName `json:"deliveryService"`
+	DeliveryService tce.DeliveryServiceName  `json:"deliveryService"`
 	ClientSteering  bool                     `json:"clientSteering"`
 	Targets         []SteeringSteeringTarget `json:"targets"`
 	Filters         []SteeringFilter         `json:"filters"`
 }
 
 type SteeringFilter struct {
-	DeliveryService enum.DeliveryServiceName `json:"deliveryService"`
-	Pattern         string                   `json:"pattern"`
+	DeliveryService tce.DeliveryServiceName `json:"deliveryService"`
+	Pattern         string                  `json:"pattern"`
 }
 
 type SteeringSteeringTarget struct {
-	Order           int32                    `json:"order"`
-	Weight          int32                    `json:"weight"`
-	DeliveryService enum.DeliveryServiceName `json:"deliveryService"`
-	GeoOrder        *int                     `json:"geoOrder,omitempty"`
-	Longitude       *float64                 `json:"longitude,omitempty"`
-	Latitude        *float64                 `json:"latitude,omitempty"`
+	Order           int32                   `json:"order"`
+	Weight          int32                   `json:"weight"`
+	DeliveryService tce.DeliveryServiceName `json:"deliveryService"`
+	GeoOrder        *int                    `json:"geoOrder,omitempty"`
+	Longitude       *float64                `json:"longitude,omitempty"`
+	Latitude        *float64                `json:"latitude,omitempty"`
 }

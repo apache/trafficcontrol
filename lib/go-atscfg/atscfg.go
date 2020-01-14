@@ -21,7 +21,7 @@ package atscfg
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 	"strings"
 	"time"
@@ -37,7 +37,7 @@ type ServerCapability string
 
 type ServerInfo struct {
 	CacheGroupID         int
-	CDN                  enum.CDNName
+	CDN                  tce.CDNName
 	CDNID                int
 	DomainName           string
 	HostName             string
@@ -55,8 +55,8 @@ type ServerInfo struct {
 }
 
 func (s *ServerInfo) IsTopLevelCache() bool {
-	return (s.ParentCacheGroupType == enum.CacheGroupOriginTypeName || s.ParentCacheGroupID == InvalidID) &&
-		(s.SecondaryParentCacheGroupType == enum.CacheGroupOriginTypeName || s.SecondaryParentCacheGroupID == InvalidID)
+	return (s.ParentCacheGroupType == tce.CacheGroupOriginTypeName || s.ParentCacheGroupID == InvalidID) &&
+		(s.SecondaryParentCacheGroupType == tce.CacheGroupOriginTypeName || s.SecondaryParentCacheGroupID == InvalidID)
 }
 
 func HeaderCommentWithTOVersionStr(name string, nameVersionStr string) string {

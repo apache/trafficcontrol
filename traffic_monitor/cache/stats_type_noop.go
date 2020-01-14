@@ -22,7 +22,7 @@ package cache
 // stats_type_noop is a no-op parser designed to work with the the noop poller, to report caches as healthy without actually polling them.
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"io"
 
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
@@ -34,7 +34,7 @@ func init() {
 	AddStatsType(StatsTypeNOOP, noopParse, noopPrecompute)
 }
 
-func noopParse(cache enum.CacheName, r io.Reader) (error, map[string]interface{}, AstatsSystem) {
+func noopParse(cache tce.CacheName, r io.Reader) (error, map[string]interface{}, AstatsSystem) {
 	// we need to make a fake system, so the health parse succeeds
 	return nil, map[string]interface{}{}, AstatsSystem{
 		ProcLoadavg: "0.10 0.05 0.05 1/1000 30000",
@@ -44,6 +44,6 @@ func noopParse(cache enum.CacheName, r io.Reader) (error, map[string]interface{}
 	}
 }
 
-func noopPrecompute(cache enum.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
-	return PrecomputedData{DeliveryServiceStats: map[enum.DeliveryServiceName]*AStat{}}
+func noopPrecompute(cache tce.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
+	return PrecomputedData{DeliveryServiceStats: map[tce.DeliveryServiceName]*AStat{}}
 }

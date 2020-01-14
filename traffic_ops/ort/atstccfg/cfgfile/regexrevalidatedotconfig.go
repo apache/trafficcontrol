@@ -21,7 +21,7 @@ package cfgfile
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -54,7 +54,7 @@ func GetConfigFileCDNRegexRevalidateDotConfig(cfg config.TCCfg, cdnNameOrID stri
 
 	params := map[string][]string{}
 	for _, param := range fileParams {
-		if !util.StrInArray(param.ProfileNames, enum.GlobalProfileName) {
+		if !util.StrInArray(param.ProfileNames, tce.GlobalProfileName) {
 			continue // TODO add profile query params to TO endpoint
 		}
 		params[param.Name] = append(params[param.Name], param.Value)

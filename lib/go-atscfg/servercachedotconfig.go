@@ -20,27 +20,27 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 	"strings"
 )
 
 type ServerCacheConfigDS struct {
 	OrgServerFQDN string
-	Type          enum.DSType
+	Type          tce.DSType
 }
 
 func MakeServerCacheDotConfig(
-	serverName enum.CacheName,
+	serverName tce.CacheName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
-	dses map[enum.DeliveryServiceName]ServerCacheConfigDS,
+	dses map[tce.DeliveryServiceName]ServerCacheConfigDS,
 ) string {
 	text := GenericHeaderComment(string(serverName), toToolName, toURL)
 
 	seenOrigins := map[string]struct{}{}
 	for _, ds := range dses {
-		if ds.Type != enum.DSTypeHTTPNoCache {
+		if ds.Type != tce.DSTypeHTTPNoCache {
 			continue
 		}
 		if _, ok := seenOrigins[ds.OrgServerFQDN]; ok {

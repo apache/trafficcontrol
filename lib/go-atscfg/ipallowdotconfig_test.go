@@ -20,14 +20,14 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
 
 func TestMakeIPAllowDotConfig(t *testing.T) {
-	serverName := enum.CacheName("server0")
-	serverType := enum.CacheTypeMid
+	serverName := tce.CacheName("server0")
+	serverType := tce.CacheTypeMid
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	params := map[string][]string{
@@ -37,7 +37,7 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 		ParamCoalesceMaskLenV6: []string{"48"},
 		ParamCoalesceNumberV6:  []string{"4"},
 	}
-	childServers := map[enum.CacheName]IPAllowServer{
+	childServers := map[tce.CacheName]IPAllowServer{
 		"child0": IPAllowServer{
 			IPAddress:  "192.168.2.1",
 			IP6Address: "2001:DB8:1::1/64",
@@ -113,8 +113,8 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 }
 
 func TestMakeIPAllowDotConfigEdge(t *testing.T) {
-	serverName := enum.CacheName("server0")
-	serverType := enum.CacheTypeEdge
+	serverName := tce.CacheName("server0")
+	serverType := tce.CacheTypeEdge
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	params := map[string][]string{
@@ -123,7 +123,7 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 		ParamCoalesceMaskLenV6: []string{"48"},
 		ParamCoalesceNumberV6:  []string{"4"},
 	}
-	childServers := map[enum.CacheName]IPAllowServer{
+	childServers := map[tce.CacheName]IPAllowServer{
 		"child0": IPAllowServer{
 			IPAddress:  "192.168.2.1",
 			IP6Address: "2001:DB8:1::1/64",

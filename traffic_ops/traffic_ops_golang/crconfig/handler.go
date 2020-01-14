@@ -22,7 +22,7 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -172,7 +172,7 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, enum.CDNName(cdn)); err != nil {
+	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, tce.CDNName(cdn)); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snapshotting CRConfig and Monitoring: starting old certificate deletion job: "+err.Error()))
 		return
 	}
@@ -215,7 +215,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, enum.CDNName(cdn)); err != nil {
+	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, tce.CDNName(cdn)); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" old snapshotting CRConfig and Monitoring: starting old certificate deletion job: "+err.Error()))
 		return
 	}

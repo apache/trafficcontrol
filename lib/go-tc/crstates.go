@@ -21,19 +21,19 @@ package tc
 
 import (
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 )
 
 // Crstates includes availability data for caches and delivery services, as gathered and aggregated by this Traffic Monitor. It is designed to be served at an API endpoint primarily for Traffic Routers (Content Router) to consume.
 type CRStates struct {
-	Caches          map[enum.CacheName]IsAvailable                       `json:"caches"`
-	DeliveryService map[enum.DeliveryServiceName]CRStatesDeliveryService `json:"deliveryServices"`
+	Caches          map[tce.CacheName]IsAvailable                       `json:"caches"`
+	DeliveryService map[tce.DeliveryServiceName]CRStatesDeliveryService `json:"deliveryServices"`
 }
 
 // DeliveryService contains data about the availability of a particular delivery service, and which caches in that delivery service have been marked as unavailable.
 type CRStatesDeliveryService struct {
-	DisabledLocations []enum.CacheGroupName `json:"disabledLocations"`
-	IsAvailable       bool                  `json:"isAvailable"`
+	DisabledLocations []tce.CacheGroupName `json:"disabledLocations"`
+	IsAvailable       bool                 `json:"isAvailable"`
 }
 
 // IsAvailable contains whether the given cache or delivery service is available. It is designed for JSON serialization, namely in the Traffic Monitor 1.0 API.
@@ -44,8 +44,8 @@ type IsAvailable struct {
 // NewCRStates creates a new CR states object, initializing pointer members.
 func NewCRStates() CRStates {
 	return CRStates{
-		Caches:          map[enum.CacheName]IsAvailable{},
-		DeliveryService: map[enum.DeliveryServiceName]CRStatesDeliveryService{},
+		Caches:          map[tce.CacheName]IsAvailable{},
+		DeliveryService: map[tce.DeliveryServiceName]CRStatesDeliveryService{},
 	}
 }
 
@@ -62,8 +62,8 @@ func (a CRStates) Copy() CRStates {
 }
 
 // CopyDeliveryServices creates a deep copy of the delivery service availability data.. It does not mutate, and is thus safe for multiple goroutines.
-func (a CRStates) CopyDeliveryServices() map[enum.DeliveryServiceName]CRStatesDeliveryService {
-	b := map[enum.DeliveryServiceName]CRStatesDeliveryService{}
+func (a CRStates) CopyDeliveryServices() map[tce.DeliveryServiceName]CRStatesDeliveryService {
+	b := map[tce.DeliveryServiceName]CRStatesDeliveryService{}
 	for k, v := range a.DeliveryService {
 		b[k] = v
 	}
@@ -71,8 +71,8 @@ func (a CRStates) CopyDeliveryServices() map[enum.DeliveryServiceName]CRStatesDe
 }
 
 // CopyCaches creates a deep copy of the cache availability data.. It does not mutate, and is thus safe for multiple goroutines.
-func (a CRStates) CopyCaches() map[enum.CacheName]IsAvailable {
-	b := map[enum.CacheName]IsAvailable{}
+func (a CRStates) CopyCaches() map[tce.CacheName]IsAvailable {
+	b := map[tce.CacheName]IsAvailable{}
 	for k, v := range a.Caches {
 		b[k] = v
 	}

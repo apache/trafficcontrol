@@ -22,7 +22,7 @@ package atscdn
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -70,8 +70,8 @@ func GetRegexRemapDotConfig(w http.ResponseWriter, r *http.Request) {
 
 // TODO combine with GetCacheURLDSes?
 
-func GetCDNDSes(tx *sql.Tx, cdn enum.CDNName) (map[enum.DeliveryServiceName]atscfg.CDNDS, error) {
-	dses := map[enum.DeliveryServiceName]atscfg.CDNDS{}
+func GetCDNDSes(tx *sql.Tx, cdn tce.CDNName) (map[tce.DeliveryServiceName]atscfg.CDNDS, error) {
+	dses := map[tce.DeliveryServiceName]atscfg.CDNDS{}
 	qry := `
 SELECT
   ds.xml_id,
@@ -94,7 +94,7 @@ WHERE
 	defer rows.Close()
 
 	for rows.Next() {
-		dsName := enum.DeliveryServiceName("")
+		dsName := tce.DeliveryServiceName("")
 		ds := atscfg.CDNDS{}
 		if err := rows.Scan(&dsName, &ds.QStringIgnore, &ds.CacheURL, &ds.OrgServerFQDN, &ds.RegexRemap); err != nil {
 			return nil, errors.New("scanning: " + err.Error())

@@ -20,7 +20,7 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/url"
 	"regexp"
 	"sort"
@@ -56,12 +56,12 @@ const ParentConfigCacheParamNotAParent = "not_a_parent"
 const DeliveryServicesAllParentsKey = "all_parents"
 
 type ParentConfigDS struct {
-	Name            enum.DeliveryServiceName
-	QStringIgnore   enum.QStringIgnore
+	Name            tce.DeliveryServiceName
+	QStringIgnore   tce.QStringIgnore
 	OriginFQDN      string
 	MultiSiteOrigin bool
 	OriginShield    string
-	Type            enum.DSType
+	Type            tce.DSType
 	QStringHandling string
 
 	RequiredCapabilities map[ServerCapability]struct{}
@@ -182,7 +182,7 @@ func MakeParentDotConfig(
 
 		for _, ds := range parentConfigDSes {
 			parentQStr := "ignore"
-			if ds.QStringHandling == "" && ds.MSOAlgorithm == enum.AlgorithmConsistentHash && ds.QStringIgnore == enum.QStringIgnoreUseInCacheKeyAndPassUp {
+			if ds.QStringHandling == "" && ds.MSOAlgorithm == tce.AlgorithmConsistentHash && ds.QStringIgnore == tce.QStringIgnoreUseInCacheKeyAndPassUp {
 				parentQStr = "consider"
 			}
 
@@ -248,7 +248,7 @@ func MakeParentDotConfig(
 		sort.Sort(sort.StringSlice(textArr))
 		text = hdr + strings.Join(textArr, "")
 	} else {
-		processedOriginsToDSNames := map[string]enum.DeliveryServiceName{}
+		processedOriginsToDSNames := map[string]tce.DeliveryServiceName{}
 
 		queryStringHandling := serverParams[ParentConfigParamQStringHandling] // "qsh" in Perl
 
@@ -289,7 +289,7 @@ func MakeParentDotConfig(
 			}
 
 			// TODO encode this in a DSType func, IsGoDirect() ?
-			if dsType := enum.DSType(ds.Type); dsType == enum.DSTypeHTTPNoCache || dsType == enum.DSTypeHTTPLive || dsType == enum.DSTypeDNSLive {
+			if dsType := tce.DSType(ds.Type); dsType == tce.DSTypeHTTPNoCache || dsType == tce.DSTypeHTTPLive || dsType == tce.DSTypeDNSLive {
 				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
 			} else {
 
@@ -309,7 +309,7 @@ func MakeParentDotConfig(
 				if parentQStr == "" {
 					parentQStr = "ignore"
 				}
-				if ds.QStringIgnore == enum.QStringIgnoreUseInCacheKeyAndPassUp && dsQSH == "" {
+				if ds.QStringIgnore == tce.QStringIgnoreUseInCacheKeyAndPassUp && dsQSH == "" {
 					parentQStr = "consider"
 				}
 
@@ -322,7 +322,7 @@ func MakeParentDotConfig(
 		parents, secondaryParents := getParentStrs(ParentConfigDSTopLevel{}, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
 		// TODO determine if this is necessary. It's super-dangerous, and moreover ignores Server Capabilitites.
 		defaultDestText := `dest_domain=. ` + parents
-		if serverParams[ParentConfigParamAlgorithm] == enum.AlgorithmConsistentHash {
+		if serverParams[ParentConfigParamAlgorithm] == tce.AlgorithmConsistentHash {
 			defaultDestText += secondaryParents
 		}
 		defaultDestText += ` round_robin=consistent_hash go_direct=false`

@@ -21,7 +21,7 @@ package manager
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/url"
 	"os"
 	"strconv"
@@ -237,14 +237,14 @@ func monitorConfigListen(
 		for _, srv := range monitorConfig.TrafficServer {
 			caches[srv.HostName] = srv.ServerStatus
 
-			cacheName := enum.CacheName(srv.HostName)
+			cacheName := tce.CacheName(srv.HostName)
 
-			srvStatus := enum.CacheStatusFromString(srv.ServerStatus)
-			if srvStatus == enum.CacheStatusOnline {
+			srvStatus := tce.CacheStatusFromString(srv.ServerStatus)
+			if srvStatus == tce.CacheStatusOnline {
 				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: true})
 				continue
 			}
-			if srvStatus == enum.CacheStatusOffline {
+			if srvStatus == tce.CacheStatusOffline {
 				continue
 			}
 			// seed states with available = false until our polling cycle picks up a result
@@ -284,18 +284,18 @@ func monitorConfigListen(
 			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 		}
 
-		peerSet := map[enum.TrafficMonitorName]struct{}{}
+		peerSet := map[tce.TrafficMonitorName]struct{}{}
 		for _, srv := range monitorConfig.TrafficMonitor {
 			if srv.HostName == staticAppData.Hostname {
 				continue
 			}
-			if enum.CacheStatusFromString(srv.ServerStatus) != enum.CacheStatusOnline {
+			if tce.CacheStatusFromString(srv.ServerStatus) != tce.CacheStatusOnline {
 				continue
 			}
 			// TODO: the URL should be config driven. -jse
 			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
 			peerURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN} // TODO determine timeout.
-			peerSet[enum.TrafficMonitorName(srv.HostName)] = struct{}{}
+			peerSet[tce.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
 		statURLSubscriber <- poller.CachePollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
@@ -321,8 +321,8 @@ func monitorConfigListen(
 		// TODO because there are multiple writers to localStates.DeliveryService, there is a race condition, where MonitorConfig (this func) and HealthResultManager could write at the same time, and the HealthResultManager could overwrite a delivery service addition or deletion here. Probably the simplest and most performant fix would be a lock-free algorithm using atomic compare-and-swaps.
 		for _, ds := range monitorConfig.DeliveryService {
 			// since caches default to unavailable, also default DS false
-			if _, exists := localStates.GetDeliveryService(enum.DeliveryServiceName(ds.XMLID)); !exists {
-				localStates.SetDeliveryService(enum.DeliveryServiceName(ds.XMLID), tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []enum.CacheGroupName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
+			if _, exists := localStates.GetDeliveryService(tce.DeliveryServiceName(ds.XMLID)); !exists {
+				localStates.SetDeliveryService(tce.DeliveryServiceName(ds.XMLID), tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []tce.CacheGroupName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
 			}
 		}
 		for ds := range localStates.GetDeliveryServices() {

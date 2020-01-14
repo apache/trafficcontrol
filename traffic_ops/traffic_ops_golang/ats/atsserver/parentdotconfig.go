@@ -22,7 +22,7 @@ package atsserver
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strconv"
 	"strings"
@@ -183,12 +183,12 @@ func GetATSMajorVersion(tx *sql.Tx, serverProfileID int) (int, error) {
 }
 
 type ParentConfigDS struct {
-	Name            enum.DeliveryServiceName
-	QStringIgnore   enum.QStringIgnore
+	Name            tce.DeliveryServiceName
+	QStringIgnore   tce.QStringIgnore
 	OriginFQDN      string
 	MultiSiteOrigin bool
 	OriginShield    string
-	Type            enum.DSType
+	Type            tce.DSType
 
 	QStringHandling string
 }
@@ -206,7 +206,7 @@ func ParentConfigDSQuerySelect() string {
 	return `
 SELECT
   ds.xml_id,
-  COALESCE(ds.qstring_ignore, ` + enum.QStringIgnoreUseInCacheKeyAndPassUp.String() + `),
+  COALESCE(ds.qstring_ignore, ` + tce.QStringIgnoreUseInCacheKeyAndPassUp.String() + `),
   COALESCE((SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
     FROM origin o
     WHERE o.deliveryservice = ds.id
@@ -257,7 +257,7 @@ func ParentConfigDSQueryTopLevel() string {
 		ParentConfigDSQueryOrder
 }
 
-func getParentConfigDSTopLevel(tx *sql.Tx, cdnName enum.CDNName) ([]atscfg.ParentConfigDSTopLevel, error) {
+func getParentConfigDSTopLevel(tx *sql.Tx, cdnName tce.CDNName) ([]atscfg.ParentConfigDSTopLevel, error) {
 	dses, err := getParentConfigDSRaw(tx, ParentConfigDSQueryTopLevel(), []interface{}{cdnName})
 	if err != nil {
 		return nil, errors.New("getting top level raw parent config ds: " + err.Error())
@@ -343,7 +343,7 @@ func getParentConfigDSRaw(tx *sql.Tx, qry string, qryParams []interface{}) ([]at
 			log.Errorf("parent.config generation: getting parent config ds: server %+v has no origin, skipping!\n", d.Name)
 			continue
 		}
-		d.Type = enum.DSTypeFromString(string(d.Type))
+		d.Type = tce.DSTypeFromString(string(d.Type))
 		for _, cap := range requiredCaps {
 
 			d.RequiredCapabilities[atscfg.ServerCapability(cap)] = struct{}{}
@@ -468,16 +468,16 @@ func getParentConfigDSParamsTopLevel(tx *sql.Tx, dses []atscfg.ParentConfigDSTop
 	return dses, nil
 }
 
-func getParentConfigDSParamsRaw(tx *sql.Tx, qry string, dsNames []string) (map[enum.DeliveryServiceName]map[string]string, error) {
+func getParentConfigDSParamsRaw(tx *sql.Tx, qry string, dsNames []string) (map[tce.DeliveryServiceName]map[string]string, error) {
 	rows, err := tx.Query(qry, pq.Array(dsNames))
 	if err != nil {
 		return nil, errors.New("querying: " + err.Error())
 	}
 	defer rows.Close()
 
-	params := map[enum.DeliveryServiceName]map[string]string{}
+	params := map[tce.DeliveryServiceName]map[string]string{}
 	for rows.Next() {
-		dsName := enum.DeliveryServiceName("")
+		dsName := tce.DeliveryServiceName("")
 		pName := ""
 		pVal := ""
 		if err := rows.Scan(&dsName, &pName, &pVal); err != nil {
@@ -524,7 +524,7 @@ WITH parent_cachegroup_ids AS (
   SELECT cg.id as v
   FROM cachegroup cg
   JOIN type on type.id = cg.type
-  WHERE type.name = '` + enum.CacheGroupOriginTypeName + `'
+  WHERE type.name = '` + tce.CacheGroupOriginTypeName + `'
 )
 `
 	} else {
@@ -564,8 +564,8 @@ FROM
   JOIN status st ON st.id = s.status
 WHERE
   cg.id IN (SELECT v FROM parent_cachegroup_ids)
-  AND (stype.name = '` + enum.OriginTypeName + `' OR stype.name LIKE '` + enum.EdgeTypePrefix + `%' OR stype.name LIKE '` + enum.MidTypePrefix + `%')
-  AND (st.name = '` + string(enum.CacheStatusReported) + `' OR st.name = '` + string(enum.CacheStatusOnline) + `')
+  AND (stype.name = '` + tce.OriginTypeName + `' OR stype.name LIKE '` + tce.EdgeTypePrefix + `%' OR stype.name LIKE '` + tce.MidTypePrefix + `%')
+  AND (st.name = '` + string(tce.CacheStatusReported) + `' OR st.name = '` + string(tce.CacheStatusOnline) + `')
   AND cdn.name = $1
 `
 
@@ -635,7 +635,7 @@ WHERE
 	}
 
 	for _, cgServer := range cgServers {
-		if cgServer.TypeName == enum.OriginTypeName {
+		if cgServer.TypeName == tce.OriginTypeName {
 			dses := cgServerDSes[cgServer.ServerID]
 			for _, ds := range dses {
 				orgURI := dsOrigins[ds]

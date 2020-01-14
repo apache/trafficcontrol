@@ -21,7 +21,7 @@ package atsserver
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strings"
 
@@ -47,7 +47,7 @@ func GetCacheDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !strings.HasPrefix(string(serverType), enum.MidTypePrefix) {
+	if !strings.HasPrefix(string(serverType), tce.MidTypePrefix) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Error - incorrect file scope for route used.  Please use the profiles route."), nil)
 		return
 	}

@@ -22,7 +22,7 @@ package crconfigregex
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"regexp"
 	"strings"
 
@@ -38,13 +38,13 @@ import (
 // 3. Everything else
 // This allows us to do a cheap match on 1 and 2, and only regex match the uncommon case.
 type Regexes struct {
-	DirectMatches                      map[string]enum.DeliveryServiceName
-	DotStartSlashDotFooSlashDotDotStar map[string]enum.DeliveryServiceName
-	RegexMatch                         map[*regexp.Regexp]enum.DeliveryServiceName
+	DirectMatches                      map[string]tce.DeliveryServiceName
+	DotStartSlashDotFooSlashDotDotStar map[string]tce.DeliveryServiceName
+	RegexMatch                         map[*regexp.Regexp]tce.DeliveryServiceName
 }
 
 // DeliveryService returns the delivery service which matches the given fqdn, or false.
-func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (enum.DeliveryServiceName, bool) {
+func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (tce.DeliveryServiceName, bool) {
 	if ds, ok := d.DotStartSlashDotFooSlashDotDotStar[subdomain]; ok {
 		return ds, true
 	}
@@ -63,19 +63,19 @@ func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (enum.D
 // NewRegexes constructs a new Regexes object, initializing internal pointer members.
 func new() Regexes {
 	return Regexes{
-		DirectMatches:                      map[string]enum.DeliveryServiceName{},
-		DotStartSlashDotFooSlashDotDotStar: map[string]enum.DeliveryServiceName{},
-		RegexMatch:                         map[*regexp.Regexp]enum.DeliveryServiceName{},
+		DirectMatches:                      map[string]tce.DeliveryServiceName{},
+		DotStartSlashDotFooSlashDotDotStar: map[string]tce.DeliveryServiceName{},
+		RegexMatch:                         map[*regexp.Regexp]tce.DeliveryServiceName{},
 	}
 }
 
 // getDeliveryServiceRegexes gets the regexes of each delivery service, for the given CDN, from Traffic Ops.
 // Returns a map[deliveryService][]regex.
 func Get(crc *tc.CRConfig) (Regexes, error) {
-	dsRegexes := map[enum.DeliveryServiceName][]string{}
+	dsRegexes := map[tce.DeliveryServiceName][]string{}
 
 	for dsNameStr, dsData := range crc.DeliveryServices {
-		dsName := enum.DeliveryServiceName(dsNameStr)
+		dsName := tce.DeliveryServiceName(dsNameStr)
 		if len(dsData.MatchSets) < 1 {
 			return Regexes{}, errors.New("CRConfig missing regex for '" + string(dsName) + "'")
 		}
@@ -91,7 +91,7 @@ func Get(crc *tc.CRConfig) (Regexes, error) {
 }
 
 // TODO precompute, move to TOData; call when we get new delivery services, instead of every time we create new stats
-func createRegexes(dsToRegex map[enum.DeliveryServiceName][]string) (Regexes, error) {
+func createRegexes(dsToRegex map[tce.DeliveryServiceName][]string) (Regexes, error) {
 	dsRegexes := new()
 
 	for ds, regexStrs := range dsToRegex {

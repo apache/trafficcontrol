@@ -20,13 +20,13 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"sort"
 	"strings"
 )
 
 func MakeServerUnknown(
-	serverName enum.CacheName,
+	serverName tce.CacheName,
 	serverDomain string,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)

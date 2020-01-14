@@ -20,7 +20,7 @@
 package datareq
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"net/url"
 	"time"
@@ -36,7 +36,7 @@ import (
 )
 
 type StatSummary struct {
-	Caches map[enum.CacheName]map[string]StatSummaryStat `json:"caches"`
+	Caches map[tce.CacheName]map[string]StatSummaryStat `json:"caches"`
 	srvhttp.CommonAPIData
 }
 
@@ -66,11 +66,11 @@ func srvStatSummary(params url.Values, errorCount threadsafe.Uint, path string, 
 func createStatSummary(statResultHistory threadsafe.ResultStatHistory, filter cache.Filter, params url.Values) StatSummary {
 	statPrefix := "ats."
 	ss := StatSummary{
-		Caches:        map[enum.CacheName]map[string]StatSummaryStat{},
+		Caches:        map[tce.CacheName]map[string]StatSummaryStat{},
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 	}
 
-	statResultHistory.Range(func(cacheName enum.CacheName, stats threadsafe.ResultStatValHistory) bool {
+	statResultHistory.Range(func(cacheName tce.CacheName, stats threadsafe.ResultStatValHistory) bool {
 		if !filter.UseCache(cacheName) {
 			return true
 		}

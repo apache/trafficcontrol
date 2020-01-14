@@ -21,7 +21,7 @@ package tmcheck
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -68,12 +68,12 @@ func ValidateOfflineStatesWithCRConfig(tmURI string, crConfig *tc.CRConfig, toCl
 // ValidateCRStates validates that no OFFLINE or ADMIN_DOWN caches in the given CRConfig are marked Available in the given CRStates.
 func ValidateCRStates(crstates *tc.CRStates, crconfig *tc.CRConfig) error {
 	for cacheName, cacheInfo := range crconfig.ContentServers {
-		status := enum.CacheStatusFromString(string(*cacheInfo.ServerStatus))
-		if status != enum.CacheStatusAdminDown && status != enum.CacheStatusOffline {
+		status := tce.CacheStatusFromString(string(*cacheInfo.ServerStatus))
+		if status != tce.CacheStatusAdminDown && status != tce.CacheStatusOffline {
 			continue
 		}
 
-		available, ok := crstates.Caches[enum.CacheName(cacheName)]
+		available, ok := crstates.Caches[tce.CacheName(cacheName)]
 		if !ok {
 			return fmt.Errorf("Cache %v in CRConfig but not CRStates", cacheName)
 		}
@@ -105,15 +105,15 @@ func AllMonitorsCRStatesOfflineValidator(
 	interval time.Duration,
 	includeOffline bool,
 	grace time.Duration,
-	onErr func(enum.TrafficMonitorName, error),
-	onResumeSuccess func(enum.TrafficMonitorName),
-	onCheck func(enum.TrafficMonitorName, error),
+	onErr func(tce.TrafficMonitorName, error),
+	onResumeSuccess func(tce.TrafficMonitorName),
+	onCheck func(tce.TrafficMonitorName, error),
 ) {
 	AllValidator(toClient, interval, includeOffline, grace, onErr, onResumeSuccess, onCheck, ValidateAllMonitorsOfflineStates)
 }
 
 // ValidateOfflineStates validates that no OFFLINE or ADMIN_DOWN caches in the given Traffic Ops' CRConfig are marked Available in the given Traffic Monitor's CRStates.
-func ValidateAllMonitorsOfflineStates(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error) {
+func ValidateAllMonitorsOfflineStates(toClient *to.Session, includeOffline bool) (map[tce.TrafficMonitorName]error, error) {
 	servers, err := GetMonitors(toClient, includeOffline)
 	if err != nil {
 		return nil, err
@@ -121,16 +121,16 @@ func ValidateAllMonitorsOfflineStates(toClient *to.Session, includeOffline bool)
 
 	crConfigs := GetCRConfigs(GetCDNs(servers), toClient)
 
-	errs := map[enum.TrafficMonitorName]error{}
+	errs := map[tce.TrafficMonitorName]error{}
 	for _, server := range servers {
-		crConfig := crConfigs[enum.CDNName(server.CDNName)]
+		crConfig := crConfigs[tce.CDNName(server.CDNName)]
 		if err := crConfig.Err; err != nil {
-			errs[enum.TrafficMonitorName(server.HostName)] = fmt.Errorf("getting CRConfig: %v", err)
+			errs[tce.TrafficMonitorName(server.HostName)] = fmt.Errorf("getting CRConfig: %v", err)
 			continue
 		}
 
 		uri := fmt.Sprintf("http://%s.%s", server.HostName, server.DomainName)
-		errs[enum.TrafficMonitorName(server.HostName)] = ValidateOfflineStatesWithCRConfig(uri, crConfig.CRConfig, toClient)
+		errs[tce.TrafficMonitorName(server.HostName)] = ValidateOfflineStatesWithCRConfig(uri, crConfig.CRConfig, toClient)
 	}
 	return errs, nil
 }

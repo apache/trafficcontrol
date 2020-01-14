@@ -20,13 +20,13 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
 
 func TestMakeHostingDotConfig(t *testing.T) {
-	serverName := enum.CacheName("server0")
+	serverName := tce.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	params := map[string]string{

@@ -24,7 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"time"
 
 	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/availableservers"
@@ -36,11 +36,11 @@ import (
 )
 
 func updateAvailableServers(crcThs crconfig.Ths, crsThs crstates.Ths, as availableservers.AvailableServers) {
-	newAS := map[enum.DeliveryServiceName]map[enum.CacheGroupName][]enum.CacheName{}
+	newAS := map[tce.DeliveryServiceName]map[tce.CacheGroupName][]tce.CacheName{}
 	crc := crcThs.Get()
 	crs := crsThs.Get()
 	for serverNameStr, server := range crc.ContentServers {
-		serverName := enum.CacheName(serverNameStr)
+		serverName := tce.CacheName(serverNameStr)
 		if !crs.Caches[serverName].IsAvailable {
 			continue
 		}
@@ -48,11 +48,11 @@ func updateAvailableServers(crcThs crconfig.Ths, crsThs crstates.Ths, as availab
 			fmt.Println("ERROR updateAvailableServers CRConfig server " + serverNameStr + " cachegroup is nil")
 			continue
 		}
-		cgName := enum.CacheGroupName(*server.CacheGroup)
+		cgName := tce.CacheGroupName(*server.CacheGroup)
 		for dsNameStr, _ := range server.DeliveryServices {
-			dsName := enum.DeliveryServiceName(dsNameStr)
+			dsName := tce.DeliveryServiceName(dsNameStr)
 			if newAS[dsName] == nil {
-				newAS[dsName] = map[enum.CacheGroupName][]enum.CacheName{}
+				newAS[dsName] = map[tce.CacheGroupName][]tce.CacheName{}
 			}
 			newAS[dsName][cgName] = append(newAS[dsName][cgName], serverName)
 		}

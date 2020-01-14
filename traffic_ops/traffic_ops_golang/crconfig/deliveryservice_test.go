@@ -22,7 +22,7 @@ package crconfig
 import (
 	"context"
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -433,17 +433,17 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	}
 }
 
-func ExpectedGetStaticDNSEntries(expectedMakeDSes map[string]tc.CRConfigDeliveryService) map[enum.DeliveryServiceName][]tc.CRConfigStaticDNSEntry {
-	expected := map[enum.DeliveryServiceName][]tc.CRConfigStaticDNSEntry{}
+func ExpectedGetStaticDNSEntries(expectedMakeDSes map[string]tc.CRConfigDeliveryService) map[tce.DeliveryServiceName][]tc.CRConfigStaticDNSEntry {
+	expected := map[tce.DeliveryServiceName][]tc.CRConfigStaticDNSEntry{}
 	for dsName, ds := range expectedMakeDSes {
 		for _, entry := range ds.StaticDNSEntries {
-			expected[enum.DeliveryServiceName(dsName)] = append(expected[enum.DeliveryServiceName(dsName)], tc.CRConfigStaticDNSEntry{Name: entry.Name, TTL: entry.TTL, Value: entry.Value, Type: entry.Type})
+			expected[tce.DeliveryServiceName(dsName)] = append(expected[tce.DeliveryServiceName(dsName)], tc.CRConfigStaticDNSEntry{Name: entry.Name, TTL: entry.TTL, Value: entry.Value, Type: entry.Type})
 		}
 	}
 	return expected
 }
 
-func MockGetStaticDNSEntries(mock sqlmock.Sqlmock, expected map[enum.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, cdn string) {
+func MockGetStaticDNSEntries(mock sqlmock.Sqlmock, expected map[tce.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, cdn string) {
 	rows := sqlmock.NewRows([]string{"ds", "name", "ttl", "value", "type"})
 	for dsName, entries := range expected {
 		for _, entry := range entries {

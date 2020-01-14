@@ -20,7 +20,7 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
@@ -33,9 +33,9 @@ func TestMakeCacheDotConfig(t *testing.T) {
 	originFQDN1 := "my.other.fqdn.example.net"
 	originFQDNNoCache := "nocache-fqn.example.net"
 	profileDSes := []ProfileDS{
-		ProfileDS{Type: enum.DSTypeHTTP, OriginFQDN: &originFQDN0},
-		ProfileDS{Type: enum.DSTypeDNS, OriginFQDN: &originFQDN1},
-		ProfileDS{Type: enum.DSTypeHTTPNoCache, OriginFQDN: &originFQDNNoCache},
+		ProfileDS{Type: tce.DSTypeHTTP, OriginFQDN: &originFQDN0},
+		ProfileDS{Type: tce.DSTypeDNS, OriginFQDN: &originFQDN1},
+		ProfileDS{Type: tce.DSTypeHTTPNoCache, OriginFQDN: &originFQDNNoCache},
 	}
 
 	txt := MakeCacheDotConfig(profileName, profileDSes, toolName, toURL)

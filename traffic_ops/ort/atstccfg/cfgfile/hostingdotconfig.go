@@ -21,7 +21,7 @@ package cfgfile
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 	"strings"
 
@@ -63,7 +63,7 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 		return "", errors.New("server '" + serverNameOrID + " not found in servers")
 	}
 
-	serverName := enum.CacheName(server.HostName)
+	serverName := tce.CacheName(server.HostName)
 
 	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
 	if err != nil {
@@ -97,12 +97,12 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 		return "", errors.New("getting delivery services: " + err.Error())
 	}
 
-	cdnServers := map[enum.CacheName]tc.Server{}
+	cdnServers := map[tce.CacheName]tc.Server{}
 	for _, sv := range servers {
 		if sv.CDNID != server.CDNID {
 			continue
 		}
-		cdnServers[enum.CacheName(sv.HostName)] = sv
+		cdnServers[tce.CacheName(sv.HostName)] = sv
 	}
 
 	serverIDs := []int{}
@@ -133,9 +133,9 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 		dsServerMap[*dss.DeliveryService][*dss.Server] = struct{}{}
 	}
 
-	hostingDSes := map[enum.DeliveryServiceName]tc.DeliveryServiceNullable{}
+	hostingDSes := map[tce.DeliveryServiceName]tc.DeliveryServiceNullable{}
 
-	isMid := strings.HasPrefix(server.Type, enum.MidTypePrefix)
+	isMid := strings.HasPrefix(server.Type, tce.MidTypePrefix)
 
 	for _, ds := range dses {
 		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
@@ -152,7 +152,7 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 		}
 
 		if isMid {
-			if !strings.HasSuffix(string(*ds.Type), enum.DSTypeLiveNationalSuffix) {
+			if !strings.HasSuffix(string(*ds.Type), tce.DSTypeLiveNationalSuffix) {
 				continue
 			}
 
@@ -161,7 +161,7 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 				continue
 			}
 		} else {
-			if !strings.HasSuffix(string(*ds.Type), enum.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), enum.DSTypeLiveSuffix) {
+			if !strings.HasSuffix(string(*ds.Type), tce.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), tce.DSTypeLiveSuffix) {
 				continue
 			}
 
@@ -175,7 +175,7 @@ func GetConfigFileServerHostingDotConfig(cfg config.TCCfg, serverNameOrID string
 			}
 		}
 
-		hostingDSes[enum.DeliveryServiceName(*ds.XMLID)] = ds
+		hostingDSes[tce.DeliveryServiceName(*ds.XMLID)] = ds
 	}
 
 	originSet := map[string]struct{}{}

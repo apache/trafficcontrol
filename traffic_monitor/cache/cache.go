@@ -21,7 +21,7 @@ package cache
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"io"
 	"time"
 
@@ -58,7 +58,7 @@ func (handler Handler) Precompute() bool {
 
 // PrecomputedData represents data parsed and pre-computed from the Result.
 type PrecomputedData struct {
-	DeliveryServiceStats map[enum.DeliveryServiceName]*AStat
+	DeliveryServiceStats map[tce.DeliveryServiceName]*AStat
 	OutBytes             int64
 	MaxKbps              int64
 	Errors               []error
@@ -68,7 +68,7 @@ type PrecomputedData struct {
 
 // Result is the data result returned by a cache.
 type Result struct {
-	ID              enum.CacheName
+	ID              tce.CacheName
 	Error           error
 	Astats          Astats
 	Time            time.Time
@@ -110,13 +110,13 @@ type Stat struct {
 // Stats is designed for returning via the API. It contains result history for each cache, as well as common API data.
 type Stats struct {
 	srvhttp.CommonAPIData
-	Caches map[enum.CacheName]map[string][]ResultStatVal `json:"caches"`
+	Caches map[tce.CacheName]map[string][]ResultStatVal `json:"caches"`
 }
 
 // Filter filters whether stats and caches should be returned from a data set.
 type Filter interface {
 	UseStat(name string) bool
-	UseCache(name enum.CacheName) bool
+	UseCache(name tce.CacheName) bool
 	WithinStatHistoryMax(int) bool
 }
 
@@ -147,7 +147,7 @@ func ComputedStats() map[string]StatComputeFunc {
 			return combinedState.IsAvailable // if the cache is missing, default to false
 		},
 		"isHealthy": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			if enum.CacheStatusFromString(serverInfo.ServerStatus) == enum.CacheStatusAdminDown {
+			if tce.CacheStatusFromString(serverInfo.ServerStatus) == tce.CacheStatusAdminDown {
 				return true
 			}
 			return combinedState.IsAvailable
@@ -210,7 +210,7 @@ func ComputedStats() map[string]StatComputeFunc {
 func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v (format '%v') handle start\n", pollID, time.Now(), format)
 	result := Result{
-		ID:           enum.CacheName(id),
+		ID:           tce.CacheName(id),
 		Time:         reqEnd,
 		RequestTime:  reqTime,
 		PollID:       pollID,

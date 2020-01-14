@@ -21,7 +21,7 @@ package atscfg
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"sort"
 	"strconv"
 	"strings"
@@ -34,7 +34,7 @@ const CacheKeyParameterConfigFile = "cachekey.config"
 
 type RemapConfigDSData struct {
 	ID                   int
-	Type                 enum.DSType
+	Type                 tce.DSType
 	OriginFQDN           *string
 	MidHeaderRewrite     *string
 	CacheURL             *string
@@ -62,7 +62,7 @@ type RemapConfigDSData struct {
 }
 
 func MakeRemapDotConfig(
-	serverName enum.CacheName,
+	serverName tce.CacheName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	atsMajorVersion int,
@@ -74,7 +74,7 @@ func MakeRemapDotConfig(
 ) string {
 	hdr := GenericHeaderComment(string(serverName), toToolName, toURL)
 	text := ""
-	if enum.CacheTypeFromString(serverInfo.Type) == enum.CacheTypeMid {
+	if tce.CacheTypeFromString(serverInfo.Type) == tce.CacheTypeMid {
 		text = GetServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesCacheKeyConfigParams, serverInfo, remapDSData, hdr)
 	} else {
 		text = GetServerConfigRemapDotConfigForEdge(cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, atsMajorVersion, hdr)
@@ -113,7 +113,7 @@ func GetServerConfigRemapDotConfigForMid(
 		if ds.MidHeaderRewrite != nil && *ds.MidHeaderRewrite != "" {
 			midRemap += ` @plugin=header_rewrite.so @pparam=` + MidHeaderRewriteConfigFileName(ds.Name)
 		}
-		if ds.QStringIgnore != nil && *ds.QStringIgnore == enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
+		if ds.QStringIgnore != nil && *ds.QStringIgnore == tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
 			qstr, addedCacheURL, addedCacheKey := GetQStringIgnoreRemap(atsMajorVersion)
 			if addedCacheURL {
 				hasCacheURL = true
@@ -139,7 +139,7 @@ func GetServerConfigRemapDotConfigForMid(
 				midRemap += ` @pparam=--` + name + "=" + val
 			}
 		}
-		if ds.RangeRequestHandling != nil && *ds.RangeRequestHandling == enum.RangeRequestHandlingCacheRangeRequest {
+		if ds.RangeRequestHandling != nil && *ds.RangeRequestHandling == tce.RangeRequestHandlingCacheRangeRequest {
 			midRemap += ` @plugin=cache_range_requests.so`
 		}
 
@@ -172,7 +172,7 @@ func GetServerConfigRemapDotConfigForEdge(
 
 	for _, ds := range dses {
 		remapText := ""
-		if ds.Type == enum.DSTypeAnyMap {
+		if ds.Type == tce.DSTypeAnyMap {
 			if ds.RemapText == nil {
 				log.Errorln("ds '" + ds.Name + "' is ANY_MAP, but has no remap text - skipping")
 				continue
@@ -222,9 +222,9 @@ func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int,
 	}
 
 	if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm != "" {
-		if *ds.SigningAlgorithm == enum.SigningAlgorithmURLSig {
+		if *ds.SigningAlgorithm == tce.SigningAlgorithmURLSig {
 			text += ` @plugin=url_sig.so @pparam=url_sig_` + ds.Name + ".config"
-		} else if *ds.SigningAlgorithm == enum.SigningAlgorithmURISigning {
+		} else if *ds.SigningAlgorithm == tce.SigningAlgorithmURISigning {
 			text += ` @plugin=uri_signing.so @pparam=uri_signing_` + ds.Name + ".config"
 		}
 	}
@@ -235,10 +235,10 @@ func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int,
 	hasCacheKey := false
 
 	if ds.QStringIgnore != nil {
-		if *ds.QStringIgnore == enum.QueryStringIgnoreDropAtEdge {
+		if *ds.QStringIgnore == tce.QueryStringIgnoreDropAtEdge {
 			dqsFile := "drop_qstring.config"
 			text += ` @plugin=regex_remap.so @pparam=` + dqsFile
-		} else if *ds.QStringIgnore == enum.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
+		} else if *ds.QStringIgnore == tce.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
 			if _, globalExists := cacheURLConfigParams["location"]; globalExists {
 				log.Warnln("Making remap.config for Delivery Service '" + ds.Name + "': qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter")
 			} else {
@@ -283,9 +283,9 @@ func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int,
 		text += ` @plugin=regex_remap.so @pparam=regex_remap_` + ds.Name + ".config"
 	}
 	if ds.RangeRequestHandling != nil {
-		if *ds.RangeRequestHandling == enum.RangeRequestHandlingBackgroundFetch {
+		if *ds.RangeRequestHandling == tce.RangeRequestHandlingBackgroundFetch {
 			text += ` @plugin=background_fetch.so @pparam=bg_fetch.config`
-		} else if *ds.RangeRequestHandling == enum.RangeRequestHandlingCacheRangeRequest {
+		} else if *ds.RangeRequestHandling == tce.RangeRequestHandlingCacheRangeRequest {
 			text += ` @plugin=cache_range_requests.so `
 		}
 	}
@@ -319,7 +319,7 @@ type RemapLine struct {
 // MakeEdgeDSDataRemapLines returns the remap lines for the given server and delivery service.
 // Returns nil, if the given server and ds have no remap lines, i.e. the DS match is not a host regex, or has no origin FQDN.
 func MakeEdgeDSDataRemapLines(ds RemapConfigDSData, server *ServerInfo) ([]RemapLine, error) {
-	if ds.RegexType == nil || enum.DSMatchType(*ds.RegexType) != enum.DSMatchTypeHostRegex || ds.OriginFQDN == nil || *ds.OriginFQDN == "" {
+	if ds.RegexType == nil || tce.DSMatchType(*ds.RegexType) != tce.DSMatchTypeHostRegex || ds.OriginFQDN == nil || *ds.OriginFQDN == "" {
 		return nil, nil
 	}
 	if ds.Pattern == nil {
@@ -365,10 +365,10 @@ func MakeEdgeDSDataRemapLines(ds RemapConfigDSData, server *ServerInfo) ([]Remap
 		mapFromHTTPS = "https://" + hName + re + *ds.Domain + httpsPortStr + "/"
 	}
 
-	if *ds.Protocol == enum.DSProtocolHTTP || *ds.Protocol == enum.DSProtocolHTTPAndHTTPS {
+	if *ds.Protocol == tce.DSProtocolHTTP || *ds.Protocol == tce.DSProtocolHTTPAndHTTPS {
 		remapLines = append(remapLines, RemapLine{From: mapFromHTTP, To: mapTo})
 	}
-	if *ds.Protocol == enum.DSProtocolHTTPS || *ds.Protocol == enum.DSProtocolHTTPToHTTPS || *ds.Protocol == enum.DSProtocolHTTPAndHTTPS {
+	if *ds.Protocol == tce.DSProtocolHTTPS || *ds.Protocol == tce.DSProtocolHTTPToHTTPS || *ds.Protocol == tce.DSProtocolHTTPAndHTTPS {
 		remapLines = append(remapLines, RemapLine{From: mapFromHTTPS, To: mapTo})
 	}
 

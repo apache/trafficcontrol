@@ -21,7 +21,7 @@ package atscfg
 
 import (
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 
@@ -29,7 +29,7 @@ import (
 )
 
 func TestMakeMetaConfig(t *testing.T) {
-	serverHostName := enum.CacheName("myServer")
+	serverHostName := tce.CacheName("myServer")
 	server := &ServerInfo{
 		CacheGroupID:                  42,
 		CDN:                           "mycdn",
@@ -111,8 +111,8 @@ func TestMakeMetaConfig(t *testing.T) {
 			Location:       "/my/location/",
 		},
 	}
-	uriSignedDSes := []enum.DeliveryServiceName{"mydsname"}
-	dses := map[enum.DeliveryServiceName]struct{}{"mydsname": {}}
+	uriSignedDSes := []tce.DeliveryServiceName{"mydsname"}
+	dses := map[tce.DeliveryServiceName]struct{}{"mydsname": {}}
 
 	scopeParams := map[string]string{"custom.config": string(tc.ATSConfigMetaDataConfigFileScopeProfiles)}
 

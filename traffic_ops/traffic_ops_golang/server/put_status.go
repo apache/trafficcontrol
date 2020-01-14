@@ -24,7 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strings"
 
@@ -75,9 +75,9 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if *status.Name == enum.CacheStatusAdminDown.String() || *status.Name == enum.CacheStatusOffline.String() {
+	if *status.Name == tce.CacheStatusAdminDown.String() || *status.Name == tce.CacheStatusOffline.String() {
 		if reqObj.OfflineReason == nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("offlineReason is required for "+enum.CacheStatusAdminDown.String()+" or "+enum.CacheStatusOffline.String()+" status"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("offlineReason is required for "+tce.CacheStatusAdminDown.String()+" or "+tce.CacheStatusOffline.String()+" status"), nil)
 			return
 		}
 		*reqObj.OfflineReason = inf.User.UserName + ": " + *reqObj.OfflineReason
@@ -95,7 +95,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	msg := "Updated status [ " + *status.Name + " ] for " + serverInfo.HostName + "." + serverInfo.DomainName + " [ " + offlineReason + " ]"
 
 	// queue updates on child servers if server is ^EDGE or ^MID
-	if strings.HasPrefix(serverInfo.Type, enum.CacheTypeEdge.String()) || strings.HasPrefix(serverInfo.Type, enum.CacheTypeMid.String()) {
+	if strings.HasPrefix(serverInfo.Type, tce.CacheTypeEdge.String()) || strings.HasPrefix(serverInfo.Type, tce.CacheTypeMid.String()) {
 		if err := queueUpdatesOnChildCaches(inf.Tx.Tx, serverInfo.CDNID, serverInfo.CachegroupID); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return

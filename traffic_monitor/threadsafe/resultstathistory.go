@@ -23,7 +23,7 @@ package threadsafe
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/url"
 	"sync"
 	"time"
@@ -69,16 +69,16 @@ func NewResultStatHistory() ResultStatHistory {
 	return ResultStatHistory{&sync.Map{}}
 }
 
-func (h ResultStatHistory) LoadOrStore(cache enum.CacheName) ResultStatValHistory {
+func (h ResultStatHistory) LoadOrStore(cache tce.CacheName) ResultStatValHistory {
 	// TODO change to use sync.Pool?
 	v, _ := h.Map.LoadOrStore(cache, NewResultStatValHistory())
 	return v.(ResultStatValHistory)
 }
 
 // Range behaves like sync.Map.Range. It calls f for every value in the map; if f returns false, the iteration is stopped.
-func (h ResultStatHistory) Range(f func(cache enum.CacheName, val ResultStatValHistory) bool) {
+func (h ResultStatHistory) Range(f func(cache tce.CacheName, val ResultStatValHistory) bool) {
 	h.Map.Range(func(k, v interface{}) bool {
-		return f(k.(enum.CacheName), v.(ResultStatValHistory))
+		return f(k.(tce.CacheName), v.(ResultStatValHistory))
 	})
 }
 
@@ -188,7 +188,7 @@ func newStatEqual(history []cache.ResultStatVal, stat interface{}) (bool, error)
 func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInfoHistory, combinedStates tc.CRStates, monitorConfig tc.TrafficMonitorConfigMap, statMaxKbpses cache.Kbpses, filter cache.Filter, params url.Values) ([]byte, error) {
 	stats := cache.Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Caches:        map[enum.CacheName]map[string][]cache.ResultStatVal{},
+		Caches:        map[tce.CacheName]map[string][]cache.ResultStatVal{},
 	}
 
 	computedStats := cache.ComputedStats()

@@ -24,7 +24,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -63,21 +63,21 @@ func GetClient(tx *sql.Tx) (*http.Client, error) {
 }
 
 // GetURLs returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.
-func GetURLs(tx *sql.Tx) (map[enum.CDNName]string, error) {
+func GetURLs(tx *sql.Tx) (map[tce.CDNName]string, error) {
 	rows, err := tx.Query(`
 SELECT s.host_name, s.domain_name, s.tcp_port, c.name as cdn
 FROM server as s
 JOIN type as t ON s.type = t.id
 JOIN status as st ON st.id = s.status
 JOIN cdn as c ON c.id = s.cdn_id
-WHERE t.name = '` + enum.MonitorTypeName + `'
+WHERE t.name = '` + tce.MonitorTypeName + `'
 AND st.name = '` + MonitorOnlineStatus + `'
 `)
 	if err != nil {
 		return nil, errors.New("querying monitors: " + err.Error())
 	}
 	defer rows.Close()
-	monitors := map[enum.CDNName]string{}
+	monitors := map[tce.CDNName]string{}
 	for rows.Next() {
 		host := ""
 		domain := ""
@@ -90,7 +90,7 @@ AND st.name = '` + MonitorOnlineStatus + `'
 		if port.Valid {
 			fqdn += ":" + strconv.FormatInt(port.Int64, 10)
 		}
-		monitors[enum.CDNName(cdn)] = fqdn
+		monitors[tce.CDNName(cdn)] = fqdn
 	}
 	return monitors, nil
 }

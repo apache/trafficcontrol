@@ -22,7 +22,7 @@ package deliveryservice
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"net/http"
 	"strings"
 
@@ -67,7 +67,7 @@ func GetHealth(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, health)
 }
 
-func getHealth(tx *sql.Tx, ds enum.DeliveryServiceName, cdn enum.CDNName) (tc.HealthData, error) {
+func getHealth(tx *sql.Tx, ds tce.DeliveryServiceName, cdn tce.CDNName) (tc.HealthData, error) {
 	monitors, err := monitorhlp.GetURLs(tx)
 	if err != nil {
 		return tc.HealthData{}, errors.New("getting monitors: " + err.Error())
@@ -79,7 +79,7 @@ func getHealth(tx *sql.Tx, ds enum.DeliveryServiceName, cdn enum.CDNName) (tc.He
 	return getMonitorHealth(tx, ds, monitor)
 }
 
-func getMonitorHealth(tx *sql.Tx, ds enum.DeliveryServiceName, monitorFQDN string) (tc.HealthData, error) {
+func getMonitorHealth(tx *sql.Tx, ds tce.DeliveryServiceName, monitorFQDN string) (tc.HealthData, error) {
 	client, err := monitorhlp.GetClient(tx)
 	if err != nil {
 		return tc.HealthData{}, errors.New("getting monitor client: " + err.Error())
@@ -87,7 +87,7 @@ func getMonitorHealth(tx *sql.Tx, ds enum.DeliveryServiceName, monitorFQDN strin
 
 	totalOnline := uint64(0)
 	totalOffline := uint64(0)
-	cgData := map[enum.CacheGroupName]tc.HealthDataCacheGroup{}
+	cgData := map[tce.CacheGroupName]tc.HealthDataCacheGroup{}
 
 	crStates, err := monitorhlp.GetCRStates(monitorFQDN, client)
 	// TODO on err, try another online monitor
@@ -109,7 +109,7 @@ func getMonitorHealth(tx *sql.Tx, ds enum.DeliveryServiceName, monitorFQDN strin
 }
 
 // addHealth adds the given cache states to the given data and totals, and returns the new data and totals
-func addHealth(ds enum.DeliveryServiceName, data map[enum.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (map[enum.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64) {
+func addHealth(ds tce.DeliveryServiceName, data map[tce.CacheGroupName]tc.HealthDataCacheGroup, totalOnline uint64, totalOffline uint64, crStates tc.CRStates, crConfig tc.CRConfig) (map[tce.CacheGroupName]tc.HealthDataCacheGroup, uint64, uint64) {
 	for cacheName, avail := range crStates.Caches {
 		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
@@ -118,18 +118,18 @@ func addHealth(ds enum.DeliveryServiceName, data map[enum.CacheGroupName]tc.Heal
 		if _, ok := cache.DeliveryServices[string(ds)]; !ok {
 			continue
 		}
-		if cache.ServerStatus == nil || *cache.ServerStatus != tc.CRConfigServerStatus(enum.CacheStatusReported) {
+		if cache.ServerStatus == nil || *cache.ServerStatus != tc.CRConfigServerStatus(tce.CacheStatusReported) {
 			continue
 		}
-		if cache.ServerType == nil || !strings.HasPrefix(string(*cache.ServerType), string(enum.CacheTypeEdge)) {
+		if cache.ServerType == nil || !strings.HasPrefix(string(*cache.ServerType), string(tce.CacheTypeEdge)) {
 			continue
 		}
 		if cache.CacheGroup == nil {
 			continue // TODO warn?
 		}
 
-		cgHealth := data[enum.CacheGroupName(*cache.CacheGroup)]
-		cgHealth.Name = enum.CacheGroupName(*cache.CacheGroup)
+		cgHealth := data[tce.CacheGroupName(*cache.CacheGroup)]
+		cgHealth.Name = tce.CacheGroupName(*cache.CacheGroup)
 		if avail.IsAvailable {
 			cgHealth.Online++
 			totalOnline++
@@ -137,7 +137,7 @@ func addHealth(ds enum.DeliveryServiceName, data map[enum.CacheGroupName]tc.Heal
 			cgHealth.Offline++
 			totalOffline++
 		}
-		data[enum.CacheGroupName(*cache.CacheGroup)] = cgHealth
+		data[tce.CacheGroupName(*cache.CacheGroup)] = cgHealth
 	}
 	return data, totalOnline, totalOffline
 }

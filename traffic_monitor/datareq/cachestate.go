@@ -21,7 +21,7 @@ package datareq
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -75,24 +75,24 @@ func srvAPICacheStates(
 }
 
 func createCacheStatuses(
-	cacheTypes map[enum.CacheName]enum.CacheType,
+	cacheTypes map[tce.CacheName]tce.CacheType,
 	statInfoHistory cache.ResultInfoHistory,
 	statResultHistory threadsafe.ResultStatHistory,
-	healthHistory map[enum.CacheName][]cache.Result,
-	lastHealthDurations map[enum.CacheName]time.Duration,
-	cacheStates map[enum.CacheName]tc.IsAvailable,
+	healthHistory map[tce.CacheName][]cache.Result,
+	lastHealthDurations map[tce.CacheName]time.Duration,
+	cacheStates map[tce.CacheName]tc.IsAvailable,
 	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
 	servers map[string]tc.TrafficServer,
-) map[enum.CacheName]CacheStatus {
+) map[tce.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
-	statii := map[enum.CacheName]CacheStatus{}
+	statii := map[tce.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get().Copy() // TODO test whether copy is necessary
 	maxKbpses := statMaxKbpses.Get()
 
 	for cacheNameStr, serverInfo := range servers {
-		cacheName := enum.CacheName(cacheNameStr)
+		cacheName := tce.CacheName(cacheNameStr)
 		status, statusPoller := cacheStatusAndPoller(cacheName, serverInfo, localCacheStatus)
 
 		cacheTypeStr := ""
@@ -178,13 +178,13 @@ func createCacheStatuses(
 	return statii
 }
 
-func cacheStatusAndPoller(server enum.CacheName, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string) {
-	switch status := enum.CacheStatusFromString(serverInfo.ServerStatus); status {
-	case enum.CacheStatusAdminDown:
+func cacheStatusAndPoller(server tce.CacheName, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string) {
+	switch status := tce.CacheStatusFromString(serverInfo.ServerStatus); status {
+	case tce.CacheStatusAdminDown:
 		fallthrough
-	case enum.CacheStatusOnline:
+	case tce.CacheStatusOnline:
 		fallthrough
-	case enum.CacheStatusOffline:
+	case tce.CacheStatusOffline:
 		return status.String(), ""
 	}
 
@@ -203,9 +203,9 @@ func cacheStatusAndPoller(server enum.CacheName, serverInfo tc.TrafficServer, lo
 	return fmt.Sprintf("%s - unavailable", statusVal.Status), statusVal.Poller
 }
 
-func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[enum.CacheName]int64 {
-	conns := map[enum.CacheName]int64{}
-	statResultHistory.Range(func(server enum.CacheName, history threadsafe.ResultStatValHistory) bool {
+func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[tce.CacheName]int64 {
+	conns := map[tce.CacheName]int64{}
+	statResultHistory.Range(func(server tce.CacheName, history threadsafe.ResultStatValHistory) bool {
 		// for server, history := range statResultHistory {
 		vals := history.Load("proxy.process.http.current_client_connections")
 		if len(vals) == 0 {
@@ -224,7 +224,7 @@ func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[
 
 // infoResultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
 // Note this is unrelated to the Stat Span field.
-func infoResultSpanMS(cacheName enum.CacheName, history cache.ResultInfoHistory) (int64, error) {
+func infoResultSpanMS(cacheName tce.CacheName, history cache.ResultInfoHistory) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)
@@ -244,7 +244,7 @@ func infoResultSpanMS(cacheName enum.CacheName, history cache.ResultInfoHistory)
 
 // resultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
 // Note this is unrelated to the Stat Span field.
-func resultSpanMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+func resultSpanMS(cacheName tce.CacheName, history map[tce.CacheName][]cache.Result) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)
@@ -262,7 +262,7 @@ func resultSpanMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.R
 	return int64(span / time.Millisecond), nil
 }
 
-func latestQueryTimeMS(cacheName enum.CacheName, lastDurations map[enum.CacheName]time.Duration) (int64, error) {
+func latestQueryTimeMS(cacheName tce.CacheName, lastDurations map[tce.CacheName]time.Duration) (int64, error) {
 	queryTime, ok := lastDurations[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v not in last durations\n", cacheName)
@@ -271,7 +271,7 @@ func latestQueryTimeMS(cacheName enum.CacheName, lastDurations map[enum.CacheNam
 }
 
 // latestResultTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result.
-func latestResultTimeMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+func latestResultTimeMS(cacheName tce.CacheName, history map[tce.CacheName][]cache.Result) (int64, error) {
 
 	results, ok := history[cacheName]
 	if !ok {
@@ -296,7 +296,7 @@ func latestResultTimeMS(cacheName enum.CacheName, history map[enum.CacheName][]c
 }
 
 // latestResultInfoTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result info.
-func latestResultInfoTimeMS(cacheName enum.CacheName, history cache.ResultInfoHistory) (int64, error) {
+func latestResultInfoTimeMS(cacheName tce.CacheName, history cache.ResultInfoHistory) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)

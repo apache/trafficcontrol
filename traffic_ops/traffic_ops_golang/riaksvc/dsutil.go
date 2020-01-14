@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -217,11 +217,11 @@ func DeleteDeliveryServicesSSLKey(tx *sql.Tx, authOpts *riak.AuthOptions, riakPo
 
 // GetURLSigConfigFileName returns the filename of the Apache Traffic Server URLSig config file
 // TODO move to ats config directory/file
-func GetURLSigConfigFileName(ds enum.DeliveryServiceName) string {
+func GetURLSigConfigFileName(ds tce.DeliveryServiceName) string {
 	return "url_sig_" + string(ds) + ".config"
 }
 
-func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds enum.DeliveryServiceName) (tc.URLSigKeys, bool, error) {
+func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tce.DeliveryServiceName) (tc.URLSigKeys, bool, error) {
 	val := tc.URLSigKeys{}
 	found := false
 	key := GetURLSigConfigFileName(ds)
@@ -245,7 +245,7 @@ func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds en
 	return val, found, nil
 }
 
-func PutURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds enum.DeliveryServiceName, keys tc.URLSigKeys) error {
+func PutURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tce.DeliveryServiceName, keys tc.URLSigKeys) error {
 	keyJSON, err := json.Marshal(&keys)
 	if err != nil {
 		return errors.New("marshalling keys: " + err.Error())
@@ -316,8 +316,8 @@ func SearchDocsToCDNSSLKeys(docs []*riak.SearchDoc) []tc.CDNSSLKey {
 
 // GetCDNSSLKeysDSNames returns the delivery service names (xml_id) of every delivery service on the given cdn with SSL keys in Riak, and the keys currently in Riak.
 // Returns map[tc.DeliveryServiceName][]key
-func GetCDNSSLKeysDSNames(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdn enum.CDNName) (map[enum.DeliveryServiceName][]string, error) {
-	dsVersions := map[enum.DeliveryServiceName][]string{}
+func GetCDNSSLKeysDSNames(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdn tce.CDNName) (map[tce.DeliveryServiceName][]string, error) {
+	dsVersions := map[tce.DeliveryServiceName][]string{}
 	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		// get the deliveryservice ssl keys by xmlID and version
 		query := `cdn:` + string(cdn)
@@ -340,7 +340,7 @@ func GetCDNSSLKeysDSNames(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint
 			if len(dses) > 1 {
 				log.Errorf("Riak had a CDN '"+string(cdn)+"' key with multiple delivery services '"+doc.Key+"' deliveryservices '%+v' - ignoring all but the first!\n", dses)
 			}
-			ds := enum.DeliveryServiceName(dses[0])
+			ds := tce.DeliveryServiceName(dses[0])
 
 			dsVersions[ds] = append(dsVersions[ds], doc.Key)
 		}

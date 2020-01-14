@@ -20,7 +20,7 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"math"
 	"regexp"
 	"strconv"
@@ -29,7 +29,7 @@ import (
 const HeaderRewriteMidPrefix = "hdr_rw_mid_"
 
 func MakeHeaderRewriteMidDotConfig(
-	cdnName enum.CDNName,
+	cdnName tce.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	ds HeaderRewriteDS,
@@ -41,7 +41,7 @@ func MakeHeaderRewriteMidDotConfig(
 	if ds.MaxOriginConnections > 0 && ds.Type.UsesMidCache() {
 		dsOnlineMidCount := 0
 		for _, sv := range assignedMids {
-			if sv.Status == enum.CacheStatusReported || sv.Status == enum.CacheStatusOnline {
+			if sv.Status == tce.CacheStatusReported || sv.Status == tce.CacheStatusOnline {
 				dsOnlineMidCount++
 			}
 		}

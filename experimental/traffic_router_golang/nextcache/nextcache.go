@@ -21,13 +21,13 @@ package nextcache
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"sync/atomic"
 )
 
 // New creates and returns a new NextCacher. The returned NextCacher is safe for use by multiple goroutines.
-func New(dses []enum.DeliveryServiceName) NextCacher {
-	m := make(map[enum.DeliveryServiceName]*uint64, len(dses))
+func New(dses []tce.DeliveryServiceName) NextCacher {
+	m := make(map[tce.DeliveryServiceName]*uint64, len(dses))
 	for _, ds := range dses {
 		i := uint64(0)
 		m[ds] = &i
@@ -39,13 +39,13 @@ func New(dses []enum.DeliveryServiceName) NextCacher {
 //
 // NextCache returns the next cache to use for the given delivery service. This is neither pure nor idempotent, and successive calls will return different numbers. The underlying mechanism may not be aware of the number of caches, and the returned number MAY exceed the number of caches. Typically, callers should mod the returned number by the size of their cache list, to determine the cache to use. Returns false if the given delivery service is not found.
 type NextCacher interface {
-	NextCache(enum.DeliveryServiceName) (uint64, bool)
+	NextCache(tce.DeliveryServiceName) (uint64, bool)
 }
 
-type nextCacher map[enum.DeliveryServiceName]*uint64
+type nextCacher map[tce.DeliveryServiceName]*uint64
 
-func (c nextCacher) NextCache(ds enum.DeliveryServiceName) (uint64, bool) {
-	m := (map[enum.DeliveryServiceName]*uint64)(c)
+func (c nextCacher) NextCache(ds tce.DeliveryServiceName) (uint64, bool) {
+	m := (map[tce.DeliveryServiceName]*uint64)(c)
 	i, ok := m[ds]
 	if !ok {
 		return 0, false

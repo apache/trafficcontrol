@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -458,7 +458,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 }
 
 func dsV13FieldsAreNilOrDefault(ds tc.DeliveryServiceNullable) bool {
-	return (ds.DeepCachingType == nil || *ds.DeepCachingType == enum.DeepCachingTypeNever) &&
+	return (ds.DeepCachingType == nil || *ds.DeepCachingType == tce.DeepCachingTypeNever) &&
 		(ds.FQPacingRate == nil || *ds.FQPacingRate == 0) &&
 		(ds.TRRequestHeaders == nil || *ds.TRRequestHeaders == "") &&
 		(ds.TRResponseHeaders == nil || *ds.TRResponseHeaders == "")

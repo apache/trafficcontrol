@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 	"strings"
 
@@ -57,7 +57,7 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 	monitors := map[string]tc.CRConfigMonitor{}
 	for host, s := range allServers {
 		switch {
-		case *s.ServerType == enum.RouterTypeName:
+		case *s.ServerType == tce.RouterTypeName:
 			status := tc.CRConfigRouterStatus(*s.ServerStatus)
 			routers[host] = tc.CRConfigRouter{
 				APIPort:       s.APIPort,
@@ -71,7 +71,7 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 				SecureAPIPort: s.SecureAPIPort,
 				ServerStatus:  &status,
 			}
-		case *s.ServerType == enum.MonitorTypeName:
+		case *s.ServerType == tce.MonitorTypeName:
 			monitors[host] = tc.CRConfigMonitor{
 				FQDN:         s.Fqdn,
 				HTTPSPort:    s.HttpsPort,
@@ -82,9 +82,9 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 				Profile:      s.Profile,
 				ServerStatus: s.ServerStatus,
 			}
-		case strings.HasPrefix(*s.ServerType, enum.EdgeTypePrefix) || strings.HasPrefix(*s.ServerType, enum.MidTypePrefix):
+		case strings.HasPrefix(*s.ServerType, tce.EdgeTypePrefix) || strings.HasPrefix(*s.ServerType, tce.MidTypePrefix):
 			if s.RoutingDisabled == 0 {
-				s.CRConfigTrafficOpsServer.DeliveryServices = serverDSes[enum.CacheName(host)]
+				s.CRConfigTrafficOpsServer.DeliveryServices = serverDSes[tce.CacheName(host)]
 			}
 			servers[host] = s.CRConfigTrafficOpsServer
 		}
@@ -192,7 +192,7 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 	return servers, nil
 }
 
-func getServerDSNames(cdn string, tx *sql.Tx) (map[enum.CacheName][]enum.DeliveryServiceName, error) {
+func getServerDSNames(cdn string, tx *sql.Tx) (map[tce.CacheName][]tce.DeliveryServiceName, error) {
 	q := `
 select s.host_name, ds.xml_id
 from deliveryservice_server as dss
@@ -203,7 +203,7 @@ inner join profile as p on p.id = s.profile
 inner join status as st ON st.id = s.status
 where ds.cdn_id = (select id from cdn where name = $1)
 and ds.active = true` +
-		fmt.Sprintf(" and dt.name != '%s' ", enum.DSTypeAnyMap) + `
+		fmt.Sprintf(" and dt.name != '%s' ", tce.DSTypeAnyMap) + `
 and p.routing_disabled = false
 and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 `
@@ -213,14 +213,14 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 	}
 	defer rows.Close()
 
-	serverDSes := map[enum.CacheName][]enum.DeliveryServiceName{}
+	serverDSes := map[tce.CacheName][]tce.DeliveryServiceName{}
 	for rows.Next() {
 		ds := ""
 		server := ""
 		if err := rows.Scan(&server, &ds); err != nil {
 			return nil, errors.New("Error scanning server deliveryservice names: " + err.Error())
 		}
-		serverDSes[enum.CacheName(server)] = append(serverDSes[enum.CacheName(server)], enum.DeliveryServiceName(ds))
+		serverDSes[tce.CacheName(server)] = append(serverDSes[tce.CacheName(server)], tce.DeliveryServiceName(ds))
 	}
 	return serverDSes, nil
 }
@@ -231,7 +231,7 @@ type DSRouteInfo struct {
 	Remap string
 }
 
-func getServerDSes(cdn string, tx *sql.Tx, domain string) (map[enum.CacheName]map[string][]string, error) {
+func getServerDSes(cdn string, tx *sql.Tx, domain string) (map[tce.CacheName]map[string][]string, error) {
 	serverDSNames, err := getServerDSNames(cdn, tx)
 	if err != nil {
 		return nil, errors.New("Error getting server deliveryservices: " + err.Error())
@@ -246,7 +246,7 @@ inner join deliveryservice as ds on ds.id = dsr.deliveryservice
 inner join type as dt on dt.id = ds.type
 where ds.cdn_id = (select id from cdn where name = $1)
 and ds.active = true` +
-		fmt.Sprintf(" and dt.name != '%s' ", enum.DSTypeAnyMap) + `
+		fmt.Sprintf(" and dt.name != '%s' ", tce.DSTypeAnyMap) + `
 and rt.name = 'HOST_REGEXP'
 order by dsr.set_number asc
 `
@@ -283,7 +283,7 @@ order by dsr.set_number asc
 		dsInfs[ds] = append(dsInfs[ds], inf)
 	}
 
-	serverDSPatterns := map[enum.CacheName]map[string][]string{}
+	serverDSPatterns := map[tce.CacheName]map[string][]string{}
 	for server, dses := range serverDSNames {
 		for _, dsName := range dses {
 			dsInfList, ok := dsInfs[string(dsName)]

@@ -23,7 +23,7 @@ package tmcheck
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -150,9 +150,9 @@ type AllValidatorFunc func(
 	interval time.Duration,
 	includeOffline bool,
 	grace time.Duration,
-	onErr func(enum.TrafficMonitorName, error),
-	onResumeSuccess func(enum.TrafficMonitorName),
-	onCheck func(enum.TrafficMonitorName, error),
+	onErr func(tce.TrafficMonitorName, error),
+	onResumeSuccess func(tce.TrafficMonitorName),
+	onCheck func(tce.TrafficMonitorName, error),
 )
 
 // CRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
@@ -219,13 +219,13 @@ func AllValidator(
 	interval time.Duration,
 	includeOffline bool,
 	grace time.Duration,
-	onErr func(enum.TrafficMonitorName, error),
-	onResumeSuccess func(enum.TrafficMonitorName),
-	onCheck func(enum.TrafficMonitorName, error),
-	validator func(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error),
+	onErr func(tce.TrafficMonitorName, error),
+	onResumeSuccess func(tce.TrafficMonitorName),
+	onCheck func(tce.TrafficMonitorName, error),
+	validator func(toClient *to.Session, includeOffline bool) (map[tce.TrafficMonitorName]error, error),
 ) {
-	invalid := map[enum.TrafficMonitorName]bool{}
-	invalidStart := map[enum.TrafficMonitorName]time.Time{}
+	invalid := map[tce.TrafficMonitorName]bool{}
+	invalidStart := map[tce.TrafficMonitorName]time.Time{}
 	metaFail := false
 	for {
 		tmErrs, err := validator(toClient, includeOffline)
@@ -269,8 +269,8 @@ func AllValidator(
 func FilterOfflines(servers []tc.Server) []tc.Server {
 	onlineServers := []tc.Server{}
 	for _, server := range servers {
-		status := enum.CacheStatusFromString(server.Status)
-		if status != enum.CacheStatusOnline && status != enum.CacheStatusReported {
+		status := tce.CacheStatusFromString(server.Status)
+		if status != tce.CacheStatusOnline && status != tce.CacheStatusReported {
 			continue
 		}
 		onlineServers = append(onlineServers, server)
@@ -278,16 +278,16 @@ func FilterOfflines(servers []tc.Server) []tc.Server {
 	return onlineServers
 }
 
-func GetCDNs(servers []tc.Server) map[enum.CDNName]struct{} {
-	cdns := map[enum.CDNName]struct{}{}
+func GetCDNs(servers []tc.Server) map[tce.CDNName]struct{} {
+	cdns := map[tce.CDNName]struct{}{}
 	for _, server := range servers {
-		cdns[enum.CDNName(server.CDNName)] = struct{}{}
+		cdns[tce.CDNName(server.CDNName)] = struct{}{}
 	}
 	return cdns
 }
 
-func GetCRConfigs(cdns map[enum.CDNName]struct{}, toClient *to.Session) map[enum.CDNName]CRConfigOrError {
-	crConfigs := map[enum.CDNName]CRConfigOrError{}
+func GetCRConfigs(cdns map[tce.CDNName]struct{}, toClient *to.Session) map[tce.CDNName]CRConfigOrError {
+	crConfigs := map[tce.CDNName]CRConfigOrError{}
 	for cdn, _ := range cdns {
 		crConfigBytes, _, err := toClient.GetCRConfig(string(cdn))
 		if err != nil {

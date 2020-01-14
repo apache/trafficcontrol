@@ -21,7 +21,7 @@ package cfgfile
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -116,7 +116,7 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 
 	serverInfo := atscfg.ServerInfo{
 		CacheGroupID:         server.CachegroupID,
-		CDN:                  enum.CDNName(server.CDNName),
+		CDN:                  tce.CDNName(server.CDNName),
 		CDNID:                server.CDNID,
 		DomainName:           server.DomainName,
 		HostName:             server.HostName,
@@ -208,8 +208,8 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 		dssMap[*dss.DeliveryService] = struct{}{}
 	}
 
-	dsNames := map[enum.DeliveryServiceName]struct{}{}
-	uriSignedDSes := []enum.DeliveryServiceName{}
+	dsNames := map[tce.DeliveryServiceName]struct{}{}
+	uriSignedDSes := []tce.DeliveryServiceName{}
 	for _, ds := range deliveryServices {
 		if ds.ID == nil {
 			continue
@@ -220,11 +220,11 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 		if _, ok := dssMap[*ds.ID]; !ok {
 			continue
 		}
-		dsNames[enum.DeliveryServiceName(*ds.XMLID)] = struct{}{}
-		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == enum.SigningAlgorithmURISigning {
-			uriSignedDSes = append(uriSignedDSes, enum.DeliveryServiceName(*ds.XMLID))
+		dsNames[tce.DeliveryServiceName(*ds.XMLID)] = struct{}{}
+		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tce.SigningAlgorithmURISigning {
+			uriSignedDSes = append(uriSignedDSes, tce.DeliveryServiceName(*ds.XMLID))
 		}
 	}
 
-	return atscfg.MakeMetaConfig(enum.CacheName(serverHostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames), nil
+	return atscfg.MakeMetaConfig(tce.CacheName(serverHostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames), nil
 }

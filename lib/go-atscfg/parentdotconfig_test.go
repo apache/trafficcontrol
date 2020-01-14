@@ -20,7 +20,7 @@ package atscfg
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"strings"
 	"testing"
 )
@@ -35,20 +35,20 @@ func TestMakeParentDotConfig(t *testing.T) {
 		ParentConfigDSTopLevel{
 			ParentConfigDS: ParentConfigDS{
 				Name:            "ds0",
-				QStringIgnore:   enum.QStringIgnoreUseInCacheKeyAndPassUp,
+				QStringIgnore:   tce.QStringIgnoreUseInCacheKeyAndPassUp,
 				OriginFQDN:      "http://ds0.example.net",
 				MultiSiteOrigin: false,
-				Type:            enum.DSTypeHTTP,
+				Type:            tce.DSTypeHTTP,
 				QStringHandling: "ds0qstringhandling",
 			},
 		},
 		ParentConfigDSTopLevel{
 			ParentConfigDS: ParentConfigDS{
 				Name:            "ds1",
-				QStringIgnore:   enum.QStringIgnoreDrop,
+				QStringIgnore:   tce.QStringIgnoreDrop,
 				OriginFQDN:      "http://ds1.example.net",
 				MultiSiteOrigin: false,
-				Type:            enum.DSTypeDNS,
+				Type:            tce.DSTypeDNS,
 				QStringHandling: "ds1qstringhandling",
 			},
 		},
@@ -74,7 +74,7 @@ func TestMakeParentDotConfig(t *testing.T) {
 
 	serverParams := map[string]string{
 		ParentConfigParamQStringHandling: "myQStringHandlingParam",
-		ParentConfigParamAlgorithm:       enum.AlgorithmConsistentHash,
+		ParentConfigParamAlgorithm:       tce.AlgorithmConsistentHash,
 		ParentConfigParamQString:         "myQstringParam",
 	}
 
@@ -119,10 +119,10 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 		ParentConfigDSTopLevel{
 			ParentConfigDS: ParentConfigDS{
 				Name:            "ds0",
-				QStringIgnore:   enum.QStringIgnoreUseInCacheKeyAndPassUp,
+				QStringIgnore:   tce.QStringIgnoreUseInCacheKeyAndPassUp,
 				OriginFQDN:      "http://ds0.example.net",
 				MultiSiteOrigin: false,
-				Type:            enum.DSTypeHTTP,
+				Type:            tce.DSTypeHTTP,
 				QStringHandling: "ds0qstringhandling",
 				RequiredCapabilities: map[ServerCapability]struct{}{
 					"FOO": {},
@@ -151,7 +151,7 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 
 	serverParams := map[string]string{
 		ParentConfigParamQStringHandling: "myQStringHandlingParam",
-		ParentConfigParamAlgorithm:       enum.AlgorithmConsistentHash,
+		ParentConfigParamAlgorithm:       tce.AlgorithmConsistentHash,
 		ParentConfigParamQString:         "myQstringParam",
 	}
 
@@ -248,10 +248,10 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 		ParentConfigDSTopLevel{
 			ParentConfigDS: ParentConfigDS{
 				Name:            "ds0",
-				QStringIgnore:   enum.QStringIgnoreUseInCacheKeyAndPassUp,
+				QStringIgnore:   tce.QStringIgnoreUseInCacheKeyAndPassUp,
 				OriginFQDN:      "http://ds0.example.net",
 				MultiSiteOrigin: true,
-				Type:            enum.DSTypeHTTP,
+				Type:            tce.DSTypeHTTP,
 				QStringHandling: "ds0qstringhandling",
 			},
 			MSOAlgorithm: ParentConfigDSParamDefaultMSOAlgorithm,
@@ -278,7 +278,7 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 
 	serverParams := map[string]string{
 		ParentConfigParamQStringHandling: "myQStringHandlingParam",
-		ParentConfigParamAlgorithm:       enum.AlgorithmConsistentHash,
+		ParentConfigParamAlgorithm:       tce.AlgorithmConsistentHash,
 		ParentConfigParamQString:         "myQstringParam",
 	}
 

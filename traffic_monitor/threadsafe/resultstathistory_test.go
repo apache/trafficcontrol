@@ -21,7 +21,7 @@ package threadsafe
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/enum"
+	"github.com/apache/trafficcontrol/lib/go-tc/tce"
 	"math/rand"
 	"net/url"
 	"testing"
@@ -39,7 +39,7 @@ func randResultStatHistory() ResultStatHistory {
 
 	num := 5
 	for i := 0; i < num; i++ {
-		hist.Store(enum.CacheName(randStr()), randResultStatValHistory())
+		hist.Store(tce.CacheName(randStr()), randResultStatValHistory())
 	}
 	return hist
 }
@@ -74,7 +74,7 @@ func randResultInfoHistory() cache.ResultInfoHistory {
 	num := 5
 	infNum := 5
 	for i := 0; i < num; i++ {
-		cacheName := enum.CacheName(randStr())
+		cacheName := tce.CacheName(randStr())
 		for j := 0; j < infNum; j++ {
 			hist[cacheName] = append(hist[cacheName], randResultInfo())
 		}
@@ -84,7 +84,7 @@ func randResultInfoHistory() cache.ResultInfoHistory {
 
 func randResultInfo() cache.ResultInfo {
 	return cache.ResultInfo{
-		ID:          enum.CacheName(randStr()),
+		ID:          tce.CacheName(randStr()),
 		Error:       fmt.Errorf(randStr()),
 		Time:        time.Now(),
 		RequestTime: time.Millisecond * time.Duration(rand.Int()),
@@ -125,7 +125,7 @@ func (f DummyFilterNever) UseStat(name string) bool {
 	return false
 }
 
-func (f DummyFilterNever) UseCache(name enum.CacheName) bool {
+func (f DummyFilterNever) UseCache(name tce.CacheName) bool {
 	return false
 }
 
