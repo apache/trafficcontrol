@@ -38,9 +38,6 @@ var TableStatusServersController = function(status, servers, $controller, $scope
 			"iDisplayLength": 25,
 			"aaSorting": [],
 			"columns": $scope.columns,
-			"colReorder": {
-				realtime: false
-			},
 			"initComplete": function(settings, json) {
 				try {
 					// need to create the show/hide column checkboxes and bind to the current visibility
