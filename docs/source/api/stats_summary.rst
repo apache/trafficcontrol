@@ -193,7 +193,7 @@ Request Structure
 -----------------
 :cdnName:             The CDN name for which the summary stat was taken for
 
-	.. note:: If the ``cdn`` is equal to ``all`` it represents summary_stats across all delivery services within the given CDN
+	.. note:: If the ``cdn`` is equal to ``all`` it represents summary_stats across all delivery services across all CDNs
 
 :deliveryServiceName: The :term:`Delivery Service` display name for which the summary stat was taken for
 
