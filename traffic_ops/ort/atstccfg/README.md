@@ -19,6 +19,9 @@
 # atstccfg
 atstccfg is a tool for generating configuration files server-side on ATC cache servers.
 
+!!! Warning !!!
+    atstccfg does not have a stable command-line interface, it can and will change without warning. Scripts should avoid calling it for the time being.
+
 ## Usage
 ```
 atstccfg [-u TO_URL] [-U TO_USER] [-P TO_PASSWORD] [-n] [-r N] [-e ERROR_LOCATION] [-w WARNING_LOCATION] [-i INFO_LOCATION] [-g] [-s] [-t TIMEOUT] [-a MAX_AGE] [-l]

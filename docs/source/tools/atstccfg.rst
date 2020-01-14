@@ -22,6 +22,8 @@ atstccfg
 ********
 :program:`atstccfg` is a tool for generating configuration files server-side on :abbr:`ATC (Apache Traffic Control)` cache servers. It stores its generated/cached files in ``/tmp/atstccfg_cache/`` for re-use.
 
+.. warning:: :program:`atstccfg` does not have a stable command-line interface, it can and will change without warning. Scripts should avoid calling it for the time being.
+
 The source code for :program:`atstccfg` may be found in :atc-file:`traffic_ops/ort/atstccfg`, and the Go module reference is :atc-godoc:`traffic_ops/ort/atstccfg`.
 
 Usage
