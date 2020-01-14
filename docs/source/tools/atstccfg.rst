@@ -22,13 +22,13 @@ atstccfg
 ********
 :program:`atstccfg` is a tool for generating configuration files server-side on :abbr:`ATC (Apache Traffic Control)` cache servers. It stores its generated/cached files in ``/tmp/atstccfg_cache/`` for re-use.
 
-.. warning:: :program:`atstccfg` does not have a stable command-line interface, it can and will change without warning. Scripts should avoid calling it for the time being.
+.. warning:: :program:`atstccfg` does not have a stable command-line interface, it can and will change without warning. Scripts should avoid calling it for the time being, as its only intended caller is :term:`ORT`.
 
 The source code for :program:`atstccfg` may be found in :atc-file:`traffic_ops/ort/atstccfg`, and the Go module reference is :atc-godoc:`traffic_ops/ort/atstccfg`.
 
 Usage
 =====
-``atstccfg [-u TO_URL] [-U TO_USER] [-P TO_PASSWORD] [-n] [-r N] [-e ERROR_LOCATION] [-w WARNING_LOCATION] [-i INFO_LOCATION] [-g] [-s] [-t TIMEOUT] [-a MAX_AGE] [-l]``
+``atstccfg [-u TO_URL] [-U TO_USER] [-P TO_PASSWORD] [-n] [-r N] [-e ERROR_LOCATION] [-w WARNING_LOCATION] [-i INFO_LOCATION] [-g] [-s] [-t TIMEOUT] [-a MAX_AGE] [-l] [-h] [-v]``
 
 Options
 -------
@@ -47,6 +47,10 @@ Options
 .. option:: -i INFO_LOCATION, --log-location-info INFO_LOCATION
 
 	The file location to which to log information messages. Respects the special string constants of :atc-godoc:`lib/go-log`. Default: 'stderr'
+
+.. option:: -h, --help
+
+	Print usage information and exit.
 
 .. option:: -l, --list-plugins
 

@@ -98,11 +98,15 @@ func GetCfg() (Cfg, error) {
 	cacheFileMaxAgeSecondsPtr := flag.IntP("cache-file-max-age-seconds", "a", 60, "Maximum age to use cached files.")
 	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
 	listPluginsPtr := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
+	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")
 
 	flag.Parse()
 
 	if *versionPtr {
 		fmt.Println(AppName + " v" + Version)
+		os.Exit(0)
+	} else if *helpPtr {
+		flag.PrintDefaults()
 		os.Exit(0)
 	} else if *printGeneratedFilesPtr {
 		return Cfg{PrintGeneratedFiles: true}, nil
