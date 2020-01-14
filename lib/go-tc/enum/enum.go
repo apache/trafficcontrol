@@ -84,43 +84,6 @@ const RangeRequestHandlingDontCache = 0
 const RangeRequestHandlingBackgroundFetch = 1
 const RangeRequestHandlingCacheRangeRequest = 2
 
-// DSTypeCategory is the Delivery Service type category: HTTP or DNS
-type DSTypeCategory string
-
-const (
-	// DSTypeCategoryHTTP represents an HTTP delivery service
-	DSTypeCategoryHTTP = DSTypeCategory("http")
-	// DSTypeCategoryDNS represents a DNS delivery service
-	DSTypeCategoryDNS = DSTypeCategory("dns")
-	// DSTypeCategoryInvalid represents an invalid delivery service type enumeration. Note this is the default construction for a DSTypeCategory.
-	DSTypeCategoryInvalid = DSTypeCategory("")
-)
-
-// String returns a string representation of this delivery service type.
-func (t DSTypeCategory) String() string {
-	switch t {
-	case DSTypeCategoryHTTP:
-		return "HTTP"
-	case DSTypeCategoryDNS:
-		return "DNS"
-	default:
-		return "INVALIDDSTYPE"
-	}
-}
-
-// DSTypeCategoryFromString returns a delivery service type object from its string representation, or DSTypeCategoryInvalid if the string is not a valid type.
-func DSTypeCategoryFromString(s string) DSTypeCategory {
-	s = strings.ToLower(s)
-	switch s {
-	case "http":
-		return DSTypeCategoryHTTP
-	case "dns":
-		return DSTypeCategoryDNS
-	default:
-		return DSTypeCategoryInvalid
-	}
-}
-
 const SigningAlgorithmURLSig = "url_sig"
 const SigningAlgorithmURISigning = "uri_signing"
 
