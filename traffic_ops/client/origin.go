@@ -50,7 +50,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 		if len(dses) == 0 {
 			return errors.New("no deliveryservice with name " + *origin.DeliveryService)
 		}
-		origin.DeliveryServiceID = &dses[0].ID
+		origin.DeliveryServiceID = dses[0].ID
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {
