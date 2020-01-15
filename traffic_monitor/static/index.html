@@ -254,7 +254,6 @@ under the License.
 				table.id = "cache-states"
 
 				// TODO: I'm not sure all these IDs are actually necessary anymore
-				// TODO: Style with CSS?
 				for (const [serverName, server] of servers) {
 					const row = table.insertRow(0);
 					row.classList.add("stripes");
@@ -333,17 +332,6 @@ under the License.
 
 				const oldtable = document.getElementById("cache-states");
 				oldtable.parentNode.replaceChild(table, oldtable);
-
-				// const duplicates = new Set();
-
-				// for (const row of table.rows) {
-				// 	const server = row.id.replace(/^cache-states-/, '');
-				// 	if (!servers.has(server) || duplicates.has(server)) {
-				// 		table.deleteRow(row.rowIndex);
-				// 	} else {
-				// 		duplicates.add(server);
-				// 	}
-				// }
 
 			})
 		}
