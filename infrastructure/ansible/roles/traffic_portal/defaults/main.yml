@@ -146,6 +146,7 @@ tp_default_properties_template:
           ccrDnsTtl: 30
           regionalGeoBlocking: false
           anonymousBlockingEnabled: false
+          ecsEnabled: false
         HTTP:
           routingName: cdn
           deepCachingType: NEVER
@@ -166,6 +167,7 @@ tp_default_properties_template:
           ccrDnsTtl: 3600
           anonymousBlockingEnabled: false
           consistentHashQueryParams: []
+          ecsEnabled: false
         STEERING:
           dscp: 0
           routingName: cdn
@@ -176,6 +178,7 @@ tp_default_properties_template:
           regionalGeoBlocking: false
           ccrDnsTtl: 30
           anonymousBlockingEnabled: false
+          ecsEnabled: false
       charts:
         _comment: Delivery Service Charts
         autoRefresh: true
