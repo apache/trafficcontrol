@@ -48,11 +48,18 @@ under the License.
 		}
 
 		tbody tr:nth-child(even) {
-			background: #dfe
+			background: #ced;
 		}
 		tbody tr:nth-child(odd) {
-			background: #fff
+			background: #fff;
 		}
+		#cache-states td:nth-child(n+4) {
+			text-align: right;
+		}
+		#cache-states td:first-child {
+			white-space: nowrap;
+		}
+
 
 		li.endpoint {
 			margin: 4px 0;
@@ -242,50 +249,38 @@ under the License.
 
 		function getCacheStates() {
 			ajax("/api/cache-statuses", function(r) {
-				var jdata = JSON.parse(r);
-				var servers = Object.keys(jdata); //debug
-				var table = document.getElementById("cache-states");
-				for (i = 0; i < servers.length; i++) {
-					var server = servers[i];
-					if (!document.getElementById("cache-states-" + server)) {
-						var row = table.insertRow(0); //document.createElement("tr");
-						row.classList.add("stripes");
-						row.id = "cache-states-" + server
-						row.insertCell(0).id = row.id + "-server";
-						row.insertCell(1).id = row.id + "-type";
-						row.insertCell(2).id = row.id + "-status";
-						row.insertCell(3).id = row.id + "-load-average";
-						row.insertCell(4).id = row.id + "-query-time";
-						row.insertCell(5).id = row.id + "-health-time";
-						row.insertCell(6).id = row.id + "-stat-time";
-						row.insertCell(7).id = row.id + "-health-span";
-						row.insertCell(8).id = row.id + "-stat-span";
-						row.insertCell(9).id = row.id + "-bandwidth";
-						row.insertCell(10).id = row.id + "-connection-count";
-						document.getElementById(row.id + "-server").textContent = server;
-						document.getElementById(row.id + "-server").style.whiteSpace = "nowrap";
-						document.getElementById(row.id + "-load-average").style.textAlign = "right";
-						document.getElementById(row.id + "-query-time").style.textAlign = "right";
-						document.getElementById(row.id + "-health-time").style.textAlign = "right";
-						document.getElementById(row.id + "-stat-time").style.textAlign = "right";
-						document.getElementById(row.id + "-health-span").style.textAlign = "right";
-						document.getElementById(row.id + "-stat-span").style.textAlign = "right";
-						document.getElementById(row.id + "-bandwidth").style.textAlign = "right";
-						document.getElementById(row.id + "-connection-count").style.textAlign = "right";
-					}
+				const servers = new Map(Object.entries(JSON.parse(r)));
+				const table = document.createElement('TBODY');
+				table.id = "cache-states"
 
-					/* \todo change to iterate over members, and make cells id constructed from these*/
-					if (jdata[server].hasOwnProperty("type")) {
-						document.getElementById("cache-states-" + server + "-type").textContent = jdata[server].type;
-					}
-					if (jdata[server].hasOwnProperty("status")) {
-						document.getElementById("cache-states-" + server + "-status").textContent = jdata[server].status;
-						var row = document.getElementById("cache-states-" + server);
-						if (jdata[server].status.indexOf("ADMIN_DOWN") != -1 || jdata[server].status.indexOf("OFFLINE") != -1) {
+				// TODO: I'm not sure all these IDs are actually necessary anymore
+				// TODO: Style with CSS?
+				for (const [serverName, server] of servers) {
+					const row = table.insertRow(0);
+					row.classList.add("stripes");
+					row.id = "cache-states-" + serverName;
+
+					let cell = row.insertCell(0);
+					cell.id = row.id + "-server";
+					cell.textContent = serverName;
+
+					cell = row.insertCell(1);
+					cell.id = row.id + "-type";
+					cell.textContent = server.type || "UNKNOWN";
+
+					cell = row.insertCell(2);
+					cell.id = row.id + "-status";
+					if (Object.prototype.hasOwnProperty.call(server, "status")) {
+						cell.textContent = server.status;
+						if (server.status.indexOf("ADMIN_DOWN") !== -1 || server.status.indexOf("OFFLINE") !== -1) {
 							row.classList.add("warning");
 							row.classList.remove("error");
 							row.classList.remove("stripes");
-						} else if (jdata[server].status.indexOf(" available") == -1 && jdata[server].status.indexOf("ONLINE") != 0) {
+						} else if (server.status.indexOf(" available") === -1 && server.status.indexOf("ONLINE") !== 0) {
+							row.classList.add("error");
+							row.classList.remove("warning");
+							row.classList.remove("stripes");
+						} else if (server.status.indexOf(" availableBandwidth") !== -1) {
 							row.classList.add("error");
 							row.classList.remove("warning");
 							row.classList.remove("stripes");
@@ -295,44 +290,60 @@ under the License.
 							row.classList.remove("error");
 						}
 					}
-					if (jdata[server].hasOwnProperty("load_average")) {
-						document.getElementById("cache-states-" + server + "-load-average").textContent = jdata[server].load_average;
-					}
-					if (jdata[server].hasOwnProperty("query_time_ms")) {
-						document.getElementById("cache-states-" + server + "-query-time").textContent = jdata[server].query_time_ms;
-					}
-					if (jdata[server].hasOwnProperty("health_time_ms")) {
-						document.getElementById("cache-states-" + server + "-health-time").textContent = jdata[server].health_time_ms;
-					}
-					if (jdata[server].hasOwnProperty("stat_time_ms")) {
-						document.getElementById("cache-states-" + server + "-stat-time").textContent = jdata[server].stat_time_ms;
-					}
-					if (jdata[server].hasOwnProperty("health_span_ms")) {
-						document.getElementById("cache-states-" + server + "-health-span").textContent = jdata[server].health_span_ms;
-					}
-					if (jdata[server].hasOwnProperty("stat_span_ms")) {
-						document.getElementById("cache-states-" + server + "-stat-span").textContent = jdata[server].stat_span_ms;
-					}
-					if (jdata[server].hasOwnProperty("bandwidth_kbps")) {
-						var kbps = (jdata[server].bandwidth_kbps / kilobitsInMegabit).toFixed(2);
-						var max = numberStrWithCommas((jdata[server].bandwidth_capacity_kbps / kilobitsInMegabit).toFixed(0));
-						document.getElementById("cache-states-" + server + "-bandwidth").textContent = '' + kbps + ' / ' + max;
+
+					cell = row.insertCell(3);
+					cell.id = row.id + "-load-average";
+					cell.textContent = server.load_average || "";
+
+					cell = row.insertCell(4);
+					cell.id = row.id + "-query-time";
+					cell.textContent = server.query_time_ms || "";
+
+					cell = row.insertCell(5);
+					cell.id = row.id + "-health-time";
+					cell.textContent = server.health_time_ms || "";
+
+					cell = row.insertCell(6);
+					cell.id = row.id + "-stat-time";
+					cell.textContent = server.stat_time_ms || "";
+
+					cell = row.insertCell(7);
+					cell.id = row.id + "-health-span";
+					cell.textContent = server.health_span_ms || "";
+
+					cell = row.insertCell(8);
+					cell.id = row.id + "-stat-span";
+					cell.textContent = server.stat_span_ms || "";
+
+					cell = row.insertCell(9);
+					cell.id = row.id + "-bandwidth";
+					if (Object.prototype.hasOwnProperty.call(server, "bandwidth_kbps")) {
+						const kbps = (server.bandwidth_kbps / kilobitsInMegabit).toFixed(2);
+						const max = numberStrWithCommas((server.bandwidth_capacity_kbps / kilobitsInMegabit).toFixed(0));
+						cell.textContent = `${kbps} / ${max}`;
 					} else {
-						document.getElementById("cache-states-" + server + "-bandwidth").textContent = "N/A";
+						cell.textContent = "N/A";
 					}
-					if (jdata[server].hasOwnProperty("connection_count")) {
-						document.getElementById("cache-states-" + server + "-connection-count").textContent = jdata[server].connection_count;
-					} else {
-						document.getElementById("cache-states-" + server + "-connection-count").textContent = "N/A";
-					}
+
+					cell = row.insertCell(10);
+					cell.id = row.id + "-connection-count";
+					cell.textContent = server.connection_count || "N/A";
 				}
 
-				for (var i = 1, row; row = table.rows[i]; i++) { // start at 1, because row[0] is the header
-					var server = row.id.replace(/^cache-states-/, '');
-					if(!(server in jdata)) {
-						table.deleteRow(i);
-					}
-				}
+
+				const oldtable = document.getElementById("cache-states");
+				oldtable.parentNode.replaceChild(table, oldtable);
+
+				// const duplicates = new Set();
+
+				// for (const row of table.rows) {
+				// 	const server = row.id.replace(/^cache-states-/, '');
+				// 	if (!servers.has(server) || duplicates.has(server)) {
+				// 		table.deleteRow(row.rowIndex);
+				// 	} else {
+				// 		duplicates.add(server);
+				// 	}
+				// }
 
 			})
 		}
@@ -469,9 +480,9 @@ under the License.
 	<div id="top-bar">
 		<div>Caches: count=<span id="cache-count">0</span> available=<span id="cache-available">0</span> down=<span id="cache-down">0</span> </div>
 		<div>Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-capacity">∞</span> gbps</div>
-		<div>Traffic Ops: <span id="source-uri">unknown</span></div>
-		<div>CDN: <span id="cdn-name">unknown</span></div>
-		<div>Version: <span id="version">unknown</span></div>
+		<div>Traffic Ops: <span id="source-uri">N/A</span></div>
+		<div>CDN: <span id="cdn-name">N/A</span></div>
+		<div>Version: <span id="version">N/A</span></div>
 	</div>
 
 	<div id="links">
