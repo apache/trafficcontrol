@@ -58,8 +58,8 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, Re
 	return data.Response, reqInf, nil
 }
 
-func (to *Session) GetDeliveryServiceByXMLID(XMLID string) ([]tc.DeliveryService, ReqInf, error) {
-	var data tc.GetDeliveryServiceResponse
+func (to *Session) GetDeliveryServiceByXMLID(XMLID string) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	var data tc.DeliveryServicesNullableResponse
 	reqInf, err := get(to, deliveryServicesByXMLID(XMLID), &data)
 	if err != nil {
 		return nil, reqInf, err
