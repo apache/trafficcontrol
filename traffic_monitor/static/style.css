@@ -24,7 +24,9 @@ body {
 	max-width: 100vw;
 }
 
+/*****************/
 /* Table Styling */
+/*****************/
 table {
 	border-collapse: separate;
 	border-spacing: 0px 0;
@@ -35,15 +37,18 @@ th, td {
 	padding:5px 20px 5px 5px;
 }
 
-th {
-	white-space: nowrap;
-}
-
 tbody tr:nth-child(even) {
 	background: #ced;
 }
 tbody tr:nth-child(odd) {
 	background: #fff;
+}
+.error {
+	background-color: #f00;
+}
+
+.warning {
+	background-color: #f80;
 }
 
 #cache-states td:nth-child(n+4),
@@ -56,20 +61,17 @@ tbody tr:nth-child(odd) {
 #cache-states td:first-child,
 #event-log td:first-child,
 #event-log td:last-child,
-#deliveryservice-stats td:first-child {
+#deliveryservice-stats td:first-child,
+th {
 	white-space: nowrap;
 }
-tbody tr.error {
-	background-color: #f00;
-}
-tbody tr.warning {
-	background-color: #f80;
-}
-
 #event-log-content th:last-child {
 	text-align: center;
 }
 
+/*****************/
+/*   Top Bar     */
+/*****************/
 #top-bar {
 	display: inline-flex;
 	justify-content: space-around;
@@ -78,6 +80,9 @@ tbody tr.warning {
 	margin: 15px 0;
 }
 
+/*****************/
+/*     Links     */
+/*****************/
 #links {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -90,7 +95,9 @@ tbody tr.warning {
 	display: block;
 }
 
-
+/*****************/
+/*     Tabs      */
+/*****************/
 input[type=radio] {
 	visibility: hidden;
 	display: none;
