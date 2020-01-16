@@ -56,51 +56,58 @@ function ajax(endpoint, f) {
 
 function getCacheCount() {
 	ajax("/api/cache-count", function(r) {
-		document.getElementById("cache-count").innerHTML = r;
+		document.getElementById("cache-count").textContent = r;
 	});
 }
 
 function getCacheAvailableCount() {
 	ajax("/api/cache-available-count", function(r) {
-		document.getElementById("cache-available").innerHTML = r;
+		document.getElementById("cache-available").textContent = r;
 	});
 }
 
 function getBandwidth() {
 	ajax("/api/bandwidth-kbps", function(r) {
-		document.getElementById("bandwidth").innerHTML = numberStrWithCommas((parseFloat(r) / kilobitsInGigabit).toFixed(2));
+		document.getElementById("bandwidth").textContent = numberStrWithCommas((parseFloat(r) / kilobitsInGigabit).toFixed(2));
 	});
 }
 
 function getBandwidthCapacity() {
 	ajax("/api/bandwidth-capacity-kbps", function(r) {
-		document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas((r / kilobitsInGigabit).toString());
+		document.getElementById("bandwidth-capacity").textContent = numberStrWithCommas((r / kilobitsInGigabit).toString());
 	});
 }
 
 function getCacheDownCount() {
 	ajax("/api/cache-down-count", function(r) {
-		document.getElementById("cache-down").innerHTML = r;
+		document.getElementById("cache-down").textContent = r;
 	});
 }
 
 function getVersion() {
 	ajax("/api/version", function(r) {
-		document.getElementById("version").innerHTML = r;
+		document.getElementById("version").textContent = r;
 	});
 }
 
 function getTrafficOpsUri() {
 	ajax("/api/traffic-ops-uri", function(r) {
-		document.getElementById("source-uri").innerHTML = "<a href='" + r + "'>" + r + "</a>";
+		// This used to be done by setting the element's `innerHTML`, but that doesn't remove
+		// the child nodes. They're orphaned, but continue to take up memory.
+		const link = document.createElement('A');
+		link.href = r;
+		link.textContent = r;
+		const sourceURISpan = document.getElementById('source-uri');
+		while (sourceURISpan.lastChild) {
+			sourceURISpan.removeChild(sourceURISpan.lastChild);
+		}
+		sourceURISpan.appendChild(link);
 	});
 }
 
-
 function getTrafficOpsCdn() {
 	ajax("/publish/ConfigDoc", function(r) {
-		var j = JSON.parse(r);
-		document.getElementById("cdn-name").innerHTML = j.cdnName;
+		document.getElementById("cdn-name").textContent = JSON.parse(r).cdnName || "unknown";
 	});
 }
 
