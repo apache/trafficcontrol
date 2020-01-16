@@ -750,17 +750,34 @@ WHERE
 }
 
 // GetDSNames returns a set of delivery service names which have the given server assigned, and any error.
+// For edges, this returns all manually-assigned delivery services. For Mids, it returns all delivery services on the Mid's CDN.
 func GetDSNames(tx *sql.Tx, serverHostName string, serverPort int) (map[tc.DeliveryServiceName]struct{}, error) {
 	qry := `
+WITH s_name_port AS (
+  SELECT $1::text as name, $2::integer as port
+)
 SELECT
   ds.xml_id
 FROM
   deliveryservice ds
   JOIN deliveryservice_server dss ON ds.id = dss.deliveryservice
   JOIN server s ON s.id = dss.server
+  JOIN type tp on s.type = tp.id
 WHERE
-  s.host_name = $1
-  AND s.tcp_port = $2
+  s.host_name = (select name from s_name_port)
+  AND s.tcp_port = (select port from s_name_port)
+  AND tp.name <> '` + tc.CacheTypeMid.String() + `'
+UNION ALL
+SELECT
+  ds.xml_id
+FROM
+  deliveryservice ds
+  JOIN server s ON s.cdn_id = ds.cdn_id
+  JOIN type tp on s.type = tp.id
+WHERE
+  s.host_name = (select name from s_name_port)
+  AND s.tcp_port = (select port from s_name_port)
+  AND tp.name = '` + tc.CacheTypeMid.String() + `'
 `
 	rows, err := tx.Query(qry, serverHostName, serverPort)
 	if err != nil {
