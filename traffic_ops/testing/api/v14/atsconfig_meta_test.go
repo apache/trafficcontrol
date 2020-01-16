@@ -27,6 +27,7 @@ func TestATSConfigMeta(t *testing.T) {
 		defer DeleteTestDeliveryServiceServersCreated(t)
 		CreateTestDeliveryServiceServers(t)
 		GetTestATSConfigMeta(t)
+		GetTestATSConfigMetaMidHdrRw(t)
 	})
 }
 
@@ -54,6 +55,66 @@ func GetTestATSConfigMeta(t *testing.T) {
 		FileNameOnDisk: "hdr_rw_ds1.config",
 		Location:       "/remap/config/location/parameter",
 		APIURI:         "cdns/cdn1/configfiles/ats/hdr_rw_ds1.config", // expected suffix; config gen doesn't care about API version
+		URL:            "",
+		Scope:          "cdns",
+	}
+
+	actual := (*tc.ATSConfigMetaDataConfigFile)(nil)
+	for _, cfg := range lst.ConfigFiles {
+		if cfg.FileNameOnDisk == expected.FileNameOnDisk {
+			actual = &cfg
+			break
+		}
+	}
+	if actual == nil {
+		t.Fatalf("Getting server '"+server.HostName+"' config list: expected: %+v actual: not found\n", expected.FileNameOnDisk)
+	}
+
+	if expected.FileNameOnDisk != actual.FileNameOnDisk {
+		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
+	}
+	if expected.Location != actual.Location {
+		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
+	}
+	if !strings.HasSuffix(actual.APIURI, expected.APIURI) {
+		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
+	}
+	if actual.Scope != expected.Scope {
+		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
+	}
+}
+
+func GetTestATSConfigMetaMidHdrRw(t *testing.T) {
+	testServer := tc.Server{}
+	for _, sv := range testData.Servers {
+		if tc.CacheTypeFromString(sv.Type) == tc.CacheTypeMid {
+
+			testServer = sv
+			break
+		}
+	}
+	if testServer.HostName == "" {
+		t.Fatal("cannot GET Server: no test data")
+	}
+
+	serverList, _, err := TOSession.GetServerByHostName(testServer.HostName)
+	if err != nil {
+		t.Fatalf("cannot GET Server: %v", err)
+	}
+	if len(serverList) < 1 {
+		t.Fatalf("cannot GET Server '" + testServer.HostName + "', returned no servers\n")
+	}
+	server := serverList[0]
+
+	lst, _, err := TOSession.GetATSServerConfigList(server.ID)
+	if err != nil {
+		t.Fatalf("Getting server '" + server.HostName + "' config list: " + err.Error() + "\n")
+	}
+
+	expected := tc.ATSConfigMetaDataConfigFile{
+		FileNameOnDisk: "hdr_rw_mid_ds1nat.config",
+		Location:       "/remap/config/location/parameter",
+		APIURI:         "cdns/cdn1/configfiles/ats/hdr_rw_mid_ds1nat.config", // expected suffix; config gen doesn't care about API version
 		URL:            "",
 		Scope:          "cdns",
 	}
