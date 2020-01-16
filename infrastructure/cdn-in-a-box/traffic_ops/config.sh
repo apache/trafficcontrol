@@ -67,6 +67,10 @@ key="$X509_INFRA_KEY_FILE"
 echo "crt=$crt"
 echo "key=$key"
 
+if [[ "$DEBUGGING_TO" == true ]]; then
+  DEBUGGING_TIMEOUT=$(( 60 * 60 * 24 )); # Timing out debugging after 1 day seems fair
+fi;
+
 cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
 {
     "hypnotoad" : {
@@ -82,20 +86,22 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     "traffic_ops_golang" : {
         "insecure": true,
         "port" : "$TO_PORT",
-        "proxy_timeout" : 60,
+        "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_keep_alive" : 60,
-        "proxy_tls_timeout" : 60,
-        "proxy_read_header_timeout" : 60,
-        "read_timeout" : 60,
-        "read_header_timeout" : 60,
-        "write_timeout" : 60,
-        "idle_timeout" : 60,
+        "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "proxy_read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "read_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "write_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "idle_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "log_location_error": "$TO_LOG_ERROR",
         "log_location_warning": "$TO_LOG_WARNING",
         "log_location_info": "$TO_LOG_INFO",
         "log_location_debug": "$TO_LOG_DEBUG",
         "log_location_event": "$TO_LOG_EVENT",
         "max_db_connections": 20,
+        "db_conn_max_lifetime_seconds": ${DEBUGGING_TIMEOUT:-60},
+        "db_query_timeout_seconds": ${DEBUGGING_TIMEOUT:-20},
         "backend_max_connections": {
             "mojolicious": 4
         },

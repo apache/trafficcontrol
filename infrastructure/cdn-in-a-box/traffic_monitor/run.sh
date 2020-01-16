@@ -107,6 +107,21 @@ until [ $(to-get "/api/2.0/cdns/$CDN_NAME/snapshot" 2>/dev/null | jq -c -e '.res
   	sleep 3;
 done
 
+if [[ "$DEBUGGING_TM" == true ]]; then
+	day_in_ms=$(( 1000 * 60 * 60 * 24 )); # Timing out debugging after 1 day seems fair
+	set -o allexport;
+	HTTP_TIMEOUT_MS=$day_in_ms
+	SERVER_READ_TIMEOUT_MS=$day_in_ms
+	SERVER_WRITE_TIMEOUT_MS=$day_in_ms
+	set +o allexport;
+else
+	set -o allexport;
+	HTTP_TIMEOUT_MS=2000
+	SERVER_READ_TIMEOUT_MS=10000
+	SERVER_WRITE_TIMEOUT_MS=10000
+	set +o allexport;
+fi;
+
 envsubst < /opt/traffic_monitor/conf/traffic_monitor.cfg.template > /opt/traffic_monitor/conf/traffic_monitor.cfg
 cd /opt/traffic_monitor
 /opt/traffic_monitor/bin/traffic_monitor -opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg -config /opt/traffic_monitor/conf/traffic_monitor.cfg
