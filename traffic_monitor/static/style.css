@@ -46,10 +46,10 @@ tbody tr:nth-child(odd) {
 	background: #fff;
 }
 
-#cache-states td:nth-child(n+4), #event-log td:last-child {
+#cache-states td:nth-child(n+4), #event-log td:last-child, #deliveryservice-stats td:nth-child(n+2) {
 	text-align: right;
 }
-#cache-states td:first-child, #event-log td:first-child, #event-log td:last-child {
+#cache-states td:first-child, #event-log td:first-child, #event-log td:last-child, #deliveryservice-stats td:first-child {
 	white-space: nowrap;
 }
 tbody tr.error {
