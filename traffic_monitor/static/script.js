@@ -1,17 +1,21 @@
-function init() {
-	getTopBar();
-	setInterval(getCacheCount, 4755);
-	setInterval(getCacheAvailableCount, 4800);
-	setInterval(getBandwidth, 4621);
-	setInterval(getBandwidthCapacity, 4591);
-	setInterval(getCacheDownCount, 4832);
-	setInterval(getVersion, 10007); // change to retry on failure, and only do on startup
-	setInterval(getTrafficOpsUri, 10019); // change to retry on failure, and only do on startup
-	setInterval(getTrafficOpsCdn, 10500); // change to retry on failure, and only do on startup
-	setInterval(getEvents, 2004); // change to retry on failure, and only do on startup
-	setInterval(getCacheStatuses, 5009);
-	setInterval(getDsStats, 4003);
-}
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
 // source: http://stackoverflow.com/a/2901298/292623
 function numberStrWithCommas(x) {
@@ -253,4 +257,19 @@ function ajax(endpoint, f) {
 	};
 	xhttp.open("GET", endpoint, true);
 	xhttp.send();
+}
+
+function init() {
+	getTopBar();
+	setInterval(getCacheCount, 4755);
+	setInterval(getCacheAvailableCount, 4800);
+	setInterval(getBandwidth, 4621);
+	setInterval(getBandwidthCapacity, 4591);
+	setInterval(getCacheDownCount, 4832);
+	setInterval(getVersion, 10007); // change to retry on failure, and only do on startup
+	setInterval(getTrafficOpsUri, 10019); // change to retry on failure, and only do on startup
+	setInterval(getTrafficOpsCdn, 10500); // change to retry on failure, and only do on startup
+	setInterval(getEvents, 2004); // change to retry on failure, and only do on startup
+	setInterval(getCacheStatuses, 5009);
+	setInterval(getDsStats, 4003);
 }
