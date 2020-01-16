@@ -128,37 +128,15 @@ under the License.
 				const table = document.createElement('TBODY');
 				table.id = "cache-states"
 
-				// TODO: I'm not sure all these IDs are actually necessary anymore
 				for (const [serverName, server] of servers) {
 					const row = table.insertRow(0);
-					row.id = "cache-states-" + serverName;
 
-					let cell = row.insertCell(0);
-					cell.textContent = serverName;
-
-					cell = row.insertCell(1);
-					cell.id = row.id + "-type";
-					cell.textContent = server.type || "UNKNOWN";
-
-                    cell = row.insertCell(2);
-                    cell.id = row.id + "-ipv4";
-                    if (server.status.indexOf("ONLINE") !== 0) {
-                        cell.textContent = server.ipv4_available;
-                    } else {
-                        cell.textContent = "N/A";
-                    }
-
-                    cell = row.insertCell(3);
-                    cell.id = row.id + "-ipv6";
-                    if (server.status.indexOf("ONLINE") !== 0) {
-                        cell.textContent = server.ipv6_available;
-                    } else {
-                        cell.textContent = "N/A";
-                    }
-					cell = row.insertCell(4);
-					cell.id = row.id + "-status";
+					row.insertCell(0).textContent = serverName;
+					row.insertCell(1).textContent = server.type || "UNKNOWN";
+					row.insertCell(2).textContent = server.status.indexOf("ONLINE") !== 0 ? server.ipv4_available : "N/A";
+                    row.insertCell(3).textContent = server.status.indexOf("ONLINE") !== 0 ?  server.ipv6_available : "N/A";
+					row.insertCell(4).textContent = server.status || "";
 					if (Object.prototype.hasOwnProperty.call(server, "status")) {
-						cell.textContent = server.status;
 						if (server.status.indexOf("ADMIN_DOWN") !== -1 || server.status.indexOf("OFFLINE") !== -1) {
 							row.classList.add("warning");
 						} else if (!server.combined_available && server.status.indexOf("ONLINE") !== 0) {
@@ -168,50 +146,29 @@ under the License.
 						}
 					}
 
-					cell = row.insertCell(5);
-					cell.id = row.id + "-load-average";
-					cell.textContent = server.load_average || "";
+					row.insertCell(5).textContent = server.load_average || "";
+					row.insertCell(6).textContent = server.query_time_ms || "";
+					row.insertCell(7).textContent = server.health_time_ms || "";
+					row.insertCell(8).textContent = server.stat_time_ms || "";
+					row.insertCell(9).textContent = server.health_span_ms || "";
+					row.insertCell(10).textContent = server.stat_span_ms || "";
 
-					cell = row.insertCell(6);
-					cell.id = row.id + "-query-time";
-					cell.textContent = server.query_time_ms || "";
-
-					cell = row.insertCell(7);
-					cell.id = row.id + "-health-time";
-					cell.textContent = server.health_time_ms || "";
-
-					cell = row.insertCell(8);
-					cell.id = row.id + "-stat-time";
-					cell.textContent = server.stat_time_ms || "";
-
-					cell = row.insertCell(9);
-					cell.id = row.id + "-health-span";
-					cell.textContent = server.health_span_ms || "";
-
-					cell = row.insertCell(10);
-					cell.id = row.id + "-stat-span";
-					cell.textContent = server.stat_span_ms || "";
-
-					cell = row.insertCell(11);
-					cell.id = row.id + "-bandwidth";
 					if (Object.prototype.hasOwnProperty.call(server, "bandwidth_kbps")) {
 						const kbps = (server.bandwidth_kbps / kilobitsInMegabit).toFixed(2);
 						const max = numberStrWithCommas((server.bandwidth_capacity_kbps / kilobitsInMegabit).toFixed(0));
-						cell.textContent = `${kbps} / ${max}`;
+						row.insertCell(11).textContent = `${kbps} / ${max}`;
 					} else {
-						cell.textContent = "N/A";
+						row.insertCell(11).textContent = "N/A";
 					}
 
-					cell = row.insertCell(12);
-					cell.id = row.id + "-connection-count";
-					cell.textContent = server.connection_count || "N/A";
+					row.insertCell(12).textContent = server.connection_count || "N/A";
 				}
 
 
 				const oldtable = document.getElementById("cache-states");
 				oldtable.parentNode.replaceChild(table, oldtable);
 
-			})
+			});
 		}
 
 		var millisecondsInSecond = 1000;
