@@ -20,6 +20,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -41,13 +43,14 @@ var (
 		"src_ip=0.0.0.0-255.255.255.255 action=ip_deny method=PUSH|PURGE|DELETE\n",
 		"src_ip=::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff action=ip_deny method=PUSH|PURGE|DELETE\n",
 	}
-	rascalRule = ""
+	rascalServerIP = ""
+	rascalRule     = "src_ip=%v action=ip_allow method=ALL"
 )
 
 func TestIPAllowDotConfig(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
-		rascalServer := getServer(t, "RASCAL")
-		rascalRule = fmt.Sprintf("src_ip=%v action=ip_allow method=ALL", rascalServer.IPAddress)
+		rascalServerIP = getServer(t, "RASCAL").IPAddress
+		// rascalRule = fmt.Sprintf("src_ip=%v action=ip_allow method=ALL", rascalServer.IPAddress)
 		GetTestIPAllowDotConfig(t)
 		GetTestIPAllowMidDotConfig(t)
 	})
@@ -66,8 +69,10 @@ func GetTestIPAllowDotConfig(t *testing.T) {
 		}
 	}
 	// Make sure edge does not contain rule for rascal server
-	if strings.Contains(output, rascalRule) {
-		t.Errorf("expected rascal to not be include as allowed in edge ip allow config")
+	exists, ipRange := getIPRule(output, rascalServerIP)
+	rascalRule := fmt.Sprintf(rascalRule, ipRange)
+	if exists && strings.Contains(output, rascalRule) {
+		t.Errorf("rascal IP was not supposed to be in an allowed rule: %v", rascalRule)
 	}
 }
 
@@ -83,8 +88,11 @@ func GetTestIPAllowMidDotConfig(t *testing.T) {
 			t.Errorf("expected rule %v not found in ip_allow config", r)
 		}
 	}
-	// Make sure mid contains rule for rascal server
-	if !strings.Contains(output, rascalRule) {
+
+	// Make sure mid contains an allowed rule that includes the rascal server
+	exists, ipRange := getIPRule(output, rascalServerIP)
+	rascalRule := fmt.Sprintf(rascalRule, ipRange)
+	if !(exists && strings.Contains(output, rascalRule)) {
 		t.Errorf("expected rascal to be include as allowed in mid ip allow config")
 	}
 }
@@ -100,4 +108,18 @@ func getServer(t *testing.T, serverType string) tc.Server {
 		t.Fatalf("cannot find any Servers by type %v", serverType)
 	}
 	return servers[0]
+}
+
+// getIPRuleRange returns if the given IP is included in the set of rules and which ip range it is included in
+func getIPRule(rules, ip string) (bool, string) {
+	for _, r := range strings.Split(rules, "\n")[1:] {
+		if !strings.Contains(r, "src_ip") {
+			continue
+		}
+		ipRange := r[7:strings.IndexAny(r, " ")]
+		if exists, _ := util.IP4InRange(ip, ipRange); exists {
+			return true, ipRange
+		}
+	}
+	return false, ""
 }
