@@ -296,3 +296,5 @@ function init() {
 	setInterval(getCacheStatuses, 5009);
 	setInterval(getDsStats, 4003);
 }
+
+window.addEventListener('load', init);
