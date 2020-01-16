@@ -45,11 +45,18 @@ tbody tr:nth-child(even) {
 tbody tr:nth-child(odd) {
 	background: #fff;
 }
+
 #cache-states td:nth-child(n+4), #event-log td:last-child {
 	text-align: right;
 }
 #cache-states td:first-child, #event-log td:first-child, #event-log td:last-child {
 	white-space: nowrap;
+}
+tbody tr.error {
+	background-color: #f00;
+}
+tbody tr.warning {
+	background-color: #f80;
 }
 
 
@@ -77,12 +84,6 @@ div#links a {
 	display: block;
 }
 
-tbody tr.error {
-	background-color: #f00;
-}
-tbody tr.warning {
-	background-color: #f80;
-}
 
 	input[type=radio] {
 	visibility: hidden;
