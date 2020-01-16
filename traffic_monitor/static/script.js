@@ -68,7 +68,17 @@ function getTrafficOpsCdn() {
 	});
 }
 
+/**
+ * This is the index of the latest event already catalogued by the UI. TM doesn't
+ * provide a way to fetch event logs "older than x" etc., so this is how we keep
+ * track of what we've seen.
+*/
 var lastEvent = 0;
+
+/**
+ * Fetches the event log from TM and updates the "Event Log" table with the new
+ * results.
+*/
 function getEvents() {
 	/// \todo add /api/events-since/{index} (and change Traffic Monitor to keep latest
 	ajax("/publish/EventLog", function(r) {
@@ -94,6 +104,10 @@ function getEvents() {
 	});
 }
 
+/**
+ * Fetches the current cache server states and statistics from TM and updates
+ * the "Cache States" table with the results - replacing the current content.
+*/
 function getCacheStates() {
 	ajax("/api/cache-statuses", function(r) {
 		const servers = new Map(Object.entries(JSON.parse(r)));
@@ -143,18 +157,16 @@ function getCacheStates() {
 	});
 }
 
-var millisecondsInSecond = 1000;
-var kilobitsInGigabit = 1000000;
-var kilobitsInMegabit = 1000;
+const millisecondsInSecond = 1000;
+const kilobitsInGigabit = 1000000;
+const kilobitsInMegabit = 1000;
 
-// dsDisplayFloat takes a float, and returns the string to display. For nonzero values, it returns two decimal places. For zero values, it returns an empty string, to make nonzero values more visible.
-function dsDisplayFloat(f) {
-	var s = f
-	if (f != 0.0) {
-		s = f.toFixed(2);
-	}
-	return s
-}
+/**
+ * dsDisplayFloat takes a float, and returns the string to display. For nonzero values, it returns two decimal places.
+ * For zero values, it returns an empty string, to make nonzero values more visible.
+ * @param f The floating point number to format
+*/
+const dsDisplayFloat = (f) => { return f === 0 ? "" : f.toFixed(2); }
 
 function getDsStats() {
 	var now = Date.now();
