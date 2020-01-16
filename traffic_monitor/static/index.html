@@ -24,123 +24,7 @@ under the License.
 <head>
 	<meta charset="UTF-8">
 	<title>Traffic Monitor</title>
-	<style>
-		body {
-			font-family: "Lato", sans-serif;
-			font-size: 14px;
-			margin: 0;
-			max-width: 100vw;
-		}
-
-		table {
-			border-collapse: separate;
-			border-spacing: 0px 0;
-			width: 100%;
-		}
-
-		th, td {
-			padding:5px 20px 5px 5px;
-		}
-
-		th {
-			white-space: nowrap;
-		}
-
-		tbody tr:nth-child(even) {
-			background: #ced;
-		}
-		tbody tr:nth-child(odd) {
-			background: #fff;
-		}
-		#cache-states td:nth-child(n+4) {
-			text-align: right;
-		}
-		#cache-states td:first-child {
-			white-space: nowrap;
-		}
-
-
-		li.endpoint {
-			margin: 4px 0;
-		}
-
-		div#top-bar {
-			display: inline-flex;
-			justify-content: space-around;
-			align-items: center;
-			width: 100%;
-			margin: 15px 0;
-		}
-
-		div#links {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			max-width: 100ch;
-		}
-		div#links div {
-			margin-left: 4px;
-		}
-		div#links a {
-			display: block;
-		}
-
-		tbody tr.error {
-			background-color: #f00;
-		}
-		tbody tr.warning {
-			background-color: #f80;
-		}
-
-	 	input[type=radio] {
-			visibility: hidden;
-			display: none;
-		}
-		label {
-			display: block;
-			padding: 14px 21px;
-			border-radius: 2px 2px 0 0;
-			cursor: pointer;
-			position: relative;
-			top: 4px;
-			transition: background-color ease-in-out 0.3s;
-			text-align: center;
-			border: 1px solid green;
-		}
-		label:hover {
-			background-color: #cfd;
-		}
-		ul.tabs {
-			list-style: none;
-			max-width: 100%;
-			border: 1px solid #ccc;
-			background-color: #f1f1f1;
-			position: relative;
-		}
-		div.tabcontent {
-			z-index: 2;
-			display: none;
-			visibility: hidden;
-			overflow: hidden;
-			width: 100%;
-			position: absolute;
-			top: 53px;
-			left: 0;
-			padding: 6px 0;
-			border-top: none;
-		}
-		input.tab:checked ~ div.tabcontent {
-			display: block;
-			visibility: visible;
-		}
-		input.tab:checked ~ label{
-			background-color: #adb;
-			border-bottom-width: 0;
-		}
-		ul.tabs li {
-			float: left;
-			display: block;
-		}
-	</style>
+	<link rel="stylesheet" type="text/css" href="./style.css"/>
 	<script>
 		function init() {
 			getTopBar();
@@ -216,32 +100,24 @@ under the License.
 		function getEvents() {
 			/// \todo add /api/events-since/{index} (and change Traffic Monitor to keep latest
 			ajax("/publish/EventLog", function(r) {
-				var jdata = JSON.parse(r);
-				for (i = jdata.events.length - 1; i >= 0; i--) {
-					var event = jdata.events[i];
-					if (event.index <= lastEvent) {
-						continue;
-					}
+				const events = JSON.parse(r).events || [];
+				for (const event of events.slice(lastEvent+1)) {
 					lastEvent = event.index
-					var row = document.getElementById("event-log").insertRow(0); //document.createElement("tr");
-					row.classList.add("stripes");
-					row.insertCell(0).id = row.id + "-name";
-					document.getElementById(row.id + "-name").textContent = event.name;
-					document.getElementById(row.id + "-name").style.whiteSpace = "nowrap";
+					const row = document.getElementById("event-log").insertRow(0);
+
+					row.insertCell(0).textContent = event.name;
 					row.insertCell(1).textContent = event.type;
-					row.insertCell(2).textContent = event.isAvailable ? "available" : "offline";
+
+					const cell = row.insertCell(2);
 					if(event.isAvailable) {
-						row.classList.add("stripes");
-						row.classList.remove("error");
+						cell.textContent = "available";
 					} else {
+						cell.textContent = "offline";
 						row.classList.add("error");
-						row.classList.remove("stripes");
 					}
+
 					row.insertCell(3).textContent = event.description;
-					row.insertCell(4).id = row.id + "-last";
-					document.getElementById(row.id + "-last").textContent = new Date(event.time * 1000).toISOString();
-					document.getElementById(row.id + "-last").style.whiteSpace = "nowrap";
-					document.getElementById(row.id + "-last").style.textAlign = "right";
+					row.insertCell(4).textContent = new Date(event.time * 1000).toISOString();
 				}
 			});
 		}
@@ -255,11 +131,9 @@ under the License.
 				// TODO: I'm not sure all these IDs are actually necessary anymore
 				for (const [serverName, server] of servers) {
 					const row = table.insertRow(0);
-					row.classList.add("stripes");
 					row.id = "cache-states-" + serverName;
 
 					let cell = row.insertCell(0);
-					cell.id = row.id + "-server";
 					cell.textContent = serverName;
 
 					cell = row.insertCell(1);
@@ -287,20 +161,10 @@ under the License.
 						cell.textContent = server.status;
 						if (server.status.indexOf("ADMIN_DOWN") !== -1 || server.status.indexOf("OFFLINE") !== -1) {
 							row.classList.add("warning");
-							row.classList.remove("error");
-							row.classList.remove("stripes");
 						} else if (!server.combined_available && server.status.indexOf("ONLINE") !== 0) {
 							row.classList.add("error");
-							row.classList.remove("warning");
-							row.classList.remove("stripes");
 						} else if (server.status.indexOf(" availableBandwidth") !== -1) {
 							row.classList.add("error");
-							row.classList.remove("warning");
-							row.classList.remove("stripes");
-						} else {
-							row.classList.add("stripe");
-							row.classList.remove("warning");
-							row.classList.remove("error");
 						}
 					}
 
