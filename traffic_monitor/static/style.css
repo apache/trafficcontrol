@@ -47,6 +47,7 @@ tbody tr:nth-child(odd) {
 }
 
 #cache-states td:nth-child(n+4),
+#cache-states-content td:nth-child(n+4),
 #event-log td:last-child,
 #deliveryservice-stats td:nth-child(n+3),
 #deliveryservice-stats-content th:nth-child(n+3) {
@@ -63,6 +64,10 @@ tbody tr.error {
 }
 tbody tr.warning {
 	background-color: #f80;
+}
+
+#event-log-content th:last-child {
+	text-align: center;
 }
 
 
