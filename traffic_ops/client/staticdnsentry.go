@@ -49,7 +49,7 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 		if len(dses) == 0 {
 			return errors.New("no deliveryservice with name " + sdns.DeliveryService)
 		}
-		sdns.DeliveryServiceID = *dses[0].ID
+		sdns.DeliveryServiceID = dses[0].ID
 	}
 
 	if sdns.TypeID == 0 && sdns.Type != "" {
