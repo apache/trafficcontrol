@@ -70,12 +70,7 @@ tbody tr.warning {
 	text-align: center;
 }
 
-
-li.endpoint {
-	margin: 4px 0;
-}
-
-div#top-bar {
+#top-bar {
 	display: inline-flex;
 	justify-content: space-around;
 	align-items: center;
@@ -83,20 +78,20 @@ div#top-bar {
 	margin: 15px 0;
 }
 
-div#links {
+#links {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	max-width: 100ch;
 }
-div#links div {
+#links div {
 	margin-left: 4px;
 }
-div#links a {
+#links a {
 	display: block;
 }
 
 
-	input[type=radio] {
+input[type=radio] {
 	visibility: hidden;
 	display: none;
 }
@@ -114,14 +109,14 @@ label {
 label:hover {
 	background-color: #cfd;
 }
-ul.tabs {
+.tabs {
 	list-style: none;
 	max-width: 100%;
 	border: 1px solid #ccc;
 	background-color: #f1f1f1;
 	position: relative;
 }
-div.tabcontent {
+.tabcontent {
 	z-index: 2;
 	display: none;
 	visibility: hidden;
@@ -141,7 +136,7 @@ input.tab:checked ~ label{
 	background-color: #adb;
 	border-bottom-width: 0;
 }
-ul.tabs li {
+.tabs li {
 	float: left;
 	display: block;
 }
