@@ -17,9 +17,41 @@
  * under the License.
  */
 
-// source: http://stackoverflow.com/a/2901298/292623
+const millisecondsInSecond = 1000;
+const kilobitsInGigabit = 1000000;
+const kilobitsInMegabit = 1000;
+
+/**
+ * This is the index of the latest event already catalogued by the UI. TM doesn't
+ * provide a way to fetch event logs "older than x" etc., so this is how we keep
+ * track of what we've seen.
+*/
+var lastEvent = 0;
+
+/**
+ * Adds a comma for every 3rd power of ten in a number represented as a string.
+ * e.g. numberStrWithCommas("100000") outputs "100,000".
+ * (source: http://stackoverflow.com/a/2901298/292623)
+ * @param x A string containing a number which will be formatted.
+*/
 function numberStrWithCommas(x) {
 	return x.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+/**
+ * ajax performs an XMLHttpRequest and passes the result to a function - *only if the response code is EXACTLY 200*.
+ * @param endpoint An API endpoint relative to the root of the TM webserver e.g. /publish/DsStats
+ * @param f A function that takes a single argument which will be the entire response body as a string.
+ */
+function ajax(endpoint, f) {
+	const xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = () => {
+		if (xhttp.readyState === 4 && xhttp.status === 200) {
+			f(xhttp.responseText);
+		}
+	};
+	xhttp.open("GET", endpoint, true);
+	xhttp.send();
 }
 
 function getCacheCount() {
@@ -71,13 +103,6 @@ function getTrafficOpsCdn() {
 		document.getElementById("cdn-name").innerHTML = j.cdnName;
 	});
 }
-
-/**
- * This is the index of the latest event already catalogued by the UI. TM doesn't
- * provide a way to fetch event logs "older than x" etc., so this is how we keep
- * track of what we've seen.
-*/
-var lastEvent = 0;
 
 /**
  * Fetches the event log from TM and updates the "Event Log" table with the new
@@ -161,10 +186,6 @@ function getCacheStates() {
 	});
 }
 
-const millisecondsInSecond = 1000;
-const kilobitsInGigabit = 1000000;
-const kilobitsInMegabit = 1000;
-
 /**
  * dsDisplayFloat takes a float, and returns the string to display. For nonzero values, it returns two decimal places.
  * For zero values, it returns an empty string, to make nonzero values more visible.
@@ -229,6 +250,10 @@ function getDsStats() {
 	});
 }
 
+/**
+ * Fetches not only the "Cache States" but also the aggregate cache server statistics used in the
+ * informational section at the top of the page.
+ */
 function getCacheStatuses() {
 	getCacheCount();
 	getCacheAvailableCount();
@@ -236,6 +261,9 @@ function getCacheStatuses() {
 	getCacheStates();
 }
 
+/**
+ * Fetches the metadata information used at the very top of the page.
+ */
 function getTopBar() {
 	getVersion();
 	getTrafficOpsUri();
@@ -244,21 +272,9 @@ function getTopBar() {
 }
 
 /**
- * ajax performs an XMLHttpRequest and passes the result to a function - *only if the response code is EXACTLY 200*.
- * @param endpoint An API endpoint relative to the root of the TM webserver e.g. /publish/DsStats
- * @param f A function that takes a single argument which will be the entire response body as a string.
+ * Runs immediately after content is loaded, fetching initial information and setting intervals for
+ * for gathering other data.
  */
-function ajax(endpoint, f) {
-	const xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = () => {
-		if (xhttp.readyState === 4 && xhttp.status === 200) {
-			f(xhttp.responseText);
-		}
-	};
-	xhttp.open("GET", endpoint, true);
-	xhttp.send();
-}
-
 function init() {
 	getTopBar();
 	setInterval(getCacheCount, 4755);
