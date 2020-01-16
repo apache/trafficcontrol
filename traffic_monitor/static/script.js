@@ -239,10 +239,15 @@ function getTopBar() {
 	getCacheStatuses();
 }
 
+/**
+ * ajax performs an XMLHttpRequest and passes the result to a function - *only if the response code is EXACTLY 200*.
+ * @param endpoint An API endpoint relative to the root of the TM webserver e.g. /publish/DsStats
+ * @param f A function that takes a single argument which will be the entire response body as a string.
+ */
 function ajax(endpoint, f) {
-	var xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = function() {
-		if (xhttp.readyState == 4 && xhttp.status == 200) {
+	const xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = () => {
+		if (xhttp.readyState === 4 && xhttp.status === 200) {
 			f(xhttp.responseText);
 		}
 	};
