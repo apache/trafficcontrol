@@ -109,6 +109,11 @@ func TestMakeMetaConfig(t *testing.T) {
 			FileNameOnDisk: "custom.config",
 			Location:       "/my/location/",
 		},
+		"external.config": ConfigProfileParams{
+			FileNameOnDisk: "external.config",
+			Location:       "/my/location/",
+			URL:            "http://myurl/remap.config",
+		},
 	}
 	uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
 	dses := map[tc.DeliveryServiceName]struct{}{"mydsname": {}}
@@ -233,6 +238,14 @@ func TestMakeMetaConfig(t *testing.T) {
 				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
 			}
 		},
+		"external.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := "/my/location/"; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeCDNs); cf.Scope != expected {
+				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+			}
+		},
 	}
 
 	for _, cfgFile := range cfg.ConfigFiles {
@@ -261,5 +274,23 @@ func TestMakeMetaConfig(t *testing.T) {
 	}
 	if strings.Contains(txt, "nonexistentds") {
 		t.Errorf("expected location parameters for nonexistent delivery services to not be added to config, actual '%v'", txt)
+	}
+
+	// check for expected apiUri vs url keys (if values are empty strings, they should be omitted from the json)
+	m := map[string]interface{}{}
+	if err := json.Unmarshal([]byte(txt), &m); err != nil {
+		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
+	}
+	cfl := m["configFiles"].([]interface{})
+	for _, cf := range cfl {
+		c := cf.(map[string]interface{})
+		if c["fnameOnDisk"] == "external.config" {
+			if _, exists := c["apiUri"]; exists {
+				t.Errorf("expected: apiUri field to be omitted for external.config, actual: present")
+			}
+			if _, exists := c["url"]; !exists {
+				t.Errorf("expected: url field to be present for external.config, actual: omitted")
+			}
+		}
 	}
 }
