@@ -52,6 +52,12 @@ Configuration Overview
 ----------------------
 Traffic Monitor is configured via two JSON configuration files, :file:`traffic_ops.cfg` and :file:`traffic_monitor.cfg`, by default located in the ``conf`` directory in the install location. :file:`traffic_ops.cfg` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. :file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times and initial poll intervals. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
 
+Peering and Optimistic Quorum
+-----------------------------
+As mentioned in the :ref:`health-proto` section of the :ref:`tm-overview` overview, peering a Traffic Monitor with one or more other Traffic Monitors enables the optimistic health protocol. In order to leverage the optimistic quorum feature along with the optimistic health protocol, a minimum of three Traffic Monitors are required. The optimistic quorum feature allows a Traffic Monitor to withdraw itself from the optimistic health protocol when it loses connectivity to a number of its peers.
+
+To enable the optimistic quorum feature, the ``peer_optimistic_quorum_min`` property in ``traffic_monitor.cfg`` should be configured with a value greater than zero that specifies the minimum number of peers that must be available in order to participate in the optimistic health protocol. If at any time the number of available peers falls below this threshold, the local Traffic Monitor will serve 503s whenever the aggregated, optimistic health protocol enabled view of the CDN's health is requested. Traffic Monitor will continue serving 503s and logging errors in ``traffic_monitor.log`` until the minimum number of peers are available. Once the mininimum number of peers are available, the local Traffic Monitor can resume participation in the optimisic health protocol. This prevents negative states caused by network isolation of a Traffic Monitor from propagating to downstream components such as Traffic Router.
+
 
 Cache Polling URL
 -----------------------------------
