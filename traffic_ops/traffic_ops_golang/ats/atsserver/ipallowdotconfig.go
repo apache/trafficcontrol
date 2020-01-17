@@ -86,7 +86,7 @@ FROM
   JOIN type tp on tp.id = s.type
   JOIN cachegroup cg on cg.id = s.cachegroup
 WHERE
-  (tp.name = '` + tc.MonitorTypeName + `' OR tp.name LIKE '` + tc.EdgeTypePrefix + `%')
+  (tp.name = '` + tc.MonitorTypeName + `' OR ( tp.name LIKE '` + tc.EdgeTypePrefix + `%')
   AND cg.id IN (
     SELECT
       cg2.id
@@ -94,7 +94,7 @@ WHERE
      server s2
      JOIN cachegroup cg2 ON (cg2.parent_cachegroup_id = s2.cachegroup OR cg2.secondary_parent_cachegroup_id = s2.cachegroup)
     WHERE
-      s2.host_name = $1
+      s2.host_name = $1 )
   )
 `
 	rows, err := tx.Query(qry, serverName)

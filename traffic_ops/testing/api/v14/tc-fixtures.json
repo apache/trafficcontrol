@@ -1828,7 +1828,7 @@
             "routerPortName": "",
             "status": "REPORTED",
             "tcpPort": 81,
-            "type": "TRAFFIC_MONITOR",
+            "type": "RASCAL",
             "updPending": false,
             "xmppId": "",
             "xmppPasswd": "X"
@@ -2301,7 +2301,7 @@
         {
             "description": "Traffic Monitor (Rascal)",
             "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
-            "name": "TRAFFIC_MONITOR",
+            "name": "RASCAL",
             "useInTable": "server"
         }
     ],
