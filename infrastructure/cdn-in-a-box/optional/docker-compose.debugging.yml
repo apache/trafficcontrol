@@ -21,6 +21,15 @@
 version: '2.1'
 
 services:
+  trafficmonitor:
+    build:
+      context: .
+      dockerfile: traffic_monitor/Dockerfile-debug
+    image: trafficmonitor-debug
+    ports:
+      - "2344:2344" #Delve debugging port
+    depends_on:
+      - trafficmonitor-nondebug
   trafficops:
     build:
       context: .
@@ -30,6 +39,16 @@ services:
       - "2345:2345" #Delve debugging port
     depends_on:
       - trafficops-go-nondebug
+  # The trafficmonitor-nondebug service exists to ensure that the trafficmonitor
+  # base image exists before building trafficmonitor-debug.
+  trafficmonitor-nondebug:
+    image: trafficmonitor
+    build:
+      context: .
+      dockerfile: traffic_monitor/Dockerfile
+      args:
+        TRAFFIC_MONITOR_RPM: traffic_monitor/traffic_monitor.rpm
+    command: /usr/bin/true
   # The trafficops-go-nondebug service ensures that the trafficops-go base image
   # exists before trying to build trafficops-go-debug.
   trafficops-go-nondebug:
