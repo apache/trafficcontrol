@@ -70,7 +70,11 @@ touch /var/log/traffic_ops/traffic_ops.log
 # enroll in the background so traffic_ops_golang can run in foreground
 TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
-traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF -riakcfg $RIAKCONF);
+traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF");
+if [[ "$TO_DEBUG_ENABLE" == true ]]; then
+  traffic_ops_golang_command=(dlv '--accept-multiclient' '--continue' '--listen=:2345' '--headless=true' '--api-version=2' exec
+    "${traffic_ops_golang_command[0]}" -- "${traffic_ops_golang_command[@]:1}");
+fi;
 "${traffic_ops_golang_command[@]}" &
 
 to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)

@@ -67,7 +67,7 @@ key="$X509_INFRA_KEY_FILE"
 echo "crt=$crt"
 echo "key=$key"
 
-if [[ "$DEBUGGING_TO" == true ]]; then
+if [[ "$TO_DEBUG_ENABLE" == true ]]; then
   DEBUGGING_TIMEOUT=$(( 60 * 60 * 24 )); # Timing out debugging after 1 day seems fair
 fi;
 

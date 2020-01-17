@@ -49,7 +49,7 @@ function initBuildArea() {
 
 	# compile traffic_ops_golang
 	pushd traffic_ops_golang
-	go_build=(go build -v );
+	go_build=(go build -v);
 	if [[ "$DEBUG_BUILD" == true ]]; then
 		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
 		go_build+=(-gcflags 'all=-N -l');
