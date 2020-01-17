@@ -21,7 +21,10 @@ package util
 
 import (
 	"bytes"
+	"errors"
 	"net"
+	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
@@ -199,4 +202,49 @@ func IPToCIDR(ip net.IP) *net.IPNet {
 		fullMask = net.IPMask([]byte{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255})
 	}
 	return &net.IPNet{IP: ip, Mask: fullMask}
+}
+
+func IP4ToNum(ip string) (uint32, error) {
+	parts := strings.Split(ip, `.`)
+	if len(parts) != 4 {
+		return 0, errors.New("malformed IPv4")
+	}
+	intParts := []uint32{}
+	for _, part := range parts {
+		i, err := strconv.ParseUint(part, 10, 32)
+		if err != nil {
+			return 0, errors.New("malformed IPv4")
+		}
+		intParts = append(intParts, uint32(i))
+	}
+
+	num := intParts[3]
+	num += intParts[2] << 8
+	num += intParts[1] << 16
+	num += intParts[0] << 24
+
+	return num, nil
+}
+
+func IP4InRange(ip, ipRange string) (bool, error) {
+	ab := strings.Split(ipRange, `-`)
+	if len(ab) != 2 {
+		if len(ab) == 1 { // no range check for equality
+			return ip == ipRange, nil
+		}
+		return false, errors.New("malformed range")
+	}
+	ipNum, err := IP4ToNum(ip)
+	if err != nil {
+		return false, errors.New("malformed ip")
+	}
+	aNum, err := IP4ToNum(ab[0])
+	if err != nil {
+		return false, errors.New("malformed range (first part)")
+	}
+	bNum, err := IP4ToNum(ab[1])
+	if err != nil {
+		return false, errors.New("malformed range (second part)")
+	}
+	return ipNum >= aNum && ipNum <= bNum, nil
 }
