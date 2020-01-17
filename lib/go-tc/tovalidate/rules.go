@@ -28,7 +28,7 @@ func NoSpaces(str string) bool {
 	return !strings.ContainsAny(str, " ")
 }
 
-// NoLineBreaks returns true if the string has no line breaks
+// NoLineBreaks returns true if the string has no line breaks.
 func NoLineBreaks(str string) bool {
 	return !strings.ContainsAny(str, "\n\r")
 }
