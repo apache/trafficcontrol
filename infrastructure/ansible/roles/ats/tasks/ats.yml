@@ -22,6 +22,16 @@
   retries: 5
   delay: 5
 
+- name: Deploy the udev device mapper script to a more reliable location
+  # with /opt on separate lvm part, udev on boot may fail
+  copy:
+    src: /opt/ort/supermicro_udev_mapper.pl
+    dest: /bin/supermicro_udev_mapper.pl
+    owner: root
+    group: root
+    mode: 0755
+  ignore_errors: true
+
 - name: Deploy ORT Crontab
   template:
     src: crontab.j2
