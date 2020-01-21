@@ -631,7 +631,7 @@ func (t DSType) IsLive() bool {
 	return false
 }
 
-// IsLive returns whether delivery services of this type are "national".
+// IsNational returns whether delivery services of this type are "national".
 func (t DSType) IsNational() bool {
 	switch t {
 	case DSTypeDNSLiveNational:

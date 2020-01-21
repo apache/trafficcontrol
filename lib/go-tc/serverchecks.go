@@ -27,7 +27,7 @@ import (
  * under the License.
  */
 
-// A list of Servercheck Responses
+// ServerchecksResponse is a list of Serverchecks response.
 // swagger:response ServerchecksResponse
 // in: body
 type ServerchecksResponse struct {
@@ -35,7 +35,7 @@ type ServerchecksResponse struct {
 	Response []Servercheck `json:"response"`
 }
 
-// A Single Servercheck struct for GET response
+// Servercheck is a single Servercheck struct for GET response.
 // swagger:model Servercheck
 type Servercheck struct {
 
@@ -106,7 +106,8 @@ type Servercheck struct {
 	} `json:"checks"`
 }
 
-// A Single Servercheck struct for Update and Create to depict what changed
+// ServercheckPost is a single Servercheck struct for Update and Create to
+// depict what changed.
 type ServercheckPost struct {
 
 	// The Servercheck data to submit

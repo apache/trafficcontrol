@@ -74,7 +74,7 @@ func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// UnmarshalJSON Customized Marshal to force date format on statDate
+// MarshalJSON Customized Marshal to force date format on statDate
 func (ss StatsSummary) MarshalJSON() ([]byte, error) {
 	type Alias StatsSummary
 	resp := struct {

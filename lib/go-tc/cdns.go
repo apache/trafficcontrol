@@ -23,7 +23,7 @@ import (
  * under the License.
  */
 
-// A List of CDNs Response
+// CDNsResponse is a list of CDNs response.
 // swagger:response CDNsResponse
 // in: body
 type CDNsResponse struct {
@@ -31,7 +31,8 @@ type CDNsResponse struct {
 	Response []CDN `json:"response"`
 }
 
-// A Single CDN Response for Update and Create to depict what changed
+// CDNResponse is a single CDN response for Update and Create to depict what
+// changed.
 // swagger:response CDNResponse
 // in: body
 type CDNResponse struct {

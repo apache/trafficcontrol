@@ -23,7 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-// CacheGroupResponse ...
+// CacheGroupsResponse ...
 type CacheGroupsResponse struct {
 	Response []CacheGroup `json:"response"`
 }
@@ -38,7 +38,7 @@ type CacheGroupDetailResponse struct {
 	Alerts
 }
 
-// CacheGroup contains information about a given Cachegroup in Traffic Ops.
+// CacheGroup contains information about a given cache group in Traffic Ops.
 type CacheGroup struct {
 	ID                          int                  `json:"id" db:"id"`
 	Name                        string               `json:"name" db:"name"`

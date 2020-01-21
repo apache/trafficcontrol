@@ -19,9 +19,7 @@ package tc
  * under the License.
  */
 
-// Autonomous System Numbers
-//
-// A List of ASNs Response
+// ASNsResponse is a list of ASNs (Autonomous System Numbers) response.
 // swagger:response ASNsResponse
 // in: body
 type ASNsResponse struct {
@@ -29,7 +27,8 @@ type ASNsResponse struct {
 	Response []ASN `json:"response"`
 }
 
-// A Single ASN Response for Update and Create to depict what changed
+// ASNResponse is a single ASN response for Update and Create to depict what
+// changed.
 // swagger:response ASNResponse
 // in: body
 type ASNResponse struct {

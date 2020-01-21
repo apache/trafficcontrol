@@ -19,14 +19,15 @@ package tc
  * under the License.
  */
 
-// A List of Divisions Response
+// DivisionsResponse is a list of Divisions response.
 // swagger:response DivisionsResponse
 type DivisionsResponse struct {
 	// in: body
 	Response []Division `json:"response"`
 }
 
-// A Single Division Response for Update and Create to depict what changed
+// DivisionResponse is a single Division response for Update and Create to
+// depict what changed.
 // swagger:response DivisionResponse
 // in: body
 type DivisionResponse struct {

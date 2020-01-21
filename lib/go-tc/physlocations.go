@@ -109,7 +109,9 @@ type PhysLocation struct {
 	Zip string `json:"zip" db:"zip"`
 }
 
-// PhysLocationNullable - a struct version that allows for all fields to be null
+
+// PhysLocationNullable contains the physical location of a cache group. It
+// allows for all fields to be null.
 type PhysLocationNullable struct {
 	//
 	// The Street Address of the physical location

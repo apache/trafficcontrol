@@ -93,7 +93,7 @@ type AllDeliveryServiceFederationsMapping struct {
 // IsAllFederations implements the IAllFederation interface. Always returns true.
 func (a AllDeliveryServiceFederationsMapping) IsAllFederations() bool { return true }
 
-// AllFederation is the JSON object returned by /api/1.x/federations?all&cdnName=my-cdn-name
+// AllFederationCDN is the JSON object returned by /api/1.x/federations?all&cdnName=my-cdn-name
 type AllFederationCDN struct {
 	CDNName *CDNName `json:"cdnName"`
 }

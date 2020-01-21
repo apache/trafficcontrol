@@ -19,14 +19,16 @@ package tc
  * under the License.
  */
 
-// A List of Statuses Response that depict the state of a server
+// StatusesResponse is a list of Statuses response that depicts the state of a
+// server.
 // swagger:response StatusesResponse
 type StatusesResponse struct {
 	// in: body
 	Response []Status `json:"response"`
 }
 
-// A Single Status Response for Update and Create to depict what changed
+// StatusResponse is a single Status response for Update and Create to depict
+// what changed.
 // swagger:response StatusResponse
 // in: body
 type StatusResponse struct {
@@ -34,7 +36,8 @@ type StatusResponse struct {
 	Response Status `json:"response"`
 }
 
-// A Single Statuses Response for Update and Create to depict what changed
+// Status is a single Status response for Update and Create to depict what
+// changed.
 // swagger:model Statuses
 type Status struct {
 

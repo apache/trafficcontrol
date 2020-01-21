@@ -14,6 +14,7 @@ package tc
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 // DeliveryServiceRegexResponse ...
 type DeliveryServiceRegexResponse struct {
 	Response []DeliveryServiceRegexes `json:"response"`
