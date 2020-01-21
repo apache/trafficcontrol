@@ -36,6 +36,7 @@ func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
+		UpdateDeliveryServiceWithInvalidRemapText(t)
 		GetTestDeliveryServices(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
@@ -186,6 +187,39 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers {
 		t.Errorf("results do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
 		t.Fatalf("results do not match actual: %d, expected: %d", *resp.MaxDNSAnswers, updatedMaxDNSAnswers)
+	}
+}
+
+// UpdateDeliveryServiceWithInvalidRemapText ensures that a delivery service can't be updated with a remap text value with a line break in it.
+func UpdateDeliveryServiceWithInvalidRemapText(t *testing.T) {
+	firstDS := testData.DeliveryServices[0]
+
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("cannot GET Delivery Services: %v", err)
+	}
+
+	remoteDS := tc.DeliveryServiceNullable{}
+	found := false
+	for _, ds := range dses {
+		if ds.XMLID == nil || ds.ID == nil {
+			continue
+		}
+		if *ds.XMLID == firstDS.XMLID {
+			found = true
+			remoteDS = ds
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("GET Delivery Services missing: %v", firstDS.XMLID)
+	}
+
+	updatedRemapText := "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua\nline2"
+	remoteDS.RemapText = &updatedRemapText
+
+	if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS); err == nil {
+		t.Errorf("Delivery service updated with invalid remap text: %v", updatedRemapText)
 	}
 }
 
