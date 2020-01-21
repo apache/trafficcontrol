@@ -96,8 +96,14 @@ func OrderableFromString(v string) *TrafficStatsOrderable {
 type TrafficStatsExclude string
 
 const (
+	// ExcludeSeries can be used to omit the data series from a response.
 	ExcludeSeries  TrafficStatsExclude = "series"
+
+	// ExcludeSummary can be used to omit the summary series from a response.
 	ExcludeSummary TrafficStatsExclude = "summary"
+
+	// ExcludeInvalid can be used if the the key that you want to exclude fails
+	// validation.
 	ExcludeInvalid TrafficStatsExclude = "INVALID"
 )
 
