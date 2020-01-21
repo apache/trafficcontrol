@@ -96,6 +96,7 @@ type StatsSummaryLastUpdated struct {
 	SummaryTime *time.Time `json:"summaryTime"  db:"summary_time"`
 }
 
+// MarshalJSON is a customized marshal to force date format on SummaryTime.
 func (ss StatsSummaryLastUpdated) MarshalJSON() ([]byte, error) {
 	resp := struct {
 		SummaryTime *string `json:"summaryTime"`
