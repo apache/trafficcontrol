@@ -1,3 +1,5 @@
+package v1
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +15,30 @@
    limitations under the License.
 */
 
-package client
+import (
+	"testing"
+)
 
-const apiBase = "/api/1.5"
+func TestLogs(t *testing.T) {
+	WithObjs(t, []TCObj{}, func() {
+		GetTestLogs(t)
+		GetTestLogsByLimit(t)
+	})
+}
+
+func GetTestLogs(t *testing.T) {
+	_, _, err := TOSession.GetLogs()
+	if err != nil {
+		t.Fatalf("error getting logs: " + err.Error())
+	}
+}
+
+func GetTestLogsByLimit(t *testing.T) {
+	toLogs, _, err := TOSession.GetLogsByLimit(10)
+	if err != nil {
+		t.Fatalf("error getting logs: " + err.Error())
+	}
+	if len(toLogs) != 10 {
+		t.Fatal("GET logs by limit: incorrect number of logs returned")
+	}
+}

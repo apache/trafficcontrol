@@ -1,3 +1,5 @@
+package v1
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +15,18 @@
    limitations under the License.
 */
 
-package client
+import (
+	"testing"
+)
 
-const apiBase = "/api/1.5"
+func TestPing(t *testing.T) {
+	_, _, err := TOSession.Ping()
+	if err != nil {
+		t.Errorf("could not Ping authenticated: %v", err)
+	}
+
+	_, _, err = NoAuthTOSession.Ping()
+	if err != nil {
+		t.Errorf("could not Ping unauthenticated: %v", err)
+	}
+}
