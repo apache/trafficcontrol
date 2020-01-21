@@ -12,19 +12,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Traffic Portal Angular7
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.1.4.
+# Traffic Portal Angular8
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.23.
 
-Traffic Portal Angular7 is an attempt at making a self-service-first UI for Apache Traffic Control CDN architectures. The eventual goal is to slowly eat Traffic Portal by importing all of its functionality once the self-service UI is complete.
+Traffic Portal Angular8 is an attempt at making a self-service-first UI for Apache Traffic Control CDN architectures. The eventual goal is to slowly eat Traffic Portal by importing all of its functionality once the self-service UI is complete.
 
 ## Setup
 First, clone the [Apache Traffic Control repository](git://github.com/apache/trafficcontrol).
 
 ### Prerequisites
-Traffic Portal Angular7 runs on [NodeJS](https://nodejs.org/) version 10 (8 theoretically works also - untested) and uses its built-in NPM package manager to manage dependencies.
+Traffic Portal Angular8 runs on [NodeJS](https://nodejs.org/) version 10 (8 theoretically works also - untested) and uses its built-in NPM package manager to manage dependencies.
 
 ### Building and Running
-To set up the Angular7 project, first install all dependencies, then build and run the server-side and client-side modules.
+To set up the Angular8 project, first install all dependencies, then build and run the server-side and client-side modules.
 
 E.g. using the [Angular CLI](https://github.com/angular/angular-cli)
 
@@ -39,8 +39,8 @@ npm install
 # Add `--prod` for production deployment
 ng build
 
-# For production deployment, run ng run traffic-portal-angular7:server:production
-ng run traffic-portal-angular7:server
+# For production deployment, run ng run traffic-portal-angular8:server:production
+ng run traffic-portal-angular8:server
 
 # Runs the server locally at http://localhost:4000
 node dist/server.js
@@ -73,7 +73,7 @@ $ CMD="npm run serve:ssr --" # (`--` signals the end of options to `npm`)
 $ $CMD --help # output is verbatim, but omits some things npm might echo e.g. the actual command
 usage: server.js [-h] [-v] [-t TRAFFIC_OPS] [-k] [-p PORT]
 
-A re-imagining of Traffic Portal with server-side rendering in Angular7.
+A re-imagining of Traffic Portal with server-side rendering in Angular8.
 
 Optional arguments:
   -h, --help            Show this help message and exit.
