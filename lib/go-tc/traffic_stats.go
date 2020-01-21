@@ -159,7 +159,8 @@ func (c *TrafficStatsConfig) OffsetString() string {
 	return fmt.Sprintf("%ds", int64(c.Start.Sub(time.Unix(0, 0))/time.Second)%iSecs)
 }
 
-// TrafficDSStatsResponse represents a response from the `/deliveryservice_stats` "Traffic Stats endpoints"
+// TrafficDSStatsResponse represents a response from the
+// deliveryservice_stats` "Traffic Stats" endpoints.
 type TrafficDSStatsResponse struct {
 	// Series holds the actual data - it is NOT in general the same as a github.com/influxdata/influxdb1-client/models.Row
 	Series *TrafficStatsSeries `json:"series,omitempty"`

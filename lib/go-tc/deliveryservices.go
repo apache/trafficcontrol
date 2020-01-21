@@ -185,7 +185,8 @@ type DeliveryServiceNullableV12 struct {
 	DeliveryServiceNullableV11
 }
 
-// DeliveryServiceNullableV11 - a version of the deliveryservice that allows for all fields to be null
+// DeliveryServiceNullableV11 is a version of the deliveryservice that allows
+// for all fields to be null.
 // TODO move contents to DeliveryServiceNullableV12, fix references, and remove
 type DeliveryServiceNullableV11 struct {
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
