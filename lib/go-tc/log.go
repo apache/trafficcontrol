@@ -19,6 +19,7 @@ package tc
  * under the License.
  */
 
+// LogsResponse is a list of Logs as a response.
 type LogsResponse struct {
 	Response []Log `json:"response"`
 }
@@ -32,6 +33,9 @@ type Log struct {
 	User        *string `json:"user"`
 }
 
+// NewLogCountResp is the response returned when the total number of new changes
+// made to the Traffic Control system is requested. "New" means since the last
+// time this information was requested.
 type NewLogCountResp struct {
 	NewLogCount uint64 `json:"newLogcount"`
 }

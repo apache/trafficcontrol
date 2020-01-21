@@ -25,6 +25,7 @@ import (
  * under the License.
  */
 
+// ServersResponse is a list of Servers as a response.
 type ServersResponse struct {
 	Response []Server `json:"response"`
 }

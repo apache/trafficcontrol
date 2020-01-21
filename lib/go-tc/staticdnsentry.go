@@ -19,6 +19,7 @@ package tc
  * under the License.
  */
 
+// StaticDNSEntriesResponse is a list of StaticDNSEntry as a response.
 type StaticDNSEntriesResponse struct {
 	Response []StaticDNSEntry `json:"response"`
 }

@@ -19,6 +19,7 @@ package tc
  * under the License.
  */
 
+// DomainsResponse is a list of Domains as a response.
 type DomainsResponse struct {
 	Response []Domain `json:"response"`
 }

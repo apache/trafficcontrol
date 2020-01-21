@@ -19,10 +19,12 @@ package tc
  * under the License.
  */
 
+// PhysLocationsResponse is a list of PhysLocations as a response.
 type PhysLocationsResponse struct {
 	Response []PhysLocation `json:"response"`
 }
 
+// PhysLocationResponse is a single PhysLocationNullable as a response.
 type PhysLocationResponse struct {
 	Response PhysLocationNullable `json:"response"`
 }
@@ -193,6 +195,7 @@ type PhysLocationNullable struct {
 	Zip *string `json:"zip" db:"zip"`
 }
 
+// PhysLocationTrimmed contains only the name of a physical location.
 type PhysLocationTrimmed struct {
 	Name string `json:"name"`
 }

@@ -155,6 +155,7 @@ func (scp ServercheckRequestNullable) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+// ServercheckPostResponse is the response to a Servercheck POST request.
 type ServercheckPostResponse struct {
 	Alerts []Alert `json:"alerts"`
 }

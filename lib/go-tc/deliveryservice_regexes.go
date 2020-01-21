@@ -33,6 +33,8 @@ type DeliveryServiceRegex struct {
 	Pattern   string `json:"pattern"`
 }
 
+// DeliveryServiceIDRegexResponse is a list of DeliveryServiceIDRegexes. It is
+// unused.
 type DeliveryServiceIDRegexResponse struct {
 	Response []DeliveryServiceIDRegex `json:"response"`
 }
@@ -45,6 +47,8 @@ type DeliveryServiceIDRegex struct {
 	Pattern   string `json:"pattern"`
 }
 
+// DeliveryServiceRegexPost holds all of the information necessary to create a
+// new routing regular expression for a delivery service.
 type DeliveryServiceRegexPost struct {
 	Type      int    `json:"type"`
 	SetNumber int    `json:"setNumber"`

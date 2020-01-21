@@ -19,6 +19,8 @@ package tc
  * under the License.
  */
 
+// DeliveryServiceRequestCommentsResponse is a list of
+// DeliveryServiceRequestComments as a response.
 type DeliveryServiceRequestCommentsResponse struct {
 	Response []DeliveryServiceRequestComment `json:"response"`
 }

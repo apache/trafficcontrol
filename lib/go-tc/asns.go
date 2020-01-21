@@ -86,6 +86,10 @@ type ASNNullable struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
+// ASNsV11 is used for the Traffic OPS API version 1.1, which lists ASNs
+// (Autonomous System Numbers) under its own key in the response and does not
+// validate structure.
+// The Traffic Ops API uses its own TOASNV11 instead.
 type ASNsV11 struct {
 	ASNs []interface{} `json:"asns"`
 }
