@@ -34,7 +34,7 @@ type SteeringFilter struct {
 }
 
 // SteeringSteeringTarget is a target delivery service of a steering delivery
-// service
+// service.
 type SteeringSteeringTarget struct {
 	Order           int32               `json:"order"`
 	Weight          int32               `json:"weight"`
