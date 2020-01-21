@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// CoordinatesResponse is a list of Coordinates response.
+// CoordinatesResponse is a list of Coordinates as a response.
 // swagger:response CoordinatesResponse
 // in: body
 type CoordinatesResponse struct {

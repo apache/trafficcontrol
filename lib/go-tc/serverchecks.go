@@ -27,7 +27,7 @@ import (
  * under the License.
  */
 
-// ServerchecksResponse is a list of Serverchecks response.
+// ServerchecksResponse is a list of Serverchecks as a response.
 // swagger:response ServerchecksResponse
 // in: body
 type ServerchecksResponse struct {

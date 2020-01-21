@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// DivisionsResponse is a list of Divisions response.
+// DivisionsResponse is a list of Divisions as a response.
 // swagger:response DivisionsResponse
 type DivisionsResponse struct {
 	// in: body

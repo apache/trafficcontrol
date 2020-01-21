@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// ASNsResponse is a list of ASNs (Autonomous System Numbers) response.
+// ASNsResponse is a list of ASNs (Autonomous System Numbers) as a response.
 // swagger:response ASNsResponse
 // in: body
 type ASNsResponse struct {

@@ -19,8 +19,8 @@ package tc
  * under the License.
  */
 
-// StatusesResponse is a list of Statuses response that depicts the state of a
-// server.
+// StatusesResponse is a list of Statuses as a response that depicts the state
+// of a server.
 // swagger:response StatusesResponse
 type StatusesResponse struct {
 	// in: body

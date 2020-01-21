@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// CacheGroupFallbacksResponse is a list of CacheGroupFallbacks response.
+// CacheGroupFallbacksResponse is a list of CacheGroupFallbacks as a response.
 // swagger:response CacheGroupFallbacksResponse
 // in: body
 type CacheGroupFallbacksResponse struct {

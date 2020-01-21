@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// RolesResponse is a list of Roles response.
+// RolesResponse is a list of Roles as a response.
 // swagger:response RolesResponse
 // in: body
 type RolesResponse struct {

@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// HWInfoResponse is a list of HWInfos as s response.
+// HWInfoResponse is a list of HWInfos as a response.
 type HWInfoResponse struct {
 	Response []HWInfo `json:"response"`
 }
