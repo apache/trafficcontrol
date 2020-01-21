@@ -24,6 +24,9 @@ type HWInfoResponse struct {
 	Response []HWInfo `json:"response"`
 }
 
+// HWInfo can be used to return information about a server's hardware, but the
+// corresponding Traffic Ops API route is deprecated and unusable without
+// alteration.
 type HWInfo struct {
 	Description    string    `json:"description" db:"description"`
 	ID             int       `json:"-" db:"id"`

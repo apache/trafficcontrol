@@ -52,6 +52,8 @@ type Division struct {
 	Name string `json:"name" db:"name"`
 }
 
+// DivisionNullable is a nullable struct that holds info about a division, which
+// is a group of regions.
 type DivisionNullable struct {
 	ID          *int       `json:"id" db:"id"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`

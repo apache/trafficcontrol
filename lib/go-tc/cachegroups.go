@@ -60,6 +60,8 @@ type CacheGroup struct {
 	Fallbacks                   []string             `json:"fallbacks" db:"fallbacks"`
 }
 
+// CacheGroupNullable contains information about a given cache group in Traffic Ops.
+// Unlike CacheGroup, CacheGroupNullable's fields are nullable.
 type CacheGroupNullable struct {
 	ID                          *int                  `json:"id" db:"id"`
 	Name                        *string               `json:"name" db:"name"`

@@ -39,6 +39,9 @@ type DeliveryServiceIDRegexResponse struct {
 	Response []DeliveryServiceIDRegex `json:"response"`
 }
 
+// DeliveryServiceIDRegex holds information related to a single routing regular
+// expression of a delivery service, e.g., one of those listed at the
+// deliveryservices/{{ID}}/regexes TO API route.
 type DeliveryServiceIDRegex struct {
 	ID        int    `json:"id"`
 	Type      int    `json:"type"`

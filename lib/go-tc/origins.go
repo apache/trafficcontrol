@@ -30,6 +30,7 @@ type OriginDetailResponse struct {
 	Alerts
 }
 
+// Origin contains information relating to an origin server.
 type Origin struct {
 	Cachegroup        *string    `json:"cachegroup" db:"cachegroup"`
 	CachegroupID      *int       `json:"cachegroupId" db:"cachegroup_id"`

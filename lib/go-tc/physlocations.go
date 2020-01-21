@@ -29,6 +29,7 @@ type PhysLocationResponse struct {
 	Response PhysLocationNullable `json:"response"`
 }
 
+// PhysLocation contains the physical location of a cache group.
 type PhysLocation struct {
 
 	//

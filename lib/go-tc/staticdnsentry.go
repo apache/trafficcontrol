@@ -24,6 +24,7 @@ type StaticDNSEntriesResponse struct {
 	Response []StaticDNSEntry `json:"response"`
 }
 
+// StaticDNSEntry holds information about a static DNS entry.
 type StaticDNSEntry struct {
 
 	// The static IP Address or fqdn of the static dns entry
@@ -78,6 +79,8 @@ type StaticDNSEntry struct {
 	TypeID int `json:"typeId" db:"type_id"`
 }
 
+// StaticDNSEntryNullable holds information about a static DNS entry. Its fields
+// are nullable.
 type StaticDNSEntryNullable struct {
 
 	// The static IP Address or fqdn of the static dns entry

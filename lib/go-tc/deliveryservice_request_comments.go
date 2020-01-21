@@ -25,6 +25,8 @@ type DeliveryServiceRequestCommentsResponse struct {
 	Response []DeliveryServiceRequestComment `json:"response"`
 }
 
+// DeliveryServiceRequestComment is a struct containing the fields for a delivery
+// service request comment.
 type DeliveryServiceRequestComment struct {
 	AuthorID                 IDNoMod   `json:"authorId" db:"author_id"`
 	Author                   string    `json:"author"`
@@ -35,6 +37,8 @@ type DeliveryServiceRequestComment struct {
 	XMLID                    string    `json:"xmlId" db:"xml_id"`
 }
 
+// DeliveryServiceRequestCommentNullable is a nullable struct containing the
+// fields for a delivery service request comment.
 type DeliveryServiceRequestCommentNullable struct {
 	AuthorID                 *IDNoMod   `json:"authorId" db:"author_id"`
 	Author                   *string    `json:"author"`

@@ -36,6 +36,7 @@ type ASNResponse struct {
 	Response ASN `json:"response"`
 }
 
+// ASN contains info related to a single Autonomous System Number (see RFC 1930).
 type ASN struct {
 	// The ASN to retrieve
 	//
@@ -61,6 +62,8 @@ type ASN struct {
 	LastUpdated string `json:"lastUpdated" db:"last_updated"`
 }
 
+// ASNNullable contains info related to a single Autonomous System Number (see RFC 1930).
+// Unlike ASN, ASNNullable's fields are nullable.
 type ASNNullable struct {
 	// The ASN to retrieve
 	//

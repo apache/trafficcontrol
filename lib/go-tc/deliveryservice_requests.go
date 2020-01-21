@@ -164,7 +164,8 @@ type DeliveryServiceRequestRequest struct {
 	Details DeliveryServiceRequestDetails `json:"details"`
 }
 
-// DeliveryServiceRequestDetails
+// DeliveryServiceRequestDetails holds information about what a user is trying
+// to change, with respect to a delivery service.
 type DeliveryServiceRequestDetails struct {
 	// ContentType is the type of content to be delivered, e.g. "static", "VOD" etc.
 	ContentType string `json:"contentType"`

@@ -118,6 +118,7 @@ type CDNSSLKeysCertificate struct {
 	Key string `json:"key"`
 }
 
+// CDNConfig includes the name and ID of a single CDN configuration.
 type CDNConfig struct {
 	Name *string `json:"name"`
 	ID   *int    `json:"id"`

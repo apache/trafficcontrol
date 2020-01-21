@@ -130,6 +130,8 @@ type ServercheckPost struct {
 	Value int `json:"value"`
 }
 
+// ServercheckRequestNullable is a single nullable Servercheck struct for Update
+// and Create to depict what changed.
 type ServercheckRequestNullable struct {
 	Name     *string `json:"servercheck_short_name"`
 	ID       *int    `json:"id"`
