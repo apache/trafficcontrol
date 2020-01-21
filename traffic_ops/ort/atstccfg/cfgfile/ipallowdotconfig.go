@@ -22,6 +22,7 @@ package cfgfile
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -110,10 +111,10 @@ func GetConfigFileServerIPAllowDotConfig(cfg config.TCCfg, serverNameOrID string
 
 	childServers := map[tc.CacheName]atscfg.IPAllowServer{}
 	for _, sv := range servers {
-		if _, ok := childCGs[sv.Cachegroup]; !ok {
-			continue
+		_, ok := childCGs[sv.Cachegroup]
+		if ok || (strings.HasPrefix(string(serverType), tc.MidTypePrefix) && string(sv.Type) == tc.MonitorTypeName) {
+			childServers[tc.CacheName(sv.HostName)] = atscfg.IPAllowServer{IPAddress: sv.IPAddress, IP6Address: sv.IP6Address}
 		}
-		childServers[tc.CacheName(sv.HostName)] = atscfg.IPAllowServer{IPAddress: sv.IPAddress, IP6Address: sv.IP6Address}
 	}
 
 	txt := atscfg.MakeIPAllowDotConfig(serverName, serverType, toToolName, toURL, fileParams, childServers)
