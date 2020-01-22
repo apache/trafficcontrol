@@ -11,7 +11,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 ### Deprecated/Removed
-- The TO API `servers/totals` endpoint is now deprecated
+- Traffic Ops API Endpoints
+  - /servers/totals
+  - /cachegroupparameters/{{cachegroupID}}/{{parameterID}}
 
 ## [4.0.0] - 2019-12-16
 ### Added
