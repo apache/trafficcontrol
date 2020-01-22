@@ -28,16 +28,16 @@ func (e ErrorConstant) Error() string { return string(e) }
 // DBError is an error message for database errors.
 const DBError = ErrorConstant("database access error")
 
-// NilTenantError is an error message used when the TentantID for a tenant that
-// owns the origin is nil.
+// NilTenantError can used when a Tenantable object finds that TentantID in the
+// request is nil.
 const NilTenantError = ErrorConstant("tenancy is enabled but request tenantID is nil")
 
-// TenantUserNotAuthError is an error message used when a user does not have
-// access to a requested resource tenant.
+// TenantUserNotAuthError is used when a user does not have access to a
+// requested resource tenant.
 const TenantUserNotAuthError = ErrorConstant("user not authorized for requested tenant")
 
-// TenantDSUserNotAuthError is an error message used when a user does not have
-// access to a requested resource tenant for a delivery service.
+// TenantDSUserNotAuthError is used when a user does not have access to a
+// requested resource tenant for a delivery service.
 const TenantDSUserNotAuthError = ErrorConstant("user not authorized for requested delivery service tenant")
 
 // AlertLevel is used for specifying or comparing different levels of alerts.
