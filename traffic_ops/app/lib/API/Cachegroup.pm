@@ -379,7 +379,7 @@ sub by_parameter_id {
 			push( @data, { "id" => $row->id, "name" => $row->name } );
 		}
 	}
-	$self->deprecation(200, "GET /cachegroupparameters & GET /cachegroups", \@data );
+	$self->deprecation(200, "GET /cachegroupparameters & GET /cachegroups", { cachegroups => \@data } );
 }
 
 sub available_for_parameter {
