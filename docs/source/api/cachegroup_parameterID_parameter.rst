@@ -18,6 +18,7 @@
 *****************************************
 ``cachegroup/{{parameter ID}}/parameter``
 *****************************************
+.. deprecated:: 1.1
 .. danger:: This endpoint does not appear to work, and thus its use is strongly discouraged!
 
 ``GET``
@@ -73,8 +74,14 @@ Response Structure
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: H03AKuJ2IjG3wb6SEplNtIjm8ka3JJdRxc2HyOkNzjHdsh8p7UcJ1teYvYUf8yMNDt8HHBaKzIDoHODLwhktjA==
 
-	{ "response": {
-		"cachegroups": [
+	{
+		"alerts": [
+			{
+				"level": "warning",
+				"text": "This endpoint is deprecated, please use 'GET /cachegroupparameters & GET /cachegroups' instead"
+			}
+		],
+		"response": [
 			{
 				"name": "CDN_in_a_Box_Edge",
 				"id": 7
@@ -103,5 +110,4 @@ Response Structure
 				"name": "TRAFFIC_STATS",
 				"id": 5
 			}
-		]
-	}}
+	]}
