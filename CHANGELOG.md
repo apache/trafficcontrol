@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Deprecated/Removed
 - Traffic Ops API Endpoints
   - /servers/totals
-  - /cachegroups/{{parameterID}}/parameter
+  - /cachegroups/:parameterID/parameter
 
 ## [4.0.0] - 2019-12-16
 ### Added
