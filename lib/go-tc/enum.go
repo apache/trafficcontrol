@@ -5,6 +5,7 @@
 // When storing enumumerable data in memory, it SHOULD be converted to and stored as an enum via the corresponding `FromString` function, checked whether the conversion failed and Invalid values handled, and valid data stored as the enum. This guarantees stored data is valid, and catches invalid input as soon as possible.
 //
 // When adding new enum types, enums should be internally stored as strings, so they implicitly serialize as human-readable JSON, unless the performance or memory of integers is necessary (it almost certainly isn't). Enums should always have the "invalid" value as the empty string (or 0), so default-initialized enums are invalid.
+// Enums should always have a FromString() conversion function, to convert input data to enums. Conversion functions should usually be case-insensitive, and may ignore underscores or hyphens, depending on the use case.
 //
 package tc
 
@@ -104,9 +105,6 @@ func (t CacheType) String() string {
 }
 
 // CacheTypeFromString returns a cache type object from its string representation, or CacheTypeInvalid if the string is not a valid type.
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func CacheTypeFromString(s string) CacheType {
 	s = strings.ToLower(s)
 	if strings.HasPrefix(s, "edge") {
@@ -153,9 +151,6 @@ func (t DSTypeCategory) String() string {
 }
 
 // DSTypeCategoryFromString returns a delivery service type object from its string representation, or DSTypeCategoryInvalid if the string is not a valid type.
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func DSTypeCategoryFromString(s string) DSTypeCategory {
 	s = strings.ToLower(s)
 	switch s {
@@ -209,9 +204,6 @@ func (t CacheStatus) String() string {
 }
 
 // CacheStatusFromString returns a CacheStatus from its string representation, or CacheStatusInvalid if the string is not a valid type.
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func CacheStatusFromString(s string) CacheStatus {
 	s = strings.ToLower(s)
 	switch s {
@@ -263,9 +255,6 @@ func (p Protocol) String() string {
 }
 
 // ProtocolFromString parses a string and returns the corresponding Protocol.
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func ProtocolFromString(s string) Protocol {
 	switch strings.Replace(strings.ToLower(s), "_", " ", -1) {
 	case "http":
@@ -326,9 +315,6 @@ func (m LocalizationMethod) String() string {
 	}
 }
 
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func LocalizationMethodFromString(s string) LocalizationMethod {
 	switch strings.ToLower(s) {
 	case "cz":
@@ -404,9 +390,6 @@ func (t DeepCachingType) String() string {
 }
 
 // DeepCachingTypeFromString returns a DeepCachingType from its string representation, or DeepCachingTypeInvalid if the string is not a valid type.
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func DeepCachingTypeFromString(s string) DeepCachingType {
 	switch strings.ToLower(s) {
 	case "always":
@@ -453,9 +436,6 @@ const (
 	SteeringTypeInvalid   SteeringType = ""
 )
 
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func SteeringTypeFromString(s string) SteeringType {
 	s = strings.ToLower(strings.Replace(s, "_", "", -1))
 	switch s {
@@ -507,9 +487,6 @@ func (t FederationResolverType) String() string {
 	}
 }
 
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func FederationResolverTypeFromString(s string) FederationResolverType {
 	switch strings.ToLower(s) {
 	case "resolve4":
@@ -567,9 +544,6 @@ func (t DSType) String() string {
 }
 
 // DSTypeFromString returns a delivery service type object from its string representation, or DSTypeInvalid if the string is not a valid type.
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func DSTypeFromString(s string) DSType {
 	s = strings.ToLower(strings.Replace(s, "_", "", -1))
 	switch s {
@@ -736,9 +710,6 @@ func (t DSMatchType) String() string {
 }
 
 // DSMatchTypeFromString returns a delivery service match type object from its string representation, or DSMatchTypeInvalid if the string is not a valid type.
-// Enums should always have a FromString() conversion function, to convert input
-// data to enums. Conversion functions should usually be case-insensitive, and
-// may ignore underscores or hyphens, depending on the use case.
 func DSMatchTypeFromString(s string) DSMatchType {
 	s = strings.ToLower(strings.Replace(s, "_", "", -1))
 	switch s {
