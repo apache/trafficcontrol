@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// The ErrorConstant type is used for error messages.
+// ErrorConstant is used for error messages.
 type ErrorConstant string
 
 // Error converts ErrorConstants to a string.
