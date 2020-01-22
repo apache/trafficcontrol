@@ -27,7 +27,7 @@ import (
  * under the License.
  */
 
-// A list of Servercheck Responses
+// ServerchecksResponse is a list of Serverchecks as a response.
 // swagger:response ServerchecksResponse
 // in: body
 type ServerchecksResponse struct {
@@ -35,7 +35,7 @@ type ServerchecksResponse struct {
 	Response []Servercheck `json:"response"`
 }
 
-// A Single Servercheck struct for GET response
+// Servercheck is a single Servercheck struct for GET response.
 // swagger:model Servercheck
 type Servercheck struct {
 
@@ -106,7 +106,8 @@ type Servercheck struct {
 	} `json:"checks"`
 }
 
-// A Single Servercheck struct for Update and Create to depict what changed
+// ServercheckPost is a single Servercheck struct for Update and Create to
+// depict what changed.
 type ServercheckPost struct {
 
 	// The Servercheck data to submit
@@ -129,6 +130,8 @@ type ServercheckPost struct {
 	Value int `json:"value"`
 }
 
+// ServercheckRequestNullable is a single nullable Servercheck struct for Update
+// and Create to depict what changed.
 type ServercheckRequestNullable struct {
 	Name     *string `json:"servercheck_short_name"`
 	ID       *int    `json:"id"`
@@ -154,6 +157,7 @@ func (scp ServercheckRequestNullable) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+// ServercheckPostResponse is the response to a Servercheck POST request.
 type ServercheckPostResponse struct {
 	Alerts []Alert `json:"alerts"`
 }
