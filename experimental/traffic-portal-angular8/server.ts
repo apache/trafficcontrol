@@ -39,7 +39,7 @@ const VERSION = '4.0.0';
 const parser = new ArgumentParser({
 	version: VERSION,
 	addHelp: true,
-	description: 'A re-imagining of Traffic Portal with server-side rendering in Angular7.'
+	description: 'A re-imagining of Traffic Portal with server-side rendering in Angular8.'
 });
 parser.addArgument(['-t', '--traffic-ops'], {
 	help: 'Specify the Traffic Ops host/URL, including port. (Default: uses the `TO_URL` environment variable)',

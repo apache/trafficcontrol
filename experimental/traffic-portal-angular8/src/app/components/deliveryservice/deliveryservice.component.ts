@@ -102,7 +102,7 @@ export class DeliveryserviceComponent implements OnInit {
 		this.from.setUTCMilliseconds(0);
 
 		// This should set it to the number of seconds needed to bucket 500 datapoints
-		this.bucketSize = (this.to.getTime() - this.from.getTime()) / 500000;
+		this.bucketSize = (this.to.getTime() - this.from.getTime()) / 30000000;
 		this.loadBandwidth();
 		this.loadTPS();
 	}
@@ -110,9 +110,9 @@ export class DeliveryserviceComponent implements OnInit {
 	private loadBandwidth () {
 		let interval: string;
 		if (this.bucketSize < 1) {
-			interval = String(Math.round(this.bucketSize * 1000)) + 'ms';
+			interval = '1m';
 		} else {
-			interval = String(Math.round(this.bucketSize)) + 's';
+			interval = String(Math.round(this.bucketSize)) + 'm';
 		}
 
 		// Edge-tier data
@@ -157,9 +157,9 @@ export class DeliveryserviceComponent implements OnInit {
 	private loadTPS () {
 		let interval: string;
 		if (this.bucketSize < 1) {
-			interval = String(Math.round(this.bucketSize * 1000)) + 'ms';
+			interval = '1m';
 		} else {
-			interval = String(Math.round(this.bucketSize)) + 's';
+			interval = String(Math.round(this.bucketSize)) + 'm';
 		}
 
 		this.api.getAllDSTPSData(this.deliveryservice.xmlId, this.from, this.to, interval, false).subscribe(

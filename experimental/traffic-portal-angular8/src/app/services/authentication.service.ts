@@ -26,13 +26,13 @@ export class AuthenticationService {
 	public currentUser: Observable<User>;
 	private readonly loggedInSubject: BehaviorSubject<boolean>;
 	public loggedIn: Observable<boolean>;
-	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Array<string>>;
-	public currentUserCapabilities: Observable<Array<string>>;
+	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Set<string>>;
+	public currentUserCapabilities: Observable<Set<string>>;
 
 	constructor (private readonly http: HttpClient, private readonly api: APIService) {
 		this.currentUserSubject = new BehaviorSubject<User>(null);
 		this.loggedInSubject = new BehaviorSubject<boolean>(false);
-		this.currentUserCapabilitiesSubject = new BehaviorSubject<Array<string>>([]);
+		this.currentUserCapabilitiesSubject = new BehaviorSubject<Set<string>>(new Set<string>());
 		this.currentUser = this.currentUserSubject.asObservable();
 		this.loggedIn = this.loggedInSubject.asObservable();
 		this.currentUserCapabilities = this.currentUserCapabilitiesSubject.asObservable();
@@ -46,7 +46,7 @@ export class AuthenticationService {
 		return this.loggedInSubject.value;
 	}
 
-	public get currentUserCapabilitiesValue (): Array<string> {
+	public get currentUserCapabilitiesValue (): Set<string> {
 		return this.currentUserCapabilitiesSubject.value;
 	}
 
@@ -61,7 +61,7 @@ export class AuthenticationService {
 				if (u.role) {
 					this.api.getRoles(u.role).pipe(first()).pipe(map(
 						(r: Role) => {
-							this.currentUserCapabilitiesSubject.next(r.capabilities);
+							this.currentUserCapabilitiesSubject.next(new Set<string>(r.capabilities));
 						}
 					));
 				}
