@@ -405,6 +405,7 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
 	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+	noLineBreaks := validation.NewStringRule(tovalidate.NoLineBreaks, "cannot contain line breaks")
 	errs := tovalidate.ToErrors(validation.Errors{
 		"active":              validation.Validate(ds.Active, validation.NotNil),
 		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
@@ -415,6 +416,7 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
 		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
 		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
+		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
 		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
 		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
 		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
