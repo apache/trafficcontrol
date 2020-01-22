@@ -23,7 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-// CacheGroupsResponse ...
+// CacheGroupsResponse is a list of CacheGroups as a response.
 type CacheGroupsResponse struct {
 	Response []CacheGroup `json:"response"`
 }

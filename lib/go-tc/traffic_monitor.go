@@ -70,7 +70,8 @@ type TMCacheGroup struct {
 	Coordinates MonitoringCoordinates `json:"coordinates"`
 }
 
-// MonitoringCoordinates ...
+// MonitoringCoordinates holds a coordinate pair for inclusion as a field in
+// TMCacheGroup.
 type MonitoringCoordinates struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
