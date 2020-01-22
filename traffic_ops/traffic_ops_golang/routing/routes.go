@@ -166,6 +166,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CacheGroup Parameters: CRUD
 		{1.1, http.MethodGet, `cachegroups/{id}/parameters/?(\.json)?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 912449723, perlBypass},
 		{1.1, http.MethodGet, `cachegroups/{id}/unassigned_parameters/?(\.json)?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupUnassignedParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 1457339250, perlBypass},
+		{1.1, http.MethodDelete, `cachegroupparameters/{cachegroupID}/{parameterId}$`, api.DeleteHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelOperations, Authenticated, nil, 912449733, perlBypass},
 
 		//CDN
 		{1.1, http.MethodGet, `cdns/name/{name}/sslkeys/?(\.json)?$`, cdn.GetSSLKeys, auth.PrivLevelAdmin, Authenticated, nil, 1278581772, noPerlBypass},

@@ -639,6 +639,18 @@ func GetParam(tx *sql.Tx, name string, configFile string) (string, bool, error) 
 	return val, true, nil
 }
 
+// GetParamNameByID returns the name of the param, whether it existed, or any error.
+func GetParamNameByID(tx *sql.Tx, id int) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`select name from parameter where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, fmt.Errorf("Error querying global paramter %v: %v", id, err.Error())
+	}
+	return name, true, nil
+}
+
 // GetCacheGroupNameFromID Get Cache Group name from a given ID
 func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
 	name := ""

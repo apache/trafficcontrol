@@ -104,7 +104,7 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 
 	delResp, _, err := TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, cgp.ParameterID)
 	if err != nil {
-		t.Errorf("cannot DELETE Parameter by cache group: %v - %v", err, delResp)
+		t.Fatalf("cannot DELETE Parameter by cache group: %v - %v", err, delResp)
 	}
 
 	// Retrieve the Cache Group Parameter to see if it got deleted
@@ -137,5 +137,23 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 	}
 	if !found {
 		t.Fatalf("parameter %v removed from cache group %v was not found in unassigned parameters response", cgp.ParameterID, cgp.CacheGroupID)
+	}
+
+	// Attempt to delete it again and it should return an error now
+	_, _, err = TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, cgp.ParameterID)
+	if err == nil {
+		t.Error("expected error when deleting unassociated cache group parameter")
+	}
+
+	// Attempt to delete using a non existing cache group
+	_, _, err = TOSession.DeleteCacheGroupParameter(-1, cgp.ParameterID)
+	if err == nil {
+		t.Error("expected error when deleting cache group parameter with non existing cache group")
+	}
+
+	// Attempt to delete using a non existing parameter
+	_, _, err = TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, -1)
+	if err == nil {
+		t.Error("expected error when deleting cache group parameter with non existing parameter")
 	}
 }
