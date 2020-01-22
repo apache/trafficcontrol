@@ -42,7 +42,7 @@ func GetAPICapabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	results, errCode, usrErr, sysErr := getAPICapabilities(inf.Tx, inf.Params)
-	if userErr != nil || sysErr != nil {
+	if usrErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, usrErr, sysErr)
 		return
 	}
@@ -68,7 +68,7 @@ func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapabili
 	if len(errs) > 0 {
 		err = util.JoinErrs(errs)
 		return nil, http.StatusInternalServerError, nil, fmt.Errorf(
-			"query exception: could not build api_capbility query with params: %v, error: %v",
+			"query exception: could not build api_capability query with params: %v, error: %v",
 			params,
 			err,
 		)
@@ -76,16 +76,14 @@ func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapabili
 
 	query := selectQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
+
 	if err != nil {
-		return nil, http.StatusInternalServerError, nil, fmt.Errorf(
-			"db exception: could not execute api_capbility query with params: %v, error: %v",
-			params,
-			err,
-		)
+		usrErr, sysErr, errCode := api.ParseDBError(err)
+		return nil, errCode, usrErr, sysErr
 	}
 	defer rows.Close()
 
-	var apiCaps []tc.APICapability
+	apiCaps := []tc.APICapability{}
 	for rows.Next() {
 		var ac tc.APICapability
 		err = rows.Scan(
