@@ -34,6 +34,14 @@ import (
 	"github.com/json-iterator/go"
 )
 
+type AvailabilityType string
+
+const(
+	Random AvailabilityType = "Random"
+	Available = "Available"
+	Unavailable = "Unavailable"
+)
+
 func getMockStaticAppData() config.StaticAppData {
 	return config.StaticAppData{
 		StartTime:      time.Now(),
@@ -103,11 +111,20 @@ func getRandDuration() time.Duration {
 	return time.Duration(rand.Int63())
 }
 
-func getRandResult(name tc.TrafficMonitorName) peer.Result {
+func getResult(name tc.TrafficMonitorName, availabilityType AvailabilityType) peer.Result {
 	peerStates := getMockPeerStates()
+
+	availability := true
+
+	if availabilityType == Random {
+		availability = randBool()
+	} else if availabilityType == Unavailable {
+		availability = false
+	}
+
 	return peer.Result{
 		ID:         name,
-		Available:  randBool(),
+		Available:  availability,
 		Errors:     []error{errors.New(randStr())},
 		PeerStates: peerStates.Get(),
 		PollID:     rand.Uint64(),
@@ -116,23 +133,79 @@ func getRandResult(name tc.TrafficMonitorName) peer.Result {
 	}
 }
 
-func getMockCRStatesPeers() peer.CRStatesPeersThreadsafe {
-	ps := peer.NewCRStatesPeersThreadsafe()
+func getMockCRStatesPeers(quorumMin int, numPeers int, availabilityType AvailabilityType) peer.CRStatesPeersThreadsafe {
+	ps := peer.NewCRStatesPeersThreadsafe(quorumMin)
 
 	ps.SetTimeout(getRandDuration())
 
 	randPeers := map[tc.TrafficMonitorName]struct{}{}
-	numPeers := 10
 	for i := 0; i < numPeers; i++ {
 		randPeers[tc.TrafficMonitorName(randStr())] = struct{}{}
 	}
-	ps.SetPeers(randPeers)
 
 	for peer, _ := range randPeers {
-		ps.Set(getRandResult(peer))
+		ps.Set(getResult(peer, availabilityType))
 	}
 
+	ps.SetPeers(randPeers)
+
 	return ps
+}
+
+func TestOptimisticQuorum(t *testing.T) {
+	quorumMin := 1 // start with quorum enabled
+	numPeers := 10
+
+	// happy path; all peers available, quorum enabled
+	peerStates := getMockCRStatesPeers(quorumMin, numPeers, Available)
+
+	if !peerStates.OptimisticQuorumEnabled() {
+		t.Fatalf("Optimistic quorum not enabled but should be; peers=%d, quorumMin=%d", quorumMin, numPeers)
+	}
+
+	optimisticQuorum, peersAvailable, peerCount, minimum := peerStates.HasOptimisticQuorum()
+
+	if !optimisticQuorum {
+		t.Fatalf("number of peers available (%d/%d) is less than the minimum number of %d required for optimistic peer quorum", peersAvailable, peerCount, minimum)
+	}
+
+	// no peers available
+	peerStates = getMockCRStatesPeers(quorumMin, numPeers, Unavailable)
+
+	optimisticQuorum, peersAvailable, peerCount, minimum = peerStates.HasOptimisticQuorum()
+
+	if optimisticQuorum {
+		t.Fatalf("optimistic quorum should be false; number of peers available (%d/%d) is less than the minimum number of %d required for optimistic peer quorum", peersAvailable, peerCount, minimum)
+	}
+
+	// optimistic quorum disabled
+	quorumMin = 0
+	peerStates = getMockCRStatesPeers(quorumMin, numPeers, Available)
+
+	if peerStates.OptimisticQuorumEnabled() {
+		t.Fatalf("Optimistic quorum enabled and should not be; peers=%d, quorumMin=%d", quorumMin, numPeers)
+	}
+
+	optimisticQuorum, peersAvailable, peerCount, minimum = peerStates.HasOptimisticQuorum()
+
+	if !optimisticQuorum {
+		t.Fatalf("optimistic quorum should be false; number of peers available (%d/%d) is less than the minimum number of %d required for optimistic peer quorum", peersAvailable, peerCount, minimum)
+	}
+
+	// optimistic quorum enabled but with a minimum greater than the number of peers; this config leads to 503s for any request
+	quorumMin = 10
+	numPeers = 4
+	peerStates = getMockCRStatesPeers(quorumMin, numPeers, Available)
+
+	if !peerStates.OptimisticQuorumEnabled() {
+		t.Fatalf("Optimistic quorum not enabled but should be; peers=%d, quorumMin=%d", quorumMin, numPeers)
+	}
+
+	optimisticQuorum, peersAvailable, peerCount, minimum = peerStates.HasOptimisticQuorum()
+
+	if optimisticQuorum {
+		t.Fatalf("optimistic quorum should be false; number of peers available (%d/%d) is less than the minimum number of %d required for optimistic peer quorum", peersAvailable, peerCount, minimum)
+	}
 }
 
 func TestGetStats(t *testing.T) {
@@ -142,7 +215,7 @@ func TestGetStats(t *testing.T) {
 	fetchCount := uint64(rand.Int())
 	healthIteration := uint64(rand.Int())
 	errCount := uint64(rand.Int())
-	crStatesPeers := getMockCRStatesPeers()
+	crStatesPeers := getMockCRStatesPeers(1, 10, Random)
 
 	statsBts, err := getStats(appData, pollingInterval, lastHealthTimes, fetchCount, healthIteration, errCount, crStatesPeers)
 	if err != nil {
