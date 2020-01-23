@@ -19,23 +19,72 @@ package tc
  * under the License.
  */
 
-import "encoding/json"
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"regexp"
 
-// TOExtensionNullable represents a servercheck extension used by Traffic Ops
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	validation "github.com/go-ozzo/ozzo-validation"
+)
+
+// TOExtensionNullable represents a TO extension used by Traffic Ops.
 type TOExtensionNullable struct {
-	ID                   *int            `json:"id"`
-	Name                 *string         `json:"name"`
-	Version              *string         `json:"version"`
-	InfoURL              *string         `json:"info_url"`
-	ScriptFile           *string         `json:"script_file"`
-	IsActive             *int            `json:"isactive"`
-	AdditionConfigJSON   json.RawMessage `json:"additional_config_json"`
-	Description          *string         `json:"description"`
-	ServercheckShortName *string         `json:"servercheck_short_name"`
-	Type                 *string         `json:"type"`
+	ID                    *int       `json:"id" db:"id"`
+	Name                  *string    `json:"name" db:"name"`
+	Version               *string    `json:"version" db:"version"`
+	InfoURL               *string    `json:"info_url" db:"info_url"`
+	ScriptFile            *string    `json:"script_file" db:"script_file"`
+	IsActive              *int       `json:"isactive" db:"isactive"`
+	AdditionConfigJSON    *string    `json:"additional_config_json" db:"additional_config_json"`
+	Description           *string    `json:"description" db:"description"`
+	ServercheckShortName  *string    `json:"servercheck_short_name" db:"servercheck_short_name"`
+	ServercheckColumnName *string    `json:"-" db:"servercheck_column_name"`
+	Type                  *string    `json:"type" db:"-"`
+	TypeID                *int       `json:"-" db:"type"`
+	LastUpdated           *TimeNoMod `json:"-" db:"last_updated"`
 }
 
-// TOExtensionResponse represents the response from Traffic Ops when creating a TOExtension
+// TOExtensionResponse represents the response from Traffic Ops when getting TOExtension.
 type TOExtensionResponse struct {
 	Response []TOExtensionNullable `json:"response"`
+}
+
+// TOExtensionPostResponse represents the response from Traffic Ops when creating TOExtension
+type TOExtensionPostResponse struct {
+	Response TOExtensionID `json:"supplemental"`
+}
+
+// TOExtensionID ...
+type TOExtensionID struct {
+	ID int `json:"id"`
+}
+
+// Validate TOExtensionNullable
+func (e *TOExtensionNullable) Validate(tx *sql.Tx) error {
+	checkRegexType := regexp.MustCompile(`^CHECK_EXTENSION_`)
+	configRegexType := regexp.MustCompile(`^CONFIG_EXTENSION$`)
+	statRegexType := regexp.MustCompile(`^STATISTIC_EXTENSION$`)
+
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name":        validation.Validate(e.Name, validation.NotNil),
+		"version":     validation.Validate(e.Version, validation.NotNil),
+		"info_url":    validation.Validate(e.InfoURL, validation.NotNil),
+		"script_file": validation.Validate(e.ScriptFile, validation.NotNil),
+		"type":        validation.Validate(e.Type, validation.NotNil),
+	})
+	if e.ID != nil {
+		errs = append(errs, errors.New("ToExtension update not supported; delete and re-add."))
+	}
+	if e.Type != nil {
+		if !(checkRegexType.MatchString(*e.Type) || configRegexType.MatchString(*e.Type) || statRegexType.MatchString(*e.Type)) {
+			errs = append(errs, fmt.Errorf("invalid TO Extension type %v", *e.Type))
+		}
+	}
+	if len(errs) > 0 {
+		return util.JoinErrs(errs)
+	}
+	return nil
 }
