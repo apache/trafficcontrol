@@ -1,3 +1,5 @@
+package v1
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +15,19 @@
    limitations under the License.
 */
 
-package client
+import (
+	"testing"
+)
 
-const apiBase = "/api/1.5"
+func TestAbout(t *testing.T) {
+	m, _, err := TOSession.GetAbout()
+	if err != nil {
+		t.Errorf("error from GetAbout(): %v", err)
+	}
+	t.Logf("about: %v", m)
+
+	m, _, err = NoAuthTOSession.GetAbout()
+	if err == nil {
+		t.Error("expected error from GetAbout() when unauthenticated")
+	}
+}

@@ -1,3 +1,5 @@
+package v1
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +15,22 @@
    limitations under the License.
 */
 
-package client
+import (
+	"testing"
 
-const apiBase = "/api/1.5"
+	"github.com/apache/trafficcontrol/lib/go-log"
+)
+
+func GetTestDomains(t *testing.T) {
+	resp, _, err := TOSession.GetDomains()
+	log.Debugln("Response: ", resp)
+	if err != nil {
+		t.Errorf("could not GET domains: %v", err)
+	}
+}
+
+func TestDomains(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses}, func() {
+		GetTestDomains(t)
+	})
+}
