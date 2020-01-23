@@ -47,8 +47,8 @@ LEFT JOIN profile ON server.profile = profile.id
 LEFT JOIN status ON server.status = status.id
 LEFT JOIN cachegroup ON server.cachegroup = cachegroup.id
 LEFT JOIN type ON server.type = type.id
-WHERE typename LIKE 'MID%' OR type.name LIKE 'EDGE%'
-ORDER BY hostName ASCENDING
+WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%'
+ORDER BY hostName ASC
 `
 
 const serverChecksQuery = `
@@ -215,7 +215,7 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 	for extRows.Next() {
 		var shortName string
 		var columnName string
-		if err = extRows.Scan(shortName, columnName); err != nil {
+		if err = extRows.Scan(&shortName, &columnName); err != nil {
 			sysErr = fmt.Errorf("scanning extension: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
@@ -252,7 +252,7 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 	data := []tc.GenericServerCheck{}
 	for serverRows.Next() {
 		var serverInfo tc.GenericServerCheck
-		if err = serverRows.Scan(serverInfo.HostName, serverInfo.ID, serverInfo.Profile, serverInfo.AdminState, serverInfo.CacheGroup, serverInfo.Type, serverInfo.UpdPending, serverInfo.RevalPending); err != nil {
+		if err = serverRows.Scan(&serverInfo.HostName, &serverInfo.ID, &serverInfo.Profile, &serverInfo.AdminState, &serverInfo.CacheGroup, &serverInfo.Type, &serverInfo.UpdPending, &serverInfo.RevalPending); err != nil {
 			sysErr = fmt.Errorf("scanning server info for checks: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
