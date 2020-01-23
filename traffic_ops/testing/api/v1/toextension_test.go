@@ -19,6 +19,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
@@ -52,6 +55,31 @@ func CreateTestInvalidTOExtensions(t *testing.T) {
 	if err == nil {
 		t.Error("expected to receive error with non extension user")
 	}
+
+	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
+
+	// Attempt to create another valid TOExtension and it should fail as there is no open slots
+	toExt := tc.TOExtensionNullable{
+		Name:                 util.StrPtr("MEM_CHECKER"),
+		Version:              util.StrPtr("3.0.3"),
+		InfoURL:              util.StrPtr("-"),
+		ScriptFile:           util.StrPtr("mem.py"),
+		ServercheckShortName: util.StrPtr("MC"),
+		Type:                 util.StrPtr("CHECK_EXTENSION_MEM"),
+	}
+	_, _, err = TOSession.CreateTOExtension(toExt)
+	if err == nil {
+		t.Error("expected to receive error with no open slots left")
+	}
+
+	// Attempt to create a TO Extension with an invalid type
+	toExt.Type = util.StrPtr("INVALID_TYPE")
+	_, _, err = TOSession.CreateTOExtension(toExt)
+	if err == nil {
+		t.Error("expected to receive error with invalid TO extension type")
+	}
+	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
+
 }
 
 func DeleteTestTOExtensions(t *testing.T) {
