@@ -214,13 +214,13 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 	}
 	for extRows.Next() {
 		var shortName string
-		var columnName string
-		if err = extRows.Scan(&shortName, &columnName); err != nil {
+		var checkName string
+		if err = extRows.Scan(&shortName, &checkName); err != nil {
 			sysErr = fmt.Errorf("scanning extension: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
-		extensions[columnName] = shortName
+		extensions[shortName] = checkName
 	}
 
 	colRows, err := inf.Tx.Queryx(serverChecksQuery)
@@ -260,7 +260,7 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 
 		serverCheckCols, ok := columns[serverInfo.ID]
 		if ok {
-			serverInfo.Checks = make(map[string]int)
+			serverInfo.Checks = make(map[string]*int)
 		} else {
 			data = append(data, serverInfo)
 			continue
@@ -269,129 +269,67 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 		for colName, checkName := range extensions {
 			switch (colName) {
 			case "aa":
-				if (serverCheckCols.AA != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AA
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AA
 			case "ab":
-				if (serverCheckCols.AB != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AB
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AB
 			case "ac":
-				if (serverCheckCols.AC != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AC
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AC
 			case "ad":
-				if (serverCheckCols.AD != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AD
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AD
 			case "ae":
-				if (serverCheckCols.AE != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AE
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AE
 			case "af":
-				if (serverCheckCols.AF != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AF
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AF
 			case "ag":
-				if (serverCheckCols.AG != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AG
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AG
 			case "ah":
-				if (serverCheckCols.AH != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AH
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AH
 			case "ai":
-				if (serverCheckCols.AI != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AI
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AI
 			case "aj":
-				if (serverCheckCols.AJ != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AJ
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AJ
 			case "ak":
-				if (serverCheckCols.AK != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AK
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AK
 			case "al":
-				if (serverCheckCols.AL != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AL
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AL
 			case "am":
-				if (serverCheckCols.AM != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AM
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AM
 			case "an":
-				if (serverCheckCols.AN != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AN
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AN
 			case "ao":
-				if (serverCheckCols.AO != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AO
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AO
 			case "ap":
-				if (serverCheckCols.AP != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AP
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AP
 			case "aq":
-				if (serverCheckCols.AQ != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AQ
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AQ
 			case "ar":
-				if (serverCheckCols.AR != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AR
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AR
 			case "at":
-				if (serverCheckCols.AT != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AT
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AT
 			case "au":
-				if (serverCheckCols.AU != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AU
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AU
 			case "av":
-				if (serverCheckCols.AV != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AV
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AV
 			case "aw":
-				if (serverCheckCols.AW != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AW
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AW
 			case "ax":
-				if (serverCheckCols.AX != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AX
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AX
 			case "ay":
-				if (serverCheckCols.AY != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AY
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AY
 			case "az":
-				if (serverCheckCols.AZ != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.AZ
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.AZ
 			case "ba":
-				if (serverCheckCols.BA != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.BA
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.BA
 			case "bb":
-				if (serverCheckCols.BB != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.BB
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.BB
 			case "bc":
-				if (serverCheckCols.BC != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.BC
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.BC
 			case "bd":
-				if (serverCheckCols.BD != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.BD
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.BD
 			case "be":
-				if (serverCheckCols.BE != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.BE
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.BE
 			case "bf":
-				if (serverCheckCols.BF != nil) {
-					serverInfo.Checks[checkName] = *serverCheckCols.BF
-				}
+				serverInfo.Checks[checkName] = serverCheckCols.BF
 			}
 		}
 

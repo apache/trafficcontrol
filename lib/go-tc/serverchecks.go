@@ -178,7 +178,7 @@ type GenericServerCheck struct {
 
 	// Checks maps arbitrary checks - up to one per "column" (whatever those mean)
 	// done on the server to their values.
-	Checks map[string]int `json:"checks,omitempty"`
+	Checks map[string]*int `json:"checks,omitempty"`
 }
 
 // ServerCheckColumns is a collection of columns associated with a particular
