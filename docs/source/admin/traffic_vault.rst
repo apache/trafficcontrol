@@ -66,13 +66,13 @@ The following steps need to be performed on each Riak server in the cluster:
 
 #. Add a line at the bottom of the :file:`riak.conf` for TLSv1 by setting ``tls_protocols.tlsv1 = on``
 #. Once the configuration file has been updated restart Riak
-#. Consult the `Riak documentation <http://docs.riak.com/riak/kv/2.2.3/setup/installing/verify/>`_ for instructions on how to verify the installed service
+#. Consult the `Riak documentation <http://docs.riak.com/riak/kv/latest/setup/installing/verify/>`_ for instructions on how to verify the installed service
 
 ``riak-admin`` Configuration
 ----------------------------
 ``riak-admin`` is a command line utility used to configure Riak that needs to be run as root on a server in the Riak cluster.
 
-.. seealso:: `The riak-admin documentation <http://docs.riak.com/riak/kv/2.2.3/using/admin/riak-admin/>`_
+.. seealso:: `The riak-admin documentation <http://docs.riak.com/riak/kv/latest/using/admin/riak-admin/>`_
 
 .. code-block:: shell
 	:caption: Traffic Vault Setup with ``riak-admin``
@@ -104,8 +104,7 @@ The following steps need to be performed on each Riak server in the cluster:
 	riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default url_sig_keys to keysusers
 	riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default cdn_uri_sig_keys to keysusers
 
-.. seealso:: For more information on security in Riak, see the `Riak Security documentation <http://docs.riak.com/riak/2.0.4/ops/advanced/security/>`_.
-.. seealso:: For more information on authentication and authorization in Riak, see the `Riak Authentication and Authorization documentation <http://docs.riak.com/riak/2.0.4/ops/running/authz/>`_.
+.. seealso:: For more information on security in Riak, see the `Riak Security documentation <https://docs.riak.com/riak/kv/latest/using/security/index.html>`_.
 
 
 Traffic Ops Configuration
