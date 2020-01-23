@@ -233,7 +233,7 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 	columns := make(map[int]tc.ServerCheckColumns)
 	for colRows.Next() {
 		var cols tc.ServerCheckColumns
-		if err = colRows.StructScan(cols); err != nil {
+		if err = colRows.StructScan(&cols); err != nil {
 			sysErr = fmt.Errorf("scanning server checks columns: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
