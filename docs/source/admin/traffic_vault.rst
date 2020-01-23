@@ -18,7 +18,7 @@ Traffic Vault Administration
 ****************************
 Installing Traffic Vault
 ========================
-In order to successfully store private keys you will need to install Riak. The latest version of Riak can be downloaded on `the Riak website <http://docs.riak.com/riak/latest/downloads/>`_. The installation instructions for Riak can be found `here <http://docs.riak.com/riak/latest/ops/building/installing/>`__. Based on experience, version 2.0.5 of Riak is recommended, but the latest version should suffice.
+In order to successfully store private keys you will need to install Riak. The latest version of Riak can be downloaded on `the Riak website <http://docs.riak.com/riak/latest/downloads/>`_. The installation instructions for Riak can be found `here <https://docs.riak.com/riak/kv/latest/setup/installing/index.html>`__. Based on experience, version 2.0.5 of Riak is recommended, but the latest version should suffice.
 
 Configuring Traffic Vault
 =========================
