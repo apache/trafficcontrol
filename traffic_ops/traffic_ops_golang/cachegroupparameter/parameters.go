@@ -39,7 +39,7 @@ const (
 	ParameterIDQueryParam       = "parameterId"
 )
 
-// TOCacheGroupParameter is a type alias that is used to define CRUD functions on
+// TOCacheGroupParameter is a type alias that is used to define CRUD functions on.
 type TOCacheGroupParameter struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CacheGroupParameterNullable
