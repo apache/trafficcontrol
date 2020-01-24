@@ -18,7 +18,7 @@
 ****************************************************
 ``cachegroups/{{parameter ID}}/parameter/available``
 ****************************************************
-.. deprecated:: 1.1
+.. deprecated:: ATCv4
 .. danger:: This endpoint does not appear to work, and thus its use is strongly discouraged!
 
 ``GET``
