@@ -32,6 +32,8 @@ type CRConfig struct {
 	Stats            CRConfigStats                        `json:"stats,omitempty"`
 }
 
+// CRConfigConfig used to be the type of CRConfig's Config field, though
+// CRConfigConfig is no longer used.
 type CRConfigConfig struct {
 	APICacheControlMaxAge                      *string      `json:"api.cache-control.max-age,omitempty"`
 	ConsistentDNSRouting                       *string      `json:"consistent.dns.routing,omitempty"`

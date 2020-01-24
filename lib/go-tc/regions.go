@@ -33,17 +33,23 @@ type Region struct {
 	Name         string    `json:"name" db:"name"`
 }
 
+// RegionName is a response to a request to get a region by its name. It
+// includes the division that the region is in.
 type RegionName struct {
 	ID       int                `json:"id"`
 	Name     string             `json:"name"`
 	Division RegionNameDivision `json:"division"`
 }
 
+// RegionNameDivision is the division that contains the region that a request
+// is trying to query by name.
 type RegionNameDivision struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
+// RegionNameResponse models the structure of a response to a request to get a
+// region by its name.
 type RegionNameResponse struct {
 	Response []RegionName `json:"response"`
 }

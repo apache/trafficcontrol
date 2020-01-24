@@ -23,11 +23,14 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-// CacheGroupResponse ...
+// CacheGroupsResponse is a list of CacheGroups as a response.
 type CacheGroupsResponse struct {
 	Response []CacheGroup `json:"response"`
 }
 
+// CacheGroupsNullableResponse is a response with a list of CacheGroupNullables.
+// Traffic Ops API responses instead uses an interface hold a list of
+// TOCacheGroups.
 type CacheGroupsNullableResponse struct {
 	Response []CacheGroupNullable `json:"response"`
 }
@@ -38,7 +41,7 @@ type CacheGroupDetailResponse struct {
 	Alerts
 }
 
-// CacheGroup contains information about a given Cachegroup in Traffic Ops.
+// CacheGroup contains information about a given cache group in Traffic Ops.
 type CacheGroup struct {
 	ID                          int                  `json:"id" db:"id"`
 	Name                        string               `json:"name" db:"name"`
@@ -57,6 +60,8 @@ type CacheGroup struct {
 	Fallbacks                   []string             `json:"fallbacks" db:"fallbacks"`
 }
 
+// CacheGroupNullable contains information about a given cache group in Traffic Ops.
+// Unlike CacheGroup, CacheGroupNullable's fields are nullable.
 type CacheGroupNullable struct {
 	ID                          *int                  `json:"id" db:"id"`
 	Name                        *string               `json:"name" db:"name"`
@@ -75,10 +80,14 @@ type CacheGroupNullable struct {
 	Fallbacks                   *[]string             `json:"fallbacks" db:"fallbacks"`
 }
 
+// CachegroupTrimmedName is useful when the only info about a cache group you
+// want to return is its name.
 type CachegroupTrimmedName struct {
 	Name string `json:"name"`
 }
 
+// CachegroupQueueUpdatesRequest holds info relating to the
+// cachegroups/{{ID}}/queue_update TO route.
 type CachegroupQueueUpdatesRequest struct {
 	Action string           `json:"action"`
 	CDN    *CDNName         `json:"cdn"`

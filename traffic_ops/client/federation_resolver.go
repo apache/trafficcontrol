@@ -102,7 +102,7 @@ func (to *Session) DeleteFederationResolver(id uint) (tc.Alerts, ReqInf, error) 
 	var reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
 	var alerts tc.Alerts
 
-	var path = fmt.Sprintf("%s/federation_resolvers/%d", apiBase, id)
+	var path = fmt.Sprintf("%s/federation_resolvers?id=%d", apiBase, id)
 	var resp *http.Response
 	var err error
 	resp, reqInf.RemoteAddr, err = to.request(http.MethodDelete, path, nil)

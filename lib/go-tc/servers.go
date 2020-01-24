@@ -25,11 +25,12 @@ import (
  * under the License.
  */
 
+// ServersResponse is a list of Servers as a response.
 type ServersResponse struct {
 	Response []Server `json:"response"`
 }
 
-// ServerDetailResponse is the JSON object returned for a single server
+// ServersDetailResponse is the JSON object returned for a single server.
 type ServersDetailResponse struct {
 	Response Server `json:"response"`
 }

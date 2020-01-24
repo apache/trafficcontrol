@@ -18,6 +18,8 @@
 *******************************
 ``federation_resolvers/{{ID}}``
 *******************************
+.. deprecated:: 1.5
+
 
 ``DELETE``
 ==========
@@ -25,7 +27,10 @@ Deletes a federation resolver.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Response Type:  ``undefined``
+:Response Type:  Object
+
+	.. versionchanged:: 1.5
+		Older versions of this endpoint did not return a ``response`` object (i.e. it was ``undefined``).
 
 Request Structure
 -----------------
@@ -40,35 +45,50 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.4/federation_resolvers/3 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.62.0
+	DELETE /api/1.4/federation_resolvers/2 HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
+	Content-Length: 0
+
 
 Response Structure
 ------------------
+:id:        The integral, unique identifier of the resolver
+:ipAddress: The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
+:type:      The :term:`Type` of the resolver
+
 .. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	access-control-allow-credentials: true
-	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept
-	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
-	access-control-allow-origin: *
-	cache-control: no-cache, no-store, max-age=0, must-revalidate
-	content-type: application/json
-	date: Wed, 05 Dec 2018 01:06:51 GMT
-	server: Mojolicious (Perl)
-	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 05:06:51 GMT; path=/; HttpOnly
-	vary: Accept-Encoding
-	whole-content-sha512: NqAZuZYlF1UWOaazbj/j4gWX7ye0kGGakRRFEkK6ShxqXvCxE0dCTyu75qiLPN2wSgr3FGQnp2Sq345sE7In9g==
-	content-length: 98
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=; Path=/; HttpOnly
+	Whole-Content-Sha512: Gpvrv90AlWWlHrLsPyqm0Jhn+bDMZ8X/MwLXH8xIXyi9DFsLDqSd1si8LjNM7fiXP0j5lbRJXpNH4dKxsvSrTg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Sat, 09 Nov 2019 07:30:09 GMT
+	Content-Length: 215
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Federation resolver deleted [ IP = ::1/128 ] with id: 3"
+			"text": "Federation resolver deleted [ IP = 1.2.6.4/22 ] with id: 2",
+			"level": "success"
+		},
+		{
+			"text": "This endpoint is deprecated, please use '/federation_resolvers' instead",
+			"level": "warning"
 		}
-	]}
+	],
+	"response": {
+		"id": 2,
+		"ipAddress": "1.2.6.4/22",
+		"type": "RESOLVE4"
+	}}
 

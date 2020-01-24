@@ -100,7 +100,8 @@ type DeliveryServiceV13 struct {
 	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
 }
 
-// DeliveryService ...
+// DeliveryServiceV11 contains the information relating to a delivery service
+// that was around in version 1.1 of the API.
 // TODO move contents to DeliveryServiceV12, fix references, and remove
 type DeliveryServiceV11 struct {
 	Active                   bool                   `json:"active"`
@@ -185,7 +186,8 @@ type DeliveryServiceNullableV12 struct {
 	DeliveryServiceNullableV11
 }
 
-// DeliveryServiceNullable - a version of the deliveryservice that allows for all fields to be null
+// DeliveryServiceNullableV11 is a version of the deliveryservice that allows
+// for all fields to be null.
 // TODO move contents to DeliveryServiceNullableV12, fix references, and remove
 type DeliveryServiceNullableV11 struct {
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
