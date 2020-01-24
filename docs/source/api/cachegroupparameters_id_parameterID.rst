@@ -70,6 +70,6 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Profile parameter association was deleted."
+			"text": "cachegroup parameter was deleted."
 		}
 	]}
