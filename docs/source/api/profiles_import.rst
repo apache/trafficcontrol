@@ -56,26 +56,24 @@ Request Structure
 	Cookie: mojolicious=...
 	Content-Type: application/json
 
-	{
-	  "profile": {
-        "name": "GLOBAL",
-        "description": "Global Traffic Ops profile",
-        "cdn": "ALL",
-        "type": "UNK_PROFILE"
-      },
-	  "parameters": [
-        {
-            "config_file": "global",
-            "name": "tm.instance_name",
-            "value": "Traffic Ops CDN"
-        },
-        {
-            "config_file": "global",
-            "name": "tm.toolname",
-            "value": "Traffic Ops"
-        }
-	  ]
-	}
+	{ "profile": {
+		"name": "GLOBAL",
+		"description": "Global Traffic Ops profile",
+		"cdn": "ALL",
+		"type": "UNK_PROFILE"
+	},
+	"parameters": [
+		{
+			"config_file": "global",
+			"name": "tm.instance_name",
+			"value": "Traffic Ops CDN"
+		},
+		{
+			"config_file": "global",
+			"name": "tm.toolname",
+			"value": "Traffic Ops"
+		}
+	]}
 
 Response Structure
 ------------------
@@ -101,18 +99,16 @@ Response Structure
 	Transfer-Encoding: gzip
 
 
-	{
-      "alerts": [
-        {
-            "level": "success",
-            "text": "Profile imported [ Global ] with 2 new and 0 existing parameters"
-        }
-      ],
-      "response": {
-        "cdn": "ALL",
-        "name": "Global",
-        "id": 18,
-        "type": "UNK_PROFILE",
-        "description": "Global Traffic Ops profile"
-      }
-	}
+	{ "alerts": [
+		{
+			"level": "success",
+			"text": "Profile imported [ Global ] with 2 new and 0 existing parameters"
+		}
+	],
+	"response": {
+		"cdn": "ALL",
+		"name": "Global",
+		"id": 18,
+		"type": "UNK_PROFILE",
+		"description": "Global Traffic Ops profile"
+	}}
