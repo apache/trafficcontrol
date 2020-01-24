@@ -18,7 +18,7 @@ Traffic Vault Administration
 ****************************
 Installing Traffic Vault
 ========================
-In order to successfully store private keys you will need to install Riak. The latest version of Riak can be downloaded on `the Riak website <http://docs.riak.com/riak/latest/downloads/>`_. The installation instructions for Riak can be found `here <https://docs.riak.com/riak/kv/latest/setup/installing/index.html>`__. Based on experience, version 2.0.5 of Riak is recommended, but the latest version should suffice.
+In order to successfully store private keys you will need to install Riak. The latest version of Riak can be downloaded on `the Riak website <https://docs.riak.com/riak/latest/downloads/>`_. The installation instructions for Riak can be found `here <https://docs.riak.com/riak/kv/latest/setup/installing/index.html>`__. Based on experience, version 2.0.5 of Riak is recommended, but the latest version should suffice.
 
 Configuring Traffic Vault
 =========================
@@ -66,13 +66,13 @@ The following steps need to be performed on each Riak server in the cluster:
 
 #. Add a line at the bottom of the :file:`riak.conf` for TLSv1 by setting ``tls_protocols.tlsv1 = on``
 #. Once the configuration file has been updated restart Riak
-#. Consult the `Riak documentation <http://docs.riak.com/riak/kv/latest/setup/installing/verify/>`_ for instructions on how to verify the installed service
+#. Consult the `Riak documentation <https://docs.riak.com/riak/kv/latest/setup/installing/verify/>`_ for instructions on how to verify the installed service
 
 ``riak-admin`` Configuration
 ----------------------------
 ``riak-admin`` is a command line utility used to configure Riak that needs to be run as root on a server in the Riak cluster.
 
-.. seealso:: `The riak-admin documentation <http://docs.riak.com/riak/kv/latest/using/admin/riak-admin/>`_
+.. seealso:: `The riak-admin documentation <https://docs.riak.com/riak/kv/latest/using/admin/riak-admin/>`_
 
 .. code-block:: shell
 	:caption: Traffic Vault Setup with ``riak-admin``
@@ -113,7 +113,7 @@ Before a fully set-up Traffic Vault instance may be used, it must be added as a 
 
 Configuring Riak Search
 =======================
-In order to more effectively support retrieval of SSL certificates by Traffic Router and :term:`ORT`, Traffic Vault uses `Riak search <http://docs.riak.com/riak/kv/latest/using/reference/search/>`_. Riak Search uses `Apache Solr <http://lucene.apache.org/solr>`_ for indexing and searching of records. This section explains how to enable, configure, and validate Riak Search.
+In order to more effectively support retrieval of SSL certificates by Traffic Router and :term:`ORT`, Traffic Vault uses `Riak search <https://docs.riak.com/riak/kv/latest/using/reference/search/>`_. Riak Search uses `Apache Solr <https://lucene.apache.org/solr>`_ for indexing and searching of records. This section explains how to enable, configure, and validate Riak Search.
 
 Riak Configuration
 ------------------
