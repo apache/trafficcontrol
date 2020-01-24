@@ -22,7 +22,7 @@ Manages a specific API capability.
 
 ``GET``
 =======
-.. deprecated:: 1.1
+.. deprecated:: ATCv4
 
 Get an API-capability mapping by id.
 
