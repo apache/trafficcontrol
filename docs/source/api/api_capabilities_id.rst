@@ -22,6 +22,8 @@ Manages a specific API capability.
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+
 Get an API-capability mapping by id.
 
 :Auth. Required: Yes
@@ -80,18 +82,28 @@ Response Structure
 	Whole-Content-Sha512: SMSFHOcD6VvfJKmcHmHBQcN+jkRRCmFzx1jyBWhJeyPg04YHPSvUcjZzslWlJqyjwWeoXeNVwxhRkBwl8TQX/g==
 	Content-Length: 162
 
-	{ "response": [
-		{
-			"httpMethod": "PATCH",
-			"lastUpdated": "2018-11-01 14:53:58.853356+00",
-			"httpRoute": "/api/1.1/api_capabilities",
-			"id": 273,
-			"capability": "types-write"
-		}
+	{
+		"alerts": [
+			{
+				"level": "warning",
+				"text": "This endpoint is deprecated, please use 'GET /api_capabilities' instead"
+			}
+		],
+		"response": [
+			{
+				"httpMethod": "PATCH",
+				"lastUpdated": "2018-11-01 14:53:58.853356+00",
+				"httpRoute": "/api/1.1/api_capabilities",
+				"id": 273,
+				"capability": "types-write"
+			}
 	]}
 
 ``PUT``
 =======
+.. deprecated:: 1.1
+    This endpoint does not have an alternative. API Capabilities can only be modified at the database seeding level.
+
 Edit an API-capability mapping.
 
 :Auth. Required: Yes
@@ -173,6 +185,10 @@ Response Structure
 			{
 				"level": "success",
 				"text": "API-Capability mapping was updated."
+			},
+			{
+				"level": "warning",
+				"text": "This endpoint is deprecated, please use '[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities_id.html#put]' instead"
 			}
 		],
 		"response": {
@@ -184,8 +200,11 @@ Response Structure
 		}
 	}
 
-DELETE
-======
+``DELETE``
+==========
+.. deprecated:: 1.1
+    This endpoint does not have an alternative. API Capabilities can only be deleted at the database seeding level.
+
 Delete a capability.
 
 :Auth. Required: Yes
@@ -235,5 +254,9 @@ Response Structure
 		{
 			"level": "success",
 			"text": "API-capability mapping deleted."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use '[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities_id.html#delete]' instead"
 		}
 	]}

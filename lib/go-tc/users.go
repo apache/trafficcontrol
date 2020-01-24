@@ -275,36 +275,48 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 //  The client's use of these will eventually be deprecated  //
 // --------------------------------------------------------- //
 
+// UsersResponseV13 is the Traffic Ops API version 1.3 variant of UserResponse.
+// It is unused.
 type UsersResponseV13 struct {
 	Response []UserV13 `json:"response"`
 }
 
+// UsersResponse can hold a Traffic Ops API response to a request to get a list of users.
 type UsersResponse struct {
 	Response []User `json:"response"`
 }
 
+// CreateUserResponse can hold a Traffic Ops API response to a POST request to create a user.
 type CreateUserResponse struct {
 	Response User `json:"response"`
 	Alerts
 }
 
+// UpdateUserResponse can hold a Traffic Ops API response to a PUT request to update a user.
 type UpdateUserResponse struct {
 	Response User `json:"response"`
 	Alerts
 }
 
+// DeleteUserResponse can theoretically hold a Traffic Ops API response to a
+// DELETE request to update a user. It is unused.
 type DeleteUserResponse struct {
 	Alerts
 }
 
+// UserCurrentResponse can hold a Traffic Ops API response to a request to get
+// or update the current user.
 type UserCurrentResponse struct {
 	Response UserCurrent `json:"response"`
 }
 
+// UserDeliveryServiceDeleteResponse can hold a Traffic Ops API response to
+// a request to remove a delivery service from a user.
 type UserDeliveryServiceDeleteResponse struct {
 	Alerts
 }
 
+// UserPasswordResetRequest can hold  Traffic Ops API request to reset a user's password.
 type UserPasswordResetRequest struct {
 	Email rfc.EmailAddress `json:"email"`
 }

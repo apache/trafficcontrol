@@ -14,6 +14,7 @@ package tc
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
 // DeliveryServiceRegexResponse ...
 type DeliveryServiceRegexResponse struct {
 	Response []DeliveryServiceRegexes `json:"response"`
@@ -32,10 +33,15 @@ type DeliveryServiceRegex struct {
 	Pattern   string `json:"pattern"`
 }
 
+// DeliveryServiceIDRegexResponse is a list of DeliveryServiceIDRegexes. It is
+// unused.
 type DeliveryServiceIDRegexResponse struct {
 	Response []DeliveryServiceIDRegex `json:"response"`
 }
 
+// DeliveryServiceIDRegex holds information relating to a single routing regular
+// expression of a delivery service, e.g., one of those listed at the
+// deliveryservices/{{ID}}/regexes TO API route.
 type DeliveryServiceIDRegex struct {
 	ID        int    `json:"id"`
 	Type      int    `json:"type"`
@@ -44,6 +50,8 @@ type DeliveryServiceIDRegex struct {
 	Pattern   string `json:"pattern"`
 }
 
+// DeliveryServiceRegexPost holds all of the information necessary to create a
+// new routing regular expression for a delivery service.
 type DeliveryServiceRegexPost struct {
 	Type      int    `json:"type"`
 	SetNumber int    `json:"setNumber"`

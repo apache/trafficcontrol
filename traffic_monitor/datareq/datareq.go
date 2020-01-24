@@ -74,8 +74,8 @@ func MakeDispatchMap(
 			return srvTRConfig(opsConfig, toSession)
 		}, ContentTypeJSON)),
 		"/publish/CrStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			bytes, err := srvTRState(params, localStates, combinedStates)
-			return WrapErrCode(errorCount, path, bytes, err)
+			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates)
+			return WrapErrStatusCode(errorCount, path, bytes, statusCode, err)
 		}, ContentTypeJSON)),
 		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvCacheStats(params, errorCount, path, toData, statResultHistory, statInfoHistory, monitorConfig, combinedStates, statMaxKbpses)
@@ -151,13 +151,26 @@ func HandleErr(errorCount threadsafe.Uint, reqPath string, err error) {
 	log.Errorf("Request Error: %v\n", fmt.Errorf(reqPath+": %v", err))
 }
 
-// WrapErrCode takes the body, err, and log context (errorCount, reqPath). It logs and deals with any error, and returns the appropriate bytes and response code for the `srvhttp`. It notably returns InternalServerError status on any error, for security reasons.
-func WrapErrCode(errorCount threadsafe.Uint, reqPath string, body []byte, err error) ([]byte, int) {
+// WrapErrStatusCode takes the body, err, status code, and log context (errorCount, reqPath). It logs and deals with any error, and returns the appropriate bytes and response code for the `srvhttp`. It notably returns InternalServerError status on any error, for security reasons.
+func WrapErrStatusCode(errorCount threadsafe.Uint, reqPath string, body []byte, statusCode int, err error) ([]byte, int) {
 	if err == nil {
 		return body, http.StatusOK
 	}
+
 	HandleErr(errorCount, reqPath, err)
-	return nil, http.StatusInternalServerError
+
+	code := http.StatusInternalServerError
+
+	if statusCode > 0 {
+		code = statusCode
+	}
+
+	return nil, code
+}
+
+// WrapErrCode calls the WrapErrStatusCode function with a hardcoded 500. This is a convenience function for callers that do not want to provide a status code.
+func WrapErrCode(errorCount threadsafe.Uint, reqPath string, body []byte, err error) ([]byte, int) {
+	return WrapErrStatusCode(errorCount, reqPath, body, http.StatusInternalServerError, err)
 }
 
 // WrapBytes takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
@@ -205,9 +218,14 @@ type SrvFunc func(params url.Values, path string) ([]byte, int)
 // WrapParams takes a SrvFunc and wraps it as an http.HandlerFunc. Note if the SrvFunc returns 0 bytes, an InternalServerError is returned, and the response code is ignored, for security reasons. If an error response code is necessary, return bytes to that effect, for example, "Bad Request". DO NOT return informational messages regarding internal server errors; these should be logged, and only a 500 code returned to the client, for security reasons.
 func WrapParams(f SrvFunc, contentType string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bytes, code := f(r.URL.Query(), r.URL.EscapedPath())
+		code := http.StatusInternalServerError
+		bytes, statusCode := f(r.URL.Query(), r.URL.EscapedPath())
+
+		if statusCode > 0 {
+			code = statusCode
+		}
+
 		if len(bytes) == 0 {
-			code := http.StatusInternalServerError
 			w.WriteHeader(code)
 			if _, err := w.Write([]byte(http.StatusText(code))); err != nil {
 				log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
@@ -216,9 +234,9 @@ func WrapParams(f SrvFunc, contentType string) http.HandlerFunc {
 		}
 
 		bytes, err := gzipIfAccepts(r, w, bytes)
+
 		if err != nil {
 			log.Errorf("gzipping '%v': %v\n", r.URL.EscapedPath(), err)
-			code := http.StatusInternalServerError
 			w.WriteHeader(code)
 			if _, err := w.Write([]byte(http.StatusText(code))); err != nil {
 				log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
