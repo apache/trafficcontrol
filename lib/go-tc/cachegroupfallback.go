@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// A List of CacheGroupFallbacks Response
+// CacheGroupFallbacksResponse is a list of CacheGroupFallbacks as a response.
 // swagger:response CacheGroupFallbacksResponse
 // in: body
 type CacheGroupFallbacksResponse struct {
@@ -27,7 +27,8 @@ type CacheGroupFallbacksResponse struct {
 	Response []CacheGroupFallback `json:"response"`
 }
 
-// A Single CacheGroupFallback Response for Update and Create to depict what changed
+// CacheGroupFallbackResponse is a single CacheGroupFallback response for Update
+// and Create to depict what changed.
 // swagger:response CacheGroupFallbackResponse
 // in: body
 type CacheGroupFallbackResponse struct {

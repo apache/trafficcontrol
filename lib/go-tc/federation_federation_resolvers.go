@@ -24,7 +24,7 @@ type FederationFederationResolversResponse struct {
 	Response []FederationResolver `json:"response"`
 }
 
-// AssignFederationFederationResolvers represents an API response for assigning a Federation Resolver to a Federation.
+// AssignFederationFederationResolversResponse represents an API response for assigning a Federation Resolver to a Federation.
 type AssignFederationFederationResolversResponse struct {
 	Response AssignFederationResolversRequest `json:"response"`
 	Alerts

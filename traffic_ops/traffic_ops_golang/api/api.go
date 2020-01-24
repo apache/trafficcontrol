@@ -690,6 +690,16 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 	return fmt.Errorf("%v %s '%s' already exists.", err.Table, match[1], match[2]), nil, http.StatusBadRequest
 }
 
+// parses pq errors for database enum constraint violations
+func parseEnumConstraint(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`invalid input value for enum (.+): \"(.+)\"`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("invalid enum value %s for field %s.", match[2], match[1]), nil, http.StatusBadRequest
+}
+
 // parses pq errors for ON DELETE RESTRICT fk constraint violations
 //
 // Note: This method would also catch an ON UPDATE RESTRICT fk constraint,
@@ -749,6 +759,10 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseEmptyConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseEnumConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
