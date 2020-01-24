@@ -402,8 +402,7 @@ sub available_for_parameter {
 			push( @data, { "id" => $row->id, "name" => $row->name } );
 		}
 	}
-
-	$self->success( \@data );
+	$self->deprecation(200, "GET /cachegroupparameters & GET /cachegroups", \@data );
 }
 
 sub postupdatequeue {

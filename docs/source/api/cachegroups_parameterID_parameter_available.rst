@@ -18,6 +18,7 @@
 ****************************************************
 ``cachegroups/{{parameter ID}}/parameter/available``
 ****************************************************
+.. deprecated:: ATCv4
 .. danger:: This endpoint does not appear to work, and thus its use is strongly discouraged!
 
 ``GET``
@@ -46,13 +47,20 @@ Response Structure
 .. code-block:: json
 	:caption: Response Example
 
-	{ "response": [
-		{
-			"name": "dc-chicago",
-			"id": "21"
-		},
-		{
-			"name": "dc-cmc",
-			"id": "22"
-		}
+	{
+		"alerts": [
+			{
+				"level": "warning",
+				"text": "This endpoint is deprecated, please use 'GET /cachegroupparameters & GET /cachegroups' instead"
+			}
+		],
+		"response": [
+			{
+				"name": "dc-chicago",
+				"id": "21"
+			},
+			{
+				"name": "dc-cmc",
+				"id": "22"
+			}
 	]}
