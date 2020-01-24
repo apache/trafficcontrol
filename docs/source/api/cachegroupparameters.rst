@@ -68,7 +68,7 @@ Response Structure
 
 ``POST``
 ========
-Assign :term:`Parameter`\ (s) to :term:`Cache Group`\ (s).
+Assign :term:`Parameter`\ (s) to :term:`Cache Group`\ (s). :term:`Parameters` already assigned to one or more :term:`Profiles` cannot be assigned to :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -93,15 +93,14 @@ The request data can take the form of either a single object or an array of one 
 	Content-Type: application/json
 
 	{
-		"cachegroupId": 8,
+		"cacheGroupId": 8,
 		"parameterId": 124
 	}
 
 Response Structure
 ------------------
-:cachegroup:   A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
-:last_updated: Date and time of last modification in an ISO-like format
-:parameter:    An integer that is the :term:`Parameter`'s :ref:`parameter-id`
+:cacheGroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` to which a :term:`Parameter` has been assigned
+:parameterId:  An integer that is the :ref:`parameter-id` of the :term:`Parameter` which has been assigned
 
 .. code-block:: http
  	:caption: Response Example
