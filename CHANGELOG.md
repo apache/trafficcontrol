@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops API Endpoints
   - /servers/totals
   - /cachegroups/:parameterID/parameter/available 
+  - /cachegroup/:parameterID/parameter
   - /api_capabilities/:id
 
 ## [4.0.0] - 2019-12-16
