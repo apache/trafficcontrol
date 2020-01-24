@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -102,7 +104,6 @@ func createCheckExt(toExt tc.TOExtensionNullable, tx *sqlx.Tx) (int, error, erro
 		return 0, nil, fmt.Errorf("reset servercheck table for new check extension: %v", err)
 	}
 	return id, nil, nil
-
 }
 
 func checkDupTOCheckExtension(colName, value string, tx *sqlx.Tx) (error, error) {
@@ -132,4 +133,68 @@ func updateQuery() string {
 	type=:type
 	WHERE id=:id
 	`
+}
+
+// Delete is the handler for DELETE requests to /federation_resolvers.
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if sysErr != nil || userErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if inf.User.UserName != "extension" {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("invalid user for this API. Only the \"extension\" user can use this"), nil)
+		return
+	}
+
+	id := inf.IntParams["id"]
+	userErr, sysErr, errCode = deleteTOExtension(id, inf.Tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	changeLogMsg := fmt.Sprintf("TO_EXTENSION: %d, ID: %d, ACTION: Deleted", id, id)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Extension deleted.")
+}
+
+func deleteTOExtension(id int, tx *sqlx.Tx) (error, error, int) {
+	// Get Open Slot Type ID
+	openID, exists, err := dbhelpers.GetTypeIDByName("CHECK_EXTENSION_OPEN_SLOT", tx.Tx)
+	if !exists {
+		return nil, errors.New("expected type CHECK_EXTENSION_OPEN_SLOT does not exist in type table"), http.StatusInternalServerError
+	} else if err != nil {
+		return nil, fmt.Errorf("getting CHECK_EXTENSION_OPEN_SLOT type id: %v", err), http.StatusInternalServerError
+	}
+
+	openTOExt := tc.TOExtensionNullable{
+		Name:                 util.StrPtr("OPEN"),
+		Version:              util.StrPtr("0"),
+		InfoURL:              util.StrPtr(""),
+		ScriptFile:           util.StrPtr(""),
+		IsActive:             util.IntPtr(0),
+		AdditionConfigJSON:   util.StrPtr(""),
+		ServercheckShortName: util.StrPtr(""),
+		TypeID:               &openID,
+		ID:                   &id,
+	}
+
+	result, err := tx.NamedExec(updateQuery(), openTOExt)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+
+	if rowsAffected, err := result.RowsAffected(); err != nil {
+		return nil, fmt.Errorf("deleting TO Extension: getting rows affected: %v", err), http.StatusInternalServerError
+	} else if rowsAffected < 1 {
+		return fmt.Errorf("no TO Extension with that key found"), nil, http.StatusNotFound
+	} else if rowsAffected > 1 {
+		return nil, fmt.Errorf("TO Extension delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
+	}
+
+	return nil, nil, http.StatusOK
 }

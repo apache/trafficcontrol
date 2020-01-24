@@ -196,19 +196,20 @@ sub delete {
 
 	my $new_id = 1;
 	my $id     = $self->param('id');
+	my $alt = "DELETE /to_extensions/:id";
 
 	# print Dumper($self->req);
 	if ( $self->current_user()->{username} ne "extension" ) {
-		return $self->alert( { error => "Invalid user for this API. Only the \"extension\" user can use this." } );
+		return $self->with_deprecation("Invalid user for this API. Only the \"extension\" user can use this.", "error", 400, $alt);
 	}
 
 	if ( !defined($id) ) {
-		return $self->alert( { error => "ToExtension delete requires an id." } );
+		return $self->with_deprecation("ToExtension delete requires an id.", "error", 400, $alt);
 	}
 	else {
 		my $delete = $self->db->resultset('ToExtension')->search( { id => $id } )->single();
 		if ( !defined($delete) ) {
-			return $self->alert( { error => "ToExtension with id " . $id . " not found." } );
+			return $self->with_deprecation("ToExtension with id " . $id . " not found.", "error", 400, $alt);
 		}
 		if ( $delete->type->name =~ /^CHECK_EXTENSION_/ ) {
 			my $open_type_id = &type_id( $self, 'CHECK_EXTENSION_OPEN_SLOT' );
@@ -229,7 +230,7 @@ sub delete {
 			$delete->delete();
 		}
 	}
-	return $self->success_message("Extension deleted.");
+	return $self->with_deprecation("Extension deleted.", "success", 200, $alt);
 }
 
 1;
