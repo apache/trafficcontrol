@@ -583,7 +583,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `stats_summary/?(\.json)?$`, trafficstats.GetStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380498598, perlBypass},
 
 		// TO Extensions
-		{1.1, http.MethodPost, `to_extensions/?(\.json)?$`, toextension.CreateTOExtension, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, perlBypass},
+		{1.5, http.MethodPost, `to_extensions$`, toextension.CreateTOExtension, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, noPerlBypass},
 
 		//Pattern based consistent hashing endpoint
 		{1.4, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil, 1960755076, noPerlBypass},

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -46,17 +45,11 @@ func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 	}
 	toExt.TypeID = &typeID
 
-	id := 0
-	successMsg := "Extension Loaded."
+	successMsg := "Check Extension Loaded."
 	errCode = http.StatusInternalServerError
-	if strings.Contains(*toExt.Type, "CHECK_EXTENSION") {
-		successMsg = "Check Extension Loaded."
-		id, userErr, sysErr = createCheckExt(toExt, inf.Tx)
-		if userErr != nil {
-			errCode = http.StatusBadRequest
-		}
-	} else {
-		id, sysErr = createNonCheckExt(toExt, inf.Tx)
+	id, userErr, sysErr := createCheckExt(toExt, inf.Tx)
+	if userErr != nil {
+		errCode = http.StatusBadRequest
 	}
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -65,32 +58,10 @@ func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 	resp := tc.TOExtensionPostResponse{
 		Response: tc.TOExtensionID{ID: id},
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, successMsg, inf.User, inf.Tx.Tx)
+	changeLogMsg := fmt.Sprintf("TO_EXTENSION: %s, ID: %d, ACTION: CREATED", *toExt.Name, id)
+
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, successMsg, resp)
-}
-
-func createNonCheckExt(toExt tc.TOExtensionNullable, tx *sqlx.Tx) (int, error) {
-	resultRows, err := tx.NamedQuery(insertQuery(), toExt)
-	if err != nil {
-		return 0, fmt.Errorf("inserting extension: %v", err)
-	}
-	defer resultRows.Close()
-
-	id := 0
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id); err != nil {
-			return 0, fmt.Errorf("scanning id from TO Extension insert: %v", err)
-		}
-	}
-	if rowsAffected == 0 {
-		return 0, errors.New("no rows affects from TO Extension insert")
-	} else if rowsAffected > 1 {
-		return 0, errors.New("too many ids returned from TO Extension insert")
-	}
-
-	return id, nil
 }
 
 func createCheckExt(toExt tc.TOExtensionNullable, tx *sqlx.Tx) (int, error, error) {
@@ -134,6 +105,19 @@ func createCheckExt(toExt tc.TOExtensionNullable, tx *sqlx.Tx) (int, error, erro
 
 }
 
+func checkDupTOCheckExtension(colName, value string, tx *sqlx.Tx) (error, error) {
+	query := fmt.Sprintf("SELECT EXISTS(SELECT * FROM to_extension WHERE %v =$1)", colName)
+	exists := false
+	err := tx.Tx.QueryRow(query, value).Scan(&exists)
+	if err != nil {
+		return nil, fmt.Errorf("checking if to_extension %v already exists: %v", colName, err)
+	}
+	if exists {
+		return fmt.Errorf("A Check extension is already loaded with %v %v", value, colName), nil
+	}
+	return nil, nil
+}
+
 func updateQuery() string {
 	return `
 	UPDATE to_extension SET
@@ -148,47 +132,4 @@ func updateQuery() string {
 	type=:type
 	WHERE id=:id
 	`
-}
-
-func insertQuery() string {
-	return `
-	INSERT INTO to_extension (
-	  name,
-	  version,
-	  info_url,
-	  script_file,
-	  isactive,
-	  additional_config_json,
-	  description,
-	  servercheck_short_name,
-	  servercheck_column_name,
-	  type
-	)
-	VALUES (
-	  :name,
-	  :version,
-	  :info_url,
-	  :script_file,
-	  :isactive,
-	  :additional_config_json,
-	  :description,
-	  :servercheck_short_name,
-	  :servercheck_column_name,
-	  :type
-	)
-	RETURNING id
-	`
-}
-
-func checkDupTOCheckExtension(colName, value string, tx *sqlx.Tx) (error, error) {
-	query := fmt.Sprintf("SELECT EXISTS(SELECT * FROM to_extension WHERE %v =$1)", colName)
-	exists := false
-	err := tx.Tx.QueryRow(query, value).Scan(&exists)
-	if err != nil {
-		return nil, fmt.Errorf("checking if to_extension %v already exists: %v", colName, err)
-	}
-	if exists {
-		return fmt.Errorf("A Check extension is already loaded with %v %v", value, colName), nil
-	}
-	return nil, nil
 }

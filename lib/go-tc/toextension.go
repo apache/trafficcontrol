@@ -22,7 +22,6 @@ package tc
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"regexp"
 
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -65,23 +64,20 @@ type TOExtensionID struct {
 // Validate TOExtensionNullable
 func (e *TOExtensionNullable) Validate(tx *sql.Tx) error {
 	checkRegexType := regexp.MustCompile(`^CHECK_EXTENSION_`)
-	configRegexType := regexp.MustCompile(`^CONFIG_EXTENSION$`)
-	statRegexType := regexp.MustCompile(`^STATISTIC_EXTENSION$`)
-
 	errs := tovalidate.ToErrors(validation.Errors{
 		"name":        validation.Validate(e.Name, validation.NotNil),
 		"version":     validation.Validate(e.Version, validation.NotNil),
 		"info_url":    validation.Validate(e.InfoURL, validation.NotNil),
 		"script_file": validation.Validate(e.ScriptFile, validation.NotNil),
-		"type":        validation.Validate(e.Type, validation.NotNil),
+		"type":        validation.Validate(e.Type, validation.NotNil, validation.Match(checkRegexType)),
+		"isactive":    validation.Validate(e.IsActive, validation.NotNil),
 	})
 	if e.ID != nil {
 		errs = append(errs, errors.New("ToExtension update not supported; delete and re-add."))
 	}
-	if e.Type != nil {
-		if !(checkRegexType.MatchString(*e.Type) || configRegexType.MatchString(*e.Type) || statRegexType.MatchString(*e.Type)) {
-			errs = append(errs, fmt.Errorf("invalid TO Extension type %v", *e.Type))
-		}
+	if e.IsActive != nil && !(*e.IsActive == 0 || *e.IsActive == 1) {
+		errs = append(errs, errors.New("isactive can only be 0 or 1."))
+
 	}
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)
