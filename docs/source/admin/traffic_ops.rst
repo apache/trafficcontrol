@@ -429,6 +429,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 		.. warning:: OAuth support in Traffic Ops is still in its infancy, so most users are advised to avoid defining this field without good cause.
 
 	:write_timeout: An optional timeout in seconds set on handlers. After reading a request's header, the server will have this long to send back a response. If set to zero, there is no timeout. Default if not specified is zero.
+
+	.. _admin-routing-blacklist:
+
 	:routing_blacklist: Optional configuration for explicitly routing requests to TO-Perl via ``perl_routes`` (only routes that are hardcoded to be able to bypass to TO-Perl -- not all Go routes can be bypassed to Perl) or explicitly disabling any routes via ``disabled_routes``.
 
 		.. versionadded:: 4.0

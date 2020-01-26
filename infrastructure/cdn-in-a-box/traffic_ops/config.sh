@@ -36,7 +36,7 @@
 # TP_HOST
 #
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_PERL_HOST TO_PERL_PORT TO_HOST TO_PORT TP_HOST)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_PERL_HOST TO_PERL_PORT TO_PERL_SCHEME TO_HOST TO_PORT TP_HOST)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
@@ -75,7 +75,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
 {
     "hypnotoad" : {
         "listen" : [
-            "https://$TO_PERL_FQDN:$TO_PERL_PORT?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+            "$TO_PERL_SCHEME://$TO_PERL_FQDN:$TO_PERL_PORT?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
         ],
         "user" : "trafops",
         "group" : "trafops",
@@ -106,7 +106,12 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
             "mojolicious": 4
         },
         "whitelisted_oauth_urls": [],
-        "oauth_client_secret": ""
+        "oauth_client_secret": "",
+        "routing_blacklist": {
+            "ignore_unknown_routes": false,
+            "perl_routes": [],
+            "disabled_routes": []
+        },
     },
     "cors" : {
         "access_control_allow_origin" : "*"
