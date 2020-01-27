@@ -103,7 +103,8 @@ Response Structure
 
 ``POST``
 ========
-.. note:: As of ATCv4 ``POST /to_extensions`` only supports CHECK_EXTENSION extensions. As prior TO would fail everytime with a CONFIG_EXTENSION or STATISTIC_EXTENSION.
+.. versionchanged:: ATCv4
+	Only supports CHECK_EXTENSION extensions now. Previous implementation would attempt to accept CONFIG_EXTENSION or STATISTIC_EXTENSION extensions but would fail the creation.
 
 Creates a new Traffic Ops extension.
 
@@ -132,7 +133,10 @@ Request Structure
 
 	.. note:: This field has meaning only for "Check Extensions"
 
-:type:    The :term:`Type` of extension. It must be a CHECK_EXTENSION type with the naming convention of ``CHECK_EXTENSION_*``.
+:type:    The :term:`Type` of extension.
+
+	.. versionchanged:: ATCv4 now only accepts a CHECK_EXTENSION type with the naming convention of ``CHECK_EXTENSION_*``.
+
 :version: A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http

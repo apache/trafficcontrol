@@ -56,7 +56,7 @@ func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 	// Get Type ID
 	typeID, exists, err := dbhelpers.GetTypeIDByName(*toExt.Type, inf.Tx.Tx)
 	if !exists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("expected type %v does not exist in type table", *toExt.Type))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("type %v does not exist", *toExt.Type), nil)
 		return
 	} else if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
