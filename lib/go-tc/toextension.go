@@ -41,7 +41,7 @@ type TOExtensionNullable struct {
 	Description           *string    `json:"description" db:"description"`
 	ServercheckShortName  *string    `json:"servercheck_short_name" db:"servercheck_short_name"`
 	ServercheckColumnName *string    `json:"-" db:"servercheck_column_name"`
-	Type                  *string    `json:"type" db:"-"`
+	Type                  *string    `json:"type" db:"type_name"`
 	TypeID                *int       `json:"-" db:"type"`
 	LastUpdated           *TimeNoMod `json:"-" db:"last_updated"`
 }

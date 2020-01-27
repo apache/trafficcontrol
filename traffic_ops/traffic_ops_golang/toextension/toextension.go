@@ -26,6 +26,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -151,4 +152,76 @@ func updateQuery() string {
 	type=:type
 	WHERE id=:id
 	`
+}
+
+func selectQuery() string {
+	return `
+	SELECT
+		e.id,
+		e.name,
+		e.version,
+		e.info_url,
+		e.script_file,
+		e.isactive::::int,
+		e.additional_config_json,
+		e.description,
+		e.servercheck_short_name,
+		t.name AS type_name
+	FROM to_extension AS e
+	JOIN type AS t ON e.type = t.id
+	`
+}
+
+// GetTOExtensions handler for getting TO Extensions.
+func GetTOExtensions(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":          dbhelpers.WhereColumnInfo{"e.id", api.IsInt},
+		"name":        dbhelpers.WhereColumnInfo{"e.name", nil},
+		"script_file": dbhelpers.WhereColumnInfo{"e.script_file", nil},
+		"isactive":    dbhelpers.WhereColumnInfo{"e.isactive", api.IsBool},
+		"type":        dbhelpers.WhereColumnInfo{"t.name", nil},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	openSlotCond := "t.name != 'CHECK_EXTENSION_OPEN_SLOT'"
+	if len(where) > 0 {
+		where = fmt.Sprintf("%s AND %s", where, openSlotCond)
+	} else {
+		where = fmt.Sprintf("%s %s", dbhelpers.BaseWhere, openSlotCond)
+	}
+
+	query := selectQuery() + where + orderBy + pagination
+
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("querying to_extensions: %v", err))
+		return
+	}
+	defer rows.Close()
+
+	toExts := []tc.TOExtensionNullable{}
+	for rows.Next() {
+		toExt := tc.TOExtensionNullable{}
+		if err = rows.StructScan(&toExt); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning to_extensions: %v", err))
+			return
+		}
+		toExts = append(toExts, toExt)
+	}
+
+	api.WriteResp(w, r, toExts)
 }
