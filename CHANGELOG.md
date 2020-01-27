@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cachegroup/:parameterID/parameter
   - /api_capabilities/:id
   - /parameters/validate
+  - /parameters/:id/unassigned_profiles
+  - /parameters/:id/profiles
 
 ## [4.0.0] - 2019-12-16
 ### Added

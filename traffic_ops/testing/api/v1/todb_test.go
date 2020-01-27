@@ -68,6 +68,12 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
+	err = SetupAPICapabilities(db)
+	if err != nil {
+		fmt.Printf("\nError setting up APICapabilities %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
 	err = SetupTenants(db)
 	if err != nil {
 		fmt.Printf("\nError setting up tenant %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -131,8 +137,25 @@ func SetupCapabilities(db *sql.DB) error {
 INSERT INTO capability (name, description) VALUES ('all-read','Full read access') ON CONFLICT DO NOTHING;
 INSERT INTO capability (name, description) VALUES ('all-write','Full write access') ON CONFLICT DO NOTHING;
 INSERT INTO capability (name, description) VALUES ('cdn-read','View CDN configuration') ON CONFLICT DO NOTHING;
+INSERT INTO capability (name, description) VALUES ('asns-read', 'Read ASNs') ON CONFLICT DO NOTHING;
+INSERT INTO capability (name, description) VALUES ('asns-write', 'Write ASNs') ON CONFLICT DO NOTHING;
+INSERT INTO capability (name, description) VALUES ('cache-groups-read', 'Read CGs') ON CONFLICT DO NOTHING;
 `
 	err := execSQL(db, sqlStmt, "capability")
+	if err != nil {
+		return fmt.Errorf("exec failed %v", err)
+	}
+	return nil
+}
+
+func SetupAPICapabilities(db *sql.DB) error {
+	sqlStmt := `
+INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', '/asns', 'asns-read') ON CONFLICT DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('POST', '/asns', 'asns-write') ON CONFLICT DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', '/cachegroups', 'cache-groups-read') ON CONFLICT DO NOTHING;
+`
+
+	err := execSQL(db, sqlStmt, "api_capability")
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -280,6 +303,7 @@ INSERT INTO to_extension (name, version, info_url, isactive, script_file, server
 func Teardown(db *sql.DB) error {
 
 	sqlStmt := `
+	DELETE FROM api_capability;
 	DELETE FROM deliveryservices_required_capability;
 	DELETE FROM server_server_capability;
 	DELETE FROM server_server_capability;
@@ -294,6 +318,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM deliveryservice_tmuser;
 	DELETE FROM tm_user;
 	DELETE FROM role;
+	DELETE FROM capability;
 	ALTER SEQUENCE role_id_seq RESTART WITH 1;
 	DELETE FROM deliveryservice_regex;
 	DELETE FROM regex;

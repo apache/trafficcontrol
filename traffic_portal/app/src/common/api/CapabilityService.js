@@ -30,18 +30,6 @@ var CapabilityService = function($http, messageModel, ENV) {
 		);
 	};
 
-	// todo: change to use query param when it is supported
-	this.getCapability = function(name) {
-		return $http.get(ENV.api['root'] + 'capabilities/' + name).then(
-			function(result) {
-				return result.data.response[0];
-			},
-			function(err) {
-				throw err;
-			}
-		);
-	};
-
 	this.createCapability = function(cap) {
 		return $http.post(ENV.api['root'] + "capabilities", cap).then(
 			function(result) {
@@ -56,7 +44,7 @@ var CapabilityService = function($http, messageModel, ENV) {
 
 	// todo: change to use query param when it is supported
 	this.updateCapability = function(cap) {
-		return $http.put(ENV.api['root'] + "capabilities/" + cap.name, cap).then(
+		return $http.put(ENV.api['root'] + "capabilities", {params: {"name": cap.name}, data: cap}).then(
 			function(result) {
 				return result.data;
 			},
@@ -69,7 +57,7 @@ var CapabilityService = function($http, messageModel, ENV) {
 
 	// todo: change to use query param when it is supported
 	this.deleteCapability = function(cap) {
-		return $http.delete(ENV.api['root'] + "capabilities/" + cap.name).then(
+		return $http.delete(ENV.api['root'] + "capabilities", {params: {"name": cap.name}}).then(
 			function(result) {
 				return result.data;
 			},

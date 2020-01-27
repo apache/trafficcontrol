@@ -18,6 +18,7 @@
 ******************************
 ``parameters/{{ID}}/profiles``
 ******************************
+.. deprecated:: ATCv4
 
 ``GET``
 =======
@@ -80,5 +81,11 @@ Response Structure
 			"type": "UNK_PROFILE",
 			"id": 1,
 			"description": "Global Traffic Ops profile, DO NOT DELETE"
+		}
+	],
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /profiles' instead"
 		}
 	]}

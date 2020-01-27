@@ -60,7 +60,7 @@ describe('Traffic Portal Profiles Test Suite', function() {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		pageData.name.sendKeys(myNewProfile.name);
-		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
+		commonFunctions.selectDropdownbyNum(pageData.cdn, 2); // the ALL CDN is first so let's pick a real CDN
 		commonFunctions.selectDropdownbyNum(pageData.type, 1);
 		pageData.routingDisabled.click();
 		pageData.routingDisabled.sendKeys('false');
