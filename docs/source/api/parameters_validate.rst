@@ -18,6 +18,7 @@
 ***********************
 ``parameters/validate``
 ***********************
+.. deprecated:: ATCv4
 
 ``POST``
 ========
@@ -81,6 +82,10 @@ Response Structure
 		{
 			"level": "success",
 			"text": "Parameter exists."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /parameters' instead"
 		}
 	],
 	"response": {
@@ -112,6 +117,10 @@ Response Structure
 		{
 			"level": "error",
 			"text": "parameter [name:fooa, config_file:records.config, value:bar] does not exist."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /parameters' instead"
 		}
 	]}
 
