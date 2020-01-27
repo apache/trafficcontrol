@@ -2616,5 +2616,15 @@
             "statValue": 1000,
             "summaryTime": "2019-01-01T00:00:00-06:00"
         }
+    ],
+    "capabilities": [
+        {
+            "name": "test",
+            "description": "quest"
+        },
+        {
+            "name": "foo",
+            "description": "bar"
+        }
     ]
 }
