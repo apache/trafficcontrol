@@ -29,9 +29,12 @@ const MidHdrRwPrefix = "hdr_rw_mid"
 
 func TestHdrRwDotConfig(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+		defer DeleteTestDeliveryServiceServersCreated(t)
+		CreateTestDeliveryServiceServers(t)
 		GetTestHdrRwDotConfig(t)
 		GetTestHdrRwMidDotConfig(t)
 		GetTestHdrRwDotConfigWithNewline(t)
+		GetTestHdrRwDotConfigMaxOriginConns(t)
 	})
 }
 
@@ -127,5 +130,33 @@ func GetTestHdrRwMidDotConfig(t *testing.T) {
 		t.Errorf("expected %d lines in the config (actual = %d)", expectedLines, count)
 	} else {
 		log.Debugf("Tested %s sucessfully\n", filename)
+	}
+}
+
+func GetTestHdrRwDotConfigMaxOriginConns(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("error getting deliveryservices: %s", err)
+	}
+	ds := tc.DeliveryServiceNullable{}
+	for _, tods := range dses {
+		if tods.MaxOriginConnections == nil || *tods.MaxOriginConnections < 100 {
+			continue
+		}
+		if tods.Type == nil || *tods.Type != tc.DSTypeHTTPLive {
+			continue // needs to be a local DS, so header rewrite gets put on the edge, not the mid
+		}
+		ds = tods
+		break
+	}
+	if ds.ID == nil {
+		t.Fatal("Cannot test hdr_rw_dot_config with no deliveryservices with max origin connections and HTTP_LIVE")
+	}
+
+	filename := fmt.Sprintf("%s_%s.config", EdgeHdrRwPrefix, *ds.XMLID)
+	config, _, _ := TOSession.GetATSCDNConfig(*ds.CDNID, filename)
+
+	if !strings.Contains(config, `set-config proxy.config.http.origin_max_connections`) {
+		t.Errorf("expected hdr_rw for DS with MaxOriginConnections to contain origin_max_connections, actual '%v'", config)
 	}
 }
