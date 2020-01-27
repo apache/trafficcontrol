@@ -246,8 +246,6 @@ else {
 
 ( my $my_profile_name, $cfg_file_tracker, my $my_cdn_name ) = &get_cfg_file_list( $hostname_short, $traffic_ops_host, $script_mode );
 
-
-
 if ( $script_mode == $REVALIDATE ) {
 	( $log_level >> $INFO ) && print "\nINFO: ======== Revalidating, no package processing needed ========\n";
 }
@@ -410,6 +408,7 @@ sub process_cfg_file {
 	}
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
+	@db_file_lines = @{ &scrape_canned_comments(\@db_file_lines) };
 
 	my $file = $config_dir . "/" . $cfg_file;
 
@@ -419,6 +418,7 @@ sub process_cfg_file {
 	if ( -e $file ) {
 		return $CFG_FILE_NOT_PROCESSED if ( !&can_read_write_file($cfg_file) );
 		@disk_file_lines = @{ &open_file_get_contents($file) };
+		@disk_file_lines = @{ &scrape_canned_comments(\@disk_file_lines) };
 	}
 
 	# First, check if the file to be generated would be identical including order
@@ -1755,23 +1755,23 @@ sub check_script_mode {
 	my $script_mode = undef;
 	if ( $ARGV[0] eq "interactive" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Script running in interactive mode.\n";
-		$script_mode = 0;
+		$script_mode = $INTERACTIVE;
 	}
 	elsif ( $ARGV[0] eq "report" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Script running in report mode.\n";
-		$script_mode = 1;
+		$script_mode = $REPORT;
 	}
 	elsif ( $ARGV[0] eq "badass" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Script running in badass mode.\n";
-		$script_mode = 2;
+		$script_mode = $BADASS;
 	}
 	elsif ( $ARGV[0] eq "syncds" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Script running in syncds mode.\n";
-		$script_mode = 3;
+		$script_mode = $SYNCDS;
 	}
 	elsif ( $ARGV[0] eq "revalidate" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Script running in revalidate mode.\n";
-		$script_mode = 4;
+		$script_mode = $REVALIDATE;
 	}
 	else {
 		( $log_level >> $FATAL ) && print "FATAL You did not specify a valid mode. Exiting.\n";
@@ -2652,6 +2652,23 @@ sub scrape_unencode_text {
 	return \@lines;
 }
 
+sub scrape_canned_comments {
+	my $linesin = $_[0];
+
+	my @linesout;
+
+	foreach my $line (@$linesin) {
+		if ( $line =~ m/^\#/ ) {
+			if ( $line =~ m/DO NOT EDIT - Generated for / || $line =~ m/$header_comment/ || $line =~ m/TRAFFIC OPS NOTE\:/ || $line =~ m/^##OVERRID.*##/ ) {
+				next;
+			}
+		}
+		push( @linesout, $line );
+	}
+
+	return \@linesout;
+}
+
 sub can_read_write_file {
 
 	my $filename = shift;
@@ -2709,10 +2726,10 @@ sub open_file_get_contents {
 		$line =~ s/(^\s+|\s+$)//g;
 		chomp($line);
 		( $log_level >> $TRACE ) && print "TRACE Line from cfg file on disk:\t$line.\n";
-		if ( $line =~ m/^\#/ || $line =~ m/^$/ ) {
-			if ( ( $line !~ m/DO NOT EDIT - Generated for / && $line !~ m/$header_comment/ ) && ( $line !~ m/TRAFFIC OPS NOTE\:/ ) && ( $line !~ m/^##OVERRID.*##/ ) ) {
-				next;
-			}
+
+		# strip empty lines
+		if ( $line =~ m/^$/ ) {
+			next;
 		}
 		push( @disk_file_lines, $line );
 	}
@@ -2882,6 +2899,8 @@ sub backup_file {
 		chmod oct(644), $fh;
 		chown $ats_uid, $ats_uid, $fh;
 		close $fh;
+	} else {
+		( $log_level >> $ERROR ) && print "ERROR needs updating: $file\n";
 	}
 	return 0;
 
