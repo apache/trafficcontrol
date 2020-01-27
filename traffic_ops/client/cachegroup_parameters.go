@@ -67,6 +67,28 @@ func (to *Session) getCacheGroupParameters(route, queryParams string) ([]tc.Cach
 	return data.Response, reqInf, nil
 }
 
+// GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
+func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersNullable, ReqInf, error) {
+	route := fmt.Sprintf("%s/", API_v1_CacheGroupParameters)
+	return to.getAllCacheGroupParameters(route, "")
+}
+
+func (to *Session) getAllCacheGroupParameters(route, queryParams string) ([]tc.CacheGroupParametersNullable, ReqInf, error) {
+	r := fmt.Sprintf("%s/%s", route, queryParams)
+	resp, remoteAddr, err := to.request(http.MethodGet, r, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.AllCacheGroupParametersResponse
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+	return data.Response.CacheGroupParameters, reqInf, nil
+}
+
 // DeleteCacheGroupParameter Deassociates a Parameter with a Cache Group
 func (to *Session) DeleteCacheGroupParameter(cacheGroupID, parameterID int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/%d", API_v1_CacheGroupParameters, cacheGroupID, parameterID)

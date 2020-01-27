@@ -76,7 +76,15 @@ Assign :term:`Parameter`\ (s) to :term:`Cache Group`\ (s). :term:`Parameters` al
 
 Request Structure
 -----------------
-The request data can take the form of either a single object or an array of one or more objects.
+This endpoint accepts two formats for the request payload:
+
+Single Object Format
+	For assigning a single :term:`Parameter` to a single :term:`Cache Group`
+Array Format
+	For making multiple assignments of :term:`Parameters` to :term:`Cache Groups` simultaneously
+
+Single Object Format
+""""""""""""""""""""
 
 :cacheGroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` to which a :term:`Parameter` is being assigned
 :parameterId:  An integer that is the :ref:`parameter-id` of the :term:`Parameter` being assigned
@@ -96,6 +104,32 @@ The request data can take the form of either a single object or an array of one 
 		"cacheGroupId": 8,
 		"parameterId": 124
 	}
+
+Array Format
+""""""""""""
+
+:cacheGroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` to which a :term:`Parameter` is being assigned
+:parameterId:  An integer that is the :ref:`parameter-id` of the :term:`Parameter` being assigned
+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.1/cachegroupparameters HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 39
+	Content-Type: application/json
+
+	[{
+		"cachegroupId": 8,
+		"parameterId": 124
+	},
+	{
+		"cachegroupId": 8,
+		"parameterId": 125
+	}]
 
 Response Structure
 ------------------
@@ -122,7 +156,7 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Profile parameter associations were created."
+			"text": "Cachegroup parameter associations were created."
 		}
 	],
 	"response": [

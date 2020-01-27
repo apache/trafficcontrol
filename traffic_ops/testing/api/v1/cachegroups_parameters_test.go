@@ -26,6 +26,7 @@ func TestCacheGroupParameters(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CacheGroupParameters}, func() {
 		GetTestCacheGroupParameters(t)
 		GetTestCacheGroupUnassignedParameters(t)
+		GetAllTestCacheGroupParameters(t)
 	})
 }
 
@@ -91,6 +92,20 @@ func GetTestCacheGroupUnassignedParameters(t *testing.T) {
 				t.Errorf("assigned parameter %v found in unassigned response", param.ID)
 			}
 		}
+	}
+}
+
+func GetAllTestCacheGroupParameters(t *testing.T) {
+	allCGParamsResp, _, err := TOSession.GetAllCacheGroupParameters()
+	if err != nil {
+		t.Errorf("could not get all cache group parameters: %v", err)
+	}
+	if allCGParamsResp == nil {
+		t.Fatal("get all cache group parameters response should not be nil")
+	}
+
+	if len(allCGParamsResp) != len(testData.CacheGroupParameterRequests) {
+		t.Errorf("did not get all cachegroup parameters: expected = %v actual = %v", len(testData.CacheGroupParameterRequests), len(allCGParamsResp))
 	}
 }
 

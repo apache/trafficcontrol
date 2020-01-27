@@ -20,10 +20,15 @@ package cachegroupparameter
  */
 
 import (
+	"bytes"
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -179,4 +184,121 @@ func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
 	}
 
 	return api.GenericDelete(cgparam)
+}
+
+func ReadAllCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	output, err := GetAllCacheGroupParameters(inf.Tx.Tx)
+	if err != nil {
+		api.WriteRespAlertObj(w, r, tc.ErrorLevel, "querying cachegroupparameters with error: "+err.Error(), output)
+		return
+	}
+	api.WriteResp(w, r, output)
+}
+
+func GetAllCacheGroupParameters(tx *sql.Tx) (tc.CacheGroupParametersList, error) {
+	parameters := map[string]string{
+		"orderby": "cachegroup",
+	}
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"cachegroup":  dbhelpers.WhereColumnInfo{"cachegroup", api.IsInt},
+		"lastUpdated": dbhelpers.WhereColumnInfo{"last_updated", nil},
+		"parameter":   dbhelpers.WhereColumnInfo{"parameter", api.IsInt},
+	}
+	where, orderBy, pagination, _, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return tc.CacheGroupParametersList{}, util.JoinErrs(errs)
+	}
+
+	query := selectAllQuery() + where + orderBy + pagination
+	rows, err := tx.Query(query)
+	if err != nil {
+		return tc.CacheGroupParametersList{}, errors.New("querying cachegroupParameters: " + err.Error())
+	}
+	defer rows.Close()
+
+	paramsList := tc.CacheGroupParametersList{}
+	params := []tc.CacheGroupParametersNullable{}
+	for rows.Next() {
+		var p tc.CacheGroupParametersNullable
+		if err = rows.Scan(&p.CacheGroup, &p.Parameter, &p.LastUpdated); err != nil {
+			return tc.CacheGroupParametersList{}, errors.New("scanning cachegroupParameters: " + err.Error())
+		}
+		params = append(params, p)
+	}
+	paramsList.CacheGroupParameters = params
+	return paramsList, nil
+}
+
+func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	data, _ := ioutil.ReadAll(r.Body)
+	buf := ioutil.NopCloser(bytes.NewReader(data))
+
+	var paramsInt interface{}
+
+	decoder := json.NewDecoder(buf)
+	err := decoder.Decode(&paramsInt)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing json: "+err.Error()), nil)
+		return
+	}
+
+	var params []tc.CacheGroupParametersNullable
+	_, ok := paramsInt.([]interface{})
+	var parseErr error = nil
+	if !ok {
+		var singleParam tc.CacheGroupParametersNullable
+		parseErr = json.Unmarshal(data, &singleParam)
+		if singleParam.CacheGroup == nil || singleParam.Parameter == nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid cachegroup parameter."), nil)
+			return
+		}
+		params = append(params, singleParam)
+	} else {
+		parseErr = json.Unmarshal(data, &params)
+	}
+	if parseErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing cachegroup parameter: "+parseErr.Error()), nil)
+		return
+	}
+
+	values := []string{}
+	for _, param := range params {
+		values = append(values, "("+strconv.Itoa(*param.CacheGroup)+", "+strconv.Itoa(*param.Parameter)+")")
+	}
+
+	insQuery := strings.Join(values, ", ")
+	_, err = inf.Tx.Tx.Query(insertQuery() + insQuery)
+
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("writing cachegroup parameter: "+err.Error()))
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Cachegroup parameter associations were created.", params)
+}
+
+func selectAllQuery() string {
+	return `SELECT * FROM cachegroup_parameter`
+}
+
+func insertQuery() string {
+	return `INSERT INTO cachegroup_parameter 
+		(cachegroup, 
+		parameter) 
+		VALUES `
 }
