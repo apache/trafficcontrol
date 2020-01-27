@@ -212,21 +212,33 @@ func GetCacheGroups(cfg config.TCCfg) ([]tc.CacheGroupNullable, error) {
 	return cacheGroups, nil
 }
 
+// DeliveryServiceServersAlwaysGetAll indicates whether to always get all delivery service servers from Traffic Ops, and cache all in a file (but still return to the caller only the objects they requested).
+// This exists and is currently true, because with an ORT run, it's typically more efficient to get them all in a single request, and re-use that cache; than for every config file to get and cache its own unique set.
+// If your use case is more efficient to only get the needed objects, for example if you're frequently requesting one file, set this false to get and cache the specific needed delivery services and servers.
+const DeliveryServiceServersAlwaysGetAll = true
+
 func GetDeliveryServiceServers(cfg config.TCCfg, dsIDs []int, serverIDs []int) ([]tc.DeliveryServiceServer, error) {
-	sortIDsInHash := true
+	const sortIDsInHash = true
+
 	serverIDsStr := ""
-	if len(serverIDs) > 0 {
-		serverIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(serverIDs, sortIDsInHash)))
-	}
 	dsIDsStr := ""
-	if len(dsIDs) > 0 {
-		dsIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(dsIDs, sortIDsInHash)))
+	dsIDsToFetch := ([]int)(nil)
+	sIDsToFetch := ([]int)(nil)
+	if !DeliveryServiceServersAlwaysGetAll {
+		if len(dsIDs) > 0 {
+			dsIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(dsIDs, sortIDsInHash)))
+		}
+		if len(serverIDs) > 0 {
+			serverIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(serverIDs, sortIDsInHash)))
+		}
+		dsIDsToFetch = dsIDs
+		sIDsToFetch = serverIDs
 	}
 
 	dsServers := []tc.DeliveryServiceServer{}
 	err := GetCachedJSON(cfg, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr+".json", &dsServers, func(obj interface{}) error {
 		const noLimit = 999999 // TODO add "no limit" param to DSS endpoint
-		toDSS, reqInf, err := (*cfg.TOClient).GetDeliveryServiceServersWithLimits(noLimit, dsIDs, serverIDs)
+		toDSS, reqInf, err := (*cfg.TOClient).GetDeliveryServiceServersWithLimits(noLimit, dsIDsToFetch, sIDsToFetch)
 		if err != nil {
 			return errors.New("getting delivery service servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
 		}
