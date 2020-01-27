@@ -603,7 +603,7 @@ sub configs_routing {
 	my $cdn_name = $self->param('name');
 	my $data_obj;
 	my $json = $self->gen_traffic_router_config($cdn_name);
-	$self->success($json);
+	$self->deprecation(200, 'GET /cdns/{{name}}/snapshot', $json);
 }
 
 sub gen_traffic_router_config {
