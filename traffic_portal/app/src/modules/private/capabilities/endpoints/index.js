@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.capabilities.endpoints', 
 						controller: 'TableCapabilityEndpointsController',
 						resolve: {
 							capability: function($stateParams, capabilityService) {
-								return capabilityService.getCapability($stateParams.capName);
+								return capabilityService.getCapabilities({"name": $stateParams.capName});
 							},
 							capEndpoints: function($stateParams, endpointService) {
 								return endpointService.getEndpoints({ capability: $stateParams.capName });

@@ -59,7 +59,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.status.sendKeys(mockVals.status);
 		pageData.hostName.sendKeys(mockVals.hostName);
 		pageData.domainName.sendKeys(mockVals.domainName);
-		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
+		commonFunctions.selectDropdownbyNum(pageData.cdn, 2); // the ALL CDN is first so let's pick a real CDN
 		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
 		element(by.css("#type [label='EDGE']")).click();
 		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
@@ -131,11 +131,4 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(element(by.css('.clone-ds-assignments')).isPresent()).toEqual(false);
 	});
 
-	it('should navigate back to the new server and delete it', function() {
-		console.log('Deleting the server ' + mockVals.hostName);
-		browser.navigate().back();
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.hostName);
-		pageData.deletePermanentlyButton.click();
-	});
 });

@@ -21,6 +21,9 @@ module.exports = function(){
 	this.moreBtn=element(by.name('moreBtn'));
 	this.viewCapabilitiesMenuItem=element(by.css('a[ng-click*=viewCapabilities]'));
 	this.addCapabilityBtn=element(by.name('addCapabilityBtn'));
+	this.manageServersMenuItem=element(by.css('a[ng-click*=viewServers]'));
+	this.selectServersBtn=element(by.name('selectServersBtn'));
+	this.selectAllCB=element(by.id('selectAllCB'));
 	this.dsLink=element(by.name('dsLink'));
 	this.selectFormDropdown=element(by.name('selectFormDropdown'));
 	this.selectFormSubmitButton=element(by.buttonText('Submit'));

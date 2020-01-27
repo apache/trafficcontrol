@@ -170,6 +170,23 @@ sub register {
 		}
 	);
 
+	$app->renderer->add_helper(
+		deprecation_with_no_alternative => sub {
+			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $code = shift || confess("Please supply a response code e.g. 400");
+			my $response_object = shift;
+
+			my $builder ||= MojoPlugins::Response::Builder->new($self, @_);
+			my @alerts_response = ({$LEVEL_KEY => $WARNING_LEVEL, $TEXT_KEY => "This endpoint and its functionality is deprecated, and will be removed in the future"});
+
+			if (defined($response_object)) {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response, $RESPONSE_KEY => $response_object } );
+			} else {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response } );
+			}
+		}
+	);
+
 	# Alerts (500)
 	$app->renderer->add_helper(
 		internal_server_error => sub {
