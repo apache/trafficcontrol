@@ -701,7 +701,7 @@ func UsernameExists(uname string, tx *sql.Tx) (bool, error) {
 	return exists, err
 }
 
-// GetTypeIDByName reports whether or not a type exists with the given name and the id of that type
+// GetTypeIDByName reports whether or not a type exists with the given name and the id of that type.
 func GetTypeIDByName(t string, tx *sql.Tx) (int, bool, error) {
 	id := 0
 	if err := tx.QueryRow(`SELECT id FROM type WHERE name = $1`, t).Scan(&id); err != nil {
