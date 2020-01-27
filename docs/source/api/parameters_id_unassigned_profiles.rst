@@ -19,7 +19,7 @@
 ``parameters/{{ID}}/unassigned_profiles``
 *****************************************
 .. deprecated:: ATCv4
-.. warning:: There are **very** few good reasons to use this endpoint - be sure not limit said use.
+.. warning:: There are **very** few good reasons to use this endpoint - be sure to limit said use.
 
 ``GET``
 =======
