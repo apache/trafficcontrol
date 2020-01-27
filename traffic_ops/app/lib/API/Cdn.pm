@@ -684,21 +684,26 @@ sub gen_traffic_router_config {
 		}
 	}
 
-	my $rs_loc = $self->db->resultset('Server')->search(
-		{ 'cdn.name' => $cdn_name },
+	my $cdn_id = $self->db->resultset('Cdn')->search(
+		{ 'name' => $cdn_name },
+		{ select => 'id' }
+	);
+
+	my $rs_loc = $self->db->resultset('Cachegroup')->search(
+		{ 'servers.cdn_id' => { -in => $cdn_id->get_column('id')->as_query } },
 		{
-			join   => [ 'cdn',             'cachegroup' ],
-			select => [ 'cachegroup.name', 'cachegroup.latitude', 'cachegroup.longitude' ],
+			join   => [ 'servers',             'coordinate' ],
+			select => [ 'name', 'coordinate.latitude', 'coordinate.longitude'],
 			distinct => 1
 		}
 	);
 	while ( my $row = $rs_loc->next ) {
 		my $cache_group;
-		my $latitude  = $row->cachegroup->latitude + 0;
-		my $longitude = $row->cachegroup->longitude + 0;
+		my $latitude  = $row->coordinate->latitude + 0;
+		my $longitude = $row->coordinate->longitude + 0;
 		$cache_group->{'coordinates'}->{'latitude'}  = $latitude;
 		$cache_group->{'coordinates'}->{'longitude'} = $longitude;
-		$cache_group->{'name'}                       = $row->cachegroup->name;
+		$cache_group->{'name'}                       = $row->name;
 		push( @{ $data_obj->{'cacheGroups'} }, $cache_group );
 	}
 
