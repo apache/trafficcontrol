@@ -18,6 +18,7 @@
 ******************************
 ``divisions/{{name}}/regions``
 ******************************
+.. deprecated:: ATCv4
 
 ``POST``
 ========
@@ -51,7 +52,7 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"name": "Greater_London",
+		"name": "Greater_London"
 	}
 
 Response Structure
@@ -83,4 +84,10 @@ Response Structure
 		"divsionId": 3,
 		"name": "Greater_London",
 		"id": 3
-	}}
+	},
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'POST /regions' instead"
+		}
+	]}
