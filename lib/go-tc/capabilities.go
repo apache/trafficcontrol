@@ -1,3 +1,5 @@
+package tc
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,23 +19,20 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.private.capabilities.edit', [])
-	.config(function($stateProvider, $urlRouterProvider) {
-		$stateProvider
-			.state('trafficPortal.private.capabilities.edit', {
-				url: '/{capName}',
-				views: {
-					capabilitiesContent: {
-						templateUrl: 'common/modules/form/capability/form.capability.tpl.html',
-						controller: 'FormEditCapabilityController',
-						resolve: {
-							capability: function($stateParams, capabilityService) {
-								return capabilityService.getCapabilities({"name": $stateParams.capName});
-							}
-						}
-					}
-				}
-			})
-		;
-		$urlRouterProvider.otherwise('/');
-	});
+// Capability reflects the ability of a user in ATC to perform some operation.
+//
+// In practice, they are assigned to relevant Traffic Ops API endpoints - to describe the
+// capabilites of said endpoint - and to user permission Roles - to describe the capabilities
+// afforded by said Role. Note that enforcement of Capability-based permisions is not currently
+// implemented.
+type Capability struct {
+	Description string    `json:"description" db:"description"`
+	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        string    `json:"name" db:"name"`
+}
+
+// CapabilitiesResponse models the structure of a minimal response from the Capabilities API in
+// Traffic Ops.
+type CapabilitiesResponse struct {
+	Response []Capability `json:"response"`
+}
