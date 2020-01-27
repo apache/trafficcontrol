@@ -181,21 +181,23 @@ sub create_for_division {
 	my $self          = shift;
 	my $division_name = $self->param('division_name');
 	my $params        = $self->req->json;
+	my $alt           = "POST /regions";
+
 	if ( !defined($params) ) {
-		return $self->alert("parameters must be in JSON format,  please check!");
+		return $self->with_deprecation("parameters must be in JSON format,  please check!", "error", 400, $alt);
 	}
 	if ( !&is_oper($self) ) {
-		return $self->alert("You must be an ADMIN or OPER to perform this operation!");
+		return $self->with_deprecation("You must be an ADMIN or OPER to perform this operation!", "error", 400, $alt);
 	}
 
 	my $existing_region = $self->db->resultset('Region')->search( { name => $params->{name} } )->get_column('name')->single();
 	if ( defined($existing_region) ) {
-		return $self->alert( "region[" . $params->{name} . "] already exists." );
+		return $self->with_deprecation("region[" . $params->{name} . "] already exists.", "error", 400, $alt);
 	}
 
 	my $divsion_id = $self->db->resultset('Division')->search( { name => $division_name } )->get_column('id')->single();
 	if ( !defined($divsion_id) ) {
-		return $self->alert( "division[" . $division_name . "] does not exist." );
+		return $self->with_deprecation("division[" . $division_name . "] does not exist.", "error", 400, $alt);
 	}
 
 	my $insert = $self->db->resultset('Region')->create(
@@ -213,9 +215,9 @@ sub create_for_division {
 		$response->{name}         = $rs->name;
 		$response->{divisionName} = $division_name;
 		$response->{divsionId}    = $rs->division->id;
-		return $self->success($response);
+		return $self->deprecation(200, $alt, $response);
 	}
-	return $self->alert( "create region " . $params->{name} . " failed." );
+	return $self->with_deprecation("create region " . $params->{name} . " failed.", "error", 400, $alt);
 }
 
 sub delete {

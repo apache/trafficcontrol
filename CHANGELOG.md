@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cachegroup/:parameterID/parameter
   - /api_capabilities/:id
   - /regions/:region_name/phys_locations
+  - /divisions/:division_name/regions
   - /parameters/:id/unassigned_profiles
   - /parameters/:id/profiles
 
