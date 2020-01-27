@@ -31,7 +31,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// CreateUpdateServercheck handles creating or updating an existing servercheck
+// CreateTOExtension handler for creating a new TO Extension.
 func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
