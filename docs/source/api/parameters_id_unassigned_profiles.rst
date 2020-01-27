@@ -18,6 +18,7 @@
 *****************************************
 ``parameters/{{ID}}/unassigned_profiles``
 *****************************************
+.. deprecated:: ATCv4
 .. warning:: There are **very** few good reasons to use this endpoint - be sure not limit said use.
 
 ``GET``
@@ -93,6 +94,12 @@ Response Structure
 			"routingDisabled": false,
 			"id": 2,
 			"type": "UNK_PROFILE"
+		}
+	],
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /profiles' instead"
 		}
 	]}
 
