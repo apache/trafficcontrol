@@ -24,6 +24,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 
 	const pageData = new pd();
 	const commonFunctions = new cfunc();
+	const ec = protractor.ExpectedConditions;
 	const mockVals = {
 		dsTypes: {
 			anyMap: [
@@ -209,8 +210,21 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(pageData.displayName.getText() === "Updated display name");
 	});
 
+	it('should assign all eligible servers to the DNS delivery service', function() {
+		console.log('Assigning all eligible servers to ' + mockVals.dnsXmlId);
+		pageData.moreBtn.click();
+		pageData.manageServersMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/servers");
+		pageData.selectServersBtn.click();
+		browser.wait(ec.presenceOf(pageData.selectAllCB), 5000);
+		pageData.selectAllCB.click();
+		pageData.selectFormSubmitButton.click();
+		expect($('div.alert-success').isDisplayed()).toBe(true);
+	});
+
 	it('should add a required server capability to the DNS delivery service', function() {
 		console.log('Adding required server capability to ' + mockVals.dnsXmlId);
+		pageData.dsLink.click();
 		pageData.moreBtn.click();
 		pageData.viewCapabilitiesMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/required-server-capabilities");
@@ -224,7 +238,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		});
 	});
 
-	it('should navigate back to the DNS delivery service and delete it', function() {
+	it('should delete the DNS delivery service', function() {
 		console.log('Deleting ' + mockVals.dnsXmlId);
 		pageData.dsLink.click();
 		pageData.deleteButton.click();
