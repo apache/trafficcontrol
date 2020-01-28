@@ -424,21 +424,27 @@ sub process_cfg_file {
 	# First, check if the file to be generated would be identical including order
 	my $change_needed = ( join( '\0', @disk_file_lines ) ne join( '\0', @db_file_lines ) );
 
-	# if different, look deeper to see if we care about the diffs (e.g. different order)
-	if ( $change_needed && !( $cfg_file eq 'logs_xml.config' || $cfg_file =~ m/\.cer$/ || $cfg_file =~ m/hdr\_rw\_(.*)\.config$/ ) ) {
-		my @return             = &diff_file_lines( $cfg_file, \@db_file_lines, \@disk_file_lines );
-		my @db_lines_missing   = @{ shift(@return) };
-		my @disk_lines_missing = @{ shift(@return) };
+	# if different, look deeper to see if we care about the diffs
+	if ( $change_needed ) {
+		# diff_file_lines has all the debug we want
+		my @return = &diff_file_lines( $cfg_file, \@db_file_lines, \@disk_file_lines );
+		my $order_dependent = ( $cfg_file eq 'logs_xml.config' || $cfg_file =~ m/\.cer$/ || $cfg_file =~ m/hdr\_rw\_(.*)\.config$/ );
 
-		if ( scalar(@disk_lines_missing) == 0 && scalar(@db_lines_missing) == 0 ) {
-			# all lines accounted for
-			$change_needed = undef;
+		# if the files aren't order dependent then relax the criteria
+		if ( ! $order_dependent ) {
+			my @db_lines_missing   = @{ shift(@return) };
+			my @disk_lines_missing = @{ shift(@return) };
+
+			if ( scalar(@disk_lines_missing) == 0 && scalar(@db_lines_missing) == 0 ) {
+				# all lines accounted for
+				$change_needed = undef;
+			}
 		}
 	}
 
-	if ($change_needed) {
+	if ( $change_needed ) {
 		$cfg_file_tracker->{$cfg_file}{'change_needed'}++;
-		( $log_level >> $DEBUG ) && print "DEBUG $file needs updated.\n";
+		( $log_level >> $ERROR ) && print "ERROR $file needs updated.\n";
 		&backup_file( $cfg_file, \$result );
 	}
 	else {
@@ -2835,7 +2841,6 @@ sub diff_file_lines {
 		foreach my $line (@db_lines_missing) {
 			( $log_level >> $ERROR ) && print "ERROR Config file $cfg_file line only on disk :\t$line\n";
 		}
-
 	}
 
 	if ( scalar(@disk_lines_missing) ) {
@@ -2844,11 +2849,9 @@ sub diff_file_lines {
 		foreach my $line (@disk_lines_missing) {
 			( $log_level >> $ERROR ) && print "ERROR Config file $cfg_file line only in TrOps:\t$line\n";
 		}
-
 	}
 
 	return ( \@db_lines_missing, \@disk_lines_missing );
-
 }
 
 sub validate_filename {
@@ -2899,11 +2902,8 @@ sub backup_file {
 		chmod oct(644), $fh;
 		chown $ats_uid, $ats_uid, $fh;
 		close $fh;
-	} else {
-		( $log_level >> $ERROR ) && print "ERROR needs updating: $file\n";
 	}
 	return 0;
-
 }
 
 sub adv_preprocessing_remap {
