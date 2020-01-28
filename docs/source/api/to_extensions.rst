@@ -159,7 +159,7 @@ Request Structure
 		"version": "0.0.1-1",
 		"info_url": "",
 		"script_file": "",
-		"isactive": "0",
+		"isactive": 0,
 		"description": "A test extension for API examples",
 		"servercheck_short_name": "test",
 		"type": "CHECK_EXTENSION_NUM"
