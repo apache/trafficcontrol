@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /divisions/:division_name/regions
   - /parameters/:id/unassigned_profiles
   - /parameters/:id/profiles
+  - /cdns/:name/configs/routing
 
 ## [4.0.0] - 2019-12-16
 ### Added
