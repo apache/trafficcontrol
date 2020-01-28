@@ -182,6 +182,8 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 	if u.Email != nil {
 		if err := json.Unmarshal(u.Email, &user.Email); err != nil {
 			errs = append(errs, fmt.Errorf("email: %v", err))
+		} else if *user.Email == "" {
+			errs = append(errs, errors.New("email: cannot be an empty string"))
 		} else if err = validation.Validate(*user.Email, is.Email); err != nil {
 			errs = append(errs, err)
 		}
