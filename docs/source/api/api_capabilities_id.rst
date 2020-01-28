@@ -102,7 +102,7 @@ Response Structure
 ``PUT``
 =======
 .. deprecated:: 1.1
-    This endpoint does not have an alternative. API Capabilities can only be modified at the database seeding level.
+	This endpoint does not have an alternative. API Capabilities can only be modified at the database seeding level.
 
 Edit an API-capability mapping.
 
@@ -203,7 +203,7 @@ Response Structure
 ``DELETE``
 ==========
 .. deprecated:: 1.1
-    This endpoint does not have an alternative. API Capabilities can only be deleted at the database seeding level.
+	This endpoint does not have an alternative. API Capabilities can only be deleted at the database seeding level.
 
 Delete a capability.
 

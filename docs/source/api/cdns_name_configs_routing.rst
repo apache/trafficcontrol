@@ -42,11 +42,11 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-    GET /api/1.5/cdns/CDN-in-a-Box/configs/routing HTTP/1.1
-    User-Agent: curl/7.29.0
-    Host: trafficops.infra.ciab.test
-    Accept: */*
-    Cookie: mojolicious=...
+	GET /api/1.5/cdns/CDN-in-a-Box/configs/routing HTTP/1.1
+	User-Agent: curl/7.29.0
+	Host: trafficops.infra.ciab.test
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
@@ -173,19 +173,19 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-    HTTP/1.1 200 OK
-    Access-Control-Allow-Credentials: true
-    Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
-    Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-    Access-Control-Allow-Origin: *
-    Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-    Content-Type: application/json
-    Date: Mon, 27 Jan 2020 19:20:14 GMT
-    Server: Mojolicious (Perl)
-    Set-Cookie: mojolicious=...; expires=Mon, 27 Jan 2020 23:20:14 GMT; path=/; HttpOnly
-    Vary: Accept-Encoding
-    Whole-Content-Sha512: Dxgtd9e67IRb9HyhPxG94zijfpCB44mdstlf5ZXokCQoAUKbcPaTu2szPMgineWmNvWxAfgrXo0ZVUnCRqxh7A==
-    Transfer-Encoding: chunked
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Mon, 27 Jan 2020 19:20:14 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Mon, 27 Jan 2020 23:20:14 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: Dxgtd9e67IRb9HyhPxG94zijfpCB44mdstlf5ZXokCQoAUKbcPaTu2szPMgineWmNvWxAfgrXo0ZVUnCRqxh7A==
+	Transfer-Encoding: chunked
 
 	{
 		"alerts": [

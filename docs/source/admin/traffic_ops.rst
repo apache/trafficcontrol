@@ -615,7 +615,7 @@ You will need to update `cdn.conf`_ with any necessary changes.
 	:caption: Sample 'listen' Line When Path to ``trafficops.crt`` and ``trafficops.key`` are Known
 
 	'hypnotoad' => ...
-	    'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
+		'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
 		 ...
 
 .. _admin-to-ext-script:

@@ -29,7 +29,7 @@ Self Signed Certificate configuration
 .. note:: Self-signed certificates are not recommended for production use. Intended for development or learning purposes only. Modify subject as necessary.
 
 .. code-block:: shell
-    :caption: Self-Signed Certificate Configuration
+	:caption: Self-Signed Certificate Configuration
 
 	cd ~
 	mkdir certs
