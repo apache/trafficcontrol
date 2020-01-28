@@ -27,7 +27,7 @@ sub stats {
 
 	my $response = $self->riak_stats()->{'response'};
 	my $content  = $response->content;
-	return $self->success( decode_json($content) );
+	$self->deprecation_with_no_alternative(200, decode_json($content));
 }
 
 sub ping {
