@@ -76,11 +76,13 @@ func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 	}
 	resp := tc.TOExtensionPostResponse{
 		Response: tc.TOExtensionID{ID: id},
+		Alerts:   tc.CreateAlerts(tc.SuccessLevel, successMsg),
 	}
 	changeLogMsg := fmt.Sprintf("TO_EXTENSION: %s, ID: %d, ACTION: CREATED", *toExt.Name, id)
 
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, successMsg, resp)
+
+	api.WriteRespRaw(w, r, resp)
 }
 
 func createCheckExt(toExt tc.TOExtensionNullable, tx *sqlx.Tx) (int, error, error) {

@@ -54,6 +54,7 @@ type TOExtensionResponse struct {
 // TOExtensionPostResponse represents the response from Traffic Ops when creating TOExtension.
 type TOExtensionPostResponse struct {
 	Response TOExtensionID `json:"supplemental"`
+	Alerts
 }
 
 // TOExtensionID ...
@@ -77,7 +78,6 @@ func (e *TOExtensionNullable) Validate(tx *sql.Tx) error {
 	}
 	if e.IsActive != nil && !(*e.IsActive == 0 || *e.IsActive == 1) {
 		errs = append(errs, errors.New("isactive can only be 0 or 1."))
-
 	}
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)

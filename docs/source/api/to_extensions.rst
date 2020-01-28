@@ -124,6 +124,9 @@ Request Structure
 	1
 		enabled
 
+	.. versionchanged:: 1.5
+		Prior to version 1.5, ``isactive`` could be given as a string or an integer. Now it can only be given as an integer.
+
 :name:        The name of the extension
 :script_file: The base filename of the script that runs for the extension
 
