@@ -18,6 +18,7 @@
 ***************
 ``jobs/{{ID}}``
 ***************
+.. deprecated:: ATCv4
 .. caution:: In the vast majority of cases, it is preferred to use the ``id`` query parameter of the :ref:`to-api-jobs` endpoint instead.
 
 ``GET``
@@ -84,7 +85,13 @@ Response Structure
 		"keyword": "PURGE",
 		"parameters": "TTL:3h",
 		"startTime": "2019-06-21 00:00:00+00"
-	}]}
+	}],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /jobs with the 'id' parameter instead",
+			"level": "warning"
+		}
+	]}
 
 
 .. [#tenancy] When viewing content invalidation jobs, only those jobs that operate on a :term:`Delivery Service` visible to the requesting user's :term:`Tenant` will be returned.
