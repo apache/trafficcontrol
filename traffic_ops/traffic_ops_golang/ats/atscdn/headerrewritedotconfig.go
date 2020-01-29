@@ -137,11 +137,12 @@ SELECT
   s.host_name,
   s.domain_name,
   s.tcp_port,
-  s.status
+  st.name
 FROM
   server s
   JOIN deliveryservice_server dss ON dss.server = s.id
   JOIN deliveryservice ds ON ds.id = dss.deliveryservice
+  JOIN status st on st.id = s.status
 WHERE
   ds.xml_id = $1
 `
@@ -154,7 +155,7 @@ WHERE
 	servers := []atscfg.HeaderRewriteServer{}
 	for rows.Next() {
 		s := atscfg.HeaderRewriteServer{}
-		if err := rows.Scan(&s.Status, &s.HostName, &s.DomainName, &s.Port); err != nil {
+		if err := rows.Scan(&s.HostName, &s.DomainName, &s.Port, &s.Status); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
 		s.Status = tc.CacheStatusFromString(string(s.Status))
@@ -170,9 +171,10 @@ SELECT
   s.host_name,
   s.domain_name,
   s.tcp_port,
-  s.status
+  st.name
 FROM
   server s
+  JOIN status st on st.id = s.status
 WHERE s.cachegroup IN (
   SELECT
     cg.parent_cachegroup_id
@@ -194,7 +196,7 @@ WHERE s.cachegroup IN (
 	servers := []atscfg.HeaderRewriteServer{}
 	for rows.Next() {
 		s := atscfg.HeaderRewriteServer{}
-		if err := rows.Scan(&s.Status, &s.HostName, &s.DomainName, &s.Port); err != nil {
+		if err := rows.Scan(&s.HostName, &s.DomainName, &s.Port, &s.Status); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
 		s.Status = tc.CacheStatusFromString(string(s.Status))
