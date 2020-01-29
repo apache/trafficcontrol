@@ -102,20 +102,34 @@ func UpdateTestServerChecks(t *testing.T) {
 func GetTestServerChecks(t *testing.T) {
 	hostname := testData.Serverchecks[0].HostName
 	// Get server checks
-	serverChecksResp, _, err := TOSession.GetServerChecks()
+	serverChecksResp, alerts, _, err := TOSession.GetServersChecks()
 	if err != nil {
-		t.Fatalf("could not GET serverchecks: %v", err)
+		t.Fatalf("could not GET serverchecks: %v (alerts: %+v)", err, alerts)
 	}
 	found := false
-	for _, sc := range serverChecksResp.Response {
+	for _, sc := range serverChecksResp {
 		if sc.HostName == *hostname {
 			found = true
-			if sc.Checks.ORT != 12 {
-				t.Errorf("%v returned for ORT value servercheck - expected 12", sc.Checks.ORT)
+
+			if sc.Checks == nil {
+				t.Errorf("server %s had no checks - expected it to have at least two", *hostname)
+				break
 			}
 
-			if sc.Checks.ILO != 0 {
-				t.Errorf("%v returned for ILO value servercheck - expected 1", sc.Checks.ILO)
+			if ort, ok := sc.Checks["ORT"]; !ok {
+				t.Error("no 'ORT' servercheck exists - expected it to exist")
+			} else if ort == nil {
+				t.Error("'null' returned for ORT value servercheck - expected pointer to 12")
+			} else if *ort != 12 {
+				t.Errorf("%v returned for ORT value servercheck - expected 12", *ort)
+			}
+
+			if ilo, ok := sc.Checks["ILO"]; !ok {
+				t.Error("no 'ILO' servercheck exists - expected it to exist")
+			} else if ilo == nil {
+				t.Error("'null' returned for ILO value servercheck - expected pointer to 0")
+			} else if *ilo != 0 {
+				t.Errorf("%v returned for ILO value servercheck - expected 0", *ilo)
 			}
 			break
 		}

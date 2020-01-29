@@ -51,9 +51,10 @@ type TOExtensionResponse struct {
 	Response []TOExtensionNullable `json:"response"`
 }
 
-// TOExtensionPostResponse represents the response from Traffic Ops when creating TOExtension
+// TOExtensionPostResponse represents the response from Traffic Ops when creating TOExtension.
 type TOExtensionPostResponse struct {
 	Response TOExtensionID `json:"supplemental"`
+	Alerts
 }
 
 // TOExtensionID ...
@@ -61,7 +62,7 @@ type TOExtensionID struct {
 	ID int `json:"id"`
 }
 
-// Validate TOExtensionNullable
+// Validate ensures that the TOExtensionNullable request body is valid for creation.
 func (e *TOExtensionNullable) Validate(tx *sql.Tx) error {
 	checkRegexType := regexp.MustCompile(`^CHECK_EXTENSION_`)
 	errs := tovalidate.ToErrors(validation.Errors{
@@ -77,7 +78,6 @@ func (e *TOExtensionNullable) Validate(tx *sql.Tx) error {
 	}
 	if e.IsActive != nil && !(*e.IsActive == 0 || *e.IsActive == 1) {
 		errs = append(errs, errors.New("isactive can only be 0 or 1."))
-
 	}
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)

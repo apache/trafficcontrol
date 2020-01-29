@@ -58,7 +58,7 @@ Traffic Router Project Tree Overview
 			* ``resources/`` - Resources pulled in during an RPM build
 			* ``scripts/`` - Scripts used by the RPM build process
 			* ``webapp/`` - Java "webapp" resources
-                        * ``var/log/`` - location of all the Traffic Router runtime logs
+			* ``var/log/`` - location of all the Traffic Router runtime logs
 
 		* ``src/test`` - Test source directory for Traffic Router Core
 
