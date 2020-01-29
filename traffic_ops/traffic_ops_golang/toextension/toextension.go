@@ -26,6 +26,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -154,7 +155,7 @@ func updateQuery() string {
 	`
 }
 
-// Delete is the handler for DELETE requests to /federation_resolvers.
+// Delete is the handler for deleting to_extensions.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
