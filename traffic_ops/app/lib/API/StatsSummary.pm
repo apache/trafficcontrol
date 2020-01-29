@@ -81,7 +81,7 @@ sub create {
 	my $summary_time = $self->req->json->{summaryTime};
 	my $stat_date    = $self->req->json->{statDate};
 
-	my $alternative = "POST /api/1.4/stats_summary";
+	my $alternative = "POST /stats_summary";
 
 	if ( !defined($stat_name) || !defined($stat_value) || !defined($stat_date) ) {
 		return $self->with_deprecation("Please provide a stat name, value, and date", "error", 500, $alternative);
