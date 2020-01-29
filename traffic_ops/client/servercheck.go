@@ -23,7 +23,7 @@ import (
 )
 
 const API_V13_SERVERCHECK = "/api/1.3/servercheck"
-const API_V13_SERVERCHECK_GET = "/api/1.3/servers/checks"
+const API_V1_SERVERCHECK_GET = apiBase + "/servers/checks"
 
 // InsertServerCheckStatus Will insert/update the servercheck value based on if it already exists or not
 func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
@@ -42,15 +42,29 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable)
 	return &resp, reqInf, nil
 }
 
-// GetServerChecks Gets ServerChecks Data
+// GetServerChecks Gets ServerChecks Data.
+//
+// Deprecated: This function cannot handle arbitrary check types, so if you're
+// using custom TO extensions it WILL quietly drop data. Please use
+// Session.GetServersChecks instead.
 func (to *Session) GetServerChecks() (*tc.ServerchecksResponse, ReqInf, error) {
-	uri := API_V13_SERVERCHECK_GET
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	resp := tc.ServerchecksResponse{}
-	reqInf, err := get(to, uri, &resp)
+	reqInf, err := get(to, API_V1_SERVERCHECK_GET, &resp)
 	if err != nil {
 		return nil, reqInf, err
 	}
 	return &resp, reqInf, nil
+}
+
+// GetServersChecks fetches check and meta information about servers from /servers/checks.
+func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
+	var response struct {
+		tc.Alerts
+		Response []tc.GenericServerCheck `json:"response"`
+	}
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+	reqInf, err := get(to, API_V1_SERVERCHECK_GET, &response)
+	return response.Response, response.Alerts, reqInf, err
 }
