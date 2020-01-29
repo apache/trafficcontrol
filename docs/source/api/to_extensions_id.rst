@@ -13,16 +13,15 @@
 .. limitations under the License.
 ..
 
-.. _to-api-to_extensions-id-delete:
+.. _to-api-to_extensions-id:
 
-*******************************
-``to_extensions/{{ID}}/delete``
-*******************************
-.. deprecated:: ATCv4
-	Use the ``DELETE`` method of :ref:`to-api-to_extensions-id` instead.
+************************
+``to_extensions/{{ID}}``
+************************
+.. versionadded:: 1.5
 
-``POST``
-========
+``DELETE``
+==========
 Deletes a Traffic Ops extension definition. This does **not** delete the actual extension file.
 
 :Auth. Required: Yes
@@ -42,7 +41,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/to_extensions/16/delete HTTP/1.1
+	DELETE /api/1.5/to_extensions/16 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -71,10 +70,6 @@ Response Structure
 		{
 			"level": "success",
 			"text": "Extension deleted."
-		},
-		{
-			"level": "warning",
-			"text": "This endpoint is deprecated, please use 'DELETE /to_extensions/:id' instead"
 		}
 	]}
 

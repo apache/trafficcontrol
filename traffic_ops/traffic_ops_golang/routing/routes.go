@@ -232,7 +232,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.4, http.MethodDelete, `jobs/?$`, invalidationjobs.Delete, auth.PrivLevelPortal, Authenticated, nil, 616780776, noPerlBypass},
 		{1.4, http.MethodPut, `jobs/?$`, invalidationjobs.Update, auth.PrivLevelPortal, Authenticated, nil, 186134226, noPerlBypass},
 		{1.4, http.MethodPost, `jobs/?`, invalidationjobs.Create, auth.PrivLevelPortal, Authenticated, nil, 80450955, noPerlBypass},
-		{1.1, http.MethodGet, `jobs/{id}(/|\.json/?)?$`, api.ReadHandler(&invalidationjobs.InvalidationJob{}), auth.PrivLevelReadOnly, Authenticated, nil, 2085189426, perlBypass},
+		{1.1, http.MethodGet, `jobs/{id}(/|\.json/?)?$`, api.DeprecatedReadHandler(&invalidationjobs.InvalidationJob{}, util.StrPtr("GET /jobs with the 'id' parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 2085189426, perlBypass},
 		{1.1, http.MethodPost, `user/current/jobs(/|\.json/?)?$`, invalidationjobs.CreateUserJob, auth.PrivLevelPortal, Authenticated, nil, 611328688, perlBypass},
 		{1.1, http.MethodGet, `user/current/jobs(/|\.json/?)?$`, invalidationjobs.GetUserJobs, auth.PrivLevelReadOnly, Authenticated, nil, 349163540, perlBypass},
 
@@ -592,6 +592,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// TO Extensions
 		{1.5, http.MethodPost, `to_extensions$`, toextension.CreateTOExtension, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, noPerlBypass},
 		{1.5, http.MethodGet, `to_extensions$`, toextension.GetTOExtensions, auth.PrivLevelReadOnly, Authenticated, nil, 383498599, noPerlBypass},
+		{1.5, http.MethodDelete, `to_extensions/{id}$`, toextension.Delete, auth.PrivLevelReadOnly, Authenticated, nil, 380498299, noPerlBypass},
 
 		//Pattern based consistent hashing endpoint
 		{1.4, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil, 1960755076, noPerlBypass},
