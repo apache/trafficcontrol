@@ -85,6 +85,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/steering"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/steeringtargets"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/toextension"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficstats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/types"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/urisigning"
@@ -321,7 +322,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 2037840835, noPerlBypass},
 
 		//Serverchecks
-		{1.1, http.MethodGet, `servers/checks$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 1796112922, noPerlBypass},
+		{1.1, http.MethodGet, `servers/checks(/|\.json)?$`, servercheck.ReadServersChecks, auth.PrivLevelReadOnly, Authenticated, nil, 1796112922, perlBypass},
 		{1.1, http.MethodPost, `servercheck/?(\.json)?$`, servercheck.CreateUpdateServercheck, auth.PrivLevelInvalid, Authenticated, nil, 1764281568, perlBypass},
 
 		//Server Details
@@ -586,6 +587,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// Stats Summary
 		{1.1, http.MethodGet, `stats_summary/?(\.json)?$`, trafficstats.GetStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380498598, perlBypass},
+		{1.5, http.MethodPost, `stats_summary/?(\.json)?$`, trafficstats.CreateStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380491598, noPerlBypass},
+
+		// TO Extensions
+		{1.5, http.MethodPost, `to_extensions$`, toextension.CreateTOExtension, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, noPerlBypass},
 
 		//Pattern based consistent hashing endpoint
 		{1.4, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil, 1960755076, noPerlBypass},

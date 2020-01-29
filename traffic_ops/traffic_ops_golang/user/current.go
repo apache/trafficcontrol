@@ -37,7 +37,7 @@ import (
 
 const replacePasswordQuery = `
 UPDATE tm_user
-SET local_passwd=$1,
+SET local_passwd=$1
 WHERE id=$2
 `
 
