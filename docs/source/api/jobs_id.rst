@@ -19,7 +19,7 @@
 ``jobs/{{ID}}``
 ***************
 .. deprecated:: ATCv4
-.. caution:: In the vast majority of cases, it is preferred to use the ``id`` query parameter of the :ref:`to-api-jobs` endpoint instead.
+	Use the ``GET`` method of :ref:`to-api-jobs` with the ``id`` query parameter instead.
 
 ``GET``
 =======
