@@ -84,7 +84,7 @@ sub create {
 	my $alternative = "POST /stats_summary";
 
 	if ( !defined($stat_name) || !defined($stat_value) || !defined($stat_date) ) {
-		return $self->with_deprecation("Please provide a stat name, value, and date", "error", 500, $alternative);
+		return $self->with_deprecation("Please provide a stat name, value, and date", "error", 400, $alternative);
 	}
 
 	my $insert = $self->db->resultset('StatsSummary')->create(
