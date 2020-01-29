@@ -19,6 +19,7 @@
 ``to_extensions/{{ID}}/delete``
 *******************************
 .. deprecated:: ATCv4
+	Use the ``DELETE`` method of :ref:`to-api-to_extensions-id` instead.
 
 ``POST``
 ========
