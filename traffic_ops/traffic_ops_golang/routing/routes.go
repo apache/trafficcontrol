@@ -591,9 +591,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// TO Extensions
 		{1.5, http.MethodPost, `to_extensions$`, toextension.CreateTOExtension, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, noPerlBypass},
-
-		// TO Extensions
-		{1.5, http.MethodPost, `to_extensions$`, toextension.CreateTOExtension, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, noPerlBypass},
 		{1.5, http.MethodGet, `to_extensions$`, toextension.GetTOExtensions, auth.PrivLevelReadOnly, Authenticated, nil, 383498599, noPerlBypass},
 
 		//Pattern based consistent hashing endpoint
