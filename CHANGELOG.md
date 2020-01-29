@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /divisions/name/:name
   - /hwinfo/dtdata
   - /riak/stats
+  - /stats_summary/create
 
 ## [4.0.0] - 2019-12-16
 ### Added
