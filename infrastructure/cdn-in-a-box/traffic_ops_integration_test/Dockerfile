@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools postgres
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/run.sh    /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/integration/app/
-COPY ./traffic_ops/testing/api/v14/tc-fixtures.json         /opt/integration/app/
+COPY ./traffic_ops/testing/api/v1/tc-fixtures.json         /opt/integration/app/
 COPY --from=integration-builder \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_integration_test \
     /opt/integration/app/

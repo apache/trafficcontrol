@@ -19,10 +19,12 @@ package tc
  * under the License.
  */
 
+// DomainsResponse is a list of Domains as a response.
 type DomainsResponse struct {
 	Response []Domain `json:"response"`
 }
 
+// Domain contains information about a single domain and its profile.
 type Domain struct {
 	ProfileID int `json:"profileId" db:"profile_id"`
 

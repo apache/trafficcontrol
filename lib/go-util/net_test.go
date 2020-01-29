@@ -17,6 +17,7 @@ package util
 // When adding symbols, document the RFC and section they correspond to.
 
 import (
+	"fmt"
 	"net"
 	"testing"
 )
@@ -188,5 +189,53 @@ func TestLastIP(t *testing.T) {
 		if expected != actual {
 			t.Errorf("expected: '" + expected + "' actual '" + actual + "'")
 		}
+	}
+}
+
+func TestIP4ToNum(t *testing.T) {
+	var tests = []struct {
+		ip     string
+		number uint32
+	}{
+		{"127.0.0.1", uint32(2130706433)},
+		{"127.0.0.4", uint32(2130706436)},
+		{"127.255.255.255", uint32(2147483647)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.ip, func(t *testing.T) {
+			n, err := IP4ToNum(tt.ip)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+
+			}
+			if n != tt.number {
+				t.Errorf("got %v, want %v", n, tt.number)
+			}
+		})
+	}
+}
+
+func TestIP4InRange(t *testing.T) {
+	var tests = []struct {
+		ip      string
+		ipRange string
+		inRange bool
+	}{
+		{"111.0.0.1", "127.0.0.0-127.255.255.255", false},
+		{"128.0.0.1", "127.0.0.0-127.255.255.255", false},
+		{"127.0.0.1", "127.0.0.0-127.255.255.255", true},
+		{"127.0.0.1", "127.0.0.1", true},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%v in range %v", tt.ip, tt.inRange), func(t *testing.T) {
+			exists, err := IP4InRange(tt.ip, tt.ipRange)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+
+			}
+			if exists != tt.inRange {
+				t.Errorf("got %v, want %v", exists, tt.inRange)
+			}
+		})
 	}
 }

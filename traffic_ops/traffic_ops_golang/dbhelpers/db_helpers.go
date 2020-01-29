@@ -639,6 +639,18 @@ func GetParam(tx *sql.Tx, name string, configFile string) (string, bool, error) 
 	return val, true, nil
 }
 
+// GetParamNameByID returns the name of the param, whether it existed, or any error.
+func GetParamNameByID(tx *sql.Tx, id int) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`select name from parameter where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, fmt.Errorf("Error querying global paramter %v: %v", id, err.Error())
+	}
+	return name, true, nil
+}
+
 // GetCacheGroupNameFromID Get Cache Group name from a given ID
 func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
 	name := ""
@@ -687,6 +699,18 @@ func UsernameExists(uname string, tx *sql.Tx) (bool, error) {
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+// GetTypeIDByName reports the id of the type and whether or not a type exists with the given name.
+func GetTypeIDByName(t string, tx *sql.Tx) (int, bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM type WHERE name = $1`, t).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying type id: " + err.Error())
+	}
+	return id, true, nil
 }
 
 // GetUserByID returns the user with the requested ID if one exists. The second return value is a

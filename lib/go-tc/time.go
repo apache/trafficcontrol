@@ -99,6 +99,7 @@ func (t *Time) UnmarshalJSON(b []byte) (err error) {
 // TimeNoMod supported JSON marshalling, but suppresses JSON unmarshalling
 type TimeNoMod Time
 
+// NewTimeNoMod returns the address of a TimeNoMod.
 func NewTimeNoMod() *TimeNoMod {
 	return &TimeNoMod{Time: time.Now()}
 }
@@ -127,4 +128,5 @@ func (t *TimeNoMod) UnmarshalJSON([]byte) (err error) {
 	return nil
 }
 
+// TimeStamp holds the current time with nanosecond precision. It is unused.
 type TimeStamp time.Time

@@ -185,7 +185,7 @@ type DNSSECKeySet struct {
 	KSK []DNSSECKey `json:"ksk"`
 }
 
-// DNSSECKeyDSRecordRiak is a DNSSEC key set (ZSK and KSK), as stored in Riak.
+// DNSSECKeySetV11 is a DNSSEC key set (ZSK and KSK), as stored in Riak.
 // This is specifically the key data, without the DS record text (which can be computed), and is also the format used in API 1.1 through 1.3.
 type DNSSECKeySetV11 struct {
 	ZSK []DNSSECKeyV11 `json:"zsk"`

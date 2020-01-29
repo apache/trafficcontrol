@@ -24,7 +24,8 @@ type ProfileParametersResponse struct {
 	Response []ProfileParameter `json:"response"`
 }
 
-// A Single ProfileParameter Response for Create to depict what changed
+// ProfileParameterResponse is a single ProfileParameter response for Create to
+// depict what changed.
 // swagger:response ProfileParameterResponse
 // in: body
 type ProfileParameterResponse struct {

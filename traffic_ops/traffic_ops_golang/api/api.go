@@ -135,24 +135,32 @@ func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode in
 	handleSimpleErr(w, r, statusCode, userErr, sysErr)
 }
 
+// logErr handles the logging of errors and setting up possibly nil errors without actually writing anything to a
+// http.ResponseWriter, unlike handleSimpleErr. It returns the userErr which will be initialized to the
+// http.StatusText of errCode if it was passed as nil - otherwise left alone.
+func logErr(r *http.Request, errCode int, userErr error, sysErr error) error {
+	if sysErr != nil {
+		log.Errorf(r.RemoteAddr + " " + sysErr.Error())
+	}
+	if userErr == nil {
+		userErr = errors.New(http.StatusText(errCode))
+	}
+	log.Debugln(userErr.Error())
+	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, errCode))
+	return userErr
+}
+
 // handleSimpleErr is a helper for HandleErr.
 // This exists to prevent exposing HandleErr calls in this file with nil transactions, which might be copy-pasted creating bugs.
 func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, userErr error, sysErr error) {
-	if sysErr != nil {
-		log.Errorln(r.RemoteAddr + " " + sysErr.Error())
-	}
-	if userErr == nil {
-		userErr = errors.New(http.StatusText(statusCode))
-	}
+	userErr = logErr(r, statusCode, userErr, sysErr)
+
 	respBts, err := json.Marshal(tc.CreateErrorAlerts(userErr))
 	if err != nil {
 		log.Errorln("marshalling error: " + err.Error())
-		*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, http.StatusInternalServerError))
-		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		w.Write(append([]byte(http.StatusText(http.StatusInternalServerError)),'\n'))
 		return
 	}
-	log.Debugln(userErr.Error())
-	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, statusCode))
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write(append(respBts, '\n'))
 }
@@ -690,6 +698,16 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 	return fmt.Errorf("%v %s '%s' already exists.", err.Table, match[1], match[2]), nil, http.StatusBadRequest
 }
 
+// parses pq errors for database enum constraint violations
+func parseEnumConstraint(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`invalid input value for enum (.+): \"(.+)\"`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("invalid enum value %s for field %s.", match[2], match[1]), nil, http.StatusBadRequest
+}
+
 // parses pq errors for ON DELETE RESTRICT fk constraint violations
 //
 // Note: This method would also catch an ON UPDATE RESTRICT fk constraint,
@@ -749,6 +767,10 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseEmptyConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseEnumConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 

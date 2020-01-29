@@ -68,7 +68,7 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 	events := health.NewThreadsafeEvents(cfg.MaxEvents)
 
 	cachesChanged := make(chan struct{})
-	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
+	peerStates := peer.NewCRStatesPeersThreadsafe(cfg.PeerOptimisticQuorumMin) // each peer's last state is saved in this map
 
 	monitorConfig := StartMonitorConfigManager(
 		monitorConfigPoller.ConfigChannel,

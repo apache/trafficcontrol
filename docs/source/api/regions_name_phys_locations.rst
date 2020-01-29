@@ -18,6 +18,7 @@
 ***************************************
 ``regions/:region_name/phys_locations``
 ***************************************
+.. deprecated:: ATCv4
 
 ``POST``
 ========
@@ -121,4 +122,10 @@ Response Structure
 		"id": 4,
 		"address": "Buckingham Palace",
 		"shortName": "uk"
-	}}
+	},
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'POST /phys_locations' instead"
+		}
+	]}

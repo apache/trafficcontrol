@@ -121,12 +121,15 @@ type CRStatesPeersThreadsafe struct {
 	peerStates map[tc.TrafficMonitorName]bool
 	peerTimes  map[tc.TrafficMonitorName]time.Time
 	peerOnline map[tc.TrafficMonitorName]bool
+	peerCount  *int
+	quorumMin  *int
 	timeout    *time.Duration
 	m          *sync.RWMutex
 }
 
 // NewCRStatesPeersThreadsafe creates a new CRStatesPeers object safe for multiple goroutine readers and a single writer.
-func NewCRStatesPeersThreadsafe() CRStatesPeersThreadsafe {
+func NewCRStatesPeersThreadsafe(quorumMin int) CRStatesPeersThreadsafe {
+	count := 0
 	timeout := time.Hour // default to a large timeout
 	return CRStatesPeersThreadsafe{
 		m:          &sync.RWMutex{},
@@ -135,6 +138,8 @@ func NewCRStatesPeersThreadsafe() CRStatesPeersThreadsafe {
 		crStates:   map[tc.TrafficMonitorName]tc.CRStates{},
 		peerStates: map[tc.TrafficMonitorName]bool{},
 		peerTimes:  map[tc.TrafficMonitorName]time.Time{},
+		peerCount:  &count,
+		quorumMin:  &quorumMin,
 	}
 }
 
@@ -147,10 +152,19 @@ func (t *CRStatesPeersThreadsafe) SetTimeout(timeout time.Duration) {
 func (t *CRStatesPeersThreadsafe) SetPeers(newPeers map[tc.TrafficMonitorName]struct{}) {
 	t.m.Lock()
 	defer t.m.Unlock()
+
+	peerCount := 0
+
 	for peer, _ := range t.crStates {
 		_, ok := newPeers[peer]
 		t.peerOnline[peer] = ok
+
+		if ok {
+			peerCount++
+		}
 	}
+
+	*t.peerCount = peerCount
 }
 
 // GetCrstates returns the internal Traffic Monitor peer Crstates data. This MUST NOT be modified.
@@ -202,22 +216,36 @@ func (t *CRStatesPeersThreadsafe) GetQueryTimes() map[tc.TrafficMonitorName]time
 	return copyPeerTimes(t.peerTimes)
 }
 
-// HasAvailablePeers returns true if at least one peer is online
+// HasAvailablePeers returns true if at least one peer is ONLINE and available (reachable via polling)
 func (t *CRStatesPeersThreadsafe) HasAvailablePeers() bool {
-	availablePeers := false
-
 	t.m.RLock()
+	defer t.m.RUnlock()
 
+	return t.hasAvailablePeers()
+}
+
+// hasAvailablePeers is a private function to determine whether any peers are currently available; callers must lock t
+func (t *CRStatesPeersThreadsafe) hasAvailablePeers() bool {
 	for _, available := range t.peerStates {
 		if available {
-			availablePeers = true
-			break
+			return true
 		}
 	}
 
-	t.m.RUnlock()
+	return false
+}
 
-	return availablePeers
+// numAvailablePeers is a private function to determine how many peers are currently available; callers must lock t
+func (t *CRStatesPeersThreadsafe) numAvailablePeers() int {
+	count := 0
+
+	for _, available := range t.peerStates {
+		if available {
+			count++
+		}
+	}
+
+	return count
 }
 
 // Set sets the internal Traffic Monitor peer state and Crstates data. This MUST NOT be called by multiple goroutines.
@@ -227,4 +255,30 @@ func (t *CRStatesPeersThreadsafe) Set(result Result) {
 	t.peerStates[result.ID] = result.Available
 	t.peerTimes[result.ID] = result.Time
 	t.m.Unlock()
+}
+
+// HasOptimisticQuorum returns true when the number of available peers is equal to or greater than the peer_optimistic_quorum_min setting.
+func (t *CRStatesPeersThreadsafe) HasOptimisticQuorum() (bool, int, int, int) {
+	t.m.RLock()
+	defer t.m.RUnlock()
+
+	available := t.numAvailablePeers()
+
+	if available >= *t.quorumMin {
+		return true, available, *t.peerCount, *t.quorumMin
+	}
+
+	return false, available, *t.peerCount, *t.quorumMin
+}
+
+// OptimisticQuorumEnabled returns true when peer_optimistic_quorum_min is set to a value greater than zero and the number of peers is greater than 1. Optimistic quorum requires a minimum of three Traffic Monitors; every individual monitor requires at least two peers to prevent a split-brain scenario that would be caused by having a single peer. If a single peer was legal (i.e.: two Traffic Monitors), neither peer would know which peer is reachable, and consequently both would serve 503s. This would force all Traffic Routers to use only their last-known state until the peering is restored, despite the fact that one of the two Traffic Monitors could still be reachable. A future enhancement could employ a heuristic to enable two monitors to determine whether they are offline independently by combining peer connectivity state with a calculation around the number of caches that are reachable, which might also include a rate of change in cache health state.
+func (t *CRStatesPeersThreadsafe) OptimisticQuorumEnabled() bool {
+	t.m.RLock()
+	defer t.m.RUnlock()
+
+	if *t.quorumMin > 0 && *t.peerCount > 1 {
+		return true
+	}
+
+	return false
 }

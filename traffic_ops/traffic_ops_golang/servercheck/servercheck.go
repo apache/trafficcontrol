@@ -33,6 +33,72 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
+const serverInfoQuery = `
+SELECT server.host_name AS hostName,
+       server.id AS id,
+       profile.name AS profile,
+       status.name AS adminState,
+       cachegroup.name AS cacheGroup,
+       type.name AS type,
+       server.upd_pending AS updPending,
+       server.reval_pending AS revalPending
+FROM server
+LEFT JOIN profile ON server.profile = profile.id
+LEFT JOIN status ON server.status = status.id
+LEFT JOIN cachegroup ON server.cachegroup = cachegroup.id
+LEFT JOIN type ON server.type = type.id
+WHERE type.name LIKE 'MID%' OR type.name LIKE 'EDGE%'
+ORDER BY hostName ASC
+`
+
+const serverChecksQuery = `
+SELECT servercheck.id,
+       servercheck.server,
+       servercheck.aa,
+       servercheck.ab,
+       servercheck.ac,
+       servercheck.ad,
+       servercheck.ae,
+       servercheck.af,
+       servercheck.ag,
+       servercheck.ah,
+       servercheck.ai,
+       servercheck.aj,
+       servercheck.ak,
+       servercheck.al,
+       servercheck.am,
+       servercheck.an,
+       servercheck.ao,
+       servercheck.ap,
+       servercheck.aq,
+       servercheck.ar,
+       servercheck.bf,
+       servercheck.at,
+       servercheck.au,
+       servercheck.av,
+       servercheck.aw,
+       servercheck.ax,
+       servercheck.ay,
+       servercheck.az,
+       servercheck.ba,
+       servercheck.bb,
+       servercheck.bc,
+       servercheck.bd,
+       servercheck.be
+FROM servercheck
+`
+
+const extensionsQuery = `
+SELECT to_extension.servercheck_column_name,
+       to_extension.servercheck_short_name
+FROM to_extension
+LEFT JOIN type ON type.id = to_extension.type
+WHERE (type.name = 'CHECK_EXTENSION_BOOL' OR
+      type.name = 'CHECK_EXTENSION_NUM') AND
+      to_extension.servercheck_short_name IS NOT NULL AND
+      to_extension.servercheck_column_name IS NOT NULL
+`
+
 // CreateUpdateServercheck handles creating or updating an existing servercheck
 func CreateUpdateServercheck(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -110,8 +176,8 @@ func createUpdateServerCheck(sid int, colName string, value int, tx *sql.Tx) err
 
 	insertUpdateQuery := fmt.Sprintf(`
 INSERT INTO servercheck (server, %[1]s)
-VALUES ($1, $2) 
-ON CONFLICT (server) 
+VALUES ($1, $2)
+ON CONFLICT (server)
 DO UPDATE SET %[1]s = EXCLUDED.%[1]s`, colName)
 
 	result, err := tx.Exec(insertUpdateQuery, sid, value)
@@ -127,4 +193,148 @@ DO UPDATE SET %[1]s = EXCLUDED.%[1]s`, colName)
 	}
 
 	return nil
+}
+
+// ReadServersChecks is the handler for GET requests for /servers/checks
+func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	extensions := make(map[string]string)
+	extRows, err := tx.Query(extensionsQuery)
+	if err != nil {
+		sysErr = fmt.Errorf("querying for extensions: %v", err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	for extRows.Next() {
+		var shortName string
+		var checkName string
+		if err = extRows.Scan(&shortName, &checkName); err != nil {
+			sysErr = fmt.Errorf("scanning extension: %v", err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		extensions[shortName] = checkName
+	}
+
+	colRows, err := inf.Tx.Queryx(serverChecksQuery)
+	if err != nil {
+		sysErr = fmt.Errorf("Querying server checks columns: %v", err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	columns := make(map[int]tc.ServerCheckColumns)
+	for colRows.Next() {
+		var cols tc.ServerCheckColumns
+		if err = colRows.StructScan(&cols); err != nil {
+			sysErr = fmt.Errorf("scanning server checks columns: %v", err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+
+		columns[cols.Server] = cols
+	}
+
+	serverRows, err := tx.Query(serverInfoQuery)
+	if err != nil {
+		sysErr = fmt.Errorf("Querying server info for checks: %v", err)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	data := []tc.GenericServerCheck{}
+	for serverRows.Next() {
+		var serverInfo tc.GenericServerCheck
+		if err = serverRows.Scan(&serverInfo.HostName, &serverInfo.ID, &serverInfo.Profile, &serverInfo.AdminState, &serverInfo.CacheGroup, &serverInfo.Type, &serverInfo.UpdPending, &serverInfo.RevalPending); err != nil {
+			sysErr = fmt.Errorf("scanning server info for checks: %v", err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+
+		serverCheckCols, ok := columns[serverInfo.ID]
+		if ok {
+			serverInfo.Checks = make(map[string]*int)
+		} else {
+			data = append(data, serverInfo)
+			continue
+		}
+
+		for colName, checkName := range extensions {
+			switch (colName) {
+			case "aa":
+				serverInfo.Checks[checkName] = serverCheckCols.AA
+			case "ab":
+				serverInfo.Checks[checkName] = serverCheckCols.AB
+			case "ac":
+				serverInfo.Checks[checkName] = serverCheckCols.AC
+			case "ad":
+				serverInfo.Checks[checkName] = serverCheckCols.AD
+			case "ae":
+				serverInfo.Checks[checkName] = serverCheckCols.AE
+			case "af":
+				serverInfo.Checks[checkName] = serverCheckCols.AF
+			case "ag":
+				serverInfo.Checks[checkName] = serverCheckCols.AG
+			case "ah":
+				serverInfo.Checks[checkName] = serverCheckCols.AH
+			case "ai":
+				serverInfo.Checks[checkName] = serverCheckCols.AI
+			case "aj":
+				serverInfo.Checks[checkName] = serverCheckCols.AJ
+			case "ak":
+				serverInfo.Checks[checkName] = serverCheckCols.AK
+			case "al":
+				serverInfo.Checks[checkName] = serverCheckCols.AL
+			case "am":
+				serverInfo.Checks[checkName] = serverCheckCols.AM
+			case "an":
+				serverInfo.Checks[checkName] = serverCheckCols.AN
+			case "ao":
+				serverInfo.Checks[checkName] = serverCheckCols.AO
+			case "ap":
+				serverInfo.Checks[checkName] = serverCheckCols.AP
+			case "aq":
+				serverInfo.Checks[checkName] = serverCheckCols.AQ
+			case "ar":
+				serverInfo.Checks[checkName] = serverCheckCols.AR
+			case "at":
+				serverInfo.Checks[checkName] = serverCheckCols.AT
+			case "au":
+				serverInfo.Checks[checkName] = serverCheckCols.AU
+			case "av":
+				serverInfo.Checks[checkName] = serverCheckCols.AV
+			case "aw":
+				serverInfo.Checks[checkName] = serverCheckCols.AW
+			case "ax":
+				serverInfo.Checks[checkName] = serverCheckCols.AX
+			case "ay":
+				serverInfo.Checks[checkName] = serverCheckCols.AY
+			case "az":
+				serverInfo.Checks[checkName] = serverCheckCols.AZ
+			case "ba":
+				serverInfo.Checks[checkName] = serverCheckCols.BA
+			case "bb":
+				serverInfo.Checks[checkName] = serverCheckCols.BB
+			case "bc":
+				serverInfo.Checks[checkName] = serverCheckCols.BC
+			case "bd":
+				serverInfo.Checks[checkName] = serverCheckCols.BD
+			case "be":
+				serverInfo.Checks[checkName] = serverCheckCols.BE
+			case "bf":
+				serverInfo.Checks[checkName] = serverCheckCols.BF
+			}
+		}
+
+		data = append(data, serverInfo)
+	}
+
+	api.WriteResp(w, r, data)
 }

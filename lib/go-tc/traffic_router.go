@@ -23,6 +23,8 @@ import (
 	"time"
 )
 
+// SOA (Start of Authority record) defines the SOA record for the CDN's
+// top-level domain.
 type SOA struct {
 	Admin              *string   `json:"admin,omitempty"`
 	AdminTime          time.Time `json:"-"`
