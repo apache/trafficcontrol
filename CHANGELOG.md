@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an optimistic quorum feature to Traffic Monitor to prevent false negative states from propagating to downstream components in the event of network isolation.
 - Traffic Ops Golang Endpoints
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
+  - /api/1.5/to_extensions/:id `(DELETE)`
   - /api/1.5/to_extensions `(POST)`
   - /api/1.5/stats_summary `(POST)`
 
@@ -21,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cachegroups/:parameterID/parameter/available
   - /cachegroup/:parameterID/parameter
   - /api_capabilities/:id
+  - /to_extensions/:id/delete
   - /regions/:region_name/phys_locations
   - /parameters/validate
   - /divisions/:division_name/regions
