@@ -18,6 +18,7 @@
 *********************************
 ``deliveryservices/{{ID}}/state``
 *********************************
+.. deprecated:: ATCv4
 
 ``GET``
 =======
@@ -76,6 +77,10 @@ Response Structure
 				"enabled": false
 			},
 			"enabled": false
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint and its functionality is deprecated, and will be removed in the future"
 		}}
 
 
