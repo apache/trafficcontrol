@@ -46,9 +46,11 @@ sub name {
 	my $self = shift;
 	my $name = $self->param('name');
 
+	my $alt = "GET /capabilities with the 'name' query paramter";
+
 	my $rs_data = $self->db->resultset("Capability")->search( 'me.name' => $name );
 	if ( !defined($rs_data) ) {
-		return $self->not_found();
+		return $self->with_deprecation("Resource not found.", "error", 404, $alt);
 	}
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
@@ -60,7 +62,7 @@ sub name {
 			}
 		);
 	}
-	$self->success( \@data );
+	$self->deprecation(200, $alt, \@data );
 }
 
 sub create {
@@ -119,22 +121,22 @@ sub update {
 	my $params = $self->req->json;
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->alert_with_deprecation_with_no_alternative("Forbidden", "error", 403);
 	}
 
 	if ( !defined($params) ) {
-		return $self->alert("Parameters must be in JSON format.");
+		return $self->alert_with_deprecation_with_no_alternative("Parameters must be in JSON format.", "error", 400);
 	}
 
 	my $description = $params->{description} if defined( $params->{description} );
 
 	my $capability = $self->db->resultset('Capability')->find( { name => $name } );
 	if ( !defined($capability) ) {
-		return $self->not_found();
+		return $self->alert_with_deprecation_with_no_alternative("Resource not found.", "error", 404);
 	}
 
 	if ( !defined($description) or $description eq "" ) {
-		return $self->alert("Description is required.");
+		return $self->alert_with_deprecation_with_no_alternative("Description is required.", "error", 400);
 	}
 
 	my $values = { description => $description };
@@ -148,10 +150,10 @@ sub update {
 
 		&log( $self, "Updated Capability: '$response->{name}', '$response->{description}'", "APICHANGE" );
 
-		return $self->success( $response, "Capability was updated." );
+		return $self->alert_with_deprecation_with_no_alternative("Capability was updated.", "success", 200, $response);
 	}
 	else {
-		return $self->alert("Capability update failed.");
+		return $self->alert_with_deprecation_with_no_alternative("Capability update failed.", "error", 400);
 	}
 }
 
@@ -160,27 +162,27 @@ sub delete {
 	my $name = $self->param('name');
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->alert_with_deprecation_with_no_alternative("Forbidden", "error", 403);
 	}
 
 	my $capability = $self->db->resultset('Capability')->find( { name => $name } );
 	if ( !defined($capability) ) {
-		return $self->not_found();
+		return $self->alert_with_deprecation_with_no_alternative("Resource not found.", "error", 404);
 	}
 
 	# make sure no api_capability refers to this capability
 	my $rs_data = $self->db->resultset("ApiCapability")->find( { 'me.capability' => $name } );
 	if ( defined($rs_data) ) {
 		my $reference_id = $rs_data->id;
-		return $self->alert("Capability \'$name\' is refered by an api_capability mapping: $reference_id. Deletion failed.");
+		return $self->alert_with_deprecation_with_no_alternative("Capability \'$name\' is refered by an api_capability mapping: $reference_id. Deletion failed.", "error", 400);
 	}
 
 	my $rs = $capability->delete();
 	if ($rs) {
-		return $self->success_message("Capability deleted.");
+		return $self->alert_with_deprecation_with_no_alternative("Capability deleted.", "success", 200);
 	}
 	else {
-		return $self->alert("Capability deletion failed.");
+		return $self->alert_with_deprecation_with_no_alternative("Capability deletion failed.", "error", 400);
 	}
 }
 
