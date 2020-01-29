@@ -1280,7 +1280,7 @@ sub state {
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result      = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
-				return $self->with_deprecation_with_no_alternative("Forbidden. Delivery-service tenant is not available to the user.", "error", 403)
+				return $self->with_deprecation_with_no_alternative("Forbidden. Delivery-service tenant is not available to the user.", "error", 403);
 			}
 			my $cdn_name    = $result->cdn->name;
 			my $ds_name     = $result->xml_id;
@@ -1348,14 +1348,14 @@ sub state {
 					}
 				}
 			}
-			$self->deprecation_with_no_alternative(200, $data)
+			$self->deprecation_with_no_alternative(200, $data);
 		}
 		else {
-			$self->with_deprecation_with_no_alternative("Forbidden. Delivery service not assigned to user.", "error", 403)
+			$self->with_deprecation_with_no_alternative("Forbidden. Delivery service not assigned to user.", "error", 403);
 		}
 	}
 	else {
-		$self->with_deprecation_with_no_alternative("Resource not found.", "error", 404)
+		$self->with_deprecation_with_no_alternative("Resource not found.", "error", 404);
 	}
 }
 
