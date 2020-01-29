@@ -135,7 +135,8 @@ Response Structure
 
 ``POST``
 ========
-.. note:: As of ATCv4 ``POST /to_extensions`` only supports CHECK_EXTENSION extensions. As prior TO would fail everytime with a CONFIG_EXTENSION or STATISTIC_EXTENSION.
+.. versionchanged:: 1.5
+	Only supports CHECK_EXTENSION extensions now. Previous implementation would attempt to accept CONFIG_EXTENSION or STATISTIC_EXTENSION extensions but would fail the creation.
 
 Creates a new Traffic Ops extension.
 
@@ -155,6 +156,9 @@ Request Structure
 	1
 		enabled
 
+	.. versionchanged:: 1.5
+		Prior to version 1.5, ``isactive`` could be given as a string or an integer. Now it can only be given as an integer.
+
 :name:        The name of the extension
 :script_file: The base filename of the script that runs for the extension
 
@@ -164,7 +168,11 @@ Request Structure
 
 	.. note:: This field has meaning only for "Check Extensions"
 
-:type:    The :term:`Type` of extension. It must be a CHECK_EXTENSION type with the naming convention of ``CHECK_EXTENSION_*``.
+:type:    The :term:`Type` of extension.
+
+	.. versionchanged:: 1.5
+		``type`` now only accepts a CHECK_EXTENSION type with the naming convention of ``CHECK_EXTENSION_*``.
+
 :version: A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http
@@ -183,7 +191,7 @@ Request Structure
 		"version": "0.0.1-1",
 		"info_url": "",
 		"script_file": "",
-		"isactive": "0",
+		"isactive": 0,
 		"description": "A test extension for API examples",
 		"servercheck_short_name": "test",
 		"type": "CHECK_EXTENSION_NUM"

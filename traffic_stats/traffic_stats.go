@@ -315,10 +315,10 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 					statTime, _ := time.Parse(time.RFC3339, t)
 					log.Infof("max gbps for cdn %v = %v", cdn, value)
 					var statsSummary tc.StatsSummary
-					statsSummary.CDNName = cdn
-					statsSummary.DeliveryService = "all"
-					statsSummary.StatName = "daily_maxgbps"
-					statsSummary.StatValue = value
+					statsSummary.CDNName = util.StrPtr(cdn)
+					statsSummary.DeliveryService = util.StrPtr("all")
+					statsSummary.StatName = util.StrPtr("daily_maxgbps")
+					statsSummary.StatValue = util.FloatPtr(value)
 					statsSummary.SummaryTime = time.Now()
 					statsSummary.StatDate = &statTime
 					go writeSummaryStats(config, statsSummary)
@@ -375,10 +375,10 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 			log.Infof("TBytes served for cdn %v = %v", cdn, bytesServedTB)
 			//write to Traffic Ops
 			var statsSummary tc.StatsSummary
-			statsSummary.CDNName = cdn
-			statsSummary.DeliveryService = "all"
-			statsSummary.StatName = "daily_bytesserved"
-			statsSummary.StatValue = bytesServedTB
+			statsSummary.CDNName = util.StrPtr(cdn)
+			statsSummary.DeliveryService = util.StrPtr("all")
+			statsSummary.StatName = util.StrPtr("daily_bytesserved")
+			statsSummary.StatValue = util.FloatPtr(bytesServedTB)
 			statsSummary.SummaryTime = time.Now()
 			statsSummary.StatDate = &startTime
 			go writeSummaryStats(config, statsSummary)

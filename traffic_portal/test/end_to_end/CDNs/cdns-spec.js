@@ -82,7 +82,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		console.log("Generating DNSSEC keys for the new CDN and and verifying their expiration date");
 		await pageData.moreButton.click();
 		await pageData.manageDnssecKeysButton.click();
-		browser.wait(ec.presenceOf(pageData.expirationDate), 5000)
+		browser.wait(ec.presenceOf(pageData.expirationDate), 10000)
 		expect(pageData.expirationDate.getAttribute('value')).toEqual('');
 		await pageData.generateDnssecKeysButton.click();
 		await pageData.regenerateButton.click();
@@ -97,7 +97,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 
 	it('should regenerate DNSSEC keys', async function() {
 		console.log("Renerating DNSSEC keys and verifying their expiration date");
-		browser.wait(ec.presenceOf(pageData.regenerateDnssecKeysButton), 5000)
+		browser.wait(ec.presenceOf(pageData.regenerateDnssecKeysButton), 10000)
 		await pageData.regenerateDnssecKeysButton.click();
 		await pageData.kskExpirationDays.clear().sendKeys(myKskDays.toString());
 		await pageData.regenerateButton.click();
@@ -112,7 +112,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 
 	it('should regenerate KSK keys', async function() {
 		console.log("Regenerating KSK keys and verifying their expiration");
-		browser.wait(ec.presenceOf(pageData.regenerateKskButton), 5000)
+		browser.wait(ec.presenceOf(pageData.regenerateKskButton), 10000)
 		await pageData.regenerateKskButton.click();
 		await pageData.kskExpirationDays.clear().sendKeys(myKskDays.toString());
 		await pageData.generateButton.click();

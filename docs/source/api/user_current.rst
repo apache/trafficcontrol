@@ -82,7 +82,7 @@ Response Structure
 		"company": null,
 		"country": null,
 		"email": null,
-		"fullName": null,
+		"fullName": "admin",
 		"gid": null,
 		"id": 2,
 		"newUser": false,
@@ -124,7 +124,7 @@ Request Structure
 	:company:            The name of the company for which the user works
 	:confirmLocalPasswd: An optional 'confirm' field in a new user's password specification. This has no known effect and in fact *doesn't even need to match* ``localPasswd``
 	:country:            The name of the country wherein the user resides
-	:email:              The user's email address\ [#notnull]_
+	:email:              The user's email address - cannot be an empty string\ [#notnull]_
 
 		.. versionchanged:: ATCv4
 			Prior to version ATCv4, the email was validated using the `Email::Valid Perl package <https://metacpan.org/pod/Email::Valid>`_ but is now validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that neither method can actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
@@ -160,7 +160,7 @@ Request Structure
 		"company": null,
 		"country": null,
 		"email": "admin@infra.trafficops.ciab.test",
-		"fullName": null,
+		"fullName": "admin",
 		"gid": null,
 		"id": 2,
 		"phoneNumber": null,

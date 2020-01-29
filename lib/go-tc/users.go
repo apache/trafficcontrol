@@ -182,6 +182,8 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 	if u.Email != nil {
 		if err := json.Unmarshal(u.Email, &user.Email); err != nil {
 			errs = append(errs, fmt.Errorf("email: %v", err))
+		} else if user.Email == nil || *user.Email == "" {
+			errs = append(errs, errors.New("email: cannot be null or an empty string"))
 		} else if err = validation.Validate(*user.Email, is.Email); err != nil {
 			errs = append(errs, err)
 		}
@@ -192,7 +194,7 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 			errs = append(errs, fmt.Errorf("fullName: %v", err))
 		} else if user.FullName == nil || *user.FullName == "" {
 			// Perl enforced this
-			errs = append(errs, fmt.Errorf("fullName: cannot be set to 'null' or empty string"))
+			errs = append(errs, errors.New("fullName: cannot be set to 'null' or empty string"))
 		}
 	}
 

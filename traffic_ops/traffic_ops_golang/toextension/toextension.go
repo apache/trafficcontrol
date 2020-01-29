@@ -57,7 +57,7 @@ func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 	// Get Type ID
 	typeID, exists, err := dbhelpers.GetTypeIDByName(*toExt.Type, inf.Tx.Tx)
 	if !exists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("expected type %v does not exist in type table", *toExt.Type))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("type %v does not exist", *toExt.Type), nil)
 		return
 	} else if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
@@ -77,11 +77,13 @@ func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 	}
 	resp := tc.TOExtensionPostResponse{
 		Response: tc.TOExtensionID{ID: id},
+		Alerts:   tc.CreateAlerts(tc.SuccessLevel, successMsg),
 	}
 	changeLogMsg := fmt.Sprintf("TO_EXTENSION: %s, ID: %d, ACTION: CREATED", *toExt.Name, id)
 
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, successMsg, resp)
+
+	api.WriteRespRaw(w, r, resp)
 }
 
 func createCheckExt(toExt tc.TOExtensionNullable, tx *sqlx.Tx) (int, error, error) {

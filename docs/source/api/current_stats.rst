@@ -70,7 +70,7 @@ Response Structure
 	Content-Length: 138
 
 	{"response": {
-	    "currentStats": [
+		"currentStats": [
 			{
 				"bandwidth": null,
 				"capacity": null,
