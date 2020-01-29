@@ -18,16 +18,13 @@
 *************************
 ``traffic_monitor/stats``
 *************************
-.. deprecated:: TrafficControl 3.0.0
-	This endpoint was used by the now-deprecated Traffic Ops UI, and will likely be removed in the future!
-
 .. caution:: This page is a stub! Much of it may be missing or just downright wrong - it needs a lot of love from people with the domain knowledge required to update it.
 
 ``GET``
 =======
 :Auth. Required: Yes
 :Roles Required: None
-:Response Type:  **NOT PRESENT** - this endpoint returns a special, custom JSON response
+:Response Type:  **NOT PRESENT** - this endpoint returns a special, custom :mimetype:`application/json` response
 
 Request Structure
 -----------------

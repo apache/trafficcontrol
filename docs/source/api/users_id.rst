@@ -21,9 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.4
-	Use the ``id`` query parameter of a ``GET`` request to the :ref:`to-api-users` endpoint instead.
-
 Retrieves a specific user.
 
 :Auth. Required: Yes

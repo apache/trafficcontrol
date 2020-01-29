@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-------------+---------------------------------------------------------------------------------------------------------+
-	| Name        | Description                                                                                             |
-	+=============+=========================================================================================================+
-	| ID          | Unique identifier for the :term:`Cache Group` which will have the :term:`Parameter` association deleted |
-	+-------------+---------------------------------------------------------------------------------------------------------+
-	| parameterID | Unique identifier for the :term:`Parameter` which will be removed from a :term:`Cache Group`            |
-	+-------------+---------------------------------------------------------------------------------------------------------+
+	+-------------+----------------------------------------------------------------------------------------------------------------+
+	| Name        | Description                                                                                                    |
+	+=============+================================================================================================================+
+	| ID          | The :ref:`cache-group-id` of the :term:`Cache Group` which will have the :term:`Parameter` association deleted |
+	+-------------+----------------------------------------------------------------------------------------------------------------+
+	| parameterID | The :ref:`parameter-id` of the :term:`Parameter` which will be removed from a :term:`Cache Group`              |
+	+-------------+----------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -70,6 +70,6 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Profile parameter association was deleted."
+			"text": "cachegroup parameter was deleted."
 		}
 	]}

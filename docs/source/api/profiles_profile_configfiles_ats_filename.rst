@@ -27,7 +27,7 @@ Returns the requested configuration file for download.
 
 :Auth. Required: Yes
 :Roles Required: "operations"
-:Response Type:  **NOT PRESENT** - endpoint returns custom text/plain response (represents the contents of the requested configuration file)
+:Response Type:  **NOT PRESENT** - endpoint returns custom :mimetype:`text/plain` response (represents the contents of the requested configuration file)
 
 Request Structure
 -----------------

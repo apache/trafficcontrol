@@ -25,7 +25,7 @@
 Retrieves properties of Edge-Tier servers assigned to a :term:`Delivery Service`.
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [1]_
+:Roles Required: None
 :Response Type:  Array
 
 Request Structure
@@ -40,21 +40,21 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     The name of the Cache Group to which the server belongs
-:cachegroupId:   An integral, unique identifier for the Cache Group to which the server belongs
+:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:          An integral, unique identifier the CDN to which the server belongs
 :cdnName:        The name of the CDN to which the server belongs
-:domainName:     The domain name part of the Fully Qualified Domain Name (FQDN) of the server
+:domainName:     The domain name part of the :abbr:`FQDN (Fully Qualified Domain Name)` of the server
 :guid:           Optionally represents an identifier used to uniquely identify the server
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS requests - 443 in most cases
 :id:             An integral, unique identifier for the server
-:iloIpAddress:   The IPv4 address of the lights-out-management port\ [2]_
-:iloIpGateway:   The IPv4 gateway address of the lights-out-management port\ [2]_
-:iloIpNetmask:   The IPv4 subnet mask of the lights-out-management port\ [2]_
-:iloPassword:    The password of the of the lights-out-management user - displays as ``******`` unless the requesting user has the 'admin' role)\ [2]_
-:iloUsername:    The user name for lights-out-management\ [2]_
-:interfaceMtu:   The Maximum Transmission Unit (MTU) to configure for ``interfaceName``
+:iloIpAddress:   The IPv4 address of the lights-out-management port\ [#ilowikipedia]_
+:iloIpGateway:   The IPv4 gateway address of the lights-out-management port\ [#ilowikipedia]_
+:iloIpNetmask:   The IPv4 subnet mask of the lights-out-management port\ [#ilowikipedia]_
+:iloPassword:    The password of the of the lights-out-management user - displays as ``******`` unless the requesting user has the 'admin' role)\ [#ilowikipedia]_
+:iloUsername:    The user name for lights-out-management\ [#ilowikipedia]_
+:interfaceMtu:   The :abbr:`MTU (Maximum Transmission Unit)` to configure for ``interfaceName``
 
 	.. seealso:: `The Wikipedia article on Maximum Transmission Unit <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
 
@@ -69,8 +69,8 @@ Response Structure
 :mgmtIpGateway:  The IPv4 gateway of the server's management port
 :mgmtIpNetmask:  The IPv4 subnet mask of the server's management port
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status (will be empty if not offline)
-:physLocation:   The name of the physical location at which the server resides
-:physLocationId: An integral, unique identifier for the physical location at which the server resides
+:physLocation:   The name of the :term:`Physical Location` at which the server resides
+:physLocationId: An integral, unique identifier for the :term:`Physical Location` at which the server resides
 :profile:        The :ref:`profile-name` of the :term:`Profile` assigned to this server
 :profileDesc:    A :ref:`profile-description` of the :term:`Profile` assigned to this server
 :profileId:      The :ref:`profile-id` of the :term:`Profile` assigned to this server
@@ -151,5 +151,4 @@ Response Structure
 	]}
 
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to the see servers associated with *any* :term:`Delivery Services`, whereas any other user will only be able to see the servers associated with :term:`Delivery Services` their Tenant is allowed to see.
-.. [2] See `the Wikipedia article on Out-of-Band Management <https://en.wikipedia.org/wiki/Out-of-band_management>`_ for more information.
+.. [#ilowikipedia] See `the Wikipedia article on Out-of-Band Management <https://en.wikipedia.org/wiki/Out-of-band_management>`_ for more information.

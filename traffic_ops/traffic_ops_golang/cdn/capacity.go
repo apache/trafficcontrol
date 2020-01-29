@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/monitorhlp"
 )
 
 func GetCapacity(w http.ResponseWriter, r *http.Request) {
@@ -49,27 +50,6 @@ func GetCapacity(w http.ResponseWriter, r *http.Request) {
 const MonitorProxyParameter = "tm.traffic_mon_fwd_proxy"
 const MonitorRequestTimeout = time.Second * 10
 const MonitorOnlineStatus = "ONLINE"
-
-// CRStates contains the Monitor CRStates members needed for health. It is NOT the full object served by the Monitor, but only the data required by this endpoint.
-type CRStates struct {
-	Caches map[tc.CacheName]Available `json:"caches"`
-}
-
-type Available struct {
-	IsAvailable bool `json:"isAvailable"`
-}
-
-// CRConfig contains the Monitor CRConfig members needed for health. It is NOT the full object served by the Monitor, but only the data required by this endpoint.
-type CRConfig struct {
-	ContentServers map[tc.CacheName]CRConfigServer `json:"contentServers"`
-}
-
-type CRConfigServer struct {
-	CacheGroup tc.CacheGroupName `json:"locationId"`
-	Status     tc.CacheStatus    `json:"status"`
-	Type       tc.CacheType      `json:"type"`
-	Profile    string            `json:"profile"`
-}
 
 func getCapacity(tx *sql.Tx) (CapacityResp, error) {
 	monitors, err := getCDNMonitorFQDNs(tx)
@@ -144,15 +124,15 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 	for cdn, monitorFQDNs := range monitors {
 		err := error(nil)
 		for _, monitorFQDN := range monitorFQDNs {
-			crStates := CRStates{}
-			crConfig := CRConfig{}
+			crStates := tc.CRStates{}
+			crConfig := tc.CRConfig{}
 			cacheStats := CacheStats{}
-			if crStates, err = getCRStates(monitorFQDN, client); err != nil {
+			if crStates, err = monitorhlp.GetCRStates(monitorFQDN, client); err != nil {
 				err = errors.New("getting CRStates for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
 				log.Warnln("getCapacity failed to get CRStates from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
 				continue
 			}
-			if crConfig, err = getCRConfig(monitorFQDN, client); err != nil {
+			if crConfig, err = monitorhlp.GetCRConfig(monitorFQDN, client); err != nil {
 				err = errors.New("getting CRConfig for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
 				log.Warnln("getCapacity failed to get CRConfig from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
 				continue
@@ -172,30 +152,34 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 	return cap, nil
 }
 
-func addCapacity(cap CapData, cacheStats CacheStats, crStates CRStates, crConfig CRConfig, thresholds map[string]float64) CapData {
+func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64) CapData {
 	for cacheName, stats := range cacheStats.Caches {
-		cache, ok := crConfig.ContentServers[cacheName]
+		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
 			continue
 		}
-		if !strings.HasPrefix(string(cache.Type), string(tc.CacheTypeEdge)) {
+		if cache.ServerType == nil || cache.ServerStatus == nil || cache.Profile == nil {
+			log.Warnln("addCapacity got cache with nil values! Skipping!")
+			continue
+		}
+		if !strings.HasPrefix(*cache.ServerType, string(tc.CacheTypeEdge)) {
 			continue
 		}
 		if len(stats.KBPS) < 1 || len(stats.MaxKBPS) < 1 {
 			continue
 		}
-		if cache.Status == "REPORTED" || cache.Status == "ONLINE" {
+		if string(*cache.ServerStatus) == string(tc.CacheStatusReported) || string(*cache.ServerStatus) == string(tc.CacheStatusOnline) {
 			if crStates.Caches[cacheName].IsAvailable {
 				cap.Available += float64(stats.KBPS[0].Value)
 			} else {
 				cap.Unavailable += float64(stats.KBPS[0].Value)
 			}
-		} else if cache.Status == "ADMIN_DOWN" {
+		} else if string(*cache.ServerStatus) == string(tc.CacheStatusAdminDown) {
 			cap.Maintenance += float64(stats.KBPS[0].Value)
 		} else {
 			continue // don't add capacity for OFFLINE or other statuses
 		}
-		cap.Capacity += float64(stats.MaxKBPS[0].Value) - thresholds[cache.Profile]
+		cap.Capacity += float64(stats.MaxKBPS[0].Value) - thresholds[*cache.Profile]
 	}
 	return cap
 }
@@ -232,35 +216,6 @@ AND pa.name = 'health.threshold.availableBandwidthInKbps'
 		profileThresholds[profile] = thresh
 	}
 	return profileThresholds, nil
-}
-
-func getCRStates(monitorFQDN string, client *http.Client) (CRStates, error) {
-	path := `/publish/CrStates`
-	resp, err := client.Get("http://" + monitorFQDN + path)
-	if err != nil {
-		return CRStates{}, errors.New("getting CRStates from Monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	defer resp.Body.Close()
-
-	crs := CRStates{}
-	if err := json.NewDecoder(resp.Body).Decode(&crs); err != nil {
-		return CRStates{}, errors.New("decoding CRStates from monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	return crs, nil
-}
-
-func getCRConfig(monitorFQDN string, client *http.Client) (CRConfig, error) {
-	path := `/publish/CrConfig`
-	resp, err := client.Get("http://" + monitorFQDN + path)
-	if err != nil {
-		return CRConfig{}, errors.New("getting CRConfig from Monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	defer resp.Body.Close()
-	crs := CRConfig{}
-	if err := json.NewDecoder(resp.Body).Decode(&crs); err != nil {
-		return CRConfig{}, errors.New("decoding CRConfig from monitor '" + monitorFQDN + "': " + err.Error())
-	}
-	return crs, nil
 }
 
 // CacheStats contains the Monitor CacheStats needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.

@@ -178,7 +178,7 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 
 :Profile:     :ref:`profile-name` of the :term:`Profile` applied to the Edge-tier or Mid-tier :term:`cache server`, or the special name "ALL" indicating that this row is a group of all :term:`cache servers` within a single :term:`Cache Group`
 :Host:        'ALL' for entries grouped by :term:`Cache Group`, or the hostname of a particular :term:`cache server`
-:Cache Group: Name of the :term:`Cache Group` to which this server belongs, or the name of the :term:`Cache Group` that is grouped for entries grouped by :term:`Cache Group`, or the special name "ALL" indicating that this row is an aggregate across all :term:`Cache Groups`
+:Cache Group: :ref:`Name of the Cache Group <cache-group-name>` to which this server belongs, or the name of the :term:`Cache Group` that is grouped for entries grouped by :term:`Cache Group`, or the special name "ALL" indicating that this row is an aggregate across all :term:`Cache Groups`
 :Healthy:     True/False as determined by Traffic Monitor
 
 	.. seealso:: :ref:`health-proto`
@@ -362,7 +362,7 @@ A configurable table of all servers (of all kinds) across all :term:`Delivery Se
 
 Use the `Select Columns` menu to select the server columns to view and search. Columns can also be rearranged using drag-and-drop. Available server columns include:
 
-:Cache Group:       [Visible by default] The name of the :term:`Cache Group` to which this server belongs
+:Cache Group:       [Visible by default] The :ref:`Name of the Cache Group <cache-group-name>` to which this server belongs
 :CDN:               [Visible by default] The name of the CDN to which the server belongs
 :Domain:            [Visible by default] The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :Host:              [Visible by default] The (short) hostname of the server
@@ -437,7 +437,7 @@ A table of all :term:`origins`. These are automatically created for the :term:`o
 	.. note:: If this field appears blank in the table, it means that a default was chosen for the :term:`origin` based on its Protocol - ``80`` for "http", ``443`` for "https".
 
 :Coordinate: The name of the geographic coordinate pair that defines the physical location of this :term:`origin server`. :term:`Origins` created for :term:`Delivery Services` automatically will **not** have associated Coordinates. This can be rectified on the details pages for said :term:`origins`
-:Cachegroup: The name of the :term:`Cache Group` to which this :term:`origin` belongs, if any.
+:Cachegroup: The :ref:`Name of the Cache Group <cache-group-name>` to which this :term:`origin` belongs, if any.
 :Profile:    The :ref:`profile-name` of a :term:`Profile` used by this :term:`origin`.
 
 :term:`Origin` management includes the ability to (where applicable):
@@ -537,11 +537,11 @@ Cache Groups
 ------------
 This page is a table of :term:`Cache Groups`, each entry of which has the following fields:
 
-:Name:       The full name of this :term:`Cache Group`
-:Short Name: A shorter, more human-friendly name for this :term:`Cache Group`
-:Type:       The :term:`Type` of this :term:`Cache Group`
-:Latitude:   A geographic latitude assigned to this :term:`Cache Group`
-:Longitude:  A geographic longitude assigned to this :term:`Cache Group`
+:Name:       The full :ref:`Name of this Cache Group <cache-group-name>`
+:Short Name: This :ref:`Cache Group's Short Name <cache-group-short-name>`
+:Type:       This :ref:`Cache Group's Type <cache-group-type>`
+:Latitude:   This :ref:`Cache Group's Latitude <cache-group-latitude>`
+:Longitude:  This :ref:`Cache Group's Longitude <cache-group-longitude>`
 
 :term:`Cache Group` management includes the ability to (where applicable):
 

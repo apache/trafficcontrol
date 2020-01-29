@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -80,6 +81,26 @@ func TestMakeMetaConfig(t *testing.T) {
 			FileNameOnDisk: "uri_signing_mydsname.config",
 			Location:       "/my/location/",
 		},
+		"uri_signing_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "uri_signing_nonexistentds.config",
+			Location:       "/my/location/",
+		},
+		"regex_remap_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "regex_remap_nonexistentds.config",
+			Location:       "/my/location/",
+		},
+		"url_sig_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "url_sig_nonexistentds.config",
+			Location:       "/my/location/",
+		},
+		"hdr_rw_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "hdr_rw_nonexistentds.config",
+			Location:       "/my/location/",
+		},
+		"hdr_rw_mid_nonexistentds.config": ConfigProfileParams{
+			FileNameOnDisk: "hdr_rw_mid_nonexistentds.config",
+			Location:       "/my/location/",
+		},
 		"unknown.config": ConfigProfileParams{
 			FileNameOnDisk: "unknown.config",
 			Location:       "/my/location/",
@@ -88,12 +109,18 @@ func TestMakeMetaConfig(t *testing.T) {
 			FileNameOnDisk: "custom.config",
 			Location:       "/my/location/",
 		},
+		"external.config": ConfigProfileParams{
+			FileNameOnDisk: "external.config",
+			Location:       "/my/location/",
+			URL:            "http://myurl/remap.config",
+		},
 	}
 	uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
+	dses := map[tc.DeliveryServiceName]struct{}{"mydsname": {}}
 
 	scopeParams := map[string]string{"custom.config": string(tc.ATSConfigMetaDataConfigFileScopeProfiles)}
 
-	txt := MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams)
+	txt := MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
 
 	cfg := tc.ATSConfigMetaData{}
 	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
@@ -211,6 +238,14 @@ func TestMakeMetaConfig(t *testing.T) {
 				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
 			}
 		},
+		"external.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := "/my/location/"; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeCDNs); cf.Scope != expected {
+				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
+			}
+		},
 	}
 
 	for _, cfgFile := range cfg.ConfigFiles {
@@ -223,7 +258,7 @@ func TestMakeMetaConfig(t *testing.T) {
 	}
 
 	server.Type = "MID"
-	txt = MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams)
+	txt = MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
 	cfg = tc.ATSConfigMetaData{}
 	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
 		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
@@ -236,5 +271,26 @@ func TestMakeMetaConfig(t *testing.T) {
 			t.Errorf("expected cache.config on a Mid to be scope '%v', actual '%v'", expected, cfgFile.Scope)
 		}
 		break
+	}
+	if strings.Contains(txt, "nonexistentds") {
+		t.Errorf("expected location parameters for nonexistent delivery services to not be added to config, actual '%v'", txt)
+	}
+
+	// check for expected apiUri vs url keys (if values are empty strings, they should be omitted from the json)
+	m := map[string]interface{}{}
+	if err := json.Unmarshal([]byte(txt), &m); err != nil {
+		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
+	}
+	cfl := m["configFiles"].([]interface{})
+	for _, cf := range cfl {
+		c := cf.(map[string]interface{})
+		if c["fnameOnDisk"] == "external.config" {
+			if _, exists := c["apiUri"]; exists {
+				t.Errorf("expected: apiUri field to be omitted for external.config, actual: present")
+			}
+			if _, exists := c["url"]; !exists {
+				t.Errorf("expected: url field to be present for external.config, actual: omitted")
+			}
+		}
 	}
 }

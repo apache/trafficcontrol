@@ -58,6 +58,7 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, Re
 	return data.Response, reqInf, nil
 }
 
+// Deprecated: This function is deprecated and GetDeliveryServiceByXMLIDNullable will be used in the future.
 func (to *Session) GetDeliveryServiceByXMLID(XMLID string) ([]tc.DeliveryService, ReqInf, error) {
 	var data tc.GetDeliveryServiceResponse
 	reqInf, err := get(to, deliveryServicesByXMLID(XMLID), &data)
@@ -121,6 +122,16 @@ func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNul
 		return nil, reqInf, nil
 	}
 	return &data.Response[0], reqInf, nil
+}
+
+func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	var data tc.DeliveryServicesNullableResponse
+	reqInf, err := get(to, deliveryServicesByXMLID(XMLID), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
 }
 
 // CreateDeliveryService creates the DeliveryService it's passed

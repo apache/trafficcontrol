@@ -68,11 +68,11 @@ Request Structure
 
 Response Structure
 ------------------
-:active:      A boolean which indicates whether or not the tenant is active
-:id:          The integral, unique identifier of this tenant
-:name:        This tenant's name
-:parentId:    The integral, unique identifier of this tenant's parent
-:parentName:  The name of the parent of this tenant
+:active:      A boolean which indicates whether or not the :term:`Tenant` is active
+:id:          The integral, unique identifier of this :term:`Tenant`
+:name:        This :term:`Tenant`'s name
+:parentId:    The integral, unique identifier of this :term:`Tenant`'s parent
+:parentName:  The name of the parent of this :term:`Tenant`
 
 .. code-block:: http
 	:caption: Response Example

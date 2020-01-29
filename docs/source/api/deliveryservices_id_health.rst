@@ -26,7 +26,7 @@
 Retrieves the health of all :term:`Cache Groups` assigned to a particular :term:`Delivery Service`
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [#tenancy]_
+:Roles Required: None\ [#tenancy]_
 :Response Type:  Object
 
 Request Structure
@@ -44,12 +44,12 @@ Response Structure
 ------------------
 :cachegroups: An array of objects that represent the health of each :term:`Cache Group` assigned to this :term:`Delivery Service`
 
-	:name:    The name of the :term:`Cache Group` represented by this object
-	:offline: The number of offline :term:`cache servers` within this :term:`Cache Group`
-	:online:  The number of online :term:`cache servers` within this :term:`Cache Group`
+	:name:    A string that is the :ref:`name of the Cache Group <cache-group-name>` represented by this object
+	:offline: The number of OFFLINE :term:`cache servers` within this :term:`Cache Group`
+	:online:  The number of ONLINE :term:`cache servers` within this :term:`Cache Group`
 
-:totalOffline: Total number of offline :term:`cache servers` assigned to this :term:`Delivery Service`
-:totalOnline:  Total number of online :term:`cache servers` assigned to this :term:`Delivery Service`
+:totalOffline: Total number of OFFLINE :term:`cache servers` assigned to this :term:`Delivery Service`
+:totalOnline:  Total number of ONLINE :term:`cache servers` assigned to this :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Response Example

@@ -189,6 +189,12 @@ This field in general contains the contents of the a configuration file used by 
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
 
+.. _ds-ecs:
+
+EDNS0 Client Subnet Enabled
+---------------------------
+A boolean value that controls whether or not EDNS0 client subnet is enabled on this Delivery Service by Traffic Router. When creating a Delivery Service in Traffic Portal, this will default to "false".
+
 .. _ds-example-urls:
 
 Example URLs
@@ -897,7 +903,7 @@ A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site O
 	| mso.parent_retry                            | `parent_retry`_                                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
 	|                                             |                                                                            | "unavailable server retries", or both.                                              |
 	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| mso.simple_retry_response_codes             | **UNKNOWN**                                                                | **UNKNOWN** - supposedly defines HTTP response codes from an :term:`origin server`   |
+	| mso.simple_retry_response_codes             | **UNKNOWN**                                                                | **UNKNOWN** - supposedly defines HTTP response codes from an :term:`origin server`  |
 	|                                             |                                                                            | that necessitate a "simple retry".                                                  |
 	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| mso.unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |

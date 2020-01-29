@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.capabilities.edit', [])
 						controller: 'FormEditCapabilityController',
 						resolve: {
 							capability: function($stateParams, capabilityService) {
-								return capabilityService.getCapability($stateParams.capName);
+								return capabilityService.getCapabilities({"name": $stateParams.capName});
 							}
 						}
 					}

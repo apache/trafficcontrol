@@ -125,14 +125,14 @@ func GetServerConfigRemapDotConfigForMid(
 		}
 		if ds.CacheURL != nil && *ds.CacheURL != "" {
 			if hasCacheURL {
-				log.Errorln("DeliveryService qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
+				log.Errorln("Making remap.config for Delivery Service '" + ds.Name + "': qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
 			}
 			midRemap += ` @plugin=cacheurl.so @pparam=` + CacheURLConfigFileName(ds.Name)
 		}
 
 		if ds.ProfileID != nil && len(profilesCacheKeyConfigParams[*ds.ProfileID]) > 0 {
 			if hasCacheKey {
-				log.Errorln("DeliveryService qstring_ignore and cachekey params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
+				log.Errorln("Making remap.config for Delivery Service '" + ds.Name + "': qstring_ignore and cachekey params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
 			}
 			midRemap += ` @plugin=cachekey.so`
 			for name, val := range profilesCacheKeyConfigParams[*ds.ProfileID] {
@@ -240,7 +240,7 @@ func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int,
 			text += ` @plugin=regex_remap.so @pparam=` + dqsFile
 		} else if *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
 			if _, globalExists := cacheURLConfigParams["location"]; globalExists {
-				log.Warnln("qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter")
+				log.Warnln("Making remap.config for Delivery Service '" + ds.Name + "': qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter")
 			} else {
 				qstr, addedCacheURL, addedCacheKey := GetQStringIgnoreRemap(atsMajorVersion)
 				if addedCacheURL {
@@ -256,14 +256,14 @@ func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int,
 
 	if ds.CacheURL != nil && *ds.CacheURL != "" {
 		if hasCacheURL {
-			log.Errorln("DeliveryService qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
+			log.Errorln("Making remap.config for Delivery Service '" + ds.Name + "': qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
 		}
 		text += ` @plugin=cacheurl.so @pparam=` + CacheURLConfigFileName(ds.Name)
 	}
 
 	if len(cacheKeyConfigParams) > 0 {
 		if hasCacheKey {
-			log.Errorln("DeliveryService qstring_ignore and params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
+			log.Errorln("Making remap.config for Delivery Service '" + ds.Name + "': qstring_ignore and params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
 		}
 		text += ` @plugin=cachekey.so`
 

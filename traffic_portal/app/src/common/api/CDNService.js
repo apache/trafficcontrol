@@ -64,6 +64,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateCDN = function(cdn) {
         return $http.put(ENV.api['root'] + 'cdns/' + cdn.id, cdn).then(
             function(result) {
@@ -77,6 +78,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteCDN = function(id) {
         return $http.delete(ENV.api['root'] + 'cdns/' + id).then(
             function(result) {

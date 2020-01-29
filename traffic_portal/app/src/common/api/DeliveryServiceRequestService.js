@@ -51,7 +51,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		dsRequest.deliveryService.consistentHashQueryParams = Array.from(new Set(dsRequest.deliveryService.consistentHashQueryParams)).filter(function(i){return i;});
 
-		return $http.put(ENV.api['root'] + "deliveryservice_requests?id=" + id, dsRequest).then(
+		return $http.put(ENV.api['root'] + "deliveryservice_requests", dsRequest, {params: {id: id}}).then(
 			function(result) {
 				return result;
 			},

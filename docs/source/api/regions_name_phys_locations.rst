@@ -18,12 +18,11 @@
 ***************************************
 ``regions/:region_name/phys_locations``
 ***************************************
-.. deprecated:: 1.1
-	Instead specify the ``regionId`` field in the body of a ``POST`` request to :ref:`to-api-phys_locations`.
+.. deprecated:: ATCv4
 
 ``POST``
 ========
-Creates a new physical location within the specified region.
+Creates a new :term:`Physical Location` within the specified :term:`region`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -123,4 +122,10 @@ Response Structure
 		"id": 4,
 		"address": "Buckingham Palace",
 		"shortName": "uk"
-	}}
+	},
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'POST /phys_locations' instead"
+		}
+	]}

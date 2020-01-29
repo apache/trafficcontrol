@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves physical locations
+Retrieves :term:`Physical Locations`
 
 :Auth. Required: Yes
 :Roles Required: None

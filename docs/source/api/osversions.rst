@@ -22,7 +22,7 @@
 
 ``GET``
 =======
-Gets all available Operating System (OS) versions for ISO generation, as well as the name of the directory where the "kickstarter" files are found.
+Gets all available :abbr:`OS (Operating System)` versions for ISO generation, as well as the name of the directory where the "kickstarter" files are found.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -66,17 +66,17 @@ The **directory** of the file can be changed by creating a specific :term:`Param
 The format of the file is a JSON object as described in :ref:`response-structure`.
 
 .. code-block:: json
-        :caption: Example osversions.json file
+	:caption: Example osversions.json file
 
-        {
-          "CentOS 7.2": "centos72"
-        }
+	{
+		"CentOS 7.2": "centos72"
+	}
 
 
 The legacy Perl Traffic Ops used a Perl configuration file located by default at ``/var/www/files/osversions.cfg``. A Perl script is provided
 to convert the legacy configuration file to the new JSON format. The script is located within the Traffic Control repository at ``traffic_ops/app/bin/osversions-convert.pl``.
 
 .. code-block:: shell
-        :caption: Example usage of conversion script
+	:caption: Example usage of conversion script
 
-        ./osversions-convert.pl < /var/www/files/osversions.cfg > /var/www/files/osversions.json
+	./osversions-convert.pl < /var/www/files/osversions.cfg > /var/www/files/osversions.json

@@ -21,9 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	Use the ``id`` query parameter of a ``GET`` request to :ref:`to-api-servers` instead.
-
 Retrieves properties of a specific server.
 
 :Auth. Required: Yes
@@ -70,15 +67,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     The name of the Cache Group to which this server belongs
-:cachegroupId:   The integral, unique identifier of the Cache Group to which this server belongs
+:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:          The integral, unique identifier of the CDN to which the server belongs
 :cdnName:        Name of the CDN to which the server belongs
 :domainName:     The domain part of the server's Fully Qualified Domain Name (FQDN)
 :guid:           An identifier used to uniquely identify the server
 
-	.. deprecated:: 1.1
-		This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
@@ -210,17 +206,17 @@ Request Structure
 	|  ID  | The integral, unique identifier of a server |
 	+------+---------------------------------------------+
 
-:cachegroupId: The integral, unique identifier of the Cache Group to which this server shall belong
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
 :cdnId:        The integral, unique identifier of the CDN to which the server shall belong
-:domainName:   The domain part of the server's Fully Qualified Domain Name (FQDN)
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :hostName:     The (short) hostname of the server
 :httpsPort:    An optional port number on which the server listens for incoming HTTPS connections/requests
-:iloIpAddress: An optional IPv4 address of the server's Integrated Lights-Out (ILO) service\ [1]_
-:iloIpGateway: An optional IPv4 gateway address of the server's ILO service\ [1]_
-:iloIpNetmask: An optional IPv4 subnet mask of the server's ILO service\ [1]_
-:iloPassword:  An optional string containing the password of the of the server's ILO service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' role(s)
-:iloUsername:  An optional string containing the user name for the server's ILO service\ [1]_
-:interfaceMtu: The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
+:iloIpAddress: An optional IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpGateway: An optional IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpNetmask: An optional IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloPassword:  An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :abbr:`Role(s) <Role>`
+:iloUsername:  An optional string containing the user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:interfaceMtu: The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
 
 	.. note:: In virtually all cases this ought to be 1500. Further note that the only acceptable values are 1500 and 9000.
 
@@ -297,15 +293,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     The name of the Cache Group to which this server belongs
-:cachegroupId:   The integral, unique identifier of the Cache Group to which this server belongs
+:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:          The integral, unique identifier of the CDN to which the server belongs
 :cdnName:        Name of the CDN to which the server belongs
-:domainName:     The domain part of the server's Fully Qualified Domain Name (FQDN)
+:domainName:     The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :guid:           An identifier used to uniquely identify the server
 
-	.. deprecated:: 1.1
-		This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests

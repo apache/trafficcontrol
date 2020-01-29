@@ -55,6 +55,7 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateType = function(type) {
         return $http.put(ENV.api['root'] + 'types/' + type.id, type).then(
             function(result) {
@@ -68,6 +69,7 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteType = function(id) {
         return $http.delete(ENV.api['root'] + "types/" + id).then(
             function(result) {

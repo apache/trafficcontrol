@@ -227,6 +227,7 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         { "name": "DNS Bypass TTL", "visible": false, "searchable": false },
         { "name": "DNS TTL", "visible": false, "searchable": false },
         { "name": "DSCP", "visible": true, "searchable": true },
+        { "name": "ECS Enabled", "visible": false, "searchable": false },
         { "name": "Edge Header Rewrite Rules", "visible": false, "searchable": false },
         { "name": "FQ Pacing Rate", "visible": false, "searchable": false },
         { "name": "Geo Limit", "visible": false, "searchable": false },
@@ -360,6 +361,10 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         },
         {
             text: 'Manage Required Server Capabilities',
+            displayed: function ($itemScope) {
+                // only show for DNS* or HTTP* delivery services
+                return ($itemScope.ds.type.indexOf('DNS') != -1 || $itemScope.ds.type.indexOf('HTTP') != -1);
+            },
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/required-server-capabilities?type=' + $itemScope.ds.type);
             }
@@ -487,9 +492,6 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
             "iDisplayLength": 25,
             "aaSorting": [],
             "columns": $scope.columns,
-            "colReorder": {
-                realtime: false
-            },
             "initComplete": function(settings, json) {
                 try {
                     // need to create the show/hide column checkboxes and bind to the current visibility

@@ -48,7 +48,7 @@ Response Structure
 ------------------
 :cdn:         The name of the CDN
 :connections: Current number of TCP connections maintained
-:capacity:    85 percent capacity of the CDN in Gbps
+:capacity:    85 percent capacity of the CDN in Gps
 :bandwidth:   The total amount of bandwidth in Gbs
 
 .. note:: If ``cdn`` name is total and capacity is omitted it represents the aggregate stats across CDNs
@@ -70,7 +70,7 @@ Response Structure
 	Content-Length: 138
 
 	{"response": {
-	    "currentStats": [
+		"currentStats": [
 			{
 				"bandwidth": null,
 				"capacity": null,

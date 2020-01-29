@@ -27,8 +27,8 @@ import "github.com/go-ozzo/ozzo-validation"
 
 // FederationResolver represents a resolver record for a CDN Federation.
 type FederationResolver struct {
-	ID          *uint      `json:"id", db:"id"`
-	IPAddress   *string    `json:"ipAddress" db:"ip_address`
+	ID          *uint      `json:"id" db:"id"`
+	IPAddress   *string    `json:"ipAddress" db:"ip_address"`
 	LastUpdated *TimeNoMod `json:"lastUpdated,omitempty" db:"last_updated"`
 	Type        *string    `json:"type"`
 	TypeID      *uint      `json:"typeId,omitempty" db:"type"`

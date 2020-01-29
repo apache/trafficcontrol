@@ -54,9 +54,6 @@ var TableTypesController = function(types, $scope, $state, dateUtils, locationUt
                     { "name": "useInTable", "visible": true, "searchable": true },
                     { "name": "lastUpdated", "visible": false, "searchable": false }
                 ],
-                "colReorder": {
-                    realtime: false
-                },
                 "initComplete": function(settings, json) {
                     try {
                         // need to create the show/hide column checkboxes and bind to the current visibility

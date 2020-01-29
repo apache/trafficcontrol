@@ -70,7 +70,8 @@ type TMCacheGroup struct {
 	Coordinates MonitoringCoordinates `json:"coordinates"`
 }
 
-// Coordinates ...
+// MonitoringCoordinates holds a coordinate pair for inclusion as a field in
+// TMCacheGroup.
 type MonitoringCoordinates struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
@@ -228,4 +229,16 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 	}
 
 	return &tm, nil
+}
+
+type HealthData struct {
+	TotalOffline uint64                 `json:"totalOffline"`
+	TotalOnline  uint64                 `json:"totalOnline"`
+	CacheGroups  []HealthDataCacheGroup `json:"cachegroups"`
+}
+
+type HealthDataCacheGroup struct {
+	Offline int64          `json:"offline"`
+	Online  int64          `json:"online"`
+	Name    CacheGroupName `json:"name"`
 }

@@ -534,7 +534,8 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" rows="3"></textarea>
+                            <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" ng-pattern="/^[^\n\r]*$/" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.remapText, 'pattern')">No Line Breaks</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.remapText}}</pre>
@@ -649,6 +650,23 @@ under the License.
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ipv6RoutingEnabled != dsCurrent.ipv6RoutingEnabled">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.ipv6RoutingEnabled ? 'Enabled' : 'Disabled'}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.ecsEnabled), 'has-feedback': hasError(routingConfig.ecsEnabled)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ecsEnabled">EDNS0 Client Subnet Enabled *<div class="helptooltip">
+                            <div class="helptext">Disabled by default, enabling this enables EDNS0 client subnet on the Delivery Service level.</div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="ecsEnabled" name="ecsEnabled" class="form-control" ng-model="deliveryService.ecsEnabled" required>
+                                <option ng-value="true">Enabled</option>
+                                <option ng-value="false">Disabled</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.ecsEnabled, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ecsEnabled != dsCurrent.ecsEnabled">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.ecsEnabled ? 'Enabled' : 'Disabled'}}</pre>
                             </aside>
                         </div>
                     </div>

@@ -96,8 +96,14 @@ func OrderableFromString(v string) *TrafficStatsOrderable {
 type TrafficStatsExclude string
 
 const (
-	ExcludeSeries  TrafficStatsExclude = "series"
+	// ExcludeSeries can be used to omit the data series from a response.
+	ExcludeSeries TrafficStatsExclude = "series"
+
+	// ExcludeSummary can be used to omit the summary series from a response.
 	ExcludeSummary TrafficStatsExclude = "summary"
+
+	// ExcludeInvalid can be used if the the key that you want to exclude fails
+	// validation.
 	ExcludeInvalid TrafficStatsExclude = "INVALID"
 )
 
@@ -140,8 +146,9 @@ type TrafficCacheStatsConfig struct {
 	TrafficStatsConfig
 }
 
-// This is a stupid, dirty hack to try to convince Influx to not give back data that's outside of the
-// range in a WHERE clause. It doesn't work, but it helps.
+// OffsetString is a stupid, dirty hack to try to convince Influx to not
+// giveback data that's outside of the range in a WHERE clause. It doesn't work,
+// but it helps.
 // (https://github.com/influxdata/influxdb/issues/8010)
 func (c *TrafficStatsConfig) OffsetString() string {
 	iSecs, err := DurationLiteralToSeconds(c.Interval)
@@ -152,7 +159,8 @@ func (c *TrafficStatsConfig) OffsetString() string {
 	return fmt.Sprintf("%ds", int64(c.Start.Sub(time.Unix(0, 0))/time.Second)%iSecs)
 }
 
-// TrafficStatsResponse represents a response from the `/deliveryservice_stats` "Traffic Stats endpoints"
+// TrafficDSStatsResponse represents a response from the
+// deliveryservice_stats` "Traffic Stats" endpoints.
 type TrafficDSStatsResponse struct {
 	// Series holds the actual data - it is NOT in general the same as a github.com/influxdata/influxdb1-client/models.Row
 	Series *TrafficStatsSeries `json:"series,omitempty"`
@@ -191,7 +199,7 @@ type TrafficStatsSummary struct {
 	NinetyFifthPercentile  float64 `json:"ninetyFifthPercentile"`
 }
 
-// TrafficStatsSummary contains summary statistics for a data series for deliveryservice stats.
+// TrafficDSStatsSummary contains summary statistics for a data series for deliveryservice stats.
 type TrafficDSStatsSummary struct {
 	TrafficStatsSummary
 	// TotalBytes is the total number of bytes served when the "metric type" requested is "kbps"

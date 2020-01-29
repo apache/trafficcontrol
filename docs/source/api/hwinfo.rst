@@ -27,8 +27,8 @@
 :Roles Required: None
 :Response Type:  Array
 
-Request Structure:
-------------------
+Request Structure
+-----------------
 .. table:: Request Query Parameters
 
 	+----------------+----------+---------------------------------------------------------------------------------------------------------------+
@@ -61,7 +61,7 @@ Request Structure:
 
 .. caution:: The ``lastUpdated`` query parameter doesn't seem to work properly, and its use is therefore discouraged.
 
-.. code:: http
+.. code-block:: http
 	:caption: Request Example
 
 	GET /api/1.3/hwinfo HTTP/1.1

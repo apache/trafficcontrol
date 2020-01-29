@@ -3,7 +3,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [unreleased]
+### Added
+- Added a boolean to delivery service in Traffic Portal and Traffic Ops to enable EDNS0 client subnet at the delivery service level and include it in the cr-config.
+- Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
+- Added an optimistic quorum feature to Traffic Monitor to prevent false negative states from propagating to downstream components in the event of network isolation.
+- Traffic Ops Golang Endpoints
+  - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
+  - /api/1.5/to_extensions `(POST)`
+  - /api/1.5/stats_summary `(POST)`
+
+### Changed
+
+### Deprecated/Removed
+- Traffic Ops API Endpoints
+  - /servers/totals
+  - /cachegroups/:parameterID/parameter/available
+  - /cachegroup/:parameterID/parameter
+  - /api_capabilities/:id
+  - /regions/:region_name/phys_locations
+  - /parameters/validate
+  - /divisions/:division_name/regions
+  - /parameters/:id/unassigned_profiles
+  - /parameters/:id/profiles
+  - /cdns/:name/configs/routing
+  - /divisions/name/:name
+  - /hwinfo/dtdata
+  - /riak/stats
+
+## [4.0.0] - 2019-12-16
 ### Added
 - Traffic Router: TR now generates a self-signed certificate at startup and uses it as the default TLS cert.
   The default certificate is used whenever a client attempts an SSL handshake for an SNI host which does not match
@@ -24,7 +52,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.4/cdns/name/:name/dnsseckeys `GET`
   - /api/1.4/user/login/oauth `POST`
   - /api/1.1/servers/:name/configfiles/ats `GET`
+  - /api/1.1/servers/:id/queue_update `POST`
   - /api/1.1/profiles/:name/configfiles/ats/* `GET`
+  - /api/1.4/profiles/name/:name/copy/:copy
   - /api/1.1/servers/:name/configfiles/ats/* `GET`
   - /api/1.1/cdns/:name/configfiles/ats/* `GET`
   - /api/1.1/servers/:id/status `PUT`
@@ -38,7 +68,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/federations/:id/users/:userID
   - /api/1.2/current_stats
   - /api/1.1/osversions
+  - /api/1.1/stats_summary `GET`
+  - /api/1.1/api_capabilities `GET`
+  - /api/1.1/user/current `PUT`
+  - /api/1.1/federations/:id/federation_resolvers `(GET, POST)`
 
+- Traffic Router: Added a tunable bounded queue to support DNS request processing.
 - Traffic Ops API Routing Blacklist: via the `routing_blacklist` field in `cdn.conf`, enable certain whitelisted Go routes to be handled by Perl instead (via the `perl_routes` list) in case a regression is found in the Go handler, and explicitly disable any routes via the `disabled_routes` list. Requests to disabled routes are immediately given a 503 response. Both fields are lists of Route IDs, and route information (ID, version, method, path, and whether or not it can bypass to Perl) can be found by running `./traffic_ops_golang --api-routes`. To disable a route or have it bypassed to Perl, find its Route ID using the previous command and put it in the `disabled_routes` or `perl_routes` list, respectively.
 - To support reusing a single riak cluster connection, an optional parameter is added to riak.conf: "HealthCheckInterval". This options takes a 'Duration' value (ie: 10s, 5m) which affects how often the riak cluster is health checked.  Default is currently set to: "HealthCheckInterval": "5s".
 - Added a new Go db/admin binary to replace the Perl db/admin.pl script which is now deprecated and will be removed in a future release. The new db/admin binary is essentially a drop-in replacement for db/admin.pl since it supports all of the same commands and options; therefore, it should be used in place of db/admin.pl for all the same tasks.
@@ -60,7 +95,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added pagination support to some Traffic Ops endpoints via three new query parameters, limit and offset/page
 - Traffic Ops now supports a "sortOrder" query parameter on some endpoints to return API responses in descending order
 - Traffic Ops now uses a consistent format for audit logs across all Go endpoints
-- Added cache-side config generator, atstccfg, installed with ORT. Includes all configs.
+- Added cache-side config generator, atstccfg, installed with ORT. Includes all configs. Includes a plugin system.
+- Fixed ATS config generation to omit regex remap, header rewrite, URL Sig, and URI Signing files for delivery services not assigned to that server.
 - In Traffic Portal, all tables now include a 'CSV' link to enable the export of table data in CSV format.
 - Pylint configuration now enforced (present in [a file in the Python client directory](./traffic_control/clients/python/pylint.rc))
 - Added an optional SMTP server configuration to the TO configuration file, api now has unused abilitiy to send emails
@@ -72,6 +108,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added deep coverage zone routing percentage to the Traffic Portal dashboard.
 - Added a `traffic_ops/app/bin/osversions-convert.pl` script to convert the `osversions.cfg` file from Perl to JSON as part of the `/osversions` endpoint rewrite.
 - Added [Experimental] - Emulated Vault suppling a HTTP server mimicking RIAK behavior for usage as traffic-control vault.
+- Added Traffic Ops Client function that returns a Delivery Service Nullable Response when requesting for a Delivery Service by XMLID
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)
@@ -91,7 +128,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Monitor UI updated to support HTTP or HTTPS traffic.
 - Traffic Monitor health/stat time now includes full body download (like prior TM <=2.1 version)
 - Modified Traffic Router logging format to include an additional field for DNS log entries, namely `rhi`. This defaults to '-' and is only used when EDNS0 client subnet extensions are enabled and a client subnet is present in the request. When enabled and a subnet is present, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
-- Changed traffic_ops_ort.pl so that hdr_rw-<ds>.config files are compared with strict ordering and line duplication when detecting configuration changes.
+- Changed traffic_ops_ort.pl so that hdr_rw-&lt;ds&gt;.config files are compared with strict ordering and line duplication when detecting configuration changes.
 - Traffic Ops (golang), Traffic Monitor, Traffic Stats are now compiled using Go version 1.11. Grove was already being compiled with this version which improves performance for TLS when RSA certificates are used.
 - Fixed issue #3497: TO API clients that don't specify the latest minor version will overwrite/default any fields introduced in later versions
 - Fixed permissions on DELETE /api/$version/deliveryservice_server/{dsid}/{serverid} endpoint
@@ -113,11 +150,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed Traffic Ops Golang POST servers/id/deliveryservice double-logging errors.
 - Issue #4131 - The "Clone Delivery Service Assignments" menu item is hidden on a cache when the cache has zero delivery service assignments to clone.
 - Traffic Portal - Turn off TLSv1
+- Removed Traffic Portal dependency on Restangular
 
 ### Deprecated/Removed
-- Traffic Ops Golang Endpoints
+- Traffic Ops API Endpoints
   - /api/1.1/cachegroup_fallbacks
-  - /api/1.1/stats_summary/create
+  - /api_capabilities `POST`
 
 ## [3.0.0] - 2018-10-30
 ### Added
@@ -182,6 +220,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[Unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...HEAD
+[Unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...HEAD
+[4.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...RELEASE-4.0.0
 [3.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.2.0...RELEASE-3.0.0
 [2.2.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.1.0...RELEASE-2.2.0

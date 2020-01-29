@@ -177,3 +177,12 @@ func HashInts(ints []int, sortIntsBeforeHashing bool) []byte {
 	bts := sha512.Sum512(buf)
 	return bts[:]
 }
+
+// IntSliceToMap creates an int set from an array.
+func IntSliceToMap(s []int) map[int]struct{} {
+	m := map[int]struct{}{}
+	for _, v := range s {
+		m[v] = struct{}{}
+	}
+	return m
+}

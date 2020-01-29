@@ -29,41 +29,64 @@ Get all capabilities.
 
 Request Structure
 -----------------
-No available parameters
+.. table:: Request Query Parameters
+
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                         |
+	+===========+==========+=====================================================================================================================+
+	| name      | no       | Return only the capability that has this name                                                                       |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------------+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                            |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                                      |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with ``limit``            |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the |
+	|           |          | first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make   |
+	|           |          | use of ``page``.                                                                                                    |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------------+
+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/capabilities?name=test HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
 :name:        Name of the capability
-:description: Describes the APIs covered by the capability.
-:lastUpdated: Date and time of the last update made to this capability, in ISO format
+:description: Describes the permissions covered by the capability.
+:lastUpdated: Date and time of the last update made to this capability, in an ISO-like format
 
 .. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 20:26:19 GMT
-	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: zmjsQO3Y4r1/xCFOHB+E+8+bbgDyVcvoR0d4gKqqsWTFaUnxp2flIzuFqWjXf+wb4Bbd1e2Ojse4nQKnyIFKGw==
 	Transfer-Encoding: chunked
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: c18+GtX2ZI8PoCSwuAzBhl+6w3vDpKQTa/cDJC0WHxdpguOL378KBxGWW5PCSyZfJUb7wPyOL5qKMn6NNTufhg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Aug 2019 17:20:20 GMT
+	Content-Length: 161
 
 	{ "response": [
 		{
-			"name": "cdn-read",
-			"description": "View CDN configuration",
-			"lastUpdated": "2017-04-02 08:22:43"
-		},
-		{
-			"name": "cdn-write",
-			"description": "Create, edit or delete CDN configuration",
-			"lastUpdated": "2017-04-02 08:22:43"
+			"description": "This is only a test. If this were a real capability, it might do something",
+			"lastUpdated": "2019-08-15 17:18:03+00",
+			"name": "test"
 		}
 	]}
 
@@ -89,17 +112,18 @@ Request Structure
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 109
+	Content-Length: 73
 	Content-Type: application/json
 
 	{
-		"name": "test",
-		"description": "This is only a test. If this were a real capability, it might do something"
+		"name": "testquest",
+		"description": "A test capability for API examples"
 	}
 
 Response Structure
 ------------------
-:description: Describes the APIs covered by the capability.
+:description: Describes the permissions covered by the capability.
+:lastUpdated: Date and time of the last update made to this capability, in an ISO-like format
 :name:        Name of the capability
 
 .. code-block:: http
@@ -107,26 +131,28 @@ Response Structure
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 20:33:00 GMT
-	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Vary: Accept-Encoding
-	Whole-Content-Sha512: HhhQzw3JBLv90lOeeSGj75uknADanz3fUnQt1E266HAKPTFuTjuIJpf8ni9fb9Chv9LN7mt16utcHMbP8MBHZw==
-	Content-Length: 183
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 07 Jan 2020 20:06:18 GMT; Max-Age=3600; HttpOnly
+	X-Server-Name: traffic_ops_golang/
+	Date: Tue, 07 Jan 2020 19:06:18 GMT
+	Content-Length: 225
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Capability was created."
+			"text": "Capability created.",
+			"level": "success"
+		},
+		{
+			"text": "This endpoint is deprecated, and will be removed in the future",
+			"level": "warning"
 		}
 	],
 	"response": {
-		"name": "test",
-		"description": "This is only a test. If this were a real capability, it might do something"
+		"description": "A test capability for API examples",
+		"lastUpdated": "2020-01-07 19:06:18+00",
+		"name": "testquest"
 	}}
-

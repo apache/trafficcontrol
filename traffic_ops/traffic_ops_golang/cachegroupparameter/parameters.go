@@ -21,6 +21,7 @@ package cachegroupparameter
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -33,14 +34,16 @@ import (
 )
 
 const (
-	CacheGroupIDQueryParam = "id"
-	ParameterIDQueryParam  = "parameterId"
+	CacheGroupIDQueryParam      = "id"
+	CacheGroupIDNamedQueryParam = "cachegroupID"
+	ParameterIDQueryParam       = "parameterId"
 )
 
-//we need a type alias to define functions on
+// TOCacheGroupParameter is a type alias that is used to define CRUD functions on.
 type TOCacheGroupParameter struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CacheGroupParameterNullable
+	CacheGroupID int `json:"-" db:"cachegroup_id"`
 }
 
 func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
@@ -51,7 +54,7 @@ func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereC
 }
 
 func (cgparam *TOCacheGroupParameter) GetType() string {
-	return "cachegroup_params"
+	return "cachegroup parameter"
 }
 
 func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) {
@@ -108,4 +111,72 @@ p.secure
 FROM parameter p
 LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id`
 	return query
+}
+
+// GetKeyFieldsInfo implements the api.Identifier interface.
+func (cgparam *TOCacheGroupParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{
+		{
+			Field: CacheGroupIDNamedQueryParam,
+			Func:  api.GetIntKey,
+		},
+		{
+			Field: ParameterIDQueryParam,
+			Func:  api.GetIntKey,
+		},
+	}
+}
+
+// SetKeys implements the api.Identifier interface and allows the
+// delete handler to assign cachegroup and parameter ids.
+func (cgparam *TOCacheGroupParameter) SetKeys(keys map[string]interface{}) {
+	id, _ := keys[CacheGroupIDNamedQueryParam].(int)
+	cgparam.CacheGroupID = id
+
+	paramID, _ := keys[ParameterIDQueryParam].(int)
+	cgparam.ID = &paramID
+}
+
+// DeleteQuery implements the api.GenericDeleter interface.
+func (cgparam *TOCacheGroupParameter) DeleteQuery() string {
+	return `DELETE FROM cachegroup_parameter
+	WHERE cachegroup = :cachegroup_id AND parameter = :id`
+}
+
+// GetAuditName implements the api.Identifier interface.
+func (cgparam *TOCacheGroupParameter) GetAuditName() string {
+	if cgparam.ID != nil {
+		return strconv.Itoa(cgparam.CacheGroupID) + "-" + strconv.Itoa(*cgparam.ID)
+	}
+	return "unknown"
+}
+
+// GetKeys implements the api.Identifier interface.
+func (cgparam *TOCacheGroupParameter) GetKeys() (map[string]interface{}, bool) {
+	if cgparam.ID == nil {
+		return map[string]interface{}{ParameterIDQueryParam: 0}, false
+	}
+	return map[string]interface{}{
+		CacheGroupIDNamedQueryParam: cgparam.CacheGroupID,
+		ParameterIDQueryParam:       *cgparam.ID,
+	}, true
+}
+
+// Delete implements the api.CRUDer interface.
+func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
+	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgparam.ReqInfo.Tx.Tx, int64(cgparam.CacheGroupID))
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	} else if !ok {
+		return fmt.Errorf("cachegroup %v does not exist", cgparam.CacheGroupID), nil, http.StatusNotFound
+	}
+
+	_, ok, err = dbhelpers.GetParamNameByID(cgparam.ReqInfo.Tx.Tx, *cgparam.ID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	} else if !ok {
+		return fmt.Errorf("parameter %v does not exist", *cgparam.ID), nil, http.StatusNotFound
+	}
+
+	return api.GenericDelete(cgparam)
 }

@@ -18,12 +18,11 @@
 ******************************
 ``divisions/{{name}}/regions``
 ******************************
-.. deprecated:: 1.1
-	Use the ``divisionId`` field in the body of a ``POST`` request to the :ref:`to-api-divisions` endpoint
+.. deprecated:: ATCv4
 
 ``POST``
 ========
-Creates a new region within the specified division.
+Creates a new :term:`Region` within the specified :term:`Division`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -53,7 +52,7 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"name": "Greater_London",
+		"name": "Greater_London"
 	}
 
 Response Structure
@@ -85,4 +84,10 @@ Response Structure
 		"divsionId": 3,
 		"name": "Greater_London",
 		"id": 3
-	}}
+	},
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'POST /regions' instead"
+		}
+	]}

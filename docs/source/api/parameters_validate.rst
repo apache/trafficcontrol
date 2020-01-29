@@ -18,8 +18,7 @@
 ***********************
 ``parameters/validate``
 ***********************
-.. deprecated:: 1.1
-	To check for the existence of a :term:`Parameter` with a specific :ref:`parameter-name`, :ref:`parameter-value` etc., use the query parameters of the :ref:`to-api-parameters` endpoint instead.
+.. deprecated:: ATCv4
 
 ``POST``
 ========
@@ -83,6 +82,10 @@ Response Structure
 		{
 			"level": "success",
 			"text": "Parameter exists."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /parameters' instead"
 		}
 	],
 	"response": {
@@ -114,6 +117,10 @@ Response Structure
 		{
 			"level": "error",
 			"text": "parameter [name:fooa, config_file:records.config, value:bar] does not exist."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /parameters' instead"
 		}
 	]}
 
