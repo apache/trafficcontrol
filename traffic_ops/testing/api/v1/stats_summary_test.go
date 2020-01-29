@@ -82,7 +82,7 @@ func GetTestStatsSummaries(t *testing.T) {
 			expectedStatsSummaries: func() []tc.StatsSummary {
 				statsSummaries := []tc.StatsSummary{}
 				for _, ss := range testStatsSummaries {
-					if ss.StatName == "daily_bytesserved" {
+					if *ss.StatName == "daily_bytesserved" {
 						statsSummaries = append(statsSummaries, ss)
 					}
 				}
@@ -113,13 +113,13 @@ func GetTestStatsSummaries(t *testing.T) {
 			for _, ess := range tc.expectedStatsSummaries {
 				found := false
 				for _, ss := range tsr.Response {
-					if ess.StatName == ss.StatName && ess.SummaryTime.Equal(ss.SummaryTime) {
+					if *ess.StatName == *ss.StatName && ess.SummaryTime.Equal(ss.SummaryTime) {
 						found = true
 						break
 					}
 				}
 				if !found {
-					t.Errorf("expected to find stat %v in stats summary response", ess.StatName)
+					t.Errorf("expected to find stat %v in stats summary response", *ess.StatName)
 				}
 			}
 		})
@@ -150,8 +150,8 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 	}
 	for _, ss := range testStatsSummaries {
 		testCases = append(testCases, testCase{
-			description:       fmt.Sprintf("latest updated timestamp for - %v", ss.StatName),
-			stat:              util.StrPtr(ss.StatName),
+			description:       fmt.Sprintf("latest updated timestamp for - %v", *ss.StatName),
+			stat:              ss.StatName,
 			errExpected:       false,
 			expectedTimestamp: ss.SummaryTime,
 		})
@@ -175,5 +175,4 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 			}
 		})
 	}
-
 }

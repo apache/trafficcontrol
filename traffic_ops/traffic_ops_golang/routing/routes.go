@@ -587,6 +587,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// Stats Summary
 		{1.1, http.MethodGet, `stats_summary/?(\.json)?$`, trafficstats.GetStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380498598, perlBypass},
+		{1.5, http.MethodPost, `stats_summary/?(\.json)?$`, trafficstats.CreateStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380491598, noPerlBypass},
 
 		// TO Extensions
 		{1.5, http.MethodPost, `to_extensions$`, toextension.CreateTOExtension, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, noPerlBypass},

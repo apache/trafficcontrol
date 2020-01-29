@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops Golang Endpoints
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
   - /api/1.5/to_extensions `(POST)`
+  - /api/1.5/stats_summary `(POST)`
 
 ### Changed
 
