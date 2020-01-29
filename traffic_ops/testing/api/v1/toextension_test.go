@@ -87,10 +87,7 @@ func DeleteTestTOExtensions(t *testing.T) {
 
 	extensions, _, err := TOSession.GetTOExtensions()
 	if err != nil {
-		t.Errorf("could not get to_extensions: %v", err)
-	}
-	if len(extensions.Response) != len(testData.TOExtensions) {
-		t.Errorf("%v to_extensions returned - expected %v", len(extensions.Response), len(testData.TOExtensions))
+		t.Fatalf("could not get to_extensions: %v", err)
 	}
 
 	ids := []int{}
@@ -117,10 +114,21 @@ func DeleteTestTOExtensions(t *testing.T) {
 	}
 	extensions, _, err = TOSession.GetTOExtensions()
 	if err != nil {
-		t.Errorf("could not get to_extensions: %v", err)
+		t.Fatalf("could not get to_extensions: %v", err)
 	}
-	if len(extensions.Response) != 0 {
-		t.Errorf("%v to_extensions returned - expected %v", len(extensions.Response), 0)
+
+	for _, ext := range testData.TOExtensions {
+		found := false
+		for _, respTOExt := range extensions.Response {
+			if *ext.Name == *respTOExt.Name {
+				found = true
+				continue
+			}
+		}
+		if found {
+			t.Errorf("to_extension %v should have been deleted", *ext.Name)
+		}
 	}
+
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
