@@ -78,7 +78,7 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "warning",
-			"text": "This endpoint is deprecated, please use 'GET /capabilities with the 'name' query paramter' instead"
+			"text": "This endpoint is deprecated, please use 'GET /capabilities with the 'name' query parameter' instead"
 		}
 	],
 	"response": [

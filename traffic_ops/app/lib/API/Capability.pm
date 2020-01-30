@@ -46,7 +46,7 @@ sub name {
 	my $self = shift;
 	my $name = $self->param('name');
 
-	my $alt = "GET /capabilities with the 'name' query paramter";
+	my $alt = "GET /capabilities with the 'name' query parameter";
 
 	my $rs_data = $self->db->resultset("Capability")->search( 'me.name' => $name );
 	if ( !defined($rs_data) ) {
