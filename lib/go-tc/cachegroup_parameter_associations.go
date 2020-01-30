@@ -26,19 +26,36 @@ type AllCacheGroupParametersResponse struct {
 }
 
 type CacheGroupParametersList struct {
-	CacheGroupParameters []CacheGroupParametersNullable `json:"cachegroupParameters"`
+	CacheGroupParameters []CacheGroupParametersResponseNullable `json:"cachegroupParameters"`
 }
 
 // CacheGroupParameter ...
 type CacheGroupParameters struct {
-	CacheGroup  int       `json:"cachegroupId"  db:"cachegroup"`
+	CacheGroup  int       `json:"cacheGroupId"  db:"cachegroup"`
 	Parameter   int       `json:"parameterId"  db:"parameter"`
 	LastUpdated TimeNoMod `json:"lastUpdated,omitempty"  db:"last_updated"`
 }
 
 // CacheGroupParameterNullable ...
 type CacheGroupParametersNullable struct {
-	CacheGroup  *int       `json:"cachegroupId"  db:"cachegroup"`
+	CacheGroup  *int       `json:"cacheGroupId"  db:"cachegroup"`
 	Parameter   *int       `json:"parameterId"  db:"parameter"`
 	LastUpdated *TimeNoMod `json:"lastUpdated,omitempty"  db:"last_updated"`
+}
+
+// CacheGroupParameterResponseNullable ...
+type CacheGroupParametersResponseNullable struct {
+	CacheGroup  *int       `json:"cachegroup"  db:"cachegroup"`
+	Parameter   *int       `json:"parameter"  db:"parameter"`
+	LastUpdated *TimeNoMod `json:"last_updated,omitempty"  db:"last_updated"`
+}
+
+// FormatForResponse converts a CacheGroupParametersNullable to CacheGroupParametersResponseNullable
+// in order to format the output the same as the Perl endpoint.
+func FormatForResponse(param CacheGroupParametersNullable) CacheGroupParametersResponseNullable {
+	cgResp := CacheGroupParametersResponseNullable{}
+	cgResp.Parameter = param.Parameter
+	cgResp.CacheGroup = param.CacheGroup
+	cgResp.LastUpdated = param.LastUpdated
+	return cgResp
 }

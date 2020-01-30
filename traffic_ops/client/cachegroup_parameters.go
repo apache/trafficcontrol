@@ -68,12 +68,12 @@ func (to *Session) getCacheGroupParameters(route, queryParams string) ([]tc.Cach
 }
 
 // GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
-func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersNullable, ReqInf, error) {
+func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
 	route := fmt.Sprintf("%s/", API_v1_CacheGroupParameters)
 	return to.getAllCacheGroupParameters(route, "")
 }
 
-func (to *Session) getAllCacheGroupParameters(route, queryParams string) ([]tc.CacheGroupParametersNullable, ReqInf, error) {
+func (to *Session) getAllCacheGroupParameters(route, queryParams string) ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
 	r := fmt.Sprintf("%s/%s", route, queryParams)
 	resp, remoteAddr, err := to.request(http.MethodGet, r, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}

@@ -186,6 +186,7 @@ func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
 	return api.GenericDelete(cgparam)
 }
 
+// ReadAllCacheGroupParameters reads all cachegroup parameter associations.
 func ReadAllCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -201,18 +202,13 @@ func ReadAllCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, output)
 }
 
+// GetAllCacheGroupParameters gets all cachegroup associations from the database and returns as slice.
 func GetAllCacheGroupParameters(tx *sql.Tx) (tc.CacheGroupParametersList, error) {
 	parameters := map[string]string{
 		"orderby": "cachegroup",
 	}
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"cachegroup":  dbhelpers.WhereColumnInfo{"cachegroup", api.IsInt},
-		"lastUpdated": dbhelpers.WhereColumnInfo{"last_updated", nil},
-		"parameter":   dbhelpers.WhereColumnInfo{"parameter", api.IsInt},
-	}
-	where, orderBy, pagination, _, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
+
+	where, orderBy, pagination, _, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, nil)
 	if len(errs) > 0 {
 		return tc.CacheGroupParametersList{}, util.JoinErrs(errs)
 	}
@@ -225,18 +221,20 @@ func GetAllCacheGroupParameters(tx *sql.Tx) (tc.CacheGroupParametersList, error)
 	defer rows.Close()
 
 	paramsList := tc.CacheGroupParametersList{}
-	params := []tc.CacheGroupParametersNullable{}
+	params := []tc.CacheGroupParametersResponseNullable{}
 	for rows.Next() {
 		var p tc.CacheGroupParametersNullable
 		if err = rows.Scan(&p.CacheGroup, &p.Parameter, &p.LastUpdated); err != nil {
 			return tc.CacheGroupParametersList{}, errors.New("scanning cachegroupParameters: " + err.Error())
 		}
-		params = append(params, p)
+		params = append(params, tc.FormatForResponse(p))
 	}
 	paramsList.CacheGroupParameters = params
 	return paramsList, nil
 }
 
+// AddCacheGroupParameters performs a Create for cachegroup parameter associations.
+// AddCacheGroupParameters accepts data as a single association or an array of multiple.
 func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -245,13 +243,18 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	data, _ := ioutil.ReadAll(r.Body)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("reading request body: "+err.Error()), nil)
+		return
+	}
+
 	buf := ioutil.NopCloser(bytes.NewReader(data))
 
 	var paramsInt interface{}
 
 	decoder := json.NewDecoder(buf)
-	err := decoder.Decode(&paramsInt)
+	err = decoder.Decode(&paramsInt)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing json: "+err.Error()), nil)
 		return
@@ -285,7 +288,8 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	_, err = inf.Tx.Tx.Query(insertQuery() + insQuery)
 
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("writing cachegroup parameter: "+err.Error()))
+		userErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
 		return
 	}
 
@@ -293,7 +297,7 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 }
 
 func selectAllQuery() string {
-	return `SELECT * FROM cachegroup_parameter`
+	return `SELECT cachegroup, parameter, last_updated FROM cachegroup_parameter`
 }
 
 func insertQuery() string {
