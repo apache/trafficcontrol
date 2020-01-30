@@ -63,9 +63,9 @@ Response Properties
 			"name": "CDN-in-a-Box"
 		}
 	],
-    "alerts": [
-        {
-            "text": "This endpoint is deprecated, please use GET /cdns instead",
-            "level": "warning"
-        }
-    ]}
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /cdns instead",
+			"level": "warning"
+		}
+	]}

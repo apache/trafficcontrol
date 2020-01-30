@@ -25,7 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-//we need a type alias to define functions on
+// TOCDNConf used as a type alias to define functions on to satisfy shared API REST interfaces.
 type TOCDNConf struct {
 	api.APIInfoImpl `json:"-"`
 }
