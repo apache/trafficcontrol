@@ -83,7 +83,7 @@ func GetTestHdrRwDotConfigWithNewline(t *testing.T) {
 
 	filename := fmt.Sprintf("%s_%s.config", EdgeHdrRwPrefix, *ds.XMLID)
 	config, _, _ := TOSession.GetATSCDNConfig(*ds.CDNID, filename)
-
+	*ds.EdgeHeaderRewrite = fmt.Sprintf("%s%s", "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections 100\n", *ds.EdgeHeaderRewrite)
 	expectedLines := getExpectedLines(*ds.EdgeHeaderRewrite)
 	count := strings.Count(config, "\n")
 	if expectedLines != count {
@@ -103,7 +103,7 @@ func GetTestHdrRwDotConfig(t *testing.T) {
 
 	filename := fmt.Sprintf("%s_%s.config", EdgeHdrRwPrefix, *ds.XMLID)
 	config, _, _ := TOSession.GetATSCDNConfig(*ds.CDNID, filename)
-
+	*ds.EdgeHeaderRewrite = fmt.Sprintf("%s%s", "cond %{REMAP_PSEUDO_HOOK}__RETURN__set-config proxy.config.http.origin_max_connections 100__RETURN__", *ds.EdgeHeaderRewrite)
 	expectedLines := getExpectedLines(*ds.EdgeHeaderRewrite)
 	count := strings.Count(config, "\n")
 	if expectedLines != count {
