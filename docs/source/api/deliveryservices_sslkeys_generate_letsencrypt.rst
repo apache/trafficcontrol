@@ -19,7 +19,7 @@
 ``deliveryservices/sslkeys/generate/letsencrypt``
 *************************************************
 
-.. versionadded:: 1.4
+.. versionadded:: 1.5
 
 ``POST``
 ========

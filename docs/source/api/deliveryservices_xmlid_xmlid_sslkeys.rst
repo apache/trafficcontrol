@@ -75,7 +75,7 @@ Response Structure
 
 :expiration:      The expiration date of the certificate for the :term:`Delivery Service`
 
-	.. versionadded:: 1.4
+	.. versionadded:: 1.5
 
 .. code-block:: http
 	:caption: Response Example

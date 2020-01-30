@@ -69,8 +69,8 @@ func GetDeliveryServiceSSLKeysObj(xmlID string, version string, tx *sql.Tx, auth
 	return key, found, nil
 }
 
-func GetDeliveryServiceSSLKeysObjV14(xmlID string, version string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.DeliveryServiceSSLKeysV14, bool, error) {
-	key := tc.DeliveryServiceSSLKeysV14{}
+func GetDeliveryServiceSSLKeysObjV15(xmlID string, version string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.DeliveryServiceSSLKeysV15, bool, error) {
+	key := tc.DeliveryServiceSSLKeysV15{}
 	found := false
 	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		// get the deliveryservice ssl keys by xmlID and version

@@ -182,7 +182,7 @@ func GetSSLKeysByHostNameV14(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	getSSLKeysByXMLIDHelperV14(xmlID, inf, w, r)
+	getSSLKeysByXMLIDHelperV15(xmlID, inf, w, r)
 }
 
 func getXmlIdFromHostname(inf *api.APIInfo, hostName string) (string, bool, error) {
@@ -264,7 +264,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 }
 
 // GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID. V14 includes expiration date.
-func GetSSLKeysByXMLIDV14(w http.ResponseWriter, r *http.Request) {
+func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -276,17 +276,17 @@ func GetSSLKeysByXMLIDV14(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	xmlID := inf.Params["xmlid"]
-	getSSLKeysByXMLIDHelperV14(xmlID, inf, w, r)
+	getSSLKeysByXMLIDHelperV15(xmlID, inf, w, r)
 }
 
-func getSSLKeysByXMLIDHelperV14(xmlID string, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+func getSSLKeysByXMLIDHelperV15(xmlID string, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	version := inf.Params["version"]
 	decode := inf.Params["decode"]
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV14(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
 		return

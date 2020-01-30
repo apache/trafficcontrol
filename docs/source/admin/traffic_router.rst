@@ -707,7 +707,7 @@ Let’s Encrypt is a free, automated :abbr:`CA (Certificate Authority)` using :a
 #. Traffic Ops stores the certificate and key in Traffic Vault and removes the DNS challenge record.
 #. The Traffic Router watcher removes the TXT record.
 
-Let's Encrypt can be set up through :file:`/opt/traffic_ops/app/conf/cdn.conf` by updating the following fields:
+Let's Encrypt can be set up through :ref:`cdn.conf` by updating the following fields:
 
 .. table:: Fields to update for Let's Encrypt under `lets_encrypt`
 

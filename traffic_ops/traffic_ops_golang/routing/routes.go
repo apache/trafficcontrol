@@ -967,7 +967,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/{id}/servers/eligible/?(\.json)?$`, deliveryservice.GetServersEligible, auth.PrivLevelReadOnly, Authenticated, nil, 474761584, noPerlBypass},
 
-		{api.Version{1, 4}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLIDV14, auth.PrivLevelAdmin, Authenticated, nil, 1135772906, noPerlBypass},
+		{api.Version{1, 5}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLIDV15, auth.PrivLevelAdmin, Authenticated, nil, 1135772906, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLID, auth.PrivLevelAdmin, Authenticated, nil, 1135772907, noPerlBypass},
 		{api.Version{1, 4}, http.MethodGet, `deliveryservices/hostname/{hostname}/sslkeys$`, deliveryservice.GetSSLKeysByHostNameV14, auth.PrivLevelAdmin, Authenticated, nil, 2105792224, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/hostname/{hostname}/sslkeys$`, deliveryservice.GetSSLKeysByHostName, auth.PrivLevelAdmin, Authenticated, nil, 2105792225, noPerlBypass},
@@ -981,9 +981,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?(\.json)?$`, apiriak.GetBucketKey, auth.PrivLevelAdmin, Authenticated, nil, 2020510801, noPerlBypass},
 
 		//Delivery service LetsEncrypt
-		{api.Version{1, 4}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?(\.json)?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelReadOnly, Authenticated, nil, 753439052, noPerlBypass},
-		{api.Version{1, 4}, http.MethodGet, `letsencrypt/dnsrecords/?(\.json)?$`, deliveryservice.GetDnsChallengeRecords, auth.PrivLevelReadOnly, Authenticated, nil, 753439055, noPerlBypass},
-		{api.Version{1, 4}, http.MethodPost, `letsencrypt/autorenew/?(\.json)?$`, deliveryservice.RenewCertificates, auth.PrivLevelOperations, Authenticated, nil, 753439056, noPerlBypass},
+		{api.Version{1, 5}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?(\.json)?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelReadOnly, Authenticated, nil, 753439052, noPerlBypass},
+		{api.Version{1, 5}, http.MethodGet, `letsencrypt/dnsrecords/?(\.json)?$`, deliveryservice.GetDnsChallengeRecords, auth.PrivLevelReadOnly, Authenticated, nil, 753439055, noPerlBypass},
+		{api.Version{1, 5}, http.MethodPost, `letsencrypt/autorenew/?(\.json)?$`, deliveryservice.RenewCertificates, auth.PrivLevelOperations, Authenticated, nil, 753439056, noPerlBypass},
 
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/{id}/health/?(\.json)?$`, deliveryservice.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 2034590101, perlBypass},
 

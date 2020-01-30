@@ -19,7 +19,7 @@
 ``letsencrypt/dnsrecords``
 **************************
 
-.. versionadded:: 1.4
+.. versionadded:: 1.5
 
 ``GET``
 ========
