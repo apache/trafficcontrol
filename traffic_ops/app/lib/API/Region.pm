@@ -69,7 +69,7 @@ sub index_by_name {
 			}
 		);
 	}
-	$self->success( \@data );
+	$self->deprecation(200, 'GET /regions?name={{name}}', \@data);
 }
 
 sub show {
