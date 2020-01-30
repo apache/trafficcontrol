@@ -57,11 +57,13 @@ func getFirstDnsOrHttpDeliveryService(t *testing.T) *tc.DeliveryServiceNullable 
 		default:
 			continue
 		}
-
+		if ds.MaxOriginConnections != nil && *ds.MaxOriginConnections > 0 {
+			continue // MaxOriginConnections adds lines to the Header Rewrite, throwing the tests (we test MaxOriginConns remap lines separately in GetTestHdrRwDotConfigMaxOriginConns).
+		}
 		return &ds
 	}
 
-	t.Errorf("Cannot test hdr_rw_dot_config with no http or dns deliveryservices: %s", err)
+	t.Errorf("Cannot test hdr_rw_dot_config with no http or dns deliveryservices without maxOriginConnections: %s", err)
 	return nil
 
 }
