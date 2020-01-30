@@ -78,10 +78,12 @@ Response Structure
 			},
 			"enabled": false
 		},
-		{
-			"level": "warning",
-			"text": "This endpoint and its functionality is deprecated, and will be removed in the future"
-		}}
+		"alerts": [
+			{
+				"text": "This endpoint is deprecated, please use GET /jobs with the 'id' parameter instead",
+				"level": "warning"
+			}
+		]}
 
 
 
