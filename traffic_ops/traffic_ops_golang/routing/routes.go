@@ -180,7 +180,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `cdns/metric_types`, notImplementedHandler, 0, NoAuth, nil, 683165463, noPerlBypass}, // MUST NOT end in $, because the 1.x route is longer
 
 		{1.1, http.MethodGet, `cdns/capacity$`, cdn.GetCapacity, auth.PrivLevelReadOnly, Authenticated, nil, 697185281, perlBypass},
-		{1.1, http.MethodGet, `cdns/configs/?(\.json)?$`, cdn.GetConfigs, auth.PrivLevelReadOnly, Authenticated, nil, 1768437852, noPerlBypass},
+		{1.1, http.MethodGet, `cdns/configs/?(\.json)?$`, api.DeprecatedReadHandler(&cdn.TOCDNConf{}, util.StrPtr("GET /cdns")), auth.PrivLevelReadOnly, Authenticated, nil, 1768437852, noPerlBypass},
 
 		{1.1, http.MethodGet, `cdns/{name}/health/?(\.json)?$`, cdn.GetNameHealth, auth.PrivLevelReadOnly, Authenticated, nil, 1135348194, perlBypass},
 		{1.1, http.MethodGet, `cdns/health/?(\.json)?$`, cdn.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 1085381134, perlBypass},

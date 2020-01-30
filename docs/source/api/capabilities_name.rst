@@ -18,9 +18,14 @@
 *************************
 ``capabilities/{{name}}``
 *************************
+.. deprecated:: ATCv4
+	As of ATC version 4.0, every method of this endpoint is deprecated. See each method for details.
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	This method of this endpoint is deprecated, please use the 'name' parameter of a ``GET`` request to :ref:`to-api-capabilities` instead.
+
 Get a capability by name.
 
 :Auth. Required: Yes
@@ -37,6 +42,16 @@ Request Structure
 	| name | The name of the capability of interest |
 	+------+----------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.5/capabilities/testquest HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
 :description: Describes the APIs covered by the capability
@@ -52,25 +67,34 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
+	Content-Length: 221
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 20:37:17 GMT
+	Date: Wed, 29 Jan 2020 20:49:49 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; expires=Thu, 30 Jan 2020 00:49:49 GMT; path=/; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: 0YBTC5TEAOJ6B8gsaKgOD1ni2hnZ8Kh9u2JhcmExoGIPaMEKpp4Omr4FglkOQZuh/IB90eJjBMNMeCEvZCxWRg==
-	Content-Length: 167
 
-	{ "response": [
+	{ "alerts": [
 		{
-			"lastUpdated": "2018-11-14 20:33:00.275376+00",
-			"name": "test",
-			"description": "This is only a test. If this were a real capability, it might do something"
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /capabilities with the 'name' query parameter' instead"
+		}
+	],
+	"response": [
+		{
+			"lastUpdated": "2020-01-29 20:10:53.821978+00",
+			"name": "testquest",
+			"description": "A test capability for API examples"
 		}
 	]}
 
 
 ``PUT``
 =======
+.. deprecated:: ATCv4
+	This method of this endpoint is deprecated. In the future, Capabilities will be immutable, and so no alternative is offered.
+
 Edit a capability.
 
 :Auth. Required: Yes
@@ -92,15 +116,15 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.4/capabilities/test HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	PUT /api/1.5/capabilities/testquest HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
-	Content-Length: 45
-	Content-Type: application/json
+	Content-Length: 36
 
-	{"description": "A much shorter description"}
+	{"description": "A new description"}
 
 Response Structure
 ------------------
@@ -117,29 +141,36 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
+	Content-Length: 224
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 20:40:33 GMT
+	Date: Wed, 29 Jan 2020 21:25:10 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; expires=Thu, 30 Jan 2020 01:25:10 GMT; path=/; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: +5mLZ/CJnDkJMbnFviXtVdjwt4bu7ykiMIs73zsnuKV/k4q/d025b2pjYDQkSgtfWPJ73FcusAuBM9TCVT3KsA==
-	Content-Length: 181
 
 	{ "alerts": [
 		{
 			"level": "success",
 			"text": "Capability was updated."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint and its functionality is deprecated, and will be removed in the future"
 		}
 	],
 	"response": {
-		"lastUpdated": "2018-11-14 20:33:00.275376+00",
-		"name": "test",
-		"description": "A much shorter description"
+		"lastUpdated": "2020-01-29 21:24:56.361518+00",
+		"name": "testquest",
+		"description": "A new description"
 	}}
 
 
 ``DELETE``
 ==========
+.. deprecated:: ATCv4
+	This method of this endpoint is deprecated. In the future, Capabilities will be immutable, and so no alternative is offered.
+
 Delete a capability.
 
 :Auth. Required: Yes
@@ -156,6 +187,18 @@ Request Structure
 	| ``name``        | yes      | Capability name.                               |
 	+-----------------+----------+------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.5/capabilities/testquest HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+	Content-Length: 0
+
+
 Response Structure
 ------------------
 .. code-block:: http
@@ -167,18 +210,21 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
+	Content-Length: 146
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 20:45:37 GMT
+	Date: Wed, 29 Jan 2020 21:27:57 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; expires=Thu, 30 Jan 2020 01:27:57 GMT; path=/; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: IlAiV4ebwTpMIgeYlR5RuwOhwmHsFs8Ekt7AaEDb3v+lXjvjkqU98xFsfNWvpvPbT/iJnotENhtVq8TVdvoPLg==
-	Content-Length: 61
 
 	{ "alerts": [
 		{
 			"level": "success",
 			"text": "Capability deleted."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint and its functionality is deprecated, and will be removed in the future"
 		}
 	]}
-
