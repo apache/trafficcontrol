@@ -745,7 +745,7 @@ sub api_routes {
 	$r->put("/api/$version/regions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Region#update', namespace => $namespace );
 	$r->post("/api/$version/regions")->over( authenticated => 1, not_ldap => 1 )->to( 'Region#create', namespace => $namespace );
 	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1, not_ldap => 1 )->to( 'Region#create_for_division', namespace => $namespace );
-	$r->delete("/api/$version/regions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Region#delete', namespace => $namespace );
+	$r->delete("/api/$version/regions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Region#delete_by_id', namespace => $namespace );
 	$r->delete("/api/$version/regions/name/:name")->over( authenticated => 1, not_ldap => 1 )->to( 'Region#delete_by_name', namespace => $namespace );
 
 	# -- ROLES

@@ -301,6 +301,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `regions/name/{name}/?(\.json)?$`, region.GetName, auth.PrivLevelReadOnly, Authenticated, nil, 503583197, noPerlBypass},
 		{1.1, http.MethodPut, `regions/{id}$`, api.UpdateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 226308224, noPerlBypass},
 		{1.1, http.MethodPost, `regions/?$`, api.CreateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 1288334488, noPerlBypass},
+		{1.1, http.MethodDelete, `regions/name/{name}$`, handlerToFunc(proxyHandler), auth.PrivLevelOperations, Authenticated, nil, 1925881096, noPerlBypass},
 		{1.1, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 1181575271, noPerlBypass},
 
 		{1.1, http.MethodDelete, `deliveryservice_server/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 1532184523, noPerlBypass},

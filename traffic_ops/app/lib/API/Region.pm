@@ -220,7 +220,7 @@ sub create_for_division {
 	return $self->with_deprecation("create region " . $params->{name} . " failed.", "error", 400, $alt);
 }
 
-sub delete {
+sub delete_by_id {
 	my $self = shift;
 	my $id     = $self->param('id');
 
@@ -244,6 +244,7 @@ sub delete {
 sub delete_by_name {
 	my $self = shift;
 	my $name     = $self->param('name');
+	my $alt		 = 'DELETE /regions?name={{name}}';
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
@@ -251,14 +252,14 @@ sub delete_by_name {
 
 	my $region = $self->db->resultset('Region')->find( { name => $name } );
 	if ( !defined($region) ) {
-		return $self->not_found();
+		return $self->with_deprecation("Resource not found.", "error", 404, $alt);
 	}
 
 	my $rs = $region->delete();
 	if ($rs) {
-		return $self->success_message("Region deleted.");
+		return $self->with_deprecation("Region deleted.", "success", 200, $alt);
 	} else {
-		return $self->alert( "Region delete failed." );
+		return $self->with_deprecation( "Region delete failed.", "error", 400, $alt);
 	}
 }
 
