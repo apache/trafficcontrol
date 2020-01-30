@@ -23,7 +23,7 @@ To add a plugin, create a new `.go` file in the `traffic_ops_golang/plugin` dire
 
 The filename, sans `.go`, is the name of your plugin, and will be the key used for configuration in the remap file. For example, if your file is `f49e54fc-fd17-4e1c-92c6-67028fde8504-hello-world.go`, the name of your plugin is `f49e54fc-fd17-4e1c-92c6-67028fde8504-hello-world`.
 
-Plugins are registered via calls to `AddPlugin` inside an `init` function in the plugin's file. The `AddPlugin` function takes a priority, a set of hook functions, a description and a version of the plugin. The priority is the order in which plugins are called, starting from 0. Note the priority of plugins included with Traffic Control use a base priority of 10000, unless priority order matters for them.
+Plugins are registered via calls to `AddPlugin` inside an `init` function in the plugin's file. The `AddPlugin` function takes a priority, a set of hook functions, a description, and a version of the plugin. The priority is the order in which plugins are called, starting from 0. Note the priority of plugins included with Traffic Control use a base priority of 10000, unless priority order matters for them.
 
 The `Funcs` object contains functions for each hook, as well as a load function for loading configuration from the remap file. The current hooks are `load`, `startup`, and `onRequest`. If your plugin does not use a hook, it may be nil.
 

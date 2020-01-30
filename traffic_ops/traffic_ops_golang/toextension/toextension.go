@@ -235,6 +235,7 @@ func GetTOExtensionsHandler(plugins plugin.Plugins) http.HandlerFunc {
 				Version:     &pi.Version,
 				Description: &pi.Description,
 				Type:        util.StrPtr("TO_PLUGIN"),
+				IsActive:    util.IntPtr(1),
 			})
 		}
 
