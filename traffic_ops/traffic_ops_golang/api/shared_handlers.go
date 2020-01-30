@@ -20,10 +20,12 @@ package api
  */
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -395,34 +397,123 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Creator)
 		obj.SetInfo(inf)
 
-		err := decodeAndValidateRequestBody(r, obj)
-		if err != nil {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-			return
-		}
-
-		if t, ok := obj.(Tenantable); ok {
-			authorized, err := t.IsTenantAuthorized(inf.User)
+		if c, ok := obj.(AllowMultipleCreates); ok && c.AllowMultipleCreates() {
+			data, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 				return
 			}
-			if !authorized {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+
+			objSlice, err := parseMultipleCreates(data, objectType, inf)
+			if err != nil {
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 				return
 			}
-		}
 
-		userErr, sysErr, errCode = obj.Create()
-		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
-		}
+			for _, objElemInt := range objSlice {
+				objElem := reflect.ValueOf(objElemInt).Interface().(Creator)
 
-		if err = CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
-			return
+				err = objElem.Validate()
+				if err != nil {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+					return
+				}
+
+				if t, ok := objElem.(Tenantable); ok {
+					authorized, err := t.IsTenantAuthorized(inf.User)
+					if err != nil {
+						HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+						return
+					}
+					if !authorized {
+						HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+						return
+					}
+				}
+
+				userErr, sysErr, errCode = objElem.Create()
+				if userErr != nil || sysErr != nil {
+					HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+					return
+				}
+
+				if err = CreateChangeLog(ApiChange, Created, objElem, inf.User, inf.Tx.Tx); err != nil {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+					return
+				}
+			}
+			if len(objSlice) == 1 {
+				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+" was created.", objSlice[0])
+			} else {
+				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+"s were created.", objSlice)
+			}
+
+		} else {
+			err := decodeAndValidateRequestBody(r, obj)
+			if err != nil {
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+				return
+			}
+
+			if t, ok := obj.(Tenantable); ok {
+				authorized, err := t.IsTenantAuthorized(inf.User)
+				if err != nil {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+					return
+				}
+				if !authorized {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+					return
+				}
+			}
+
+			userErr, sysErr, errCode = obj.Create()
+			if userErr != nil || sysErr != nil {
+				HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+				return
+			}
+
+			if err = CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+				return
+			}
+			WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was created.", obj)
 		}
-		WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was created.", obj)
 	}
+}
+
+func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *APIInfo) ([]Creator, error) {
+	buf := ioutil.NopCloser(bytes.NewReader(data))
+
+	var genericInt interface{}
+	err := json.NewDecoder(buf).Decode(&genericInt)
+	if err != nil {
+		return nil, err
+	}
+
+	var creatorSlice []Creator
+
+	_, ok := genericInt.([]interface{})
+	var parseErr error = nil
+	if !ok {
+		singleCreator := reflect.New(desiredType).Interface().(Creator)
+		singleCreator.SetInfo(inf)
+		parseErr = json.Unmarshal(data, &singleCreator)
+		creatorSlice = append(creatorSlice, singleCreator)
+	} else {
+		sliceOfT := reflect.SliceOf(desiredType)
+		ptr := reflect.New(sliceOfT)
+		parseErr = json.Unmarshal(data, ptr.Interface())
+
+		for i := 0; i < reflect.Indirect(ptr).Len(); i++ {
+			singleCreator := reflect.Indirect(ptr).Index(i).Addr().Interface().(Creator)
+			singleCreator.SetInfo(inf)
+			creatorSlice = append(creatorSlice, singleCreator)
+		}
+	}
+	if parseErr != nil {
+		return nil, parseErr
+	}
+
+	return creatorSlice, nil
 }

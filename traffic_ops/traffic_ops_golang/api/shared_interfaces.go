@@ -59,6 +59,10 @@ type Creator interface {
 	Validator
 }
 
+type AllowMultipleCreates interface {
+	AllowMultipleCreates() bool
+}
+
 type Reader interface {
 	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
 	Read() ([]interface{}, error, error, int)
