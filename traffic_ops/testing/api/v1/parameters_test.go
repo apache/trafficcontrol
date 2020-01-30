@@ -45,6 +45,20 @@ func CreateTestParameters(t *testing.T) {
 
 }
 
+func CreateMultipleTestParameters(t *testing.T) {
+
+	pls := []tc.Parameter{}
+	for _, pl := range testData.Parameters {
+		pls = append(pls, pl)
+	}
+	resp, _, err := TOSession.CreateMultipleParameters(pls)
+	log.Debugln("Response: ", resp)
+	if err != nil {
+		t.Errorf("could not CREATE parameters: %v", err)
+	}
+
+}
+
 func UpdateTestParameters(t *testing.T) {
 
 	firstParameter := testData.Parameters[0]

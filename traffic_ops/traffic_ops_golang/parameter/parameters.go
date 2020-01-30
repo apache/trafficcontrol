@@ -52,6 +52,7 @@ type TOParameter struct {
 	tc.ParameterNullable
 }
 
+func (v *TOParameter) AllowMultipleCreates() bool    { return true }
 func (v *TOParameter) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOParameter) InsertQuery() string           { return insertQuery() }
 func (v *TOParameter) NewReadObj() interface{}       { return &tc.ParameterNullable{} }
