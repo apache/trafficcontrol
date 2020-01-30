@@ -17,7 +17,8 @@
 ****************
 ``cdns/configs``
 ****************
-
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-cdns` instead.
 .. danger:: This endpoint does not appear to work, and thus its use is strongly discouraged!
 
 ``GET``
@@ -34,9 +35,37 @@ No parameters available.
 
 Response Properties
 -------------------
-:config_file: Presumably the name of some configuration file\ [1]_
 :id:          The integral, unique identifier for this CDN
 :name:        The CDN's name
-:value:       Presumably the content of some configuration file\ [1]_
 
-.. [1] These values are currently missing from this endpoint's output. **DO NOT count on this endpoint to provide this information**.
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: z9P1NkxGebPncUhaChDHtYKYI+XVZfhE6Y84TuwoASZFIMfISELwADLpvpPTN+wwnzBfREksLYn+0313QoBWhA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:46:57 GMT
+	Content-Length: 237
+
+	{ "response": [
+		{
+			"id": 1,
+			"name": "ALL"
+		},
+		{
+			"id": 2,
+			"name": "CDN-in-a-Box"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /cdns instead",
+			"level": "warning"
+		}
+	]}
