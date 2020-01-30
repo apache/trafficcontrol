@@ -188,7 +188,7 @@ sub register {
 	);
 
 	$app->renderer->add_helper(
-		alert_with_deprecation_with_no_alternative => sub {
+		with_deprecation_with_no_alternative => sub {
 			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
 			my $alert = shift || confess("Please supply an alert string");
 			my $level = shift || confess("Please supply an alert level such as 'error' or 'warning'");
