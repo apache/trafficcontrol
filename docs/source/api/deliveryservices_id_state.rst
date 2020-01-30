@@ -18,6 +18,7 @@
 *********************************
 ``deliveryservices/{{ID}}/state``
 *********************************
+.. deprecated:: ATCv4
 
 ``GET``
 =======
@@ -76,7 +77,13 @@ Response Structure
 				"enabled": false
 			},
 			"enabled": false
-		}}
+		},
+		"alerts": [
+			{
+				"text": "This endpoint is deprecated, please use GET /jobs with the 'id' parameter instead",
+				"level": "warning"
+			}
+		]}
 
 
 

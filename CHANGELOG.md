@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /jobs/:id
   - /riak/stats
   - /stats_summary/create
+  - /deliveryservices/:id/state
   - /cdns/configs
 
 ## [4.0.0] - 2019-12-16
