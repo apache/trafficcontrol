@@ -21,7 +21,7 @@ import (
 )
 
 func init() {
-	AddPlugin(10000, Funcs{load: helloConfigLoad, onStartup: helloConfigStartup})
+	AddPlugin(10000, Funcs{load: helloConfigLoad, onStartup: helloConfigStartup}, "example plugin for loading and using config file data", "1.0.0")
 }
 
 type HelloConfig struct {

@@ -22,6 +22,9 @@
 
 ``GET``
 =======
+.. versionchanged:: 1.5
+	Starting in version 1.5 ``to_extensions`` returns stored extensions as well as configured TO Plugins. Prior ``to_extensions`` would return stored extensions as well as perl extensions, whose info would be loaded dynamically.
+
 Retrieves the list of Traffic Ops extensions.
 
 :Auth. Required: Yes
@@ -30,7 +33,39 @@ Retrieves the list of Traffic Ops extensions.
 
 Request Structure
 -----------------
-No parameters available.
+.. table:: Request Query Parameters
+
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| Name             | Required | Description                                                                                                                  |
+	+==================+==========+==============================================================================================================================+
+	| id               | no       | Filter TO Extensions by the integral, unique identifier of an Extension                                                      |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| name             | no       | Filter TO Extensions by the name of an Extension                                                                             |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| script_file      | no       | Filter TO Extensions by the base filename of the script that runs for the Extension                                          |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| isactive         | no       | Boolean used to return either only active (1) or inactive(0) TO Extensions                                                   |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| type             | no       | Filter TO Extensions by the type of Extension                                                                                |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder        | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                     |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| limit            | no       | Choose the maximum number of results to return                                                                               |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| offset           | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit.                        |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| page             | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first    |
+	|                  |          | page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``. |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.5/to_extensions HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
@@ -54,7 +89,11 @@ Response Structure
 
 	.. note:: This field has meaning only for "Check Extensions"
 
-:type:    The :term:`Type` of extension - there are a set number of allowed values which are not recorded anywhere at the time of this writing
+:type:    The Check :term:`Type` of the extension.
+
+	.. versionchanged:: 1.5
+		Since ``to_extensions`` returns configured TO Plugins in 1.5, this type will either be the stored extension type or ``TO_PLUGIN`` for TO Plugins.
+
 :version: A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http

@@ -23,7 +23,7 @@ import (
 )
 
 func init() {
-	AddPlugin(10000, Funcs{onRequest: helloMiddleware})
+	AddPlugin(10000, Funcs{onRequest: helloMiddleware}, "example middleware plugin", "1.0.0")
 }
 
 const HelloMiddlewarePath = "/_hello_middleware"
