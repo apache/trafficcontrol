@@ -21,7 +21,6 @@ package cachegroupparameter
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,6 +29,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -194,7 +196,7 @@ func ReadAllCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	output, err := GetAllCacheGroupParameters(inf.Tx.Tx)
+	output, err := GetAllCacheGroupParameters(inf.Tx, inf.Params)
 	if err != nil {
 		api.WriteRespAlertObj(w, r, tc.ErrorLevel, "querying cachegroupparameters with error: "+err.Error(), output)
 		return
@@ -203,18 +205,28 @@ func ReadAllCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllCacheGroupParameters gets all cachegroup associations from the database and returns as slice.
-func GetAllCacheGroupParameters(tx *sql.Tx) (tc.CacheGroupParametersList, error) {
-	parameters := map[string]string{
-		"orderby": "cachegroup",
+func GetAllCacheGroupParameters(tx *sqlx.Tx, parameters map[string]string) (tc.CacheGroupParametersList, error) {
+	if _, ok := parameters["orderby"]; !ok {
+		parameters["orderby"] = "cachegroup"
 	}
 
-	where, orderBy, pagination, _, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, nil)
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"cachegroup": dbhelpers.WhereColumnInfo{"cgp.cachegroup", api.IsInt},
+		"parameter":  dbhelpers.WhereColumnInfo{"cgp.parameter", api.IsInt},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return tc.CacheGroupParametersList{}, util.JoinErrs(errs)
 	}
 
+	log.Errorf("MATT JACKSON queryparams = %s", queryValues)
+	log.Errorf("MATT JACKSON parameters = %s", parameters)
+	log.Errorf("MATT JACKSON query = %s", selectAllQuery()+where+orderBy+pagination)
 	query := selectAllQuery() + where + orderBy + pagination
-	rows, err := tx.Query(query)
+	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return tc.CacheGroupParametersList{}, errors.New("querying cachegroupParameters: " + err.Error())
 	}
@@ -224,7 +236,7 @@ func GetAllCacheGroupParameters(tx *sql.Tx) (tc.CacheGroupParametersList, error)
 	params := []tc.CacheGroupParametersResponseNullable{}
 	for rows.Next() {
 		var p tc.CacheGroupParametersNullable
-		if err = rows.Scan(&p.CacheGroup, &p.Parameter, &p.LastUpdated); err != nil {
+		if err = rows.Scan(&p.CacheGroup, &p.Parameter, &p.LastUpdated, &p.CacheGroupName); err != nil {
 			return tc.CacheGroupParametersList{}, errors.New("scanning cachegroupParameters: " + err.Error())
 		}
 		params = append(params, tc.FormatForResponse(p))
@@ -297,7 +309,10 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 }
 
 func selectAllQuery() string {
-	return `SELECT cachegroup, parameter, last_updated FROM cachegroup_parameter`
+	return `SELECT cgp.cachegroup, cgp.parameter, cgp.last_updated, cg.name 
+				FROM cachegroup_parameter AS cgp 
+				JOIN cachegroup AS cg ON cg.id = cachegroup`
+	//return `SELECT cachegroup, parameter, last_updated FROM cachegroup_parameter`
 }
 
 func insertQuery() string {

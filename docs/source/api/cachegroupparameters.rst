@@ -29,7 +29,15 @@ Extract information about the :ref:`cache-group-parameters` associated with :ter
 
 Response Structure
 ------------------
-No available parameters
+.. table:: Request Query Parameters
+
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                                          |
+	+=============+==========+======================================================================================================================================+
+	| cachegroup  | no       | Show only the :ref:`cache-group-parameters` with the :term:`Cache Group` identified by this integral, unique identifier              |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| parameter   | no       | Show only the :ref:`cache-group-parameters` with the :term:`Parameter` identified by this integral, unique identifier                |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -123,11 +131,11 @@ Array Format
 	Content-Type: application/json
 
 	[{
-		"cachegroupId": 8,
+		"cacheGroupId": 8,
 		"parameterId": 124
 	},
 	{
-		"cachegroupId": 8,
+		"cacheGroupId": 8,
 		"parameterId": 125
 	}]
 
