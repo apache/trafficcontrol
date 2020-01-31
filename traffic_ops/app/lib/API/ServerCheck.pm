@@ -55,7 +55,7 @@ sub aadata {
 		);
 		push( @{ $data{'aaData'} }, \@line );
 	}
-	return $self->render( json => \%data );
+	return $self->deprecation_with_no_alternative(200, \%data);
 }
 
 # read for not crazy Datatables
