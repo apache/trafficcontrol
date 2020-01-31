@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cdns/configs
   - /servercheck/aadata
   - /types/trimmed
+  - /deliveryservice_user/:dsId/:userId
 
 ## [4.0.0] - 2019-12-16
 ### Added

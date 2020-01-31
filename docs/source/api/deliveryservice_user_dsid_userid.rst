@@ -18,6 +18,7 @@
 ********************************************
 ``deliveryservice_user/{{dsID}}/{{userID}}``
 ********************************************
+.. deprecated:: ATCv4
 
 ``DELETE``
 ==========
@@ -62,5 +63,9 @@ Response Structure
 		{
 			"level": "success",
 			"text": "User [ test ] unlinked from deliveryservice [ 1 | demo1 ]."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint and its functionality is deprecated, and will be removed in the future"
 		}
 	]}
