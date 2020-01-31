@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /stats_summary/create
   - /deliveryservices/:id/state
   - /cdns/configs
+  - /traffic_monitor/stats
 
 ## [4.0.0] - 2019-12-16
 ### Added
