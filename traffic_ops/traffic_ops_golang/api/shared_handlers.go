@@ -157,7 +157,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			userErr = logErr(r, http.StatusInternalServerError, userErr, sysErr)
+			userErr = LogErr(r, http.StatusInternalServerError, userErr, sysErr)
 			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
 			WriteAlerts(w, r, errCode, alerts)
 			return
@@ -165,7 +165,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 
 		interfacePtr := reflect.ValueOf(reader)
 		if interfacePtr.Kind() != reflect.Ptr {
-			userErr = logErr(r, http.StatusInternalServerError, nil, errors.New(" reflect: can only indirect from a pointer"))
+			userErr = LogErr(r, http.StatusInternalServerError, nil, errors.New(" reflect: can only indirect from a pointer"))
 			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
 			WriteAlerts(w, r, errCode, alerts)
 			return
@@ -177,7 +177,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 
 		results, userErr, sysErr, errCode := obj.Read()
 		if userErr != nil || sysErr != nil {
-			userErr = logErr(r, http.StatusInternalServerError, userErr, sysErr)
+			userErr = LogErr(r, http.StatusInternalServerError, userErr, sysErr)
 			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
 			WriteAlerts(w, r, errCode, alerts)
 			return

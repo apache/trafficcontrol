@@ -19,7 +19,7 @@ package invalidationjobs
  * under the License.
  */
 
-import "encoding/json"
+import "database/sql"
 import "errors"
 import "fmt"
 import "net/http"
@@ -27,7 +27,7 @@ import "strconv"
 import "time"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/lib/go-rfc"
+import "github.com/apache/trafficcontrol/lib/go-log"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 const userReadQuery = `
@@ -62,28 +62,36 @@ type response struct {
 // Creates a new job for the current user (via POST request to `/user/current/jobs`)
 // this uses its own special format encoded in the tc.UserInvalidationJobInput structure
 func CreateUserJob(w http.ResponseWriter, r *http.Request) {
+	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, please use the POST method /jobs instead")
+
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		userErr = api.LogErr(r, errCode, userErr, sysErr)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 	defer inf.Close()
 
 	job := tc.UserInvalidationJobInput{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &job); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, fmt.Errorf("error parsing jobs POST body: %v", err))
+		userErr = api.LogErr(r, http.StatusBadRequest, err, fmt.Errorf("error parsing jobs POST body: %v", err))
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, http.StatusBadRequest, alerts)
 		return
 	}
 
 	if ok, err := IsUserAuthorizedToModifyDSID(inf, *job.DSID); err != nil {
-		sysErr = fmt.Errorf("Checking user permissions on DS #%d: %v", *job.DSID, err)
+		err = fmt.Errorf("Checking user permissions on DS #%d: %v", *job.DSID, err)
 		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		userErr = api.LogErr(r, errCode, nil, err)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	} else if !ok {
-		userErr = errors.New("No such Delivery Service!")
-		errCode = http.StatusNotFound
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		userErr = api.LogErr(r, http.StatusNotFound, errors.New("No such Delivery Service!"), nil)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 
@@ -106,52 +114,53 @@ func CreateUserJob(w http.ResponseWriter, r *http.Request) {
 		&result.StartTime)
 	if err != nil {
 		userErr, sysErr, code := api.ParseDBError(err)
-		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
+		userErr = api.LogErr(r, code, userErr, sysErr)
+		if err := inf.Tx.Tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Errorln("rolling back transaction: " + err.Error())
+		}
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, code, alerts)
 		return
 	}
 
 	if err := setRevalFlags(*job.DSID, inf.Tx.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval flags: %v", err))
+		errCode = http.StatusInternalServerError
+		alerts.AddNewAlert(tc.ErrorLevel, api.LogErr(r, errCode, nil, fmt.Errorf("setting reval flags: %v", err)).Error())
+		if err := inf.Tx.Tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Errorln("rolling back transaction: " + err.Error())
+		}
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 
-	respObj := apiResponse{
-		[]tc.Alert{
-			tc.Alert{
-				Level: tc.SuccessLevel.String(),
-				Text:  "Invalidation Job creation was successful.",
-			},
-			api.DeprecationWarning("POST /jobs"),
-		},
-		result,
-	}
-	resp, err := json.Marshal(respObj)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Marshaling JSON: %v", err))
-		return
-	}
-
-	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	alerts.AddNewAlert(tc.SuccessLevel, "Invalidation Job creation was successful")
 	w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
-	w.WriteHeader(http.StatusOK)
-	w.Write(append(resp, '\n'))
-
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, result)
 	api.CreateChangeLogRawTx(api.ApiChange, api.Created+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
 }
 
 // Gets all jobs that were created by the requesting user, and returns them in
 // in a special format encoded in the tc.UserInvalidationJob structure
 func GetUserJobs(w http.ResponseWriter, r *http.Request) {
+	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, please use the 'userId' or 'createdBy' query parameters of a GET request to /jobs instead")
+
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		userErr = api.LogErr(r, errCode, userErr, sysErr)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 	defer inf.Close()
 
 	rows, err := inf.Tx.Query(userReadQuery, inf.User.ID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Fetching user jobs: %v", err))
+		userErr = api.LogErr(r, http.StatusInternalServerError, nil, fmt.Errorf("Fetching user jobs: %v", err))
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		// if err := inf.Tx.Tx.Rollback(); err != nil && err != sql.ErrTxDone {
+		// 	log.Errorln("rolling back transaction: " + err.Error())
+		// }
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
 	defer rows.Close()
@@ -172,7 +181,9 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 			&j.Parameters)
 
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Parsing user job DB row: %v", err))
+			userErr = api.LogErr(r, http.StatusInternalServerError, nil, fmt.Errorf("Parsing user job DB row: %v", err))
+			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+			api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 			return
 		}
 
@@ -180,7 +191,8 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := rows.Err(); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Parsing user job DB rows: %v", err))
+		userErr = api.LogErr(r, http.StatusInternalServerError, nil, fmt.Errorf("Parsing user job DB rows: %v", err))
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
 
@@ -190,25 +202,14 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 	for _, j := range jobs {
 		ok, err := IsUserAuthorizedToModifyDSXMLID(inf, *j.DeliveryService)
 		if err != nil {
-			sysErr = fmt.Errorf("Checking user permissions for DS %s: %v", *j.DeliveryService, err)
 			errCode = http.StatusInternalServerError
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+			userErr = api.LogErr(r, errCode, nil, fmt.Errorf("Checking user permissions for DS %s: %v", *j.DeliveryService, err))
+			api.WriteAlerts(w, r, errCode, alerts)
 			return
 		} else if ok {
 			filtered = append(filtered, j)
 		}
 	}
 
-	type userResponse struct {
-		Alerts   []tc.Alert               `json:"alerts"`
-		Response []tc.UserInvalidationJob `json:"response"`
-	}
-
-	resp, err := json.Marshal(userResponse{[]tc.Alert{api.DeprecationWarning("GET /jobs?userId=")}, filtered})
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("encoding user jobs response: %v", err))
-		return
-	}
-	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
-	w.Write(append(resp, '\n'))
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, filtered)
 }

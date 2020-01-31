@@ -135,10 +135,10 @@ func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode in
 	handleSimpleErr(w, r, statusCode, userErr, sysErr)
 }
 
-// logErr handles the logging of errors and setting up possibly nil errors without actually writing anything to a
+// LogErr handles the logging of errors and setting up possibly nil errors without actually writing anything to a
 // http.ResponseWriter, unlike handleSimpleErr. It returns the userErr which will be initialized to the
 // http.StatusText of errCode if it was passed as nil - otherwise left alone.
-func logErr(r *http.Request, errCode int, userErr error, sysErr error) error {
+func LogErr(r *http.Request, errCode int, userErr error, sysErr error) error {
 	if sysErr != nil {
 		log.Errorf(r.RemoteAddr + " " + sysErr.Error())
 	}
@@ -153,7 +153,7 @@ func logErr(r *http.Request, errCode int, userErr error, sysErr error) error {
 // handleSimpleErr is a helper for HandleErr.
 // This exists to prevent exposing HandleErr calls in this file with nil transactions, which might be copy-pasted creating bugs.
 func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, userErr error, sysErr error) {
-	userErr = logErr(r, statusCode, userErr, sysErr)
+	userErr = LogErr(r, statusCode, userErr, sysErr)
 
 	respBts, err := json.Marshal(tc.CreateErrorAlerts(userErr))
 	if err != nil {

@@ -146,16 +146,17 @@ sub get_current_user_jobs {
 		}
 	}
 
-	return $self->success($response);
+	return $self->deprecation(200, "the 'userId' or 'createdBy' query parameters of a GET request to /jobs", $response);
 }
 
 # Creates a purge job based upon the Deliveryservice (ds_id) instead
 # of the ds_xml_id like the UI does.
 sub create_current_user_job {
 	my $self = shift;
+	my $alt = "the POST method of /jobs";
 
 	if (!&is_portal($self)) {
-		return $self->forbidden();
+		return $self->with_deprecation("Forbidden", "error", 403, $alt);
 	}
 
 	my $ds_id      = $self->req->json->{dsId};
@@ -165,16 +166,16 @@ sub create_current_user_job {
 
 	my ( $is_valid, $result ) = $self->is_valid( { dsId => $ds_id, regex => $regex, startTime => $start_time, ttl => $ttl } );
 	if ( !$is_valid ) {
-		return $self->alert($result);
+		return $self->with_deprecation($result, "error", 400, $alt);
 	}
 
 	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
 	if ( !defined($ds) ) {
-		return $self->not_found();
+		return $self->with_deprecation("Resource not found.", "error", 404, $alt);
 	}
 	my $org_server_fqdn = UI::DeliveryService::compute_org_server_fqdn($self, $ds_id);
 	if ( !defined($org_server_fqdn) ) {
-		return $self->alert("cannot invalidate content: requested delivery service has no origin");
+		return $self->with_deprecation("cannot invalidate content: requested delivery service has no origin", "error", 400, $alt);
 	}
 
 	my $tenant_utils = Utils::Tenant->new($self);
@@ -182,11 +183,11 @@ sub create_current_user_job {
 
 	if ( $tenant_utils->use_tenancy() ) {
 		if ( !$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id) ) {
-			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+			return $self->with_deprecation("Forbidden. Delivery-service tenant is not available to the user.", "error", 403, $alt);
 		}
 	} else {
 		if ( !&is_oper($self) && !$self->is_delivery_service_assigned($ds_id) ) {
-			return $self->forbidden();
+			return $self->with_deprecation("Forbidden", "error", 403, $alt);
 		}
 	}
 
@@ -199,10 +200,10 @@ sub create_current_user_job {
 		my $asset_url = $saved_job->asset_url;
 		my $msg = "Invalidate content request submitted for " . $ds->xml_id() . " [ $asset_url - " . $saved_job->parameters . " ]";
 		&log( $self, $msg, "APICHANGE" );
-		return $self->success_message( $msg );
+		return $self->with_deprecation( $msg, "success", 200, $alt );
 	}
 	else {
-		return $self->alert( { "Error creating invalidate content request" . $ds_id } );
+		return $self->with_deprecation( ("Error creating invalidate content request" . $ds_id), "error", 400, $alt );
 	}
 }
 
