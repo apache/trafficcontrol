@@ -55,7 +55,7 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "warning",
-			"text": "This endpoint is deprecated"
+			"text": "This endpoint is deprecated, please use '/types' instead"
 		}
 	],
 	"response": [

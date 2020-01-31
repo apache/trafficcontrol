@@ -62,7 +62,7 @@ sub index_trimmed {
 			}
 		);
 	}
-	$self->success_deprecate( \@data );
+	$self->deprecate( 200, "/types", \@data );
 }
 
 sub show {
