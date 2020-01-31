@@ -30,7 +30,7 @@ sub index {
 		next unless ( $row->type->name ne 'CHECK_EXTENSION_OPEN_SLOT' );    # Open slots are not in the list
 		push(
 			@data, {
-				id                     => $row->id,
+				id                     => $row->id + 0,
 				name                   => $row->name,
 				version                => $row->version,
 				info_url               => $row->info_url,
@@ -62,7 +62,7 @@ sub index {
 
 		push(
 			@data, {
-				id                     => $row->id,
+				id                     => $row->id + 0,
 				name                   => $info->{name},
 				version                => $info->{version},
 				info_url               => $info->{info_url},
