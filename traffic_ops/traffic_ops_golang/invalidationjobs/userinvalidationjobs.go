@@ -157,9 +157,6 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		userErr = api.LogErr(r, http.StatusInternalServerError, nil, fmt.Errorf("Fetching user jobs: %v", err))
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		// if err := inf.Tx.Tx.Rollback(); err != nil && err != sql.ErrTxDone {
-		// 	log.Errorln("rolling back transaction: " + err.Error())
-		// }
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
