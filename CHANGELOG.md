@@ -38,6 +38,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /deliveryservices/:id/state
   - /cdns/configs
   - /traffic_monitor/stats
+  - /servercheck/aadata
+  - /types/trimmed
 
 ## [4.0.0] - 2019-12-16
 ### Added
