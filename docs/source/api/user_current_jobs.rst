@@ -96,7 +96,13 @@ Response Structure
 	Date: Wed, 19 Jun 2019 13:23:18 GMT
 	Content-Length: 747
 
-	{ "response": [{
+	{ "alerts": [
+		{
+			"text": "This endpoint is deprecated, please use the 'userId' or 'createdBy' query parameters of a GET request to /jobs instead",
+			"level": "warning"
+		}
+	],
+	"response": [{
 		"agent": 1,
 		"assetType": "file",
 		"assetUrl": "http://origin.infra.ciab.test/.*",
@@ -185,15 +191,21 @@ Response Structure
 	Date: Wed, 19 Jun 2019 13:19:51 GMT
 	Content-Length: 235
 
-	{ "alerts": [{
-		"text": "Invalidation Job creation was successful.",
-		"level": "success"
-	}],
+	{ "alerts": [
+		{
+			"text": "This endpoint is deprecated, please use the POST method /jobs instead",
+			"level": "warning"
+		},
+		{
+			"text": "Invalidation Job creation was successful",
+			"level": "success"
+		}
+	],
 	"response": {
 		"assetUrl": "http://origin.infra.ciab.test/.*",
 		"createdBy": "admin",
 		"deliveryService": "demo1",
-		"id": 3,
+		"id": 1,
 		"keyword": "PURGE",
 		"parameters": "TTL:3h",
 		"startTime": "2019-06-21 00:00:00+00"
