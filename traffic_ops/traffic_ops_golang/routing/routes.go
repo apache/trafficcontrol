@@ -361,6 +361,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Get, auth.PrivLevelReadOnly, Authenticated, nil, 211047475, noPerlBypass},
 
 		//Type: CRUD
+		{1.1, http.MethodGet, `types/trimmed/?(\.json)?$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 666, noPerlBypass},
 		{1.1, http.MethodGet, `types/?(\.json)?$`, api.ReadHandler(&types.TOType{}), auth.PrivLevelReadOnly, Authenticated, nil, 2026701823, noPerlBypass},
 		{1.1, http.MethodGet, `types/{id}$`, api.ReadHandler(&types.TOType{}), auth.PrivLevelReadOnly, Authenticated, nil, 86037256, noPerlBypass},
 		{1.1, http.MethodPut, `types/{id}$`, api.UpdateHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 68860115, noPerlBypass},

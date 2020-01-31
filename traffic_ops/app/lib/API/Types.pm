@@ -62,7 +62,7 @@ sub index_trimmed {
 			}
 		);
 	}
-	$self->success( \@data );
+	$self->success_deprecate( \@data );
 }
 
 sub show {
