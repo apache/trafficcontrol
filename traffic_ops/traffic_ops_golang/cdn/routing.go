@@ -20,20 +20,40 @@ package cdn
  */
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
+type (
+	routerResp struct {
+		Error error
+		Stats tc.CRSStats
+	}
+	RouterData struct {
+		StatTotal tc.CRSStatsStat
+		Total     uint64
+	}
+)
+
+const (
+	RouterProxyParameter = "tm.traffic_rtr_fwd_proxy"
+	RouterRequestTimeout = time.Second * 10
+	RouterOnlineStatus   = "ONLINE"
+)
+
 func GetRouting(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -41,10 +61,6 @@ func GetRouting(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 	api.RespWriter(w, r, inf.Tx.Tx)(getRouting(inf.Tx.Tx))
 }
-
-const RouterProxyParameter = "tm.traffic_rtr_fwd_proxy"
-const RouterRequestTimeout = time.Second * 10
-const RouterOnlineStatus = "ONLINE"
 
 func getRouting(tx *sql.Tx) (tc.CDNRouting, error) {
 	routers, err := getCDNRouterFQDNs(tx)
@@ -65,30 +81,46 @@ func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string) (tc.CDNRouti
 		if err != nil {
 			return tc.CDNRouting{}, errors.New("router forward proxy '" + forwardProxy + "' in parameter '" + RouterProxyParameter + "' not a URI: " + err.Error())
 		}
-		client = &http.Client{Timeout: RouterRequestTimeout, Transport: &http.Transport{Proxy: http.ProxyURL(proxyURI)}}
+		clientTransport := &http.Transport{Proxy: http.ProxyURL(proxyURI)}
+		// Disable HTTP/2. Go Transport Proxy does not support H2 Servers, and if the server does support it, the client will fail.
+		// See https://github.com/golang/go/issues/26479 "We only support http1 proxies currently."
+		clientTransport.TLSNextProto = make(map[string]func(authority string, c *tls.Conn) http.RoundTripper)
+		client = &http.Client{Timeout: RouterRequestTimeout, Transport: clientTransport}
 	}
 
-	dat := RouterData{}
+	count := 0
+	for _, routerFQDNs := range routers {
+		count += len(routerFQDNs)
+	}
+
+	resp := make(chan routerResp, count)
+
+	wg := sync.WaitGroup{}
+	wg.Add(count)
+
 	for cdn, routerFQDNs := range routers {
 		for _, routerFQDN := range routerFQDNs {
-			crsStats := tc.CRSStats{}
-			if err := getCRSStats(routerFQDN, client, &crsStats); err != nil {
-				return tc.CDNRouting{}, errors.New("getting crs stats for CDN '" + string(cdn) + "' router '" + routerFQDN + "': " + err.Error())
-			}
-			dat = addCRSStats(dat, crsStats)
+			go getCRSStats(resp, &wg, routerFQDN, string(cdn), client)
 		}
+	}
+
+	wg.Wait()
+	close(resp)
+
+	dat := RouterData{}
+
+	for r := range resp {
+		if r.Error != nil {
+			return tc.CDNRouting{}, err
+		}
+		dat = addCRSStats(dat, r.Stats)
 	}
 	return sumRouterData(dat), nil
 }
 
-type RouterData struct {
-	StatTotal tc.CRSStatsStat
-	Total     uint64
-}
-
 func sumRouterData(d RouterData) tc.CDNRouting {
 	if d.Total == 0 {
-		return tc.CDNRouting{} // TODO warn?
+		return tc.CDNRouting{}
 	}
 	return tc.CDNRouting{
 		CZ:                float64(d.StatTotal.CZCount) / float64(d.Total) * 100.0,
@@ -105,7 +137,13 @@ func sumRouterData(d RouterData) tc.CDNRouting {
 }
 
 func addCRSStats(d RouterData, stats tc.CRSStats) RouterData {
+	// DNSMap
 	for _, stat := range stats.Stats.DNSMap {
+		d.StatTotal = sumCRSStat(d.StatTotal, stat)
+		d.Total += totalCRSStat(stat)
+	}
+	// HTTPMap
+	for _, stat := range stats.Stats.HTTPMap {
 		d.StatTotal = sumCRSStat(d.StatTotal, stat)
 		d.Total += totalCRSStat(stat)
 	}
@@ -140,17 +178,23 @@ func sumCRSStat(a, b tc.CRSStatsStat) tc.CRSStatsStat {
 	}
 }
 
-func getCRSStats(routerFQDN string, client *http.Client, stats interface{}) error {
-	path := `/crs/stats`
-	resp, err := client.Get("http://" + routerFQDN + path)
+func getCRSStats(respond chan<- routerResp, wg *sync.WaitGroup, routerFQDN, cdn string, client *http.Client) {
+	defer wg.Done()
+	r := routerResp{}
+	resp, err := client.Get("http://" + routerFQDN + "/crs/stats")
 	if err != nil {
-		return errors.New("getting crs stats from router '" + routerFQDN + "': " + err.Error())
+		r.Error = fmt.Errorf("getting crs stats for CDN %s router %s: %v", cdn, routerFQDN, err)
+		respond <- r
+		return
 	}
-	defer resp.Body.Close()
-	if err := json.NewDecoder(resp.Body).Decode(stats); err != nil {
-		return errors.New("decoding stats from router '" + routerFQDN + "': " + err.Error())
+	stats := tc.CRSStats{}
+	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
+		r.Error = fmt.Errorf("decoding stats from CDN %s router %s: %v", cdn, routerFQDN, err)
+		respond <- r
+		return
 	}
-	return nil
+	r.Stats = stats
+	respond <- r
 }
 
 func getRouterForwardProxy(tx *sql.Tx) (string, error) {
@@ -198,21 +242,4 @@ GROUP BY s.host_name, s.domain_name, c.name
 		routers[tc.CDNName(cdn)] = append(routers[tc.CDNName(cdn)], fqdn)
 	}
 	return routers, nil
-}
-
-// getGlobalParams returns the value of the global param, whether it existed, or any error
-func getGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
-	return getParam(tx, name, "global")
-}
-
-// getGlobalParams returns the value of the param, whether it existed, or any error.
-func getParam(tx *sql.Tx, name string, configFile string) (string, bool, error) {
-	val := ""
-	if err := tx.QueryRow(`select value from parameter where name = $1 and config_file = $2`, name, configFile).Scan(&val); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("Error querying global paramter '" + name + "': " + err.Error())
-	}
-	return val, true, nil
 }

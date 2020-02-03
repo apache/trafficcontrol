@@ -186,7 +186,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `cdns/health/?(\.json)?$`, cdn.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 1085381134, perlBypass},
 
 		{1.1, http.MethodGet, `cdns/domains/?(\.json)?$`, cdn.DomainsHandler, auth.PrivLevelReadOnly, Authenticated, nil, 296902560, noPerlBypass},
-		{1.1, http.MethodGet, `cdns/routing$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 66722982, noPerlBypass},
+		{1.1, http.MethodGet, `cdns/routing$`, cdn.GetRouting, auth.PrivLevelOperations, Authenticated, nil, 66722982, noPerlBypass},
 
 		//CDN: CRUD
 		{1.1, http.MethodGet, `cdns/?(\.json)?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 1345914650, noPerlBypass},
