@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /servercheck/aadata
   - /types/trimmed
   - /deliveryservice_user/:dsId/:userId
+  - /deliveryservice_user
   - /user/current/jobs
 
 ## [4.0.0] - 2019-12-16

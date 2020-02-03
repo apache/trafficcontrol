@@ -18,6 +18,7 @@
 ************************
 ``deliveryservice_user``
 ************************
+.. deprecated:: ATCv4
 
 ``POST``
 ========
@@ -73,6 +74,10 @@ Response Structure
 		{
 			"level": "success",
 			"text": "Delivery service assignments complete."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint and its functionality is deprecated, and will be removed in the future"
 		}
 	],
 	"response": {
