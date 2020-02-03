@@ -17,66 +17,60 @@
  * under the License.
  */
 
-var OriginService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
+var OriginService = function($http, locationUtils, messageModel, ENV) {
 
     this.getOrigins = function(queryParams) {
-        return Restangular.all('origins').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'origins', {params: queryParams}).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        );
     };
 
     this.createOrigin = function(origin) {
-        var request = $q.defer();
-
-        $http.post(ENV.api['root'] + "origins", origin)
-            .then(
-                function(response) {
-                    messageModel.setMessages(response.data.alerts, true);
-                    locationUtils.navigateToPath('/origins');
-                    request.resolve(response);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false)
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.post(ENV.api['root'] + 'origins', origin).then(
+            function(response) {
+                messageModel.setMessages(response.data.alerts, true);
+                locationUtils.navigateToPath('/origins');
+                return response;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false)
+                throw err;
+            }
+        );
     };
 
     this.updateOrigin = function(id, origin) {
-        var request = $q.defer();
-
-        $http.put(ENV.api['root'] + "origins?id=" + id, origin)
-            .then(
-                function(response) {
-                    messageModel.setMessages(response.data.alerts, false);
-                    request.resolve();
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject();
-                }
-            );
-        return request.promise;
+        return $http.put(ENV.api['root'] + "origins", origin, {params: {id: id}}).then(
+            function(response) {
+                messageModel.setMessages(response.data.alerts, false);
+                return response;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.deleteOrigin = function(id) {
-        var deferred = $q.defer();
-
-        $http.delete(ENV.api['root'] + "origins?id=" + id)
-            .then(
-                function(response) {
-                    messageModel.setMessages(response.data.alerts, true);
-                    deferred.resolve(response);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    deferred.reject(fault);
-                }
-            );
-        return deferred.promise;
+        return $http.delete(ENV.api['root'] + "origins", {params: {id: id}}).then(
+            function(response) {
+                messageModel.setMessages(response.data.alerts, true);
+                return response;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
 };
 
-OriginService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
+OriginService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = OriginService;

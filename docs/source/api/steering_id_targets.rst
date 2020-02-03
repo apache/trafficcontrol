@@ -39,11 +39,23 @@ Request Structure
 
 .. table:: Request Query Parameters
 
-	+--------+-------------------------------------------------------------------------------------------------------------------------+
-	|  Name  | Description                                                                                                             |
-	+========+=========================================================================================================================+
-	| target | Return only the target mappings that target the :term:`Delivery Service` identified by this integral, unique identifier |
-	+--------+-------------------------------------------------------------------------------------------------------------------------+
+	+-----------+-------------------------------------------------------------------------------------------------------------------------+
+	| Name      | Description                                                                                                             |
+	+===========+=========================================================================================================================+
+	| target    | Return only the target mappings that target the :term:`Delivery Service` identified by this integral, unique identifier |
+	+-----------+-------------------------------------------------------------------------------------------------------------------------+
+	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array     |
+	+-----------+-------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                |
+	+-----------+-------------------------------------------------------------------------------------------------------------------------+
+	| limit     | Choose the maximum number of results to return                                                                          |
+	+-----------+-------------------------------------------------------------------------------------------------------------------------+
+	| offset    | The number of results to skip before beginning to return results. Must use in conjunction with limit                    |
+	+-----------+-------------------------------------------------------------------------------------------------------------------------+
+	| page      | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the     |
+	|           | first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use   |
+	|           | of ``page``.                                                                                                            |
+	+-----------+-------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Structure
@@ -56,13 +68,13 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService:   The 'xml_id' of the steering :term:`Delivery Service`
+:deliveryService:   A string that is the :ref:`ds-xmlid` of the steering :term:`Delivery Service`
 :deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
-:target:            The 'xml_id' of this target :term:`Delivery Service`
+:target:            A string that is the :ref:`ds-xmlid` of this target :term:`Delivery Service`
 :targetId:          An integral, unique identifier for this target :term:`Delivery Service`
 :type:              The routing type of this target :term:`Delivery Service`
-:typeId:            An integral, unique identifier for the routing type of this target :term:`Delivery Service`
-:value:             The 'weight' attributed to this steering target
+:typeId:            An integral, unique identifier for the :ref:`routing type <ds-types>` of this target :term:`Delivery Service`
+:value:             The 'weight' attributed to this steering target as an integer
 
 .. code-block:: http
 	:caption: Response Example
@@ -73,7 +85,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: utlJK4oYS2l6Ff7NzAqRuQeMEtazYn3rM3Nlux2XgTLxvSyslHy0mJrwDExSU05gVMdrgYCLZrZEvPHlENT1nA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 11 Dec 2018 14:09:23 GMT
@@ -132,13 +144,13 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService:   The 'xml_id' of the steering :term:`Delivery Service`
+:deliveryService:   A string that is the :ref:`ds-xmlid` of the steering :term:`Delivery Service`
 :deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
-:target:            The 'xml_id' of the newly added target :term:`Delivery Service`
-:targetId:          An integral, unique identifier for the newly added target :term:`Delivery Service`
-:type:              The routing type of the newly added target :term:`Delivery Service`
-:typeId:            An integral, unique identifier for the routing type of the newly added target :term:`Delivery Service`
-:value:             The 'weight' attributed to the new steering target
+:target:            A string that is the :ref:`ds-xmlid` of this target :term:`Delivery Service`
+:targetId:          An integral, unique identifier for this target :term:`Delivery Service`
+:type:              The routing type of this target :term:`Delivery Service`
+:typeId:            An integral, unique identifier for the :ref:`routing type <ds-types>` of this target :term:`Delivery Service`
+:value:             The 'weight' attributed to this steering target as an integer
 
 .. code-block:: http
 	:caption: Response Example
@@ -149,7 +161,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: +dTvfzrnOhdwAOMmY28r0+gFV5z+3aABI2FfAMziTYcU+pZrDanrJzMXpKWIL5Q/oCUBZpJDRt9hRCFkT4oGYw==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 10 Dec 2018 21:22:17 GMT

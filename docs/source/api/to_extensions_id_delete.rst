@@ -18,6 +18,8 @@
 *******************************
 ``to_extensions/{{ID}}/delete``
 *******************************
+.. deprecated:: ATCv4
+	Use the ``DELETE`` method of :ref:`to-api-to_extensions-id` instead.
 
 ``POST``
 ========
@@ -60,7 +62,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 12 Dec 2018 16:33:52 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Wed, 12 Dec 2018 20:33:52 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: EB0Nu85azbGzaehDTAODP3NPqWbByIza1XQhgwtsW2WTXyK/dxQtncp0YiJXyO0tH9H+n+6BBfojBOb5h0dFPA==
 	Content-Length: 60
@@ -69,6 +71,10 @@ Response Structure
 		{
 			"level": "success",
 			"text": "Extension deleted."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'DELETE /to_extensions/:id' instead"
 		}
 	]}
 

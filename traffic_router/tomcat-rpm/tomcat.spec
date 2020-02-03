@@ -17,7 +17,7 @@ Version:    %{tomcat_version}
 Release:    %{build_number}
 Summary:    Apache Tomcat Servlet/JSP Engine 8.5+, RI for Servlet 3.1/JSP 2.3 API
 License:    Apache Software License
-URL:        https://github.com/apache/incubator-trafficcontrol/
+URL:        https://github.com/apache/trafficcontrol/
 Source:     %{_sourcedir}/apache-tomcat-%{version}.tar.gz
 Requires:   java >= 1.8
 

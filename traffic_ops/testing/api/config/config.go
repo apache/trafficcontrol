@@ -17,14 +17,16 @@
  * under the License.
  */
 
+// Package config provides tools to load and validate configuration data for
+// Traffic Ops API tests.
 package config
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"reflect"
+	"strings"
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/kelseyhightower/envconfig"
@@ -72,6 +74,9 @@ type Users struct {
 
 	// FederationUser - The Traffic Ops Federation user
 	Federation string `json:"federation" envconfig:"TO_USER_FEDERATION"`
+
+	// Extension - The Traffic Ops Extension user
+	Extension string `json:"extension" envconfig:"TO_USER_EXTENSION"`
 }
 
 // TrafficOpsDB - config section
@@ -126,38 +131,40 @@ type Locations struct {
 func LoadConfig(confPath string) (Config, error) {
 	var cfg Config
 
-	if _, err := os.Stat(confPath); !os.IsNotExist(err) {
-		confBytes, err := ioutil.ReadFile(confPath)
-		if err != nil {
-			return Config{}, fmt.Errorf("Reading CDN conf '%s': %v", confPath, err)
-		}
-
-		err = json.Unmarshal(confBytes, &cfg)
-		if err != nil {
-			return Config{}, fmt.Errorf("unmarshalling '%s': %v", confPath, err)
-		}
-	}
-	errs := validate(confPath, cfg)
-	if len(errs) > 0 {
-		fmt.Printf("configuration error:\n")
-		for _, e := range errs {
-			fmt.Printf("%v\n", e)
-		}
-		os.Exit(0)
-	}
-	err := envconfig.Process("traffic-ops-client-tests", &cfg)
+	confBytes, err := ioutil.ReadFile(confPath)
 	if err != nil {
-		fmt.Errorf("cannot parse config: %v\n", err)
-		os.Exit(0)
+		return cfg, fmt.Errorf("failed to read CDN configuration: %v", err)
 	}
 
-	return cfg, err
+	err = json.Unmarshal(confBytes, &cfg)
+	if err != nil {
+		return cfg, fmt.Errorf("failed to parse configuration from '%s': %v", confPath, err)
+	}
+
+	if err := validate(confPath, cfg); err != nil {
+		return cfg, fmt.Errorf("failed to validate configuration:\n%v", err)
+	}
+
+	if err := envconfig.Process("traffic-ops-client-tests", &cfg); err != nil {
+		return cfg, fmt.Errorf("failed to parse configuration from environment: %v", err)
+	}
+
+	return cfg, nil
+}
+
+type multiError []error
+
+func (me multiError) Error() string {
+	var sb strings.Builder
+	for _, e := range me {
+		fmt.Fprintln(&sb, e)
+	}
+	return sb.String()
 }
 
 // validate all required fields in the config.
-func validate(confPath string, config Config) []error {
-
-	errs := []error{}
+func validate(confPath string, config Config) error {
+	var errs multiError
 
 	var f string
 	f = "TrafficOps"
@@ -229,7 +236,10 @@ func validate(confPath string, config Config) []error {
 		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
 	}
 
-	return errs
+	if len(errs) > 0 {
+		return errs
+	}
+	return nil
 }
 
 func getStructTag(thing interface{}, fieldName string) (string, bool) {

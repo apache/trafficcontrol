@@ -1,0 +1,42 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<tp-header title="{{deliveryservice.displayName}}"></tp-header>
+
+<main>
+	<form name="timespan" (ngSubmit)="newDateRange()" ngNativeValidate>
+		<div>
+			<label for="fromdate">From</label>
+			<input [formControl]="fromDate" type="date" id="fromdate" title="From (date)" name="fromdate"/>
+			<label for="fromtime">At</label>
+			<input [formControl]="fromTime" type="time" id="fromtime" title="From (time)" name="fromtime" value="00:00">
+		</div>
+		<div>
+			<label for="todate">To</label>
+			<input [formControl]="toDate" type="date" id="todate" title="To (date)" name="todate"/>
+			<label for="totime">At</label>
+			<input [formControl]="toTime" type="time" id="totime" title="To (time)" name="totime"></div>
+		<button>Refresh</button>
+	</form>
+	<hr/>
+	<canvas linechart chartTitle="Bandwidth of Cache Tiers" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
+		Your browser does not support canvases or Javascript. Normally, this would be a graph of bandwidth data.
+	</canvas>
+	<hr/>
+	 <canvas linechart chartTitle="Transactions at the Edge Tier" [chartDataSets]="TPSChartData" chartYAxisLabel="Transactions Per Second" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
+		Your browser does not support canvases or Javascript. Normally, this would be a graph of transaction data.
+	</canvas>
+	<a id="invalidate" routerLink="/deliveryservice/{{deliveryservice.id}}/invalidation-jobs">
+		<img src="assets/invalidate.svg" title="Invalidate Content">
+	</a>
+</main>

@@ -55,6 +55,7 @@ func init() {
 func main() {
 	showVersion := flag.Bool("version", false, "Show version and exit")
 	showPlugins := flag.Bool("plugins", false, "Show the list of plugins and exit")
+	showRoutes := flag.Bool("api-routes", false, "Show the list of API routes and exit")
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
@@ -68,16 +69,39 @@ func main() {
 		fmt.Println(strings.Join(plugin.List(), "\n"))
 		os.Exit(0)
 	}
+	if *showRoutes {
+		fake := routing.ServerData{Config: config.NewFakeConfig()}
+		routes, _, _, _ := routing.Routes(fake)
+		if len(*configFileName) != 0 {
+			cfg, err := config.LoadCdnConfig(*configFileName)
+			if err != nil {
+				fmt.Printf("Loading cdn config from '%s': %v", *configFileName, err)
+				os.Exit(1)
+			}
+			perlRoutes := routing.GetRouteIDMap(cfg.PerlRoutes)
+			disabledRoutes := routing.GetRouteIDMap(cfg.DisabledRoutes)
+			for _, r := range routes {
+				_, isBypassedToPerl := perlRoutes[r.ID]
+				_, isDisabled := disabledRoutes[r.ID]
+				fmt.Printf("id=%d\tmethod=%s\tversion=%.1f\tpath=%s\tcan_bypass_to_perl=%t\tis_bypassed_to_perl=%t\tis_disabled=%t\n", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl, isBypassedToPerl, isDisabled)
+			}
+		} else {
+			for _, r := range routes {
+				fmt.Printf("id=%d\tmethod=%s\tversion=%.1f\tpath=%s\tcan_bypass_to_perl=%t\n", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl)
+			}
+		}
+		os.Exit(0)
+	}
 	if len(os.Args) < 2 {
 		flag.Usage()
 		os.Exit(1)
 	}
 
 	cfg, errsToLog, blockStart := config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, version)
+	for _, err := range errsToLog {
+		fmt.Fprintf(os.Stderr, "Loading Config: %v\n", err)
+	}
 	if blockStart {
-		for _, err := range errsToLog {
-			fmt.Println(err)
-		}
 		os.Exit(1)
 	}
 
@@ -86,7 +110,7 @@ func main() {
 		for _, err := range errsToLog {
 			fmt.Println(err)
 		}
-		return
+		os.Exit(1)
 	}
 	for _, err := range errsToLog {
 		log.Warnln(err)
@@ -97,7 +121,7 @@ func main() {
 	err := auth.LoadPasswordBlacklist("app/conf/invalid_passwords.txt")
 	if err != nil {
 		log.Errorf("loading password blacklist: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	sslStr := "require"
@@ -108,7 +132,7 @@ func main() {
 	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s&fallback_application_name=trafficops", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.DBName, sslStr))
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
-		return
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -135,7 +159,7 @@ func main() {
 
 	if err := routing.RegisterRoutes(routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	plugins.OnStartup(plugin.StartupData{Data: plugin.Data{SharedCfg: cfg.PluginSharedConfig, AppCfg: cfg}})
@@ -322,5 +346,6 @@ func logConfig(cfg config.Config) {
 		Debug Log:            %s
 		Event Log:            %s
 		Riak Port:            %v
-		LDAP Enabled:         %v`, cfg.Port, cfg.DB.Hostname, cfg.DB.User, cfg.DB.DBName, cfg.DB.SSL, cfg.MaxDBConnections, cfg.Listen[0], cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent, logRiakPort, cfg.LDAPEnabled)
+		LDAP Enabled:         %v
+		InfluxDB Enabled:     %v`, cfg.Port, cfg.DB.Hostname, cfg.DB.User, cfg.DB.DBName, cfg.DB.SSL, cfg.MaxDBConnections, cfg.Listen[0], cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent, logRiakPort, cfg.LDAPEnabled, cfg.InfluxEnabled)
 }

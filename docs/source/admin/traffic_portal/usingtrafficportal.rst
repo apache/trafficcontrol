@@ -27,6 +27,60 @@ Traffic Portal is the official Traffic Control UI. Traffic Portal typically runs
 
 	Traffic Portal Start Page
 
+Change Logs
+===========
+At the top-right of every page is a bubble icon and badge count indicating the number of changes made to the CDN since the last viewing. Clicking on this expands a short list, with an option to :guilabel:`See All Change Logs`. Clicking on this will navigate to the "Changelog" page.
+
+.. figure:: images/changelog_dialog.png
+	:width: 15%
+	:align: center
+	:alt: The changelog dialog
+
+	The Changelog Dialog
+
+.. figure:: images/changelog_page.png
+	:width: 45%
+	:align: center
+	:alt: The 'full' change logs page
+
+	The Full Change Logs Page
+
+Sidebar Bottom Buttons
+======================
+At the bottom of the sidebar, a few action buttons may be found. At the far left, is the :guilabel:`Logout` button.
+
+.. figure:: images/logout_button.png
+	:align: center
+	:alt: The logout button
+
+	The Logout Button
+
+Clicking on this button will cause the current user session to end; further use of the Traffic Portal UI will require re-authentication. Next to this is the :guilabel:`User Profile` button.
+
+.. figure:: images/profile_button.png
+	:align: center
+	:alt: The profile button
+
+	The User Profile Button
+
+Clicking on this button will take the user to his or her user profile page, where much of their information (contact, username etc.) is editable. The next button to the right is the :guilabel:`Release Info` button.
+
+.. figure:: images/release_info_button.png
+	:align: center
+	:alt: The release info button
+
+	The Release Info Button
+
+When this button is clicked, a modal window will appear, displaying the Traffic Portal version, the date on which it was built, and the network location of the Traffic Ops server that serves the :ref:`to-api` used by the Traffic Portal instance. The final button is the :guilabel:`Popout` button.
+
+.. figure:: images/popout_button.png
+	:align: center
+	:alt: The popout button
+
+	The Popout Button
+
+This button will open the current view in a new browsing context. Most browsers will implement this as a new tab, but can be configured instead to open them in a new window - check your browser's configuration and set it as desired.
+
 Dashboard
 =========
 The Dashboard is the default landing page for Traffic Portal. It provides a real-time view into the main performance indicators of the CDNs managed by Traffic Control. It also displays various statistics about the overall health of your CDN.
@@ -124,7 +178,7 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 
 :Profile:     :ref:`profile-name` of the :term:`Profile` applied to the Edge-tier or Mid-tier :term:`cache server`, or the special name "ALL" indicating that this row is a group of all :term:`cache servers` within a single :term:`Cache Group`
 :Host:        'ALL' for entries grouped by :term:`Cache Group`, or the hostname of a particular :term:`cache server`
-:Cache Group: Name of the :term:`Cache Group` to which this server belongs, or the name of the :term:`Cache Group` that is grouped for entries grouped by :term:`Cache Group`, or the special name "ALL" indicating that this row is an aggregate across all :term:`Cache Groups`
+:Cache Group: :ref:`Name of the Cache Group <cache-group-name>` to which this server belongs, or the name of the :term:`Cache Group` that is grouped for entries grouped by :term:`Cache Group`, or the special name "ALL" indicating that this row is an aggregate across all :term:`Cache Groups`
 :Healthy:     True/False as determined by Traffic Monitor
 
 	.. seealso:: :ref:`health-proto`
@@ -137,7 +191,7 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 
 Services
 ========
-:guilabel:`Services` groups the functionality to modify :term:`Delivery Service`\ s - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions.
+:guilabel:`Services` groups the functionality to modify :term:`Delivery Services` - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions.
 
 
 .. figure:: ./images/tp_menu_services.png
@@ -214,20 +268,22 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 
 :term:`Delivery Service` management includes the ability to (where applicable):
 
-- create a new :term:`Delivery Service`
-- clone an existing :term:`Delivery Service`
-- update an existing :term:`Delivery Service`
-- delete an existing :term:`Delivery Service`
-- compare :term:`Delivery Services`
-- manage :term:`Delivery Service` SSL keys
-- manage :term:`Delivery Service` URL signature keys
-- manage :term:`Delivery Service` URI signing keys
-- view and assign :term:`Delivery Service` servers
-- create, update and delete :term:`Delivery Service` regular expressions
-- view and create :term:`Delivery Service` invalidate content jobs
-- manage steering targets
-- test :ref:`pattern-based-consistenthash`
-- view and manage static DNS records within a :term:`Delivery Service` subdomain
+- Create a new :term:`Delivery Service`
+- Clone an existing :term:`Delivery Service`
+- Update an existing :term:`Delivery Service`
+- Delete an existing :term:`Delivery Service`
+- Compare :term:`Delivery Services`
+- Manage :term:`Delivery Service` SSL keys
+- Manage :term:`Delivery Service` URL signature keys
+- Manage :term:`Delivery Service` URI signing keys
+- Manage :term:`Delivery Service` invalidation requests
+- Manage :term:`Delivery Service` origins
+- Manage :term:`Delivery Service` regular expressions
+- :ref:`delivery_service_required_server_capabilities`
+- Manage :term:`Delivery Service` server assignments
+- Manage :term:`Delivery Service` steering targets
+- Manage :term:`Delivery Service` static DNS records within a :term:`Delivery Service` subdomain
+- Test :ref:`pattern-based-consistenthash`
 
 	.. seealso:: :ref:`static-dns-qht`
 
@@ -306,7 +362,7 @@ A configurable table of all servers (of all kinds) across all :term:`Delivery Se
 
 Use the `Select Columns` menu to select the server columns to view and search. Columns can also be rearranged using drag-and-drop. Available server columns include:
 
-:Cache Group:       [Visible by default] The name of the :term:`Cache Group` to which this server belongs
+:Cache Group:       [Visible by default] The :ref:`Name of the Cache Group <cache-group-name>` to which this server belongs
 :CDN:               [Visible by default] The name of the CDN to which the server belongs
 :Domain:            [Visible by default] The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :Host:              [Visible by default] The (short) hostname of the server
@@ -347,15 +403,16 @@ Use the `Select Columns` menu to select the server columns to view and search. C
 
 Server management includes the ability to (where applicable):
 
-- create a new server
-- update an existing server
-- delete an existing server
+- Create a new server
+- Update an existing server
+- Delete an existing server
 - :term:`Queue Updates` on a server, or clear such updates
-- update server status
-- view server :term:`Delivery Services`
-- view server configuration files
-- clone :term:`Delivery Service` assignments
-- assign :term:`Delivery Services` to server(s)
+- Update server status
+- View server :term:`Delivery Services`
+- View server configuration files
+- Clone :term:`Delivery Service` assignments
+- Assign :term:`Delivery Services` to server(s)
+- :ref:`server_server_capabilities`
 
 .. _tp-configure-origins:
 
@@ -380,7 +437,7 @@ A table of all :term:`origins`. These are automatically created for the :term:`o
 	.. note:: If this field appears blank in the table, it means that a default was chosen for the :term:`origin` based on its Protocol - ``80`` for "http", ``443`` for "https".
 
 :Coordinate: The name of the geographic coordinate pair that defines the physical location of this :term:`origin server`. :term:`Origins` created for :term:`Delivery Services` automatically will **not** have associated Coordinates. This can be rectified on the details pages for said :term:`origins`
-:Cachegroup: The name of the :term:`Cache Group` to which this :term:`origin` belongs, if any.
+:Cachegroup: The :ref:`Name of the Cache Group <cache-group-name>` to which this :term:`origin` belongs, if any.
 :Profile:    The :ref:`profile-name` of a :term:`Profile` used by this :term:`origin`.
 
 :term:`Origin` management includes the ability to (where applicable):
@@ -436,7 +493,7 @@ This page displays a table of :term:`Parameters` from all :term:`Profiles` with 
 
 Types
 -----
-:term:`Type`\ s group :term:`Delivery Service`\ s, servers and :term:`Cache Group`\ s for various purposes. Each entry in the table shown on this page has the following fields:
+:term:`Types` group :term:`Delivery Services`, servers and :term:`Cache Groups` for various purposes. Each entry in the table shown on this page has the following fields:
 
 :Name:         The name of the :term:`Type`
 :Use In Table: States the use of this :term:`Type`, e.g. ``server`` indicates this is a :term:`Type` assigned to servers
@@ -447,9 +504,9 @@ Types
 - create a new :term:`Type`
 - update an existing :term:`Type`
 - delete an existing :term:`Type`
-- view :term:`Delivery Service`\ s assigned to a :term:`Type`
+- view :term:`Delivery Services` assigned to a :term:`Type`
 - view servers assigned to a :term:`Type`
-- view :term:`Cache Group`\ s assigned to a :term:`Type`
+- view :term:`Cache Groups` assigned to a :term:`Type`
 
 Statuses
 --------
@@ -480,11 +537,11 @@ Cache Groups
 ------------
 This page is a table of :term:`Cache Groups`, each entry of which has the following fields:
 
-:Name:       The full name of this :term:`Cache Group`
-:Short Name: A shorter, more human-friendly name for this :term:`Cache Group`
-:Type:       The :term:`Type` of this :term:`Cache Group`
-:Latitude:   A geographic latitude assigned to this :term:`Cache Group`
-:Longitude:  A geographic longitude assigned to this :term:`Cache Group`
+:Name:       The full :ref:`Name of this Cache Group <cache-group-name>`
+:Short Name: This :ref:`Cache Group's Short Name <cache-group-short-name>`
+:Type:       This :ref:`Cache Group's Type <cache-group-type>`
+:Latitude:   This :ref:`Cache Group's Latitude <cache-group-latitude>`
+:Longitude:  This :ref:`Cache Group's Longitude <cache-group-longitude>`
 
 :term:`Cache Group` management includes the ability to (where applicable):
 
@@ -515,7 +572,7 @@ Coordination management includes the ability to (where applicable):
 
 Phys Locations
 --------------
-A table of :term:`Physical Location`\ s which may be assigned to servers and :term:`Cache Group`\ s, typically for the purpose of optimizing client routing. Each entry has the following columns:
+A table of :term:`Physical Locations` which may be assigned to servers and :term:`Cache Groups`, typically for the purpose of optimizing client routing. Each entry has the following columns:
 
 :Name:       The full name of the :term:`Physical Location`
 :Short Name: A shorter, more human-friendly name for this :term:`Physical Location`
@@ -533,7 +590,7 @@ A table of :term:`Physical Location`\ s which may be assigned to servers and :te
 
 Divisions
 ---------
-Each entry in the table of :term:`Division`\ s on this page has the following fields:
+Each entry in the table of :term:`Divisions` on this page has the following fields:
 
 :Name: The name of the :term:`Division`
 
@@ -542,11 +599,11 @@ Each entry in the table of :term:`Division`\ s on this page has the following fi
 - create a new :term:`Division`
 - delete an existing :term:`Division`
 - modify an existing :term:`Division`
-- view :term:`Region`\ s within a :term:`Division`
+- view :term:`Regions` within a :term:`Division`
 
 Regions
 -------
-Each entry in the table of :term:`Region`\ s on this page has the following fields:
+Each entry in the table of :term:`Regions` on this page has the following fields:
 
 :Name:     The name of this :term:`Region`
 :Division: The :term:`Division` to which this :term:`Region` is assigned
@@ -556,7 +613,7 @@ Each entry in the table of :term:`Region`\ s on this page has the following fiel
 - create a new :term:`Region`
 - update an existing :term:`Region`
 - delete an existing :term:`Region`
-- view :term:`Physical Location`\ s within a :term:`Region`
+- view :term:`Physical Locations` within a :term:`Region`
 
 ASNs
 ----
@@ -585,7 +642,7 @@ Tools
 
 Invalidate Content
 ------------------
-Here, specific assets can be invalidated in all caches of a :term:`Delivery Service`, forcing content to be updated from the origin. Specifically, this *doesn't* mean that :term:`cache server` s will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the Invalidate Content Job's :abbr:`TTL (Time To Live)` expires. Each entry in the table on this page has the following fields:
+Here, specific assets can be invalidated in all caches of a :term:`Delivery Service`, forcing content to be updated from the origin. Specifically, this *doesn't* mean that :term:`cache servers` will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the Invalidate Content Job's :abbr:`TTL (Time To Live)` expires. Each entry in the table on this page has the following fields:
 
 :term:`Delivery Service`: The :term:`Delivery Service` to which to apply this Invalidate Content Job
 :Asset URL:        A URL or regular expression which describes the asset(s) to be invalidated
@@ -603,10 +660,12 @@ Generate ISO
 ------------
 Generates a boot-able system image for any of the servers in the Servers table (or any server for that matter). Currently it only supports CentOS 7, but if you're brave and pure of heart you MIGHT be able to get it to work with other Unix-like Operating Systems. The interface is *mostly* self-explanatory, but here is a short explanation of the fields in that form.
 
+.. seealso:: For instructions on setting up the Kickstart ISO generation files, see :ref:`Creating-CentOS-Kickstart`.
+
 Copy Server Attributes From
 	Optional. This option lets the user choose a server from the Traffic Ops database and will auto-fill the other fields as much as possible based on that server's properties
 OS Version
-	This list is populated by modifying the :file:`osversions.cfg` file on the Traffic Ops server. This file maps OS names to the name of a directory under ``app/public/iso/`` directory within the Traffic Ops install directory
+	This list is populated by modifying the :file:`osversions.json` file on the Traffic Ops server. This file maps OS names to the name of a directory under ``app/public/iso/`` directory within the Traffic Ops install directory
 Hostname
 	The desired hostname of the resultant system
 Domain
@@ -650,7 +709,7 @@ Interface Name
 		.. seealso:: `The Link aggregation Wikipedia Page <https://en.wikipedia.org/wiki/Link_aggregation>`_
 
 Stream ISO
-	If this is 'yes', then the download will start immediately as the ISO is written directly to the socket connection to Traffic Ops. If this is 'no', then the download will begin only *after* the ISO has finished being generated. For almost all use cases, this should be 'yes'.
+	If this is 'yes', then the download will start immediately as the ISO is written directly to the socket connection from Traffic Ops. If this is 'no', then the download will begin only *after* the ISO has finished being generated. For almost all use cases, this should be 'yes'.
 
 .. impl-detail:: Traffic Ops uses Red Hat's `Kickstart <https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/installation_guide/chap-kickstart-installations>` to create these ISOs, so many configuration options not available here can be tweaked in the :ref:`Kickstart configuration file <Creating-CentOS-Kickstart>`.
 
@@ -679,16 +738,16 @@ User management includes the ability to (where applicable):
 - register a new user
 - create a new user
 - update an existing user
-- view :term:`Delivery Service`\ s visible to a user
+- view :term:`Delivery Services` visible to a user
 
 .. Note:: If OAuth is enabled, the username must exist both here as well as with the OAuth provider. A user's rights are defined by the :term:`role` assigned to the user in Traffic Ops. Creating/deleting a user here will update the user's :term:`role` but the user needs to be created/deleted with the OAuth provider as well.
 
 Tenants
 -------
-Each entry in the table of :term:`Tenant`\ s on this page has the following entries:
+Each entry in the table of :term:`Tenants` on this page has the following entries:
 
 :Name:   The name of the :term:`Tenant`
-:Active: If 'true' users of this :term:`Tenant` group are allowed to login and have active :term:`Delivery Service`\ s
+:Active: If 'true' users of this :term:`Tenant` group are allowed to login and have active :term:`Delivery Services`
 :Parent: The parent of this :term:`Tenant`. The default is the 'root' :term:`Tenant`, which has no users.
 
 :term:`Tenant` management includes the ability to (where applicable):
@@ -697,11 +756,11 @@ Each entry in the table of :term:`Tenant`\ s on this page has the following entr
 - update an existing :term:`Tenant`
 - delete an existing :term:`Tenant`
 - view users assigned to a :term:`Tenant`
-- view :term:`Delivery Service`\ s assigned to a :term:`Tenant`
+- view :term:`Delivery Services` assigned to a :term:`Tenant`
 
 Roles
 -----
-Each entry in the table of :term:`Role`\ s on this page has the following fields:
+Each entry in the table of :term:`Roles` on this page has the following fields:
 
 :Name:            The name of the :term:`Role`
 :Privilege Level: The privilege level of this :term:`Role`. This is a whole number that actually controls what a user is allowed to do. Higher numbers correspond to higher permission levels
@@ -709,10 +768,10 @@ Each entry in the table of :term:`Role`\ s on this page has the following fields
 
 Role management includes the ability to (where applicable):
 
-- view all :term:`Role`\ s
+- view all :term:`Roles`
 - create new :term:`Role`
 
-.. note:: :term:`Role`\ s cannot be deleted through the Traffic Portal UI
+.. note:: :term:`Roles` cannot be deleted through the Traffic Portal UI
 
 Other
 =====

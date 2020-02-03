@@ -22,8 +22,7 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li class="active">API Endpoints</li>
         </ol>
-        <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="Create Endpoint" ng-click="createEndpoint()"><i class="fa fa-plus"></i></button>
+        <div class="pull-right" role="group">
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -39,7 +38,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editEndpoint(e.id)" ng-repeat="e in ::endpoints">
+            <tr ng-repeat="e in ::endpoints">
                 <td data-search="^{{::e.httpMethod}}$">{{::e.httpMethod}}</td>
                 <td data-search="^/api/*/{{::e.httpRoute}}$">/api/*/{{::e.httpRoute}}</td>
                 <td data-search="^{{::e.capability}}$">{{::e.capability}}</td>

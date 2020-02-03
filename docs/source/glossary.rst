@@ -38,24 +38,15 @@ Glossary
 
 	Cache Group
 	Cache Groups
-		A group of caching HTTP proxy servers that together create a combined larger cache using consistent hashing. Traffic Router treats all servers in a :dfn:`Cache Group` as though they are in the  same :term:`Physical Location`, though they are in fact only in the same general area. A :dfn:`Cache Group` has one single set of geographical coordinates even if the :term:`cache server`\ s that make up the :dfn:`Cache Group` are actually in :term:`Physical Location`\ s. The :term:`cache server`\ s in a :dfn:`Cache Group` are not aware of the other :term:`cache server`\ s in the group - there is no clustering software or communications between :term:`cache server`\ s in a :dfn:`Cache Group`.
+		A group of caching HTTP proxy servers that together create a combined larger cache using consistent hashing. Traffic Router treats all servers in a :dfn:`Cache Group` as though they are in the  same geographic location, though they are in fact only in the same general area. A :dfn:`Cache Group` has one single set of geographical coordinates even if the :term:`cache servers` that make up the :dfn:`Cache Group` are actually in :term:`Physical Locations`. The :term:`cache servers` in a :dfn:`Cache Group` are not aware of the other :term:`cache servers` in the group - there is no clustering software or communications between :term:`cache servers` in a :dfn:`Cache Group`.
 
-  		There are two basic types of :dfn:`Cache Groups`: EDGE_LOC and MID_LOC ("LOC" being short for "location" - a holdover from when :dfn:`Cache Groups` were called "Cache Locations). Traffic Control is a two-tiered system, where the clients get directed to the Edge-tier (EDGE_LOC) :dfn:`Cache Group`. On cache miss, the :term:`cache server` in the Edge-tier :dfn:`Cache Group` obtains content from a Mid-tier (MID_LOC) :dfn:`Cache Group`, rather than the origin, which is shared with multiple Edge-tier :dfn:`Cache Groups`. Edge-tier :dfn:`Cache Groups` are configured to have a single "parent" :dfn:`Cache Group`, but in general Mid-tier :dfn:`Cache Groups` have many "children".
+  		There are two basic types of :dfn:`Cache Groups`: EDGE_LOC and MID_LOC ("LOC" being short for "location" - a holdover from when :dfn:`Cache Groups` were called "Cache Locations). Traffic Control is a two-tiered system, where the clients get directed to the Edge-tier (EDGE_LOC) :dfn:`Cache Group`. On cache miss, the :term:`cache server` in the Edge-tier :dfn:`Cache Group` obtains content from a Mid-tier (MID_LOC) :dfn:`Cache Group`, rather than the origin, which is shared with multiple Edge-tier :dfn:`Cache Groups`. Edge-tier :dfn:`Cache Groups` are usually configured to have a single "parent" :dfn:`Cache Group`, but in general Mid-tier :dfn:`Cache Groups` have many "children".
 
 		..  Note:: Often the Edge-tier to Mid-tier relationship is based on network distance, and does not necessarily match the geographic distance.
 
 		.. seealso:: A :dfn:`Cache Group` serves a particular part of the network as defined in the :term:`Coverage Zone File` (or :term:`Deep Coverage Zone File`, when applicable).
 
-		Consider the example CDN in :numref:`fig-cg_hierarchy`. Here some country/province/region has been divided into quarters: Northeast, Southeast, Northwest, and Southwest. The arrows in the diagram indicate the flow of requests. If a client in the Northwest, for example, were to make a request to the :term:`Delivery Service`, it would first be directed to some :term:`cache server` in the "Northwest" Edge-tier :dfn:`Cache Group`. Should the requested content not be in cache, the Edge-tier server will select a parent from the "West" :dfn:`Cache Group` and pass the request up, caching the result for future use. All Mid-tier :dfn:`Cache Groups` (usually) answer to a single :term:`origin` that provides canonical content. If requested content is not in the Mid-tier cache, then the request will be passed up to the :term:`origin` and the result cached.
-
-		.. _fig-cg_hierarchy:
-
-		.. figure:: ./cg_hierarchy.*
-			:align: center
-			:width: 60%
-			:alt: An illustration of Cache Group hierarchy
-
-			An example CDN that shows the hierarchy between four Edge-tier :dfn:`Cache Groups`, two Mid-tier :dfn:`Cache Groups`, and one Origin
+		.. seealso:: For a more complete description of Cache Groups, see the :ref:`cache-groups` overview section.
 
 	content routing
 		Directing clients (or client systems) to a particular location or device in a location for optimal delivery of content See also :ref:`http-cr` and :ref:`dns-cr`.
@@ -106,7 +97,7 @@ Glossary
 
 	Delivery Service
 	Delivery Services
-		:dfn:`Delivery Services` are often referred to as a :term:`reverse proxy` "remap rule" that exists on Edge-tier :term:`cache servers`. In most cases, a :dfn:`Delivery Service` is a one-to-one mapping to an :abbr:`FQDN (Fully Qualified Domain Name)` that is used as a hostname to deliver the content. Many options and settings regarding how to optimize the content delivery exist, which are configurable on a :dfn:`Delivery Service` basis. Some examples of these :dfn:`Delivery Service`\ settings are:
+		:dfn:`Delivery Services` are often referred to as a :term:`reverse proxy` "remap rule" that exists on Edge-tier :term:`cache servers`. In most cases, a :dfn:`Delivery Service` is a one-to-one mapping to an :abbr:`FQDN (Fully Qualified Domain Name)` that is used as a hostname to deliver the content. Many options and settings regarding how to optimize the content delivery exist, which are configurable on a :dfn:`Delivery Service` basis. Some examples of these :dfn:`Delivery Service` settings are:
 
 		* Cache in RAM, cache on disk, or do not cache at all.
 		* Use DNS or HTTP Content routing.
@@ -118,6 +109,9 @@ Glossary
 		Since Traffic Control version 2.1, :dfn:`Delivery Services` can optionally be linked to a :term:`Profile`, and have :term:`Parameters` associated with them. One example of a feature that uses :dfn:`Delivery Service` :term:`Parameters` is the :ref:`ds-multi-site-origin` configuration. :dfn:`Delivery Services` are also for use in allowing multiple :term:`Tenants` to coexist in a Traffic Control CDN without interfering with each other, and to keep information about their content separated.
 
 		.. seealso:: See :ref:`delivery-services` for a more in-depth explanation of :dfn:`Delivery Services`.
+
+	Delivery Service required capabilities
+		:dfn:`Delivery Services required capabilities` are capabilities, which correlate to server capabilities, that are required in order to assign a server to a delivery service.`
 
 	Division
 	Divisions
@@ -141,7 +135,7 @@ Glossary
 
 	forward proxy
 	forward proxies
-		A forward proxy acts on behalf of the client such that the :term:`origin server` is (potentially) unaware of the proxy's existence. All Mid-tier :term:`cache server`\ s in a Traffic Control based CDN are :dfn:`forward proxies`. In a :dfn:`forward proxy` scenario, the client is explicitly configured to use the the proxy's IP address and port as a :dfn:`forward proxy`. The client always connects to the :dfn:`forward proxy` for content. The content provider does not have to change the URL the client obtains, and is (potentially) unaware of the proxy in the middle.
+		A forward proxy acts on behalf of the client such that the :term:`origin server` is (potentially) unaware of the proxy's existence. All Mid-tier :term:`cache servers` in a Traffic Control based CDN are :dfn:`forward proxies`. In a :dfn:`forward proxy` scenario, the client is explicitly configured to use the the proxy's IP address and port as a :dfn:`forward proxy`. The client always connects to the :dfn:`forward proxy` for content. The content provider does not have to change the URL the client obtains, and is (potentially) unaware of the proxy in the middle.
 
 		..  seealso:: `ATS documentation on forward proxy <https://docs.trafficserver.apache.org/en/latest/admin/forward-proxy.en.html>`_.
 
@@ -261,7 +255,7 @@ Glossary
 
 	Physical Location
 	Physical Locations
-		A pair of geographic coordinates (latitude and longitude) that is used by :term:`Cache Group`\ s to define their location. This information is used by Traffic Router to route client traffic to the geographically nearest :term:`Cache Group`.
+		A pair of geographic coordinates (latitude and longitude) that is used by :term:`Cache Groups` to define their location. This information is used by Traffic Router to route client traffic to the geographically nearest :term:`Cache Group`.
 
 	Profile
 	Profiles
@@ -286,15 +280,15 @@ Glossary
 
 	Region
 	Regions
-		A group of :term:`Physical Location`\ s.
+		A group of :term:`Physical Locations`.
 
 	reverse proxy
 	reverse proxies
-		A :dfn:`reverse proxy` acts on behalf of the :term:`origin server` such that the client is (potentially) unaware it is not communicating directly with the :term:`origin`. All Edge-tier :term:`cache server`\ s in a Traffic Control CDN are :dfn:`reverse proxies`. To the end user a Traffic Control-based CDN appears as a :dfn:`reverse proxy` since it retrieves content from the :term:`origin server`, acting on behalf of that :term:`origin server`. The client requests a URL that has a hostname which resolves to the :dfn:`reverse proxy`'s IP address and, in compliance with the HTTP 1.1 specification (:rfc:`2616`), the client sends a ``Host:`` header to the :dfn:`reverse proxy` that matches the hostname in the URL. The proxy looks up this hostname in a list of mappings to find the :term:`origin` hostname; if the hostname of the ``Host:`` header is not found in the list, the proxy will send an error (usually either ``404 Not Found`` or ``503 Service Unavailable`` as appropriate) to the client. If the supplied hostname is found in this list of mappings, the proxy checks its cache, and when the content is not already present, connects to the :term:`origin` to which the requested ``Host:`` maps requests the path of the original URL, providing the :term:`origin` hostname in the ``Host`` header. The proxy then stores the URL in its cache and serves the contents to the client. When there are subsequent requests for the same URL, a caching proxy serves the content out of its cache - provided :ref:`cache-revalidation` are satisfied - thereby reducing latency and network traffic.
+		A :dfn:`reverse proxy` acts on behalf of the :term:`origin server` such that the client is (potentially) unaware it is not communicating directly with the :term:`origin`. All Edge-tier :term:`cache servers` in a Traffic Control CDN are :dfn:`reverse proxies`. To the end user a Traffic Control-based CDN appears as a :dfn:`reverse proxy` since it retrieves content from the :term:`origin server`, acting on behalf of that :term:`origin server`. The client requests a URL that has a hostname which resolves to the :dfn:`reverse proxy`'s IP address and, in compliance with the HTTP 1.1 specification (:rfc:`2616`), the client sends a ``Host:`` header to the :dfn:`reverse proxy` that matches the hostname in the URL. The proxy looks up this hostname in a list of mappings to find the :term:`origin` hostname; if the hostname of the ``Host:`` header is not found in the list, the proxy will send an error (usually either ``404 Not Found`` or ``503 Service Unavailable`` as appropriate) to the client. If the supplied hostname is found in this list of mappings, the proxy checks its cache, and when the content is not already present, connects to the :term:`origin` to which the requested ``Host:`` maps requests the path of the original URL, providing the :term:`origin` hostname in the ``Host`` header. The proxy then stores the URL in its cache and serves the contents to the client. When there are subsequent requests for the same URL, a caching proxy serves the content out of its cache - provided :ref:`cache-revalidation` are satisfied - thereby reducing latency and network traffic.
 
 		.. seealso:: `The Apache Traffic Server documentation on reverse proxy <https://docs.trafficserver.apache.org/en/latest/admin/reverse-proxy-http-redirects.en.html#http-reverse-proxy>`_.
 
-		To insert a :dfn:`reverse proxy` into a typical HTTP 1.1 request and response flow, the :dfn:`reverse proxy` needs to be told where the :term:`origin server` can be reached (and which :term:`origin` to use for a given request when it's configured to proxy requests for multiple :term:`origin`\ s). In :abbr:`ATS (Apache Traffic Server)` this is handled by adding rules to `the remap.config configuration file <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/remap.config.en.html>`_. The content owner must inform the clients, by updating the URL, to receive the content from the cache and not from the :term:`origin server` directly. For example, clients might be instructed to request content from ``http://www-origin-cache.cdn.com`` which points to a :dfn:`reverse proxy` for the actual :term:`origin` located at ``http://www.origin.com``.
+		To insert a :dfn:`reverse proxy` into a typical HTTP 1.1 request and response flow, the :dfn:`reverse proxy` needs to be told where the :term:`origin server` can be reached (and which :term:`origin` to use for a given request when it's configured to proxy requests for multiple :term:`origins`). In :abbr:`ATS (Apache Traffic Server)` this is handled by adding rules to `the remap.config configuration file <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/remap.config.en.html>`_. The content owner must inform the clients, by updating the URL, to receive the content from the cache and not from the :term:`origin server` directly. For example, clients might be instructed to request content from ``http://www-origin-cache.cdn.com`` which points to a :dfn:`reverse proxy` for the actual :term:`origin` located at ``http://www.origin.com``.
 
 		Now, if the client requests ``/foo/bar/fun.html`` from the :dfn:`reverse proxy` the sequence of events is as follows. is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` (note the different hostname) and when attempting to obtain that URL, the following occurs:
 
@@ -376,6 +370,10 @@ Glossary
 	Roles
 		Permissions :dfn:`Roles` define the operations a user is allowed to perform, and are currently an ordered list of permission levels.
 
+	Server Capability
+	Server Capabilities
+		A :dfn:`Server Capability` (not to be confused with a "Capability") expresses the capacity of a :term:`cache server` to serve a particular kind of traffic. For example, a :dfn:`Server Capability` could be created named "RAM" to be assigned to :term:`cache servers` that have RAM-disks allocated for content caching. :dfn:`Server Capabilities` can also be required by :term:`Delivery Services`, which will prevent :term:`cache servers` without that :dfn:`Server Capability` from being assigned to them. It also prevents :term:`Mid-tier Cache Servers` without said :term:`Server Capability` from being selected to serve upstream requests from those :term:`Edge-tier Cache Servers` assigned to the requiring :term:`Delivery Services`.
+
 	Snapshot
 	Snapshots
 	CDN Snapshot
@@ -388,7 +386,9 @@ Glossary
 
 	Tenant
 	Tenants
-		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Service`\ s and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Service`\ s and does **not** apply permissions restrictions to any other aspect of Traffic Control.
+	Tenancy
+	Tenancies
+		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Services` and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Services` and does **not** apply permissions restrictions to any other aspect of Traffic Control.
 
 	Type
 	Types

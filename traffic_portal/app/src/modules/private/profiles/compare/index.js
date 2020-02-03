@@ -21,11 +21,11 @@ module.exports = angular.module('trafficPortal.private.profiles.compare', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.profiles.compare', {
-				url: '/compare/{profile1Id}/{profile2Id}',
+				url: '/{profile1Id:[0-9]{1,8}}/{profile2Id:[0-9]{1,8}}/compare/all',
 				views: {
 					profilesContent: {
-						templateUrl: 'common/modules/compare/compare.tpl.html',
-						controller: 'CompareController',
+						templateUrl: 'common/modules/table/profilesParamsCompare/table.profilesParamsCompare.tpl.html',
+						controller: 'TableProfilesParamsCompareController',
 						resolve: {
 							profile1: function($stateParams, profileService) {
 								return profileService.getProfile($stateParams.profile1Id, { includeParams: true });
@@ -33,17 +33,11 @@ module.exports = angular.module('trafficPortal.private.profiles.compare', [])
 							profile2: function($stateParams, profileService) {
 								return profileService.getProfile($stateParams.profile2Id, { includeParams: true });
 							},
-							item1Name: function(profile1) {
-								return profile1.name;
+							profilesParams: function(profile1, profile2, collectionUtils) {
+								return collectionUtils.uniqArray(profile1.params, profile2.params, 'id');
 							},
-							item2Name: function(profile2) {
-								return profile2.name;
-							},
-							item1: function(profile1) {
-								return profile1.params;
-							},
-							item2: function(profile2) {
-								return profile2.params;
+							showAll: function() {
+								return true;
 							}
 						}
 					}

@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Assigns one or more :term:`Delivery Service`\ s to a user.
+Assigns one or more :term:`Delivery Services` to a user.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -29,8 +29,8 @@ Assigns one or more :term:`Delivery Service`\ s to a user.
 
 Request Structure
 -----------------
-:userId:           An integral, unique identifier for the user to whom the :term:`Delivery Service`\ (s) identified in ``deliveryServices`` will be assigned
-:deliveryServices: An array of integral, unique identifiers for the :term:`Delivery Service`\ (s) being assigned to the user identified by ``userId``
+:userId:           An integral, unique identifier for the user to whom the :term:`Delivery Service(s) <Delivery Service>` identified in ``deliveryServices`` will be assigned
+:deliveryServices: An array of integral, unique identifiers for the :term:`Delivery Service(s) <Delivery Service>` being assigned to the user identified by ``userId``
 :replace:          An optional field which, when present and ``true`` will replace existing user/ds assignments? (true|false)
 
 .. code-block:: http
@@ -48,8 +48,8 @@ Request Structure
 
 Response Structure
 ------------------
-:userId:           The integral, unique identifier of the user to whom the :term:`Delivery Service`\ (s) identified in ``deliveryServices`` are assigned
-:deliveryServices: An array of integral, unique identifiers of :term:`Delivery Service`\ s assigned to the user identified by ``userId``
+:userId:           The integral, unique identifier of the user to whom the :term:`Delivery Service(s) <Delivery Service>` identified in ``deliveryServices`` are assigned
+:deliveryServices: An array of integral, unique identifiers of :term:`Delivery Services` assigned to the user identified by ``userId``
 :replace:          If ``true``, any and all existing, conflicting :term:`Delivery Service` assignments were overwritten by this assignment operation
 
 .. code-block:: http
@@ -64,7 +64,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 14 Nov 2018 21:37:30 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 01:37:30 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: Uwl+924m6Ye3NraFP+RBpldkhcNTTDyXHZbzRaYV95p9tP56Z61gckeKSr1oQIkNXjXcCsDN5Dmum7Zk1AR6Hw==
 	Content-Length: 127

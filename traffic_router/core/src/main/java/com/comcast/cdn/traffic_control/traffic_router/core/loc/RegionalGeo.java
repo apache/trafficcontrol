@@ -16,15 +16,13 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import java.io.File;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
@@ -51,6 +49,7 @@ import static com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGe
 public final class RegionalGeo {
     private static final Logger LOGGER = Logger.getLogger(RegionalGeo.class);
     public static final String HTTP_SCHEME = "http://";
+    public static final String HTTPS_SCHEME = "https://";
     private boolean fallback = false;
     private final Map<String, RegionalGeoDsvc> regionalGeoDsvcs = new HashMap<String, RegionalGeoDsvc>();
 
@@ -88,7 +87,7 @@ public final class RegionalGeo {
 
     private boolean addRule(final String dsvcId, final String urlRegex,
             final RegionalGeoRule.PostalsType postalsType, final Set<String> postals,
-            final NetworkNode networkRoot, final String alternateUrl) {
+            final NetworkNode networkRoot, final String alternateUrl, final boolean isSteeringDS) {
 
         // Loop check for alternateUrl with fqdn against the regex before adding
         Pattern urlRegexPattern;
@@ -101,10 +100,16 @@ public final class RegionalGeo {
             return false;
         }
 
-        if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME)
+        if ((alternateUrl.toLowerCase().startsWith(HTTP_SCHEME) || alternateUrl.toLowerCase().startsWith(HTTPS_SCHEME))
             && urlRegexPattern.matcher(alternateUrl).matches()) {
             LOGGER.error("RegionalGeo ERR: possible LOOP detected, alternate fqdn url " + alternateUrl
                          + " matches regex " + urlRegex + " in dsvc " +  dsvcId);
+            return false;
+        }
+
+        if (isSteeringDS && !(alternateUrl.toLowerCase().startsWith(HTTP_SCHEME) || alternateUrl.toLowerCase().startsWith(HTTPS_SCHEME))) {
+            LOGGER.error("RegionalGeo ERR: Alternate URL for Steering delivery service: "
+                    +  dsvcId + " must start with " + HTTP_SCHEME + " or " + HTTPS_SCHEME);
             return false;
         }
 
@@ -186,6 +191,13 @@ public final class RegionalGeo {
                     LOGGER.error("RegionalGeo ERR: deliveryServiceId empty");
                     return null;
                 }
+                Boolean isSteeringDS = false;
+                try {
+                    isSteeringDS = JsonUtils.getBoolean(ruleJson, "isSteeringDS");
+                } catch (JsonUtilsException e) {
+                    //It's not in the config so we can just keep it set as false.
+                    LOGGER.debug("RegionalGeo ERR: isSteeringDS empty");
+                }
 
                 final String urlRegex = JsonUtils.getString(ruleJson, "urlRegex");
                 if (urlRegex.trim().isEmpty()) {
@@ -215,8 +227,10 @@ public final class RegionalGeo {
                     whiteListRoot = parseWhiteListJson(whiteListJson);
                 }
 
+
+
                 // add the rule
-                if (!regionalGeo.addRule(dsvcId, urlRegex, postalsType, postals, whiteListRoot, redirectUrl)) {
+                if (!regionalGeo.addRule(dsvcId, urlRegex, postalsType, postals, whiteListRoot, redirectUrl, isSteeringDS)) {
                     LOGGER.error("RegionalGeo ERR: add rule failed on parsing json file");
                     return null;
                 }
@@ -256,6 +270,7 @@ public final class RegionalGeo {
         LOGGER.debug("RegionalGeo: create instance from new json");
         return true;
     }
+
 
     public static RegionalGeoResult enforce(final String dsvcId, final String url,
         final String ip, final String postalCode) {
@@ -298,12 +313,12 @@ public final class RegionalGeo {
             result.setUrl(url);
             result.setType(ALLOWED);
         } else {
-            // For a disallowed client, if alternateUrl starts with "http://"
+            // For a disallowed client, if alternateUrl starts with "http://" or "https://"
             // just redirect the client to this url without any cache selection;
             // if alternateUrl only has path and file name like "/path/abc.html",
             // then cache selection process will be needed, and hostname will be
             // added to make it like "http://cache01.example.com/path/abc.html" later.
-            if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME)) {
+            if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME) || alternateUrl.toLowerCase().startsWith(HTTPS_SCHEME)) {
                 result.setUrl(alternateUrl);
                 result.setType(ALTERNATE_WITHOUT_CACHE);
             } else {
@@ -325,9 +340,15 @@ public final class RegionalGeo {
         return result;
     }
 
+    public static void enforce(final TrafficRouter trafficRouter, final Request request, final DeliveryService deliveryService, final Cache cache,
+                               final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
+        enforce(trafficRouter, request, deliveryService, cache, routeResult, track, false);
+    }
+
+    @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
     public static void enforce(final TrafficRouter trafficRouter, final Request request,
         final DeliveryService deliveryService, final Cache cache,
-        final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
+        final HTTPRouteResult routeResult, final Track track, final boolean isSteering) throws MalformedURLException {
 
         LOGGER.debug("RegionalGeo: enforcing");
 
@@ -352,12 +373,30 @@ public final class RegionalGeo {
         final RegionalGeoResult result = enforce(deliveryService.getId(), httpRequest.getRequestedUrl(), 
                                                  httpRequest.getClientIP(), postalCode);
 
+        if (cache == null && result.getType() == ALTERNATE_WITH_CACHE) {
+            LOGGER.debug("RegionalGeo: denied for dsvc " + deliveryService.getId() + ", url " + httpRequest.getRequestedUrl() + ", postal " + postalCode + ". Relative re-direct URLs not allowed for Multi Route Delivery Services.");
+            result.setHttpResponseCode(RegionalGeoResult.REGIONAL_GEO_DENIED_HTTP_CODE);
+            result.setType(DENIED);
+        }
+
+        if (cache == null && result.getType() == ALLOWED) {
+            LOGGER.debug("RegionalGeo: Client is allowed to access steering service, returning null re-direct URL");
+            result.setUrl(null);
+            updateTrack(track, result);
+            return;
+        }
+
         updateTrack(track, result);
 
         if (result.getType() == DENIED) {
             routeResult.setResponseCode(result.getHttpResponseCode());
         } else {
-            routeResult.addUrl(new URL(createRedirectURIString(httpRequest, deliveryService, cache, result)));
+            final String redirectURIString = createRedirectURIString(httpRequest, deliveryService, cache, result);
+            if(!"Denied".equals(redirectURIString)){
+                routeResult.addUrl(new URL(redirectURIString));
+            }else{
+                LOGGER.warn("RegionalGeo: this needs a better error message, createRedirectURIString returned denied");
+            }
         }
     }
 
@@ -403,7 +442,7 @@ public final class RegionalGeo {
             return regionalGeoResult.getUrl();
         }
 
-        return null; // DENIED
+        return "Denied"; // DENIED
     }
 }
 

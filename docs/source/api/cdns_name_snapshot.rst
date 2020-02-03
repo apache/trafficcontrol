@@ -51,11 +51,7 @@ Response Structure
 ------------------
 :config: An object containing basic configurations on the actual CDN object
 
-	:api.cache-control.max-age: A string containing an integer which specifies the value of ``max-age`` in the ``Cache-Control`` header of some HTTP responses, likely the Traffic Router API responses
-
-		.. deprecated:: 1.1
-			This field still exists for legacy compatibility reasons, but has no known use at the time of this writing
-
+	:api.cache-control.max-age:     A string containing an integer which specifies the value of ``max-age`` in the :mailheader:`Cache-Control` header of some HTTP responses, likely the :ref:`tr-api` responses
 	:certificates.polling.interval: A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for updated SSL certificates
 	:consistent.dns.routing:        A string containing a boolean which indicates whether DNS routing will use a consistent hashing method or "round-robin"
 
@@ -65,8 +61,11 @@ Response Structure
 			A consistent hashing method will be used to define DNS routing
 
 	:coveragezone.polling.interval:      A string containing an integer which specifies the interval, in seconds, on which Traffic Routers should check for a new Coverage Zone file
-	:coveragezone.polling.url:           The URL where a Coverage Zone file may be requested by Traffic Routers
+	:coveragezone.polling.url:           The URL where a :term:`Coverage Zone File` may be requested by Traffic Routers
 	:dnssec.dynamic.response.expiration: A string containing a number and unit suffix that specifies the length of time for which dynamic responses to DNSSEC lookup queries should remain valid
+	:dnssec.dynamic.concurrencylevel:    An integer that defines the size of the concurrency level (threads) of the Guava cache used by ZoneManager to store zone material
+	:dnssec.dynamic.initialcapacity:     An integer that defines the initial size of the Guava cache, default is 10000. Too low of a value can lead to expensive resizing
+	:dnssec.init.timeout:                An integer that defines the number of minutes to allow for zone generation, this bounds the zone priming activity
 	:dnssec.enabled:                     A string that tells whether or not the CDN uses DNSSEC; one of:
 
 		"false"
@@ -74,11 +73,7 @@ Response Structure
 		"true"
 			DNSSEC is used within this CDN
 
-	:domain_name:                        The Top-Level Domain Name (TLD) served by the CDN
-	:edge.dns.limit:                     This field is of unknown use, and may be remnants of a legacy system
-	:edge.dns.routing:                   This field is of unknown use, and may be remnants of a legacy system
-	:edge.http.limit:                    This field is of unknown use, and may be remnants of a legacy system
-	:edge.http.routing:                  This field is of unknown use, and may be remnants of a legacy system
+	:domain_name:                        A string that is the :abbr:`TLD (Top-Level Domain)` served by the CDN
 	:federationmapping.polling.interval: A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new federation mappings
 	:federationmapping.polling.url:      The URL where Traffic Control components can request federation mappings
 	:geolocation.polling.interval:       A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new IP-to-geographic-location mapping databases
@@ -86,15 +81,15 @@ Response Structure
 	:keystore.maintenance.interval:      A string containing an integer which specifies the interval, in seconds, on which Traffic Routers should refresh their zone caches
 	:neustar.polling.interval:           A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new "Neustar" databases
 	:neustar.polling.url:                The URL where Traffic Control components can request "Neustar" databases
-	:soa:                                An object defining the Start of Authority (SOA) for the CDN's TLD (defined in ``domain_name``)
+	:soa:                                An object defining the :abbr:`SOA (Start of Authority)` for the CDN's :abbr:`TLD (Top-Level Domain)` (defined in ``domain_name``)
 
 		:admin: The name of the administrator for this zone - i.e. the RNAME
 
 			.. note:: This rarely represents a proper email address, unfortunately.
 
 		:expire:  A string containing an integer that sets the number of seconds after which secondary name servers should stop answering requests for this zone if the master does not respond
-		:minimum: A string containing an integer that sets the Time To Live (TTL) - in seconds - of the record for the purpose of negative caching
-		:refresh: A string containing an integer that sets the number of seconds after which secondary name servers should query the master for the SOA record, to detect zone changes
+		:minimum: A string containing an integer that sets the :abbr:`TTL (Time To Live)` - in seconds - of the record for the purpose of negative caching
+		:refresh: A string containing an integer that sets the number of seconds after which secondary name servers should query the master for the :abbr:`SOA (Start of Authority)` record, to detect zone changes
 		:retry:   A string containing an integer that sets the number of seconds after which secondary name servers should retry to request the serial number from the master if the master does not respond
 
 			.. note:: :rfc:`1035` dictates that this should always be less than ``refresh``.
@@ -106,29 +101,29 @@ Response Structure
 	:zonemanager.cache.maintenance.interval: A configuration option for the ZoneManager Java class of Traffic Router
 	:zonemanager.threadpool.scale:           A configuration option for the ZoneManager Java class of Traffic Router
 
-:contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for :term:`Delivery Service`\ s in this CDN
+:contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for :term:`Delivery Services` in this CDN
 
 	:api.port:        A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTP
-	:secure.api.port: A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTPS (optional)
-	:fqdn:            This Traffic Router's Fully Qualified Domain Name (FQDN)
+	:secure.api.port: An optionally present string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTPS
+	:fqdn:            This Traffic Router's :abbr:`FQDN (Fully Qualified Domain Name)`
 	:httpsPort:       The port number on which this Traffic Router listens for incoming HTTPS requests
 	:ip:              This Traffic Router's IPv4 address
 	:ip6:             This Traffic Router's IPv6 address
-	:location:        The name of the Cache Group to which this Traffic Router belongs
+	:location:        A string which is the :ref:`cache-group-name` of the :term:`Cache Group` to which this Traffic Router belongs
 	:port:            The port number on which this Traffic Router listens for incoming HTTP requests
 	:profile:         The :ref:`profile-name` of the :term:`Profile` used by this Traffic Router
 	:status:          The health status of this Traffic Router
 
 		.. seealso:: :ref:`health-proto`
 
-:contentServers: An object containing keys which are the (short) hostnames of the Edge-Tier :term:`cache server` s in the CDN; the values corresponding to those keys are routing information for said servers
+:contentServers: An object containing keys which are the (short) hostnames of the :term:`Edge-Tier cache servers` in the CDN; the values corresponding to those keys are routing information for said servers
 
-	:cacheGroup:       The name of the Cache Group to which the server belongs
-	:deliveryServices: An object containing keys which are the names of :term:`Delivery Service`\ s to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of FQDNs that resolve to this :term:`cache server`
+	:cacheGroup:       A string that is the :ref:`cache-group-name` of the :term:`Cache Group` to which the server belongs
+	:deliveryServices: An object containing keys which are the names of :term:`Delivery Services` to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of :abbr:`FQDNs (Fully Qualified Domain Names)` that resolve to this :term:`cache server`
 
-		.. note:: Only Edge-tier :term:`cache server` s can be assigned to a Delivery SErvice, and therefore this field will only be present when ``type`` is ``"EDGE"``.
+		.. note:: Only :term:`Edge-tier cache servers` can be assigned to a :term:`Delivery Service`, and therefore this field will only be present when ``type`` is ``"EDGE"``.
 
-	:fqdn:            The server's Fully Qualified Domain Name (FQDN)
+	:fqdn:            The server's :abbr:`FQDN (Fully Qualified Domain Name)`
 	:hashCount:       The number of servers to be placed into a single "hash ring" in Traffic Router
 	:hashId:          A unique string to be used as the key for hashing servers - as of version 3.0.0 of Traffic Control, this is always the same as the server's (short) hostname and only still exists for legacy compatibility reasons
 	:httpsPort:       The port on which the :term:`cache server` listens for incoming HTTPS requests
@@ -138,7 +133,7 @@ Response Structure
 	:locationId:      This field is exactly the same as ``cacheGroup`` and only exists for legacy compatibility reasons
 	:port:            The port on which this :term:`cache server` listens for incoming HTTP requests
 	:profile:         The :ref:`profile-name` of the :term:`Profile` used by the :term:`cache server`
-	:routingDisabled: An integer representing the boolean concept of whether or not Traffic Routers should route client traffic this :term:`cache server`; one of:
+	:routingDisabled: An integer representing the boolean concept of whether or not Traffic Routers should route client traffic to this :term:`cache server`; one of:
 
 		0
 			Do not route traffic to this server
@@ -149,16 +144,16 @@ Response Structure
 
 		.. seealso:: :ref:`health-proto`
 
-	:type: The type of this :term:`cache server`; one of:
+	:type: The :term:`Type` of this :term:`cache server`; which ought to be one of (but in practice need not be in certain special circumstances):
 
 		EDGE
-			This is an Edge-tier :term:`cache server`
+			This is an :term:`Edge-tier cache server`
 		MID
-			This is a Mid-tier :term:`cache server`
+			This is a :term:`Mid-tier cache server`
 
-:deliveryServices: An object containing keys which are the 'xml_id's of all of the :term:`Delivery Service`\ s within the CDN
+:deliveryServices: An object containing keys which are the :ref:`xml_ids <ds-xmlid>` of all of the :term:`Delivery Services` within the CDN
 
-	:anonymousBlockingEnabled: A string containing a boolean that tells whether or not Anonymized IP Addresses are blocked by this :term:`Delivery Service`; one of:
+	:anonymousBlockingEnabled: A string containing a boolean that tells whether or not :ref:`ds-anonymous-blocking` is set on this :term:`Delivery Service`; one of:
 
 		"true"
 			Anonymized IP addresses are blocked by this :term:`Delivery Service`
@@ -170,37 +165,41 @@ Response Structure
 	:consistentHashQueryParameters: A set of query parameters that Traffic Router should consider when determining a consistent hash for a given client request.
 
 		.. versionadded:: ATCv4
-			This endpoint does not, in general, obey the same versioning rules as all others. So this will appear in all API versions, but *only* if the Traffic Ops server is on version 4+
+			This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0.
 
 	:consistentHashRegex: An optional regular expression that will ensure clients are consistently routed to a :term:`cache server` based on matches to it.
 
 		.. versionadded:: ATCv4
-			This endpoint does not, in general, obey the same versioning rules as all others. So this will appear in all API versions, but *only* if the Traffic Ops server is on version 4+
+			This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0.
 
-	:coverageZoneOnly: A string containing a boolean that tells whether or not this :term:`Delivery Service` routes traffic based only on its Coverage Zone file
-	:deepCachingType:  A string that tells when Deep Caching is used by this :term:`Delivery Service`; one of:
+	:coverageZoneOnly: A string containing a boolean that tells whether or not this :term:`Delivery Service` routes traffic based only on its :term:`Coverage Zone File`
 
-		"ALWAYS"
-			Deep Caching is always used by this :term:`Delivery Service`
-		"NEVER"
-			Deep Caching is never used by this :term:`Delivery Service`
+		.. seealso:: :ref:`ds-geo-limit`
 
-	:dispersion: An object describing the "dispersion" - or number of caches within a single Cache Group across which the same content is spread - within the :term:`Delivery Service`
+	:deepCachingType: A string that defines the :ref:`ds-deep-caching` setting of this :term:`Delivery Service`
+	:dispersion:      An object describing the "dispersion" - or number of :term:`cache servers` within a single :term:`Cache Group` across which the same content is spread - within the :term:`Delivery Service`
 
-		:limit: The maximum number of caches in which the response to a single request URL will be stored
+		:limit: The maximum number of :term:`cache servers` in which the response to a single request URL will be stored
 
-			.. note:: If this is greater than the number of caches in the Cache Group chosen to service the request, then content will be spread across all of them. That is, it causes no problems.
+			.. note:: If this is greater than the number of :term:`cache servers` in the :term:`Cache Group` chosen to service the request, then content will be spread across all of them. That is, it causes no problems.
 
-		:shuffled: A string containing a boolean that tells whether the caches chosen for content dispersion are chosen randomly or based on a consistent hash of the request URL; one of:
+		:shuffled: A string containing a boolean that tells whether the :term:`cache servers` chosen for content dispersion are chosen randomly or based on a consistent hash of the request URL; one of:
 
 			"false"
-				Caches will be chosen consistently
+				:term:`Cache servers` will be chosen consistently
 			"true"
-				Caches will be chosen at random
+				:term:`Cache servers` will be chosen at random
 
 	:domains:             An array of domains served by this :term:`Delivery Service`
+	:ecsEnabled:          A string containing a boolean from :ref:`ds-ecs` that tells whether EDNS0 client subnet is enabled on this :term:`Delivery Service`; one of:
+
+		"false"
+			EDNS0 client subnet is not enabled on this :term:`Delivery Service`
+		"true"
+			EDNS0 client subnet is enabled on this :term:`Delivery Service`
+
 	:geolocationProvider: The name of a provider for IP-to-geographic-location mapping services - currently the only valid value is ``"maxmindGeolocationService"``
-	:ip6RoutingEnabled:   A string containing a boolean that tells whether IPv6 traffic can be routed on this :term:`Delivery Service`; one of:
+	:ip6RoutingEnabled:   A string containing a boolean that defines the :ref:`ds-ipv6-routing` setting for this :term:`Delivery Service`; one of:
 
 		"false"
 			IPv6 traffic will not be routed by this :term:`Delivery Service`
@@ -211,21 +210,21 @@ Response Structure
 
 		:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
 		:setNumber: An integral, unique identifier for the set of types to which the ``type`` field belongs
-		:type:      The type of match performed using ``pattern`` to determine whether or not to use this :term:`Delivery Service`
+		:type:      The name of the :term:`Type` of match performed using ``pattern`` to determine whether or not to use this :term:`Delivery Service`
 
 			HOST_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request, or the name requested for resolution in a DNS request
+				Use the :term:`Delivery Service` if ``pattern`` matches the :mailheader:`Host` HTTP header of an HTTP request, or the name requested for resolution in a DNS request
 			HEADER_REGEXP
 				Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [#httpOnly]_
 			PATH_REGEXP
 				Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL\ [#httpOnly]_
 			STEERING_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Services`
+				Use the :term:`Delivery Service` if ``pattern`` matches the :ref:`ds-xmlid` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Services`
 
-	:missLocation: An object representing the default geographic coordinates to use for a client when lookup of their IP has failed in both the Coverage Zone file(s) and the IP-to-geographic-location database
+	:missLocation: An object representing the default geographic coordinates to use for a client when lookup of their IP has failed in both the :term:`Coverage Zone File` (and/or possibly the :term:`Deep Coverage Zone File`) and the IP-to-geographic-location database
 
-		:lat:  Geographic latitude
-		:long: Geographic longitude
+		:lat:  Geographic latitude as a floating point number
+		:long: Geographic longitude as a floating point number
 
 	:protocol: An object that describes how the :term:`Delivery Service` ought to handle HTTP requests both with and without TLS encryption
 
@@ -243,7 +242,9 @@ Response Structure
 			"true"
 				Respond to HTTP requests with instructions to use HTTPS instead
 
-	:regionalGeoBlocking: A string containing a boolean that tells whether Regional Geographic Blocking is enabled on this :term:`Delivery Service`; one of:
+		.. seealso:: :ref:`ds-protocol`
+
+	:regionalGeoBlocking: A string containing a boolean that defines the :ref:`ds-regionalgeo` setting of this :term:`Delivery Service`; one of:
 
 		"false"
 			Regional Geographic Blocking is not used by this :term:`Delivery Service`
@@ -252,16 +253,16 @@ Response Structure
 
 		.. seealso:: :ref:`regionalgeo-qht`
 
-	:routingName: The highest-level part of the FQDNs serviced by this :term:`Delivery Service`
-	:soa:         An object defining the Start of Authority (SOA) record for the :term:`Delivery Service`'s TLDs (defined in ``domains``)
+	:routingName: A string that is this :ref:`Delivery Service's Routing Name <ds-routing-name>`
+	:soa:         An object defining the :abbr:`SOA (Start of Authority)` record for the :term:`Delivery Service`'s :abbr:`TLDs (Top-Level Domains)` (defined in ``domains``)
 
 		:admin: The name of the administrator for this zone - i.e. the RNAME
 
 			.. note:: This rarely represents a proper email address, unfortunately.
 
 		:expire:  A string containing an integer that sets the number of seconds after which secondary name servers should stop answering requests for this zone if the master does not respond
-		:minimum: A string containing an integer that sets the Time To Live (TTL) - in seconds - of the record for the purpose of negative caching
-		:refresh: A string containing an integer that sets the number of seconds after which secondary name servers should query the master for the SOA record, to detect zone changes
+		:minimum: A string containing an integer that sets the :abbr:`TTL (Time To Live)` - in seconds - of the record for the purpose of negative caching
+		:refresh: A string containing an integer that sets the number of seconds after which secondary name servers should query the master for the :abbr:`SOA (Start of Authority)` record, to detect zone changes
 		:retry:   A string containing an integer that sets the number of seconds after which secondary name servers should retry to request the serial number from the master if the master does not respond
 
 			.. note:: :rfc:`1035` dictates that this should always be less than ``refresh``.
@@ -275,36 +276,38 @@ Response Structure
 		"true"
 			SSL is used by this :term:`Delivery Service`
 
+		.. seealso:: :ref:`ds-protocol`
+
 	:ttls: An object that contains keys which are types of DNS records that have values which are strings containing integers that specify the time for which a response to the specific type of record request should remain valid
 
 		.. note:: This overrides ``config.ttls``.
 
-:edgeLocations: An object containing keys which are the names of Edge-Tier Cache Groups within the CDN
+:edgeLocations: An object containing keys which are the names of Edge-Tier :term:`Cache Groups` within the CDN
 
-	:backupLocations: An object that describes fallbacks for when this Cache Group is unavailable
+	:backupLocations: An object that describes this :ref:`Cache Group's Fallbacks <cache-group-fallbacks>`
 
-		:fallbackToClosest: A string containing a boolean which tells whether requests should fall back on the closest available Cache Group when this Cache Group is not available; one of:
+		:fallbackToClosest: A string containing a boolean which defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`; one of:
 
 			"false"
-				Do not fall back on the closest available Cache Group
+				Do not fall back on the closest available :term:`Cache Group`
 			"true"
-				Fall back on the closest available Cache Group
+				Fall back on the closest available :term:`Cache Group`
 
-		:list: If any fallback Cache Groups have been configured for this Cache Group, this key will appear and will be an array of the names of all of those fallback Cache Groups, in the prescribed order
+		:list: If this :term:`Cache Group` has any :ref:`cache-group-fallbacks`, this key will appear and will be an array of those :ref:`Cache Groups' Names <cache-group-name>`
 
-	:latitude:            The geographic latitude of this Cache Group
-	:localizationMethods: An array of short names for localization methods available for this Cache Group
-	:longitude:           The geographic longitude of this Cache Group
+	:latitude:            A floating point number that defines this :ref:`Cache Group's Latitude <cache-group-latitude>`
+	:localizationMethods: An array of strings that represents this :ref:`Cache Group's Localization Methods <cache-group-localization-methods>`
+	:longitude:           A floating point number that defines this :ref:`Cache Group's Longitude <cache-group-longitude>`
 
 :monitors: An object containing keys which are the (short) hostnames of Traffic Monitors within this CDN
 
-	:fqdn:      The FQDN of this Traffic Monitor
+	:fqdn:      The :abbr:`FQDN (Fully Qualified Domain Name)` of this Traffic Monitor
 	:httpsPort: The port number on which this Traffic Monitor listens for incoming HTTPS requests
 	:ip6:       This Traffic Monitor's IPv6 address
 	:ip:        This Traffic Monitor's IPv4 address
-	:location:  The name of the :term:`Cache Group` to which this Traffic Monitor belongs
+	:location:  A string which is the :ref:`cache-group-name` of the :term:`Cache Group` to which this Traffic Monitor belongs
 	:port:      The port number on which this Traffic Monitor listens for incoming HTTP requests
-	:profile:   The :ref:`profile-name` of the :term:`Profile` used by this Traffic Monitor
+	:profile:   A string which is the :ref:`profile-name` of the :term:`Profile` used by this Traffic Monitor
 
 		.. note:: For legacy reasons, this must always start with "RASCAL-".
 
@@ -314,31 +317,27 @@ Response Structure
 
 :stats: An object containing metadata information regarding the CDN
 
-	:CDN_name: The name of this CDN
-	:date:     The UNIX epoch timestamp date in the Traffic Ops server's own timezone
-	:tm_host:  The FQDN of the Traffic Ops server
-	:tm_path:  A path relative to the root of the Traffic Ops server where a request may be replaced to have this :term:`Snapshot` overwritten by the current *configured state* of the CDN
-
-		.. deprecated:: 1.1
-			This field is still present for legacy compatibility reasons, but its contents should be ignored. Instead, make a ``PUT`` request to :ref:`to-api-snapshot-name`.
-
+	:CDN_name:   The name of this CDN
+	:date:       The UNIX epoch timestamp date in the Traffic Ops server's own timezone
+	:tm_host:    The :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Ops server
+	:tm_path:    A path relative to the root of the Traffic Ops server where a request may be replaced to have this :term:`Snapshot` overwritten by the current *configured state* of the CDN
 	:tm_user:    The username of the currently logged-in user
 	:tm_version: The full version number of the Traffic Ops server, including release number, git commit hash, and supported Enterprise Linux version
 
-:trafficRouterLocations: An object containing keys which are the names of Cache Groups within the CDN which contain Traffic Routers
+:trafficRouterLocations: An object containing keys which are the :ref:`names of Cache Groups <cache-group-name>` within the CDN which contain Traffic Routers
 
-	:backupLocations: An object that describes fallbacks for when this Cache Group is unavailable
+	:backupLocations: An object that describes this :ref:`Cache Group's Fallbacks <cache-group-fallbacks>`
 
-		:fallbackToClosest: A string containing a boolean which tells whether requests should fall back on the closest available Cache Group when this Cache Group is not available; one of:
+		:fallbackToClosest: A string containing a boolean which defines this :ref:`Cache Group's Fallback to Closest <cache-group-fallback-to-closest>` setting; one of:
 
 			"false"
-				Do not fall back on the closest available Cache Group
+				Do not fall back on the closest available :term:`Cache Group`
 			"true"
-				Fall back on the closest available Cache Group
+				Fall back on the closest available :term:`Cache Group`
 
-	:latitude:            The geographic latitude of this Cache Group
-	:localizationMethods: An array of short names for localization methods available for this Cache Group
-	:longitude:           The geographic longitude of this Cache Group
+	:latitude:            A floating point number that defines this :ref:`Cache Group's Latitude <cache-group-latitude>`
+	:localizationMethods: An array of strings that represents this :ref:`Cache Group's Localization Methods <cache-group-localization-methods>`
+	:longitude:           A floating point number that defines this :ref:`Cache Group's Longitude <cache-group-longitude>`
 
 .. code-block:: http
 	:caption: Response Example
@@ -349,7 +348,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 220bc4XXwaj+s7ODd3QAF5leGj06lnApiN5E8H/B2RgxSphnQIfnwy6WWbBDjonWXPV1IWDCjBMO+rR+lAabMg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 12 Dec 2018 17:36:25 GMT
@@ -365,10 +364,6 @@ Response Structure
 			"dnssec.dynamic.response.expiration": "300s",
 			"dnssec.enabled": "false",
 			"domain_name": "mycdn.ciab.test",
-			"edge.dns.limit": "6",
-			"edge.dns.routing": "true",
-			"edge.http.limit": "6",
-			"edge.http.routing": "true",
 			"federationmapping.polling.interval": "60000",
 			"federationmapping.polling.url": "https://${toHostname}/internal/api/1.3/federations.json",
 			"geolocation.polling.interval": "86400000",
@@ -495,6 +490,7 @@ Response Structure
 					"SOA": "86400"
 				},
 				"ip6RoutingEnabled": "true",
+				"ecsEnabled": "false",
 				"routingName": "video",
 				"deepCachingType": "NEVER"
 			}

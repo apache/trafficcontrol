@@ -41,14 +41,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cacheGroups: An array of objects representing each of the Cache Groups being monitored within this CDN
+:cacheGroups: An array of objects representing each of the :term:`Cache Groups` being monitored within this CDN
 
-	:coordinates: An object representing the physical location of this Cache Group
+	:coordinates: An object representing the geographic location of this :term:`Cache Group`
 
-		:latitude:  The geographic latitude of this Cache Group
-		:longitude: The geographic longitude of this Cache Group
+		:latitude:  This :ref:`Cache Group's latitude <cache-group-latitude>` as a floating-point number
+		:longitude: This :ref:`Cache Group's longitude <cache-group-longitude>` as a floating-point number
 
-	:name: The name of this Cache Group
+	:name: A string that is this :ref:`Cache Group's name <cache-group-name>`
 
 :config: A collection of parameters used to configure the monitoring behaviour of Traffic Monitor
 
@@ -67,45 +67,48 @@ Response Structure
 	:status:             The :term:`Delivery Service`'s status
 	:totalKbpsThreshold: A threshold rate of data transfer this :term:`Delivery Service` is configured to handle, in Kilobits per second
 	:totalTpsThreshold:  A threshold amount of transactions per second that this :term:`Delivery Service` is configured to handle
-	:xmlId:              An integral, unique identifier for this Deliver Service (named "xmlId" for legacy reasons)
+	:xmlId:              A string that is the :ref:`Delivery Service's XMLID <ds-xmlid>`
 
 :profiles: An array of the :term:`Profiles` in use by the :term:`cache servers` and :term:`Delivery Services` belonging to this CDN
 
-	:name:       The :term:`Profile`'s :ref:`profile-name`
+	:name:       A string that is the :ref:`Profile's Name <profile-name>`
 	:parameters: An array of the :term:`Parameters` in this :term:`Profile` that relate to monitoring configuration. This can be ``null`` if the servers using this :term:`Profile` cannot be monitored (e.g. Traffic Routers)
 
 		:health.connection.timeout:                 A timeout value, in milliseconds, to wait before giving up on a health check request
 		:health.polling.url:                        A URL to request for polling health. Substitutions can be made in a shell-like syntax using the properties of an object from the ``"trafficServers"`` array
 		:health.threshold.availableBandwidthInKbps: The total amount of bandwidth that servers using this profile are allowed, in Kilobits per second. This is a string and using comparison operators to specify ranges, e.g. ">10" means "more than 10 kbps"
-		:health.threshold.loadavg:                  The UNIX loadavg at which the server should be marked "unhealthy" - see ``man uptime``
-		:health.threshold.queryTime:                The highest allowed length of time for completing health queries (after connection has been established) in milliseconds
-		:history.count:                             The number of past events to store; once this number is reached, the oldest event will be forgotten before a new one can be added
+		:health.threshold.loadavg:                  The UNIX loadavg at which the server should be marked "unhealthy"
 
-	:type: The :ref:`profile-type` of the :term:`Profile`
+			.. seealso:: :manpage:`uptime(1)`
+
+		:health.threshold.queryTime: The highest allowed length of time for completing health queries (after connection has been established) in milliseconds
+		:history.count:              The number of past events to store; once this number is reached, the oldest event will be forgotten before a new one can be added
+
+	:type: A string that names the :ref:`Profile's Type <profile-type>`
 
 :trafficMonitors: An array of objects representing each Traffic Monitor that monitors this CDN (this is used by Traffic Monitor's "peer polling" function)
 
-	:fqdn:     AN FQDN that resolves to the IP (and/or IPv6) address of the server running this Traffic Monitor instance
+	:fqdn:     An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the IPv4 (and/or IPv6) address of the server running this Traffic Monitor instance
 	:hostname: The hostname of the server running this Traffic Monitor instance
 	:ip6:      The IPv6 address of this Traffic Monitor - when applicable
-	:ip:       The IP address of this Traffic Monitor
+	:ip:       The IPv4 address of this Traffic Monitor
 	:port:     The port on which this Traffic Monitor listens for incoming connections
-	:profile:  The :ref:`profile-name` of the :term:`Profile` assigned to this Traffic Monitor
+	:profile:  A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this Traffic Monitor
 	:status:   The status of the server running this Traffic Monitor instance
 
 :trafficServers: An array of objects that represent the :term:`cache servers` being monitored within this CDN
 
-	:cacheGroup:    The Cache Group to which this cache belongs
-	:fqdn:          A Fully Qualified Domain Name (FQDN) that resolves to the :term:`cache server`'s IP (or IPv6) address
-	:hashId:        The short name for the :term:`cache server` - named "hashId" for legacy reasons
+	:cacheGroup:    The :term:`Cache Group` to which this :term:`cache server` belongs
+	:fqdn:          An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the :term:`cache server`'s IPv4 (or IPv6) address
+	:hashId:        The (short) hostname for the :term:`cache server` - named "hashId" for legacy reasons
 	:hostName:      The (short) hostname of the :term:`cache server`
-	:interfacename: The name of the network interface device being used by the cache's HTTP proxy
-	:ip6:           The cache's IPv6 address - when applicable
-	:ip:            The cache's IP address
-	:port:          The port on which the cache listens for incoming connections
-	:profile:       The :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
-	:status:        The status of the Cache
-	:type:          The type of the cache - should be either ``EDGE`` or ``MID``
+	:interfacename: The name of the network interface device being used by the :term:`cache server`'s HTTP proxy
+	:ip6:           The :term:`cache server`'s IPv6 address - when applicable
+	:ip:            The :term:`cache server`'s IPv4 address
+	:port:          The port on which the :term:`cache server` listens for incoming connections
+	:profile:       A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
+	:status:        The status of the :term:`cache server`
+	:type:          A string that names the :term:`Type` of the :term:`cache server` - should (ideally) be either ``EDGE`` or ``MID``
 
 .. code-block:: http
 	:caption: Response Example
@@ -116,7 +119,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: uLR+tRoqR8SYO38j3DV9wQ+IkJ7Kf+MCoFkcWZtsgbpLJ+0S6f+IiI8laNVeDgrM/P23MAQ6BSepm+EJRl1AXQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 14 Nov 2018 21:09:31 GMT

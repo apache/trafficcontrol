@@ -236,8 +236,15 @@ public class CertificateRegistry {
 		}
 		handshakeDataMap = master;
 
-		if (sslEndpoint != null) {
-			sslEndpoint.replaceSSLHosts(changes);
+		// This will update the SSLHostConfig objects stored in the server
+		// if any of those updates fail then we need to be sure to remove them
+		// from the previousData list so that we will try to update them again
+		// next time we import certificates
+		if (sslEndpoint != null && !changes.isEmpty()) {
+			final List<String> failedUpdates = sslEndpoint.reloadSSLHosts(changes);
+			failedUpdates.forEach(alias-> {
+				previousData.remove(alias);
+			});
 		}
 	}
 

@@ -1,6 +1,10 @@
 package tc
 
-import "time"
+import (
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,11 +25,12 @@ import "time"
  * under the License.
  */
 
+// ServersResponse is a list of Servers as a response.
 type ServersResponse struct {
 	Response []Server `json:"response"`
 }
 
-// ServerDetailResponse is the JSON object returned for a single server
+// ServersDetailResponse is the JSON object returned for a single server.
 type ServersDetailResponse struct {
 	Response Server `json:"response"`
 }
@@ -139,6 +144,19 @@ type ServerUpdateStatus struct {
 	ParentRevalPending bool   `json:"parent_reval_pending"`
 }
 
+type ServerPutStatus struct {
+	Status        util.JSONNameOrIDStr `json:"status"`
+	OfflineReason *string              `json:"offlineReason"`
+}
+
+type ServerInfo struct {
+	CachegroupID int    `json:"cachegroupId" db:"cachegroup_id"`
+	CDNID        int    `json:"cdnId" db:"cdn_id"`
+	DomainName   string `json:"domainName" db:"domain_name"`
+	HostName     string `json:"hostName" db:"host_name"`
+	Type         string `json:"type" db:"server_type"`
+}
+
 type ServerDetail struct {
 	CacheGroup         *string           `json:"cachegroup" db:"cachegroup"`
 	CDNName            *string           `json:"cdnName" db:"cdn_name"`
@@ -176,4 +194,24 @@ type ServerDetail struct {
 	Type               string            `json:"type" db:"server_type"`
 	XMPPID             *string           `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd         *string           `json:"xmppPasswd" db:"xmpp_passwd"`
+}
+
+// ServerQueueUpdateRequest encodes the request data for the POST
+// servers/{{ID}}/queue_update endpoint.
+type ServerQueueUpdateRequest struct {
+	Action string `json:"action"`
+}
+
+// ServerQueueUpdateResponse decodes the full response with alerts from the POST
+// servers/{{ID}}/queue_update endpoint.
+type ServerQueueUpdateResponse struct {
+	Response ServerQueueUpdate `json:"response"`
+	Alerts
+}
+
+// ServerQueueUpdate decodes the update data from the POST
+// servers/{{ID}}/queue_update endpoint.
+type ServerQueueUpdate struct {
+	ServerID util.JSONIntStr `json:"serverId"`
+	Action   string          `json:"action"`
 }

@@ -19,7 +19,7 @@ import (
 )
 
 func init() {
-	AddPlugin(10000, Funcs{onRequest: hello})
+	AddPlugin(10000, Funcs{onRequest: hello}, "example HTTP plugin", "1.0.0")
 }
 
 const HelloPath = "/_hello"

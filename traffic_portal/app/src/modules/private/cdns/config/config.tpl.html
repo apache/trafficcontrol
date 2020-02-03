@@ -32,7 +32,7 @@ under the License.
     </div>
     <div id="snapshotContainer" class="x_content">
         <uib-tabset active="active" justified="true">
-            <uib-tab index="0" class="tab">
+            <uib-tab index="0" class="tab" select="tabSelected()">
                 <uib-tab-heading uib-popover-template="configCount.templateUrl" popover-title="{{configCount.added + configCount.removed + configCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     General Config<br/>[ {{configCount.added}} | {{configCount.removed}} | {{configCount.updated}} ]
                 </uib-tab-heading>
@@ -58,7 +58,7 @@ under the License.
                     </table>
                 </div>
             </uib-tab>
-            <uib-tab index="1" class="tab">
+            <uib-tab index="1" class="tab" select="tabSelected()">
                 <uib-tab-heading uib-popover-template="contentRoutersCount.templateUrl" popover-title="{{contentRoutersCount.added + contentRoutersCount.removed + contentRoutersCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     Traffic Routers<br/>[ {{contentRoutersCount.added}} | {{contentRoutersCount.removed}} | {{contentRoutersCount.updated}} ]
                 </uib-tab-heading>
@@ -84,7 +84,7 @@ under the License.
                     </table>
                 </div>
             </uib-tab>
-            <uib-tab index="2" class="tab">
+            <uib-tab index="2" class="tab" select="tabSelected()">
                 <uib-tab-heading uib-popover-template="monitorsCount.templateUrl" popover-title="{{monitorsCount.added + monitorsCount.removed + monitorsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     Traffic Monitors<br/>[ {{monitorsCount.added}} | {{monitorsCount.removed}} | {{monitorsCount.updated}} ]
                 </uib-tab-heading>
@@ -110,7 +110,7 @@ under the License.
                     </table>
                 </div>
             </uib-tab>
-            <uib-tab index="3" class="tab">
+            <uib-tab index="3" class="tab" select="tabSelected()">
                 <uib-tab-heading uib-popover-template="contentServersCount.templateUrl" popover-title="{{contentServersCount.added + contentServersCount.removed + contentServersCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     Traffic Servers<br/>[ {{contentServersCount.added}} | {{contentServersCount.removed}} | {{contentServersCount.updated}} ]
                 </uib-tab-heading>
@@ -136,7 +136,7 @@ under the License.
                     </table>
                 </div>
             </uib-tab>
-            <uib-tab index="4" class="tab">
+            <uib-tab index="4" class="tab" select="tabSelected()">
                 <uib-tab-heading uib-popover-template="deliveryServicesCount.templateUrl" popover-title="{{deliveryServicesCount.added + deliveryServicesCount.removed + deliveryServicesCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     Delivery Services<br/>[ {{deliveryServicesCount.added}} | {{deliveryServicesCount.removed}} | {{deliveryServicesCount.updated}} ]
                 </uib-tab-heading>
@@ -162,7 +162,7 @@ under the License.
                     </table>
                 </div>
             </uib-tab>
-            <uib-tab index="5" class="tab">
+            <uib-tab index="5" class="tab" select="tabSelected()">
                 <uib-tab-heading uib-popover-template="edgeLocationsCount.templateUrl" popover-title="{{edgeLocationsCount.added + edgeLocationsCount.removed + edgeLocationsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     Edge Cache Groups<br/>[ {{edgeLocationsCount.added}} | {{edgeLocationsCount.removed}} | {{edgeLocationsCount.updated}} ]
                 </uib-tab-heading>
@@ -188,7 +188,7 @@ under the License.
                     </table>
                 </div>
             </uib-tab>
-            <uib-tab index="6" class="tab">
+            <uib-tab index="6" class="tab" select="tabSelected()">
                 <uib-tab-heading uib-popover-template="trLocationsCount.templateUrl" popover-title="{{trLocationsCount.added + trLocationsCount.removed + trLocationsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     TR Cache Groups<br/>[ {{trLocationsCount.added}} | {{trLocationsCount.removed}} | {{trLocationsCount.updated}} ]
                 </uib-tab-heading>
@@ -214,7 +214,7 @@ under the License.
                     </table>
                 </div>
             </uib-tab>
-            <uib-tab index="7" class="tab">
+            <uib-tab index="7" class="tab" select="tabSelected()">
                 <uib-tab-heading uib-popover-template="statsCount.templateUrl" popover-title="{{statsCount.added + statsCount.removed + statsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     Stats<br/>[ {{statsCount.added}} | {{statsCount.removed}} | {{statsCount.updated}} ]
                 </uib-tab-heading>

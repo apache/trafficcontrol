@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// A List of Roles Response
+// RolesResponse is a list of Roles as a response.
 // swagger:response RolesResponse
 // in: body
 type RolesResponse struct {
@@ -27,7 +27,8 @@ type RolesResponse struct {
 	Response []Role `json:"response"`
 }
 
-// A Single Role Response for Update and Create to depict what changed
+// RoleResponse is a single Role response for Update and Create to depict what
+// changed.
 // swagger:response RoleResponse
 // in: body
 type RoleResponse struct {
@@ -37,6 +38,16 @@ type RoleResponse struct {
 
 // Role ...
 type Role struct {
+	RoleV11
+
+	// Capabilities associated with the Role
+	//
+	// required: true
+	Capabilities *[]string `json:"capabilities" db:"-"`
+}
+
+// RoleV11 ...
+type RoleV11 struct {
 	// ID of the Role
 	//
 	// required: true
@@ -56,9 +67,4 @@ type Role struct {
 	//
 	// required: true
 	PrivLevel *int `json:"privLevel" db:"priv_level"`
-
-	// Capabilities associated with the Role
-	//
-	// required: true
-	Capabilities *[]string `json:"capabilities" db:"-"`
 }

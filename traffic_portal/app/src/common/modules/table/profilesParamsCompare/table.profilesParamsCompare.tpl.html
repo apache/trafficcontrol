@@ -1,0 +1,60 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/profiles', dirty)">Profiles</a></li>
+            <li><a ng-click="navigateToPath('/profiles/' + profile1.id, dirty)">{{::profile1.name}}</a></li>
+            <li><a ng-click="navigateToPath('/profiles/' + profile2.id, dirty)">{{::profile2.name}}</a></li>
+            <li class="active">Compare</li>
+        </ol>
+        <div class="pull-right">
+            <button type="button" class="btn btn-link" title="Show Shared Params" ng-if="!showAll" ng-click="navigateToPath('/profiles/' + profile1.id + '/' + profile2.id + '/compare/all', dirty)">Show Shared Params</button>
+            <button type="button" class="btn btn-link" title="Hide Shared Params" ng-if="showAll" ng-click="navigateToPath('/profiles/' + profile1.id + '/' + profile2.id + '/compare/diff', dirty)">Hide Shared Params</button>
+            <button type="button" class="btn btn-default" title="Restore" ng-show="dirty" ng-click="restore()">Restore</button>
+            <button type="button" class="btn btn-primary" title="Update" ng-disabled="!dirty" ng-click="confirmUpdateProfiles()">Update</button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="profilesParamsCompareTable" class="table responsive-utilities jambo_table params">
+            <thead>
+            <tr class="headings">
+                <th>Name</th>
+                <th>Config File</th>
+                <th>Value</th>
+                <th class="center">{{::profile1.name}} <span ng-if="showAll">({{selectedProfile1Params.length}})</span></th>
+                <th class="center">{{::profile2.name}} <span ng-if="showAll">({{selectedProfile2Params.length}})</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="pp in ::selectedParams | filter:filterFn">
+                <td data-search="^{{::pp.name}}$">{{::pp.name}}</td>
+                <td data-search="^{{::pp.configFile}}$">{{::pp.configFile}}</td>
+                <td data-search="^{{::pp.value}}$">{{::pp.value}}</td>
+                <td class="center" data-order="{{pp.selected1}}"><input type="checkbox" ng-change="onChange(1)" ng-class="{'dirty': isCheckboxDirty(pp, 1)}" ng-model="pp.selected1"><span hidden>{{pp.selected1}}</span></td>
+                <td class="center" data-order="{{pp.selected2}}"><input type="checkbox" ng-change="onChange(2)" ng-class="{'dirty': isCheckboxDirty(pp, 2)}" ng-model="pp.selected2"><span hidden>{{pp.selected2}}</span></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

@@ -52,7 +52,7 @@ Installing Traffic Router
 	:file:`traffic_monitor.properties.reload.period`
 		Period to wait (in milliseconds) between reloading this file, e.g. ``traffic_monitor.properties.reload.period=60000``
 
-#. Start Traffic Router. This is normally done by starting its :manpage:`systemd(1)` service. ``systemctl start traffic_router`` , and test DNS lookups against that server to be sure it's resolving properly. with e.g. ``dig`` or ``curl``. Also, because previously taken CDN :term:`Snapshot`\ s will be cached, they need to be removed manually to actually be reloaded. This file should be located at :file:`/opt/traffic_router/db/cr-config.json`. This should be done before starting or restarting Traffic Router.
+#. Start Traffic Router. This is normally done by starting its :manpage:`systemd(1)` service. ``systemctl start traffic_router`` , and test DNS lookups against that server to be sure it's resolving properly. with e.g. ``dig`` or ``curl``. Also, because previously taken CDN :term:`Snapshots` will be cached, they need to be removed manually to actually be reloaded. This file should be located at :file:`/opt/traffic_router/db/cr-config.json`. This should be done before starting or restarting Traffic Router.
 
 	.. code-block:: console
 		:caption: Starting and Testing Traffic Router
@@ -119,6 +119,9 @@ For the most part, the configuration files and :term:`Parameters` used by Traffi
 	|                            | dns.udp.port                              | UDP port that Traffic Router will use for incoming DNS requests                  | ``53``                                             |
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.max-threads                           | Maximum number of threads used to process incoming DNS requests                  | ``1000``                                           |
+	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
+	|                            | dns.queue-depth                           | Maximum number of threads allowed to queue when all workers threads are busy.    | ``1000``                                           |
+	|                            |                                           | To disable the queue, set to 0, or to allow an unlimited sized queue, set to -1. |                                                    |
 	|                            +-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 	|                            | dns.zones.dir                             | Path to automatically generated zone files for reference                         | ``/opt/traffic_router/var/auto-zones``             |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
@@ -192,7 +195,8 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| CoverageZoneJsonURL                     | CRConfig.xml                 | The location (URL) where a :term:`Coverage Zone Map` may be found.                                                                    |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| ecsEnable                               | CRConfig.json                | Boolean value to enable or disable ENDS0 client subnet extensions.                                                                    |
+	| ecsEnable                               | CRConfig.json                | Boolean value to enable or disable EDNS0 client subnet extensions.                                                                    |
+	|                                         |                              | This is a universal value for the CDN but can be set on the :term:`Delivery Service` level through the :ref:`ds-ecs` field.           |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url                 | CRConfig.json                | The location (URL) where a geographic IP mapping database may be found.                                                               |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -274,6 +278,12 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	|                                         |                              | from its cache.                                                                                                                       |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| zonemanager.dynamic.response.expiration | CRConfig.json                | A duration (e.g.: "300s") that defines how long a dynamic zone will remain valid before expiring.                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| zonemanager.dynamic.concurrencylevel    | CRConfig.json                | An integer that defines the size of the concurrency level (threads) of the Guava cache used by ZoneManager to store zone material.    |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| zonemanager.dynamic.initialcapacity     | CRConfig.json                | An integer that defines the initial size of the Guava cache, default is 10000. Too low of a value can lead to expensive resizing.     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| zonemanager.init.timeout                | CRConfig.json                | An integer that defines the number of minutes to allow for zone generation; this bounds the zone priming activity.                    |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| DNSKEY.generation.multiplier            | CRConfig.json                | Used to determine when new DNSSEC keys need to be generated. Keys are re-generated if expiration is less than the generation          |
 	|                                         |                              | multiplier multiplied by the :abbr:`TTL (Time To Live)`. If this :term:`Parameter` does not exist, the default is "10".               |
@@ -437,13 +447,13 @@ CZ
 DEEP_CZ
 	The result was derived from Deep Coverage Zone data based on the address in the ``chi`` field
 DS_MISS
-	_*HTTP Only*_ No HTTP :term:`Delivery Service`\ supports either this request's URL path or headers
+	_*HTTP Only*_ No HTTP :term:`Delivery Service` supports either this request's URL path or headers
 DS_REDIRECT
 	The result is using the Bypass Destination configured for the matched :term:`Delivery Service` when that :term:`Delivery Service` is unavailable or does not have the requested resource
 ERROR
 	An internal error occurred within Traffic Router, more details may be found in the ``rerr`` field
 FED
-	_*DNS Only*_ The result was obtained through federated coverage zone data outside of any :term:`Delivery Service`\ s
+	_*DNS Only*_ The result was obtained through federated coverage zone data outside of any :term:`Delivery Services`
 GEO
 	The result was derived from geolocation service based on the address in the ``chi`` field
 GEO_REDIRECT
@@ -455,7 +465,7 @@ RGALT
 RGDENY
 	_*DNS Only*_ The result was obtained through federated coverage zone data outside of any :term:`Delivery Service` - the request was regionally blocked because there was no rule for the request made
 STATIC_ROUTE
-	_*DNS Only*_ No DNS :term:`Delivery Service`\ supports the hostname portion of the requested URL
+	_*DNS Only*_ No DNS :term:`Delivery Service` supports the hostname portion of the requested URL
 
 
 ``rdtl`` Meanings
@@ -530,7 +540,7 @@ DNS Specifics
 	+=======+=================================================================================+===================================================================================================+
 	| xn    | The ID from the client DNS request header                                       | a whole number between 0 and 65535 (inclusive)                                                    |
 	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
-	| rhi   | The IP address of the resolver when ENDS0 client subnet extensions are enabled. | An IPv4 or IPv6 string, or dash if request is for resolver only and no client subnet is present   |
+	| rhi   | The IP address of the resolver when EDNS0 client subnet extensions are enabled. | An IPv4 or IPv6 string, or dash if request is for resolver only and no client subnet is present   |
 	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
 	| fqdn  | The qname field from the client DNS request message (i.e. the                   | A series of DNS labels/domains separated by '.' characters and ending with a '.' character        |
 	|       | :abbr:`FQDN (Fully Qualified Domain Name)` the client is requesting be          |                                                                                                   |
@@ -564,7 +574,7 @@ Deep Caching
 
 Overview
 --------
-Deep Caching is a feature that enables clients to be routed to the closest possible "deep" Edge-tier :term:`cache server` s on a per-:term:`Delivery Service` basis. The term "deep" is used in the networking sense, meaning that the Edge-tier :term:`cache server` s are located deep in the network where the number of network hops to a client is as minimal. This deep caching topology is desirable because storing content closer to the client gives better bandwidth savings, and sometimes the cost of bandwidth usage in the network outweighs the cost of adding storage. While it may not be feasible to cache an entire copy of the CDN's contents in every deep location (for the best possible bandwidth savings), storing just a relatively small amount of the CDN's most requested content can lead to very high bandwidth savings.
+Deep Caching is a feature that enables clients to be routed to the closest possible "deep" Edge-tier :term:`cache servers` on a per-:term:`Delivery Service` basis. The term "deep" is used in the networking sense, meaning that the Edge-tier :term:`cache servers` are located deep in the network where the number of network hops to a client is as minimal. This deep caching topology is desirable because storing content closer to the client gives better bandwidth savings, and sometimes the cost of bandwidth usage in the network outweighs the cost of adding storage. While it may not be feasible to cache an entire copy of the CDN's contents in every deep location (for the best possible bandwidth savings), storing just a relatively small amount of the CDN's most requested content can lead to very high bandwidth savings.
 
 What You Need
 -------------
@@ -577,11 +587,11 @@ What You Need
 
 	.. seealso:: See :ref:`tr-profile` for details.
 
-#. Deep Caching enabled on one or more HTTP :term:`Delivery Service`\ s (i.e. 'Deep Caching' field on the :term:`Delivery Service` details page (under :guilabel:`Advanced Options`) set to ``ALWAYS``)
+#. Deep Caching enabled on one or more HTTP :term:`Delivery Services` (i.e. 'Deep Caching' field on the :term:`Delivery Service` details page (under :guilabel:`Advanced Options`) set to ``ALWAYS``)
 
 How it Works
 ------------
-Deep Coverage Zone routing is very similar to that of regular Coverage Zone routing, except that the :abbr:`DCZF (Deep Coverage Zone File)` is preferred over the regular :abbr:`CZF (Coverage Zone File)` for :term:`Delivery Service`\ s with Deep Caching enabled. If the client requests a Deep Caching-enabled :term:`Delivery Service` and their IP address gets a "hit" in the :abbr:`DCZF (Deep Coverage Zone File)`, Traffic Router will attempt to route that client to one of the available "deep" :term:`cache server` s in the client's corresponding zone. If there are no "deep" :term:`cache server` s available for a client's request, Traffic Router will fall back to the regular :abbr:`CZF (Coverage Zone File)` and continue regular :abbr:`CZF (Coverage Zone File)` routing from there.
+Deep Coverage Zone routing is very similar to that of regular Coverage Zone routing, except that the :abbr:`DCZF (Deep Coverage Zone File)` is preferred over the regular :abbr:`CZF (Coverage Zone File)` for :term:`Delivery Services` with Deep Caching enabled. If the client requests a Deep Caching-enabled :term:`Delivery Service` and their IP address gets a "hit" in the :abbr:`DCZF (Deep Coverage Zone File)`, Traffic Router will attempt to route that client to one of the available "deep" :term:`cache servers` in the client's corresponding zone. If there are no "deep" :term:`cache servers` available for a client's request, Traffic Router will fall back to the regular :abbr:`CZF (Coverage Zone File)` and continue regular :abbr:`CZF (Coverage Zone File)` routing from there.
 
 .. _tr-steering:
 
@@ -590,7 +600,7 @@ Steering Feature
 
 Overview
 --------
-A Steering :term:`Delivery Service` is a :term:`Delivery Service` that is used to route a client to another :term:`Delivery Service`. The :ref:`Type <ds-types>` of a Steering :term:`Delivery Service` is either STEERING or CLIENT_STEERING. A Steering :term:`Delivery Service` will have target :term:`Delivery Service`\ s configured for it with weights assigned to them. Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights. This consistent hash ring is separate from the consistent hash ring used in cache selection.
+A Steering :term:`Delivery Service` is a :term:`Delivery Service` that is used to route a client to another :term:`Delivery Service`. The :ref:`Type <ds-types>` of a Steering :term:`Delivery Service` is either STEERING or CLIENT_STEERING. A Steering :term:`Delivery Service` will have target :term:`Delivery Services` configured for it with weights assigned to them. Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights. This consistent hash ring is separate from the consistent hash ring used in cache selection.
 
 Special regular expressions - referred to as 'filters' - can also be configured for target :term:`Delivery Services` to pin traffic to a specific :term:`Delivery Service`. For example, if the filter :regexp:`.*/news/.*` for a target called ``target-ds-1`` is created, any requests to Traffic Router with "news" in them will be routed to ``target-ds-1``. This will happen regardless of the configured weights.
 
@@ -608,7 +618,7 @@ A couple simple use-cases for Steering are:
 
 The Difference Between STEERING and CLIENT_STEERING
 ---------------------------------------------------
-The only difference between the STEERING and CLIENT_STEERING :term:`Delivery Service` :term:`Type`\ s is that CLIENT_STEERING explicitly allows a client to bypass Steering by choosing a destination :term:`Delivery Service`. A client can accomplish this by providing the ``X-TC-Steering-Option`` HTTP header with a value of the ``xml_id`` of the target :term:`Delivery Service` to which they desire to be routed. When Traffic Router receives this header it will route to the requested target :term:`Delivery Service` regardless of weight configuration. This header is ignored by STEERING :term:`Delivery Services`.
+The only difference between the STEERING and CLIENT_STEERING :term:`Delivery Service` :term:`Types` is that CLIENT_STEERING explicitly allows a client to bypass Steering by choosing a destination :term:`Delivery Service`. A client can accomplish this by providing the ``X-TC-Steering-Option`` HTTP header with a value of the ``xml_id`` of the target :term:`Delivery Service` to which they desire to be routed. When Traffic Router receives this header it will route to the requested target :term:`Delivery Service` regardless of weight configuration. This header is ignored by STEERING :term:`Delivery Services`.
 
 Configuration
 -------------
@@ -637,7 +647,7 @@ The HTTPS set up process is:
 #. Obtain and import signed certificate chain
 #. Perform a CDN :term:`Snapshot`
 
-Clients may make HTTPS requests to :term:`Delivery Service`\ s only after the CDN :term:`Snapshot` propagates to Traffic Router and it receives the certificate chain from Traffic Ops.
+Clients may make HTTPS requests to :term:`Delivery Services` only after the CDN :term:`Snapshot` propagates to Traffic Router and it receives the certificate chain from Traffic Ops.
 
 Protocol Options
 ----------------
@@ -652,7 +662,7 @@ HTTP TO HTTPS
 
 Certificate Retrieval
 ---------------------
-.. Warning:: If you have HTTPS :term:`Delivery Service`\ s in your CDN, Traffic Router will not accept **any** connections until it is able to fetch certificates from Traffic Ops and load them into memory. Traffic Router does not persist certificates to the Java Keystore or anywhere else.
+.. Warning:: If you have HTTPS :term:`Delivery Services` in your CDN, Traffic Router will not accept **any** connections until it is able to fetch certificates from Traffic Ops and load them into memory. Traffic Router does not persist certificates to the Java Keystore or anywhere else.
 
 Traffic Router fetches certificates into memory:
 
@@ -704,7 +714,7 @@ Once this is done you should be able to verify that you are being correctly redi
 
 Router Load Testing
 ===================
-The Traffic Router load testing tool is located in the `Traffic Control repository under test/router <https://github.com/apache/trafficcontrol/tree/master/test/router>`_. It can be used to simulate a mix of HTTP and HTTPS traffic for a CDN by choosing the number of HTTP :term:`Delivery Service`\ s and the number HTTPS :term:`Delivery Service` the test will exercise.
+The Traffic Router load testing tool is located in the `Traffic Control repository under test/router <https://github.com/apache/trafficcontrol/tree/master/test/router>`_. It can be used to simulate a mix of HTTP and HTTPS traffic for a CDN by choosing the number of HTTP :term:`Delivery Services` and the number HTTPS :term:`Delivery Service` the test will exercise.
 
 There are 2 parts to the load test:
 
@@ -722,9 +732,9 @@ Running the Load Tests
 #. Authenticate against a Traffic Ops host - this should be a nearly instantaneous operation - you can watch the output from ``server.go`` for feedback
 #. Enter the Traffic Ops host in the second form and click the button to get a list of CDN's
 #. Wait for the web page to show a list of CDN's under the above form, this may take several seconds
-#. The List of CDN's will display the number of HTTP- and HTTPS-capable :term:`Delivery Service`\ s that may be exercised
+#. The List of CDN's will display the number of HTTP- and HTTPS-capable :term:`Delivery Services` that may be exercised
 #. Choose the CDN you want to exercise from the drop-down menu
-#. Fill out the rest of the form, enter appropriate numbers for each HTTP and HTTPS :term:`Delivery Service`\ s
+#. Fill out the rest of the form, enter appropriate numbers for each HTTP and HTTPS :term:`Delivery Services`
 #. Click :guilabel:`Run Test`
 #. As the test runs the web page will occasionally report results including running time, latency, and throughput
 

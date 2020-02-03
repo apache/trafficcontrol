@@ -26,7 +26,7 @@ under the License.
         <div class="pull-right" role="group" ng-show="!settings.isNew">
             <button type="button" class="btn btn-primary" title="Cache Charts" ng-if="showChartsButton && isCache" ng-click="openCharts(server)"><i class="fa fa-bar-chart fa-fw"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
                     <span class="caret"></span>
                 </button>
@@ -34,8 +34,9 @@ under the License.
                     <li><a ng-click="confirmStatusUpdate()">Update Status</a></li>
                     <li ng-show="isCache(server) && !server.updPending"><a ng-click="queueServerUpdates(server)">Queue Server Updates</a></li>
                     <li ng-show="isCache(server) && server.updPending"><a ng-click="clearServerUpdates(server)">Clear Server Updates</a></li>
-                    <li ng-show="isEdge(server) || isCache(server)" class="divider"></li>
-                    <li><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
+                    <li ng-show="isCache(server)" class="divider"></li>
+                    <li ng-show="isCache(server)" name="viewCapabilitiesMenuItem"><a ng-click="viewCapabilities()">Manage Capabilities</a></li>
+                    <li ng-show="isEdge(server) || isOrigin(server)"><a ng-click="viewDeliveryServices()">Manage Delivery Services</a></li>
                     <li ng-show="isCache(server)"><a ng-click="viewConfigFiles()">View Config Files</a></li>
                 </ul>
             </div>
@@ -104,9 +105,9 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.type), 'has-feedback': hasError(serverForm.type)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
+                <label for="type" class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="type" class="form-control" ng-model="server.typeId" ng-options="type.id as type.name for type in types" required>
+                    <select id="type" name="type" class="form-control" ng-model="server.typeId" ng-options="type.id as type.name for type in types" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.type, 'required')">Required</small>

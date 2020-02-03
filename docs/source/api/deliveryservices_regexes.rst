@@ -22,7 +22,7 @@
 
 ``GET``
 =======
-Retrieves routing regular expressions for all :term:`Delivery Service`\ s.
+Retrieves routing regular expressions for all :term:`Delivery Services`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
@@ -50,7 +50,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: +2MI+Q/NJqTizlMR/MhPAL+yu6/z/Yqvo5fDO8F593RMOmK6dX/Al4wARbEG+HQaJNgSCRPsiLVATusrmnnCMA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 27 Nov 2018 19:22:59 GMT
@@ -69,4 +69,4 @@ Response Structure
 		}
 	]}
 
-.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to see.
+.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by :term:`Delivery Services` their tenant has permissions to see.

@@ -19,35 +19,61 @@
 ********
 ``asns``
 ********
-.. seealso:: `The Autonomous System Wikipedia page <https://en.wikipedia.org/wiki/Autonomous_system_%28Internet%29>` for an explanation of what an ASN actually is.
+.. seealso:: `The Autonomous System Wikipedia page <https://en.wikipedia.org/wiki/Autonomous_system_%28Internet%29>`_ for an explanation of what an :abbr:`ASN (Autonomous System Number)` actually is.
 
 ``GET``
 =======
-List all Autonomous System Numbers (ASNs).
+List all :abbr:`ASNs (Autonomous System Numbers)`.
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
+
+	.. versionchanged:: 1.2
+		Previously was an object with only one key ("asns") that contained the response array. This has been flattened so that the response is the actual array.
 
 Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+----------------+----------+-----------------------------------------------------------------------------------------------------+
-	| Parameter      | Required |                                 Description                                                         |
-	+================+==========+=====================================================================================================+
-	|   cachegroup   | no       | An integral, unique identifier for a Cache Group - only ANSs for this Cache Group will be returned. |
-	+----------------+----------+-----------------------------------------------------------------------------------------------------+
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| Parameter  | Required | Description                                                                                         |
+	+============+==========+=====================================================================================================+
+	| cachegroup | no       | The :ref:`cache-group-id` of a :term:`Cache Group` - only :abbr:`ASNs (Autonomous System Numbers)`  |
+	|            |          | for this :term:`Cache Group` will be returned.                                                      |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| orderby    | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the    |
+	|            |          | ``response`` array                                                                                  |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| sortOrder  | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")            |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| limit      | no       | Choose the maximum number of results to return                                                      |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| offset     | no       | The number of results to skip before beginning to return results. Must use in conjunction with      |
+	|            |          | limit                                                                                               |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| page       | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are        |
+	|            |          | ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no      |
+	|            |          | effect. ``limit`` must be defined to make use of ``page``.                                          |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/asns HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
-:lastUpdated:  The Time / Date this server entry was last updated in ISO format
-:id:           An integer which uniquely identifies the ASN
-:asn:          Autonomous System Numbers per APNIC for identifying a service provider
-:cachegroup:   Related Cache Group name
-:cachegroupId: Related Cache Group ID
-
-.. versionchanged:: 1.2
-	Used to contain the array in the ``response.asns`` object, changed so that ``response`` is an actual array
+:asn:          An :abbr:`ASN (Autonomous System Number)` as specified by IANA for identifying a service provider
+:cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
+:cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
+:id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
+:lastUpdated:  The time and date this server entry was last updated in an ISO-like format
 
 .. code-block:: http
 	:caption: Response Example
@@ -57,12 +83,13 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
-	Whole-Content-Sha512: 2zeWYI/dGyCzi0ZUWXuuycLFPyL9M5nDJchC7nJMQPW3cwXTaTwf0qI3mP3G1ArZlJTk/ju6/jbUVCNcVIXX1Q==
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 02 Dec 2019 22:51:14 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: F2NmDbTpXqrIQDX7IBKH9+1drtTL4XedSfJv6klMgLEZwbLCkddIXuSLpmgVCID6kTVqy3fTKjZS3U+HJ3YUEQ==
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 01 Nov 2018 18:56:38 GMT
-	Content-Length: 129
+	Date: Mon, 02 Dec 2019 21:51:14 GMT
+	Content-Length: 128
 
 	{ "response": [
 		{
@@ -70,14 +97,15 @@ Response Structure
 			"cachegroup": "TRAFFIC_ANALYTICS",
 			"cachegroupId": 1,
 			"id": 1,
-			"lastUpdated": "2018-11-01 18:55:39+00"
+			"lastUpdated": "2019-12-02 21:49:08+00"
 		}
 	]}
 
 
+
 ``POST``
 ========
-Creates a new Autonomous System Number (ASN).
+Creates a new :abbr:`ASN (Autonomous System Number)`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -85,32 +113,34 @@ Creates a new Autonomous System Number (ASN).
 
 Request Structure
 -----------------
-:asn:          The value of the new ASN
-:cachegroupId: The integral, unique identifier of a Cache Group to which this ASN will be assigned
-:cachegroup:   An optional field which, if present, specifies the name of a Cache Group to which this ASN will be assigned
+:asn:        The value of the new :abbr:`ASN (Autonomous System Number)`
+:cachegroup: An optional field which, if present, is a string that specifies the :ref:`cache-group-name` of a :term:`Cache Group` to which this :abbr:`ASN (Autonomous System Number)` will be assigned
 
-.. note:: While this endpoint accepts the ``cachegroup`` field, sending this in the request payload has no effect except that the response will (erroneously) name the Cache Group to which the ASN was assigned. Any subsequent requests will reveal that, in fact, the Cache Group name is set by the ``cachegroupId`` field.
+	.. note:: While this endpoint accepts the ``cachegroup`` field, sending this in the request payload has no effect except that the response will (erroneously) name the :term:`Cache Group` to which the :abbr:`ASN (Autonomous System Number)` was assigned. Any subsequent requests will reveal that, in fact, the :term:`Cache Group` is set entirely by the ``cachegroupId`` field, and so the actual :ref:`cache-group-name` may differ from what was in the request.
+
+:cachegroupId: An integer that is the :ref:`cache-group-id` of a :term:`Cache Group` to which this :abbr:`ASN (Autonomous System Number)` will be assigned
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.1/asns HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	POST /api/1.4/asns HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
-	Content-Length: 60
-	Content-Type: application/x-www-form-urlencoded
+	Content-Length: 29
 
 	{"asn": 1, "cachegroupId": 1}
 
+
 Response Structure
 ------------------
-:lastUpdated:  The Time / Date this server entry was last updated in ISO format
-:id:           An integer which uniquely identifies the ASN
-:asn:          Autonomous System Numbers per APNIC for identifying a service provider
-:cachegroup:   Related Cache Group name
-:cachegroupId: Related Cache Group ID
+:asn:          An :abbr:`ASN (Autonomous System Number)` as specified by IANA for identifying a service provider
+:cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
+:cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
+:id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
+:lastUpdated:  The time and date this server entry was last updated in an ISO-like format
 
 .. code-block:: http
 	:caption: Response Example
@@ -120,12 +150,13 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
-	Whole-Content-Sha512: DnM8HexH7LFkVNH8UYFe6uBQ445Ic8lRLDlOSDIuo4gjokMafxh5Ebr+CsSixNt//OxP0hoWZ+DKymSC5Hdi9Q==
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 02 Dec 2019 22:49:08 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: mx8b2GTYojz4QtMxXCMoQyZogCB504vs0yv6WGly4dwM81W3XiejWNuUwchRBYYi8QHaWsMZ3DaiGGfQi/8Giw==
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 01 Nov 2018 18:57:08 GMT
-	Content-Length: 175
+	Date: Mon, 02 Dec 2019 21:49:08 GMT
+	Content-Length: 150
 
 	{ "alerts": [
 		{
@@ -135,8 +166,9 @@ Response Structure
 	],
 	"response": {
 		"asn": 1,
-		"cachegroup": "TRAFFIC_ANALYTICS",
+		"cachegroup": null,
 		"cachegroupId": 1,
-		"id": 2,
-		"lastUpdated": "2018-11-01 18:57:08+00"
+		"id": 1,
+		"lastUpdated": "2019-12-02 21:49:08+00"
 	}}
+

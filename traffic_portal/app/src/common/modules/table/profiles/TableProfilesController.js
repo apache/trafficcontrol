@@ -163,8 +163,9 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
 
     $scope.compareProfiles = function() {
         var params = {
-            title: 'Compare Profile Parameters',
-            message: "Please select 2 profiles to compare parameters"
+            title: 'Compare Profiles',
+            message: 'Please select 2 profiles to compare',
+            labelFunction: function(item) { return item['name'] + ' (' + item['type'] + ')' }
         };
         var modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/compare/dialog.compare.tpl.html',
@@ -180,7 +181,7 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
             }
         });
         modalInstance.result.then(function(profiles) {
-            $location.path($location.path() + '/compare/' + profiles[0].id + '/' + profiles[1].id);
+            $location.path($location.path() + '/' + profiles[0].id + '/' + profiles[1].id + '/compare/diff');
         }, function () {
             // do nothing
         });

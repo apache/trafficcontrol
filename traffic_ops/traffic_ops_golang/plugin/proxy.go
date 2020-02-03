@@ -32,7 +32,7 @@ import (
 // Users are required to be authenticated. For modifications such as removing authentication or amending the proxied request, forking this plugin is encouraged.
 
 func init() {
-	AddPlugin(10000, Funcs{load: proxyLoad, onRequest: proxyOnReq})
+	AddPlugin(10000, Funcs{load: proxyLoad, onRequest: proxyOnReq}, "proxy plugin to reverse-proxy to other HTTP services", "1.0.0")
 }
 
 type ProxyConfig []ProxyRemap

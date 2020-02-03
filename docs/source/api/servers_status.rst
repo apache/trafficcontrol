@@ -29,7 +29,13 @@ Retrieves an aggregated view of all server statuses across all CDNs
 
 Request Structure
 -----------------
-No parameters available.
+.. table:: Request Query Parameters
+
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| Name       | Required | Description                                                                                                       |
+	+============+==========+===================================================================================================================+
+	| type       | no       | Return status counts for only servers of this :term:`Type`                                                        |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -49,7 +55,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Mon, 04 Feb 2019 16:22:14 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Mon, 04 Feb 2019 20:22:14 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: M072YRXvtNwjnCfntv/W3AsSpOhCl7Cpm0UDznOcXxwwgRYSGXx2MoeovXSNzYim62FJJoQJom1ccRSAW9ZMcA==
 	Content-Length: 38

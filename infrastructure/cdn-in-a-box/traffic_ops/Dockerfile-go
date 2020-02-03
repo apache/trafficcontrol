@@ -20,24 +20,26 @@
 # Based on CentOS 7.2
 ############################################################
 
-
 FROM centos:7
-RUN yum -y install nmap-ncat openssl epel-release
-RUN yum -y install jq && yum clean all
 
-RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production /opt/traffic_ops/app/db
-COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
-COPY --from=trafficops-perl /opt/traffic_ops/app/conf/ /opt/traffic_ops/app/conf
+# Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
+ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
+COPY $TRAFFIC_OPS_RPM /
+
+RUN mkdir /etc/cron.d && \
+    rpm --install --nodeps --verbose --hash \
+        /$(basename $TRAFFIC_OPS_RPM) \
+        http://yum.postgresql.org/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm && \
+	yum -y install epel-release && \
+	yum -y install jq bind-utils net-tools gettext perl-JSON-PP nmap-ncat openssl postgresql96 && \
+	yum clean all
+
+COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
+    infrastructure/cdn-in-a-box/traffic_ops/config.sh \
+    infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \
+    infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
+    /
 
 EXPOSE 443
 WORKDIR /opt/traffic_ops/app
-RUN yum install -y bind-utils net-tools gettext perl-JSON-PP
-
-
-ADD enroller/server_template.json \
-    traffic_ops/config.sh \
-    traffic_ops/run-go.sh \
-    traffic_ops/to-access.sh \
-    /
-
 CMD /run-go.sh

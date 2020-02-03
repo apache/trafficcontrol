@@ -51,9 +51,9 @@ Response Structure
 	:use_tenancy: A string containing an integer which represents a boolean value; one of:
 
 		"0"
-			Do not use tenancy - this effectively disables all ``*tenant*`` endpoints and removes tenancy restrictions on origins and :term:`Delivery Service`\ s
+			Do not use tenancy - this effectively disables all ``*tenant*`` endpoints and removes tenancy restrictions on origins and :term:`Delivery Services`
 		"1"
-			Use tenancy - this effectively enables all ``*tenant*`` endpoints and enforces tenancy restrictions on origins and :term:`Delivery Service`\ s
+			Use tenancy - this effectively enables all ``*tenant*`` endpoints and enforces tenancy restrictions on origins and :term:`Delivery Services`
 
 .. code-block:: http
 	:caption: Response Example
@@ -64,7 +64,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: ObxOXk1jrC1/JtrqElUICceyx9iJKJxZydEIHvAU7khTTQwt0QGvSO4ELDkdrbu3ctFo3pf3NAMaMM9tAkNokg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 11 Dec 2018 19:06:01 GMT

@@ -33,8 +33,25 @@ describe('Traffic Portal Profiles Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
+	it('should compare profiles', function() {
+		pageData.moreBtn.click();
+		pageData.compareProfilesMenuItem.click();
+		expect(pageData.compareSubmit.isEnabled()).toBe(false);
+		commonFunctions.selectDropdownbyNum(pageData.compareDropdown1, 1);
+		commonFunctions.selectDropdownbyNum(pageData.compareDropdown2, 2);
+		expect(pageData.compareSubmit.isEnabled()).toBe(true);
+		pageData.compareSubmit.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles/[0-9]+/[0-9]+/compare/diff");
+	});
+
 	it('should open new profile form page', function() {
 		console.log("Open new profile form page");
+		browser.setLocation("profiles");
 		pageData.createProfileButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles/new");
 	});
@@ -43,7 +60,7 @@ describe('Traffic Portal Profiles Test Suite', function() {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		pageData.name.sendKeys(myNewProfile.name);
-		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
+		commonFunctions.selectDropdownbyNum(pageData.cdn, 2); // the ALL CDN is first so let's pick a real CDN
 		commonFunctions.selectDropdownbyNum(pageData.type, 1);
 		pageData.routingDisabled.click();
 		pageData.routingDisabled.sendKeys('false');

@@ -122,7 +122,10 @@ var TableParametersController = function(parameters, $scope, $state, $uibModal, 
         $('#parametersTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
-            "aaSorting": []
+            "aaSorting": [],
+            "columnDefs": [
+                { "width": "50%", "targets": 2 }
+            ]
         });
     });
 

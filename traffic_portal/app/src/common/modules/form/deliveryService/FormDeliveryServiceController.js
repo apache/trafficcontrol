@@ -209,35 +209,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     };
 
     $scope.clone = function(ds) {
-        var params = {
-            title: 'Clone Delivery Service: ' + ds.xmlId,
-            message: "Please select a content routing category for the clone"
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-            controller: 'DialogSelectController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                },
-                collection: function() {
-                    // the following represent the 4 categories of delivery services
-                    // the ids are arbitrary but the dialog.select dropdown needs them
-                    return [
-                        { id: 1, name: 'ANY_MAP' },
-                        { id: 2, name: 'DNS' },
-                        { id: 3, name: 'HTTP' },
-                        { id: 4, name: 'STEERING' }
-                    ];
-                }
-            }
-        });
-        modalInstance.result.then(function(type) {
-            locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?type=' + type.name);
-        }, function () {
-            // do nothing
-        });
+        locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?type=' + ds.type);
     };
 
     $scope.changeSigningAlgorithm = function(signingAlgorithm) {
@@ -273,6 +245,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
+    };
+
+    $scope.viewCapabilities = function() {
+        $location.path($location.path() + '/required-server-capabilities');
     };
 
     $scope.viewOrigins = function() {

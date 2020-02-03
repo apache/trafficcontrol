@@ -18,6 +18,12 @@
  */
 
 module.exports = function(){
+	this.moreBtn=element(by.name('moreBtn'));
+	this.compareProfilesMenuItem=element(by.css('a[ng-click*=compareProfiles]'));
+	this.compareDropdown1=element(by.name('compareDropdown1'));
+	this.compareDropdown2=element(by.name('compareDropdown2'));
+	this.compareSubmit=element(by.name('compareSubmit'));
+	this.description=element(by.id('description'));
 	this.createProfileButton=element(by.name('createProfileButton'));
 	this.name=element(by.name('name'));
 	this.cdn=element(by.name('cdn'));
@@ -27,7 +33,7 @@ module.exports = function(){
 	this.createButton=element(by.buttonText('Create'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('profilesTable_filter')).element(by.css('label')).element(by.css('input'));
+	this.searchFilter=element(by.id('profilesTable_filter')).element(by.css('label input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
 };

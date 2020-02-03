@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the aggregate routing percentages of Cache Groups assigned to any CDN.
+Retrieves the aggregate routing percentages of :term:`Cache Groups` assigned to any CDN.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -33,12 +33,16 @@ No parameters available
 
 Response Structure
 ------------------
-:cz:          Used Coverage Zone geographic IP mapping
-:dsr:         Overflow traffic sent to secondary CDN
-:err:         Error localizing client IP
-:geo:         Used 3rd party geographic IP mapping
-:miss:        No location available for client IP
-:staticRoute: Used pre-configured DNS entries
+:cz:                The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Coverage Zone File`
+:deepCz:            The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Deep Coverage Zone File`
+:dsr:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to an overflow :term:`Delivery Service`
+:err:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that resulted in an error
+:fed:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to a federated CDN
+:geo:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied using 3rd party geographic IP mapping
+:miss:              The percent of requests to the Traffic Router for this :term:`Delivery Service` that could not be satisfied
+:regionalAlternate: The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to the alternate, Regional Geo-blocking URL
+:regionalDenied:    The percent of Traffic Router requests for this :term:`Delivery Service` that were denied due to geographic location policy
+:staticRoute:       The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied with :ref:`ds-static-dns-entries`
 
 .. code-block:: http
 	:caption: Response Example
@@ -52,20 +56,20 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 14 Nov 2018 21:29:32 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 01:29:32 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: 7LjytwKyRzSKM4cRIol4OMIJxApFpTWJaSK73rbtUIQdASZjI64XxLVzZP0OGRU7XeJ22YKUyQ30qbKHDRv7FQ==
 	Content-Length: 130
 
 	{ "response": {
-		"staticRoute": 0,
-		"geo": 20.6251834458468,
-		"err": 0,
-		"fed": 0.287643087760493,
-		"cz": 79.0607572644555,
-		"regionalAlternate": 0,
+		"cz": 79,
+		"deepCz": 0.50,
 		"dsr": 0,
-		"miss": 0.0264162019371881,
-		"regionalDenied": 0
+		"err": 0,
+		"fed": 0.25,
+		"geo": 20,
+		"miss": 0.25,
+		"regionalAlternate": 0,
+		"regionalDenied": 0,
+		"staticRoute": 0
 	}}
-

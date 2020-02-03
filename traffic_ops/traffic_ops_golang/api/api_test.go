@@ -27,6 +27,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/lib/pq"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -161,4 +163,43 @@ func (i *MockHTTPResponseWriter) Write(b []byte) (int, error) {
 
 func (i *MockHTTPResponseWriter) Header() http.Header {
 	return http.Header{}
+}
+
+func TestParseRestrictFKConstraint(t *testing.T) {
+	var testCases = []struct {
+		description        string
+		storageError       pq.Error
+		expectedReturnCode int
+	}{
+		{
+			description: "FK Constraint Error",
+			storageError: pq.Error{
+				Message: "update or delete on table \"foo\" violates foreign key constraint \"fk_foo_bar\" on table \"bar\"",
+			},
+			expectedReturnCode: http.StatusBadRequest,
+		},
+		{
+			description: "FK Constraint Error with underscores in table name",
+			storageError: pq.Error{
+				Message: "update or delete on table \"foo_ser\" violates foreign key constraint \"fk_foo_bar\" on table \"bar_cap\"",
+			},
+			expectedReturnCode: http.StatusBadRequest,
+		},
+		{
+			description: "Non FK Constraint Error",
+			storageError: pq.Error{
+				Message: "connection error",
+			},
+			expectedReturnCode: http.StatusOK,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			t.Log("Starting test scenario: ", tc.description)
+			_, _, sc := parseRestrictFKConstraint(&tc.storageError)
+			if sc != tc.expectedReturnCode {
+				t.Errorf("code expected: %v, actual %v", tc.expectedReturnCode, sc)
+			}
+		})
+	}
 }

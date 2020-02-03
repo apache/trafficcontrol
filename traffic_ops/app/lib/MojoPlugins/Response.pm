@@ -119,6 +119,93 @@ sub register {
 		}
 	);
 
+	# Success (200) - With a JSON response and a deprecated message
+	$app->renderer->add_helper(
+		success_deprecate => sub {
+			my $self    = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $data    = shift || confess("Please supply a response body hash.");
+
+			my $builder ||= MojoPlugins::Response::Builder->new($self, @_);
+			my @alerts_response = ({$LEVEL_KEY => $WARNING_LEVEL, $TEXT_KEY => "This endpoint is deprecated"});
+
+			return $self->render( $STATUS_KEY => 200, $JSON_KEY => { $ALERTS_KEY => \@alerts_response, $RESPONSE_KEY => $data } );
+		}
+	);
+
+	$app->renderer->add_helper(
+		deprecation => sub {
+			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $code = shift || confess("Please supply a response code e.g. 400");
+			my $alternative = shift || confess("Please supply an alternative handler, like 'PUT /api/1.4/user/current'");
+			my $response_object = shift;
+
+			my $builder ||= MojoPlugins::Response::Builder->new($self, @_);
+			my @alerts_response = ({$LEVEL_KEY => $WARNING_LEVEL, $TEXT_KEY => "This endpoint is deprecated, please use '" . $alternative . "' instead"});
+
+			if (defined($response_object)) {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response, $RESPONSE_KEY => $response_object } );
+			} else {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response } );
+			}
+		}
+	);
+
+	$app->renderer->add_helper(
+		with_deprecation => sub {
+			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $alert = shift || confess("Please supply an alert string");
+			my $level = shift || confess("Please supply an alert level such as 'error' or 'warning'");
+			my $code = shift || confess("Please supply a response code e.g. 400");
+			my $alternative = shift || confess("Please supply an alternative handler, like 'PUT /api/1.4/user/current'");
+			my $response_object = shift;
+
+			my $builder ||= MojoPlugins::Response::Builder->new($self, @_);
+			my @alerts_response = ({$LEVEL_KEY => $level, $TEXT_KEY => $alert}, {$LEVEL_KEY => $WARNING_LEVEL, $TEXT_KEY => "This endpoint is deprecated, please use '" . $alternative . "' instead"});
+
+			if (defined($response_object)) {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response, $RESPONSE_KEY => $response_object } );
+			} else {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response } );
+			}
+		}
+	);
+
+	$app->renderer->add_helper(
+		deprecation_with_no_alternative => sub {
+			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $code = shift || confess("Please supply a response code e.g. 400");
+			my $response_object = shift;
+
+			my $builder ||= MojoPlugins::Response::Builder->new($self, @_);
+			my @alerts_response = ({$LEVEL_KEY => $WARNING_LEVEL, $TEXT_KEY => "This endpoint and its functionality is deprecated, and will be removed in the future"});
+
+			if (defined($response_object)) {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response, $RESPONSE_KEY => $response_object } );
+			} else {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response } );
+			}
+		}
+	);
+
+	$app->renderer->add_helper(
+		with_deprecation_with_no_alternative => sub {
+			my $self = shift || confess("Call on an instance of MojoPlugins::Response");
+			my $alert = shift || confess("Please supply an alert string");
+			my $level = shift || confess("Please supply an alert level such as 'error' or 'warning'");
+			my $code = shift || confess("Please supply a response code e.g. 400");
+			my $response_object = shift;
+
+			my $builder ||= MojoPlugins::Response::Builder->new($self, @_);
+			my @alerts_response = ({$LEVEL_KEY => $level, $TEXT_KEY => $alert}, {$LEVEL_KEY => $WARNING_LEVEL, $TEXT_KEY => "This endpoint and its functionality is deprecated, and will be removed in the future"});
+
+			if (defined($response_object)) {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response, $RESPONSE_KEY => $response_object } );
+			} else {
+				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response } );
+			}
+		}
+	);
+
 	# Alerts (500)
 	$app->renderer->add_helper(
 		internal_server_error => sub {

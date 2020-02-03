@@ -19,6 +19,11 @@ package util
  * under the License.
  */
 
+import (
+	"strings"
+	"unicode"
+)
+
 // RemoveStrDuplicates removes duplicates from strings, considering a map of already-seen duplicates.
 // Returns the strings which are unique, and not already present in seen; and a map of the unique strings in inputStrings and seenStrings.
 //
@@ -32,4 +37,33 @@ func RemoveStrDuplicates(inputStrings []string, seenStrings map[string]struct{})
 		}
 	}
 	return uniqueStrings, seenStrings
+}
+
+// StrInArray returns whether s is one of the strings in strs.
+func StrInArray(strs []string, s string) bool {
+	for _, str := range strs {
+		if str == s {
+			return true
+		}
+	}
+	return false
+}
+
+func ContainsStr(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
+// StripAllWhitespace returns s with all whitespace removed, as defined by unicode.IsSpace.
+func StripAllWhitespace(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, s)
 }

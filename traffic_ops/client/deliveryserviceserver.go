@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -70,6 +71,33 @@ func (to *Session) GetDeliveryServiceServers() (tc.DeliveryServiceServerResponse
 // GetDeliveryServiceServersN gets all delivery service servers, with a limit of n.
 func (to *Session) GetDeliveryServiceServersN(n int) (tc.DeliveryServiceServerResponse, ReqInf, error) {
 	return to.getDeliveryServiceServers(url.Values{"limit": []string{strconv.Itoa(n)}})
+}
+
+// GetDeliveryServiceServersWithLimits gets all delivery service servers, allowing specifying the limit of mappings to return, the delivery services to return, and the servers to return.
+// The limit may be 0, in which case the default limit will be applied. The deliveryServiceIDs and serverIDs may be nil or empty, in which case all delivery services and/or servers will be returned.
+func (to *Session) GetDeliveryServiceServersWithLimits(limit int, deliveryServiceIDs []int, serverIDs []int) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+	vals := url.Values{}
+	if limit != 0 {
+		vals.Set("limit", strconv.Itoa(limit))
+	}
+
+	if len(deliveryServiceIDs) != 0 {
+		dsIDStrs := []string{}
+		for _, dsID := range deliveryServiceIDs {
+			dsIDStrs = append(dsIDStrs, strconv.Itoa(dsID))
+		}
+		vals.Set("deliveryserviceids", strings.Join(dsIDStrs, ","))
+	}
+
+	if len(serverIDs) != 0 {
+		serverIDStrs := []string{}
+		for _, serverID := range serverIDs {
+			serverIDStrs = append(serverIDStrs, strconv.Itoa(serverID))
+		}
+		vals.Set("serverids", strings.Join(serverIDStrs, ","))
+	}
+
+	return to.getDeliveryServiceServers(vals)
 }
 
 func (to *Session) getDeliveryServiceServers(urlQuery url.Values) (tc.DeliveryServiceServerResponse, ReqInf, error) {

@@ -366,12 +366,7 @@ func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
 	req.AssigneeID = assigneeID
 
 	// LastEditedBy field should not change with status update
-	v := "null"
-	if req.AssigneeID != nil {
-		v = strconv.Itoa(*req.AssigneeID)
-	}
-
-	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, v, *req.ID); err != nil {
+	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, req.AssigneeID, *req.ID); err != nil {
 		return api.ParseDBError(err)
 	}
 

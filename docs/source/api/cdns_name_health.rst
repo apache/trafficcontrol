@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the health of all :term:`Cache Group`\ s for a given CDN.
+Retrieves the health of all :term:`Cache Groups` for a given CDN.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -37,16 +37,26 @@ Request Structure
 	| name | The name of the CDN for which health will be reported |
 	+------+-------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/cdns/CDN-in-a-Box/health HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
 :cachegroups:  An array of objects describing the health of each :term:`Cache Group`
 
-	:name:    The name of the :term:`Cache Group`
-	:offline: The number of OFFLINE caches in the :term:`Cache Group`
-	:online:  The number of ONLINE caches in the :term:`Cache Group`
+	:name:    A string that is the :ref:`Cache Group's Name <cache-group-name>`
+	:offline: The number of OFFLINE :term:`cache servers` in the :term:`Cache Group`
+	:online:  The number of ONLINE :term:`cache servers` in the :term:`Cache Group`
 
-:totalOffline: Total number of OFFLINE caches across all :term:`Cache Group`\ s which are assigned to the CDN defined by the ``name`` request path parameter
-:totalOnline:  Total number of ONLINE caches across all :term:`Cache Group`\ s which are assigned to the CDN defined by the ``name`` request path parameter
+:totalOffline: Total number of OFFLINE :term:`cache servers` across all :term:`Cache Groups` which are assigned to the CDN defined by the ``name`` request path parameter
+:totalOnline:  Total number of ONLINE :term:`cache servers` across all :term:`Cache Groups` which are assigned to the CDN defined by the ``name`` request path parameter
 
 .. code-block:: http
 	:caption: Response Example
@@ -57,13 +67,14 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
+	Content-Length: 108
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 21:14:05 GMT
+	Date: Tue, 03 Dec 2019 21:33:59 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 01:14:05 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; expires=Wed, 04 Dec 2019 01:33:59 GMT; path=/; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: KpXViXeAgch58ueQqdyU8NuINBw1EUedE6Rv2ewcLUajJp6kowdbVynpwW7XiSvAyHdtClIOuT3OkhIimghzSA==
-	Content-Length: 115
 
 	{ "response": {
 		"totalOffline": 0,

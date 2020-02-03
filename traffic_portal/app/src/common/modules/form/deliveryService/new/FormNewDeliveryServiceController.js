@@ -81,7 +81,7 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, type, t
 							{ id: $scope.DRAFT, name: 'Save Request as Draft' },
 							{ id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
 						];
-						if (userModel.user.roleName == propertiesModel.properties.dsRequests.roleNeededToSkip) {
+						if (userModel.user.roleName == propertiesModel.properties.dsRequests.overrideRole) {
 							statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
 						}
 						return statuses;

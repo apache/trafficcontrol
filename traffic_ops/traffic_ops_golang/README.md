@@ -215,7 +215,9 @@ Now we need to create the Go endpoint.
 
 ##### Getting a "Handle" on Routes
 
-Open [routes.go](./routing/routes.go). Routes are defined in the `Routes` function, of the form `{version, method, path, handler}`. Notice the path can contain variables, of the form `/{var}/`. These variables will be made available to your handler.
+Open [routes.go](./routing/routes.go). Routes are defined in the `Routes` function, of the form `{version, method, path, handler, ID}`. Notice the path can contain variables, of the form `/{var}/`. These variables will be made available to your handler.
+
+NOTE: Route IDs are immutable and unique. DO NOT change the ID of an existing Route; otherwise, existing configurations may break. New Route IDs can be any integer between 0 and 2147483647 (inclusive), as long as it's unique.
 
 ##### Creating a Handler
 

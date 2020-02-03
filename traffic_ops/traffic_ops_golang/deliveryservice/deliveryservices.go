@@ -139,7 +139,6 @@ func CreateV13(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV13{*res})
 }
 
-// 	TODO allow users to post names (type, cdn, etc) and get the IDs from the names. This isn't trivial to do in a single query, without dynamically building the entire insert query, and ideally inserting would be one query. But it'd be much more convenient for users. Alternatively, remove IDs from the database entirely and use real candidate keys.
 func CreateV14(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -162,6 +161,29 @@ func CreateV14(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV14{*res})
 }
 
+// 	TODO allow users to post names (type, cdn, etc) and get the IDs from the names. This isn't trivial to do in a single query, without dynamically building the entire insert query, and ideally inserting would be one query. But it'd be much more convenient for users. Alternatively, remove IDs from the database entirely and use real candidate keys.
+func CreateV15(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	ds := tc.DeliveryServiceNullableV15{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
+
+	res, status, userErr, sysErr := createV15(w, r, inf, ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV15{*res})
+}
+
 func createV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
 	dsV13 := tc.DeliveryServiceNullableV13{DeliveryServiceNullableV12: reqDS}
 	res, status, userErr, sysErr := createV13(w, r, inf, dsV13)
@@ -180,8 +202,17 @@ func createV13(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	return nil, status, userErr, sysErr
 }
 
-// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
 func createV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV14) (*tc.DeliveryServiceNullableV14, int, error, error) {
+	dsV15 := tc.DeliveryServiceNullableV15{DeliveryServiceNullableV14: reqDS}
+	res, status, userErr, sysErr := createV15(w, r, inf, dsV15)
+	if res != nil {
+		return &res.DeliveryServiceNullableV14, status, userErr, sysErr
+	}
+	return nil, status, userErr, sysErr
+}
+
+// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
+func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
 	ds := tc.DeliveryServiceNullable(reqDS)
 	user := inf.User
 	tx := inf.Tx.Tx
@@ -255,7 +286,8 @@ func createV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.TRRequestHeaders,
 		&ds.TRResponseHeaders,
 		&ds.TypeID,
-		&ds.XMLID)
+		&ds.XMLID,
+		&ds.EcsEnabled)
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -299,7 +331,7 @@ func createV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return nil, code, usrErr, sysErr
 	} else {
-		api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("Created %d consistent hash query params for delivery service: %s", c, *ds.XMLID), user, tx)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
 	}
 
 	matchlists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
@@ -334,11 +366,11 @@ func createV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	}
 
 	ds.LastUpdated = &lastUpdated
-	if err := api.CreateChangeLogRawErr(api.ApiChange, "Created ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
+	if err := api.CreateChangeLogRawErr(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created delivery service", user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
-	dsLatest := tc.DeliveryServiceNullableV14(ds)
+	dsLatest := tc.DeliveryServiceNullableV15(ds)
 	return &dsLatest, http.StatusOK, nil, nil
 }
 
@@ -380,21 +412,23 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	}
 
 	returnable := []interface{}{}
-	dses, errs, _ := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			if err.Error() == `id cannot parse to integer` { // TODO create const for string
-				return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
-			}
-		}
-		return nil, nil, errors.New("reading dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
+	dses, userErr, sysErr, errCode := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
+
+	if sysErr != nil {
+		sysErr = errors.New("reading dses: " + sysErr.Error())
+		errCode = http.StatusInternalServerError
+	}
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, errCode
 	}
 
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Minor >= 4:
+		case version.Minor >= 5:
 			returnable = append(returnable, ds)
+		case version.Minor >= 4:
+			returnable = append(returnable, ds.DeliveryServiceNullableV14)
 		case version.Minor >= 3:
 			returnable = append(returnable, ds.DeliveryServiceNullableV13)
 		case version.Minor >= 1:
@@ -481,6 +515,31 @@ func UpdateV14(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV14{*res})
 }
 
+func UpdateV15(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.IntParams["id"]
+
+	ds := tc.DeliveryServiceNullableV15{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+	ds.ID = &id
+
+	res, status, userErr, sysErr := updateV15(w, r, inf, &ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV15{*res})
+}
+
 func updateV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
 	dsV13 := tc.DeliveryServiceNullableV13{DeliveryServiceNullableV12: *reqDS}
 	// query the DB for existing 1.3 fields in order to "upgrade" this 1.2 request into a 1.3 request
@@ -550,6 +609,31 @@ WHERE
 }
 
 func updateV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV14) (*tc.DeliveryServiceNullableV14, int, error, error) {
+	dsV15 := tc.DeliveryServiceNullableV15{DeliveryServiceNullableV14: *reqDS}
+	// query the DB for existing 1.5 fields in order to "upgrade" this 1.4 request into a 1.5 request
+	query := `
+SELECT
+  ds.ecs_enabled
+FROM
+  deliveryservice ds
+WHERE
+  ds.id = $1`
+	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
+		&dsV15.EcsEnabled,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV15.ID), nil
+		}
+		return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service ID %d: %s", *dsV15.ID, err.Error())
+	}
+	res, status, userErr, sysErr := updateV15(w, r, inf, &dsV15)
+	if res != nil {
+		return &res.DeliveryServiceNullableV14, status, userErr, sysErr
+	}
+	return nil, status, userErr, sysErr
+}
+
+func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
 	converted := tc.DeliveryServiceNullable(*reqDS)
 	ds := &converted
 	tx := inf.Tx.Tx
@@ -649,6 +733,7 @@ func updateV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.AnonymousBlockingEnabled,
 		&ds.ConsistentHashRegex,
 		&ds.MaxOriginConnections,
+		&ds.EcsEnabled,
 		&ds.ID)
 
 	if err != nil {
@@ -734,20 +819,20 @@ func updateV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	if res, err := tx.Exec(q, *ds.ID); err != nil {
 		return nil, http.StatusInternalServerError, nil, fmt.Errorf("deleting consistent hash query params for ds %s: %s", *ds.XMLID, err.Error())
 	} else if c, _ := res.RowsAffected(); c > 0 {
-		api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("Deleted %d consistent hash query params for delivery service: %s", c, *ds.XMLID), user, tx)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Deleted "+strconv.FormatInt(c, 10)+" consistent hash query params", user, tx)
 	}
 
 	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return nil, code, usrErr, sysErr
 	} else {
-		api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("Created %d consistent hash query params for delivery service: %s", c, *ds.XMLID), user, tx)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created "+strconv.Itoa(c)+" consistent hash query params", user, tx)
 	}
 
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
-	dsLatest := tc.DeliveryServiceNullableV14(*ds)
+	dsLatest := tc.DeliveryServiceNullableV15(*ds)
 	return &dsLatest, http.StatusOK, nil, nil
 }
 
@@ -797,7 +882,7 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
-func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, []error, tc.ApiErrorType) {
+func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, error, error, int) {
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
 	}
@@ -821,14 +906,14 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, nil, tc.DBError, http.StatusInternalServerError
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
@@ -899,7 +984,7 @@ func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServi
 			if _, err := tx.Exec(q, *ds.ID); err != nil {
 				return fmt.Errorf("deleting primary origin for ds %s: %s", *ds.XMLID, err.Error())
 			}
-			api.CreateChangeLogRawTx(api.ApiChange, "Deleted primary origin for delivery service: "+*ds.XMLID, user, tx)
+			api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Deleted primary origin", user, tx)
 		}
 		return nil
 	}
@@ -920,7 +1005,7 @@ func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServi
 		return fmt.Errorf("update primary origin for ds %s from '%s': %s", *ds.XMLID, *ds.OrgServerFQDN, err.Error())
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "Updated primary origin: "+name+" for delivery service: "+*ds.XMLID, user, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Updated primary origin: "+name, user, tx)
 
 	return nil
 }
@@ -941,7 +1026,7 @@ func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServi
 		return fmt.Errorf("insert origin from '%s': %s", *ds.OrgServerFQDN, err.Error())
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "Created primary origin id: "+strconv.Itoa(originID)+" for delivery service: "+*ds.XMLID, user, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created primary origin id: "+strconv.Itoa(originID), user, tx)
 
 	return nil
 }
@@ -957,10 +1042,10 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 	return tc.DSTypeFromString(name), true, nil
 }
 
-func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullable, []error, tc.ApiErrorType) {
+func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullable, error, error, int) {
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
+		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -988,6 +1073,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.DNSBypassIP6,
 			&ds.DNSBypassTTL,
 			&ds.DSCP,
+			&ds.EcsEnabled,
 			&ds.EdgeHeaderRewrite,
 			&ds.GeoLimitRedirectURL,
 			&ds.GeoLimit,
@@ -1037,7 +1123,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&cdnDomain)
 
 		if err != nil {
-			return nil, []error{fmt.Errorf("getting delivery services: %v", err)}, tc.SystemError
+			return nil, nil, fmt.Errorf("getting delivery services: %v", err), http.StatusInternalServerError
 		}
 
 		ds.ConsistentHashQueryParams = []string{}
@@ -1069,7 +1155,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 
 	matchLists, err := GetDeliveryServicesMatchLists(dsNames, tx.Tx)
 	if err != nil {
-		return nil, []error{errors.New("getting delivery service matchlists: " + err.Error())}, tc.SystemError
+		return nil, nil, errors.New("getting delivery service matchlists: " + err.Error()), http.StatusInternalServerError
 	}
 	for i, ds := range dses {
 		matchList, ok := matchLists[*ds.XMLID]
@@ -1081,7 +1167,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 		dses[i] = ds
 	}
 
-	return dses, nil, tc.NoError
+	return dses, nil, nil, http.StatusOK
 }
 
 func updateSSLKeys(ds *tc.DeliveryServiceNullable, hostName string, tx *sql.Tx, cfg *config.Config) error {
@@ -1472,15 +1558,15 @@ func getDSTenantIDByName(tx *sql.Tx, ds tc.DeliveryServiceName) (*int, bool, err
 }
 
 // GetDeliveryServiceType returns the type of the deliveryservice.
-func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, error) {
+func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, bool, error) {
 	var dsType tc.DSType
 	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
 		if err == sql.ErrNoRows {
-			return tc.DSTypeInvalid, errors.New("a deliveryservice with id '" + strconv.Itoa(dsID) + "' was not found")
+			return tc.DSTypeInvalid, false, nil
 		}
-		return tc.DSTypeInvalid, errors.New("querying type from delivery service: " + err.Error())
+		return tc.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
 	}
-	return dsType, nil
+	return dsType, true, nil
 }
 
 // GetXMLID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
@@ -1513,6 +1599,7 @@ ds.dns_bypass_ip,
 ds.dns_bypass_ip6,
 ds.dns_bypass_ttl,
 ds.dscp,
+ds.ecs_enabled,
 ds.edge_header_rewrite,
 ds.geolimit_redirect_url,
 ds.geo_limit,
@@ -1628,8 +1715,9 @@ type=$48,
 xml_id=$49,
 anonymous_blocking_enabled=$50,
 consistent_hash_regex=$51,
-max_origin_connections=$52
-WHERE id=$53
+max_origin_connections=$52,
+ecs_enabled=$53
+WHERE id=$54
 RETURNING last_updated
 `
 }
@@ -1688,9 +1776,10 @@ tenant_id,
 tr_request_headers,
 tr_response_headers,
 type,
-xml_id
+xml_id,
+ecs_enabled
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53)
 RETURNING id, last_updated
 `
 }

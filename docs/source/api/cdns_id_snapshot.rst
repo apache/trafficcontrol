@@ -18,8 +18,6 @@
 ************************
 ``cdns/{{ID}}/snapshot``
 ************************
-.. deprecated:: 1.1
-	Use :ref:`to-api-snapshot-name` instead.
 
 ``PUT``
 =======
@@ -60,7 +58,7 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 12 Dec 2018 22:04:46 GMT

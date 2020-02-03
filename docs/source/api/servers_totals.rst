@@ -18,10 +18,11 @@
 ******************
 ``servers/totals``
 ******************
+.. deprecated:: 1.1
 
 ``GET``
 =======
-Retrieves a count of each type of server across all CDNs.
+Retrieves a count of each :term:`Type` of server across all CDNs.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -34,7 +35,7 @@ No parameters available.
 Response Structure
 ------------------
 :count: The number of servers of this type configured in this instance of Traffic Ops
-:type:  The name of the type servers herein counted
+:type:  The name of the :term:`Type` servers herein counted
 
 .. code-block:: http
 	:caption: Response Example
@@ -48,12 +49,17 @@ Response Structure
 	Content-Type: application/json
 	Date: Mon, 10 Dec 2018 17:02:02 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Mon, 10 Dec 2018 21:02:02 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: J4wy8zf+LX44/qWIbvziWHCcDZpUJ9GOpOVUVqPbVHUCh1V19o8FnE7T+V0639n9Xyw9k10NcaGIqASA+O9Rzg==
 	Content-Length: 305
 
-	{ "response": [
+	{	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated"
+		}],
+		"response": [
 		{
 			"count": 1,
 			"type": "EDGE"

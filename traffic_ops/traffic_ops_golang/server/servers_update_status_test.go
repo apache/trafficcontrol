@@ -23,7 +23,6 @@ import (
 	"context"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -48,8 +47,7 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(serverStatusRow)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTx(dbCtx, nil)
+	tx, err := db.BeginTx(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}

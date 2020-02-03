@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Get all requested tenants.
+Get all requested :term:`Tenants`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,15 +31,31 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+--------+------------------------------------------------------------------------------------+
-	|  Name  | Description                                                                        |
-	+========+====================================================================================+
-	| active | If ``true``, return only active tenants; if ``false`` return only inactive tenants |
-	+--------+------------------------------------------------------------------------------------+
-	|   id   | Return only tenants with this integral, unique identifier                          |
-	+--------+------------------------------------------------------------------------------------+
-	|  name  | Return only tenants with this name                                                 |
-	+--------+------------------------------------------------------------------------------------+
+	+-----------+------------------------------------------------------------------------------------+
+	| Name      | Description                                                                        |
+	+===========+====================================================================================+
+	| active    | If ``true``, return only active :term:`Tenants`; if ``false`` return only inactive |
+	|           | :term:`Tenants`                                                                    |
+	+-----------+------------------------------------------------------------------------------------+
+	| id        | Return only :term:`Tenants` with this integral, unique identifier                  |
+	+-----------+------------------------------------------------------------------------------------+
+	| name      | Return only :term:`Tenants` with this name                                         |
+	+-----------+------------------------------------------------------------------------------------+
+	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the  |
+	|           | objects in the ``response`` array                                                  |
+	+-----------+------------------------------------------------------------------------------------+
+	| sortOrder | Changes the order of sorting. Either ascending (default or "asc") or descending    |
+	|           | ("desc")                                                                           |
+	+-----------+------------------------------------------------------------------------------------+
+	| limit     | Choose the maximum number of results to return                                     |
+	+-----------+------------------------------------------------------------------------------------+
+	| offset    | The number of results to skip before beginning to return results. Must use in      |
+	|           | conjunction with limit                                                             |
+	+-----------+------------------------------------------------------------------------------------+
+	| page      | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, |
+	|           | pages are ``limit`` long and the first page is 1. If ``offset`` was defined, this  |
+	|           | query parameter has no effect. ``limit`` must be defined to make use of ``page``.  |
+	+-----------+------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -52,11 +68,11 @@ Request Structure
 
 Response Structure
 ------------------
-:active:      A boolean which indicates whether or not the tenant is active
-:id:          The integral, unique identifier of this tenant
-:name:        This tenant's name
-:parentId:    The integral, unique identifier of this tenant's parent
-:parentName:  The name of the parent of this tenant
+:active:      A boolean which indicates whether or not the :term:`Tenant` is active
+:id:          The integral, unique identifier of this :term:`Tenant`
+:name:        This :term:`Tenant`'s name
+:parentId:    The integral, unique identifier of this :term:`Tenant`'s parent
+:parentName:  The name of the parent of this :term:`Tenant`
 
 .. code-block:: http
 	:caption: Response Example
@@ -67,7 +83,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: Yzr6TfhxgpZ3pbbrr4TRG4wC3PlnHDDzgs2igtz/1ppLSy2MzugqaGW4y5yzwzl5T3+7q6HWej7GQZt1XIVeZQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 11 Dec 2018 19:57:58 GMT
@@ -132,7 +148,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: ysdopC//JQI79BRUa61s6M2HzHxYHpo5RdcuauOoqCYxiVOoUhNZfOVydVkv8zDN2qA374XKnym4kWj3VzQIXg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 11 Dec 2018 19:37:16 GMT

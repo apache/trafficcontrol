@@ -54,6 +54,7 @@ var TenantService = function($http, ENV, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateTenant = function(tenant) {
         return $http.put(ENV.api['root'] + 'tenants/' + tenant.id, tenant).then(
             function(result) {
@@ -67,6 +68,7 @@ var TenantService = function($http, ENV, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteTenant = function(id) {
         return $http.delete(ENV.api['root'] + "tenants/" + id).then(
             function(result) {

@@ -1,0 +1,27 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<tp-header [title]="currentUser ? currentUser.username : ''"></tp-header>
+
+<main *ngIf=currentUser>
+<h1><span *ngIf=currentUser.fullName>{{currentUser.fullName}}, </span>{{currentUser.roleName}} user</h1>
+<address>
+	<p *ngIf="currentUser.email || currentUser.phoneNumber"><a *ngIf=currentUser.email href="mailto:{{currentUser.email}}">{{currentUser.email}}</a><span *ngIf="currentUser.email && currentUser.phoneNumber">, </span><a *ngIf="currentUser.phoneNumber" href="tel:{{currentUser.phoneNumber}}">{{currentUser.phoneNumber}}</a></p>
+	<p *ngIf=currentUser.addressLine1>{{currentUser.addressLine1}}</p>
+	<p *ngIf=currentUser.addressLine2>{{currentUser.addressLine2}}</p>
+	<p *ngIf=currentUser.company>{{currentUser.company}}</p>
+	<p *ngIf="currentUser.city || currentUser.country || currentUser.stateOrProvince || currentUser.postalCode"><span *ngIf="currentUser.city">{{currentUser.city}}<span *ngIf="currentUser.country || currentUser.stateOrProvince || currentUser.postalCode">&nbsp;</span></span><span *ngIf="currentUser.stateOrProvince">{{currentUser.stateOrProvince}}<span *ngIf="currentUser.country || currentUser.postalCode">, </span></span><span *ngIf="currentUser.country">{{currentUser.country}}<span *ngIf="currentUser.postalCode">, </span></span><span *ngIf=currentUser.postalCode>{{currentUser.postalCode}}</span></p>
+</address>
+</main>
+
+<a id="edit" title="Edit Profile"><img src="/assets/edit.svg"/></a>

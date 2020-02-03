@@ -90,6 +90,15 @@ cat <<-EOF >$TSCONF
 }
 EOF
 
+cat <<-EOF >/opt/traffic_stats/conf/traffic_stats_seelog.xml
+<?xml version='1.0'?>
+<seelog minlevel="debug">
+    <outputs formatid="std:debug-short">
+        <file path="/opt/traffic_stats/var/log/traffic_stats/traffic_stats.log" />
+    </outputs>
+</seelog>
+EOF
+
 touch /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
 
 # Wait for influxdb

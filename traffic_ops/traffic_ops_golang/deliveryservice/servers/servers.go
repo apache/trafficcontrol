@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -37,7 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -46,7 +47,9 @@ import (
 type TODeliveryServiceServer struct {
 	api.APIInfoImpl `json:"-"`
 	tc.DeliveryServiceServer
-	TenantIDs pq.Int64Array `json:"-" db:"accessibleTenants"`
+	TenantIDs          pq.Int64Array `json:"-" db:"accessibleTenants"`
+	DeliveryServiceIDs pq.Int64Array `json:"-" db:"dsids"`
+	ServerIDs          pq.Int64Array `json:"-" db:"serverids"`
 }
 
 func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -111,7 +114,7 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 
 	dss := TODeliveryServiceServer{}
 	dss.SetInfo(inf)
-	results, err := dss.readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams)
+	results, err := dss.readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -119,7 +122,56 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespRaw(w, r, results)
 }
 
-func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int) (*tc.DeliveryServiceServerResponse, error) {
+// ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
+func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	dsIDs := []int64{}
+	dsIDStrs := strings.Split(inf.Params["deliveryserviceids"], ",")
+	for _, dsIDStr := range dsIDStrs {
+		dsIDStr = strings.TrimSpace(dsIDStr)
+		if dsIDStr == "" {
+			continue
+		}
+		dsID, err := strconv.Atoi(dsIDStr)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, 400, errors.New("deliveryserviceids query parameter must be a comma-delimited list of integers, got '"+inf.Params["deliveryserviceids"]+"'"), nil)
+			return
+		}
+		dsIDs = append(dsIDs, int64(dsID))
+	}
+
+	serverIDs := []int64{}
+	serverIDStrs := strings.Split(inf.Params["serverids"], ",")
+	for _, serverIDStr := range serverIDStrs {
+		serverIDStr = strings.TrimSpace(serverIDStr)
+		if serverIDStr == "" {
+			continue
+		}
+		serverID, err := strconv.Atoi(serverIDStr)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, 400, errors.New("serverids query parameter must be a comma-delimited list of integers, got '"+inf.Params["serverids"]+"'"), nil)
+			return
+		}
+		serverIDs = append(serverIDs, int64(serverID))
+	}
+
+	dss := TODeliveryServiceServer{}
+	dss.SetInfo(inf)
+	results, err := dss.readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams, dsIDs, serverIDs)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	api.WriteRespRaw(w, r, results)
+}
+
+func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int, dsIDs []int64, serverIDs []int64) (*tc.DeliveryServiceServerResponse, error) {
 	orderby := params["orderby"]
 	limit := 20
 	offset := 0
@@ -147,8 +199,10 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 	for _, id := range tenantIDs {
 		dss.TenantIDs = append(dss.TenantIDs, int64(id))
 	}
+	dss.ServerIDs = serverIDs
+	dss.DeliveryServiceIDs = dsIDs
 
-	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset))
+	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs)
 	if err != nil {
 		return nil, errors.New("creating query for DeliveryserviceServers: " + err.Error())
 	}
@@ -170,7 +224,7 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, nil
 }
 
-func selectQuery(orderBy string, limit string, offset string) (string, error) {
+func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, serverIDs []int64) (string, error) {
 	selectStmt := `SELECT
 	s.deliveryService,
 	s.server,
@@ -196,6 +250,16 @@ func selectQuery(orderBy string, limit string, offset string) (string, error) {
 JOIN deliveryservice d on s.deliveryservice = d.id
 WHERE d.tenant_id = ANY(CAST(:accessibleTenants AS bigint[]))
 `
+	if len(dsIDs) > 0 {
+		selectStmt += `
+AND s.deliveryservice = ANY(:dsids)
+`
+	}
+	if len(serverIDs) > 0 {
+		selectStmt += `
+AND s.server = ANY(:serverids)
+`
+	}
 
 	if orderBy != "" {
 		selectStmt += ` ORDER BY ` + orderBy
@@ -266,6 +330,21 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	serverNames := []string{}
+	for _, s := range servers {
+		name, _, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, s)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+			return
+		}
+		serverNames = append(serverNames, name)
+	}
+
+	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	if usrErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
+		return
+	}
 
 	if *payload.Replace {
 		// delete existing
@@ -291,7 +370,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_server replace ensuring ds parameters: "+err.Error()))
 		return
 	}
-
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+ds.Name+", ID: "+strconv.Itoa(*dsId)+", ACTION: Replace existing servers assigned to delivery service", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server assignements complete", tc.DSSMapResponse{*dsId, *payload.Replace, respServers})
 }
 
@@ -336,6 +415,12 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	payload.XmlId = dsName
 	serverNames := payload.ServerNames
 
+	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	if usrErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
+		return
+	}
+
 	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, ds.ID, pq.Array(serverNames))
 	if err != nil {
 
@@ -357,8 +442,50 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_server replace ensuring ds parameters: "+err.Error()))
 		return
 	}
-
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(ds.ID)+", ACTION: Assigned servers "+strings.Join(serverNames, ", ")+" to delivery service", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
+}
+
+// ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
+func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (error, error, int) {
+	nonOriginServerNames := []string{}
+	nonOriginTypeQuery := `
+	SELECT ARRAY(
+		SELECT s.host_name
+		FROM server s
+		JOIN type t ON s.type = t.id
+		WHERE t.name LIKE 'EDGE%' AND s.host_name = ANY($1)
+	)`
+
+	serverNamePqArray := pq.Array(serverNames)
+
+	if err := tx.QueryRow(nonOriginTypeQuery, serverNamePqArray).Scan(pq.Array(&nonOriginServerNames)); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil, http.StatusOK
+		}
+		return nil, err, http.StatusInternalServerError
+	}
+
+	var sCaps []string
+	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
+
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	for _, name := range nonOriginServerNames {
+		sCaps, err = dbhelpers.GetServerCapabilitiesFromName(name, tx)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		for _, dsc := range dsCaps {
+			if !util.ContainsStr(sCaps, dsc) {
+				return fmt.Errorf("Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, name), nil, http.StatusBadRequest
+			}
+		}
+	}
+
+	return nil, nil, 0
 }
 
 func insertIdsQuery() string {
@@ -496,7 +623,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	user := dss.APIInfo().User
 
 	if err := api.IsInt(params["id"]); err != nil {
-		return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
+		return nil, err, nil, http.StatusBadRequest
 	}
 
 	if _, ok := params["orderby"]; !ok {
@@ -533,9 +660,12 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
-	dses, errs, _ := deliveryservice.GetDeliveryServices(query, queryValues, dss.APIInfo().Tx)
-	if len(errs) > 0 {
-		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
+	dses, userErr, sysErr, _ := deliveryservice.GetDeliveryServices(query, queryValues, dss.APIInfo().Tx)
+	if sysErr != nil {
+		sysErr = fmt.Errorf("reading server dses: %v ", sysErr)
+	}
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, http.StatusInternalServerError
 	}
 
 	for _, ds := range dses {
@@ -549,8 +679,8 @@ func updateQuery() string {
 	profile_parameter SET
 	profile=:profile_id,
 	parameter=:parameter_id
-	WHERE profile=:profile_id AND 
-      parameter = :parameter_id 
+	WHERE profile=:profile_id AND
+      parameter = :parameter_id
       RETURNING last_updated`
 	return query
 }

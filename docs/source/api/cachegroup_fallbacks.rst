@@ -19,9 +19,13 @@
 ``cachegroup_fallbacks``
 ************************
 
+.. deprecated:: 1.4
+
+	The :ref:`to-api-cachegroups` and :ref:`to-api-cachegroups-id` endpoints now contain a list of :ref:`cache-group-fallbacks` in the output, and support it in input, and so this endpoint is redundant.
+
 ``GET``
 =======
-Retrieve fallback-related configurations for a :term:`Cache Group`.
+Retrieve the :ref:`cache-group-fallbacks` of a :term:`Cache Group`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -34,27 +38,28 @@ Request Structure
 	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
 	| Name         | Required | Description                                                                                               |
 	+==============+==========+===========================================================================================================+
-	| cacheGroupId |yes\ [1]_ | The integral, unique identifier of a :term:`Cache Group` whose fallback configurations shall be retrieved |
+	| cacheGroupId | yes      | The :ref:`cache-group-id` of a :term:`Cache Group` whose :ref:`cache-group-fallbacks` shall be retrieved  |
 	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
-	| fallbackId   |yes\ [1]_ | The integral, unique identifier of a fallback :term:`Cache Group`                                         |
+	| fallbackId   | no       | The integral, unique identifier of a single :ref:`"fallback" <cache-group-fallbacks>` :term:`Cache Group` |
 	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.3/cachegroup_fallbacks?cacheGroupId=11&fallbackId=7 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	GET /api/1.4/cachegroup_fallbacks?cacheGroupId=7 HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
 
 Response Structure
 ------------------
-:cacheGroupId:   The integral, unique identifier of the :term:`Cache Group` described by this entry
-:cacheGroupName: The name of the :term:`Cache Group` described by this entry
-:fallbackId:     The integral, unique identifier of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will fall back
-:fallbackName:   The name of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will fall back
-:fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the :term:`Cache Group` described by this entry
+:cacheGroupId:   An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` described by this entry
+:cacheGroupName: The :ref:`cache-group-name` of the :term:`Cache Group` described by this entry as a string
+:fallbackId:     An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will "fall back"
+:fallbackName:   The :ref:`cache-group-name` of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will "fall back" as a string
+:fallbackOrder:  The place in the list of :ref:`cache-group-fallbacks` of the :term:`Cache Group` identified by ``cacheGroupId`` and ``cacheGroupName`` where the :term:`Cache Group` identified by ``fallbackId`` and ``fallbackName`` starting from index 1.
 
 .. code-block:: http
 	:caption: Response Example
@@ -65,30 +70,35 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
+	Content-Length: 189
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 15:40:34 GMT
+	Date: Mon, 02 Dec 2019 22:26:27 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 19:40:34 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; expires=Tue, 03 Dec 2019 02:26:27 GMT; path=/; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: 9kauJ9tA4Ca5ElMHZk0fIJpQr+Wcx6NHiqWrnZJvyupRIOBQiUec3UW/fI9HdtE98xkrthz1daXKmdUkDhon8Q==
-	Content-Length: 125
+	Whole-Content-Sha512: zSAeB8nxonyinsg1/at/l0/9FRRPw7N27DpkcZxRIwEzDOEY5XVfYcCHHFg1d/Q2JWtWZ9iRhs8mK5rLbKkccw==
 
-	{ "response": [
+	{ "alerts": [
 		{
-			"cacheGroupId": 11,
-			"fallbackOrder": 1,
-			"fallbackName": "CDN_in_a_Box_Edge",
-			"fallbackId": 7,
-			"cacheGroupName": "test"
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /cachegroups' instead"
+		}
+	],
+	"response": [
+		{
+			"cacheGroupId": 7,
+			"fallbackOrder": 2,
+			"fallbackName": "test",
+			"fallbackId": 8,
+			"cacheGroupName": "CDN_in_a_Box_Edge"
 		}
 	]}
 
 
-.. [1] At least one of these must be provided, not necessarily both (though both is perfectly valid).
-
 ``POST``
 ========
-Creates fallback configuration for a :term:`Cache Group`.
+Creates :ref:`"fallback" <cache-group-fallbacks>` configuration for a :term:`Cache Group`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -96,33 +106,32 @@ Creates fallback configuration for a :term:`Cache Group`.
 
 Request Structure
 -----------------
-The request payload for this endpoint **must** be an array, even if only one fallback relationship is being created.
+The request payload for this endpoint **must** be an array, even if only one "fallback" relationship is being created.
 
-:cacheGroupId:  Integral, unique identifier of a :term:`Cache Group` to which to assign a fallback
-:fallbackId:    Integral, unique identifier of a :term:`Cache Group` on which the :term:`Cache Group` identified by ``cacheGroupId`` will fall back
-:fallbackOrder: The order of this fallback for the :term:`Cache Group` identified by ``cacheGroupId``
+:cacheGroupId:  An integer that is the :ref:`cache-group-id` of a :term:`Cache Group` to which to assign a :ref:`fallback <cache-group-fallbacks>`
+:fallbackId:    An integer that is the :ref:`cache-group-id` of a :term:`Cache Group` on which the :term:`Cache Group` identified by ``cacheGroupId`` will "fall back"
+:fallbackOrder:  The place in the list of :ref:`cache-group-fallbacks` of the :term:`Cache Group` identified by ``cacheGroupId`` and ``cacheGroupName`` where the :term:`Cache Group` identified by ``fallbackId`` and ``fallbackName`` starting from index 1.
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.3/cachegroup_fallbacks HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	POST /api/1.4/cachegroup_fallbacks HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
-	Content-Length: 59
-	Content-Type: application/x-www-form-urlencoded
+	Content-Length: 57
 
-	[{"cacheGroupId": 11, "fallbackId": 7, "fallbackOrder": 1}]
+	[{"cacheGroupId": 7, "fallbackId": 8, "fallbackOrder": 2}]
 
 Response Structure
 ------------------
-:cacheGroupId:   The integral, unique identifier of the :term:`Cache Group` to which this fallback was assigned
-:cacheGroupName: The name of the :term:`Cache Group` to which this fallback was assigned
-:fallbackId:     The integral, unique identifier of the :term:`Cache Group` on which this entries :term:`Cache Group` will fall back
-:fallbackName:   The name of the :term:`Cache Group` on which this entries :term:`Cache Group` will fall back
-:fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the :term:`Cache Group` described by this entry
-
+:cacheGroupId:   An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` described by this entry
+:cacheGroupName: The :ref:`cache-group-name` of the :term:`Cache Group` described by this entry as a string
+:fallbackId:     An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will "fall back"
+:fallbackName:   The :ref:`cache-group-name` of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will "fall back" as a string
+:fallbackOrder:  The place in the list of :ref:`cache-group-fallbacks` of the :term:`Cache Group` identified by ``cacheGroupId`` and ``cacheGroupName`` where the :term:`Cache Group` identified by ``fallbackId`` and ``fallbackName`` starting from index 1.
 
 .. code-block:: http
 	:caption: Response Example
@@ -133,34 +142,30 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
+	Content-Length: 174
 	Content-Type: application/json
-	Date: Thu, 08 Nov 2018 14:59:46 GMT
+	Date: Mon, 02 Dec 2019 22:23:22 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 08 Nov 2018 18:59:46 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; expires=Tue, 03 Dec 2019 02:23:22 GMT; path=/; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: 0twD50R5e7V2DtVrALQxzr2DmeHPPu8rTY8aGU4dFkx4XnOzjeRK5z+SYCrZEZ9Mh8QnWha3yZ2PtlxVTZt1YA==
-	Content-Length: 225
+	Whole-Content-Sha512: S8CMeR3P22itBNYOQaIjiQPMDoq2AzGt0/oBYpMPm1b8/iKeZfGSS4zyt4WYbVJrgrzFZYGUhBEJe6uimQYdCQ==
 
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Backup configuration CREATE for cache group 11 successful."
-		}
-	],
-	"response": [
+			"text": "Backup configuration CREATE for cache group 7 successful."
+		},
 		{
-			"cacheGroupId": 11,
-			"fallbackName": "CDN_in_a_Box_Edge",
-			"fallbackOrder": 1,
-			"fallbackId": 7,
-			"cacheGroupName": "test"
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'POST /cachegroups with a non-empty 'fallbacks' array' instead"
 		}
 	]}
 
 
 ``PUT``
 =======
-Updates an existing fallback configuration for one or more :term:`Cache Group`\ s.
+Updates an existing :ref:`fallback <cache-group-fallbacks>` configuration for one or more :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -169,32 +174,31 @@ Updates an existing fallback configuration for one or more :term:`Cache Group`\ 
 Request Structure
 -----------------
 The request payload for this endpoint **must** be an array, even if only one fallback relationship is being updated.
-:cacheGroupId:  Integral, unique identifier of a :term:`Cache Group` to which to assign a fallback
-:fallbackId:    Integral, unique identifier of a :term:`Cache Group` on which the :term:`Cache Group` identified by ``cacheGroupId`` will fall back
-:fallbackOrder: The order of this fallback for the :term:`Cache Group` identified by ``cacheGroupId``
 
-.. note:: The request data should be an array of these objects (and any number can be submitted per request), see the example
+:cacheGroupId:  An integer that is the :ref:`cache-group-id` of a :term:`Cache Group` to which to assign a :ref:`fallback <cache-group-fallbacks>`
+:fallbackId:    An integer that is the :ref:`cache-group-id` of a :term:`Cache Group` on which the :term:`Cache Group` identified by ``cacheGroupId`` will "fall back"
+:fallbackOrder:  The place in the list of :ref:`cache-group-fallbacks` of the :term:`Cache Group` identified by ``cacheGroupId`` and ``cacheGroupName`` where the :term:`Cache Group` identified by ``fallbackId`` and ``fallbackName`` starting from index 1.
 
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.1/cachegroup_fallbacks HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	PUT /api/1.4/cachegroup_fallbacks HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
-	Content-Length: 59
-	Content-Type: application/x-www-form-urlencoded
+	Content-Length: 58
 
-	[{"cacheGroupId": 11, "fallbackId": 7, "fallbackOrder": 2}]
+	[{"cacheGroupId": 7, "fallbackId": 8, "fallbackOrder": 2}]
 
 Response Structure
 ------------------
-:cacheGroupId:   The integral, unique identifier of the :term:`Cache Group` to which this fallback was assigned
-:cacheGroupName: The name of the :term:`Cache Group` to which this fallback was assigned
-:fallbackId:     The integral, unique identifier of the :term:`Cache Group` on which this entries :term:`Cache Group` will fall back
-:fallbackName:   The name of the :term:`Cache Group` on which this entries :term:`Cache Group` will fall back
-:fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the :term:`Cache Group` described by this entry
+:cacheGroupId:   An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` described by this entry
+:cacheGroupName: The :ref:`cache-group-name` of the :term:`Cache Group` described by this entry as a string
+:fallbackId:     An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will "fall back"
+:fallbackName:   The :ref:`cache-group-name` of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will "fall back" as a string
+:fallbackOrder:  The place in the list of :ref:`cache-group-fallbacks` of the :term:`Cache Group` identified by ``cacheGroupId`` and ``cacheGroupName`` where the :term:`Cache Group` identified by ``fallbackId`` and ``fallbackName`` starting from index 1.
 
 .. code-block:: http
 	:caption: Response Example
@@ -205,59 +209,65 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
+	Content-Length: 237
 	Content-Type: application/json
-	Date: Thu, 08 Nov 2018 15:07:06 GMT
+	Date: Mon, 02 Dec 2019 22:28:55 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 08 Nov 2018 19:07:06 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; expires=Tue, 03 Dec 2019 02:28:55 GMT; path=/; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: 7QQpwDEmSpSPn6E3FAjxNw3E7xKP3TOBdnvZiBHQwOLmOH6Eiaq58f3eMPYAuK4qMSAKBj9Y2R//Fpa59YCMRw==
-	Content-Length: 225
+	Whole-Content-Sha512: /rGLP3gbnqFUjDhC/4mSYr2a2HoVsGTukxHX8CbURnwDS5LV7U6gwvlOcgtMfEUyX1FEa4+1Xa94tiL/dRFj6w==
 
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Backup configuration UPDATE for cache group 11 successful."
+			"text": "Backup configuration UPDATE for cache group 7 successful."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'PUT /cachegroups' instead"
 		}
 	],
 	"response": [
 		{
-			"cacheGroupId": 11,
-			"fallbackName": "CDN_in_a_Box_Edge",
+			"cacheGroupId": 7,
 			"fallbackOrder": 2,
-			"fallbackId": 7,
-			"cacheGroupName": "test"
+			"fallbackName": "test",
+			"fallbackId": 8,
+			"cacheGroupName": "CDN_in_a_Box_Edge"
 		}
 	]}
 
 ``DELETE``
 ==========
-Delete fallback list assigned to a :term:`Cache Group`
+Remove one or more :ref:`cache-group-fallbacks` from one or more :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Response Type:  Object (string)
+:Response Type:  ``undefined``
 
 Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
-	| Name         | Required | Description                                                                                               |
-	+==============+==========+===========================================================================================================+
-	| cacheGroupId |yes\ [2]_ | The integral, unique identifier of a :term:`Cache Group` whose fallback configurations shall be retrieved |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
-	| fallbackId   |yes\ [2]_ | The integral, unique identifier of a fallback :term:`Cache Group`                                         |
-	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
+	+--------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name         | Required | Description                                                                                                  |
+	+==============+==========+==============================================================================================================+
+	| cacheGroupId |yes\ [2]_ | The :ref:`cache-group-id` of a :term:`Cache Group` from which :ref:`cache-group-fallbacks` are being removed |
+	+--------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| fallbackId   |yes\ [2]_ | The :ref:`cache-group-id` of a :ref:`"fallback" <cache-group-fallbacks>` :term:`Cache Group`                 |
+	+--------------+----------+--------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.2/cachegroup_fallbacks?cacheGroupId=11&fallbackId=7 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	DELETE /api/1.4/cachegroup_fallbacks?fallbackId=8 HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
-
+	Content-Length: 0
 
 Response Structure
 ------------------
@@ -270,17 +280,24 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Encoding: gzip
+	Content-Length: 186
 	Content-Type: application/json
-	Date: Thu, 08 Nov 2018 15:48:56 GMT
+	Date: Mon, 02 Dec 2019 22:30:58 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 08 Nov 2018 19:48:56 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; expires=Tue, 03 Dec 2019 02:30:58 GMT; path=/; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: MG2FNZ18EyAvy/IgdUPX4XRjJXYclXtp0e/kCMfimx9C427LNwjvL1seXkvu9crT2o68i0H2q1efshDJHO81IQ==
-	Content-Length: 76
+	Whole-Content-Sha512: iag1k8Ym4K6nrpahJwzyA45m2RO6159gSRg4ozUvg69/TKrTLyggMeAIVdzbwn8+ayOFq01lTK1Ho9jQFJ5j2w==
 
-	{
-		"response": "Backup Cachegroup 7  DELETED from cachegroup 11 fallback list"
-	}
+	{ "alerts": [
+		{
+			"level": "success",
+			"text": "Cachegroup 8 DELETED from all the configured fallback lists"
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'PUT /cachegroups with an empty 'fallbacks' array' instead"
+		}
+	]}
 
-
-.. [2] At least one of "cacheGroupId" or "fallbackId" must be sent with the request. If both are sent, a single fallback relationship is deleted, whereas using only "cacheGroupId" will result in all fallbacks being removed from the :term:`Cache Group` identified by that integral, unique identifier, and using only "fallbackId" will remove the :term:`Cache Group` identified by *that* integral, unique identifier from all other :term:`Cache Group`\ s' fallback lists.
+.. [2] At least one of "cacheGroupId" or "fallbackId" must be sent with the request. If both are sent, a single fallback relationship is deleted, whereas using only "cacheGroupId" will result in all fallbacks being removed from the :term:`Cache Group` identified by that integral, unique identifier, and using only "fallbackId" will remove the :term:`Cache Group` identified by *that* integral, unique identifier from all other :term:`Cache Groups`' fallback lists.

@@ -37,12 +37,32 @@ function initBuildArea() {
 	local ts_dest=$(createSourceDir traffic_stats)
 	cd "$TS_DIR" || \
 		 { echo "Could not cd to $TS_DIR: $?"; exit 1; }
+
+        echo "PATH: $PATH"
+        echo "GOPATH: $GOPATH"
+        go version
+        go env
+
+        # get x/* packages (everything else should be properly vendored)
+        go get -v golang.org/x/net/publicsuffix || \
+                { echo "Could not get go package dependencies"; exit 1; }
+
+        # compile traffic_stats
+        go build -v || \
+                { echo "Could not build traffic_stats binary"; exit 1; }
+
+	# compile influx_db_tools
+	pushd influxdb_tools
+	go build -v sync/sync_ts_databases.go || \
+                { echo "Could not build sync_ts_databases binary"; exit 1; }
+	go build -v create/create_ts_databases.go || \
+                { echo "Could not build create_ts_databases binary"; exit 1; }
+	popd
+
 	rsync -aLv ./ "$ts_dest"/ || \
 		 { echo "Could not copy to $ts_dest: $?"; exit 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; exit 1; }
-
-	cp -L -r "$TS_DIR"/ "$ts_dest" || { echo "Could not copy $TS_DIR to $ts_dest: $?"; exit 1; }
 
 	tar -czvf "$ts_dest".tgz -C "$RPMBUILD"/SOURCES $(basename $ts_dest) || { echo "Could not create tar archive $ts_dest.tgz: $?"; exit 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; exit 1; }

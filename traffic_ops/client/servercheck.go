@@ -1,8 +1,11 @@
 /*
+
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
+
    http://www.apache.org/licenses/LICENSE-2.0
+
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +23,10 @@ import (
 )
 
 const API_V13_SERVERCHECK = "/api/1.3/servercheck"
-const API_V13_SERVERCHECK_GET = "/api/1.3/servers/checks"
+const API_V1_SERVERCHECK_GET = apiBase + "/servers/checks"
 
-// Update a Server Check Status
-func (to *Session) UpdateCheckStatus(status tc.ServercheckPostNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
+// InsertServerCheckStatus Will insert/update the servercheck value based on if it already exists or not
+func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
 	uri := API_V13_SERVERCHECK
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -39,15 +42,29 @@ func (to *Session) UpdateCheckStatus(status tc.ServercheckPostNullable) (*tc.Ser
 	return &resp, reqInf, nil
 }
 
-// Get Server Check Data
-func (to *Session) GetCheckData() (*tc.ServerchecksResponse, ReqInf, error) {
-	uri := API_V13_SERVERCHECK_GET
+// GetServerChecks Gets ServerChecks Data.
+//
+// Deprecated: This function cannot handle arbitrary check types, so if you're
+// using custom TO extensions it WILL quietly drop data. Please use
+// Session.GetServersChecks instead.
+func (to *Session) GetServerChecks() (*tc.ServerchecksResponse, ReqInf, error) {
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	resp := tc.ServerchecksResponse{}
-	reqInf, err := get(to, uri, &resp)
+	reqInf, err := get(to, API_V1_SERVERCHECK_GET, &resp)
 	if err != nil {
 		return nil, reqInf, err
 	}
 	return &resp, reqInf, nil
+}
+
+// GetServersChecks fetches check and meta information about servers from /servers/checks.
+func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
+	var response struct {
+		tc.Alerts
+		Response []tc.GenericServerCheck `json:"response"`
+	}
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+	reqInf, err := get(to, API_V1_SERVERCHECK_GET, &response)
+	return response.Response, response.Alerts, reqInf, err
 }

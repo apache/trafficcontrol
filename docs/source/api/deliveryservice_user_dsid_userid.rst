@@ -18,6 +18,7 @@
 ********************************************
 ``deliveryservice_user/{{dsID}}/{{userID}}``
 ********************************************
+.. deprecated:: ATCv4
 
 ``DELETE``
 ==========
@@ -53,7 +54,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 14 Nov 2018 21:40:06 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 01:40:06 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: /eNE3LhFABGukcczjxJOYiwmfVTUUKII9RRuZi14AbF65BLhHdXZ5lAVEi4Hc65+ojNaijBgI9jTmgO4XCcP/A==
 	Content-Length: 100
@@ -62,5 +63,9 @@ Response Structure
 		{
 			"level": "success",
 			"text": "User [ test ] unlinked from deliveryservice [ 1 | demo1 ]."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint and its functionality is deprecated, and will be removed in the future"
 		}
 	]}

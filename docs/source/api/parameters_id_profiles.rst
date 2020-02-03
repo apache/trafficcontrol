@@ -18,8 +18,7 @@
 ******************************
 ``parameters/{{ID}}/profiles``
 ******************************
-.. deprecated:: 1.1
-	Use the ``param`` query parameter of :ref:`to-api-profiles` instead.
+.. deprecated:: ATCv4
 
 ``GET``
 =======
@@ -69,7 +68,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 05 Dec 2018 20:51:23 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 06 Dec 2018 00:51:23 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: y5fA9q1VogDGxL66ka+ofTtLo3JiTj+Bdrvc4DnfrjFyzqll+537WySFj1nE0C29Twx5l/C8JEHy3Byaz/wbfA==
 	Content-Length: 184
@@ -82,5 +81,11 @@ Response Structure
 			"type": "UNK_PROFILE",
 			"id": 1,
 			"description": "Global Traffic Ops profile, DO NOT DELETE"
+		}
+	],
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /profiles' instead"
 		}
 	]}

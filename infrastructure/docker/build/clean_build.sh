@@ -31,8 +31,11 @@ trap cleanup EXIT
 set -x
 
 # set owner of dist dir -- cleans up existing dist permissions...
-cp -a /trafficcontrol /tmp/. && \
-	cd /tmp/trafficcontrol && \
+mkdir -p /tmp/go/{src,pkg,bin}
+mkdir -p /tmp/go/src/github.com/apache/
+export GOPATH=/tmp/go
+cp -a /trafficcontrol /tmp/go/src/github.com/apache/. && \
+	cd /tmp/go/src/github.com/apache/trafficcontrol && \
 	rm -rf dist && \
 	mkdir -p /trafficcontrol/dist && \
 	ln -s /trafficcontrol/dist dist && \

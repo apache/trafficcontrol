@@ -32,21 +32,31 @@ Request Structure
 .. table:: Request Query Parameters
 
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|    Name    | Required |                                                Description                                                        |
+	| Name       | Required | Description                                                                                                       |
 	+============+==========+===================================================================================================================+
-	| cachegroup | no       | Return only those servers within the :term:`Cache Group` identified by this integral, unique identifier           |
+	| cachegroup | no       | Return only those servers within the :term:`Cache Group` that has this :ref:`cache-group-id`                      |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|    dsId    | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier |
+	| dsId       | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|  hostName  | no       | Return only those servers that have this (short) hostname                                                         |
+	| hostName   | no       | Return only those servers that have this (short) hostname                                                         |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|     id     | no       | Return only the server with this integral, unique identifier                                                      |
+	| id         | no       | Return only the server with this integral, unique identifier                                                      |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|  profileId | no       | Return only those servers that are using the :term:`Profile` that has this :ref:`profile-id`                      |
+	| profileId  | no       | Return only those servers that are using the :term:`Profile` that has this :ref:`profile-id`                      |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|   status   | no       | Return only those servers with this status - see :ref:`health-proto`                                              |
+	| status     | no       | Return only those servers with this status - see :ref:`health-proto`                                              |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|    type    | no       | Return only servers of this 'type'                                                                                |
+	| type       | no       | Return only servers of this :term:`Type`                                                                          |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| sortOrder  | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                          |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| limit      | no       | Choose the maximum number of results to return                                                                    |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| offset     | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit              |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| page       | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and   |
+	|            |          | the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to  |
+	|            |          | make use of ``page``.                                                                                             |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
@@ -60,25 +70,24 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     The name of the Cache Group to which this server belongs
-:cachegroupId:   The integral, unique identifier of the Cache Group to which this server belongs
+:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:          The integral, unique identifier of the CDN to which the server belongs
 :cdnName:        Name of the CDN to which the server belongs
-:domainName:     The domain part of the server's Fully Qualified Domain Name (FQDN)
+:domainName:     The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :guid:           An identifier used to uniquely identify the server
 
-	.. deprecated:: 1.1
-		This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
 :id:             An integral, unique identifier for this server
-:iloIpAddress:   The IPv4 address of the server's Integrated Lights-Out (ILO) service\ [1]_
-:iloIpGateway:   The IPv4 gateway address of the server's ILO service\ [1]_
-:iloIpNetmask:   The IPv4 subnet mask of the server's ILO service\ [1]_
-:iloPassword:    The password of the of the server's ILO service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' role(s)
-:iloUsername:    The user name for the server's ILO service\ [1]_
-:interfaceMtu:   The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
+:iloIpAddress:   The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpGateway:   The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpNetmask:   The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloPassword:    The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
+:iloUsername:    The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:interfaceMtu:   The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
 :interfaceName:  The name of the primary network interface used by the server
 :ip6Address:     The IPv6 address and subnet mask of ``interfaceName``
 :ip6Gateway:     The IPv6 address of the gateway used by ``interfaceName``
@@ -126,7 +135,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: WyapQctUIhjzEALka5QbBiZRZ58Mlc6MJSwjBeGyJS2UzbL3W6lN/4kvAZtPrP4qMWQBWz6JjbF7Y5lNRASUmQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 10 Dec 2018 16:13:31 GMT
@@ -180,8 +189,6 @@ Response Structure
 		}
 	]}
 
-.. [1] For more information see the `Wikipedia page on Lights-Out management <https://en.wikipedia.org/wiki/Out-of-band_management>`_\ .
-
 ``POST``
 ========
 Allows a user to create a new server.
@@ -192,17 +199,17 @@ Allows a user to create a new server.
 
 Request Structure
 -----------------
-:cachegroupId: The integral, unique identifier of the Cache Group to which this server shall belong
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
 :cdnId:        The integral, unique identifier of the CDN to which the server shall belong
-:domainName:   The domain part of the server's Fully Qualified Domain Name (FQDN)
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :hostName:     The (short) hostname of the server
 :httpsPort:    An optional port number on which the server listens for incoming HTTPS connections/requests
-:iloIpAddress: An optional IPv4 address of the server's Integrated Lights-Out (ILO) service\ [1]_
-:iloIpGateway: An optional IPv4 gateway address of the server's ILO service\ [1]_
-:iloIpNetmask: An optional IPv4 subnet mask of the server's ILO service\ [1]_
-:iloPassword:  An optional string containing the password of the of the server's ILO service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' role(s)
-:iloUsername:  An optional string containing the user name for the server's ILO service\ [1]_
-:interfaceMtu: The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
+:iloIpAddress: An optional IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpGateway: An optional IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpNetmask: An optional IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloPassword:  An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
+:iloUsername:  An optional string containing the user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:interfaceMtu: The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
 
 	.. note:: In virtually all cases this ought to be 1500. Further note that the only acceptable values are 1500 and 9000.
 
@@ -279,25 +286,24 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     The name of the Cache Group to which this server belongs
-:cachegroupId:   The integral, unique identifier of the Cache Group to which this server belongs
+:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:          The integral, unique identifier of the CDN to which the server belongs
 :cdnName:        Name of the CDN to which the server belongs
-:domainName:     The domain part of the server's Fully Qualified Domain Name (FQDN)
+:domainName:     The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :guid:           An identifier used to uniquely identify the server
 
-	.. deprecated:: 1.1
-		This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
 :id:             An integral, unique identifier for this server
-:iloIpAddress:   The IPv4 address of the server's Integrated Lights-Out (ILO) service\ [1]_
-:iloIpGateway:   The IPv4 gateway address of the server's ILO service\ [1]_
-:iloIpNetmask:   The IPv4 subnet mask of the server's ILO service\ [1]_
-:iloPassword:    The password of the of the server's ILO service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' role(s)
-:iloUsername:    The user name for the server's ILO service\ [1]_
-:interfaceMtu:   The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
+:iloIpAddress:   The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpGateway:   The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpNetmask:   The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloPassword:    The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :abbr:`Role(s) <Role>`
+:iloUsername:    The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:interfaceMtu:   The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
 :interfaceName:  The name of the primary network interface used by the server
 :ip6Address:     The IPv6 address and subnet mask of ``interfaceName``
 :ip6Gateway:     The IPv6 address of the gateway used by ``interfaceName``
@@ -309,8 +315,8 @@ Response Structure
 :mgmtIpGateway:  The IPv4 address of a gateway used by some network interface on the server used for 'management'
 :mgmtIpNetmask:  The IPv4 subnet mask used by some network interface on the server used for 'management'
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physLocation:   The name of the physical location where the server resides
-:physLocationId: An integral, unique identifier for the physical location where the server resides
+:physLocation:   The name of the :term:`Physical Location` where the server resides
+:physLocationId: An integral, unique identifier for the :term:`Physical Location` where the server resides
 :profile:        The :ref:`profile-name` of the :term:`Profile` used by this server
 :profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
 :profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
@@ -345,7 +351,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: mcGmmu5ONDg3jmvlkItcw6jxiT1ecmePYujZfmKiZrn5ThKjsSadeJIynaeOK0XVUjHuYHdtdynSqxr2rdzEyA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 10 Dec 2018 17:44:04 GMT
@@ -402,3 +408,5 @@ Response Structure
 		"xmppId": "test",
 		"xmppPasswd": null
 	}}
+
+.. [1] For more information see the `Wikipedia page on Lights-Out management <https://en.wikipedia.org/wiki/Out-of-band_management>`_\ .

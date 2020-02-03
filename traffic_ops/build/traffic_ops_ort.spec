@@ -38,12 +38,21 @@ tar xvf %{SOURCE0} -C $RPM_SOURCE_DIR
 
 
 %build
+# copy atstccfg binary
+godir=src/github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg
+( mkdir -p "$godir" && \
+  cd "$godir" && \
+  cp "$TC_DIR"/traffic_ops/ort/atstccfg/atstccfg .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 
 %install
 mkdir -p ${RPM_BUILD_ROOT}/opt/ort
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/opt/ort
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/opt/ort
+
+src=src/github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg
+cp -p "$src"/atstccfg ${RPM_BUILD_ROOT}/opt/ort
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
@@ -54,5 +63,6 @@ rm -rf ${RPM_BUILD_ROOT}
 %attr(755, root, root)
 /opt/ort/traffic_ops_ort.pl
 /opt/ort/supermicro_udev_mapper.pl
+/opt/ort/atstccfg
 
 %changelog

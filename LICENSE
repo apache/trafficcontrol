@@ -252,6 +252,14 @@ For the DataTables ColReorder component:
 @traffic_portal/app/src/assets/js/colReorder.dataTables.min_1.5.1.js
 ./licenses/MIT-ColReorder
 
+For the DataTables Buttons component:
+@traffic_portal/app/src/assets/js/dataTables.buttons.min_1.5.6.js
+./licenses/MIT-datatables-buttons
+
+For the HTML5 Buttons component:
+@traffic_portal/app/src/assets/js/buttons.html5.min_1.5.6.js
+./licenses/MIT-buttons-html5
+
 For the moment.js component:
 @traffic_portal/app/src/assets/js/moment-min_2.22.1.js
 ./licenses/MIT-momentjs
@@ -293,10 +301,6 @@ For the underscore component:
 @traffic_portal/app/src/assets/js/underscore-min_1.8.3.js
 ./licenses/MIT-underscore
 
-For the selenium component:
-@infrastructure/test/ui/vendor/github.com/tebeka/selenium/*
-./infrastructure/test/ui/vendor/github.com/tebeka/selenium/LICENSE.txt
-
 For the stoppableListener component:
 @traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/*
 ./traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/LICENSE
@@ -311,18 +315,18 @@ For the yaml component:
 ./vendor/gopkg.in/yaml.v2/LICENSE.libyaml
 
 For the jwt-go component:
-@traffic_ops/experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/*
-./traffic_ops/experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/LICENSE
+@experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/*
+./experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/LICENSE
 
 For the pq component:
-@traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
+@experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
 @vendor/github.com/lib/pq/*
 ./vendor/github.com/lib/pq/LICENSE.md
 
 For the influxdb component:
-@traffic_stats/vendor/github.com/influxdata/influxdb/*
-./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE
-./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
+@vendor/github.com/influxdata/influxdb/*
+./vendor/github.com/influxdata/influxdb/LICENSE
+./vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
 
 For the errors component:
 @traffic_stats/vendor/github.com/pkg/errors/*
@@ -440,3 +444,11 @@ For the lestrrat-go/jwx (commit e35178a) component:
 For the dgrijalva/jwt-go (commit 5e25c22) component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/LICENSE
+
+For the ogier/pflag (commit 45c278a) component:
+@vendor/github.com/ogier/pflag/*
+./licenses/BSD-pflag
+
+For the errors (commit 27936f6) component:
+@vendor/github.com/pkg/errors/*
+./vendor/github.com/pkg/errors/LICENSE

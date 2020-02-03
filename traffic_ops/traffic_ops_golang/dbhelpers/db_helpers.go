@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -41,6 +42,81 @@ const BaseWhere = "\nWHERE"
 const BaseOrderBy = "\nORDER BY"
 const BaseLimit = "\nLIMIT"
 const BaseOffset = "\nOFFSET"
+
+const getDSTenantIDFromXMLIDQuery = `
+SELECT deliveryservice.tenant_id
+FROM deliveryservice
+WHERE deliveryservice.xml_id = $1
+`
+
+const getFederationIDForUserIDByXMLIDQuery = `
+SELECT federation_deliveryservice.federation
+FROM federation_deliveryservice
+WHERE federation_deliveryservice.deliveryservice IN (
+	SELECT deliveryservice.id
+	FROM deliveryservice
+	WHERE deliveryservice.xml_id = $1
+) AND federation_deliveryservice.federation IN (
+	SELECT federation_tmuser.federation
+	FROM federation_tmuser
+	WHERE federation_tmuser.tm_user = $2
+)
+`
+
+const getUserByEmailQuery = `
+SELECT u.id,
+       u.username,
+       u.public_ssh_key,
+       u.role,
+       r.name as rolename,
+       u.company,
+       u.email,
+       u.full_name,
+       u.new_user,
+       u.address_line1,
+       u.address_line2,
+       u.city,
+       u.state_or_province,
+       u.phone_number,
+       u.postal_code,
+       u.country,
+       u.registration_sent,
+       u.tenant_id,
+       t.name as tenant,
+       u.last_updated
+FROM tm_user u
+LEFT JOIN tenant t ON u.tenant_id = t.id
+LEFT JOIN role r ON u.role = r.id
+WHERE u.email=$1
+`
+const getUserByIDQuery = `
+SELECT tm_user.address_line1,
+       tm_user.address_line2,
+       tm_user.city,
+       tm_user.company,
+       tm_user.country,
+       tm_user.email,
+       tm_user.full_name,
+       tm_user.gid,
+       tm_user.id,
+       tm_user.new_user,
+       tm_user.phone_number,
+       tm_user.postal_code,
+       tm_user.public_ssh_key,
+       tm_user.registration_sent,
+       tm_user.role,
+       role.name AS role_name,
+       tm_user.state_or_province,
+       tenant.name AS tenant,
+       tm_user.tenant_id,
+       tm_user.token,
+       tm_user.uid,
+       tm_user.username
+FROM tm_user
+LEFT OUTER JOIN role ON role.id = tm_user.role
+LEFT OUTER JOIN tenant ON tenant.id = tm_user.tenant_id
+WHERE tm_user.id = $1
+`
 
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
@@ -120,7 +196,6 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 }
 
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {
-	m := make(map[string]interface{})
 	var criteria string
 
 	var criteriaArgs []string
@@ -135,7 +210,6 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 			if err != nil {
 				errs = append(errs, errors.New(key+" "+err.Error()))
 			} else {
-				m[key] = urlValue
 				criteria = colInfo.Column + "=:" + key
 				criteriaArgs = append(criteriaArgs, criteria)
 				queryValues[key] = urlValue
@@ -217,6 +291,95 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	return name, true, nil
 }
 
+// GetDSTenantIDFromXMLID fetches the ID of the Tenant to whom the Delivery Service identified by the
+// the provided XMLID belongs. It returns, in order, the requested ID (if one could be found), a
+// boolean indicating whether or not a Delivery Service with the provided xmlid could be found, and
+// an error for logging in case something unexpected goes wrong.
+func GetDSTenantIDFromXMLID(tx *sql.Tx, xmlid string) (int, bool, error) {
+	var id int
+	if err := tx.QueryRow(getDSTenantIDFromXMLIDQuery, xmlid).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return -1, false, nil
+		}
+		return -1, false, fmt.Errorf("Fetching Tenant ID for DS %s: %v", xmlid, err)
+	}
+	return id, true, nil
+}
+
+// returns returns the delivery service name and cdn, whether it existed, and any error.
+func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNName, bool, error) {
+	name := tc.DeliveryServiceName("")
+	cdn := tc.CDNName("")
+	if err := tx.QueryRow(`
+SELECT ds.xml_id, cdn.name
+FROM deliveryservice as ds
+JOIN cdn on cdn.id = ds.cdn_id
+WHERE ds.id = $1
+`, id).Scan(&name, &cdn); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DeliveryServiceName(""), tc.CDNName(""), false, nil
+		}
+		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
+	}
+	return name, cdn, true, nil
+}
+
+// GetFederationResolversByFederationID fetches all of the federation resolvers currently assigned to a federation.
+// In the event of an error, it will return an empty slice and the error.
+func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.FederationResolver, error) {
+	qry := `
+		SELECT
+		  fr.ip_address,
+		  frt.name as resolver_type,
+		  ffr.federation_resolver
+		FROM
+		  federation_federation_resolver ffr
+		  JOIN federation_resolver fr ON ffr.federation_resolver = fr.id
+		  JOIN type frt on fr.type = frt.id
+		WHERE
+		  ffr.federation = $1
+		ORDER BY fr.ip_address
+	`
+	rows, err := tx.Query(qry, fedID)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error querying federation_resolvers by federation ID [%d]: %s", fedID, err.Error(),
+		)
+	}
+	defer rows.Close()
+
+	resolvers := []tc.FederationResolver{}
+	for rows.Next() {
+		fr := tc.FederationResolver{}
+		err := rows.Scan(
+			&fr.IPAddress,
+			&fr.Type,
+			&fr.ID,
+		)
+		if err != nil {
+			return resolvers, fmt.Errorf(
+				"error scanning federation_resolvers rows for federation ID [%d]: %s", fedID, err.Error(),
+			)
+		}
+		resolvers = append(resolvers, fr)
+	}
+	return resolvers, nil
+}
+
+// GetFederationNameFromID returns the federation's name, whether a federation with ID exists, or any error.
+func GetFederationNameFromID(id int, tx *sql.Tx) (string, bool, error) {
+	var name string
+	if err := tx.QueryRow(`SELECT cname from federation where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return name, false, fmt.Errorf(
+			"error querying federation name from id [%d]: %s", id, err.Error(),
+		)
+	}
+	return name, true, nil
+}
+
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
 func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	name := ""
@@ -239,6 +402,42 @@ func GetProfileIDFromName(name string, tx *sql.Tx) (int, bool, error) {
 		return 0, false, errors.New("querying profile id from name: " + err.Error())
 	}
 	return id, true, nil
+}
+
+// GetServerCapabilitiesFromName returns the server's capabilities.
+func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
+	var caps []string
+	q := `SELECT ARRAY(SELECT ssc.server_capability FROM server s JOIN server_server_capability ssc ON s.id = ssc.server WHERE s.host_name = $1 ORDER BY ssc.server_capability);`
+	rows, err := tx.Query(q, name)
+	if err != nil {
+		return nil, errors.New("querying server capabilities from name: " + err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(pq.Array(&caps)); err != nil {
+			return nil, errors.New("scanning capability: " + err.Error())
+		}
+	}
+	return caps, nil
+}
+
+// GetDSRequiredCapabilitiesFromID returns the server's capabilities.
+func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
+	var caps []string
+	q := `SELECT ARRAY(SELECT drc.required_capability FROM deliveryservices_required_capability drc WHERE drc.deliveryservice_id = $1 ORDER BY drc.required_capability);`
+	rows, err := tx.Query(q, id)
+	if err != nil {
+		return nil, errors.New("querying deliveryservice required capabilities from id: " + err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(pq.Array(&caps)); err != nil {
+			return nil, errors.New("scanning capability: " + err.Error())
+		}
+	}
+	return caps, nil
 }
 
 // Returns true if the cdn exists
@@ -276,19 +475,105 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 	return domain, true, nil
 }
 
-// ServerExists returns true if the server exists.
-func ServerExists(serverName string, tx *sql.Tx) (bool, error) {
+// GetServerInfo returns a ServerInfo struct, whether the server exists, and an error (if one occurs).
+func GetServerInfo(serverID int, tx *sql.Tx) (tc.ServerInfo, bool, error) {
+	q := `
+SELECT
+  s.cachegroup as cachegroup_id,
+  s.cdn_id as cdn_id,
+  s.domain_name as domain_name,
+  s.host_name as host_name,
+  t.name as server_type
+FROM
+  server s
+JOIN type t ON s.type = t.id
+WHERE s.id = $1
+`
+	row := tc.ServerInfo{}
+	if err := tx.QueryRow(q, serverID).Scan(
+		&row.CachegroupID,
+		&row.CDNID,
+		&row.DomainName,
+		&row.HostName,
+		&row.Type,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return row, false, nil
+		}
+		return row, false, fmt.Errorf("querying server id %d: %v", serverID, err.Error())
+	}
+	return row, true, nil
+}
+
+// GetStatusByID returns a Status struct, a bool for whether or not a status of the given ID exists, and an error (if one occurs).
+func GetStatusByID(id int, tx *sql.Tx) (tc.StatusNullable, bool, error) {
+	q := `
+SELECT
+  description,
+  id,
+  last_updated,
+  name
+FROM
+  status s
+WHERE
+  id = $1
+`
+	row := tc.StatusNullable{}
+	if err := tx.QueryRow(q, id).Scan(
+		&row.Description,
+		&row.ID,
+		&row.LastUpdated,
+		&row.Name,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return row, false, nil
+		}
+		return row, false, fmt.Errorf("querying status id %d: %v", id, err.Error())
+	}
+	return row, true, nil
+}
+
+// GetStatusByName returns a Status struct, a bool for whether or not a status of the given name exists, and an error (if one occurs).
+func GetStatusByName(name string, tx *sql.Tx) (tc.StatusNullable, bool, error) {
+	q := `
+SELECT
+  description,
+  id,
+  last_updated,
+  name
+FROM
+  status s
+WHERE
+  name = $1
+`
+	row := tc.StatusNullable{}
+	if err := tx.QueryRow(q, name).Scan(
+		&row.Description,
+		&row.ID,
+		&row.LastUpdated,
+		&row.Name,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return row, false, nil
+		}
+		return row, false, fmt.Errorf("querying status name %s: %v", name, err.Error())
+	}
+	return row, true, nil
+}
+
+// GetServerIDFromName gets server id from a given name
+func GetServerIDFromName(serverName string, tx *sql.Tx) (int, bool, error) {
 	id := 0
 	if err := tx.QueryRow(`SELECT id FROM server WHERE host_name = $1`, serverName).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
-			return false, nil
+			return id, false, nil
 		}
-		return false, errors.New("querying server name: " + err.Error())
+		return id, false, errors.New("querying server name: " + err.Error())
 	}
-	return true, nil
+	return id, true, nil
 }
 
-func GetServerNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
+func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT host_name FROM server WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
@@ -335,4 +620,129 @@ func GetCDNs(tx *sql.Tx) (map[tc.CDNName]struct{}, error) {
 		cdns[cdn] = struct{}{}
 	}
 	return cdns, nil
+}
+
+// GetGlobalParams returns the value of the global param, whether it existed, or any error
+func GetGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
+	return GetParam(tx, name, "global")
+}
+
+// GetParam returns the value of the param, whether it existed, or any error.
+func GetParam(tx *sql.Tx, name string, configFile string) (string, bool, error) {
+	val := ""
+	if err := tx.QueryRow(`select value from parameter where name = $1 and config_file = $2`, name, configFile).Scan(&val); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("Error querying global paramter '" + name + "': " + err.Error())
+	}
+	return val, true, nil
+}
+
+// GetParamNameByID returns the name of the param, whether it existed, or any error.
+func GetParamNameByID(tx *sql.Tx, id int) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`select name from parameter where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, fmt.Errorf("Error querying global paramter %v: %v", id, err.Error())
+	}
+	return name, true, nil
+}
+
+// GetCacheGroupNameFromID Get Cache Group name from a given ID
+func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying cachegroup ID: " + err.Error())
+	}
+	return tc.CacheGroupName(name), true, nil
+}
+
+// GetFederationIDForUserIDByXMLID retrieves the ID of the Federation assigned to the user defined by
+// userID on the Delivery Service identified by xmlid. If no such federation exists, the boolean
+// returned will be 'false', while the error indicates unexpected errors that occurred when querying.
+func GetFederationIDForUserIDByXMLID(tx *sql.Tx, userID int, xmlid string) (uint, bool, error) {
+	var id uint
+	if err := tx.QueryRow(getFederationIDForUserIDByXMLIDQuery, xmlid, userID).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, false, nil
+		}
+		return 0, false, fmt.Errorf("Getting Federation ID for user #%d by DS XMLID '%s': %v", userID, xmlid, err)
+	}
+	return id, true, nil
+}
+
+// GetUserByEmail retrieves the user with the given email. If no such user exists, the boolean
+// returned will be 'false', while the error indicates unexpected errors that occurred when querying.
+func GetUserByEmail(tx *sqlx.Tx, email string) (tc.User, bool, error) {
+	var u tc.User
+	if err := tx.QueryRowx(getUserByEmailQuery, email).StructScan(&u); err != nil {
+		if err == sql.ErrNoRows {
+			return u, false, nil
+		}
+		return u, false, err
+	}
+	return u, true, nil
+}
+
+// UsernameExists reports whether or not the the given username exists as a user in the database to
+// which the passed transaction refers. If anything goes wrong when checking the existence of said
+// user, the error is directly returned to the caller. Note that in that case, no real meaning
+// should be assigned to the returned boolean value.
+func UsernameExists(uname string, tx *sql.Tx) (bool, error) {
+	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM tm_user WHERE tm_user.username=$1)`, uname)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+// GetTypeIDByName reports the id of the type and whether or not a type exists with the given name.
+func GetTypeIDByName(t string, tx *sql.Tx) (int, bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM type WHERE name = $1`, t).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying type id: " + err.Error())
+	}
+	return id, true, nil
+}
+
+// GetUserByID returns the user with the requested ID if one exists. The second return value is a
+// boolean indicating whether said user actually did exist, and the third contains any error
+// encountered along the way.
+func GetUserByID(id int, tx *sql.Tx) (tc.User, bool, error) {
+	row := tx.QueryRow(getUserByIDQuery, id)
+	var u tc.User
+	err := row.Scan(&u.AddressLine1,
+		&u.AddressLine2,
+		&u.City,
+		&u.Company,
+		&u.Country,
+		&u.Email,
+		&u.FullName,
+		&u.GID,
+		&u.ID,
+		&u.NewUser,
+		&u.PhoneNumber,
+		&u.PostalCode,
+		&u.PublicSSHKey,
+		&u.RegistrationSent,
+		&u.Role,
+		&u.RoleName,
+		&u.StateOrProvince,
+		&u.Tenant,
+		&u.TenantID,
+		&u.Token,
+		&u.UID,
+		&u.Username)
+	if err == sql.ErrNoRows {
+		return u, false, nil
+	}
+	return u, true, err
 }

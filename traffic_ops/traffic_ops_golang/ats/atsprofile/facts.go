@@ -21,17 +21,24 @@ package atsprofile
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
 func GetFacts(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, makeFacts)
+	WithProfileData(w, r, rfc.ContentTypeTextPlain, makeFacts)
 }
 
 func makeFacts(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, fileName string) (string, error) {
-	text := "profile:" + profile.Name + "\n"
-	return text, nil
+	toolName, toURL, err := ats.GetToolNameAndURL(tx)
+	if err != nil {
+		return "", errors.New("getting tool name and URL: " + err.Error())
+	}
+
+	return atscfg.Make12MFacts(profile.Name, toolName, toURL), nil
 }

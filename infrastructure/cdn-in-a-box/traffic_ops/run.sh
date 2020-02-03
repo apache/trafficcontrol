@@ -108,11 +108,11 @@ export PATH=/usr/local/go/bin:/opt/traffic_ops/go/bin:$PATH
 export GOPATH=/opt/traffic_ops/go
 
 cd $TO_DIR && \
-	./db/admin.pl --env=production reset && \
-	./db/admin.pl --env=production upgrade || echo "db upgrade failed!"
+	./db/admin --env=production reset && \
+	./db/admin --env=production upgrade || { echo "db upgrade failed!"; exit 1; }
 
 # Add admin user -- all other users should be created using API
-/adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD admin | psql -U$DB_USER -h$DB_SERVER $DB_NAME || echo "adding traffic_ops admin user failed!"
+/adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD admin | psql -v ON_ERROR_STOP=1 -U$DB_USER -h$DB_SERVER $DB_NAME || { echo "adding traffic_ops admin user failed!"; exit 1; }
 
 cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
 

@@ -18,8 +18,7 @@
 ***********************
 ``parameters/validate``
 ***********************
-.. deprecated:: 1.1
-	To check for the existence of a :term:`Parameter` with a specific :ref:`parameter-name`, :ref:`parameter-value` etc., use the query parameters of the :ref:`to-api-parameters` endpoint instead.
+.. deprecated:: ATCv4
 
 ``POST``
 ========
@@ -74,7 +73,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 05 Dec 2018 20:35:42 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 06 Dec 2018 00:35:42 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: CcsN9WhMPnvlPtBAcTnecILm1eM1ZxEySwmk3rdCclydPu0cMgefRVI/aRYe+IDAKWFmpeZHg+g1Ed11R7dfWg==
 	Content-Length: 149
@@ -83,6 +82,10 @@ Response Structure
 		{
 			"level": "success",
 			"text": "Parameter exists."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /parameters' instead"
 		}
 	],
 	"response": {
@@ -105,7 +108,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 05 Dec 2018 20:42:10 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 06 Dec 2018 00:42:10 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: kUNe70iQz1eEjsSZK3hk3WaJ3eTpBsepdDRUYeXTgEII3lBD5NiXobShT6zGhWJTsalHbNegjWbfAWsly/XEQQ==
 	Content-Length: 116
@@ -114,6 +117,10 @@ Response Structure
 		{
 			"level": "error",
 			"text": "parameter [name:fooa, config_file:records.config, value:bar] does not exist."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'GET /parameters' instead"
 		}
 	]}
 

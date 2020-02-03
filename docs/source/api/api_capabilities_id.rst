@@ -22,6 +22,8 @@ Manages a specific API capability.
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+
 Get an API-capability mapping by id.
 
 :Auth. Required: Yes
@@ -75,23 +77,33 @@ Response Structure
 	Content-Type: application/json
 	Date: Thu, 01 Nov 2018 16:14:09 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 01 Nov 2018 20:14:09 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: SMSFHOcD6VvfJKmcHmHBQcN+jkRRCmFzx1jyBWhJeyPg04YHPSvUcjZzslWlJqyjwWeoXeNVwxhRkBwl8TQX/g==
 	Content-Length: 162
 
-	{ "response": [
-		{
-			"httpMethod": "PATCH",
-			"lastUpdated": "2018-11-01 14:53:58.853356+00",
-			"httpRoute": "/api/1.1/api_capabilities",
-			"id": 273,
-			"capability": "types-write"
-		}
+	{
+		"alerts": [
+			{
+				"level": "warning",
+				"text": "This endpoint is deprecated, please use 'GET /api_capabilities' instead"
+			}
+		],
+		"response": [
+			{
+				"httpMethod": "PATCH",
+				"lastUpdated": "2018-11-01 14:53:58.853356+00",
+				"httpRoute": "/api/1.1/api_capabilities",
+				"id": 273,
+				"capability": "types-write"
+			}
 	]}
 
 ``PUT``
 =======
+.. deprecated:: 1.1
+	This endpoint does not have an alternative. API Capabilities can only be modified at the database seeding level.
+
 Edit an API-capability mapping.
 
 :Auth. Required: Yes
@@ -163,7 +175,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Thu, 01 Nov 2018 18:28:38 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 01 Nov 2018 22:28:38 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: zQuDrqpJt02Fh2fNZ6K7/XmVJ49ZqGTnSbsaR7nOyoxbkmLM17XJV1rtef/SAows2M4j4YjcDbEP4WM/hjCFtw==
 	Content-Length: 241
@@ -173,6 +185,10 @@ Response Structure
 			{
 				"level": "success",
 				"text": "API-Capability mapping was updated."
+			},
+			{
+				"level": "warning",
+				"text": "This endpoint is deprecated, please use '[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities_id.html#put]' instead"
 			}
 		],
 		"response": {
@@ -184,8 +200,11 @@ Response Structure
 		}
 	}
 
-DELETE
-======
+``DELETE``
+==========
+.. deprecated:: 1.1
+	This endpoint does not have an alternative. API Capabilities can only be deleted at the database seeding level.
+
 Delete a capability.
 
 :Auth. Required: Yes
@@ -226,7 +245,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 07 Nov 2018 15:44:14 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Wed, 07 Nov 2018 19:44:14 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: eTFJkB2Bh8SCT2A29e21e8qoEdNzFGfuT5a3tDG7u8vwz/JHntQRRR8554a1i65733uWojlWKM65bLSDNmmNqQ==
 	Content-Length: 73
@@ -235,5 +254,9 @@ Response Structure
 		{
 			"level": "success",
 			"text": "API-capability mapping deleted."
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use '[NO ALTERNATE - See https://traffic-control-cdn.readthedocs.io/en/latest/api/api_capabilities_id.html#delete]' instead"
 		}
 	]}

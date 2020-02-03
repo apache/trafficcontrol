@@ -31,21 +31,33 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| Name        | Required | Description                                                                                                                                |
-	+=============+==========+============================================================================================================================================+
-	| cdn         | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier                      |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| id          | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                           |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| logsEnabled | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                                  |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| profile     | no       | Return only :term:`Delivery Services` using the :term:`Profile` that has this :ref:`profile-id`                                            |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant      | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier                     |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| type        | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier       |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                                          |
+	+=============+==========+======================================================================================================================================+
+	| cdn         | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier                |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| id          | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                     |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| logsEnabled | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                            |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| profile     | no       | Return only :term:`Delivery Services` using the :term:`Profile` that has this :ref:`profile-id`                                      |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| tenant      | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier               |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| type        | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                        |
+	|             |          | array                                                                                                                                |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                             |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| limit       | no       | Choose the maximum number of results to return                                                                                       |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                 |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. |
+	|             |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                    |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -78,6 +90,10 @@ Response Structure
 :dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
 :dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
 :dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+:ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
+
+	.. versionadded:: 1.5
+
 :edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
 :exampleURLs:       An array of :ref:`ds-example-urls`
 :fqPacingRate:      The :ref:`ds-fqpr`
@@ -157,7 +173,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: mCLMjvACRKHNGP/OSx4javkOtxxzyiDdQzsV78IamUhVmvyKyKaCeOKRmpsG69w+nhh3OkPZ6e9MMeJpcJSKcA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 15 Nov 2018 19:04:29 GMT
@@ -241,7 +257,8 @@ Response Structure
 			"xxx",
 			"zyx"
 		],
-		"maxOriginConnections": 0
+		"maxOriginConnections": 0,
+		"ecsEnabled": false
 	}]}
 
 
@@ -283,6 +300,10 @@ Request Structure
 :dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
 :dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
 :dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+:ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
+
+	.. versionadded:: 1.4
+
 :edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
 :fqPacingRate:      The :ref:`ds-fqpr`
 
@@ -360,6 +381,7 @@ Request Structure
 		"deepCachingType": "NEVER",
 		"displayName": "test",
 		"dscp": 0,
+		"ecsEnabled": true,
 		"geoLimit": 0,
 		"geoProvider": 0,
 		"initialDispersion": 1,
@@ -415,6 +437,10 @@ Response Structure
 :dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
 :dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
 :dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+:ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
+
+	.. versionadded:: 1.4
+
 :edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
 :exampleURLs:       An array of :ref:`ds-example-urls`
 :fqPacingRate:      The :ref:`ds-fqpr`
@@ -494,7 +520,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: SVveQ5hGwfPv8N5APUskwLOzwrTUVA+z8wuFLsSLCr1/vVnFJJ0VQOGMUctg1NbqhAuQ795MJmuuAaAwR8dSOQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 19 Nov 2018 19:45:49 GMT
@@ -574,7 +600,8 @@ Response Structure
 			],
 			"deepCachingType": "NEVER",
 			"signingAlgorithm": null,
-			"tenant": "root"
+			"tenant": "root",
+			"ecsEnabled": true
 		}
 	]}
 

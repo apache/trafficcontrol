@@ -35,7 +35,6 @@ var trafficPortal = angular.module('trafficPortal', [
         'ui.router',
         'ui.bootstrap',
         'ui.bootstrap.contextMenu',
-        'restangular',
         'app.templates',
         'angular-jwt',
         'chart.js',
@@ -102,6 +101,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/deliveryServiceRequests/edit').name,
         require('./modules/private/deliveryServiceRequests/list').name,
         require('./modules/private/deliveryServices').name,
+        require('./modules/private/deliveryServices/capabilities').name,
         require('./modules/private/deliveryServices/clone').name,
         require('./modules/private/deliveryServices/charts').name,
         require('./modules/private/deliveryServices/charts/view').name,
@@ -139,9 +139,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/divisions/new').name,
         require('./modules/private/divisions/regions').name,
         require('./modules/private/endpoints').name,
-        require('./modules/private/endpoints/edit').name,
         require('./modules/private/endpoints/list').name,
-        require('./modules/private/endpoints/new').name,
         require('./modules/private/iso').name,
         require('./modules/private/jobs').name,
         require('./modules/private/jobs/list').name,
@@ -156,13 +154,13 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/physLocations/new').name,
         require('./modules/private/physLocations/servers').name,
         require('./modules/private/parameters').name,
-        require('./modules/private/parameters/cacheGroups').name,
         require('./modules/private/parameters/edit').name,
         require('./modules/private/parameters/list').name,
         require('./modules/private/parameters/new').name,
         require('./modules/private/parameters/profiles').name,
         require('./modules/private/profiles').name,
         require('./modules/private/profiles/compare').name,
+        require('./modules/private/profiles/compare/diff').name,
         require('./modules/private/profiles/deliveryServices').name,
         require('./modules/private/profiles/edit').name,
         require('./modules/private/profiles/list').name,
@@ -180,7 +178,14 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/roles/list').name,
         require('./modules/private/roles/new').name,
         require('./modules/private/roles/users').name,
+        require('./modules/private/serverCapabilities').name,
+        require('./modules/private/serverCapabilities/deliveryServices').name,
+        require('./modules/private/serverCapabilities/list').name,
+        require('./modules/private/serverCapabilities/new').name,
+        require('./modules/private/serverCapabilities/servers').name,
+        require('./modules/private/serverCapabilities/view').name,
         require('./modules/private/servers').name,
+        require('./modules/private/servers/capabilities').name,
         require('./modules/private/servers/configFiles').name,
         require('./modules/private/servers/deliveryServices').name,
         require('./modules/private/servers/edit').name,
@@ -282,9 +287,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/division').name,
         require('./common/modules/form/division/edit').name,
         require('./common/modules/form/division/new').name,
-        require('./common/modules/form/endpoint').name,
-        require('./common/modules/form/endpoint/edit').name,
-        require('./common/modules/form/endpoint/new').name,
         require('./common/modules/form/federation').name,
         require('./common/modules/form/federation/edit').name,
         require('./common/modules/form/federation/new').name,
@@ -309,6 +311,9 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/role').name,
         require('./common/modules/form/role/edit').name,
         require('./common/modules/form/role/new').name,
+        require('./common/modules/form/serverCapability').name,
+        require('./common/modules/form/serverCapability/new').name,
+        require('./common/modules/form/serverCapability/view').name,
         require('./common/modules/form/server').name,
         require('./common/modules/form/server/edit').name,
         require('./common/modules/form/server/new').name,
@@ -346,6 +351,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/cdnServers').name,
         require('./common/modules/table/coordinates').name,
         require('./common/modules/table/deliveryServices').name,
+        require('./common/modules/table/deliveryServiceCapabilities').name,
         require('./common/modules/table/deliveryServiceJobs').name,
         require('./common/modules/table/deliveryServiceOrigins').name,
         require('./common/modules/table/deliveryServiceRegexes').name,
@@ -364,10 +370,10 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/physLocations').name,
         require('./common/modules/table/physLocationServers').name,
         require('./common/modules/table/parameters').name,
-        require('./common/modules/table/parameterCacheGroups').name,
         require('./common/modules/table/parameterProfiles').name,
         require('./common/modules/table/profileDeliveryServices').name,
         require('./common/modules/table/profileParameters').name,
+        require('./common/modules/table/profilesParamsCompare').name,
         require('./common/modules/table/profileServers').name,
         require('./common/modules/table/profiles').name,
         require('./common/modules/table/regions').name,
@@ -375,6 +381,10 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/roles').name,
         require('./common/modules/table/roleCapabilities').name,
         require('./common/modules/table/roleUsers').name,
+        require('./common/modules/table/serverCapabilities').name,
+        require('./common/modules/table/serverCapabilityServers').name,
+        require('./common/modules/table/serverCapabilityDeliveryServices').name,
+        require('./common/modules/table/serverServerCapabilities').name,
         require('./common/modules/table/servers').name,
         require('./common/modules/table/serverConfigFiles').name,
         require('./common/modules/table/serverDeliveryServices').name,
@@ -417,25 +427,11 @@ var trafficPortal = angular.module('trafficPortal', [
 
     ], App)
 
-        .config(function($stateProvider, $logProvider, RestangularProvider, momentPickerProvider, ENV) {
+        .config(function($stateProvider, $logProvider, momentPickerProvider, ENV) {
 
             momentPickerProvider.options({
                 minutesStep: 1,
                 maxView: 'hour'
-            });
-
-            RestangularProvider.setBaseUrl(ENV.api['root']);
-
-            RestangularProvider.setResponseInterceptor(function(data, operation, what) {
-
-                if (angular.isDefined(data.response)) { // todo: this should not be needed. need better solution.
-                    if (operation == 'getList') {
-                        return data.response;
-                    }
-                    return data.response[0];
-                } else {
-                    return data;
-                }
             });
 
             $logProvider.debugEnabled(true);
@@ -481,7 +477,7 @@ trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $loc
                         messageModel.setMessages(alerts, true);
                         // forward the to the login page with ?redirect=page/they/were/trying/to/reach
                         $location.url('/login').search({ redirect: encodeURIComponent(url) });
-                    }, 200);
+                    }, 100);
                 }
             } else if (rejection.status === 403 || rejection.status === 404) {
                 $timeout(function () {

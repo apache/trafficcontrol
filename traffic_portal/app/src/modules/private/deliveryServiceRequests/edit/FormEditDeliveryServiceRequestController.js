@@ -83,7 +83,8 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, status).
 				then(function() {
 					$state.reload();
-				});
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request status was updated' } ], false);
+			});
 		}, function () {
 			// do nothing
 		});
@@ -99,6 +100,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest($scope.dsRequest.id, userModel.user.id));
 		// set the status to 'pending'
 		promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, 'pending'));
+		return promises;
 	};
 
 	$scope.fulfillRequest = function(ds) {
@@ -165,9 +167,13 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 					deliveryServiceService.deleteDeliveryService(ds).
 						then(
 							function() {
-								updateDeliveryServiceRequest(); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
-								messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
-								locationUtils.navigateToPath('/delivery-service-requests');
+								let promises = updateDeliveryServiceRequest(); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
+								$q.all(promises)
+									.then(
+										function() {
+											messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
+											locationUtils.navigateToPath('/delivery-service-requests');
+										});
 							},
 							function(fault) {
 								$anchorScroll(); // scrolls window to top
@@ -249,7 +255,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		modalInstance.result.then(function() {
 			deliveryServiceRequestService.deleteDeliveryServiceRequest($stateParams.deliveryServiceRequestId).
 				then(function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], true);
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was deleted' } ], true);
 					locationUtils.navigateToPath('/delivery-service-requests');
 				});
 		}, function () {

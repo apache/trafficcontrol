@@ -132,9 +132,8 @@ func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 func (origin *TOOrigin) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 
-	origins, errs, errType := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User)
-	if len(errs) > 0 {
-		userErr, sysErr, errCode := api.TypeErrsToAPIErr(errs, errType)
+	origins, userErr, sysErr, errCode := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User)
+	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
 
@@ -145,7 +144,7 @@ func (origin *TOOrigin) Read() ([]interface{}, error, error, int) {
 	return returnable, nil, nil, http.StatusOK
 }
 
-func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.Origin, []error, tc.ApiErrorType) {
+func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.Origin, error, error, int) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -164,13 +163,13 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, nil, tc.DBError, http.StatusInternalServerError
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "o.tenant", tenantIDs)
 
@@ -179,7 +178,7 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 
 	rows, err = tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
+		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -188,11 +187,11 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 	for rows.Next() {
 		var s tc.Origin
 		if err = rows.StructScan(&s); err != nil {
-			return nil, []error{fmt.Errorf("getting origins: %v", err)}, tc.SystemError
+			return nil, nil, fmt.Errorf("getting origins: %v", err), http.StatusInternalServerError
 		}
 		origins = append(origins, s)
 	}
-	return origins, nil, tc.NoError
+	return origins, nil, nil, http.StatusOK
 }
 
 func selectQuery() string {
@@ -229,34 +228,34 @@ LEFT JOIN tenant t ON o.tenant = t.id`
 	return selectStmt
 }
 
-func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *auth.CurrentUser) (error, tc.ApiErrorType) {
+func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *auth.CurrentUser) (error, error, int) {
 	if originTenantID == nil {
-		return tc.NilTenantError, tc.ForbiddenError
+		return tc.NilTenantError, nil, http.StatusForbidden
 	}
 	authorized, err := tenant.IsResourceAuthorizedToUserTx(*originTenantID, user, tx.Tx)
 	if err != nil {
-		return err, tc.SystemError
+		return nil, err, http.StatusInternalServerError
 	}
 	if !authorized {
-		return tc.TenantUserNotAuthError, tc.ForbiddenError
+		return tc.TenantUserNotAuthError, nil, http.StatusForbidden
 	}
 
 	var deliveryserviceTenantID int
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, *deliveryserviceID).Scan(&deliveryserviceTenantID); err != nil {
 		if err == sql.ErrNoRows {
-			return errors.New("checking tenancy: requested delivery service does not exist"), tc.DataConflictError
+			return errors.New("checking tenancy: requested delivery service does not exist"), nil, http.StatusBadRequest
 		}
 		log.Errorf("could not get tenant_id from deliveryservice %d: %++v\n", *deliveryserviceID, err)
-		return err, tc.SystemError
+		return err, nil, http.StatusBadRequest
 	}
 	authorized, err = tenant.IsResourceAuthorizedToUserTx(deliveryserviceTenantID, user, tx.Tx)
 	if err != nil {
-		return err, tc.SystemError
+		return err, nil, http.StatusBadRequest
 	}
 	if !authorized {
-		return tc.TenantDSUserNotAuthError, tc.ForbiddenError
+		return tc.TenantDSUserNotAuthError, nil, http.StatusForbidden
 	}
-	return nil, tc.NoError
+	return nil, nil, http.StatusOK
 }
 
 //The TOOrigin implementation of the Updater interface
@@ -266,9 +265,9 @@ func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *aut
 //generic error message returned
 func (origin *TOOrigin) Update() (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
-	if err != nil {
-		return api.TypeErrToAPIErr(err, errType)
+	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	isPrimary := false
@@ -336,9 +335,9 @@ WHERE id=:id RETURNING last_updated`
 //to be added to the struct
 func (origin *TOOrigin) Create() (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
-	if err != nil {
-		return api.TypeErrToAPIErr(err, errType)
+	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(insertQuery(), origin)

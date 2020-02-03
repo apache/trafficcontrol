@@ -17,174 +17,238 @@
  * under the License.
  */
 
-var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, httpService, messageModel, ENV) {
+var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 
     this.getDeliveryServices = function(queryParams) {
-        return Restangular.all('deliveryservices').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'deliveryservices', {params: queryParams}).then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.getDeliveryService = function(id) {
-        return Restangular.one("deliveryservices", id).get();
+        return $http.get(ENV.api['root'] + 'deliveryservices', {params: {id: id}}).then(
+            function(result) {
+                return result.data.response[0];
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.createDeliveryService = function(ds) {
-        var request = $q.defer();
-
         // strip out any falsy values or duplicates from consistentHashQueryParams
         ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(function(i){return i;});
 
-        $http.post(ENV.api['root'] + "deliveryservices", ds)
-            .then(
-                function(response) {
-                    request.resolve(response);
-                },
-                function(fault) {
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.post(ENV.api['root'] + "deliveryservices", ds).then(
+            function(response) {
+                return response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
+    // todo: change to use query param when it is supported
     this.updateDeliveryService = function(ds) {
-        var request = $q.defer();
-
         // strip out any falsy values or duplicates from consistentHashQueryParams
         ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(function(i){return i;});
 
-        $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds)
-            .then(
-                function(response) {
-                    request.resolve(response);
-                },
-                function(fault) {
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds).then(
+            function(response) {
+                return response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteDeliveryService = function(ds) {
-        var deferred = $q.defer();
+        return $http.delete(ENV.api['root'] + "deliveryservices/" + ds.id).then(
+            function(response) {
+                return response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
+    };
 
-        $http.delete(ENV.api['root'] + "deliveryservices/" + ds.id)
-            .then(
-                function(response) {
-                    deferred.resolve(response);
-                },
-                function(fault) {
-                    deferred.reject(fault);
+    this.getServerCapabilities = function(id) {
+        return $http.get(ENV.api['root'] + 'deliveryservices_required_capabilities', { params: { deliveryServiceID: id } }).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        )
+    };
+
+    this.addServerCapability = function(deliveryServiceId, capabilityName) {
+        return $http.post(ENV.api['root'] + 'deliveryservices_required_capabilities', { deliveryServiceID: deliveryServiceId, requiredCapability: capabilityName}).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
                 }
-            );
+                throw err;
+            }
+        );
+    };
 
-        return deferred.promise;
+    this.removeServerCapability = function(deliveryServiceId, capabilityName) {
+        return $http.delete(ENV.api['root'] + 'deliveryservices_required_capabilities', { params: { deliveryServiceID: deliveryServiceId, requiredCapability: capabilityName} }).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
+                throw err;
+            }
+        );
     };
 
     this.getServerDeliveryServices = function(serverId) {
-        return Restangular.one('servers', serverId).getList('deliveryservices');
+        return $http.get(ENV.api['root'] + 'servers/' + serverId + '/deliveryservices').then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.getDeliveryServiceTargets = function(dsId) {
-        return Restangular.one('steering', dsId).getList('targets');
+        return $http.get(ENV.api['root'] + 'steering/' + dsId + '/targets').then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.getDeliveryServiceTarget = function(dsId, targetId) {
-        return Restangular.one('steering', dsId).one('targets', targetId).get();
+        return $http.get(ENV.api['root'] + 'steering/' + dsId + '/targets/' + targetId).then(
+            function(result) {
+                return result.data.response[0];
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.updateDeliveryServiceTarget = function(dsId, targetId, target) {
-        var request = $q.defer();
-
-        $http.put(ENV.api['root'] + "steering/" + dsId + "/targets/" + targetId, target)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Steering target updated' } ], false);
-                    locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
-
-        return request.promise;
+        return $http.put(ENV.api['root'] + "steering/" + dsId + "/targets/" + targetId, target).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, true);
+                locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.createDeliveryServiceTarget = function(dsId, target) {
-        return Restangular.one('steering', dsId).all('targets').post(target)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Steering target created' } ], true);
-                    locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'steering/' + dsId + '/targets', target).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, true);
+                locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.deleteDeliveryServiceTarget = function(dsId, targetId) {
-        return Restangular.one('steering', dsId).one('targets', targetId).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Steering target deleted' } ], true);
-                    locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
-            );
+        return $http.delete(ENV.api['root'] + 'steering/' + dsId + '/targets/' + targetId).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, true);
+                locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, true);
+                throw err;
+            }
+        );
     };
 
     this.getUserDeliveryServices = function(userId) {
-        return Restangular.one('users', userId).getList('deliveryservices');
+        return $http.get(ENV.api['root'] + 'users/' + userId + '/deliveryservices').then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.deleteDeliveryServiceServer = function(dsId, serverId) {
-        return httpService.delete(ENV.api['root'] + 'deliveryservice_server/' + dsId + '/' + serverId)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery service and server were unlinked.' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
-            );
+        return $http.delete(ENV.api['root'] + 'deliveryservice_server/' + dsId + '/' + serverId).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, true);
+                throw err;
+            }
+        );
     };
 
     this.assignDeliveryServiceServers = function(dsId, servers) {
-        return Restangular.service('deliveryserviceserver').post( { dsId: dsId, servers: servers, replace: true } )
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Servers linked to delivery service' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'deliveryserviceserver',{ dsId: dsId, servers: servers, replace: true } ).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.getConsistentHashResult = function (regex, requestPath, cdnId) {
+        const url = ENV.api['root'] + "consistenthash";
+        const params = {regex: regex, requestPath: requestPath, cdnId: cdnId};
 
-        var url = ENV.api['root'] + "consistenthash",
-            params = {regex: regex, requestPath: requestPath, cdnId: cdnId};
-
-        var deferred = $q.defer();
-        $http.post(url, params)
-            .then(
-                function (result) {
-                    deferred.resolve(result.data);
-                },
-                function (fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    deferred.reject(fault);
-                }
-            );
-
-        return deferred.promise;
+        return $http.post(url, params).then(
+            function (result) {
+                return result.data;
+            },
+            function (err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
 };
 
-DeliveryServiceService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'httpService', 'messageModel', 'ENV'];
+DeliveryServiceService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceService;

@@ -21,9 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.4
-	Use the ``id`` query parameter of a ``GET`` request to the :ref:`to-api-users` endpoint instead.
-
 Retrieves a specific user.
 
 :Auth. Required: Yes
@@ -83,7 +80,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 9vqUmt8fWEuDb+9LQJ4sGbbF4Z0a7uNyBNSWhyzAi3fBUZ5mGhd4Jx5IuSlEqiLZnYeViJJL8mpRortkHCgp5Q==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 13 Dec 2018 17:46:00 GMT
@@ -223,8 +220,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Thu, 13 Dec 2018 17:24:23 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
-	Set-Cookie: mojolicious=...; expires=Thu, 13 Dec 2018 21:24:23 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: QKvGSIwSdreMI/OdgWv9WQfI/C1JbXSoQGGospTGfCVUJ32XNWMhmREGzojWsilW8os8b14TGYeyMLUWunf2Ug==
 	Content-Length: 661

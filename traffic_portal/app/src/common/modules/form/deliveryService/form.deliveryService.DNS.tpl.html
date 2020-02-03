@@ -42,7 +42,7 @@ under the License.
             <button class="btn btn-success" ng-if="!settings.isRequest" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
             <button type="button" class="btn btn-primary" ng-if="!settings.isRequest && !settings.isNew" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>
             <div class="btn-group" ng-if="!settings.isRequest && !settings.isNew" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
                     <span class="caret"></span>
                 </button>
@@ -55,10 +55,11 @@ under the License.
                     <li role="menuitem"><a ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
                     <li role="menuitem"><a ng-click="manageUriSigningKeys()">Manage URI Signing Keys</a></li>
                     <hr class="divider"/>
-                    <li role="menuitem"><a ng-click="viewOrigins()">Manage Origins</a></li>
-                    <li role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
-                    <li role="menuitem"><a ng-click="viewRegexes()">Manage Regexes</a></li>
                     <li role="menuitem"><a ng-click="viewJobs()">Manage Invalidation Requests</a></li>
+                    <li role="menuitem"><a ng-click="viewOrigins()">Manage Origins</a></li>
+                    <li role="menuitem"><a ng-click="viewRegexes()">Manage Regexes</a></li>
+                    <li role="menuitem"><a ng-click="viewCapabilities()">Manage Required Server Capabilities</a></li>
+                    <li role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
                     <li role="menuitem"><a ng-click="viewStaticDnsEntries()">Manage Static DNS Entries</a></li>
                 </ul>
             </div>
@@ -473,7 +474,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" rows="3" autofocus></textarea>
+                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" rows="3"></textarea>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.edgeHeaderRewrite != dsCurrent.edgeHeaderRewrite">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.edgeHeaderRewrite}}</pre>
@@ -533,7 +534,8 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" rows="3"></textarea>
+                            <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" ng-pattern="/^[^\n\r]*$/" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.remapText, 'pattern')">No Line Breaks</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.remapText}}</pre>
@@ -614,7 +616,7 @@ under the License.
                     </div>
                     <div class="form-group" ng-class="{'has-error': hasError(routingConfig.ipv6RoutingEnabled), 'has-feedback': hasError(routingConfig.ipv6RoutingEnabled)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ipv6RoutingEnabled">IPv6 Routing Enabled *<div class="helptooltip">
-                            <div class="helptext">Enabeld by default, disabling this allows you to turn off CDN responses to IPv6 requests</div>
+                            <div class="helptext">Enabled by default, disabling this allows you to turn off CDN responses to IPv6 requests</div>
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
@@ -626,6 +628,23 @@ under the License.
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ipv6RoutingEnabled != dsCurrent.ipv6RoutingEnabled">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.ipv6RoutingEnabled ? 'Enabled' : 'Disabled'}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.ecsEnabled), 'has-feedback': hasError(routingConfig.ecsEnabled)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ecsEnabled">EDNS0 Client Subnet Enabled *<div class="helptooltip">
+                            <div class="helptext">Disabled by default, enabling this enables EDNS0 client subnet on the Delivery Service level.</div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="ecsEnabled" name="ecsEnabled" class="form-control" ng-model="deliveryService.ecsEnabled" required>
+                                <option ng-value="true">Enabled</option>
+                                <option ng-value="false">Disabled</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.ecsEnabled, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ecsEnabled != dsCurrent.ecsEnabled">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.ecsEnabled ? 'Enabled' : 'Disabled'}}</pre>
                             </aside>
                         </div>
                     </div>

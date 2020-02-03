@@ -18,9 +18,9 @@
 *************************************
 Configure Regional Geo-blocking (RGB)
 *************************************
-.. Note:: :abbr:`RGB (Regional Geographic-based Blocking)` is only supported for HTTP :term:`Delivery Service`\ s.
+.. Note:: :abbr:`RGB (Regional Geographic-based Blocking)` is only supported for HTTP :term:`Delivery Services`.
 
-#. Prepare an :abbr:`RGB (Regional Geographic-based Blocking)` configuration file. :abbr:`RGB (Regional Geographic-based Blocking)` uses a configuration file in JSON format to define regional geographic blocking rules for :term:`Delivery Service`\ s. The file needs to be put on an HTTP server accessible to Traffic Router.
+#. Prepare an :abbr:`RGB (Regional Geographic-based Blocking)` configuration file. :abbr:`RGB (Regional Geographic-based Blocking)` uses a configuration file in JSON format to define regional geographic blocking rules for :term:`Delivery Services`. The file needs to be put on an HTTP server accessible to Traffic Router.
 
 	.. code-block:: json
 		:caption: Example Configuration File
@@ -39,7 +39,16 @@ Configure Regional Geo-blocking (RGB)
 					"urlRegex": ".*live5\\.m3u8",
 					"ipWhiteList": ["185.68.71.9/22","142.232.0.79/24"],
 					"geoLocation": {"excludePostalCode":["N0H", "L9V"]},
-					"redirectUrl": "/live5_low_bitrate.m3u8"
+					"redirectUrl": "/live5_low_bitrate.m3u8",
+					"isSteeringDS": "false"
+				},
+				{
+					"deliveryServiceId": "linear-steering",
+					"urlRegex": ".*live3\\.m3u8",
+					"ipWhiteList": ["185.68.71.9/22","142.232.0.79/24"],
+					"geoLocation": {"excludePostalCode":["N0H", "L9V"]},
+					"redirectUrl": "http://ip-slate.cdn.example.com/slate.m3u8",
+					"isSteeringDS": "true"
 				}
 			]
 		}
@@ -51,16 +60,16 @@ Configure Regional Geo-blocking (RGB)
 	``geoLocation``
 		An object that currently supports only the keys ``includePostalCode`` and ``excludePostalCode`` (mutually exclusive). When the ``includePostalCode`` key is used, only the clients whose :abbr:`FSA (Forward Sortation Areas)`\ s - the first three postal characters of Canadian postal codes - are in the ``includePostalCode`` list are able to view the content at URLs matched by the ``urlRegex``. When ``excludePostalCode`` is used, any client whose :abbr:`FSA (Forward Sortation Areas)` is not in the ``excludePostalCode`` list will be allowed to view the content
 	``redirectUrl``
-		The URL that will be returned to the blocked clients. Without a domain name in the URL, the URL will still be served in the same :term:`Delivery Service`. Thus Traffic Router will redirect the client to a chosen :term:`cache server` assigned to the :term:`Delivery Service`. If the URL includes a domain name, Traffic Router simply redirects the client to the defined URL. In the latter case, the redirect URL must not match the ``urlRegex`` value, or an infinite loop of  HTTP ``302 Found`` responses will occur at the Traffic Router
+		The URL that will be returned to the blocked clients. Without a domain name in the URL, the URL will still be served in the same :term:`Delivery Service`. Thus Traffic Router will redirect the client to a chosen :term:`cache server` assigned to the :term:`Delivery Service`. If the URL includes a domain name, Traffic Router simply redirects the client to the defined URL. In the latter case, the redirect URL must not match the ``urlRegex`` value, or an infinite loop of  HTTP ``302 Found`` responses will occur at the Traffic Router.  Steering-:ref:`ds-types` :term:`Delivery Services` must contain an :abbr:`FQDN (Fully Qualified Domain Name)` as the re-direct or Traffic Router will return a DENIED to the client.  This is because steering services do not have caches associated to them, so a relative ``redirectURL`` can not be turned into a :abbr:`FQDN (Fully Qualified Domain Name)`.
 	``ipWhiteList``
 		An optional element that is an array of :abbr:`CIDR (Classless Inter-Domain Routing)` blocks indicating the IPv4 subnets that are allowed by the rule. If this list exists and the value is not empty, client IP will be matched against the :abbr:`CIDR (Classless Inter-Domain Routing)` list, bypassing the value of ``geoLocation``. If there is no match in the white list, Traffic Router defers to the value of ``geoLocation`` to determine if content ought to be blocked.
 
 
 #. Add :abbr:`RGB (Regional Geographic-based Blocking)` :term:`Parameters` in Traffic Portal to the :term:`Delivery Service`'s Traffic Router(s)'s :term:`Profile`\ (s). The :ref:`parameter-config-file` value should be set to ``CRConfig.json``, and the following two :term:`Parameter` :ref:`parameter-name`/:ref:`parameter-value` pairs need to be specified:
 
-	``regional_geoblocking.polling.url``
+	``regional_geoblock.polling.url``
 		The URL of the RGB configuration file. Traffic Router will fetch the file from this URL using an HTTP ``GET`` request.
-	``regional_geoblocking.polling.interval``
+	``regional_geoblock.polling.interval``
 		The interval on which Traffic Router polls the :abbr:`RGB (Regional Geographic-based Blocking)` configuration file.
 
 	.. figure:: regionalgeo/01.png

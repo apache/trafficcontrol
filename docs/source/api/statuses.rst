@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves a list of all server statuses.
+Retrieves a list of all server :term:`Statuses`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,15 +31,29 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------+----------+--------------------------------------------------------------+
-	|    Name     | Required | Description                                                  |
-	+=============+==========+==============================================================+
-	| description |    no    | Return only statuses with this *exact* description           |
-	+-------------+----------+--------------------------------------------------------------+
-	|     id      |    no    | Return only the status with this integral, unique identifier |
-	+-------------+----------+--------------------------------------------------------------+
-	|    name     |    no    | Return only statuses with this name                          |
-	+-------------+----------+--------------------------------------------------------------+
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                          |
+	+=============+==========+======================================================================================================+
+	| description | no       | Return only :term:`Statuses` with this *exact* description                                           |
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
+	| id          | no       | Return only the :term:`Status` with this integral, unique identifier                                 |
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
+	| name        | no       | Return only :term:`Statuses` with this name                                                          |
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one                                         |
+	|             |          | of the fields of the objects in the ``response`` array                                               |
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default or "asc") or                                 |
+	|             |          | descending ("desc")                                                                                  |
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
+	| limit       | no       | Choose the maximum number of results to return                                                       |
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit |
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are         |
+	|             |          | ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no       |
+	|             |          | effect. ``limit`` must be defined to make use of ``page``.                                           |
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -54,7 +68,7 @@ Response Structure
 ------------------
 :description: A short description of the status
 :id:          The integral, unique identifier of this status
-:lastUpdated: The date and time at which this status was last modified, in ISO format
+:lastUpdated: The date and time at which this status was last modified, in an ISO-like format
 :name:        The name of the status
 
 .. code-block:: http
@@ -66,7 +80,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: dHNip9kpTGGS1w39/fWcFehNktgmXZus8XaufnmDpv0PyG/3fK/KfoCO3ZOj9V74/CCffps7doEygWeL/xRtKA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 10 Dec 2018 20:56:59 GMT

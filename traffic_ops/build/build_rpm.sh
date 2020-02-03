@@ -37,7 +37,41 @@ function initBuildArea() {
 	local to_dest=$(createSourceDir traffic_ops)
 	cd "$TO_DIR" || \
 		 { echo "Could not cd to $TO_DIR: $?"; exit 1; }
-	rsync -av doc etc install "$to_dest"/ || \
+
+	echo "PATH: $PATH"
+	echo "GOPATH: $GOPATH"
+	go version
+	go env
+
+	# get x/* packages (everything else should be properly vendored)
+	go get -v golang.org/x/crypto/ed25519 golang.org/x/crypto/scrypt golang.org/x/net/ipv4 golang.org/x/net/ipv6 golang.org/x/sys/unix || \
+                { echo "Could not get go package dependencies"; exit 1; }
+
+	# compile traffic_ops_golang
+	pushd traffic_ops_golang
+	go build -v -ldflags "-X main.version=traffic_ops-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION} -B 0x`git rev-parse HEAD`" || \
+                { echo "Could not build traffic_ops_golang binary"; exit 1; }
+	popd
+
+	# compile db/admin
+	pushd app/db
+	go build -v -o admin || \
+                { echo "Could not build db/admin binary"; exit 1; }
+	popd
+
+	# compile TO profile converter
+	pushd install/bin/convert_profile
+	go build -v || \
+                { echo "Could not build convert_profile binary"; exit 1; }
+	popd
+
+	# compile atstccfg
+	pushd ort/atstccfg
+	go build -v -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=${TC_VERSION}" || \
+                { echo "Could not build atstccfg binary"; exit 1; }
+	popd
+
+	rsync -av etc install "$to_dest"/ || \
 		 { echo "Could not copy to $to_dest: $?"; exit 1; }
 	rsync -av app/{bin,conf,cpanfile,db,lib,public,script,templates} "$to_dest"/app/ || \
 		 { echo "Could not copy to $to_dest/app: $?"; exit 1; }
@@ -48,8 +82,11 @@ function initBuildArea() {
 
 	# Create traffic_ops_ort source area
 	to_ort_dest=$(createSourceDir traffic_ops_ort)
-	cp -p bin/traffic_ops_ort.pl "$to_ort_dest"
-	cp -p bin/supermicro_udev_mapper.pl "$to_ort_dest"
+	cp -p ort/traffic_ops_ort.pl "$to_ort_dest"
+	cp -p ort/supermicro_udev_mapper.pl "$to_ort_dest"
+	mkdir -p "${to_ort_dest}/atstccfg"
+	cp -R -p ort/atstccfg/* "${to_ort_dest}/atstccfg"
+
 	tar -czvf "$to_ort_dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$to_ort_dest") || \
 		 { echo "Could not create tar archive $to_ort_dest: $?"; exit 1; }
 

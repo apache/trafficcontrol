@@ -81,7 +81,8 @@ var TableCacheGroupParametersController = function(cacheGroup, parameters, $cont
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 4 }
+				{ 'orderable': false, 'targets': 4 },
+				{ "width": "50%", "targets": 2 }
 			],
 			"aaSorting": []
 		});

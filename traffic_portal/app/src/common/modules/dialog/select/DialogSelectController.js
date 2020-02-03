@@ -23,10 +23,12 @@ var DialogSelectController = function(params, collection, $scope, $uibModalInsta
 
 	$scope.collection = collection;
 
-	$scope.selectedItemId = null;
+	$scope.selectedItemKeyValue = null;
 
 	$scope.select = function() {
-		var selectedItem = _.find(collection, function(item){ return parseInt(item.id) == parseInt($scope.selectedItemId) });
+		const selectedItem = collection.find(function(item) {
+			return item[$scope.key] === $scope.selectedItemKeyValue;
+		});
 		$uibModalInstance.close(selectedItem);
 	};
 
@@ -42,6 +44,8 @@ var DialogSelectController = function(params, collection, $scope, $uibModalInsta
 		} else {
 			$scope.label = function(item) { return item['name']; }
 		}
+
+		$scope.key = $scope.params.key || 'id';
 	};
 	init();
 

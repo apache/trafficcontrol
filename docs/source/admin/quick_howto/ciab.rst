@@ -42,7 +42,7 @@ These can all be supplied manually via the steps in :ref:`dev-building` (for Tra
 
 Usage
 -----
-In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the containers are exposed locally to the host on specific ports. These are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
+In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the environment are by default not exposed locally to the host. If this is the desired behavior when bringing up CDN in a Box the command ``docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`` should be run. The ports are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.expose-ports.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
 
 .. _ciab-service-info:
 .. table:: Service Info
@@ -93,9 +93,9 @@ When the CDN is to be shut down, it is often best to do so using ``sudo docker-c
 
 variables.env
 """""""""""""
-.. include:: ../../../../infrastructure/cdn-in-a-box/variables.env
-	:code: shell
-	:start-line: 16
+.. literalinclude:: ../../../../infrastructure/cdn-in-a-box/variables.env
+	:language: shell
+	:lines: 17-
 	:tab-width: 4
 
 .. note:: While these port settings can be changed without hampering the function of the CDN in a Box system, note that changing a port without also changing the matching port-mapping in :file:`infrastructure/cdn-in-a-box/docker-compose.yml` for the affected service *will* make it unreachable from the host.
@@ -106,7 +106,7 @@ variables.env
 
 X.509 SSL/TLS Certificates
 ==========================
-All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Root :abbr:`CA (Certificate Authority)` is generated at the first initial startup. An X.509 Intermediate :abbr:`CA (Certificate Authority)` is also generated and signed by the Root :abbr:`CA (Certificate Authority)`. Additional "wildcard" certificates are generated/signed by the Intermediate :abbr:`CA (Certificate Authority)` for each container service and demo1, demo2, and demo3 :term:`Delivery Service`\ s. All certificates and keys are stored in the ``ca`` host volume which is located at :file:`infrastruture/cdn-in-a-box/traffic_ops/ca`\ [4]_.
+All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Root :abbr:`CA (Certificate Authority)` is generated at the first initial startup. An X.509 Intermediate :abbr:`CA (Certificate Authority)` is also generated and signed by the Root :abbr:`CA (Certificate Authority)`. Additional "wildcard" certificates are generated/signed by the Intermediate :abbr:`CA (Certificate Authority)` for each container service and demo1, demo2, and demo3 :term:`Delivery Services`. All certificates and keys are stored in the ``ca`` host volume which is located at :file:`infrastruture/cdn-in-a-box/traffic_ops/ca`\ [4]_.
 
 .. _ciab-x509-certificate-list:
 .. table:: Self-Signed X.509 Certificate List
@@ -247,14 +247,19 @@ The TightVNC optional container provides a basic lightweight window manager (flu
 		:caption: CIAB Startup Using Bash Alias
 
 		# From infrastructure/cdn-in-a-box
-		alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.vnc.yml"
+		alias mydc="docker-compose "` \
+			`"-f $PWD/docker-compose.yml "` \
+			`"-f $PWD/docker-compose.expose-ports.yml "` \
+			`"-f $PWD/optional/docker-compose.vnc.yml "` \
+			`"-f $PWD/optional/docker-compose.vnc.expose-ports.yml"
 		docker volume prune -f
 		mydc build
 		mydc kill
 		mydc rm -fv
 		mydc up
 
-#. Connect with a VNC client to localhost port 9080.
+
+#. Connect with a VNC client to localhost port 5909.
 #. When Traffic Portal becomes available, the Firefox within the VNC instance will subsequently be started.
 #. An xterm with bash shell is also automatically spawned and minimized for convenience.
 

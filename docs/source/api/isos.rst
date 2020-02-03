@@ -40,7 +40,7 @@ Request Structure
 :domainName:    The domain part of the system image's Fully Qualified Domain Name (FQDN)
 :hostName:      The host name part of the system image's FQDN
 :interfaceMtu:  A number that specifies the Maximum Transmission Unit (MTU) for the system image's network interface card - the only valid values of which I'm aware are 1500 or 9000, and this should almost always just be 1500
-:interfaceName: An optional string naming the network interface to be used by the generated system image e.g. "bond0", "eth0", etc. If the special name "bond0" is used, a Link Aggregation Control Protocol (LACP) binding configuration will be created and included in the system image
+:interfaceName: An optional string naming the network interface to be used by the generated system image e.g. "bond0", "eth0", etc. If the special name "bond0" is used, an :abbr:`LACP (Link Aggregation Control Protocol)` binding configuration will be created and included in the system image
 
 	.. seealso:: `The Link Aggregation Wikipedia page <https://en.wikipedia.org/wiki/Link_aggregation>`_\ .
 
@@ -107,7 +107,7 @@ Assuming the ``stream`` key isn't defined in the request payload JSON object (or
 	Content-Type: application/json
 	Date: Fri, 30 Nov 2018 20:27:10 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=e...; expires=Sat, 01 Dec 2018 00:27:10 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: pdlIVEfbcEiz6+JPWpD1+RVw6j66yzM3l9Bp/4Yl9bh0Mh+aXel06WWq05XnU1szM/APWRwEYUvUHtEdobGSAQ==
 	Content-Length: 243

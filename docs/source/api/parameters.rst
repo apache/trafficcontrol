@@ -31,15 +31,28 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------------+----------+-----------------------------------------------------------+
-	| Name       | Required | Description                                               |
-	+============+==========+===========================================================+
-	| id         | no       | Filter :term:`Parameters` by :ref:`parameter-id`          |
-	+------------+----------+-----------------------------------------------------------+
-	| name       | no       | Filter :term:`Parameters` by :ref:`parameter-name`        |
-	+------------+----------+-----------------------------------------------------------+
-	| configFile | no       | Filter :term:`Parameters` by :ref:`parameter-config-file` |
-	+------------+----------+-----------------------------------------------------------+
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                   |
+	+=============+==========+===============================================================================================================+
+	| configFile  | no       | Filter :term:`Parameters` by :ref:`parameter-config-file`                                                     |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| id          | no       | Filters :term:`Parameters` by :ref:`parameter-id`                                                             |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| name        | no       | Filter :term:`Parameters` by :ref:`parameter-name`                                                            |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|             |          | array                                                                                                         |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| limit       | no       | Choose the maximum number of results to return                                                                |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit.         |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|             |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|             |          | defined to make use of ``page``.                                                                              |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -69,7 +82,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: UFO3/jcBFmFZM7CsrsIwTfPc5v8gUiXqJm6BNp1boPb4EQBnWNXZh/DbBwhMAOJoeqDImoDlrLnrVjQGO4AooA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 05 Dec 2018 18:23:39 GMT
@@ -170,7 +183,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: eQrl48zWids0kDpfCYmmtYMpegjnFxfOVvlBYxxLSfp7P7p6oWX4uiC+/Cfh2X9i3G+MQ36eH95gukJqOBOGbQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 05 Dec 2018 19:18:21 GMT

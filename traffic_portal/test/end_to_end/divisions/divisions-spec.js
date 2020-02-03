@@ -33,19 +33,38 @@ describe('Traffic Portal Divisions Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
 	it('should open new division form page', function() {
 		console.log("Open new division form page");
 		browser.driver.findElement(by.name('createDivisionButton')).click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
-		console.log("Filling out form, check create button is enabled and submit");
+	it('should create a new division', function () {
+		console.log("Creating a new division");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		pageData.name.sendKeys(myNewDiv.name);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions");
+	});
+
+	it('should update a division', function() {
+		console.log('Updating the new division: ' + myNewDiv.name);
+		pageData.searchFilter.sendKeys(myNewDiv.name);
+		element.all(by.repeater('d in ::divisions')).filter(function(row){
+			return row.element(by.name('name')).getText().then(function(val){
+				return val === myNewDiv.name;
+			});
+		}).get(0).click();
+		pageData.name.clear();
+		pageData.name.sendKeys(myNewDiv.name + ' updated');
+		pageData.updateButton.click();
+		expect(pageData.name.getText() === myNewDiv.name + ' updated');
 	});
 
 });

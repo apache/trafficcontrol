@@ -217,7 +217,6 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
                 clearServerUpdates($itemScope.s);
             }
         },
-        null, // Divider
         {
             text: 'Show Charts',
             displayed: function () {
@@ -226,12 +225,33 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
             hasBottomDivider: function () {
                 return true;
             },
+            hasTopDivider: function () {
+                return true;
+            },
             click: function ($itemScope) {
                 $window.open(propertiesModel.properties.servers.charts.baseUrl + $itemScope.s.hostName, '_blank');
             }
         },
         {
+            text: 'Manage Capabilities',
+            displayed: function ($itemScope) {
+                return serverUtils.isCache($itemScope.s);
+            },
+            hasTopDivider: function () {
+                return true;
+            },
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/capabilities');
+            }
+        },
+        {
             text: 'Manage Delivery Services',
+            displayed: function ($itemScope) {
+                return serverUtils.isEdge($itemScope.s) || serverUtils.isOrigin($itemScope.s);
+            },
+            hasTopDivider: function ($itemScope) {
+                return !serverUtils.isCache($itemScope.s);
+            },
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/delivery-services');
             }
@@ -384,9 +404,6 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
             "iDisplayLength": 25,
             "aaSorting": [],
             "columns": $scope.columns,
-            "colReorder": {
-                realtime: false
-            },
             "initComplete": function(settings, json) {
                 try {
                     // need to create the show/hide column checkboxes and bind to the current visibility

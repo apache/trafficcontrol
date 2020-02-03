@@ -18,22 +18,44 @@
 *********************************
 ``cachegroups/{{ID}}/parameters``
 *********************************
-Gets all the :term:`Parameters` associated with a :term:`Cache Group`
 
 ``GET``
 =======
+Gets all of a :ref:`Cache Group's parameters <cache-group-parameters>`.
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
 
 Request Structure
 -----------------
+.. table:: Request Query Parameters
+
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                   |
+	+=============+==========+===============================================================================================================+
+	| parameterId | no       | Show only the :term:`Parameter` with the given :ref:`parameter-id`                                            |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|             |          | array                                                                                                         |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| limit       | no       | Choose the maximum number of results to return                                                                |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|             |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|             |          | defined to make use of ``page``.                                                                              |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+
 .. table:: Request Path Parameters
 
 	+-----------+----------------------------------------------------------+
 	| Parameter | Description                                              |
 	+===========+==========================================================+
-	| ID        | The integral, unique identifier of a :term:`Cache Group` |
+	| ID        | The :ref:`cache-group-id` of a :term:`Cache Group`       |
 	+-----------+----------------------------------------------------------+
 
 
@@ -58,7 +80,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 14 Nov 2018 19:56:23 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 23:56:23 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: DfqPtySzVMpnBYqVt/45sSRG/1pRTlQdIcYuQZ0CQt79QSHLzU5e4TbDqht6ntvNP041LimKsj5RzPlPX1n6tg==
 	Content-Length: 135

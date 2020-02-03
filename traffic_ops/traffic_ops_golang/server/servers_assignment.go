@@ -23,16 +23,40 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/lib/pq"
 )
+
+type needsCheck struct {
+	CDN     uint
+	CDNName string
+	DSID    uint
+	DSXMLID string
+	Tenant  int
+}
+
+const needsCheckInfoQuery = `
+SELECT deliveryservice.id,
+       deliveryservice.cdn_id,
+       deliveryservice.tenant_id,
+       deliveryservice.xml_id,
+       cdn.name
+FROM deliveryservice
+LEFT OUTER JOIN cdn ON cdn.id=deliveryservice.cdn_id
+WHERE deliveryservice.id = ANY($1)
+`
 
 func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -44,7 +68,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 
 	dsList := []int{}
 	if err := json.NewDecoder(r.Body).Decode(&dsList); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("payload must be a list of integers representing delivery service ids"), nil)
 		return
 	}
 
@@ -55,25 +79,115 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	serverPathParameter := inf.Params["id"]
-	server, err := strconv.Atoi(serverPathParameter)
+	server := inf.IntParams["id"]
+
+	serverInfo, ok, err := dbhelpers.GetServerInfo(server, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
 		return
+	}
+
+	if !strings.HasPrefix(serverInfo.Type, "ORG") {
+		usrErr, sysErr, status := ValidateDSCapabilities(dsList, serverInfo.HostName, inf.Tx.Tx)
+		if usrErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
+			return
+		}
+	}
+
+	// We already know the CDN exists because that's part of the serverInfo query above
+	serverCDN, _, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(serverInfo.CDNID))
+	if err != nil {
+		sysErr = fmt.Errorf("Failed to get CDN name from ID: %v", err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	}
+
+	if len(dsList) > 0 {
+		if errCode, userErr, sysErr = checkTenancyAndCDN(inf.Tx.Tx, string(serverCDN), server, serverInfo, dsList, inf.User); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
 	}
 
 	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
 		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
 	}
 
-	if err := api.CreateChangeLogRawErr(api.ApiChange, "Assigned "+strconv.Itoa(len(assignedDSes))+" delivery services to server id: "+strconv.Itoa(server) , inf.User, inf.Tx.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error writing to change log: " + err.Error()))
-		return
-	}
-
+	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverInfo.HostName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
+}
+
+func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.ServerInfo, dsList []int, user *auth.CurrentUser) (int, error, error) {
+	rows, err := tx.Query(needsCheckInfoQuery, pq.Array(dsList))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusBadRequest, errors.New("Either at least one Delivery Service ID doesn't exist, or is outside your tenancy!"), nil
+		}
+		return http.StatusInternalServerError, nil, err
+	}
+	defer rows.Close()
+
+	tenantsToCheck := make([]needsCheck, 0, len(dsList))
+	for rows.Next() {
+		var n needsCheck
+		if err = rows.Scan(&n.DSID, &n.CDN, &n.Tenant, &n.DSXMLID, &n.CDNName); err != nil {
+			return http.StatusInternalServerError, nil, fmt.Errorf("Scanning cdn_id for ds: %v", err)
+		}
+
+		tenantsToCheck = append(tenantsToCheck, n)
+	}
+
+	if len(tenantsToCheck) != len(dsList) {
+		return http.StatusNotFound, errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!"), nil
+	}
+
+	for _, t := range tenantsToCheck {
+		if ok, err := tenant.IsResourceAuthorizedToUserTx(t.Tenant, user, tx); err != nil {
+			return http.StatusInternalServerError, nil, fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.DSID, t.Tenant, user.TenantID, err)
+		} else if !ok {
+			// In keeping with the behavior of /deliveryservices, we don't disclose the existences
+			// of Delivery Services to which the user is forbidden access
+			return http.StatusNotFound, errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!"), fmt.Errorf("User %s denied access to inaccessible DS %d (owned by tenant_id %d)", user.UserName, t.DSID, t.Tenant)
+		}
+
+		if int(t.CDN) != serverInfo.CDNID {
+			return http.StatusConflict, fmt.Errorf("Delivery Service %s (#%d) is not in the same CDN as server %s (#%d) (server is in %s (#%d), DS is in %s (#%d))!", t.DSXMLID, t.DSID, serverInfo.HostName, server, serverCDN, serverInfo.CDNID, t.CDNName, t.CDN), nil
+		}
+	}
+
+	return http.StatusOK, nil, nil
+}
+
+// ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.
+func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, error, int) {
+	var dsCaps []string
+	sCaps, err := dbhelpers.GetServerCapabilitiesFromName(serverName, tx)
+
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	for _, id := range dsIDs {
+		dsCaps, err = dbhelpers.GetDSRequiredCapabilitiesFromID(id, tx)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		for _, dsc := range dsCaps {
+			if !util.ContainsStr(sCaps, dsc) {
+				return errors.New(fmt.Sprintf("Caching server cannot assign this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, serverName)), nil, http.StatusBadRequest
+			}
+		}
+	}
+
+	return nil, nil, 0
 }
 
 func assignDeliveryServicesToServer(server int, dses []int, replace bool, tx *sql.Tx) ([]int, error) {
@@ -104,14 +218,14 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 	SELECT * FROM q1,q2 ON CONFLICT DO NOTHING
 `
 	if _, err := tx.Exec(q, dsPqArray, server); err != nil {
-		log.Errorf("could not execute deliveryservice_server bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("inserting deliveryservice_server: " + err.Error())
 	}
 
 	//need remap config location
-	row := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = '" + ats.RemapFile + "'")
 	var atsConfigLocation string
-	row.Scan(&atsConfigLocation)
+	if err := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = '" + atscfg.RemapFile + "'").Scan(&atsConfigLocation); err != nil {
+		return nil, errors.New("scanning location parameter: " + err.Error())
+	}
 	if strings.HasSuffix(atsConfigLocation, "/") {
 		atsConfigLocation = atsConfigLocation[:len(atsConfigLocation)-1]
 	}
@@ -119,8 +233,7 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 	//we need dses: xmlids and edge_header_rewrite, regex_remap, and cache_url
 	rows, err := tx.Query(`SELECT xml_id, edge_header_rewrite, regex_remap, cacheurl FROM deliveryservice WHERE id = ANY($1::bigint[])`, dsPqArray)
 	if err != nil {
-		log.Error.Printf("could not execute ds fields select query: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("querying deliveryservice: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -137,26 +250,24 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 		var edgeHeaderRewrite sql.NullString
 		var regexRemap sql.NullString
 		var cacheURL sql.NullString
-
 		if err := rows.Scan(&xmlID, &edgeHeaderRewrite, &regexRemap, &cacheURL); err != nil {
-			log.Error.Printf("could not scan ds fields row: %s\n", err)
-			return nil, tc.DBError
+			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
 		if xmlID.Valid && len(xmlID.String) > 0 {
 			//param := "hdr_rw_" + xmlID.String + ".config"
-			param := ats.GetConfigFile(ats.HeaderRewritePrefix, xmlID.String)
+			param := atscfg.GetConfigFile(atscfg.HeaderRewritePrefix, xmlID.String)
 			if edgeHeaderRewrite.Valid && len(edgeHeaderRewrite.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = ats.GetConfigFile(ats.RegexRemapPrefix, xmlID.String)
+			param = atscfg.GetConfigFile(atscfg.RegexRemapPrefix, xmlID.String)
 			if regexRemap.Valid && len(regexRemap.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = ats.GetConfigFile(ats.CacheUrlPrefix, xmlID.String)
+			param = atscfg.GetConfigFile(atscfg.CacheUrlPrefix, xmlID.String)
 			if cacheURL.Valid && len(cacheURL.String) > 0 {
 				insert = append(insert, param)
 			} else {
@@ -177,15 +288,13 @@ INSERT INTO parameter (config_file, name, value)
 `
 	fileNamePqArray := pq.Array(insert)
 	if _, err = tx.Exec(q, fileNamePqArray, "location", atsConfigLocation); err != nil {
-		log.Error.Printf("could not execute parameter bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("inserting parameters: " + err.Error())
 	}
 
 	//select the ids associated with the parameters we created above (may be able to get them from insert above to optimize)
 	rows, err = tx.Query(`SELECT id FROM parameter WHERE name = 'location' AND config_file IN ($1)`, fileNamePqArray)
 	if err != nil {
-		log.Error.Printf("could not execute parameter id select query: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("selecting location parameter after insert: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -209,14 +318,12 @@ INSERT INTO profile_parameter (profile, parameter)
 	ON CONFLICT DO NOTHING
 `
 	if _, err = tx.Exec(q, dsPqArray, pq.Array(parameterIds)); err != nil {
-		log.Error.Printf("could not execute profile_parameter bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("inserting profile_parameter: " + err.Error())
 	}
 
 	//process delete list
 	if _, err = tx.Exec(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`, pq.Array(delete)); err != nil {
-		log.Error.Printf("could not execute parameter delete query: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("deleting parameters: " + err.Error())
 	}
 
 	return dses, nil

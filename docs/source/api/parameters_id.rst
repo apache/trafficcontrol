@@ -23,9 +23,6 @@
 =======
 Gets details about a specific :term:`Parameter`
 
-.. deprecated:: 1.1
-	Use the ``id`` query parameter of the :ref:`to-api-parameters` endpoint instead
-
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -34,11 +31,28 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+------------------------------------------------------------------------+
-	| Name | Description                                                            |
-	+======+========================================================================+
-	|  ID  | The :ref:`parameter-id` of the :term:`Parameter` which will be deleted |
-	+------+------------------------------------------------------------------------+
+	+------+------------------------------------------------------------------+
+	| Name | Description                                                      |
+	+======+==================================================================+
+	| ID   | The :ref:`parameter-id` of the :term:`Parameter` to be inspected |
+	+------+------------------------------------------------------------------+
+
+.. table:: Request Query Parameters
+
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name      | Description                                                                                                                                                                                 |
+	+===========+=============================================================================================================================================================================================+
+	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array                                                                         |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                                                                    |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| limit     | Choose the maximum number of results to return                                                                                                                                              |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| offset    | The number of results to skip before beginning to return results. Must use in conjunction with limit                                                                                        |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| page      | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no |
+	|           | effect. ``limit`` must be defined to make use of ``page``.                                                                                                                                  |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -68,7 +82,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: UFO3/jcBFmFZM7CsrsIwTfPc5v8gUiXqJm6BNp1boPb4EQBnWNXZh/DbBwhMAOJoeqDImoDlrLnrVjQGO4AooA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 05 Dec 2018 19:01:54 GMT
@@ -149,7 +163,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: DMxS2gKceFVKRtezON/vsnrC+zI8onASSHaGv5i3wwvUvyt9KEe72gxQd6ZgVcSq3K8ZpkH6g3UI/WtEfdp5vA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 05 Dec 2018 20:21:07 GMT
@@ -209,7 +223,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: hJjQq2Seg7sqWt+jKgp6gwRxUtoVU34PFoc9wEaweXdaIBTn/BscoUuyw2/n+V8GZPqpeQcihZE50/0oQhdtHw==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 05 Dec 2018 19:20:30 GMT

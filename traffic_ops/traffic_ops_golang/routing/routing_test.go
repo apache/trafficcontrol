@@ -33,6 +33,7 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 )
 
 type key int
@@ -134,8 +135,8 @@ func TestCompileRoutes(t *testing.T) {
 		t.Error("error fetching routes: ", err.Error())
 	}
 
-	authBase := AuthBase{secret: d.Secrets[0], override: nil}
-	routes, versions := CreateRouteMap(routeSlice, nil, authBase, 1)
+	authBase := middleware.AuthBase{Secret: d.Secrets[0], Override: nil}
+	routes, versions := CreateRouteMap(routeSlice, nil, nil, nil, nil, authBase, 1)
 	if len(routes) == 0 {
 		t.Error("no routes handler defined")
 	}
@@ -172,13 +173,33 @@ func TestCompileRoutes(t *testing.T) {
 	}
 }
 
+func TestRoutes(t *testing.T) {
+	fake := ServerData{Config: config.NewFakeConfig()}
+	routes, _, _, err := Routes(fake)
+	if err != nil {
+		t.Fatalf("expected: no error getting Routes, actual: %v", err)
+	}
+	// verify that all returned Routes are unique
+	for i := 0; i < len(routes); i++ {
+		for j := i + 1; j < len(routes); j++ {
+			if routes[i].Path == routes[j].Path && routes[i].Method == routes[j].Method && routes[i].Version == routes[j].Version {
+				t.Errorf("expected: no duplicate routes, actual: found duplicate route %s", routes[j].String())
+			}
+		}
+	}
+}
+
 func TestCreateRouteMap(t *testing.T) {
-	authBase := AuthBase{"secret", func(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	authBase := middleware.AuthBase{"secret", func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			ctx := context.WithValue(r.Context(), AuthWasCalled, "true")
 			handlerFunc(w, r.WithContext(ctx))
 		}
 	}}
+
+	CatchallHandler := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "catchall")
+	}
 
 	PathOneHandler := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -197,15 +218,27 @@ func TestCreateRouteMap(t *testing.T) {
 		authWasCalled := getAuthWasCalled(ctx)
 		fmt.Fprintf(w, "%s %s", "path3", authWasCalled)
 	}
-
-	routes := []Route{
-		{1.2, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil},
-		{1.2, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil},
-		{1.2, http.MethodGet, `path3`, PathThreeHandler, 0, false, []Middleware{}},
+	PathFourHandler := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "path4")
 	}
 
+	PathFiveHandler := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "path5")
+	}
+
+	routes := []Route{
+		{1.2, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil, 0, false},
+		{1.2, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil, 1, false},
+		{1.2, http.MethodGet, `path3`, PathThreeHandler, 0, false, []middleware.Middleware{}, 2, false},
+		{1.2, http.MethodGet, `path4`, PathFourHandler, 0, false, []middleware.Middleware{}, 3, true},
+		{1.2, http.MethodGet, `path5`, PathFiveHandler, 0, false, []middleware.Middleware{}, 4, false},
+	}
+
+	perlRoutesIDs := []int{3}
+	disabledRoutesIDs := []int{4}
+
 	rawRoutes := []RawRoute{}
-	routeMap, _ := CreateRouteMap(routes, rawRoutes, authBase, 60)
+	routeMap, _ := CreateRouteMap(routes, rawRoutes, perlRoutesIDs, disabledRoutesIDs, CatchallHandler, authBase, 60)
 
 	route1Handler := routeMap["GET"][0].Handler
 
@@ -243,6 +276,25 @@ func TestCreateRouteMap(t *testing.T) {
 	}
 	if v, ok := w.HeaderMap["Access-Control-Allow-Credentials"]; ok {
 		t.Errorf("Unexpected Access-Control-Allow-Credentials: %s", v)
+	}
+
+	// request should be handled by Catchall
+	route4Handler := routeMap["GET"][3].Handler
+	w = httptest.NewRecorder()
+	route4Handler(w, r)
+	if bytes.Compare(w.Body.Bytes(), []byte("catchall")) != 0 {
+		t.Errorf("Expected: 'catchall', actual: %s", w.Body.Bytes())
+	}
+
+	// request should be handled by DisabledRouteHandler
+	route5Handler := routeMap["GET"][4].Handler
+	w = httptest.NewRecorder()
+	route5Handler(w, r)
+	if bytes.Compare(w.Body.Bytes(), []byte("path5")) == 0 {
+		t.Errorf("Expected: not 'path5', actual: '%s'", w.Body.Bytes())
+	}
+	if w.Result().StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("Expected status: %d, actual: %d", http.StatusServiceUnavailable, w.Result().StatusCode)
 	}
 }
 

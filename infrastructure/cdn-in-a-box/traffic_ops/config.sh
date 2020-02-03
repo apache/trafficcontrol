@@ -6,9 +6,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -107,12 +107,12 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     },
     "to" : {
         "base_url" : "https://$TO_FQDN",
-        "email_from" : "no-reply@$DOMAIN",
+        "email_from" : "no-reply@$INFRA_SUBDOMAIN.$TLD_DOMAIN",
         "no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
     },
     "portal" : {
-        "base_url" : "https://$TP_FQDN/!#/",
-        "email_from" : "no-reply@$DOMAIN",
+        "base_url" : "https://$TP_HOST.$INFRA_SUBDOMAIN.$TLD_DOMAIN/#!/",
+        "email_from" : "no-reply@$INFRA_SUBDOMAIN.$TLD_DOMAIN",
         "pass_reset_path" : "user",
         "user_register_path" : "user"
     },
@@ -122,7 +122,15 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     "geniso" : {
         "iso_root_path" : "/opt/traffic_ops/app/public"
     },
-    "inactivity_timeout" : 60
+    "inactivity_timeout" : 60,
+    "smtp" : {
+        "enabled" : false,
+        "user" : "",
+        "password" : "",
+        "address" : ""
+    },
+    "InfluxEnabled": true,
+    "influxdb_conf_path": "/opt/traffic_ops/app/conf/production/influx.conf"
 }
 EOF
 
@@ -154,5 +162,13 @@ EOF
 cat <<-EOF >/opt/traffic_ops/app/conf/production/riak.conf
 {     "user": "$TV_RIAK_USER",
   "password": "$TV_RIAK_PASSWORD"
+}
+EOF
+
+cat <<-EOF >/opt/traffic_ops/app/conf/production/influx.conf
+{
+    "user": "$INFLUXDB_ADMIN_USER",
+    "password": "$INFLUXDB_ADMIN_PASSWORD",
+    "secure": false
 }
 EOF

@@ -36,6 +36,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/traffic_ops/client"
 	log "github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"
@@ -313,12 +315,12 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 					statTime, _ := time.Parse(time.RFC3339, t)
 					log.Infof("max gbps for cdn %v = %v", cdn, value)
 					var statsSummary tc.StatsSummary
-					statsSummary.CDNName = cdn
-					statsSummary.DeliveryService = "all"
-					statsSummary.StatName = "daily_maxgbps"
-					statsSummary.StatValue = strconv.FormatFloat(value, 'f', 2, 64)
-					statsSummary.SummaryTime = time.Now().Format(time.RFC3339)
-					statsSummary.StatDate = statTime.Format("2006-01-02")
+					statsSummary.CDNName = util.StrPtr(cdn)
+					statsSummary.DeliveryService = util.StrPtr("all")
+					statsSummary.StatName = util.StrPtr("daily_maxgbps")
+					statsSummary.StatValue = util.FloatPtr(value)
+					statsSummary.SummaryTime = time.Now()
+					statsSummary.StatDate = &statTime
 					go writeSummaryStats(config, statsSummary)
 
 					//write to influxdb
@@ -373,12 +375,12 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 			log.Infof("TBytes served for cdn %v = %v", cdn, bytesServedTB)
 			//write to Traffic Ops
 			var statsSummary tc.StatsSummary
-			statsSummary.CDNName = cdn
-			statsSummary.DeliveryService = "all"
-			statsSummary.StatName = "daily_bytesserved"
-			statsSummary.StatValue = strconv.FormatFloat(bytesServedTB, 'f', 2, 64)
-			statsSummary.SummaryTime = time.Now().Format(time.RFC3339)
-			statsSummary.StatDate = startTime.Format("2006-01-02")
+			statsSummary.CDNName = util.StrPtr(cdn)
+			statsSummary.DeliveryService = util.StrPtr("all")
+			statsSummary.StatName = util.StrPtr("daily_bytesserved")
+			statsSummary.StatValue = util.FloatPtr(bytesServedTB)
+			statsSummary.SummaryTime = time.Now()
+			statsSummary.StatDate = &startTime
 			go writeSummaryStats(config, statsSummary)
 			//write to Influxdb
 			tags := map[string]string{"cdn": cdn, "deliveryservice": "all"}
@@ -422,7 +424,7 @@ func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
 		log.Error(newErr)
 		return
 	}
-	err = to.AddSummaryStats(statsSummary)
+	_, _, err = to.CreateSummaryStats(statsSummary)
 	if err != nil {
 		log.Error(err)
 	}
@@ -502,16 +504,13 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		}
 	}
 
-	lastSummaryTimeStr, err := to.SummaryStatsLastUpdated("daily_maxgbps")
+	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated(util.StrPtr("daily_maxgbps"))
 	if err != nil {
 		errHndlr(err, ERROR)
+	} else if lastSummaryTimeResponse.Response.SummaryTime == nil {
+		errHndlr(errors.New("unable to get last updated stats summary timestamp: daily_maxgbps stats summary not reported yet"), WARN)
 	} else {
-		lastSummaryTime, err := time.Parse("2006-01-02 15:04:05-07", lastSummaryTimeStr)
-		if err != nil {
-			log.Error("Error parsing lastSummaryTime: " + err.Error())
-		} else {
-			runningConfig.LastSummaryTime = lastSummaryTime
-		}
+		runningConfig.LastSummaryTime = *lastSummaryTimeResponse.Response.SummaryTime
 	}
 
 	configChan <- runningConfig

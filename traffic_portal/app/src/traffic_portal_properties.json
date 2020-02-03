@@ -132,7 +132,8 @@
           "signingAlgorithm": null,
           "ccrDnsTtl": 30,
           "regionalGeoBlocking": false,
-          "anonymousBlockingEnabled": false
+          "anonymousBlockingEnabled": false,
+          "ecsEnabled": false
         },
         "HTTP": {
           "routingName": "cdn",
@@ -153,7 +154,8 @@
           "signingAlgorithm": null,
           "ccrDnsTtl": 3600,
           "anonymousBlockingEnabled": false,
-          "consistentHashQueryParams": []
+          "consistentHashQueryParams": [],
+          "ecsEnabled": false
         },
         "STEERING": {
           "dscp": 0,
@@ -164,7 +166,8 @@
           "geoLimit": 0,
           "regionalGeoBlocking": false,
           "ccrDnsTtl": 30,
-          "anonymousBlockingEnabled": false
+          "anonymousBlockingEnabled": false,
+          "ecsEnabled": false
         }
       },
       "charts": {
@@ -179,9 +182,9 @@
       }
     },
     "dsRequests": {
-      "_comments": "Should all delivery service changes go through the delivery service review process? You can also provide a role that will skip the process.",
+      "_comments": "Should all delivery service changes go through the delivery service request/review process? You can also provide a override role name (i.e. admin) that will allow users with the given role to circumvent the delivery service request process.",
       "enabled": false,
-      "roleNeededToSkip": "admin"
+      "overrideRole": ""
     },
     "servers": {
       "_comment": "Server settings",

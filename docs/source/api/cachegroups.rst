@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Extract information about all :term:`Cache Group`\ s.
+Extract information about :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,11 +31,23 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------+----------+--------------------------------------------------------------------------------------------------------+
-	| Name | Required | Description                                                                                            |
-	+======+==========+========================================================================================================+
-	| type | no       | Return only :term:`Cache Group`\ s that are of the type identified by this integral, unique identifier |
-	+------+----------+--------------------------------------------------------------------------------------------------------+
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                              |
+	+===========+==========+==========================================================================================================================+
+	| type      | no       | Return only :term:`Cache Groups` that are of the :ref:`cache-group-type` identified by this integral, unique identifier  |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array      |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                 |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                                           |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                     |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long  and the     |
+	|           |          | first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of |
+	|           |          | ``page``.                                                                                                                |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -49,19 +61,31 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbackToClosest:             If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable.
-:id:                            A numeric, unique identifier for the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in ISO format
-:latitude:                      Latitude for the :term:`Cache Group`
-:longitude:                     Longitude for the :term:`Cache Group`
-:name:                          The name of the :term:`Cache Group` entry
-:parentCachegroupId:            ID of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:parentCachegroupName:          Name of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupId:   ID of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupName: Name of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
-:shortName:                     Abbreviation of the :term:`Cache Group` name
-:typeId:                        Unique identifier for the 'Type' of :term:`Cache Group` entry
-:typeName:                      The name of the type of :term:`Cache Group` entry
+:fallbacks: An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
+
+	.. versionadded:: ATCv4.0
+
+		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
+
+:fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
+:id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
+:lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
+:latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
+:localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
+
+	.. versionadded:: ATCv4.0
+
+		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
+
+:longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
+:name:                          A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
+:parentCachegroupId:            An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
+:parentCachegroupName:          A string containing the :ref:`cache-group-name` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
+:secondaryParentCachegroupId:   An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-secondary-parent` - or ``null`` if it doesn't have a :ref:`cache-group-secondary-parent`
+:secondaryParentCachegroupName: A string containing the :ref:`cache-group-name` of this :term:`Cache Group`'s :ref:`cache-group-secondary-parent` :term:`Cache Group` - or ``null`` if it doesn't have a :ref:`cache-group-secondary-parent`
+:shortName:                     A string containing the :ref:`cache-group-short-name` of the :term:`Cache Group`
+:typeId:                        An integral, unique identifier for the ':term:`Type`' of the :term:`Cache Group`
+:typeName:                      A string that names the :ref:`cache-group-type` of this :term:`Cache Group`
 
 .. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
@@ -74,7 +98,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: oV6ifEgoFy+v049tVjSsRdWQf4bxjrUvIYfDdgpUtlxiC7gzCv31m5bXQ8EUBW4eg2hfYM+BsGvJpnNDZB7pUg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 07 Nov 2018 19:46:36 GMT
@@ -95,7 +119,8 @@ Response Structure
 			"localizationMethods": [],
 			"typeName": "EDGE_LOC",
 			"typeId": 23,
-			"lastUpdated": "2018-11-07 14:45:43+00"
+			"lastUpdated": "2018-11-07 14:45:43+00",
+			"fallbacks": []
 		}
 	]}
 
@@ -110,28 +135,33 @@ Creates a :term:`Cache Group`
 
 Request Structure
 -----------------
-:fallbackToClosest: If ``true``, the Traffic Router will fall back on the 'closest' :term:`Cache Group` to this one, when this one fails
+:fallbacks: An optional field which, when present, should contain an array of strings that are the :ref:`Names <cache-group-name>` of other :term:`Cache Groups` which will be the :ref:`cache-group-fallbacks`\ [#fallbacks]_
 
-	.. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
+	.. versionadded:: ATCv4.0
 
-:latitude:                    An optional field which, if present, will define the latitude for the :term:`Cache Group` to ISO-standard double specification\ [1]_
-:longitude:                   An optional field which, if present, will define the longitude for the :term:`Cache Group` to ISO-standard double specification\ [1]_
-:localizationMethods:         Array of enabled localization methods (as strings)
-:fallbacks:                   Array of fallback server hostnames.
-:name:                        The name of the :term:`Cache Group`
-:parentCachegroupId:          An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`\ 's primary parent
-:secondaryParentCachegroupId: An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`\ 's secondary parent
+		Support for this field was added to all versions of this endpoint with Apache Traffic Control version 4.0
+
+:fallbackToClosest: A boolean that sets the :ref:`cache-group-fallback-to-closest` behavior of the :term:`Cache Group`\ [#fallbacks]_
+
+	.. note:: The default value of ``fallbackToClosest`` is ``true``, and if it is ``null`` Traffic Control components will still interpret it as though it were ``true``.
+
+:latitude:                    An optional field which, if present, should be a floating-point number that will define the :ref:`cache-group-latitude` for the :term:`Cache Group`\ [#optional]_
+:localizationMethods:         Array of :ref:`cache-group-localization-methods` (as strings)
+
+	.. versionadded:: ATCv4.0
+
+		Support for this field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0.
+
+	.. tip:: This field has no defined meaning if the :ref:`cache-group-type` identified by ``typeId`` is not "EDGE_LOC".
+
+:longitude:                   An optional field which, if present, should be a floating-point number that will define the :ref:`cache-group-longitude` for the :term:`Cache Group`\ [#optional]_
+:name:                        The :ref:`cache-group-name` of the :term:`Cache Group`
+:parentCachegroupId:          An optional field which, if present, should be an integer that is the :ref:`cache-group-id` of a :ref:`cache-group-parent` for this :term:`Cache Group`.
+:secondaryParentCachegroupId: An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`'s secondary parent
 :shortName:                   An abbreviation of the ``name``
-:typeId:                      An integral, unique identifier for the type of :term:`Cache Group`; one of:
+:typeId:                      An integral, unique identifier for the :ref:`Cache Group's Type <cache-group-type>`
 
-	EDGE_LOC
-		Indicates a group of Edge-tier caches
-	MID_LOC
-		Indicates a group of Mid-tier caches
-	ORG_LOC
-		Indicates a group of origin servers (though only one server will typically be in any given ORG_LOC)
-
-	.. note:: The actual, integral, unique identifiers for these types must first be obtained, generally via :ref:`to-api-types`.
+	.. note:: The actual, integral, unique identifiers for these :term:`Types` must first be obtained, generally via :ref:`to-api-types`.
 
 .. code-block:: http
 	:caption: Request Example
@@ -142,38 +172,49 @@ Request Structure
 	Accept: */*
 	Cookie: mojolicious=...
 	Content-Length: 252
-	Content-Type: application/x-www-form-urlencoded
+	Content-Type: application/json
 
 	{
-		"fallbackToClosest": false,
+		"name": "test",
+		"shortName": "test",
 		"latitude": 0,
 		"longitude": 0,
-		"localizationMethods": [],
-		"fallbacks": [],
-		"name": "test",
-		"parentCachegroupId": 7,
-		"shortName": "test",
-		"typeId": 23
+		"fallbackToClosest": true,
+		"localizationMethods": [
+			"DEEP_CZ",
+			"CZ",
+			"GEO"
+		],
+		"typeId": 23,
 	}
 
 Response Structure
 ------------------
-:fallbackToClosest:             If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable.
-:id:                            A numeric, unique identifier for the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in ISO format
-:latitude:                      Latitude for the :term:`Cache Group`
-:longitude:                     Longitude for the :term:`Cache Group`
-:localizationMethods:           Array of enabled localization methods (as strings)
-:fallbacks:                     Array of fallback server hostnames
-:name:                          The name of the :term:`Cache Group` entry
-:parentCachegroupId:            ID of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:parentCachegroupName:          Name of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupId:   ID of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupName: Name of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
-:shortName:                     Abbreviation of the :term:`Cache Group` name
-:typeId:                        Unique identifier for the 'Type' of :term:`Cache Group` entry
-:typeName:                      The name of the type of :term:`Cache Group` entry
+:fallbacks: An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
 
+	.. versionadded:: ATCv4.0
+
+		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
+
+:fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
+:id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
+:lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
+:latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
+:localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
+
+	.. versionadded:: ATCv4.0
+
+		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
+
+:longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
+:name:                          A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
+:parentCachegroupId:            An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
+:parentCachegroupName:          A string containing the :ref:`cache-group-name` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
+:secondaryParentCachegroupId:   An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-secondary-parent` - or ``null`` if it doesn't have a :ref:`cache-group-secondary-parent`
+:secondaryParentCachegroupName: A string containing the :ref:`cache-group-name` of this :term:`Cache Group`'s :ref:`cache-group-secondary-parent` :term:`Cache Group` - or ``null`` if it doesn't have a :ref:`cache-group-secondary-parent`
+:shortName:                     A string containing the :ref:`cache-group-short-name` of the :term:`Cache Group`
+:typeId:                        An integral, unique identifier for the ':term:`Type`' of the :term:`Cache Group`
+:typeName:                      A string that names the :ref:`cache-group-type` of this :term:`Cache Group`
 
 .. code-block:: http
 	:caption: Response Example
@@ -184,7 +225,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: YvZlh3rpfl3nBq6SbNVhbkt3IvckbB9amqGW2JhLxWK9K3cxjBq5J2sIHBUhrLKUhE9afpxtvaYrLRxjt1/YMQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 07 Nov 2018 22:11:50 GMT
@@ -197,25 +238,26 @@ Response Structure
 		}
 	],
 	"response": {
-		"id": 10,
+		"id": 8,
 		"name": "test",
 		"shortName": "test",
 		"latitude": 0,
 		"longitude": 0,
-		"parentCachegroupName": "CDN_in_a_Box_Mid",
-		"parentCachegroupId": 7,
+		"parentCachegroupName": null,
+		"parentCachegroupId": null,
 		"secondaryParentCachegroupName": null,
 		"secondaryParentCachegroupId": null,
-		"fallbackToClosest": false,
-		"localizationMethods": [],
-		"fallbacks": [],
+		"fallbackToClosest": true,
+		"localizationMethods": [
+			"DEEP_CZ",
+			"CZ",
+			"GEO"
+		],
 		"typeName": "EDGE_LOC",
 		"typeId": 23,
-		"lastUpdated": "2018-11-07 22:11:50+00"
+		"lastUpdated": "2019-12-02 22:21:08+00",
+		"fallbacks": []
 	}}
 
-.. [1] While these fields are technically optional, note that if they are not specified many things may break. For this reason, Traffic Portal requires them when creating or editing :term:`Cache Group`\ s.
-
-.. This doesn't appear to exist anymore - can't reproduce in CIAB nor production
-.. ``/api/1.1/cachegroups/:parameter_id/parameter/available``
-.. ==========================================================
+.. [#fallbacks] Traffic Router will first check for a ``fallbacks`` array and, when that is empty/unset/all the :term:`Cache Groups` in it are also unavailable, will subsequently check for ``fallbackToClosest``. If that is ``true``, then it falls back to the geographically closest :term:`Cache Group` capable of serving the same content or, when it is ``false``/no such :term:`Cache Group` exists/said :term:`Cache Group` is also unavailable, will respond to clients with a failure response indicating the problem.
+.. [#optional] While these fields are technically optional, note that if they are not specified many things may break. For this reason, Traffic Portal requires them when creating or editing :term:`Cache Groups`.

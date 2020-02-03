@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -57,6 +58,15 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	cdnName := *req.Key
 
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdnName))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+cdnName+"': "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+
 	cdnDomain, cdnExists, err := dbhelpers.GetCDNDomainFromName(inf.Tx.Tx, tc.CDNName(cdnName))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("create DNSSEC keys: getting CDN domain: "+err.Error()))
@@ -70,6 +80,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Generated DNSSEC keys", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully created dnssec keys for "+cdnName)
 }
 
@@ -302,11 +313,31 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := inf.Params["name"]
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
 
 	if err := riaksvc.DeleteObject(key, CDNDNSSECKeyType, cluster); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "Deleted DNSSEC keys for CDN "+key, inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully deleted "+CDNDNSSECKeyType+" for "+key)
+}
+
+// getCDNIDFromName returns the CDN's ID if a CDN with the given name exists
+func getCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying CDN ID: " + err.Error())
+	}
+	return id, true, nil
 }

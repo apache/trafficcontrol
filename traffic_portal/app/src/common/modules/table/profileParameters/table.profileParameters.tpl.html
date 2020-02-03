@@ -32,7 +32,7 @@ under the License.
     </div>
     <div class="x_content">
         <br>
-        <table id="profileParametersTable" class="table responsive-utilities jambo_table">
+        <table id="profileParametersTable" class="table responsive-utilities jambo_table params">
             <thead>
             <tr class="headings">
                 <th>Name</th>
@@ -43,12 +43,14 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="p in ::parameters" context-menu="contextMenuItems">
+            <tr ng-click="editParameter(p.id)" ng-repeat="p in ::parameters" context-menu="contextMenuItems">
                 <td data-search="^{{::p.name}}$">{{::p.name}}</td>
                 <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
                 <td data-search="^{{::p.value}}$">{{::p.value}}</td>
                 <td data-search="^{{::p.secure}}$">{{::p.secure}}</td>
-                <td><button type="button" class="btn btn-link" title="Unlink Parameter from Profile" ng-click="confirmRemoveParam(p)"><i class="fa fa-chain-broken"></i></button></td>
+                <td style="text-align: right;">
+                    <a class="link action-link" title="Unlink Parameter from Profile" ng-click="confirmRemoveParam(p, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
+                </td>
             </tr>
             </tbody>
         </table>

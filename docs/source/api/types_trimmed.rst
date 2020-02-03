@@ -18,12 +18,14 @@
 *****************
 ``types/trimmed``
 *****************
-.. deprecated:: 1.1
-	A type is not a large object. Just get the names from :ref:`to-api-types` instead.
+.. deprecated:: ATCv4
+	This endpoint and all of its functionality is deprecated. All of the information it can return can be more completely obtained with :ref:`to-api-types`.
 
 ``GET``
 =======
-Retrieves only the names of all of the types of things configured in Traffic Ops. Yes, that is as specific as a description of a 'type' can be.
+Retrieves only the names of all of the :term:`Types` of things configured in Traffic Ops. Yes, that is as specific as a description of a 'type' can be.
+
+.. warning:: This endpoint is of limited use because it doesn't tell you what the type of each :term:`Type` is, which describes the types of objects that it can describe. No, I did not just have a stroke while writing this.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -41,26 +43,167 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	Connection: keep-alive
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
-	Set-Cookie: mojolicious=...; expires=Thu, 13 Dec 2018 03:37:01 GMT; path=/; HttpOnly
-	Whole-Content-SHA512: Wh4z9VkNcOI8UzSTM77N+JFx5bP8yxRR4rg1fZIH40DI+0suOD36YhePUMMqMl6DIlIWjrnkj+iojuQ09oTzeg==
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-	Date: Wed, 12 Dec 2018 23:37:01 GMT
-	Access-Control-Allow-Origin: *
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Content-Length: 1104
+	Content-Encoding: gzip
+	Content-Length: 389
 	Content-Type: application/json
+	Date: Fri, 31 Jan 2020 18:09:29 GMT
 	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Fri, 31 Jan 2020 22:09:29 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
 
-	{ "response": [
+	{ "alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use '/types' instead"
+		}
+	],
+	"response": [
 		{
 			"name": "AAAA_RECORD"
 		},
 		{
 			"name": "ANY_MAP"
+		},
+		{
+			"name": "A_RECORD"
+		},
+		{
+			"name": "BIND"
+		},
+		{
+			"name": "CCR"
+		},
+		{
+			"name": "CHECK_EXTENSION_BOOL"
+		},
+		{
+			"name": "CHECK_EXTENSION_NUM"
+		},
+		{
+			"name": "CHECK_EXTENSION_OPEN_SLOT"
+		},
+		{
+			"name": "CLIENT_STEERING"
+		},
+		{
+			"name": "CNAME_RECORD"
+		},
+		{
+			"name": "CONFIG_EXTENSION"
+		},
+		{
+			"name": "DNS"
+		},
+		{
+			"name": "DNS_LIVE"
+		},
+		{
+			"name": "DNS_LIVE_NATNL"
+		},
+		{
+			"name": "EDGE"
+		},
+		{
+			"name": "EDGE_LOC"
+		},
+		{
+			"name": "ENROLLER"
+		},
+		{
+			"name": "GRAFANA"
+		},
+		{
+			"name": "HEADER_REGEXP"
+		},
+		{
+			"name": "HOST_REGEXP"
+		},
+		{
+			"name": "HTTP"
+		},
+		{
+			"name": "HTTP_LIVE"
+		},
+		{
+			"name": "HTTP_LIVE_NATNL"
+		},
+		{
+			"name": "HTTP_NO_CACHE"
+		},
+		{
+			"name": "INFLUXDB"
+		},
+		{
+			"name": "MID"
+		},
+		{
+			"name": "MID_LOC"
+		},
+		{
+			"name": "ORG"
+		},
+		{
+			"name": "ORG_LOC"
+		},
+		{
+			"name": "PATH_REGEXP"
+		},
+		{
+			"name": "RASCAL"
+		},
+		{
+			"name": "RESOLVE4"
+		},
+		{
+			"name": "RESOLVE6"
+		},
+		{
+			"name": "RIAK"
+		},
+		{
+			"name": "STATISTIC_EXTENSION"
+		},
+		{
+			"name": "STEERING"
+		},
+		{
+			"name": "STEERING_GEO_ORDER"
+		},
+		{
+			"name": "STEERING_GEO_WEIGHT"
+		},
+		{
+			"name": "STEERING_ORDER"
+		},
+		{
+			"name": "STEERING_REGEXP"
+		},
+		{
+			"name": "STEERING_WEIGHT"
+		},
+		{
+			"name": "TC_LOC"
+		},
+		{
+			"name": "TRAFFIC_ANALYTICS"
+		},
+		{
+			"name": "TRAFFIC_OPS"
+		},
+		{
+			"name": "TRAFFIC_OPS_DB"
+		},
+		{
+			"name": "TRAFFIC_PORTAL"
+		},
+		{
+			"name": "TRAFFIC_STATS"
+		},
+		{
+			"name": "TR_LOC"
+		},
+		{
+			"name": "TXT_RECORD"
 		}
 	]}
-
-.. note:: The response example for this endpoint has been truncated to only the first two elements of the resulting array, as the output was hundreds of lines long.

@@ -20,7 +20,7 @@
 **************************************
 .. versionadded:: 1.3
 
-.. note:: This endpoint only truly has meaning for :term:`cache server`\ s, though it will return a valid response for any server configured in Traffic Ops.
+.. note:: This endpoint only truly has meaning for :term:`cache servers`, though it will return a valid response for any server configured in Traffic Ops.
 
 ``GET``
 =======
@@ -55,8 +55,8 @@ Each object in the returned array\ [1]_ will contain the following fields:
 
 :host_id:              The integral, unique identifier for the server for which the other fields in this object represent the pending updates and revalidation status
 :host_name:            The (short) hostname of the server for which the other fields in this object represent the pending updates and revalidation status
-:parent_pending:       A boolean telling whether or not the :term:`parent`\ s of this server have pending updates
-:parent_reval_pending: A boolean telling whether or not the :term:`parent`\ s of this server have pending revalidation jobs
+:parent_pending:       A boolean telling whether or not the :term:`parents` of this server have pending updates
+:parent_reval_pending: A boolean telling whether or not the :term:`parents` of this server have pending revalidation jobs
 :reval_pending:        ``true`` if the server has pending revalidation jobs, ``false`` otherwise
 :status:               The name of the status of this server
 
@@ -76,7 +76,7 @@ Each object in the returned array\ [1]_ will contain the following fields:
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: R6BjNVrcecHGn3eGDqQ1yDiBnEDGQe7QtOMIsRwlpck9SZR8chRQznrkTF3YdROAZ1l8BxR3fXTIvKHIzK2/dA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 04 Feb 2019 16:24:01 GMT

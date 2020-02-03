@@ -18,12 +18,11 @@
 ******************************
 ``divisions/{{name}}/regions``
 ******************************
-.. deprecated:: 1.1
-	Use the ``divisionId`` field in the body of a ``POST`` request to the :ref:`to-api-divisions` endpoint
+.. deprecated:: ATCv4
 
 ``POST``
 ========
-Creates a new region within the specified division.
+Creates a new :term:`Region` within the specified :term:`Division`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -53,7 +52,7 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"name": "Greater_London",
+		"name": "Greater_London"
 	}
 
 Response Structure
@@ -75,7 +74,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Thu, 06 Dec 2018 00:03:36 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 06 Dec 2018 04:03:36 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: HlzhY41lFBRlLe5D0XN1w+LbU/N1WD+JXX0tzMwDFqI4VmpBLaAqzUaJqRpQdJnO2u7Z2E0b6QVOgeGRPpyUzg==
 	Content-Length: 84
@@ -85,4 +84,10 @@ Response Structure
 		"divsionId": 3,
 		"name": "Greater_London",
 		"id": 3
-	}}
+	},
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'POST /regions' instead"
+		}
+	]}

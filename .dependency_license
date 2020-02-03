@@ -19,11 +19,11 @@ CHANGELOG$, Docs
 \.classpath$, Apache
 \.pmd$, Apache
 \.project$, Apache
-^\.rat-excludes$, Apache
 RobotoSlab-Bold\.ttf$, Apache
 RobotoSlab-Regular\.ttf$, Apache
 \.cfg$, Apache
 \.json$, Apache
+\.webmanifest, Apache
 \.csv$, Apache
 \.conf$, Apache
 \.prop$, Apache
@@ -36,6 +36,7 @@ RobotoSlab-Regular\.ttf$, Apache
 traffic_monitor_config\.js$, Apache # Actually JSON with a specific format.
 CrStates$, Apache # JSON with a specific format.
 ^docs/.*\.(png|jpe?g|ico|gif)$, Apache
+^blueprints/.*\.(png|jpe?g|ico|gif)$, Apache
 favicon.(ico|png)$, Apache
 ^traffic_ops/experimental/goto/testFiles/, Apache
 cron\.d/[^/]*$, Apache
@@ -101,18 +102,20 @@ jquery\.tree\.min\.css$, MIT
 jquery\.dataTables\..*\.(css|js)$, MIT
 github\.com/basho/backoff/.*, MIT
 github\.com/dchest/siphash/.*, CC0
+github\.com/pkg/errors\..*, BSD
 traffic_portal/app/src/assets/js/chartjs/angular-chart\..*, BSD
 traffic_portal/app/src/assets/css/jsonformatter\..*, Apache
 traffic_portal/app/src/assets/js/jsonformatter\..*, Apache
 traffic_portal/app/src/assets/js/fast-json-patch\..*, MIT
 traffic_portal/app/src/assets/css/colReorder.dataTables\..*, MIT
 traffic_portal/app/src/assets/js/colReorder.dataTables\..*, MIT
+traffic_portal/app/src/assets/js/dataTables.buttons\..*, MIT
+traffic_portal/app/src/assets/js/buttons.html5\..*, MIT
 traffic_ops/traffic_ops_golang/vendor/github\.com/dgrijalva/.*, MIT
 traffic_ops/traffic_ops_golang/vendor/github\.com/lestrrat-go/.*, MIT
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.
-^\.rat-excludes$, Ignore # False positives for basically everything.
 \.dependency_license$, Ignore # False positives in this file.
 
 # This file is created dynamically by the testing script itself, it is

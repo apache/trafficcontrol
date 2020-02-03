@@ -19,7 +19,41 @@ package login
  * under the License.
  */
 
-import "testing"
+import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
+	"net/mail"
+	"strings"
+	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+)
+
+func TestLoginWithEmptyCredentials(t *testing.T) {
+	testInputs := []string{
+		`{"u":"","p":""}`,
+		`{"u":"foo","p":""}`,
+		`{"u":"","p":"foo"}`,
+	}
+
+	for _, testInput := range testInputs {
+		w := httptest.NewRecorder()
+		body := strings.NewReader(testInput)
+		r, err := http.NewRequest(http.MethodPost, "login", body)
+		if err != nil {
+			t.Error("Error creating new request")
+		}
+		LoginHandler(nil, config.Config{})(w, r)
+
+		expected := `{"alerts":[{"text":"username and password are required","level":"error"}]}` + "\n"
+		if w.Body.String() != expected {
+			t.Error("Expected body", expected, "got", w.Body.String())
+		}
+	}
+}
 
 func TestVerifyUrlOnWhiteList(t *testing.T) {
 	type TestResult struct {
@@ -49,4 +83,36 @@ func TestVerifyUrlOnWhiteList(t *testing.T) {
 			t.Errorf("for whitelist: %v, expected: %v, actual: %v", result.Whitelist, result.ExpectedResult, matched)
 		}
 	}
+}
+
+func TestTemplateRender(t *testing.T) {
+	to := rfc.EmailAddress{
+		mail.Address{
+			Address: "em@i.l",
+			Name:    "",
+		},
+	}
+	from := rfc.EmailAddress{
+		mail.Address{
+			Address: "no-reply@test.quest",
+			Name:    "",
+		},
+	}
+
+	f := emailFormatter{
+		From:         from,
+		To:           to,
+		Token:        "test",
+		InstanceName: "TO API Unit Tests",
+		ResetURL:     "https://example.test/#!/user",
+	}
+
+	var tmpl bytes.Buffer
+	if err := resetPasswordEmailTemplate.Execute(&tmpl, &f); err != nil {
+		t.Fatalf("Failed to render email template: %v", err)
+	}
+	if tmpl.Len() <= 0 {
+		t.Fatalf("Template buffer empty after execution")
+	}
+	t.Logf("%s", tmpl.String())
 }

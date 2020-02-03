@@ -21,7 +21,7 @@
 ****************
 An API endpoint that returns cache statistics using the :ref:`tm-api`.
 
-.. seealso:: This gives a set of basic statistics for *all caches* at the current time. For statistics from time ranges and/or aggregated over a specific CDN, use :ref:`to-api-cache_stats`.
+.. seealso:: This gives a set of basic statistics for *all* :term:`cache servers` at the current time. For statistics from time ranges and/or aggregated over a specific CDN, use :ref:`to-api-cache_stats`.
 
 ``GET``
 =======
@@ -37,17 +37,17 @@ No parameters available.
 
 Response Structure
 ------------------
-:cachegroup:  The name of the :term:`Cache Group` to which this cache belongs
-:connections: Current number of TCP connections maintained by the cache
-:healthy:     ``true`` if Traffic Monitor has marked the cache as "healthy", ``false`` otherwise
+:cachegroup:  A string that is the :ref:`cache-group-name` of the :term:`Cache Group` to which this :term:`cache server` belongs
+:connections: Current number of TCP connections maintained by the :term:`cache server`
+:healthy:     ``true`` if Traffic Monitor has marked the :term:`cache server` as "healthy", ``false`` otherwise
 
 	.. seealso:: :ref:`health-proto`
 
-:hostname:    The (short) hostname of the cache
-:ip:          The IP address of the cache
-:kbps:        Cache upload speed (to clients) in Kilobits per second
+:hostname:    The (short) hostname of the :term:`cache server`
+:ip:          The IP address of the :term:`cache server`
+:kbps:        The :term:`cache server`'s upload speed (to clients) in Kilobits per second
 :profile:     The :ref:`profile-name` of the :term:`Profile` in use by this :term:`cache server`
-:status:      The status of the cache
+:status:      The status of the :term:`cache server`
 
 .. code-block:: http
 	:caption: Response Example
@@ -61,7 +61,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 14 Nov 2018 20:25:01 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 00:25:01 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: DqbLgitanS8q81/qKC1i+ImMiEMF+SW4G9rb79FWdeWcgwFjL810tlTRp1nNNfHV+tajgjyK+wMHobqVyaNEfA==
 	Content-Length: 133

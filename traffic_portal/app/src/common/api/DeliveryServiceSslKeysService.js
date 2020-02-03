@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageModel, ENV) {
+var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel, ENV) {
 	this.generateSslKeys = function(deliveryService, sslKeys, generateSslKeyForm) {
 		if (sslKeys.hasOwnProperty('version')){
-			generateSslKeyForm.version = parseInt(sslKeys.version) + 1;
+			generateSslKeyForm.version = parseInt(sslKeys.version, 10) + 1;
 		} else {
 			generateSslKeyForm.version = 1;
 		}
@@ -29,27 +29,23 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
 		generateSslKeyForm.deliveryservice = deliveryService.xmlId;
 		generateSslKeyForm.key = deliveryService.xmlId;
 
-		var request = $q.defer();
-        $http.post(ENV.api['root'] + "deliveryservices/sslkeys/generate", generateSslKeyForm)
-        .then(
+        return $http.post(ENV.api['root'] + "deliveryservices/sslkeys/generate", generateSslKeyForm).then(
             function(result) {
-            	messageModel.setMessages([ { level: 'success', text: 'SSL Keys generated and updated for ' + deliveryService.xmlId } ], true);
-                request.resolve(result.data.response);
+            	messageModel.setMessages([{level: "success", text: result.data.response}], true);
+                return result.data.response;
             },
-            function(fault) {
-            	messageModel.setMessages(fault.data.alerts, false);
-                request.reject(fault);
+            function(err) {
+            	messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
-        return request.promise;
 	};
 
 	this.addSslKeys = function(sslKeys, deliveryService) {
-		var request = $q.defer();
 
         sslKeys.key = deliveryService.xmlId;
         if (sslKeys.hasOwnProperty('version')){
-            sslKeys.version = parseInt(sslKeys.version) + 1;
+            sslKeys.version = parseInt(sslKeys.version, 10) + 1;
         } else {
             sslKeys.version = 1;
         }
@@ -57,35 +53,30 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
         sslKeys.cdn = deliveryService.cdnName;
         sslKeys.deliveryservice = deliveryService.xmlId;
 
-        $http.post(ENV.api['root'] + "deliveryservices/sslkeys/add", sslKeys)
-        .then(
+        return $http.post(ENV.api['root'] + "deliveryservices/sslkeys/add", sslKeys).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
-                request.resolve(result.data.response);
+                return result.data.response;
             },
-            function(fault) {
-            	messageModel.setMessages(fault.data.alerts, false);
-                request.reject(fault);
+            function(err) {
+            	messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
-        return request.promise;
 	};
 
 	this.getSslKeys = function(deliveryService) {
-		var request = $q.defer();
-        $http.get(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys?decode=true")
-        .then(
+        return $http.get(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys", {params: {decode: "true"}}).then(
             function(result) {
-                request.resolve(result.data.response);
+                return result.data.response;
             },
-            function(fault) {
-            	messageModel.setMessages(fault.data.alerts, true);
-                request.reject(fault);
+            function(err) {
+            	messageModel.setMessages(err.data.alerts, true);
+                throw err;
             }
         );
-        return request.promise;
 	};
 };
 
-DeliveryServiceSslKeysService.$inject = ['$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
+DeliveryServiceSslKeysService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceSslKeysService;

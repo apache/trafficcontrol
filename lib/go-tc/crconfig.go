@@ -32,8 +32,10 @@ type CRConfig struct {
 	Stats            CRConfigStats                        `json:"stats,omitempty"`
 }
 
+// CRConfigConfig used to be the type of CRConfig's Config field, though
+// CRConfigConfig is no longer used.
 type CRConfigConfig struct {
-	APICacheControlMaxAge                      *string      `json:"api.cache-control.max_age,omitempty"`
+	APICacheControlMaxAge                      *string      `json:"api.cache-control.max-age,omitempty"`
 	ConsistentDNSRouting                       *string      `json:"consistent.dns.routing,omitempty"`
 	CoverageZonePollingIntervalSeconds         *string      `json:"coveragezone.polling.interval,omitempty"`
 	CoverageZonePollingURL                     *string      `json:"coveragezone.polling.url,omitempty"`
@@ -121,6 +123,7 @@ type CRConfigDeliveryService struct {
 	TTLs                      *CRConfigTTL                          `json:"ttls,omitempty"`
 	MaxDNSIPsForLocation      *int                                  `json:"maxDnsIpsForLocation,omitempty"`
 	IP6RoutingEnabled         *bool                                 `json:"ip6RoutingEnabled,string,omitempty"`
+	EcsEnabled                *bool                                 `json:"ecsEnabled,string,omitempty"`
 	RoutingName               *string                               `json:"routingName,omitempty"`
 	BypassDestination         map[string]*CRConfigBypassDestination `json:"bypassDestination,omitempty"`
 	DeepCachingType           *DeepCachingType                      `json:"deepCachingType"`

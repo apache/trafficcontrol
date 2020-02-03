@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	"github.com/lib/pq"
@@ -85,6 +85,13 @@ func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int64, dsIDs []int64) (tc
 		}
 	}
 
+	cgName, ok, err := dbhelpers.GetCacheGroupNameFromID(tx, cgID)
+	if err != nil {
+		return tc.CacheGroupPostDSResp{}, nil, errors.New("getting cachegroup name from ID '" + string(cgID) + "': " + err.Error()), http.StatusInternalServerError
+	} else if !ok {
+		return tc.CacheGroupPostDSResp{}, errors.New("cachegroup " + string(cgID) + " does not exist"), nil, http.StatusNotFound
+	}
+
 	if err := verifyDSesCDN(tx, dsIDs, cdnName); err != nil {
 		return tc.CacheGroupPostDSResp{}, nil, errors.New("verifying delivery service CDNs match cachegroup server CDNs: " + err.Error()), http.StatusInternalServerError
 	}
@@ -99,7 +106,7 @@ func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int64, dsIDs []int64) (tc
 	if err := updateParams(tx, dsIDs); err != nil {
 		return tc.CacheGroupPostDSResp{}, nil, errors.New("updating delivery service parameters: " + err.Error()), http.StatusInternalServerError
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("assign servers in cache group %v to deliveryservices %v", cgID, dsIDs), user, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.FormatInt(cgID, 10)+", ACTION: Assign DSes to CacheGroup servers", user, tx)
 	return tc.CacheGroupPostDSResp{ID: util.JSONIntStr(cgID), ServerNames: cgServers, DeliveryServices: dsIDs}, nil, nil, http.StatusOK
 }
 

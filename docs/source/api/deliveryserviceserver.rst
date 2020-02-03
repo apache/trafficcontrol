@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieve information about the assignment of servers to :term:`Delivery Service`\ s
+Retrieve information about the assignment of servers to :term:`Delivery Services`
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
@@ -77,7 +77,7 @@ Unlike most API endpoints, this will return a JSON response body containing both
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: J7sK8PohQWyTpTrMjjrWdlJwPj+Zyep/xutM25uVosL6cHgi30nXa6VMyOC5Y3vd9r5KLES8rTgR+qUQcZcJ/A==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 01 Nov 2018 14:27:45 GMT
@@ -139,7 +139,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: D+HhGhoxzaxvka9vZIStoaOZUpX23nz7zZnMbpFHNRO3MawyEaSb3GVUHQyCv6sDgwhpZZjRggDmctGCw88flg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 01 Nov 2018 14:12:49 GMT
@@ -158,4 +158,4 @@ Response Structure
 	}}
 
 
-.. [2] Users with the "admin" or "operations" roles will be able to modify ALL server-to-Delivery-Service assignments, whereas all other users can only assign servers to the :term:`Delivery Service`\ s their Tenant has permissions to edit.
+.. [2] Users with the "admin" or "operations" roles will be able to modify ALL server-to-Delivery-Service assignments, whereas all other users can only assign servers to the :term:`Delivery Services` their Tenant has permissions to edit.

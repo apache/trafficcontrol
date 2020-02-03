@@ -21,8 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	To get the :term:`Profiles` associated with a particular :term:`Parameter`, use the ``param`` query parameter of :ref:`to-api-profiles` instead. To see the :term:`Parameters` associated with a particular :term:`Profile`, refer to the ``params`` key in the response of a ``GET`` request to :ref:`to-api-profiles-id` instead.
 
 Retrieves all :term:`Parameter`/:term:`Profile` assignments.
 
@@ -32,7 +30,24 @@ Retrieves all :term:`Parameter`/:term:`Profile` assignments.
 
 Request Structure
 -----------------
-No parameters available
+.. table:: Request Query Parameters
+
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                   |
+	+===========+==========+===============================================================================================================+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|           |          | array                                                                                                         |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                                |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|           |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|           |          | defined to make use of ``page``.                                                                              |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -49,7 +64,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: +bnMkRgdx4bJoGGlr3mZl539obj3aQAP8e65FAXgywdRAUfXZCFM6VNDn7wScXBmvF2SFXo9F+MhuSwrtB9mPg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 10 Dec 2018 15:09:13 GMT
@@ -152,7 +167,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: eDmIwlzX44fZdxLRPHMNa8aoGAK5fQv9Y70A2eeQHfEkliU4evwcsQ4WeHcH0l3/wPTGlpyC0gwLo8LQQpUxWQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 10 Dec 2018 13:50:11 GMT

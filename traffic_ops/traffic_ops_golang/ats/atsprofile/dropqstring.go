@@ -24,25 +24,30 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
 func GetDropQString(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, makeDropQString)
+	WithProfileData(w, r, rfc.ContentTypeTextPlain, makeDropQString)
 }
 
 func makeDropQString(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {
-	dropQStringVal, hasDropQStringParam, err := ats.GetProfileParamValue(tx, profile.ID, "drop_qstring.config", "content")
+	toolName, toURL, err := ats.GetToolNameAndURL(tx)
+	if err != nil {
+		return "", errors.New("getting tool name and URL: " + err.Error())
+	}
+
+	dropQStringVal, hasDropQStringParam, err := ats.GetProfileParamValue(tx, profile.ID, atscfg.DropQStringDotConfigFileName, atscfg.DropQStringDotConfigParamName)
 	if err != nil {
 		return "", errors.New("getting profile param val: " + err.Error())
 	}
-
-	text := ""
+	dropQStringValPtr := (*string)(nil)
 	if hasDropQStringParam {
-		text += dropQStringVal + "\n"
-	} else {
-		text += `/([^?]+) $s://$t/$1` + "\n"
+		dropQStringValPtr = &dropQStringVal
 	}
-	return text, nil
+
+	return atscfg.MakeDropQStringDotConfig(profile.Name, toolName, toURL, dropQStringValPtr), nil
 }

@@ -62,7 +62,8 @@ var TableCacheGroupParamsUnassignedController = function(cg, parameters, $scope,
 			"iDisplayLength": 25,
 			"order": [[ 1, 'asc' ]],
 			"columnDefs": [
-				{ "width": "5%", "targets": 0 }
+				{ "width": "5%", "targets": 0 },
+				{ "width": "50%", "targets": 3 }
 			]
 		});
 	});

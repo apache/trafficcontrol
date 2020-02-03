@@ -23,43 +23,26 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
 func GetATSDotRules(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, makeATSDotRules)
+	WithProfileData(w, r, rfc.ContentTypeTextPlain, makeATSDotRules)
 }
 
 func makeATSDotRules(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, fileName string) (string, error) {
+	toolName, toURL, err := ats.GetToolNameAndURL(tx)
+	if err != nil {
+		return "", errors.New("getting tool name and URL: " + err.Error())
+	}
 	// TODO add more efficient db func to only get drive params?
 	paramData, err := ats.GetProfileParamData(tx, profile.ID, "storage.config") // ats.rules is based on the storage.config params
 	if err != nil {
 		return "", errors.New("getting profile param data: " + err.Error())
 	}
-
-	drivePrefix := strings.TrimPrefix(paramData["Drive_Prefix"], `/dev/`)
-	drivePostfix := strings.Split(paramData["Drive_Letters"], ",")
-
-	text := ""
-	for _, l := range drivePostfix {
-		l = strings.TrimSpace(l)
-		if l == "" {
-			continue
-		}
-		text += `KERNEL=="` + drivePrefix + l + `", OWNER="ats"` + "\n"
-	}
-	if ramPrefix, ok := paramData["RAM_Drive_Prefix"]; ok {
-		ramPrefix = strings.TrimPrefix(ramPrefix, `/dev/`)
-		ramPostfix := strings.Split(paramData["RAM_Drive_Letters"], ",")
-		for _, l := range ramPostfix {
-			text += `KERNEL=="` + ramPrefix + l + `", OWNER="ats"` + "\n"
-		}
-	}
-	if text == "" {
-		text = "\n" // prevents it being flagged as "not found"
-	}
-	return text, nil
+	return atscfg.MakeATSDotRules(profile.Name, paramData, toolName, toURL), nil
 }

@@ -21,7 +21,9 @@
 
 ``POST``
 ========
-Assigns a :term:`Cache Group` to one or more :term:`Delivery Service`\ s
+Assigns all of the "assignable" servers within a :term:`Cache Group` to one or more :term:`Delivery Services`.
+
+.. note:: "Assignable" here means all of the :ref:`Cache Group's servers <cache-group-servers>` that have a :term:`Type` that matches one of the glob patterns ``EDGE*`` or ``ORG*``. If even one server of any :term:`Type` exists within the :term:`Cache Group` that is not assigned to the same CDN as the :term:`Delivery Service` to which an attempt is being made to assign them, the request will fail.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,13 +33,13 @@ Request Structure
 -----------------
 .. table::Request Path Parameters
 
-	+------+---------------------------------------------------------------------------+
-	| Name |           Description                                                     |
-	+======+===========================================================================+
-	|  ID  | The integral, unique identifier of the :term:`Cache Group` being assigned |
-	+------+---------------------------------------------------------------------------+
+	+------+-----------------------------------------------------------------------------------+
+	| Name | Description                                                                       |
+	+======+===================================================================================+
+	|  ID  | The :ref:`cache-group-id` of the :term:`Cache Group` from which to assign servers |
+	+------+-----------------------------------------------------------------------------------+
 
-:deliveryServices:  The integral, unique identifiers of the :term:`Delivery Service`\ s to which the :term:`Cache Group` is being assigned
+:deliveryServices:  The integral, unique identifiers of the :term:`Delivery Services` to which the :ref:`Cache Group's servers <cache-group-servers>` are being assigned
 
 .. code-block:: http
 	:caption: Request Example
@@ -48,15 +50,15 @@ Request Structure
 	Accept: */*
 	Cookie: mojolicious=...
 	Content-Length: 25
-	Content-Type: application/x-www-form-urlencoded
+	Content-Type: application/json
 
 	{"deliveryServices": [2]}
 
 Response Structure
 ------------------
-:deliveryServices: An array of *all* :term:`Delivery Service`\ s to which the :term:`Cache Group` is assigned (**not** just the one(s) to which it was assigned via the request)
-:id:               The :term:`Cache Group`\ 's ID
-:serverNames:      An array of the (short) hostnames of all servers in the :term:`Cache Group`
+:deliveryServices: An array of integral, unique identifiers for :term:`Delivery Services` to which the :ref:`Cache Group's servers <cache-group-servers>` have been assigned
+:id:               An integer that is the :ref:`Cache Group's ID <cache-group-id>`
+:serverNames:      An array of the (short) hostnames of all of the :term:`Cache Group`'s "assignable" :ref:`cache-group-servers`
 
 .. code-block:: http
 	:caption: Response Example
@@ -67,7 +69,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: j/yH0gvJoaGjiLZU/0MA8o5He20O4aJ5wh1eF9ex6F6IBO1liM9Wk9RkWCw7sdiUHoy13/mf7gDntisZwzP7yw==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 14 Nov 2018 19:54:17 GMT

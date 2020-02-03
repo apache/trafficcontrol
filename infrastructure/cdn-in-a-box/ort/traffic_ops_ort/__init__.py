@@ -24,6 +24,8 @@ files and start, stop, and restart HTTP cache servers etc.
 
 .. program:: traffic_ops_ort
 
+.. seealso:: Contributions to :program:`traffic_ops_ort` should follow the :ref:`ATC Python contribution guidelines <py-contributing>`
+
 This package provides an executable script named :program:`traffic_ops_ort`
 
 Usage

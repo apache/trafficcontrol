@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Gets a list of DNSSEC keys for CDN and all associated :term:`Delivery Service`\ s. Before returning response to user, this will make sure DNSSEC keys for all delivery services exist and are not expired. If they don't exist or are expired, they will be (re-)generated.
+Gets a list of DNSSEC keys for CDN and all associated :term:`Delivery Services`. Before returning response to user, this will make sure DNSSEC keys for all :term:`Delivery Services` exist and are not expired. If they don't exist or are expired, they will be (re-)generated.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -41,7 +41,7 @@ Response Structure
 ------------------
 :name: The name of the CDN or :term:`Delivery Service` to which the enclosed keys belong
 
-	:zsk: The short-term Zone-Signing Key (ZSK)
+	:zsk: The short-term :abbr:`ZSK (Zone-Signing Key)`
 
 		:expirationDate: A Unix epoch timestamp (in seconds) representing the date and time whereupon the key will expire
 		:inceptionDate:  A Unix epoch timestamp (in seconds) representing the date and time when the key was created
@@ -50,9 +50,11 @@ Response Structure
 		:public:         Encoded public key
 		:ttl:            The time for which the key should be trusted by the client
 
-	:ksk: The long-term Key-Signing Key (KSK)
+	:ksk: The long-term :abbr:`KSK (Key-Signing Key)`
 
 		:dsRecord: An optionally present object containing information about the algorithm used to generate the key
+
+			.. versionadded:: 1.2
 
 			:algorithm: The name of the algorithm used to generate the key
 			:digest: A hash of the DNSKEY record
@@ -64,9 +66,6 @@ Response Structure
 		:private:        Encoded private key
 		:public:         Encoded public key
 		:ttl:            The time for which the key should be trusted by the client
-
-.. versionchanged:: 1.2
-	Added the ``dsRecord`` field to KSK entries
 
 .. code-block:: json
 	:caption: Response Example

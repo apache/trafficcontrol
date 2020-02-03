@@ -21,9 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	Use the ``id`` query parameter of a ``GET`` request to :ref:`to-api-servers` instead.
-
 Retrieves properties of a specific server.
 
 :Auth. Required: Yes
@@ -37,8 +34,27 @@ Request Structure
 	+------+---------------------------------------------+
 	| Name |                Description                  |
 	+======+=============================================+
-	|  ID  | The integral, unique identifier of a server |
+	| ID   | The integral, unique identifier of a server |
 	+------+---------------------------------------------+
+
+.. table:: Request Query Parameters
+
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                   |
+	+===========+==========+===============================================================================================================+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|           |          | array                                                                                                         |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                                |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|           |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|           |          | defined to make use of ``page``.                                                                              |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -51,15 +67,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     The name of the Cache Group to which this server belongs
-:cachegroupId:   The integral, unique identifier of the Cache Group to which this server belongs
+:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:          The integral, unique identifier of the CDN to which the server belongs
 :cdnName:        Name of the CDN to which the server belongs
 :domainName:     The domain part of the server's Fully Qualified Domain Name (FQDN)
 :guid:           An identifier used to uniquely identify the server
 
-	.. deprecated:: 1.1
-		This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
@@ -117,7 +132,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: WyapQctUIhjzEALka5QbBiZRZ58Mlc6MJSwjBeGyJS2UzbL3W6lN/4kvAZtPrP4qMWQBWz6JjbF7Y5lNRASUmQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 10 Dec 2018 16:40:01 GMT
@@ -191,17 +206,17 @@ Request Structure
 	|  ID  | The integral, unique identifier of a server |
 	+------+---------------------------------------------+
 
-:cachegroupId: The integral, unique identifier of the Cache Group to which this server shall belong
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
 :cdnId:        The integral, unique identifier of the CDN to which the server shall belong
-:domainName:   The domain part of the server's Fully Qualified Domain Name (FQDN)
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :hostName:     The (short) hostname of the server
 :httpsPort:    An optional port number on which the server listens for incoming HTTPS connections/requests
-:iloIpAddress: An optional IPv4 address of the server's Integrated Lights-Out (ILO) service\ [1]_
-:iloIpGateway: An optional IPv4 gateway address of the server's ILO service\ [1]_
-:iloIpNetmask: An optional IPv4 subnet mask of the server's ILO service\ [1]_
-:iloPassword:  An optional string containing the password of the of the server's ILO service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' role(s)
-:iloUsername:  An optional string containing the user name for the server's ILO service\ [1]_
-:interfaceMtu: The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
+:iloIpAddress: An optional IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpGateway: An optional IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloIpNetmask: An optional IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:iloPassword:  An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :abbr:`Role(s) <Role>`
+:iloUsername:  An optional string containing the user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+:interfaceMtu: The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
 
 	.. note:: In virtually all cases this ought to be 1500. Further note that the only acceptable values are 1500 and 9000.
 
@@ -278,15 +293,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     The name of the Cache Group to which this server belongs
-:cachegroupId:   The integral, unique identifier of the Cache Group to which this server belongs
+:cachegroup:     A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:          The integral, unique identifier of the CDN to which the server belongs
 :cdnName:        Name of the CDN to which the server belongs
-:domainName:     The domain part of the server's Fully Qualified Domain Name (FQDN)
+:domainName:     The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :guid:           An identifier used to uniquely identify the server
 
-	.. deprecated:: 1.1
-		This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
@@ -344,7 +358,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 9lGAMCCC9I/bOpuBSyf3ACffjHeRuXCTuxrA/oU78uYzW5FeFTq5PHSSnsnqKG5E0vWg0Rko0CwguGeNc9IT0w==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 10 Dec 2018 17:58:57 GMT
@@ -440,7 +454,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: JZdjKJYWN9w9NF6VE/rVkGUqecycKB2ABkkI4LNDmgpJLwu53bRHAA+4uWrow0zuba/4MSEhHKshutziypSxPg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 10 Dec 2018 18:23:21 GMT

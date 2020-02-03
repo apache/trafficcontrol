@@ -89,6 +89,9 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
     $scope.isEdge = serverUtils.isEdge;
 
+    $scope.isOrigin = serverUtils.isOrigin;
+
+
     $scope.openCharts = serverUtils.openCharts;
 
     $scope.showChartsButton = propertiesModel.properties.servers.charts.show;
@@ -135,6 +138,10 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         }, function () {
             // do nothing
         });
+    };
+
+    $scope.viewCapabilities = function() {
+        $location.path($location.path() + '/capabilities');
     };
 
     $scope.viewConfigFiles = function() {

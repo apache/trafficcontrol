@@ -18,14 +18,12 @@
 ****************************************************
 ``cachegroups/{{parameter ID}}/parameter/available``
 ****************************************************
-.. deprecated:: 1.1
-	Use :ref:`to-api-cachegroupparameters` instead
-
-.. caution:: This endpoint does not appear to work, and thus its use is strongly discouraged!
+.. deprecated:: ATCv4
+.. danger:: This endpoint does not appear to work, and thus its use is strongly discouraged!
 
 ``GET``
 =======
-Gets a list of :term:`Cache Groups` which are available to have a specific :term:`Parameter` assigned to them
+Gets a list of :term:`Cache Groups` which are available to have a specific :term:`Parameter` assigned to them.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -36,26 +34,33 @@ Request Structure
 .. table:: Request Path Parameters
 
 	+------------------+----------+--------------------------------------------------------------+
-	|       Name       | Required | Description                                                  |
+	| Name             | Required | Description                                                  |
 	+==================+==========+==============================================================+
 	| ``parameter ID`` | yes      | The :ref:`parameter-id` of the :term:`Parameter` of interest |
 	+------------------+----------+--------------------------------------------------------------+
 
 Response Structure
 ------------------
-:id:   An integral, unique identifier for the :term:`Cache Group`
-:name: The name of the :term:`Cache Group`
+:id:   An integer that is the :ref:`Cache Group's ID <cache-group-id>`
+:name: A string that is the :ref:`Cache Group's name <cache-group-name>`
 
 .. code-block:: json
 	:caption: Response Example
 
-	{ "response": [
-		{
-			"name": "dc-chicago",
-			"id": "21"
-		},
-		{
-			"name": "dc-cmc",
-			"id": "22"
-		}
+	{
+		"alerts": [
+			{
+				"level": "warning",
+				"text": "This endpoint is deprecated, please use 'GET /cachegroupparameters & GET /cachegroups' instead"
+			}
+		],
+		"response": [
+			{
+				"name": "dc-chicago",
+				"id": "21"
+			},
+			{
+				"name": "dc-cmc",
+				"id": "22"
+			}
 	]}

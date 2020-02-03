@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves physical locations
+Retrieves :term:`Physical Locations`
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,15 +31,28 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+--------+------------------------------------------------------------+
-	|  Name  |                Description                                 |
-	+========+============================================================+
-	|   id   | Filter by integral, unique identifier                      |
-	+--------+------------------------------------------------------------+
-	| region | Filter by integral, unique identifier of containing region |
-	+--------+------------------------------------------------------------+
-	|  name  | Filter by name                                             |
-	+--------+------------------------------------------------------------+
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| Name      | Description                                                                                                   |
+	+===========+===============================================================================================================+
+	| id        | Filter by integral, unique identifier                                                                         |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| region    | Filter by integral, unique identifier of containing :term:`Region`                                            |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| name      | Filter by name                                                                                                |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|           | array                                                                                                         |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| limit     | Choose the maximum number of results to return                                                                |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| offset    | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| page      | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|           | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|           | defined to make use of ``page``.                                                                              |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -76,7 +89,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 0g4b3W1AwXytCnBo8TReQQij2v9oHAl7MG9KuwMig5V4sFcMM5qP8dgPsFTunFr00DPI20c7BpUbZsvJtsYTEQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 05 Dec 2018 22:19:52 GMT
@@ -177,7 +190,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: GZ/BC+AgGpOQNfd9oiZy19jtsD8MPOdeyi7PVdz+9YSiLYP44gmn5K+Xi1yS0l59yjHf7O+C1loVQPSlIeP9fg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 06 Dec 2018 00:14:47 GMT

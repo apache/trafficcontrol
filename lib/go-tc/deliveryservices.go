@@ -100,7 +100,8 @@ type DeliveryServiceV13 struct {
 	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
 }
 
-// DeliveryService ...
+// DeliveryServiceV11 contains the information relating to a delivery service
+// that was around in version 1.1 of the API.
 // TODO move contents to DeliveryServiceV12, fix references, and remove
 type DeliveryServiceV11 struct {
 	Active                   bool                   `json:"active"`
@@ -158,9 +159,13 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceNullableV14 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
+type DeliveryServiceNullableV15 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
 
 type DeliveryServiceNullable struct {
+	DeliveryServiceNullableV14
+	EcsEnabled bool `json:"ecsEnabled" db:"ecs_enabled"`
+}
+type DeliveryServiceNullableV14 struct {
 	DeliveryServiceNullableV13
 	ConsistentHashRegex       *string  `json:"consistentHashRegex"`
 	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
@@ -181,7 +186,8 @@ type DeliveryServiceNullableV12 struct {
 	DeliveryServiceNullableV11
 }
 
-// DeliveryServiceNullable - a version of the deliveryservice that allows for all fields to be null
+// DeliveryServiceNullableV11 is a version of the deliveryservice that allows
+// for all fields to be null.
 // TODO move contents to DeliveryServiceNullableV12, fix references, and remove
 type DeliveryServiceNullableV11 struct {
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
@@ -405,6 +411,7 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
 	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+	noLineBreaks := validation.NewStringRule(tovalidate.NoLineBreaks, "cannot contain line breaks")
 	errs := tovalidate.ToErrors(validation.Errors{
 		"active":              validation.Validate(ds.Active, validation.NotNil),
 		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
@@ -415,6 +422,7 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
 		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
 		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
+		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
 		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
 		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
 		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
@@ -549,6 +557,13 @@ type UserAvailableDS struct {
 	DisplayName *string `json:"displayName" db:"display_name"`
 	XMLID       *string `json:"xmlId" db:"xml_id"`
 	TenantID    *int    `json:"-"` // tenant is necessary to check authorization, but not serialized
+}
+
+type FederationDeliveryServiceNullable struct {
+	ID    *int    `json:"id" db:"id"`
+	CDN   *string `json:"cdn" db:"cdn"`
+	Type  *string `json:"type" db:"type"`
+	XMLID *string `json:"xmlId" db:"xml_id"`
 }
 
 type DeliveryServiceUserPost struct {

@@ -136,7 +136,7 @@ Traffic Ops responds with a Mojolicious cookie to be used for future requests, a
 	Connection: keep-alive
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
-	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 02 Oct 2018 19:03:18 GMT; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Content-Type: application/json
 	Date: Tue, 02 Oct 2018 12:53:32 GMT
 	Access-Control-Allow-Credentials: true
@@ -174,7 +174,7 @@ Using this cookie, the user can now access their original target - the ``/api/1.
 	Content-Length: 48
 	Content-Type: application/json
 	Date: Tue, 02 Oct 2018 12:55:57 GMT
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-SHA512: u+Q5X7z/DMTc/VzRGaFlJBA8btA8EC…dnA85HCYTm8vVwsQCvle+uVc1nA==
 	X-Server-Name: traffic_ops_golang/
 
@@ -245,7 +245,7 @@ The most common errors returned by Traffic Ops are:
 		Content-Type: text/html;charset=UTF-8
 		Date: Tue, 02 Oct 2018 13:58:56 GMT
 		Server: Mojolicious (Perl)
-		Set-Cookie: mojolicious=...; expires=Tue, 02 Oct 2018 17:58:56 GMT; path=/; HttpOnly
+		Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 		Vary: Accept-Encoding
 		Whole-Content-Sha512: Ff5hO8ZUNUMbwCW0mBuUlsvrSmm/Giijpq7O3uLivLZ6VOu6eGom4Jag6UqlBbbDBnP6AG7l1Szdt74TT6NidA==
 		Transfer-Encoding: chunked
@@ -268,7 +268,7 @@ The most common errors returned by Traffic Ops are:
 		Content-Type: application/json
 		Date: Tue, 02 Oct 2018 17:29:42 GMT
 		Server: Mojolicious (Perl)
-		Set-Cookie: mojolicious=..; expires=Sun, 19 Apr 2015 00:45:06 GMT; path=/; HttpOnly
+		Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 		Vary: Accept-Encoding
 		Whole-Content-Sha512: gFa4NYFmofCbV7YqgwyFRzKk90+KNgoZu6p2Nx98J4Gy7/2j55tYknvk53WXuMdMKKrgYMop4uiYOla1k1ozQQ==
 

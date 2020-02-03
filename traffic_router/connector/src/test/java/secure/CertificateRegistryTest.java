@@ -15,6 +15,7 @@
 
 package secure;
 
+import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterNioEndpoint;
 import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateDataConverter;
 import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.secure.HandshakeData;
@@ -22,21 +23,24 @@ import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.anyMap;
 
 public class CertificateRegistryTest {
 
 	private CertificateRegistry certificateRegistry = CertificateRegistry.getInstance();
-	private List<CertificateData> certificateDataList;
+	private List certificateDataList;
 	private CertificateDataConverter certificateDataConverter;
 	private CertificateData certificateData1;
 	private CertificateData certificateData2;
@@ -54,7 +58,7 @@ public class CertificateRegistryTest {
 		when(certificateData2.alias()).thenReturn("ds-2.some-cdn.example.com");
 		when(certificateData3.alias()).thenReturn("ds-3.some-cdn.example.com");
 
-		certificateDataList = Arrays.asList(certificateData1, certificateData2, certificateData3);
+		certificateDataList = new ArrayList(Arrays.asList(certificateData1, certificateData2, certificateData3));
 
 		handshakeData1 = mock(HandshakeData.class);
 		when(handshakeData1.getHostname()).thenReturn("*.ds-1.some-cdn.example.com");
@@ -89,5 +93,50 @@ public class CertificateRegistryTest {
 		assertThat(certificateRegistry.getAliases(),
 			containsInAnyOrder(CertificateRegistry.DEFAULT_SSL_KEY, "ds-1.some-cdn.example.com",
 					"ds-2.some-cdn.example.com", "ds-3.some-cdn.example.com"));
+	}
+
+	@Test
+	public void itRetrysCertificateDataOnEndpointFail() throws Exception {
+		HandshakeData handshakeData3mod = mock(HandshakeData.class);
+		when(handshakeData3mod.getHostname()).thenReturn("*.ds-3.some-cdn.example.com");
+		CertificateData certificateData3mod = mock(CertificateData.class);
+		when(certificateData3mod.alias()).thenReturn("ds-3.some-cdn.example.com");
+		when(certificateDataConverter.toHandshakeData(certificateData3mod)).thenReturn(handshakeData3mod);
+		certificateDataList.remove(certificateData3);
+		certificateDataList.add(certificateData3mod);
+		RouterNioEndpoint endpoint = mock(RouterNioEndpoint.class);
+		List<String> failist = new ArrayList<>();
+		failist.add("ds-3.some-cdn.example.com");
+		when(endpoint.reloadSSLHosts(anyMap())).thenReturn(failist);
+		certificateRegistry.setEndPoint(endpoint);
+		certificateRegistry.importCertificateDataList(certificateDataList);
+
+		assertThat(certificateRegistry.getHandshakeData("ds-1.some-cdn.example.com"), equalTo(handshakeData1));
+		assertThat(certificateRegistry.getHandshakeData("ds-2.some-cdn.example.com"), equalTo(handshakeData2));
+		assertThat(certificateRegistry.getHandshakeData("ds-3.some-cdn.example.com"), equalTo(handshakeData3mod));
+
+		verify(certificateDataConverter).toHandshakeData(certificateData1);
+		verify(certificateDataConverter).toHandshakeData(certificateData2);
+		verify(certificateDataConverter).toHandshakeData(certificateData3mod);
+		verify(endpoint).reloadSSLHosts(anyMap());
+
+		assertThat(certificateRegistry.getAliases(),
+			containsInAnyOrder(CertificateRegistry.DEFAULT_SSL_KEY, "ds-1.some-cdn.example.com", "ds-2.some-cdn.example.com", "ds-3.some-cdn.example.com"));
+
+		// try again
+		// we should see that reloadSSLHosts gets called again even though none of the inputs have changed
+		when(endpoint.reloadSSLHosts(anyMap())).thenReturn(new ArrayList<>());
+		certificateRegistry.importCertificateDataList(certificateDataList);
+		assertThat(certificateRegistry.getHandshakeData("ds-1.some-cdn.example.com"), equalTo(handshakeData1));
+		assertThat(certificateRegistry.getHandshakeData("ds-2.some-cdn.example.com"), equalTo(handshakeData2));
+		assertThat(certificateRegistry.getHandshakeData("ds-3.some-cdn.example.com"), equalTo(handshakeData3mod));
+
+		verify(certificateDataConverter, times(2)).toHandshakeData(certificateData1);
+		verify(certificateDataConverter, times(2)).toHandshakeData(certificateData2);
+		verify(certificateDataConverter, times(2)).toHandshakeData(certificateData3mod);
+		verify(endpoint, times(2)).reloadSSLHosts(anyMap());
+
+		assertThat(certificateRegistry.getAliases(),
+			containsInAnyOrder(CertificateRegistry.DEFAULT_SSL_KEY, "ds-1.some-cdn.example.com", "ds-2.some-cdn.example.com", "ds-3.some-cdn.example.com"));
 	}
 }

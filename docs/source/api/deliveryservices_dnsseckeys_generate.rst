@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Generates Zone-Signing Key (ZSK) and Key-Signing Key (KSK) keypairs for a CDN and all associated :term:`Delivery Service`\ s.
+Generates :abbr:`ZSK (Zone-Signing Key)` and :abbr:`KSK (Key-Signing Key)` keypairs for a CDN and all associated :term:`Delivery Services`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -29,15 +29,16 @@ Generates Zone-Signing Key (ZSK) and Key-Signing Key (KSK) keypairs for a CDN an
 
 Request Structure
 -----------------
+:effectiveDate: UNIX epoch start date for the signing keys
+
+	.. versionadded:: 1.2
+
 :key:               Name of the CDN
+:kskExpirationDays: Expiration (in days) for the :abbr:`KSKs (Key-Signing Keys)`
 :name:              Domain name used by the CDN
 :ttl:               Time for which the keypairs shall remain valid
-:kskExpirationDays: Expiration (in days) for the KSKs
-:zskExpirationDays: Expiration (in days) for the ZSKs
-:effectiveDate:     UNIX epoch start date for the signing keys
+:zskExpirationDays: Expiration (in days) for the :abbr:`ZSKs (Zone-Signing Keys)`
 
-.. versionchanged:: 1.2
-	Added required 'effectiveDate' field to request
 
 Response Structure
 ------------------

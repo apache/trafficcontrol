@@ -21,11 +21,17 @@
 # This script, which should be run when the container is run (it's the ENTRYPOINT), will configure the container.
 
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_PERL_HOST TO_PERL_PORT TO_HOST TO_PORT TP_HOST)
-for v in $envvars
-do
-    if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+envvars=( DB_NAME DB_FQDN DB_USER DB_USER_PASS DB_PORT TO_HOST TO_PORT TO_ADMIN_PASSWORD )
+unset_vars=""
+for v in "${envvars[@]}"; do
+    if [[ -z "${!v}" ]]; then
+        unset_vars="$unset_vars $v"
+    fi
 done
+if [[ ! -z "$unset_vars" ]]; then
+    echo "required env vars are unset:$unset_vars"
+    exit 1
+fi
 
 cat <<-EOF >/opt/integration/app/traffic-ops-test.conf
 {
@@ -43,14 +49,15 @@ cat <<-EOF >/opt/integration/app/traffic-ops-test.conf
     },
     "trafficOps": {
         "URL": "https://$TO_HOST:$TO_PORT",
-        "password": "$ADMIN_PASS",
+        "password": "$TO_ADMIN_PASSWORD",
         "users": {
             "disallowed": "disallowed",
             "operations": "operations",
             "admin": "admin",
             "federation": "federation",
             "portal": "portal",
-            "readOnly": "readOnly"
+            "readOnly": "readOnly",
+            "extension": "extension"
         }
     },
     "trafficOpsDB": {

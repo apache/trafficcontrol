@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Returns a JSON representation of all configured Divisions.
+Returns a JSON representation of all configured :term:`Divisions`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,13 +31,26 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------+--------------------------------------------------------------+
-	| Name | Description                                                  |
-	+======+==============================================================+
-	|  id  | Filter for divisions having this integral, unique identifier |
-	+------+--------------------------------------------------------------+
-	| name | Filter for divisions with this name                          |
-	+------+--------------------------------------------------------------+
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| Name      | Description                                                                                                   |
+	+===========+===============================================================================================================+
+	| id        | Filter for :term:`Divisions` having this integral, unique identifier                                          |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| name      | Filter for :term:`Divisions` with this name                                                                   |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|           | array                                                                                                         |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| limit     | Choose the maximum number of results to return                                                                |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| offset    | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| page      | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|           | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|           | defined to make use of ``page``.                                                                              |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -54,7 +67,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: SLKi9RHa67sGoSz62IDcQsk7KZjTXKfonqMoCUFPXGcNUdhBssvUjc1G7KkWK8X1Ny16geMx2BN8Hm/3dQ75GA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 29 Nov 2018 19:44:03 GMT
@@ -114,7 +127,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: +pJm4c3O+JTaSXNt+LP+u240Ba/SsvSSDOQ4rDc6hcyZ0FIL+iY/WWrMHhpLulRGKGY88bM4YPCMaxGn3FZ9yQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 29 Nov 2018 19:52:06 GMT

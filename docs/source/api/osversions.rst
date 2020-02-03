@@ -22,7 +22,7 @@
 
 ``GET``
 =======
-Gets all available Operating System (OS) versions for ISO generation, as well as the name of the directory where the "kickstarter" files are found.
+Gets all available :abbr:`OS (Operating System)` versions for ISO generation, as well as the name of the directory where the "kickstarter" files are found.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,6 +31,8 @@ Gets all available Operating System (OS) versions for ISO generation, as well as
 Request Structure
 -----------------
 No parameters available.
+
+.. _response-structure:
 
 Response Structure
 ------------------
@@ -41,18 +43,40 @@ This endpoint has no constant keys in its ``response``. Instead, each key in the
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Fri, 30 Nov 2018 19:14:36 GMT
-	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Fri, 30 Nov 2018 23:14:36 GMT; path=/; HttpOnly
-	Vary: Accept-Encoding
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: RxbRY2DZ+lYOdTzzUETEZ3wtLBiD2BwXMVuaZjhe4a4cwgcZKRBWxZ6Qy5YYujFe1+UBiTG4sML/Amn27F4AVg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Fri, 30 Nov 2018 19:14:36 GMT
 	Content-Length: 38
 
 	{ "response": {
 		"CentOS 7.2": "centos72"
 	}}
+
+
+Configuration File
+------------------
+The data returned from the endpoint comes directly from a configuration file. By default, the file is located at ``/var/www/files/osversions.json``.
+The **directory** of the file can be changed by creating a specific :term:`Parameter` named ``kickstart.files.location`` in configuration file ``mkisofs``.
+
+The format of the file is a JSON object as described in :ref:`response-structure`.
+
+.. code-block:: json
+	:caption: Example osversions.json file
+
+	{
+		"CentOS 7.2": "centos72"
+	}
+
+
+The legacy Perl Traffic Ops used a Perl configuration file located by default at ``/var/www/files/osversions.cfg``. A Perl script is provided
+to convert the legacy configuration file to the new JSON format. The script is located within the Traffic Control repository at ``traffic_ops/app/bin/osversions-convert.pl``.
+
+.. code-block:: shell
+	:caption: Example usage of conversion script
+
+	./osversions-convert.pl < /var/www/files/osversions.cfg > /var/www/files/osversions.json

@@ -448,12 +448,12 @@ func (cg *TOCacheGroup) Update() (error, error, int) {
 		cg.FallbackToClosest = &fbc
 	}
 
-	coordinateID, err, errType := cg.handleCoordinateUpdate()
-	if err != nil {
-		return api.TypeErrToAPIErr(err, errType)
+	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
-	err = cg.ReqInfo.Tx.Tx.QueryRow(
+	err := cg.ReqInfo.Tx.Tx.QueryRow(
 		UpdateQuery(),
 		cg.Name,
 		cg.ShortName,
@@ -484,8 +484,7 @@ func (cg *TOCacheGroup) Update() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-// TODO: Remove tc.ApiErrorType (see #3349)
-func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, tc.ApiErrorType) {
+func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 
 	coordinateID, err := cg.getCoordinateID()
 
@@ -493,10 +492,10 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, tc.ApiErrorType) 
 	// cachegroup table, not being able to find the coordinate is equivalent to
 	// not being able to find the cachegroup.
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("no cachegroup with id %d found", *cg.ID), tc.DataMissingError
+		return nil, fmt.Errorf("no cachegroup with id %d found", *cg.ID), nil, http.StatusNotFound
 	}
 	if err != nil {
-		return nil, tc.DBError, tc.SystemError
+		return nil, nil, tc.DBError, http.StatusInternalServerError
 	}
 
 	// If partial coordinate information is given or the coordinate information is wholly
@@ -513,17 +512,17 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, tc.ApiErrorType) 
 	//
 	if cg.Latitude == nil || cg.Longitude == nil {
 		if err = cg.deleteCoordinate(*coordinateID); err != nil {
-			return nil, tc.DBError, tc.SystemError
+			return nil, nil, tc.DBError, http.StatusInternalServerError
 		}
 		cg.Latitude = nil
 		cg.Longitude = nil
-		return nil, nil, tc.NoError
+		return nil, nil, nil, http.StatusOK
 	}
 
 	if err = cg.updateCoordinate(); err != nil {
-		return nil, tc.DBError, tc.SystemError
+		return nil, nil, tc.DBError, http.StatusInternalServerError
 	}
-	return coordinateID, nil, tc.NoError
+	return coordinateID, nil, nil, http.StatusOK
 }
 
 func (cg *TOCacheGroup) getCoordinateID() (*int, error) {

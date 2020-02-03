@@ -25,11 +25,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
@@ -227,6 +229,13 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsID := inf.IntParams["dsid"]
+	dsName, _, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	}
+
 	respObj := tc.DeliveryServiceIDRegex{
 		ID:        regexID,
 		Pattern:   dsr.Pattern,
@@ -234,6 +243,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		TypeName:  typeName,
 		SetNumber: dsr.SetNumber,
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Created a regular expression ("+dsr.Pattern+") in position "+strconv.Itoa(dsr.SetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
@@ -247,6 +257,14 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	dsID := inf.IntParams["dsid"]
+	dsName, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
 	regexID := inf.IntParams["regexid"]
 	dsTenantID := 0
 	if err := tx.QueryRow(`SELECT tenant_id from deliveryservice where id = $1`, dsID).Scan(&dsTenantID); err != nil {
@@ -291,6 +309,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		TypeName:  typeName,
 		SetNumber: dsr.SetNumber,
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Updated a regular expression ("+dsr.Pattern+") in position "+strconv.Itoa(dsr.SetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
@@ -308,6 +327,14 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	dsID := inf.IntParams["dsid"]
+	dsName, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
 	regexID := inf.IntParams["regexid"]
 
 	count := 0
@@ -337,6 +364,26 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsrSetNumber := 0
+	if err := inf.Tx.Tx.QueryRow(`SELECT set_number FROM deliveryservice_regex WHERE regex = $1`, regexID).Scan(&dsrSetNumber); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("regex not found for this delivery service"), nil)
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Delete finding set number: "+err.Error()))
+		return
+	}
+
+	dsrType, dsrPattern := 0, ""
+	if err := inf.Tx.Tx.QueryRow(`SELECT type, pattern FROM regex WHERE id = $1`, regexID).Scan(&dsrType, &dsrPattern); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("regex not found"), nil)
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Delete finding type and pattern: "+err.Error()))
+		return
+	}
+
 	result, err := inf.Tx.Tx.Exec(`DELETE FROM deliveryservice_regex WHERE deliveryservice = $1 and regex = $2`, dsID, regexID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Delete deleting delivery service regexes: "+err.Error()))
@@ -355,7 +402,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("this create affected too many rows: %d", rowsAffected))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf(`deleted deliveryservice_regex {"ds": %d, "regex": %d}`, dsID, regexID), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Deleted a regular expression ("+dsrPattern+") in position "+strconv.Itoa(dsrSetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "deliveryservice_regex was deleted.")
 }
 

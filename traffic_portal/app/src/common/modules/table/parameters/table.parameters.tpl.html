@@ -30,7 +30,7 @@ under the License.
     </div>
     <div class="x_content">
         <br>
-        <table id="parametersTable" class="table responsive-utilities jambo_table" >
+        <table id="parametersTable" class="table responsive-utilities jambo_table params" >
             <thead>
                 <tr class="headings">
                     <th>Name</th>
@@ -42,7 +42,7 @@ under the License.
             </thead>
             <tbody>
                 <tr ng-click="editParameter(p.id)" ng-repeat="p in ::parameters" context-menu="contextMenuItems">
-                    <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+                    <td name="name" data-search="^{{::p.name}}$">{{::p.name}}</td>
                     <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
                     <td data-search="^{{::p.value}}$">{{::p.value}}</td>
                     <td data-search="^{{::p.secure}}$">{{::p.secure}}</td>

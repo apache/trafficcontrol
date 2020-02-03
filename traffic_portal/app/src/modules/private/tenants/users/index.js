@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.tenants.users', [])
 								return tenantService.getTenant($stateParams.tenantId);
 							},
 							tenantUsers: function(tenant, userService) {
-								return userService.getUsers({ tenant: tenant.id });
+								return userService.getUsers({ tenant: tenant.name });
 							}
 						}
 					}

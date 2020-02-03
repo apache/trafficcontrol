@@ -36,7 +36,7 @@ RUN go get -u github.com/jstemmer/go-junit-report
 RUN cd /go/src/github.com/jstemmer/go-junit-report && go build
 
 FROM debian:stretch
-RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools vim && apt-get clean
+RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools postgresql-client && apt-get clean
 
 # MANIFEST
 # run.sh                        (wait on TO, then run bin)
@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools vim && a
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/run.sh    /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/integration/app/
-COPY ./traffic_ops/testing/api/v14/tc-fixtures.json         /opt/integration/app/
+COPY ./traffic_ops/testing/api/v1/tc-fixtures.json         /opt/integration/app/
 COPY --from=integration-builder \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_integration_test \
     /opt/integration/app/

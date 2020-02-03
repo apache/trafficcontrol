@@ -182,7 +182,7 @@ Section headings should *always* follow this order exactly, and **never** skip l
 
 Terms
 """""
-Please always spell out the entire name of any Traffic Control terms used in the definition. For example, a collection of :term:`cache server`\ s associated with a certain physical location is called a "Cache Group", not a "CG", "cachegroup", "cache location" etc. A subdomain and collection of :term:`cache server`\ s responsible collectively for routing traffic to a specific origin is called a :term:`Delivery Service`", not a "DS", "deliveryservice" etc. Similarly, always use *full* permissions role names e.g. "operations" not "oper". This will ensure the :ref:`glossary` is actually helpful. To link a term to the glossary, use the ``:term:`` role. This should be done for virtually every use of a Traffic Control term, e.g. ``:term:`Cache Group``` will render as: :term:`Cache Group`.
+Please always spell out the entire name of any Traffic Control terms used in the definition. For example, a collection of :term:`cache servers` associated with a certain physical location is called a "Cache Group", not a "CG", "cachegroup", "cache location" etc. A subdomain and collection of :term:`cache servers` responsible collectively for routing traffic to a specific origin is called a :term:`Delivery Service`", not a "DS", "deliveryservice" etc. Similarly, always use *full* permissions role names e.g. "operations" not "oper". This will ensure the :ref:`glossary` is actually helpful. To link a term to the glossary, use the ``:term:`` role. This should be done for virtually every use of a Traffic Control term, e.g. ``:term:`Cache Group``` will render as: :term:`Cache Group`.
 Generally speaking, be wary of using the word "cache". To most people that means the *actual* cache on a hard disk somewhere. This word is frequently confused with " :term:`cache server`", which - when accurate - is always preferred over "cache".
 
 Documenting API Routes
@@ -202,7 +202,7 @@ File names should reflect the request path of the endpoint, e.g. a file for an e
 
 Extension
 ---------
-The :abbr:`ATC (Apache Traffic Control)` documentation provides an extension to the standard roles and directives offered by Sphinx, located at :file:`docs/source/_ext/atc.py`. It provides the following roles and directives:
+The :abbr:`ATC (Apache Traffic Control)` documentation provides an extension to the standard roles and directives offered by Sphinx, located at :atc-file:`docs/source/_ext/atc.py`. It provides the following roles and directives:
 
 impl-detail
 	An admonition directive used to contain implementation-specific notes on a subject.
@@ -225,3 +225,10 @@ pr
 	A text role that can be used to easily link to GitHub Pull Requests for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:pr:`1```" renders as :pr:`1`.
 pull-request
 	A synonym for ``pr``
+
+godoc
+	A text role that can be used to easily link to the documentation for any Go package, type, or function/method (grouped constants/variables not supported). For example, "``:godoc:`net/http.HandlerFunc```" renders as :godoc:`net/http.HandlerFunc`.
+atc-godoc
+	This is provided for convenience, and is identical to ``:godoc:`` except that it is assumed to be relative to the Apache Traffic Control project. For example, ``:atc-godoc:`lib/go-rfc.MimeType.Quality``` renders as :atc-godoc:`lib/go-rfc.MimeType.Quality`.
+to-godoc
+	This is provided for convenience, and is identical to ``:godoc:`` except that it is assumed to be relative to the :atc-godoc:`traffic_ops/traffic_ops_golang` package. For example, ``:to-godoc:`api.APIInfo``` renders as :to-godoc:`api.APIInfo`.

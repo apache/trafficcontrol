@@ -21,8 +21,6 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	Use the ``id`` query parameter of a ``GET`` request to :ref:`to-api-profiles-id` instead.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -77,7 +75,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: LCdG7AgeHqL4wpGraaoN8ks+/gYW//h1Q2OVBECk+T9/IC6tbJ3DWOgWX4u4dpudIDJ5mhRwBzicYvyyXWj3qA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Fri, 07 Dec 2018 21:06:30 GMT
@@ -182,7 +180,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: Pnf+G9G3/+edt4b8PVsyGZHsNzaFEgphaGSminjRlRmMpWtuLAA20WZDUo3nX0QO81c2GCuFuEh9uMF2Vjeppg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Fri, 07 Dec 2018 21:45:06 GMT
@@ -244,7 +242,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: HNmJkZaNW9yil08/3TnqZ5FllH6Rp+jgp3KI46FZdojLYcu+8jEhDLl1okoirdrHyU4R1c3hjCI0urN7PVvWDA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Fri, 07 Dec 2018 21:55:33 GMT

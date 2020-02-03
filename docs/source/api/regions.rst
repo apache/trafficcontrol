@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves information about regions
+Retrieves information about :term:`Regions`
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,15 +31,28 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+----------+----------+---------------------------------------------------------------------------------------+
-	|   Name   | Required |                                  Description                                          |
-	+==========+==========+=======================================================================================+
-	| division |    no    | Filter regions by the integral, unique identifier of the division which contains them |
-	+----------+----------+---------------------------------------------------------------------------------------+
-	|    id    |    no    | Filter regions by integral, unique identifier                                         |
-	+----------+----------+---------------------------------------------------------------------------------------+
-	|   name   |    no    | Filter regions by name                                                                |
-	+----------+----------+---------------------------------------------------------------------------------------+
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                   |
+	+===========+==========+===============================================================================================================+
+	| division  | no       | Filter :term:`Regions` by the integral, unique identifier of the :term:`Division` which contains them         |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| id        | no       | Filter :term:`Regions` by integral, unique identifier                                                         |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| name      | no       | Filter :term:`Regions` by name                                                                                |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|           |          | array                                                                                                         |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                                |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|           |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|           |          | defined to make use of ``page``.                                                                              |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -67,7 +80,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: nSYbR+fRXaxhYl7dWgf0Udo2AsiXEnwvED1CPbk7ZNWK03I3TOhtmCQx9ABnJJ6xKYnlt6EKMeopVTK0nKU+SQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 06 Dec 2018 01:58:38 GMT
@@ -133,7 +146,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: ezxk+iP7o7KE7zpWmGc0j8nz5k+1wAzY0HiNiA2xswTQrt+N+6CgQqUV2r9G1HAsPNr0HF2PhYs/Xr7DrYOw0A==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 06 Dec 2018 02:14:45 GMT

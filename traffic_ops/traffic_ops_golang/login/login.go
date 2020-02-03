@@ -21,25 +21,86 @@ package login
 
 import (
 	"bytes"
+	"crypto/rand"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/lestrrat-go/jwx/jwk"
+	"html/template"
 	"net/http"
 	"net/url"
 	"path/filepath"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
+	"github.com/lestrrat-go/jwx/jwk"
 )
+
+type emailFormatter struct {
+	From         rfc.EmailAddress
+	To           rfc.EmailAddress
+	InstanceName string
+	ResetURL     string
+	Token        string
+}
+
+const instanceNameQuery = `
+SELECT value
+FROM parameter
+WHERE name='tm.instance_name' AND
+      config_file='global'
+`
+const userQueryByEmail = `SELECT EXISTS(SELECT * FROM tm_user WHERE email=$1)`
+const setTokenQuery = `UPDATE tm_user SET token=$1 WHERE email=$2`
+
+const defaultCookieDuration = 6 * time.Hour
+
+var resetPasswordEmailTemplate = template.Must(template.New("Password Reset Email").Parse("From: {{.From.Address.Address}}\r" + `
+To: {{.To.Address.Address}}` + "\r" + `
+Content-Type: text/html` + "\r" + `
+Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>{{.InstanceName}} Password Reset Request</title>
+	<meta charset="utf-8"/>
+	<style>
+		.button_link {
+			display: block;
+			width: 130px;
+			height: 35px;
+			background: #2682AF;
+			padding: 5px;
+			text-align: center;
+			border-radius: 5px;
+			color: white;
+			font-weight: bold;
+			text-decoration: none;
+			cursor: pointer;
+		}
+	</style>
+</head>
+<body>
+  	<main>
+  		<p>Someone has requested to change your password for the {{.InstanceName}}. If you requested this change, please click the link below and change your password. Otherwise, you can disregard this email.</p>
+		<p><a class="button_link" target="_blank" href="{{.ResetURL}}?token={{.Token}}">Click to Reset Your Password</a></p>
+	</main>
+	<footer>
+		<p>Thank you,<br/>
+		The {{.InstanceName}} Team</p>
+	</footer>
+</body>
+</html>
+`))
 
 func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +110,10 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		form := auth.PasswordForm{}
 		if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
 			handleErrs(http.StatusBadRequest, err)
+			return
+		}
+		if form.Username == "" || form.Password == "" {
+			api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("username and password are required"), nil)
 			return
 		}
 		resp := struct {
@@ -81,10 +146,8 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				}
 			}
 			if authenticated {
-				expiry := time.Now().Add(time.Hour * 6)
-				cookie := tocookie.New(form.Username, expiry, cfg.Secrets[0])
-				httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
-				http.SetCookie(w, &httpCookie)
+				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
+				http.SetCookie(w, httpCookie)
 				resp = struct {
 					tc.Alerts
 				}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}
@@ -103,11 +166,50 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		if !authenticated {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
 		fmt.Fprintf(w, "%s", respBts)
+	}
+}
+
+func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		var t tc.UserToken
+		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+			api.HandleErr(w, r, nil, http.StatusBadRequest, fmt.Errorf("Invalid request: %v", err), nil)
+			return
+		}
+
+		tokenMatches, username, err := auth.CheckLocalUserToken(t.Token, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		if err != nil {
+			sysErr := fmt.Errorf("Checking token: %v", err)
+			errCode := http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, nil, sysErr)
+			return
+		} else if !tokenMatches {
+			userErr := errors.New("Invalid token. Please contact your administrator.")
+			errCode := http.StatusUnauthorized
+			api.HandleErr(w, r, nil, errCode, userErr, nil)
+			return
+		}
+
+		httpCookie := tocookie.GetCookie(username, defaultCookieDuration, cfg.Secrets[0])
+		http.SetCookie(w, httpCookie)
+		respBts, err := json.Marshal(tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in."))
+		if err != nil {
+			sysErr := fmt.Errorf("Marshaling response: %v", err)
+			errCode := http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, nil, sysErr)
+			return
+		}
+
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+		w.Write(append(respBts, '\n'))
+
+		// TODO: afaik, Perl never clears these tokens. They should be reset to NULL on login, I think.
 	}
 }
 
@@ -239,10 +341,8 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		if userAllowed && authenticated {
-			expiry := time.Now().Add(time.Hour * 6)
-			cookie := tocookie.New(userId, expiry, cfg.Secrets[0])
-			httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
-			http.SetCookie(w, &httpCookie)
+			httpCookie := tocookie.GetCookie(userId, defaultCookieDuration, cfg.Secrets[0])
+			http.SetCookie(w, httpCookie)
 			resp = struct {
 				tc.Alerts
 			}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}
@@ -257,7 +357,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		if !authenticated {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
@@ -291,4 +391,126 @@ func VerifyUrlOnWhiteList(urlString string, whiteListedUrls []string) (bool, err
 		}
 	}
 	return false, nil
+}
+
+func generateToken() (string, error) {
+	var t = make([]byte, 16)
+	_, err := rand.Read(t)
+	if err != nil {
+		return "", err
+	}
+	t[6] = (t[6] & 0x0f) | 0x40
+	t[8] = (t[8] & 0x3f) | 0x80
+
+	return fmt.Sprintf("%x-%x-%x-%x-%x", t[0:4], t[4:6], t[6:8], t[8:10], t[10:]), nil
+}
+
+func setToken(addr rfc.EmailAddress, tx *sql.Tx) (string, error) {
+	token, err := generateToken()
+	if err != nil {
+		return "", err
+	}
+
+	if _, err = tx.Exec(setTokenQuery, token, addr.Address.Address); err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func createMsg(addr rfc.EmailAddress, t string, db *sqlx.DB, c config.ConfigPortal) ([]byte, error) {
+	var instanceName string
+	row := db.QueryRow(instanceNameQuery)
+	if err := row.Scan(&instanceName); err != nil {
+		return nil, err
+	}
+	f := emailFormatter{
+		From:         c.EmailFrom,
+		To:           addr,
+		Token:        t,
+		InstanceName: instanceName,
+		ResetURL:     c.BaseURL.String() + c.PasswdResetPath,
+	}
+
+	var tmpl bytes.Buffer
+	if err := resetPasswordEmailTemplate.Execute(&tmpl, &f); err != nil {
+		return nil, err
+	}
+	return tmpl.Bytes(), nil
+}
+
+func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var userErr, sysErr error
+		var errCode int
+		tx, err := db.Begin()
+		if err != nil {
+			sysErr = fmt.Errorf("Beginning transaction: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			return
+		}
+		defer r.Body.Close()
+
+		var req tc.UserPasswordResetRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			userErr = fmt.Errorf("Malformed request: %v", err)
+			errCode = http.StatusBadRequest
+			api.HandleErr(w, r, tx, errCode, userErr, nil)
+			return
+		}
+
+		row := tx.QueryRow(userQueryByEmail, req.Email.Address.Address)
+		var userExists bool
+		if err := row.Scan(&userExists); err != nil {
+			sysErr = fmt.Errorf("Checking for existence of user with email '%s': %v", req.Email.String(), err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			return
+		}
+		if !userExists {
+			// TODO: consider concealing database state from unauthenticated parties;
+			// this should maybe just return a 2XX w/ success message at this point?
+			userErr = fmt.Errorf("No account with the email address '%s' was found!", req.Email.Address.Address)
+			errCode = http.StatusNotFound
+			api.HandleErr(w, r, tx, errCode, userErr, nil)
+			return
+		}
+
+		token, err := setToken(req.Email, tx)
+		if err != nil {
+			sysErr = fmt.Errorf("Failed to generate and insert UUID: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			return
+		}
+		tx.Commit()
+
+		msg, err := createMsg(req.Email, token, db, cfg.ConfigPortal)
+		if err != nil {
+			sysErr = fmt.Errorf("Failed to create email message: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, nil, sysErr)
+			return
+		}
+
+		log.Debugf("Sending password reset email to %s", req.Email)
+
+		if errCode, userErr, sysErr = api.SendMail(req.Email, msg, &cfg); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, nil, errCode, userErr, sysErr)
+			return
+		}
+
+		alerts := tc.CreateAlerts(tc.SuccessLevel, "Password reset email sent")
+		respBts, err := json.Marshal(alerts)
+		if err != nil {
+			userErr = errors.New("Email was sent, but an error occurred afterward")
+			sysErr = fmt.Errorf("Marshaling response: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, userErr, sysErr)
+			return
+		}
+
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+		w.Write(append(respBts, '\n'))
+	}
 }

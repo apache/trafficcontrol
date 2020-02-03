@@ -17,17 +17,9 @@
  * under the License.
  */
 
-var TableEndpointsController = function(endpoints, $scope, $state, locationUtils) {
+var TableEndpointsController = function(endpoints, $scope, $state) {
 
 	$scope.endpoints = endpoints;
-
-	$scope.editEndpoint = function(id) {
-		locationUtils.navigateToPath('/endpoints/' + id);
-	};
-
-	$scope.createEndpoint = function() {
-		locationUtils.navigateToPath('/endpoints/new');
-	};
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
@@ -43,5 +35,5 @@ var TableEndpointsController = function(endpoints, $scope, $state, locationUtils
 
 };
 
-TableEndpointsController.$inject = ['endpoints', '$scope', '$state', 'locationUtils'];
+TableEndpointsController.$inject = ['endpoints', '$scope', '$state'];
 module.exports = TableEndpointsController;

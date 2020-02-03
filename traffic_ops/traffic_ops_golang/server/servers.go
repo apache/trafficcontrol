@@ -1,3 +1,5 @@
+// Package server provides tools for manipulating the server database table and
+// corresponding http handlers.
 package server
 
 /*
@@ -20,6 +22,7 @@ package server
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -33,95 +36,95 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
-//we need a type alias to define functions on
+// TOServer combines data about a server with metadata from an API request and
+// provides methods that implement several interfaces from the api package.
 type TOServer struct {
 	api.APIInfoImpl `json:"-"`
 	tc.ServerNullable
 }
 
-func (v *TOServer) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOServer) InsertQuery() string           { return insertQuery() }
-func (v *TOServer) UpdateQuery() string           { return updateQuery() }
-func (v *TOServer) DeleteQuery() string           { return deleteQuery() }
+func (s *TOServer) SetLastUpdated(t tc.TimeNoMod) { s.LastUpdated = &t }
+func (*TOServer) InsertQuery() string             { return insertQuery() }
+func (*TOServer) UpdateQuery() string             { return updateQuery() }
+func (*TOServer) DeleteQuery() string             { return deleteQuery() }
 
-func (server TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
+func (TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
-func (server TOServer) GetKeys() (map[string]interface{}, bool) {
-	if server.ID == nil {
+func (s TOServer) GetKeys() (map[string]interface{}, bool) {
+	if s.ID == nil {
 		return map[string]interface{}{"id": 0}, false
 	}
-	return map[string]interface{}{"id": *server.ID}, true
+	return map[string]interface{}{"id": *s.ID}, true
 }
 
-func (server *TOServer) SetKeys(keys map[string]interface{}) {
+func (s *TOServer) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	server.ID = &i
+	s.ID = &i
 }
 
-func (server *TOServer) GetAuditName() string {
-	if server.DomainName != nil {
-		return *server.DomainName
+func (s *TOServer) GetAuditName() string {
+	if s.DomainName != nil {
+		return *s.DomainName
 	}
-	if server.ID != nil {
-		return strconv.Itoa(*server.ID)
+	if s.ID != nil {
+		return strconv.Itoa(*s.ID)
 	}
 	return "unknown"
 }
 
-func (server *TOServer) GetType() string {
+func (s *TOServer) GetType() string {
 	return "server"
 }
 
-func (server *TOServer) Sanitize() {
-	if server.IP6Address != nil && *server.IP6Address == "" {
-		server.IP6Address = nil
+func (s *TOServer) Sanitize() {
+	if s.IP6Address != nil && *s.IP6Address == "" {
+		s.IP6Address = nil
 	}
 }
 
-func (server *TOServer) Validate() error {
-	server.Sanitize()
+func (s *TOServer) Validate() error {
+	s.Sanitize()
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
 	validateErrs := validation.Errors{
-		"cachegroupId":   validation.Validate(server.CachegroupID, validation.NotNil),
-		"cdnId":          validation.Validate(server.CDNID, validation.NotNil),
-		"domainName":     validation.Validate(server.DomainName, validation.NotNil, noSpaces),
-		"hostName":       validation.Validate(server.HostName, validation.NotNil, noSpaces),
-		"interfaceMtu":   validation.Validate(server.InterfaceMtu, validation.NotNil),
-		"interfaceName":  validation.Validate(server.InterfaceName, validation.NotNil),
-		"ipAddress":      validation.Validate(server.IPAddress, validation.NotNil, is.IPv4),
-		"ipNetmask":      validation.Validate(server.IPNetmask, validation.NotNil),
-		"ipGateway":      validation.Validate(server.IPGateway, validation.NotNil),
-		"ip6Address":     validation.Validate(server.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress)),
-		"physLocationId": validation.Validate(server.PhysLocationID, validation.NotNil),
-		"profileId":      validation.Validate(server.ProfileID, validation.NotNil),
-		"statusId":       validation.Validate(server.StatusID, validation.NotNil),
-		"typeId":         validation.Validate(server.TypeID, validation.NotNil),
-		"updPending":     validation.Validate(server.UpdPending, validation.NotNil),
-		"httpsPort":      validation.Validate(server.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
-		"tcpPort":        validation.Validate(server.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
+		"cachegroupId":   validation.Validate(s.CachegroupID, validation.NotNil),
+		"cdnId":          validation.Validate(s.CDNID, validation.NotNil),
+		"domainName":     validation.Validate(s.DomainName, validation.NotNil, noSpaces),
+		"hostName":       validation.Validate(s.HostName, validation.NotNil, noSpaces),
+		"interfaceMtu":   validation.Validate(s.InterfaceMtu, validation.NotNil),
+		"interfaceName":  validation.Validate(s.InterfaceName, validation.NotNil),
+		"ipAddress":      validation.Validate(s.IPAddress, validation.NotNil, is.IPv4),
+		"ipNetmask":      validation.Validate(s.IPNetmask, validation.NotNil),
+		"ipGateway":      validation.Validate(s.IPGateway, validation.NotNil),
+		"ip6Address":     validation.Validate(s.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress)),
+		"physLocationId": validation.Validate(s.PhysLocationID, validation.NotNil),
+		"profileId":      validation.Validate(s.ProfileID, validation.NotNil),
+		"statusId":       validation.Validate(s.StatusID, validation.NotNil),
+		"typeId":         validation.Validate(s.TypeID, validation.NotNil),
+		"updPending":     validation.Validate(s.UpdPending, validation.NotNil),
+		"httpsPort":      validation.Validate(s.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
+		"tcpPort":        validation.Validate(s.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
 	}
 	errs := tovalidate.ToErrors(validateErrs)
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)
 	}
 
-	if _, err := tc.ValidateTypeID(server.ReqInfo.Tx.Tx, server.TypeID, "server"); err != nil {
+	if _, err := tc.ValidateTypeID(s.ReqInfo.Tx.Tx, s.TypeID, "server"); err != nil {
 		return err
 	}
 
-	rows, err := server.ReqInfo.Tx.Tx.Query("select cdn from profile where id=$1", server.ProfileID)
+	rows, err := s.ReqInfo.Tx.Tx.Query("select cdn from profile where id=$1", s.ProfileID)
 	if err != nil {
 		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
 		errs = append(errs, tc.DBError)
@@ -136,34 +139,34 @@ func (server *TOServer) Validate() error {
 			return util.JoinErrs(errs)
 		}
 	}
-	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *server.CDNID)
-	if cdnID != *server.CDNID {
-		errs = append(errs, errors.New(fmt.Sprintf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, *server.ProfileID, *server.CDNID)))
+	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
+	if cdnID != *s.CDNID {
+		errs = append(errs, errors.New(fmt.Sprintf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, *s.ProfileID, *s.CDNID)))
 	}
 	return util.JoinErrs(errs)
 }
 
 // ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
-func (server TOServer) ChangeLogMessage(action string) (string, error) {
+func (s TOServer) ChangeLogMessage(action string) (string, error) {
 
 	var status string
-	if server.Status != nil {
-		status = *server.Status
+	if s.Status != nil {
+		status = *s.Status
 	}
 
 	var hostName string
-	if server.HostName != nil {
-		hostName = *server.HostName
+	if s.HostName != nil {
+		hostName = *s.HostName
 	}
 
 	var domainName string
-	if server.DomainName != nil {
-		domainName = *server.DomainName
+	if s.DomainName != nil {
+		domainName = *s.DomainName
 	}
 
 	var serverID string
-	if server.ID != nil {
-		serverID = strconv.Itoa(*server.ID)
+	if s.ID != nil {
+		serverID = strconv.Itoa(*s.ID)
 	}
 
 	message := action + ` ` + status + ` server: { "hostName":"` + hostName + `", "domainName":"` + domainName + `", id:` + serverID + ` }`
@@ -171,17 +174,12 @@ func (server TOServer) ChangeLogMessage(action string) (string, error) {
 	return message, nil
 }
 
-func (server *TOServer) Read() ([]interface{}, error, error, int) {
+func (s *TOServer) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 
-	servers, errs, errType := getServers(server.ReqInfo.Params, server.ReqInfo.Tx, server.ReqInfo.User)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			if err.Error() == `id cannot parse to integer` {
-				return nil, errors.New("Resource not found."), nil, http.StatusInternalServerError //matches perl response
-			}
-		}
-		userErr, sysErr, errCode := api.TypeErrsToAPIErr(errs, errType)
+	servers, userErr, sysErr, errCode := getServers(s.ReqInfo.Params, s.ReqInfo.Tx, s.ReqInfo.User)
+
+	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
 
@@ -192,7 +190,7 @@ func (server *TOServer) Read() ([]interface{}, error, error, int) {
 	return returnable, nil, nil, http.StatusOK
 }
 
-func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
+func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -214,20 +212,23 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
 		if err != nil {
-			return nil, []error{errors.New("dsId must be an integer")}, tc.DataMissingError
+			return nil, errors.New("dsId must be an integer"), nil, http.StatusNotFound
 		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
-			return nil, []error{errors.New("Forbidden")}, tc.ForbiddenError
+			return nil, errors.New("Forbidden"), sysErr, http.StatusForbidden
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
 		queryAddition = `
 FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 `
 		// depending on ds type, also need to add mids
-		dsType, err := deliveryservice.GetDeliveryServiceType(dsID, tx.Tx)
+		dsType, exists, err := deliveryservice.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
-			return nil, []error{err}, tc.DataConflictError
+			return nil, nil, err, http.StatusInternalServerError
+		}
+		if !exists {
+			return nil, fmt.Errorf("a deliveryservice with id %v was not found", dsID), nil, http.StatusBadRequest
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
@@ -235,7 +236,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	query := selectQuery() + queryAddition + where + orderBy + pagination
@@ -243,7 +244,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
+		return nil, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -254,7 +255,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err = rows.StructScan(&s); err != nil {
-			return nil, []error{fmt.Errorf("getting servers: %v", err)}, tc.SystemError
+			return nil, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError
 		}
 		if user.PrivLevel < auth.PrivLevelOperations {
 			s.ILOPassword = &HiddenField
@@ -265,32 +266,30 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
-		mids, errs, errType := getMidServers(servers, tx)
+		mids, userErr, sysErr, errCode := getMidServers(servers, tx)
 
-		log.Debugf("getting mids: %v, %v\n", errs, errType)
-		if len(errs) > 0 {
-			for _, err := range errs {
-				if err.Error() == `id cannot parse to integer` {
-					return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
-				}
-			}
-			return nil, errs, errType
+		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
+
+		if userErr != nil || sysErr != nil {
+			return nil, userErr, sysErr, errCode
 		}
-		for _, server := range mids {
-			servers = append(servers, server)
-		}
+		servers = append(servers, mids...)
 	}
 
-	return servers, nil, tc.NoError
+	return servers, nil, nil, http.StatusOK
 }
 
-// getMidServers gets mids used by the servers in this ds
+// getMidServers gets the mids used by the servers in this DS.
+//
 // Original comment from the Perl code:
-// if the delivery service employs mids, we're gonna pull mid servers too by pulling the cachegroups of the edges and finding those cachegroups parent cachegroup...
-// then we see which servers have cachegroup in parent cachegroup list...that's how we find mids for the ds :)
-func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
+//
+// If the delivery service employs mids, we're gonna pull mid servers too by
+// pulling the cachegroups of the edges and finding those cachegroups parent
+// cachegroup... then we see which servers have cachegroup in parent cachegroup
+// list...that's how we find mids for the ds :)
+func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullable, error, error, int) {
 	if len(servers) == 0 {
-		return nil, nil, tc.NoError
+		return nil, nil, nil, http.StatusOK
 	}
 	var ids []string
 	for _, s := range servers {
@@ -311,7 +310,7 @@ WHERE s.id IN (
 `
 	rows, err := tx.Queryx(q)
 	if err != nil {
-		return nil, []error{err}, tc.DataConflictError
+		return nil, err, nil, http.StatusBadRequest
 	}
 	defer rows.Close()
 
@@ -320,33 +319,54 @@ WHERE s.id IN (
 		var s tc.ServerNullable
 		if err := rows.StructScan(&s); err != nil {
 			log.Error.Printf("could not scan mid servers: %s\n", err)
-			return nil, []error{err}, tc.SystemError
+			return nil, nil, err, http.StatusInternalServerError
 		}
 		mids = append(mids, s)
 	}
-	return mids, nil, tc.NoError
+	return mids, nil, nil, http.StatusOK
 }
 
-func (sv *TOServer) Update() (error, error, int) {
-	if sv.IP6Address != nil && len(strings.TrimSpace(*sv.IP6Address)) == 0 {
-		sv.IP6Address = nil
+func (s *TOServer) Update() (error, error, int) {
+	if s.IP6Address != nil && len(strings.TrimSpace(*s.IP6Address)) == 0 {
+		s.IP6Address = nil
 	}
-	return api.GenericUpdate(sv)
+
+	// see if type changed
+	typeID := -1
+	if err := s.APIInfo().Tx.QueryRow("SELECT type FROM server WHERE id = $1", s.ID).Scan(&typeID); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("no server found with this id"), nil, http.StatusNotFound
+		}
+		return nil, fmt.Errorf("getting current server type: %v", err), http.StatusInternalServerError
+	}
+
+	// If type is changing ensure it isn't assigned to any DSes.
+	if typeID != *s.TypeID {
+		dsIDs := []int64{}
+		if err := s.APIInfo().Tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", s.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
+			return nil, fmt.Errorf("getting server assigned delivery services: %v", err), http.StatusInternalServerError
+		}
+		if len(dsIDs) != 0 {
+			return errors.New("server type can not be updated when it is currently assigned to delivery services"), nil, http.StatusConflict
+		}
+	}
+
+	return api.GenericUpdate(s)
 }
 
-func (sv *TOServer) Create() (error, error, int) {
+func (s *TOServer) Create() (error, error, int) {
 	// TODO put in Validate()
-	if sv.IP6Address != nil && len(strings.TrimSpace(*sv.IP6Address)) == 0 {
-		sv.IP6Address = nil
+	if s.IP6Address != nil && len(strings.TrimSpace(*s.IP6Address)) == 0 {
+		s.IP6Address = nil
 	}
-	if sv.XMPPID == nil || *sv.XMPPID == "" {
-		hostName := *sv.HostName
-		sv.XMPPID = &hostName
+	if s.XMPPID == nil || *s.XMPPID == "" {
+		hostName := *s.HostName
+		s.XMPPID = &hostName
 	}
-	return api.GenericCreate(sv)
+	return api.GenericCreate(s)
 }
 
-func (sv *TOServer) Delete() (error, error, int) { return api.GenericDelete(sv) }
+func (s *TOServer) Delete() (error, error, int) { return api.GenericDelete(s) }
 
 func selectQuery() string {
 	const JumboFrameBPS = 9000

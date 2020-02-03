@@ -19,11 +19,11 @@
 ``deliveryservices/{{ID}}/unassigned_servers``
 **********************************************
 
-.. caution:: This route does not appear to work properly, and its use is strongly discouraged! Also note that the documentation here is not being updated as a result of this, and may contain out-of-date and/or erroneous information.
+.. danger:: This route does not appear to work properly, and its use is strongly discouraged! Also note that the documentation here is not being updated as a result of this, and may contain out-of-date and/or erroneous information.
 
 ``GET``
 =======
-Retrieves properties of Edge-tier servers not assigned to a :term:`Delivery Service`.
+Retrieves properties of :term:`Edge-tier cache servers` **not** assigned to a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_
@@ -33,16 +33,16 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+---------------------------------------------------+
-	| Name | Description                                       |
-	+======+===================================================+
-	| ID   | Delivery service ID.                              |
-	+------+---------------------------------------------------+
+	+------+---------------------------------------------------------------+
+	| Name | Description                                                   |
+	+======+===============================================================+
+	| ID   | An integral, unique identifier for a :term:`Delivery Service` |
+	+------+---------------------------------------------------------------+
 
 Response Structure
 ------------------
-:cachegroup:     The cache group name
-:cachegroupId:   The cache group id
+:cachegroup:     A string which is the :ref:`Name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
 :cdnId:          Id of the CDN to which the server belongs to
 :cdnName:        Name of the CDN to which the server belongs to
 :domainName:     The domain name part of the FQDN of the cache
@@ -132,5 +132,5 @@ Response Structure
 				]
 		}
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to see servers not assigned to *any* given :term:`Delivery Service`, whereas any other user will only be able to see the servers not assigned to :term:`Delivery Service`\ s their Tenant is allowed to see.
+.. [1] Users with the roles "admin" and/or "operations" will be able to see servers not assigned to *any* given :term:`Delivery Service`, whereas any other user will only be able to see the servers not assigned to :term:`Delivery Services` their Tenant is allowed to see.
 

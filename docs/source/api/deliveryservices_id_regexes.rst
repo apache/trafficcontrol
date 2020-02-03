@@ -51,7 +51,7 @@ Response Structure
 :id:        The integral, unique identifier of this regular expression
 :pattern:   The actual regular expression - ``\``\ s are escaped
 :setNumber: The order in which the regular expression is evaluated against requests
-:type:      The integral, unique identifier of the type of this regular expression
+:type:      The integral, unique identifier of the :term:`Type` of this regular expression
 :typeName:  The :term:`Type` of regular expression - determines that against which it will be evaluated
 
 .. code-block:: http
@@ -63,7 +63,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: fW9Fde4WRpp2ShRAC41P9s/PhU71LI/SEzHgYjGqfzhk45wq0kpaWy76JvPfLpowY8eDTp8Y8TL5rNGEc+bM+A==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 27 Nov 2018 20:56:43 GMT
@@ -139,7 +139,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: kS5dRzAhFKE7vfzHK7XVIwpMOjztksk9MU+qtj5YU/1oxVHmqNbJ12FeOOIJsZJCXbYlnBS04sCI95Sz5wed1Q==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 28 Nov 2018 17:00:42 GMT

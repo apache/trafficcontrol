@@ -133,7 +133,8 @@ func TestCreateHandler(t *testing.T) {
 	createFunc := CreateHandler(typeRef)
 
 	//verifies we get the right changelog insertion
-	expectedMessage := Created + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " keys: { id:1 }"
+	keys, _ := typeRef.GetKeys()
+	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Created + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
@@ -141,7 +142,7 @@ func TestCreateHandler(t *testing.T) {
 	createFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"alerts":[{"text":"tester was created.","level":"success"}],"response":{"ID":1}}`
+	body := `{"alerts":[{"text":"tester was created.","level":"success"}],"response":{"ID":1}}` + "\n"
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -181,7 +182,7 @@ func TestReadHandler(t *testing.T) {
 	readFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"response":[{"ID":1}]}`
+	body := `{"response":[{"ID":1}]}` + "\n"
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -218,7 +219,8 @@ func TestUpdateHandler(t *testing.T) {
 	updateFunc := UpdateHandler(typeRef)
 
 	//verifies we get the right changelog insertion
-	expectedMessage := Updated + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " keys: { id:1 }"
+	keys, _ := typeRef.GetKeys()
+	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Updated + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
@@ -226,7 +228,7 @@ func TestUpdateHandler(t *testing.T) {
 	updateFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"alerts":[{"text":"tester was updated.","level":"success"}],"response":{"ID":1}}`
+	body := `{"alerts":[{"text":"tester was updated.","level":"success"}],"response":{"ID":1}}` + "\n"
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -263,14 +265,15 @@ func TestDeleteHandler(t *testing.T) {
 	deleteFunc := DeleteHandler(typeRef)
 
 	//verifies we get the right changelog insertion
-	expectedMessage := Deleted + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " keys: { id:1 }"
+	keys, _ := typeRef.GetKeys()
+	expectedMessage := strings.ToUpper(typeRef.GetType()) + ": " + typeRef.GetAuditName() + ", ID: " + strconv.Itoa(keys["id"].(int)) + ", ACTION: " + Deleted + " " + typeRef.GetType() + ", keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	deleteFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"alerts":[{"text":"tester was deleted.","level":"success"}]}`
+	body := `{"alerts":[{"text":"tester was deleted.","level":"success"}]}` + "\n"
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}

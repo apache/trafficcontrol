@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var CompareController = function(Restangular, item1Name, item2Name, item1, item2, $scope, $window) {
+var CompareController = function(item1Name, item2Name, item1, item2, $scope, $window) {
 
 	$scope.item1Name = item1Name;
 	$scope.item2Name = item2Name;
@@ -59,8 +59,7 @@ var CompareController = function(Restangular, item1Name, item2Name, item1, item2
 
 	var compare = function() {
 		$('#diff').html('<i class="fa fa-refresh fa-spin fa-1x fa-fw"></i> Comparing...');
-		// if the response has been decorated with Restangular methods / properties, remove them...they will pollute the diff
-		performDiff(Restangular.stripRestangular(item1), Restangular.stripRestangular(item2), 'diff');
+		performDiff(item1, item2, 'diff');
 	};
 
 	$scope.back = function() {
@@ -73,5 +72,5 @@ var CompareController = function(Restangular, item1Name, item2Name, item1, item2
 
 };
 
-CompareController.$inject = ['Restangular', 'item1Name', 'item2Name', 'item1', 'item2', '$scope', '$window'];
+CompareController.$inject = ['item1Name', 'item2Name', 'item1', 'item2', '$scope', '$window'];
 module.exports = CompareController;

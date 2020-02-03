@@ -22,8 +22,7 @@
 
 ``POST``
 ========
-
-Authentication of a user by exchanging a code for an encrypted JSON Web Token from an OAuth service. Traffic Ops will ``POST`` to the authCodeTokenUrl to exchange the code for an encrypted JSON Web Token.  It will then decode and validate the token, validate the key set domain, and send back a session cookie.
+Authentication of a user by exchanging a code for an encrypted JSON Web Token from an OAuth service. Traffic Ops will ``POST`` to the ``authCodeTokenUrl`` to exchange the code for an encrypted JSON Web Token.  It will then decode and validate the token, validate the key set domain, and send back a session cookie.
 
 :Auth. Required: No
 :Roles Required: None
@@ -65,7 +64,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 13 Dec 2018 21:21:33 GMT; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: UdO6T3tMNctnVusDXzRjVwwYOnD7jmnBzPEB9PvOt2bHajTv3SKTPiIZjDzvhU6EX4p+JoG4fA5wlhgxpsejIw==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 13 Dec 2018 15:21:33 GMT

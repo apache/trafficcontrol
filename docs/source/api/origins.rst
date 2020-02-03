@@ -22,7 +22,7 @@
 
 ``GET``
 =======
-Gets all requested :term:`origin`\ s.
+Gets all requested :term:`origins`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -35,7 +35,7 @@ Request Structure
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| Name            | Required | Description                                                                                                                                                       |
 	+=================+==========+===================================================================================================================================================================+
-	| cachegroup      | no       | Return only :term:`origins` within the :term:`Cache Group` identified by this integral, unique identifier                                                         |
+	| cachegroup      | no       | Return only :term:`origins` within the :term:`Cache Group` that has this :ref:`cache-group-id`                                                                    |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| coordinate      | no       | Return only :term:`origins` located at the geographic coordinates identified by this integral, unique identifier                                                  |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -52,6 +52,18 @@ Request Structure
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| tenant          | no       | Return only :term:`origins` belonging to the tenant identified by this integral, unique identifier                                                                |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby         | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                                                     |
+	|                 |          | array                                                                                                                                                             |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder       | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                                          |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| limit           | no       | Choose the maximum number of results to return                                                                                                                    |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| offset          | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                                              |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| page            | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. If ``offset`` was defined,   |
+	|                 |          | this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                                                                            |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. note:: Several fields of origin definitions which are filterable by Query Parameters are allowed to be ``null``. ``null`` values in these fields will be filtered *out* appropriately by such Query Parameters, but do note that ``null`` is not a valid value accepted by any of these Query Parameters, and attempting to pass it will result in an error.
 
@@ -66,11 +78,11 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:        The name of the :term:`Cache Group` to which the :term:`origin` belongs
-:cachegroupId:      An integral, unique identifier for the :term:`Cache Group` to which the :term:`origin` belongs
+:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`origin` belongs
+:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`origin` belongs
 :coordinate:        The name of a coordinate pair that defines the origin's geographic location
-:coordinateID:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
-:deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`origin` belongs
+:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
+:deliveryService:   A string that is the :ref:`ds-xmlid` of the :term:`Delivery Service` to which the :term:`origin` belongs
 :deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`origin` belongs
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
 :id:                An integral, unique identifier for this :term:`origin`
@@ -95,7 +107,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: sm8DpvdvrfdSVLtmXTdfjsZbTlbc+pI40Gy0aj00XIURTPfFXuv/4LgHb6A3r92iymbRHvFrH6qdB2g97U2sBg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 11 Dec 2018 15:43:41 GMT
@@ -129,7 +141,7 @@ Response Structure
 ========
 Creates a new origin definition.
 
-.. warning:: At the time of this writing it is possible to create and/or modify origin definitions assigned to STEERING and CLIENT_STEERING :term:`Delivery Service`\ s - despite that an origin has no meaning in those contexts. In these cases, the API responses may give incorrect output - see `GitHub Issue #3107 <https://github.com/apache/trafficcontrol/issues/3107>`_ for details and updates.
+.. warning:: At the time of this writing it is possible to create and/or modify origin definitions assigned to STEERING and CLIENT_STEERING :term:`Delivery Services` - despite that an origin has no meaning in those contexts. In these cases, the API responses may give incorrect output - see `GitHub Issue #3107 <https://github.com/apache/trafficcontrol/issues/3107>`_ for details and updates.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -137,8 +149,8 @@ Creates a new origin definition.
 
 Request Structure
 -----------------
-:cachegroupId:      An optional, integral, unique identifier that identifies a :term:`Cache Group` to which the new :term:`origin` shall belong
-:coordinateID:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
+:cachegroupId:      An optional, integer which, if present, should be the :ref:`Cache Group ID <cache-group-id>` that identifies a :term:`Cache Group` to which the new :term:`origin` shall belong
+:coordinateId:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
 :deliveryServiceId: The integral, unique identifier of the :term:`Delivery Service` to which the new :term:`origin` shall belong
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
 :ip6Address:        An optional string containing the IPv6 address of the :term:`origin`
@@ -177,10 +189,10 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:        The name of the :term:`Cache Group` to which the :term:`origin` belongs
-:cachegroupId:      An integral, unique identifier for the :term:`Cache Group` to which the :term:`origin` belongs
+:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`origin` belongs
+:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`origin` belongs
 :coordinate:        The name of a coordinate pair that defines the origin's geographic location
-:coordinateID:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
+:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
 :deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`origin` belongs
 :deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`origin` belongs
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
@@ -206,7 +218,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: z4gp0MaqYu+gSRORhKT2eObVBuVDVx1rdteRaN5kRL9uJ3hNzUCi4dSKIt0rgNgOEDt6x/iTYrmVhr/TSHYtmA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 11 Dec 2018 15:14:27 GMT
@@ -255,11 +267,11 @@ Request Structure
 	+------+----------+-------------------------------------------------------------------------------+
 	| Name | Required | Description                                                                   |
 	+======+==========+===============================================================================+
-	|  id  | yes      | The integral, unique identifier of the :term:`origin` definition being edited |
+	| id   | yes      | The integral, unique identifier of the :term:`origin` definition being edited |
 	+------+----------+-------------------------------------------------------------------------------+
 
-:cachegroupId:      An optional, integral, unique identifier that identifies a :term:`Cache Group` to which the :term:`origin` shall belong
-:coordinateID:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
+:cachegroupId:      An optional, integer which, if present, should be the :ref:`Cache Group ID <cache-group-id>` that identifies a :term:`Cache Group` to which the new :term:`origin` shall belong
+:coordinateId:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
 :deliveryServiceId: The integral, unique identifier of the :term:`Delivery Service` to which the :term:`origin` shall belong
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
 :ip6Address:        An optional string containing the IPv6 address of the :term:`origin`
@@ -295,10 +307,10 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:        The name of the :term:`Cache Group` to which the :term:`origin` belongs
-:cachegroupId:      An integral, unique identifier for the :term:`Cache Group` to which the :term:`origin` belongs
+:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`origin` belongs
+:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`origin` belongs
 :coordinate:        The name of a coordinate pair that defines the origin's geographic location
-:coordinateID:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
+:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
 :deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`origin` belongs
 :deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`origin` belongs
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
@@ -324,7 +336,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: Zx7jOa7UAQxRtDenYodvGQSoooPj4m0yY0AIeUpbdelmYMiNdPYtW82BCmMesFXkmP74nV4HbTUyDHVMuJxZ7g==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 11 Dec 2018 15:40:53 GMT
@@ -396,7 +408,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: fLaY4/nh0yR38xq5weBKYg02+aQV6Z1ZroOq9UqUCHLMMrH1NMyhOHx+EphPq7JxkjmGY04WCt6VvDyjGWcgfQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 11 Dec 2018 17:04:14 GMT

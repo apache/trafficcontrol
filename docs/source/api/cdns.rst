@@ -28,7 +28,28 @@ Extract information about all CDNs
 
 Request Structure
 -----------------
-No parameters available
+
+.. table:: Request Query Parameters
+
+	+-----------+----------+-----------------------------------------------------------------------------------+
+	| Parameter | Required | Description                                                                       |
+	+===========+==========+===================================================================================+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the |
+	|           |          | objects in the ``response`` array                                                 |
+	+-----------+----------+-----------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending   |
+	|           |          | ("desc")                                                                          |
+	+-----------+----------+-----------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                    |
+	+-----------+----------+-----------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in     |
+	|           |          | conjunction with limit                                                            |
+	+-----------+----------+-----------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this           |
+	|           |          | parameter, pages are ``limit`` long and the first page is 1. If ``offset`` was    |
+	|           |          | defined, this query parameter has no effect. ``limit`` must be defined to make    |
+	|           |          | use of ``page``.                                                                  |
+	+-----------+----------+-----------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -47,7 +68,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: z9P1NkxGebPncUhaChDHtYKYI+XVZfhE6Y84TuwoASZFIMfISELwADLpvpPTN+wwnzBfREksLYn+0313QoBWhA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 14 Nov 2018 20:46:57 GMT
@@ -115,7 +136,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 1rZRlOfQioGRrEb4nCfjGGx7y3Ub2h7BZ4z6NbhcY4acPslKSUNM8QLjWTVwLU4WpkfJNxcoyy8NlKULFrY9Bg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 14 Nov 2018 20:49:28 GMT

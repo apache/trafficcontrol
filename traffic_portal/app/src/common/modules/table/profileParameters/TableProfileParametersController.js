@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfileParametersController = function(profile, parameters, $controller, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService) {
+var TableProfileParametersController = function(profile, parameters, $controller, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService, messageModel) {
 
 	// extends the TableParametersController to inherit common methods
 	angular.extend(this, $controller('TableParametersController', { parameters: parameters, $scope: $scope }));
@@ -45,15 +45,19 @@ var TableProfileParametersController = function(profile, parameters, $controller
 	};
 
 	var linkProfileParameters = function(paramIds) {
-		profileParameterService.linkProfileParameters(profile.id, paramIds)
+		profileParameterService.linkProfileParameters(profile, paramIds)
 			.then(
-				function() {
+				function(result) {
+					messageModel.setMessages(result.data.alerts, false);
 					$scope.refresh(); // refresh the profile parameters table
 				}
 			);
 	};
 
-	$scope.confirmRemoveParam = function(parameter) {
+	$scope.confirmRemoveParam = function(parameter, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
 		if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
 			deliveryServiceService.getDeliveryServices({ profile: profile.id }).
 				then(function(result) {
@@ -180,6 +184,7 @@ var TableProfileParametersController = function(profile, parameters, $controller
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
+				{ "width": "50%", "targets": 2 },
 				{ 'orderable': false, 'targets': 4 }
 			],
 			"aaSorting": []
@@ -188,5 +193,5 @@ var TableProfileParametersController = function(profile, parameters, $controller
 
 };
 
-TableProfileParametersController.$inject = ['profile', 'parameters', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
+TableProfileParametersController.$inject = ['profile', 'parameters', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService', 'messageModel'];
 module.exports = TableProfileParametersController;

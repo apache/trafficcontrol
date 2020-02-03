@@ -21,6 +21,7 @@ package origin
 
 import (
 	"errors"
+	"net/http"
 	"reflect"
 	"strings"
 	"testing"
@@ -121,9 +122,9 @@ func TestReadOrigins(t *testing.T) {
 	v := map[string]string{}
 
 	testUser := auth.CurrentUser{TenantID: 1}
-	origins, errs, errType := getOrigins(v, db.MustBegin(), &testUser)
-	if len(errs) > 0 {
-		t.Errorf("getOrigins expected: no errors, actual: %v with error type: %s", errs, errType.String())
+	origins, userErr, sysErr, errCode := getOrigins(v, db.MustBegin(), &testUser)
+	if userErr != nil || sysErr != nil {
+		t.Errorf("getOrigins expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
 
 	if len(origins) != 3 {

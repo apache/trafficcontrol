@@ -24,7 +24,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/quadtree"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/quadtree"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )

@@ -21,7 +21,7 @@
 
 ``DELETE``
 ==========
-De-associate a :term:`Parameter` with a :term:`Cache Group`
+Dissociate a :term:`Parameter` with a :term:`Cache Group`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-------------+---------------------------------------------------------------------------------------------------------+
-	| Name        | Description                                                                                             |
-	+=============+=========================================================================================================+
-	| ID          | Unique identifier for the :term:`Cache Group` which will have the :term:`Parameter` association deleted |
-	+-------------+---------------------------------------------------------------------------------------------------------+
-	| parameterID | Unique identifier for the :term:`Parameter` which will be removed from a :term:`Cache Group`            |
-	+-------------+---------------------------------------------------------------------------------------------------------+
+	+-------------+----------------------------------------------------------------------------------------------------------------+
+	| Name        | Description                                                                                                    |
+	+=============+================================================================================================================+
+	| ID          | The :ref:`cache-group-id` of the :term:`Cache Group` which will have the :term:`Parameter` association deleted |
+	+-------------+----------------------------------------------------------------------------------------------------------------+
+	| parameterID | The :ref:`parameter-id` of the :term:`Parameter` which will be removed from a :term:`Cache Group`              |
+	+-------------+----------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -62,7 +62,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 14 Nov 2018 18:26:40 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 22:26:40 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: Cuj+ZPAKsDLp4FpbJDcwsWY0yVQAi1Um1CWraeTIQEMlyJSBEm17oKQWDjzTrvqqV8Prhu3gzlcHoVPzEpbQ1Q==
 	Content-Length: 84
@@ -70,6 +70,6 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Profile parameter association was deleted."
+			"text": "cachegroup parameter was deleted."
 		}
 	]}

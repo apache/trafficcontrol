@@ -15,111 +15,63 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
+	"net"
+	"net/url"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// SummaryStats ...
-// Deprecated: use GetSummaryStats
-func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]tc.StatsSummary, error) {
-	ss, _, err := to.GetSummaryStats(cdn, deliveryService, statName)
-	return ss, err
+const (
+	basePathSummaryStats = apiBase + "/stats_summary"
+)
+
+// GetSummaryStats gets a list of summary stats with the ability to filter on cdn,deliveryService and/or stat
+func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.StatsSummaryResponse, ReqInf, error) {
+	resp := tc.StatsSummaryResponse{}
+
+	param := url.Values{}
+	if cdn != nil {
+		param.Add("cdnName", *cdn)
+	}
+	if deliveryService != nil {
+		param.Add("deliveryServiceName", *deliveryService)
+	}
+	if statName != nil {
+		param.Add("statName", *statName)
+	}
+
+	url := basePathSummaryStats
+	if len(param) > 0 {
+		url = fmt.Sprintf("%s?%s", basePathSummaryStats, param.Encode())
+	}
+	reqInf, err := get(to, url, &resp)
+	return resp, reqInf, err
 }
 
-func (to *Session) GetSummaryStats(cdn string, deliveryService string, statName string) ([]tc.StatsSummary, ReqInf, error) {
-	var queryParams []string
-	if len(cdn) > 0 {
-		queryParams = append(queryParams, fmt.Sprintf("cdnName=%s", cdn))
-	}
-	if len(deliveryService) > 0 {
-		queryParams = append(queryParams, fmt.Sprintf("deliveryServiceName=%s", deliveryService))
-	}
-	if len(statName) > 0 {
-		queryParams = append(queryParams, fmt.Sprintf("statName=%s", statName))
-	}
-	queryURL := "/api/1.2/stats_summary.json"
-	queryParamString := "?"
-	if len(queryParams) > 0 {
-		for i, param := range queryParams {
-			if i == 0 {
-				queryParamString += param
-			} else {
-				queryParamString += fmt.Sprintf("&%s", param)
-			}
-		}
-		queryURL += queryParamString
-	}
+// GetSummaryStatsLastUpdated time of the last summary for a given stat
+func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummaryLastUpdatedResponse, ReqInf, error) {
+	resp := tc.StatsSummaryLastUpdatedResponse{}
 
-	resp, remoteAddr, err := to.request("GET", queryURL, nil)
+	param := url.Values{}
+	param.Add("lastSummaryDate", "true")
+	if statName != nil {
+		param.Add("statName", *statName)
+	}
+	url := fmt.Sprintf("%s?%s", basePathSummaryStats, param.Encode())
+
+	reqInf, err := get(to, url, &resp)
+	return resp, reqInf, err
+}
+
+// CreateSummaryStats creates a stats summary
+func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, ReqInf, error) {
+	var alerts tc.Alerts
+	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.StatsSummaryResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-// SummaryStatsLastUpdated ...
-// Deprecated: use GetSummaryStatsLastUpdated
-func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
-	s, _, err := to.GetSummaryStatsLastUpdated(statName)
-	return s, err
-}
-
-func (to *Session) GetSummaryStatsLastUpdated(statName string) (string, ReqInf, error) {
-	queryURL := "/api/1.2/stats_summary.json?lastSummaryDate=true"
-	if len(statName) > 0 {
-		queryURL += fmt.Sprintf("?statName=%s", statName)
-	}
-
-	resp, remoteAddr, err := to.request("GET", queryURL, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return "", reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.LastUpdated
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", reqInf, err
-	}
-
-	if len(data.Response.SummaryTime) > 0 {
-		return data.Response.SummaryTime, reqInf, nil
-	}
-	t := "1970-01-01 00:00:00"
-	return t, reqInf, nil
-}
-
-// AddSummaryStats ...
-// Deprecated: use DoAddSummaryStats
-func (to *Session) AddSummaryStats(statsSummary tc.StatsSummary) error {
-	_, err := to.DoAddSummaryStats(statsSummary)
-	return err
-}
-func (to *Session) DoAddSummaryStats(statsSummary tc.StatsSummary) (ReqInf, error) {
 	reqBody, err := json.Marshal(statsSummary)
 	if err != nil {
-		return ReqInf{}, err
+		return tc.Alerts{}, reqInf, err
 	}
-
-	url := "/api/1.2/stats_summary/create"
-	resp, remoteAddr, err := to.request("POST", url, reqBody)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return reqInf, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		err := fmt.Errorf("Response code = %s and Status = %s", strconv.Itoa(resp.StatusCode), resp.Status)
-		return reqInf, err
-	}
-	return reqInf, nil
+	reqInf, err = post(to, basePathSummaryStats, reqBody, &alerts)
+	return alerts, reqInf, err
 }

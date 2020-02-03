@@ -123,7 +123,7 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
                         { id: $scope.DRAFT, name: 'Save Request as Draft' },
                         { id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
                     ];
-                    if (userModel.user.roleName == propertiesModel.properties.dsRequests.roleNeededToSkip) {
+                    if (userModel.user.roleName == propertiesModel.properties.dsRequests.overrideRole) {
                         statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
                     }
                     return statuses;
@@ -227,6 +227,7 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         { "name": "DNS Bypass TTL", "visible": false, "searchable": false },
         { "name": "DNS TTL", "visible": false, "searchable": false },
         { "name": "DSCP", "visible": true, "searchable": true },
+        { "name": "ECS Enabled", "visible": false, "searchable": false },
         { "name": "Edge Header Rewrite Rules", "visible": false, "searchable": false },
         { "name": "FQ Pacing Rate", "visible": false, "searchable": false },
         { "name": "Geo Limit", "visible": false, "searchable": false },
@@ -337,13 +338,9 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         },
         null, // Divider
         {
-            text: 'Manage Targets',
-            displayed: function ($itemScope) {
-                // only show for steering* delivery services
-                return $itemScope.ds.type.indexOf('STEERING') != -1;
-            },
+            text: 'Manage Invalidation Requests',
             click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/targets?type=' + $itemScope.ds.type);
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/jobs?type=' + $itemScope.ds.type);
             }
         },
         {
@@ -357,21 +354,35 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
             }
         },
         {
-            text: 'Manage Servers',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/servers?type=' + $itemScope.ds.type);
-            }
-        },
-        {
             text: 'Manage Regexes',
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/regexes?type=' + $itemScope.ds.type);
             }
         },
         {
-            text: 'Manage Invalidation Requests',
+            text: 'Manage Required Server Capabilities',
+            displayed: function ($itemScope) {
+                // only show for DNS* or HTTP* delivery services
+                return ($itemScope.ds.type.indexOf('DNS') != -1 || $itemScope.ds.type.indexOf('HTTP') != -1);
+            },
             click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/jobs?type=' + $itemScope.ds.type);
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/required-server-capabilities?type=' + $itemScope.ds.type);
+            }
+        },
+        {
+            text: 'Manage Servers',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/servers?type=' + $itemScope.ds.type);
+            }
+        },
+        {
+            text: 'Manage Targets',
+            displayed: function ($itemScope) {
+                // only show for steering* delivery services
+                return $itemScope.ds.type.indexOf('STEERING') != -1;
+            },
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/targets?type=' + $itemScope.ds.type);
             }
         },
         {
@@ -481,9 +492,6 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
             "iDisplayLength": 25,
             "aaSorting": [],
             "columns": $scope.columns,
-            "colReorder": {
-                realtime: false
-            },
             "initComplete": function(settings, json) {
                 try {
                     // need to create the show/hide column checkboxes and bind to the current visibility

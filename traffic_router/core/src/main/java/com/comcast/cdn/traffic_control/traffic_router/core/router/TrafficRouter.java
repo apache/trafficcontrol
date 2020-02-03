@@ -543,6 +543,13 @@ public class TrafficRouter {
 		final HTTPRouteResult routeResult = new HTTPRouteResult(true);
 		routeResult.setDeliveryService(entryDeliveryService);
 
+		if (entryDeliveryService.isRegionalGeoEnabled()) {
+		    RegionalGeo.enforce(this, request, entryDeliveryService, null, routeResult, track);
+		    if (routeResult.getUrl() != null) {
+		        return routeResult;
+		    }
+		}
+
 		final List<SteeringResult> resultsToRemove = new ArrayList<>();
 
 		final Set<Cache> selectedCaches = new HashSet<>();
@@ -551,7 +558,6 @@ public class TrafficRouter {
 		final String steeringHash = buildPatternBasedHashString(entryDeliveryService.getConsistentHashRegex(), request.getPath());
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
-
 			List<Cache> caches = selectCaches(request, ds, track);
 
 			// child Delivery Services can use their query parameters
@@ -580,7 +586,6 @@ public class TrafficRouter {
 				resultsToRemove.add(steeringResult);
 			}
 		}
-
 		steeringResults.removeAll(resultsToRemove);
 
 		geoSortSteeringResults(steeringResults, request.getClientIP(), entryDeliveryService);
@@ -750,10 +755,7 @@ public class TrafficRouter {
 				track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
 				return null;
 			}
-			if (ds.isRegionalGeoEnabled()) {
-				LOGGER.error("Regional Geo Blocking is not supported with multi-route delivery services.. skipping " + entryDeliveryService.getId() + "/" + ds.getId());
-				toBeRemoved.add(steeringResult);
-			} else if (!ds.isAvailable()) {
+			if (!ds.isAvailable()) {
 				toBeRemoved.add(steeringResult);
 			}
 

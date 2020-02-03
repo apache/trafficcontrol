@@ -29,7 +29,7 @@ Configure Federations
 		:scale: 100%
 		:align: center
 
-#. As a user with administrative privileges, create a Federation Mapping by going to :menuselection:`Services --> :term:`Delivery Service`\ s --> More --> Federations` and then clicking :guilabel:`Add Federation Mapping`.
+#. As a user with administrative privileges, create a Federation Mapping by going to :menuselection:`Services --> :term:`Delivery Services` --> More --> Federations` and then clicking :guilabel:`Add Federation Mapping`.
 
 #. Choose the :term:`Delivery Service` to which the federation will be mapped and assign it to the Federation-role user; click :guilabel:`Add`.
 
@@ -59,7 +59,7 @@ Configure Federations
 		Access-Control-Allow-Credentials: true
 		Content-Type: application/json
 		Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-		Set-Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1MTI2LCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---06b4f870d809d82a91433e92eae8320875c3e8b0; expires=Thu, 03 Dec 2015 01:12:06 GMT; path=/; HttpOnly
+		Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 		Server: Mojolicious (Perl)
 		Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
 		Cache-Control: no-cache, no-store, max-age=0, must-revalidate
@@ -88,7 +88,7 @@ Configure Federations
 		:caption: Example API Response
 
 		HTTP/1.1 200 OK
-		Set-Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1OTQyLCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---b42be0749415cefd1d14e1a91bb214845b4de556; expires=Thu, 03 Dec 2015 01:25:42 GMT; path=/; HttpOnly
+		Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 		Server: Mojolicious (Perl)
 		Date: Wed, 02 Dec 2015 21:25:42 GMT
 		Content-Length: 74

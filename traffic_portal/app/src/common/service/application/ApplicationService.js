@@ -38,6 +38,13 @@ var ApplicationService = function($rootScope, $anchorScroll, $http, messageModel
 
         // jquery DataTables default overrides
         $.extend(true, $.fn.dataTable.defaults, {
+            "dom": "lfBrtip",
+            "buttons": [
+                { "extend": "csv", "text": "Export as CSV", "titleAttr": "Export as CSV", "className": "btn-link" }
+            ],
+            "colReorder": {
+                realtime: false
+            },
             "stateSave": true,
             "scrollX": true
         });

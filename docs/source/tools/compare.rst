@@ -22,13 +22,15 @@ The ``compare`` tool is used to compare the output of a set of :ref:`to-api` end
 
 Location and Dependencies
 =========================
-The ``compare`` tool is written in Go, and can be found from within the Traffic Control repository at ``traffic_ops/testing/compare/``. The main file of interest is ``compare.go``, which contains the main routine and logic for checking endpoints. To build the executable, run ``go build .`` from within the ``traffic_ops/testing/compare/`` directory. Alternatively, run the file without storing a built binary by using ``go run <path to compare.go>``. In order to build/run the ``compare`` tool, the following dependencies should be satisfied, probably via ``go get``:
+The ``compare`` tool is written in Go, and can be found from within the Traffic Control repository at ``traffic_ops/testing/compare/``. The main file of interest is ``compare.go``, which contains the main routine and logic for checking endpoints. To build the executable, run ``go build .`` from within the ``traffic_ops/testing/compare/`` directory. Alternatively, run the file without storing a built binary by using :samp:`go run {path to compare.go}`. In order to build/run the :program:`compare` tool, the following dependencies should be satisfied, probably via ``go get``:
 
 * github.com/apache/trafficcontrol/lib/go-tc\ [1]_
 * github.com/kelseyhightower/envconfig
 * golang.org/x/net/publicsuffix
 
-The directory containing the ``compare`` tool also contains an executable Python 3 script named ``genConfigRoutes.py``. This script can be used to scrape the two Traffic Ops instances for API routes that resolve to generated configuration files for mid-tier and edge-tier :term:`cache server`\ s, which can then be fed directly into the ``compare`` tool via a file or pipe. While the script itself has no actual dependencies, it *must* be run from within the full Traffic Control repository, as it imports the Python client for Traffic Ops (located in ``traffic_control/clients/python/trafficops`` inside the repository). The client itself has its own documented dependencies
+The directory containing the ``compare`` tool also contains an executable Python 3 script named ``genConfigRoutes.py``. This script can be used to scrape the two Traffic Ops instances for API routes that resolve to generated configuration files for mid-tier and edge-tier :term:`cache servers`, which can then be fed directly into the ``compare`` tool via a file or pipe. While the script itself has no actual dependencies, it *must* be run from within the full Traffic Control repository, as it imports the Python client for Traffic Ops (located in ``traffic_control/clients/python/trafficops`` inside the repository). The client itself has its own documented dependencies
+
+.. seealso:: Contributions to :program:`genConfigRoutes.py` should follow the :ref:`ATC Python contribution guidelines <py-contributing>`
 
 .. [1] Theoretically, if you downloaded the Traffic Control repository properly (into ``$GOPATH/src/github.com/apache/trafficcontrol``), this will already be satisfied.
 
