@@ -490,22 +490,22 @@ sub assign_deliveryservices {
 	my $count				= 0;
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->with_deprecation_with_no_alternative("Forbidden", "error", 403);
 	}
 
 	if ( ref($delivery_services) ne 'ARRAY' ) {
-		return $self->alert("Delivery services must be an array");
+		return $self->with_deprecation_with_no_alternative("Delivery services must be an array", "error", 400);
 	}
 
 	my $user = $self->db->resultset('TmUser')->find( { id => $user_id } );
 	if ( !defined($user) ) {
-		return $self->not_found();
+		return $self->with_deprecation_with_no_alternative("Resource not found.", "error", 404);
 	}
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
 		#no access to resource tenant
-		return $self->alert("Invalid user. This user is not available to you for assignment.");
+		return $self->with_deprecation_with_no_alternative("Invalid user. This user is not available to you for assignment.", "error", 400);
 	}
 
 	if ( $replace ) {
@@ -527,7 +527,7 @@ sub assign_deliveryservices {
 	&log( $self, $count . " delivery services were assigned to " . $user->username, "APICHANGE" );
 
 	my $response = $params;
-	return $self->success($response, "Delivery service assignments complete.");
+	return $self->with_deprecation_with_no_alternative("Delivery service assignments complete.", "success", 200, $response);
 }
 
 # Read the current user profile and produce the result
