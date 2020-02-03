@@ -31,7 +31,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -222,9 +221,6 @@ func GetAllCacheGroupParameters(tx *sqlx.Tx, parameters map[string]string) (tc.C
 		return tc.CacheGroupParametersList{}, util.JoinErrs(errs)
 	}
 
-	log.Errorf("MATT JACKSON queryparams = %s", queryValues)
-	log.Errorf("MATT JACKSON parameters = %s", parameters)
-	log.Errorf("MATT JACKSON query = %s", selectAllQuery()+where+orderBy+pagination)
 	query := selectAllQuery() + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
@@ -312,7 +308,6 @@ func selectAllQuery() string {
 	return `SELECT cgp.cachegroup, cgp.parameter, cgp.last_updated, cg.name 
 				FROM cachegroup_parameter AS cgp 
 				JOIN cachegroup AS cg ON cg.id = cachegroup`
-	//return `SELECT cachegroup, parameter, last_updated FROM cachegroup_parameter`
 }
 
 func insertQuery() string {

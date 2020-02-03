@@ -70,8 +70,7 @@ func (to *Session) getCacheGroupParameters(route, queryParams string) ([]tc.Cach
 // GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
 func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
 	route := fmt.Sprintf("%s/", API_v1_CacheGroupParameters)
-	r := fmt.Sprintf("%s/%s", route, "")
-	resp, remoteAddr, err := to.request(http.MethodGet, r, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
