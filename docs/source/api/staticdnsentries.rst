@@ -67,7 +67,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/staticdnsentries?address=foo.bar HTTP/1.1
+	GET /api/2.0/staticdnsentries?address=foo.bar HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -125,8 +125,6 @@ Response Structure
 
 ``POST``
 ========
-.. versionadded:: 1.3
-
 Creates a new, static DNS entry.
 
 :Auth. Required: Yes
@@ -148,7 +146,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/staticdnsentries HTTP/1.1
+	POST /api/2.0/staticdnsentries HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -220,8 +218,6 @@ Response Structure
 
 ``PUT``
 =======
-.. versionadded:: 1.3
-
 Updates a static DNS entry.
 
 :Auth. Required:   Yes
@@ -251,7 +247,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.4/staticdnsentries?id=2 HTTP/1.1
+	PUT /api/2.0/staticdnsentries?id=2 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -324,8 +320,6 @@ Response Structure
 
 ``DELETE``
 ==========
-.. versionadded:: 1.3
-
 Delete staticdnsentries.
 
 :Auth. Required: Yes
@@ -345,7 +339,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.4/staticdnsentries?id=2 HTTP/1.1
+	DELETE /api/2.0/staticdnsentries?id=2 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

@@ -42,7 +42,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.4/profileparameters/18/129 HTTP/1.1
+	DELETE /api/2.0/profileparameters/18/129 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

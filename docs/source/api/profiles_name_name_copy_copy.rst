@@ -42,7 +42,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/profiles/name/GLOBAL_copy/copy/GLOBAL HTTP/1.1
+	POST /api/2.0/profiles/name/GLOBAL_copy/copy/GLOBAL HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.62.0
 	Accept: */*
@@ -67,7 +67,7 @@ Response Structure
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
 	Date: Fri, 07 Dec 2018 22:03:54 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: r6V9viEZui1WCns0AUGEx1MtxjjXiU8SZVOtSQjeq7ZJDLl5s8fMmjJdR/HRWduHn7Ax6GzYhoKwnIjMyc7ZWg==

@@ -42,7 +42,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.4/federations/1/deliveryservices/1 HTTP/1.1
+	DELETE /api/2.0/federations/1/deliveryservices/1 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.62.0
 	Accept: */*
@@ -61,7 +61,7 @@ Response Structure
 	cache-control: no-cache, no-store, max-age=0, must-revalidate
 	content-type: application/json
 	date: Wed, 05 Dec 2018 01:06:51 GMT
-	server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 05:06:51 GMT; path=/; HttpOnly
 	vary: Accept-Encoding
 	whole-content-sha512: NqAZuZYlF1UWOaazbj/j4gWX7ye0kGGakRRFEkK6ShxqXvCxE0dCTyu75qiLPN2wSgr3FGQnp2Sq345sE7In9g==

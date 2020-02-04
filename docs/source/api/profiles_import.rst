@@ -49,7 +49,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.1/profiles/import HTTP/1.1
+	POST /api/2.0/profiles/import HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.62.0
 	Accept: */*

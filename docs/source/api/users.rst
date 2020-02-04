@@ -55,13 +55,10 @@ Request Structure
 	|           |          | parameter has no effect. ``limit`` must be defined to make use of ``page``.              |
 	+-----------+----------+------------------------------------------------------------------------------------------+
 
-.. versionadded:: 1.4
-	The ``id`` and ``username`` query parameters were added in the 1.4 API.
-
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/users?username=admin HTTP/1.1
+	GET /api/2.0/users?username=admin HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -152,20 +149,16 @@ Request Structure
 :company:            An optional field which should contain the name of the company for which the user works
 :confirmLocalPasswd: The 'confirm' field in a new user's password specification - must match ``localPasswd``
 :country:            An optional field which should contain the name of the country wherein the user resides
-:email:              The user's email address
-
-	.. versionchanged:: 1.4
-		Prior to version 1.4, the email was validated using the `Email::Valid Perl package <https://metacpan.org/pod/Email::Valid>`_ but is now validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that neither method can actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
-
-:fullName:        The user's full name, e.g. "John Quincy Adams"
-:localPasswd:     The user's password
-:newUser:         An optional meta field with no apparent purpose - don't use this
-:phoneNumber:     An optional field which should contain the user's phone number
-:postalCode:      An optional field which should contain the user's postal code
-:publicSshKey:    An optional field which should contain the user's public encryption key used for the SSH protocol
-:role:            The number that corresponds to the highest permission role which will be permitted to the user
-:stateOrProvince: An optional field which should contain the name of the state or province in which the user resides
-:tenantId:        The integral, unique identifier of the tenant to which the new user shall belong
+:email:              The user's email address validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that neither method can actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
+:fullName:           The user's full name, e.g. "John Quincy Adams"
+:localPasswd:        The user's password
+:newUser:            An optional meta field with no apparent purpose - don't use this
+:phoneNumber:        An optional field which should contain the user's phone number
+:postalCode:         An optional field which should contain the user's postal code
+:publicSshKey:       An optional field which should contain the user's public encryption key used for the SSH protocol
+:role:               The number that corresponds to the highest permission role which will be permitted to the user
+:stateOrProvince:    An optional field which should contain the name of the state or province in which the user resides
+:tenantId:           The integral, unique identifier of the tenant to which the new user shall belong
 
 	.. note:: This field is optional if and only if tenancy is not enabled in Traffic Control
 
@@ -174,7 +167,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.1/users HTTP/1.1
+	POST /api/2.0/users HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -232,7 +225,7 @@ Response Structure
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
 	Date: Thu, 13 Dec 2018 02:28:27 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: vDqbaMvgeeoIds1czqvIWlyDG8WLnCCJdF14Ub05nsE+oJOakkyeZ8odf4d0Zjtqpk01hoVo14H2tjuWPdqwgw==

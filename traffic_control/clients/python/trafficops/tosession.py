@@ -268,7 +268,6 @@ class TOSession(RestApiSession):
 	def get_api_capabilities_by_id(self, id=None):
 		"""
 		Get an API-capability mapping by ID
-		:ref:`to-api-api_capabilities-id`
 		:param id: The api-capabilities Id
 		:type id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -399,7 +398,6 @@ class TOSession(RestApiSession):
 	def get_cachegroup_parameters_by_id(self, parameter_id=None):
 		"""
 		Get a cache groups parameter by its ID
-		:ref:`to-api-cachegroup-parameterID-parameter`
 		:param parameter_id: The parameter Id
 		:type parameter_id: int
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -484,7 +482,6 @@ class TOSession(RestApiSession):
 	def get_cache_group_fallbacks(self, query_params=None):
 		"""
 		Retrieve fallback related configurations for a cache group
-		:ref:`to-api-cachegroup_fallbacks`
 
 		:param query_params: Either cacheGroupId or fallbackId must be used or can be used simultaneously
 		:type query_params: Dict[str, int]
@@ -496,7 +493,6 @@ class TOSession(RestApiSession):
 	def create_cache_group_fallbacks(self, data=None):
 		"""
 		Creates fallback configuration for the cache group. New fallbacks can be added only via POST.
-		:ref:`to-api-cachegroup_fallbacks`
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -507,7 +503,6 @@ class TOSession(RestApiSession):
 	def update_cache_group_fallbacks(self, data=None):
 		"""
 		Updates an existing fallback configuration for the cache group.
-		:ref:`to-api-cachegroup_fallbacks`
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -518,7 +513,6 @@ class TOSession(RestApiSession):
 	def delete_cache_group_fallbacks(self, query_params=None):
 		"""
 		Deletes an existing fallback related configurations for a cache group
-		:ref:`to-api-cachegroup_fallbacks`
 
 		:param query_params: Either cacheGroupId or fallbackId must be used or can be used simultaneously
 		:type query_params: Dict[str, int]
@@ -744,7 +738,6 @@ class TOSession(RestApiSession):
 	def get_cdn_routing_info(self, cdn_name=None):
 		"""
 		Retrieves CDN routing information
-		:ref:`to-api-cdns-name-configs-routing`
 		:param cdn_name: The CDN name to find routing info for
 		:type cdn_name: String
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -1010,7 +1003,6 @@ class TOSession(RestApiSession):
 		"""
 		Retrieves the failover state for a delivery service. Delivery service must be assigned to
 		user if user is not admin or operations.
-		:ref:`to-api-deliveryservices-id-state`
 		:param delivery_service_id: The delivery service Id
 		:type delivery_service_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -1114,7 +1106,6 @@ class TOSession(RestApiSession):
 	def create_delivery_service_user_link(self, data=None):
 		"""
 		Create one or more user / delivery service assignments.
-		:ref:`to-api-deliveryservice_user`
 		:param data: The parameter data to use for Delivery Service SSL key generation.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -1126,7 +1117,6 @@ class TOSession(RestApiSession):
 	def delete_delivery_service_user_link(self, delivery_service_id=None, user_id=None):
 		"""
 		Removes a delivery service from a user.
-		:ref:`to-api-deliveryservice_user-dsid-userid`
 		:param delivery_service_id: The delivery service id to dissasociate the user
 		:type delivery_service_id: int
 		:param user_id: The user id to dissassociate
@@ -1582,7 +1572,6 @@ class TOSession(RestApiSession):
 	def get_hwinfo(self):
 		"""
 		Get hwinfo for servers.
-		:ref:`to-api-hwinfo`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1631,7 +1620,6 @@ class TOSession(RestApiSession):
 	def get_job_by_id(self, job_id=None):
 		"""
 		Get a job by ID (currently limited to invalidate content (PURGE) jobs).
-		:ref:`to-api-jobs-id`
 		:param job_id: The job id to retrieve
 		:type job_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -1665,7 +1653,6 @@ class TOSession(RestApiSession):
 	def get_associated_profiles_by_parameter_id(self, parameter_id=None):
 		"""
 		Get all Profiles associated to a Parameter by Id.
-		:ref:`to-api-parameters-id-profiles`
 		:param parameter_id: The parameter id
 		:type parameter_id: int
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -1676,7 +1663,6 @@ class TOSession(RestApiSession):
 	def get_unassigned_profiles_by_parameter_id(self, parameter_id=None):
 		"""
 		Retrieves all profiles NOT assigned to the parameter.
-		:ref:`to-api-parameters-id-unassigned_profiles`
 		:param parameter_id: The parameter id
 		:type parameter_id: int
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -1756,7 +1742,6 @@ class TOSession(RestApiSession):
 	def validate_parameter_exists(self, data=None):
 		"""
 		Validate that a Parameter exists.
-		:ref:`to-api-parameters-validate`
 		:param data: The parameter data to use for parameter validation.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -1810,7 +1795,6 @@ class TOSession(RestApiSession):
 	def create_physical_location(self, region_name=None, query_params=None):
 		"""
 		Create physical location
-		:ref:`to-api-regions-name-phys_locations`
 		:param region_name: the name of the region to create physical location into
 		:type region_name: String
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -2025,7 +2009,6 @@ class TOSession(RestApiSession):
 	def create_region(self, division_name=None, data=None):
 		"""
 		Create a region
-		:ref:`to-api-divisions-name-regions`
 		:param division_name: The Division name in which region will reside
 		:type division_name: String
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
@@ -2086,7 +2069,6 @@ class TOSession(RestApiSession):
 	def get_server_type_count(self):
 		"""
 		Retrieves a count of CDN servers by type
-		:ref:`to-api-servers-totals`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -2357,7 +2339,6 @@ class TOSession(RestApiSession):
 	def delete_to_extension(self, extension_id=None):
 		"""
 		Deletes a Traffic Ops extension.
-		:ref:`to-api-to_extensions-id-delete`
 		:param extension_id: The extension id to delete
 		:type extension_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -2380,7 +2361,6 @@ class TOSession(RestApiSession):
 	def get_types_only_names(self):
 		"""
 		Get Data Types with only the Names
-		:ref:`to-api-types-trimmed`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -2487,7 +2467,6 @@ class TOSession(RestApiSession):
 	def get_authenticated_user_jobs(self):
 		"""
 		Retrieves the user's list of jobs.
-		:ref:`to-api-user-current-jobs`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -2502,7 +2481,6 @@ class TOSession(RestApiSession):
 		not try to remove the content from the caches, but it makes the content inaccessible using
 		the `regex_revalidate ATS plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_revalidate.en.html>`_
 		This forces a revalidation of the content, rather than a new get.
-		:ref:`to-api-user-current-jobs`
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]

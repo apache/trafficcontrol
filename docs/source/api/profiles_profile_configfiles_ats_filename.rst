@@ -44,7 +44,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/profiles/ATS_MID_TIER_CACHE/configfiles/ats/volume.config HTTP/1.1
+	GET /api/2.0/profiles/ATS_MID_TIER_CACHE/configfiles/ats/volume.config HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -65,7 +65,7 @@ Response Structure
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: text/plain;charset=UTF-8
 	Date: Thu, 15 Nov 2018 15:23:44 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: C1Hrs4y3qSThOeZJo5aDJu1QjD/r/7vO6c7E7TaFXx67kWat91uk9BSvieXN5yrOE4HkGsiGBkNZjjZ3hb5mYw==

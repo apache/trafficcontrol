@@ -19,7 +19,6 @@
 *************************
 ``deliveryservice_stats``
 *************************
-.. versionadded:: 1.2
 
 ``GET``
 =======
@@ -27,10 +26,6 @@ Retrieves time-aggregated statistics on a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
-
-	.. versionchanged:: ATCv4
-		Prior to :abbr:`ATC (Apache Traffic Control)` version 4, this endpoint had more convoluted access requirements. The required :term:`Roles` for access were "operations" or "admin" - *unless* the :term:`Delivery Service` requested was "assigned" to the requesting user. In these older versions, Traffic Ops never checked the access to the :term:`Delivery Service`'s stats from a :term:`Tenant`-based perspective (which it now does) but instead used the legacy concept of "assigning" a :term:`Delivery Service` to a user. It no longer considers such assignments whatsoever.
-
 :Response Type:  Object
 
 Request Structure
@@ -88,14 +83,11 @@ Request Structure
 	|                     |                   | Epoch, or in the same, proprietary format as the ``lastUpdated`` fields prevalent throughout the Traffic Ops API                                                                          |
 	+---------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. versionadded:: ATCv4
-	The ``deliveryService`` query parameter was added to this endpoint in all API versions in version 4 of :abbr:`ATC (Apache Traffic Control)`.
-
 .. _deliveryservice_stats-get-request-example:
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.3/deliveryservice_stats?deliveryServiceName=demo1&startDate=2019-07-22T17:55:00Z&endDate=2019-07-22T17:56:00.000Z&metricType=tps_total HTTP/1.1
+	GET /api/2.0/deliveryservice_stats?deliveryServiceName=demo1&startDate=2019-07-22T17:55:00Z&endDate=2019-07-22T17:56:00.000Z&metricType=tps_total HTTP/1.1
 	User-Agent: python-requests/2.20.1
 	Accept-Encoding: gzip, deflate
 	Accept: application/json;timestamp=unix, application/json;timestamp=rfc;q=0.9, application/json;q=0.8, */*;q=0.7

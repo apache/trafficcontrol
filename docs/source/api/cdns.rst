@@ -109,7 +109,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Structure
 
-	POST /api/1.4/cdns HTTP/1.1
+	POST /api/2.0/cdns HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

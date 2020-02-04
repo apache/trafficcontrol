@@ -58,7 +58,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/federation_resolvers?type=RESOLVE6 HTTP/1.1
+	GET /api/2.0/federation_resolvers?type=RESOLVE6 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.63.0
 	Accept: */*
@@ -70,9 +70,6 @@ Response Structure
 :id:          The integral, unique identifier of the resolver
 :ipAddress:   The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
 :lastUpdated: The date and time at which this resolver was last updated, in an ISO-like format
-
-	.. versionadded:: 1.4
-
 :type: The :term:`Type` of the resolver
 
 .. code-block:: http
@@ -120,7 +117,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/federation_resolvers HTTP/1.1
+	POST /api/2.0/federation_resolvers HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.63.0
 	Accept: */*
@@ -138,9 +135,6 @@ Response Structure
 :id:        The integral, unique identifier of the resolver
 :ipAddress: The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
 :type:      The :term:`Type` of the resolver
-
-	.. versionadded:: 1.4
-
 :typeId: The integral, unique identifier of the :term:`Type` of the resolver
 
 
@@ -176,8 +170,6 @@ Response Structure
 ==========
 Deletes a federation resolver.
 
-.. versionadded:: 1.5
-
 :Auth. Required: Yes
 :Roles Required: "admin"
 :Response Type:  Object
@@ -195,7 +187,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.5/federation_resolvers?id=4 HTTP/1.1
+	DELETE /api/2.0/federation_resolvers?id=4 HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*

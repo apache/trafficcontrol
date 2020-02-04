@@ -43,7 +43,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.4/servers/13/status HTTP/1.1
+	PUT /api/2.0/servers/13/status HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -69,7 +69,7 @@ Response Structure
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
 	Date: Mon, 10 Dec 2018 18:08:44 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: LS1jCo5eMVKxmeYDol0I2LgLYazocSggR5hynNoLcPmMov9u2s3ulksPdQtG1N3aS+VM9tdMsCrahFPraLJVwg==

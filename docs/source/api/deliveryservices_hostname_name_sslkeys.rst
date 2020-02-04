@@ -46,7 +46,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-GET /api/1.4/deliveryservices/hostname/video.demo1.mycdn.ciab.test/sslkeys HTTP/1.1
+GET /api/2.0/deliveryservices/hostname/video.demo1.mycdn.ciab.test/sslkeys HTTP/1.1
 Host: trafficops.infra.ciab.test
 User-Agent: curl/7.47.0
 Accept: */*

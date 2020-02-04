@@ -57,7 +57,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/roles?name=admin HTTP/1.1
+	GET /api/2.0/roles?name=admin HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -66,9 +66,6 @@ Request Structure
 Response Structure
 ------------------
 :capabilities: An array of the names of the Capabilities given to this :term:`Role`
-
-	.. versionadded:: 1.3
-
 :description: A description of the :term:`Role`
 :id:          The integral, unique identifier for this :term:`Role`
 :name:        The name of the :term:`Role`
@@ -104,8 +101,6 @@ Response Structure
 
 ``POST``
 ========
-.. versionadded:: 1.3
-
 Creates a new :term:`Role`.
 
 :Auth. Required: Yes
@@ -122,7 +117,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.3/roles HTTP/1.1
+	POST /api/2.0/roles HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -177,8 +172,6 @@ Response Structure
 
 ``PUT``
 =======
-.. versionadded:: 1.3
-
 Replaces an existing :term:`Role` with one provided by the request.
 
 :Auth. Required: Yes
@@ -206,7 +199,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.3/roles?id=5 HTTP/1.1
+	PUT /api/2.0/roles?id=5 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -267,8 +260,6 @@ Response Structure
 
 ``DELETE``
 ==========
-.. versionadded:: 1.3
-
 Deletes a :term:`Role`
 
 :Auth. Required: Yes
@@ -288,7 +279,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.3/roles?id=5 HTTP/1.1
+	DELETE /api/2.0/roles?id=5 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

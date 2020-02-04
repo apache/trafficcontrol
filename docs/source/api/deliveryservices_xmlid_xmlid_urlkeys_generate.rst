@@ -19,8 +19,6 @@
 ``deliveryservices/xmlId/{{xml_id}}/urlkeys/generate``
 ******************************************************
 
-.. versionadded:: 1.2
-
 ``POST``
 ========
 Generates URL signing keys for a :term:`Delivery Service`

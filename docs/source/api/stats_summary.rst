@@ -65,7 +65,7 @@ Summary Stats
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/stats_summary HTTP/1.1
+	GET /api/2.0/stats_summary HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -87,7 +87,7 @@ Last Updated Summary Stat
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/stats_summary?lastSummaryDate=true HTTP/1.1
+	GET /api/2.0/stats_summary?lastSummaryDate=true HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -181,8 +181,6 @@ Last Updated Summary Stat
 ``POST``
 ========
 
-.. versionadded:: 1.5
-
 Post a stats summary for a given stat.
 
 :Auth. Required: Yes
@@ -209,7 +207,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.5/stats_summary HTTP/1.1
+	POST /api/2.0/stats_summary HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

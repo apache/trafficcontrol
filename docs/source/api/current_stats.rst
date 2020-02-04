@@ -21,8 +21,6 @@
 *****************
 An API endpoint that returns current statistics for each CDN and an aggregate across them all.
 
-.. versionadded:: 1.2
-
 ``GET``
 =======
 Retrieves current stats for each CDN. Also includes aggregate stats across them.
@@ -38,7 +36,7 @@ No parameters available.
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/current_stats HTTP/1.1
+	GET /api/2.0/current_stats HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

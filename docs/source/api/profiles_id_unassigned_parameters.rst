@@ -41,7 +41,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/profiles/9/unassigned_parameters HTTP/1.1
+	GET /api/2.0/profiles/9/unassigned_parameters HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

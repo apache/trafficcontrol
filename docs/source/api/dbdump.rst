@@ -39,7 +39,7 @@ No parameters available
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/dbdump HTTP/1.1
+	GET /api/2.0/dbdump HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

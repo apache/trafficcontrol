@@ -58,21 +58,11 @@ Request Structure
 Response Structure
 ------------------
 :fallbacks: An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
-
-	.. versionadded:: ATCv4.0
-
-		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
-
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
 :lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
-
-	.. versionadded:: ATCv4.0
-
-		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
-
 :longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
 :name:                          A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
 :parentCachegroupId:            An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
@@ -143,21 +133,12 @@ Request Structure
 	+-----------+----------------------------------------------------+
 
 :fallbacks: An optional field which, when present, should contain an array of strings that are the :ref:`Names <cache-group-name>` of other :term:`Cache Groups` which will be the :ref:`cache-group-fallbacks`\ [#fallbacks]_
-
-	.. versionadded:: ATCv4.0
-
-		Support for this field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0.
-
 :fallbackToClosest: A boolean that sets the :ref:`cache-group-fallback-to-closest` behavior of the :term:`Cache Group`\ [#fallbacks]_
 
 	.. note:: The default value of ``fallbackToClosest`` is ``true``, and if it is ``null`` Traffic Control components will still interpret it as though it were ``true``.
 
 :latitude:                    An optional field which, if present, should be a floating-point number that will define the :ref:`cache-group-latitude` for the :term:`Cache Group`\ [#optional]_
 :localizationMethods:         Array of :ref:`cache-group-localization-methods` (as strings)
-
-	.. versionadded:: ATCv4.0
-
-		Support for this field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0.
 
 	.. tip:: This field has no defined meaning if the :ref:`cache-group-type` identified by ``typeId`` is not "EDGE_LOC".
 
@@ -173,7 +154,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.3/cachegroups/8 HTTP/1.1
+	PUT /api/2.0/cachegroups/8 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -195,21 +176,11 @@ Request Structure
 Response Structure
 ------------------
 :fallbacks: An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
-
-	.. versionadded:: ATCv4.0
-
-		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
-
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
 :lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
-
-	.. versionadded:: ATCv4.0
-
-		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
-
 :longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
 :name:                          A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
 :parentCachegroupId:            An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
@@ -283,7 +254,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.4/cachegroups/42 HTTP/1.1
+	DELETE /api/2.0/cachegroups/42 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

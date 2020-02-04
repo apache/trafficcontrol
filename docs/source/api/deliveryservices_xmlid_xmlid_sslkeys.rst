@@ -52,9 +52,6 @@ Request Structure
 
 Response Structure
 ------------------
-.. versionchanged:: 1.2
-	Grouped the ``crt``, ``csr``, and ``key`` fields under ``certificate``.
-
 :businessUnit: An optional field which, if present, contains the business unit entered by the user when generating the SSL certificate\ [1]_
 :certificate:  An object containing the actual generated key, certificate, and signature of the SSL keys
 

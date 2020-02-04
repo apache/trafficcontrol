@@ -69,9 +69,6 @@ Response Structure
 
 	:url:         An optional field which, if present, gives the full URL used to retrieve the actual file's contents\ [1]_
 
-.. versionchanged:: Traffic Control 2.0
-	Elements of the ``"configFile"`` array may no longer have the ``"contents"`` key - all file contents are now retrieved via a network request
-
 .. code-block:: http
 	:caption: Response Example
 
@@ -83,7 +80,7 @@ Response Structure
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: text/plain;charset=UTF-8
 	Date: Thu, 15 Nov 2018 15:28:10 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: K6pRI4MkN8O9+wKW8MG3w6nTnmLHtCZKqzXCjw4JfoMYIVJC6fVTN9ysGML71VF2T7ZAIP1TveWhjaH/fNr7sQ==
@@ -104,85 +101,85 @@ Response Structure
 		{
 			"fnameOnDisk": "astats.config",
 			"location": "/etc/trafficserver",
-			"apiUri": "/api/1.2/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/astats.config",
+			"apiUri": "/api/2.0/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/astats.config",
 			"scope": "profiles"
 		},
 		{
 			"fnameOnDisk": "cache.config",
 			"location": "/etc/trafficserver/",
-			"apiUri": "/api/1.2/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/cache.config",
+			"apiUri": "/api/2.0/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/cache.config",
 			"scope": "profiles"
 		},
 		{
 			"fnameOnDisk": "cacheurl_foo.config",
 			"location": "/etc/trafficserver",
-			"apiUri": "/api/1.2/cdns/CDN-in-a-Box/configfiles/ats/cacheurl_foo.config",
+			"apiUri": "/api/2.0/cdns/CDN-in-a-Box/configfiles/ats/cacheurl_foo.config",
 			"scope": "cdns"
 		},
 		{
 			"fnameOnDisk": "hdr_rw_foo.config",
 			"location": "/etc/trafficserver",
-			"apiUri": "/api/1.2/cdns/CDN-in-a-Box/configfiles/ats/hdr_rw_foo.config",
+			"apiUri": "/api/2.0/cdns/CDN-in-a-Box/configfiles/ats/hdr_rw_foo.config",
 			"scope": "cdns"
 		},
 		{
 			"fnameOnDisk": "hosting.config",
 			"location": "/etc/trafficserver/",
-			"apiUri": "/api/1.2/servers/edge/configfiles/ats/hosting.config",
+			"apiUri": "/api/2.0/servers/edge/configfiles/ats/hosting.config",
 			"scope": "servers"
 		},
 		{
 			"fnameOnDisk": "ip_allow.config",
 			"location": "/etc/trafficserver",
-			"apiUri": "/api/1.2/servers/edge/configfiles/ats/ip_allow.config",
+			"apiUri": "/api/2.0/servers/edge/configfiles/ats/ip_allow.config",
 			"scope": "servers"
 		},
 		{
 			"fnameOnDisk": "parent.config",
 			"location": "/etc/trafficserver/",
-			"apiUri": "/api/1.2/servers/edge/configfiles/ats/parent.config",
+			"apiUri": "/api/2.0/servers/edge/configfiles/ats/parent.config",
 			"scope": "servers"
 		},
 		{
 			"fnameOnDisk": "plugin.config",
 			"location": "/etc/trafficserver/",
-			"apiUri": "/api/1.2/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/plugin.config",
+			"apiUri": "/api/2.0/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/plugin.config",
 			"scope": "profiles"
 		},
 		{
 			"fnameOnDisk": "records.config",
 			"location": "/etc/trafficserver/",
-			"apiUri": "/api/1.2/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/records.config",
+			"apiUri": "/api/2.0/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/records.config",
 			"scope": "profiles"
 		},
 		{
 			"fnameOnDisk": "regex_remap_foo.config",
 			"location": "/etc/trafficserver",
-			"apiUri": "/api/1.2/cdns/CDN-in-a-Box/configfiles/ats/regex_remap_foo.config",
+			"apiUri": "/api/2.0/cdns/CDN-in-a-Box/configfiles/ats/regex_remap_foo.config",
 			"scope": "cdns"
 		},
 		{
 			"fnameOnDisk": "regex_revalidate.config",
 			"location": "/etc/trafficserver",
-			"apiUri": "/api/1.2/cdns/CDN-in-a-Box/configfiles/ats/regex_revalidate.config",
+			"apiUri": "/api/2.0/cdns/CDN-in-a-Box/configfiles/ats/regex_revalidate.config",
 			"scope": "cdns"
 		},
 		{
 			"fnameOnDisk": "remap.config",
 			"location": "/etc/trafficserver/",
-			"apiUri": "/api/1.2/servers/edge/configfiles/ats/remap.config",
+			"apiUri": "/api/2.0/servers/edge/configfiles/ats/remap.config",
 			"scope": "servers"
 		},
 		{
 			"fnameOnDisk": "storage.config",
 			"location": "/etc/trafficserver/",
-			"apiUri": "/api/1.2/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/storage.config",
+			"apiUri": "/api/2.0/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/storage.config",
 			"scope": "profiles"
 		},
 		{
 			"fnameOnDisk": "volume.config",
 			"location": "/etc/trafficserver/",
-			"apiUri": "/api/1.2/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/volume.config",
+			"apiUri": "/api/2.0/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/volume.config",
 			"scope": "profiles"
 		}
 	]}

@@ -29,9 +29,6 @@ List all :abbr:`ASNs (Autonomous System Numbers)`.
 :Roles Required: None
 :Response Type:  Array
 
-	.. versionchanged:: 1.2
-		Previously was an object with only one key ("asns") that contained the response array. This has been flattened so that the response is the actual array.
-
 Request Structure
 -----------------
 .. table:: Request Query Parameters
@@ -60,7 +57,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/asns HTTP/1.1
+	GET /api/2.0/asns HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -123,7 +120,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/asns HTTP/1.1
+	POST /api/2.0/asns HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*

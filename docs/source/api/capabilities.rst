@@ -53,7 +53,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/capabilities?name=test HTTP/1.1
+	GET /api/2.0/capabilities?name=test HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -89,70 +89,3 @@ Response Structure
 			"name": "test"
 		}
 	]}
-
-``POST``
-========
-Create a capability.
-
-:Auth. Required: Yes
-:Roles Required: "admin" or "operations"
-:Response Type:  Object
-
-
-Request Structure
------------------
-:name:        The name of the capability being created
-:description: A description of what the capability allows
-
-.. code-block:: http
-	:caption: Request Example
-
-	POST /api/1.4/capabilities HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
-	Accept: */*
-	Cookie: mojolicious=...
-	Content-Length: 73
-	Content-Type: application/json
-
-	{
-		"name": "testquest",
-		"description": "A test capability for API examples"
-	}
-
-Response Structure
-------------------
-:description: Describes the permissions covered by the capability.
-:lastUpdated: Date and time of the last update made to this capability, in an ISO-like format
-:name:        Name of the capability
-
-.. code-block:: http
-	:caption: Response Example
-
-	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
-	Content-Encoding: gzip
-	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 07 Jan 2020 20:06:18 GMT; Max-Age=3600; HttpOnly
-	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 07 Jan 2020 19:06:18 GMT
-	Content-Length: 225
-
-	{ "alerts": [
-		{
-			"text": "Capability created.",
-			"level": "success"
-		},
-		{
-			"text": "This endpoint is deprecated, and will be removed in the future",
-			"level": "warning"
-		}
-	],
-	"response": {
-		"description": "A test capability for API examples",
-		"lastUpdated": "2020-01-07 19:06:18+00",
-		"name": "testquest"
-	}}

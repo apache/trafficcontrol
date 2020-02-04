@@ -42,7 +42,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Structure
 
-	GET /api/1.1/asns/1 HTTP/1.1
+	GET /api/2.0/asns/1 HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -113,7 +113,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.4/asns/1 HTTP/1.1
+	PUT /api/2.0/asns/1 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -181,7 +181,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.4/asns/1 HTTP/1.1
+	DELETE /api/2.0/asns/1 HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*

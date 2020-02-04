@@ -44,7 +44,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.3/deliveryservices/sslkeys/generate HTTP/1.1
+	POST /api/2.0/deliveryservices/sslkeys/generate HTTP/1.1
 	Content-Type: application/json
 
 	{

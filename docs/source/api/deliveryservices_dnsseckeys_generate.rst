@@ -30,9 +30,6 @@ Generates :abbr:`ZSK (Zone-Signing Key)` and :abbr:`KSK (Key-Signing Key)` keypa
 Request Structure
 -----------------
 :effectiveDate: UNIX epoch start date for the signing keys
-
-	.. versionadded:: 1.2
-
 :key:               Name of the CDN
 :kskExpirationDays: Expiration (in days) for the :abbr:`KSKs (Key-Signing Keys)`
 :name:              Domain name used by the CDN

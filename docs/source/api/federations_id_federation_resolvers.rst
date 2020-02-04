@@ -40,7 +40,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.1/federations/1/federation_resolvers HTTP/1.1
+	GET /api/2.0/federations/1/federation_resolvers HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.62.0
 	Accept: */*
@@ -68,7 +68,7 @@ Response Structure
 	cache-control: no-cache, no-store, max-age=0, must-revalidate
 	content-type: application/json
 	date: Wed, 05 Dec 2018 00:49:50 GMT
-	server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 04:49:50 GMT; path=/; HttpOnly
 	vary: Accept-Encoding
 	whole-content-sha512: csC18kE3YjiILHP1wmJg7V4h/XWY8HUMKyPuZWnde2g7HJ4gTY51HfjCSqhyKvIJQ8Rl7uEqshF3Ey6xIMOX4A==
@@ -108,7 +108,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/federations/1/federation_resolvers HTTP/1.1
+	POST /api/2.0/federations/1/federation_resolvers HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.62.0
 	Accept: */*
@@ -137,7 +137,7 @@ Response Structure
 	cache-control: no-cache, no-store, max-age=0, must-revalidate
 	content-type: application/json
 	date: Wed, 05 Dec 2018 00:47:47 GMT
-	server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 04:47:47 GMT; path=/; HttpOnly
 	vary: Accept-Encoding
 	whole-content-sha512: +JDcRByS3HO6pMg3Gzkvn0w7/v5oRul9e+RxyFIOKJKNHOkZILyQBS+PJpxDeCgwI19+0poW5dyHPPR9SwbNCA==

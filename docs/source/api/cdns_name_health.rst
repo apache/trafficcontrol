@@ -40,7 +40,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/cdns/CDN-in-a-Box/health HTTP/1.1
+	GET /api/2.0/cdns/CDN-in-a-Box/health HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -71,7 +71,7 @@ Response Structure
 	Content-Length: 108
 	Content-Type: application/json
 	Date: Tue, 03 Dec 2019 21:33:59 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; expires=Wed, 04 Dec 2019 01:33:59 GMT; path=/; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: KpXViXeAgch58ueQqdyU8NuINBw1EUedE6Rv2ewcLUajJp6kowdbVynpwW7XiSvAyHdtClIOuT3OkhIimghzSA==

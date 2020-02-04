@@ -60,7 +60,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/federations/1/deliveryservices HTTP/1.1
+	GET /api/2.0/federations/1/deliveryservices HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.62.0
 	Accept: */*
@@ -84,7 +84,7 @@ Response Structure
 	cache-control: no-cache, no-store, max-age=0, must-revalidate
 	content-type: application/json
 	date: Wed, 05 Dec 2018 00:44:13 GMT
-	server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 04:44:13 GMT; path=/; HttpOnly
 	vary: Accept-Encoding
 	whole-content-sha512: 7Y9Q/qHeXfbjJduvucRCR85wf4VRfyYhlK59sNRkzIJuwnsMhFcEfYfNqrvELwfexOum/VEX2f/1oa+I/edGfw==
@@ -125,7 +125,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/federations/1/deliveryservices HTTP/1.1
+	POST /api/2.0/federations/1/deliveryservices HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.62.0
 	Accept: */*

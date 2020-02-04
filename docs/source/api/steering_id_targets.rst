@@ -60,7 +60,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Structure
 
-	GET /api/1.1/steering/2/targets?target=1 HTTP/1.1
+	GET /api/2.0/steering/2/targets?target=1 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -128,7 +128,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.1/steering/2/targets HTTP/1.1
+	POST /api/2.0/steering/2/targets HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

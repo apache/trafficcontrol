@@ -21,8 +21,6 @@
 ***************
 Retrieves detailed, aggregated statistics for caches in a specific CDN.
 
-.. versionadded:: 1.2
-
 .. seealso:: This gives an aggregate of statistics for *all caches* within a particular CDN and time range. For statistics basic statistics from all caches regardless of CDN and at the current time, use :ref:`to-api-caches-stats`.
 
 ``GET``
@@ -70,7 +68,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/cache_stats?cdnName=CDN&endDate=2019-10-28T20:49:00Z&metricType=bandwidth&startDate=2019-10-28T20:45:00Z HTTP/1.1
+	GET /api/2.0/cache_stats?cdnName=CDN&endDate=2019-10-28T20:49:00Z&metricType=bandwidth&startDate=2019-10-28T20:45:00Z HTTP/1.1
 	User-Agent: python-requests/2.20.1
 	Accept-Encoding: gzip, deflate
 	Accept: application/json;timestamp=unix, application/json;timestamp=rfc;q=0.9, application/json;q=0.8, */*;q=0.7

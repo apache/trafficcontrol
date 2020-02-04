@@ -19,8 +19,6 @@
 ``deliveryservices/xmlId/{{xmlid}}/urlkeys``
 ********************************************
 
-.. versionadded:: 1.2
-
 ``GET``
 =======
 Retrieves URL signing keys for a :term:`Delivery Service`.

@@ -110,7 +110,7 @@ Single Object Format
 .. code-block:: http
 	:caption: Request Example - Single Object Format
 
-	POST /api/1.4/profileparameters HTTP/1.1
+	POST /api/2.0/profileparameters HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -133,7 +133,7 @@ Array Format
 .. code-block:: http
 	:caption: Request Example - Array Format
 
-	POST /api/1.4/profileparameters HTTP/1.1
+	POST /api/2.0/profileparameters HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

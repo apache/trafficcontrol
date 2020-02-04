@@ -44,7 +44,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Structure
 
-	GET /api/1.4/types?name=TC_LOC HTTP/1.1
+	GET /api/2.0/types?name=TC_LOC HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

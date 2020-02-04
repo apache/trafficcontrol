@@ -40,7 +40,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/profiles/name/GLOBAL/parameters HTTP/1.1
+	GET /api/2.0/profiles/name/GLOBAL/parameters HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -143,7 +143,7 @@ Single Parameter Format
 .. code-block:: http
 	:caption: Request Example - Single Parameter Format
 
-	POST /api/1.4/profiles/name/test/parameters HTTP/1.1
+	POST /api/2.0/profiles/name/test/parameters HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -168,7 +168,7 @@ Parameter Array Format
 .. code-block:: http
 	:caption: Request Example - Parameter Array Format
 
-	POST /api/1.4/profiles/name/test/parameters HTTP/1.1
+	POST /api/2.0/profiles/name/test/parameters HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

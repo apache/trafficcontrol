@@ -54,8 +54,6 @@ Response Structure
 
 		:dsRecord: An optionally present object containing information about the algorithm used to generate the key
 
-			.. versionadded:: 1.2
-
 			:algorithm: The name of the algorithm used to generate the key
 			:digest: A hash of the DNSKEY record
 			:digestType: The type of hash algorithm used to create the value of ``digest``

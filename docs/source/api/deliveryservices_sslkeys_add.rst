@@ -44,7 +44,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/deliveryservices/sslkeys/add HTTP/1.1
+	POST /api/2.0/deliveryservices/sslkeys/add HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	Content-Type: application/json
 

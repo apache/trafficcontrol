@@ -19,8 +19,6 @@
 ``cdns/{{name}}/dnsseckeys/ksk/generate``
 *****************************************
 
-.. versionadded:: 1.4
-
 ``POST``
 ========
 Generates a new :abbr:`KSK (Key-Signing Key)` for a specific CDN.

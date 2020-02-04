@@ -59,7 +59,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/servers/9/deliveryservices HTTP/1.1
+	GET /api/2.0/servers/9/deliveryservices HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -79,17 +79,8 @@ Response Structure
 :cdnName:             Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :checkPath:           A :ref:`ds-check-path`
 :consistentHashRegex: A :ref:`ds-consistent-hashing-regex`
-
-	.. versionadded:: 1.4
-
 :consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
-
-	.. versionadded:: 1.4
-
 :deepCachingType:    The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
-
-	.. versionadded:: 1.3
-
 :displayName:       The :ref:`ds-display-name`
 :dnsBypassCname:    A :ref:`ds-dns-bypass-cname`
 :dnsBypassIp:       A :ref:`ds-dns-bypass-ip`
@@ -97,15 +88,9 @@ Response Structure
 :dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
 :dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
 :ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
-
-	.. versionadded:: 1.4
-
 :edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
 :exampleURLs:       An array of :ref:`ds-example-urls`
 :fqPacingRate:      The :ref:`ds-fqpr`
-
-	.. versionadded:: 1.3
-
 :geoLimit:            An integer that defines the :ref:`ds-geo-limit`
 :geoLimitCountries:   A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`
 :geoLimitRedirectUrl: A :ref:`ds-geo-limit-redirect-url`
@@ -130,9 +115,6 @@ Response Structure
 
 :maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
 :maxOriginConnections: The :ref:`ds-max-origin-connections`
-
-	.. versionadded:: 1.4
-
 :midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
 :missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
 :missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
@@ -150,22 +132,10 @@ Response Structure
 :remapText:            :ref:`ds-raw-remap`
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
-
-	.. versionadded:: 1.3
-
 :sslKeyVersion: This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
-
-	.. versionadded:: 1.3
-
 :trRequestHeaders: If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
-
-	.. versionadded:: 1.3
-
 :trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
-
-	.. versionadded:: 1.3
-
 :type:   The :ref:`ds-types` of this :term:`Delivery Service`
 :typeId: The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
 :xmlId:  This :term:`Delivery Service`'s :ref:`ds-xmlid`

@@ -18,7 +18,6 @@
 **************************************
 ``servers/{{hostname}}/update_status``
 **************************************
-.. versionadded:: 1.3
 
 .. note:: This endpoint only truly has meaning for :term:`cache servers`, though it will return a valid response for any server configured in Traffic Ops.
 
@@ -43,7 +42,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/servers/edge/update_status HTTP/1.1
+	GET /api/2.0/servers/edge/update_status HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

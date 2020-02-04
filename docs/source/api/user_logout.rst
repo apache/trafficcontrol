@@ -44,7 +44,7 @@ Response Structure
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
 	Date: Thu, 13 Dec 2018 21:25:36 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: 6KEdr1ZC512zkOl03KwvQE0L7qrJ/+ek6ztymkYy9p8gdPUyYyzGEAJ/Ldb8GY0UBFYmgqeZ3yWHvTcEsOQMiw==

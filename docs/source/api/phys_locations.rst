@@ -57,7 +57,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/phys_locations?name=CDN_in_a_Box HTTP/1.1
+	GET /api/2.0/phys_locations?name=CDN_in_a_Box HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -140,7 +140,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/phys_locations HTTP/1.1
+	POST /api/2.0/phys_locations HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

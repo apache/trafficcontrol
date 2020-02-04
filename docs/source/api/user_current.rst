@@ -110,10 +110,6 @@ Updates the date for the authenticated user.
 :Roles Required: None
 :Response Type:  Object
 
-	.. versionchanged:: ATCv4
-		Starting in ATC version 4, all API versions respond to this endpoint with the updated user information. Prior to that, no response object was returned at all.
-
-
 Request Structure
 -----------------
 :user: The entire request must be inside a top-level "user" key for legacy reasons
@@ -125,10 +121,6 @@ Request Structure
 	:confirmLocalPasswd: An optional 'confirm' field in a new user's password specification. This has no known effect and in fact *doesn't even need to match* ``localPasswd``
 	:country:            The name of the country wherein the user resides
 	:email:              The user's email address - cannot be an empty string\ [#notnull]_
-
-		.. versionchanged:: ATCv4
-			Prior to version ATCv4, the email was validated using the `Email::Valid Perl package <https://metacpan.org/pod/Email::Valid>`_ but is now validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that neither method can actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
-
 	:fullName:        The user's full name, e.g. "John Quincy Adams"
 	:gid:             A legacy field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - please don't use this
 	:id:              The user's integral, unique, identifier - this cannot be changed\ [#notnull]_
@@ -145,7 +137,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.4/user/current HTTP/1.1
+	PUT /api/2.0/user/current HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

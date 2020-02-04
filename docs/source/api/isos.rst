@@ -61,7 +61,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.3/isos HTTP/1.1
+	POST /api/2.0/isos HTTP/1.1
 	Host: some.trafficops.host
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -106,7 +106,7 @@ Assuming the ``stream`` key isn't defined in the request payload JSON object (or
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
 	Date: Fri, 30 Nov 2018 20:27:10 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: pdlIVEfbcEiz6+JPWpD1+RVw6j66yzM3l9Bp/4Yl9bh0Mh+aXel06WWq05XnU1szM/APWRwEYUvUHtEdobGSAQ==

@@ -53,7 +53,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/jobs?id=3&dsId=1&userId=2 HTTP/1.1
+	GET /api/2.0/jobs?id=3&dsId=1&userId=2 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: python-requests/2.20.1
 	Accept-Encoding: gzip, deflate
@@ -104,8 +104,6 @@ Response Structure
 
 ``POST``
 ========
-.. versionadded:: 1.4
-
 Creates a new content invalidation job.
 
 .. caution:: Creating a content invalidation job immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that content invalidation jobs become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
@@ -117,7 +115,7 @@ Creates a new content invalidation job.
 Request Structure
 -----------------
 :deliveryService: This should either be the integral, unique identifier of a :term:`Delivery Service`, or a string containing an :ref:`ds-xmlid`
-:startTime: This can be a string in the legacy ``YYYY-MM-DD HH:MM:SS`` format, or a string in :rfc:`3339` format, or a string representing a date in the same non-standard format as the ``last_updated`` fields common in other API responses, or finally it can be a number indicating the number of milliseconds since the Unix Epoch (January 1, 1970 UTC). This date must be in the future, but unlike :ref:`to-api-user-current-jobs` (or the PUT_ method of this endpoint), it is not required to be within two days from the time of creation.
+:startTime: This can be a string in the legacy ``YYYY-MM-DD HH:MM:SS`` format, or a string in :rfc:`3339` format, or a string representing a date in the same non-standard format as the ``last_updated`` fields common in other API responses, or finally it can be a number indicating the number of milliseconds since the Unix Epoch (January 1, 1970 UTC). This date must be in the future.
 :regex: A regular expression that will be used to match the path part of URIs for content stored on :term:`cache servers` that service traffic for the :term:`Delivery Service` identified by ``deliveryService``.
 :ttl: Either the number of hours for which the content invalidation job should remain active, or a "duration" string, which is a sequence of numbers followed by units. The accepted units are:
 
@@ -133,7 +131,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/jobs HTTP/1.1
+	POST /api/2.0/jobs HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: python-requests/2.20.1
 	Accept-Encoding: gzip, deflate
@@ -174,7 +172,7 @@ Response Structure
 	Access-Control-Allow-Origin: *
 	Content-Encoding: gzip
 	Content-Type: application/json
-	Location: https://trafficops.infra.ciab.test/api/1.4/jobs?id=3
+	Location: https://trafficops.infra.ciab.test/api/2.0/jobs?id=3
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: nB2xg2IqO56rLT8dI4+KZgxOsTe5ShctG1U8epRsY9NyyMIpx8TZYt5MrO2QikuYh+NnyoR6V0VICCnGCKZpKw==
 	X-Server-Name: traffic_ops_golang/
@@ -202,8 +200,6 @@ Response Structure
 
 ``PUT``
 =======
-.. versionadded:: 1.4
-
 Replaces an existing content invalidation job with a new one provided in the request. This method of editing a content invalidation job does not prevent the requesting user from changing fields that normally only have one value. Use with care.
 
 .. caution:: Modifying a content invalidation job immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that content invalidation jobs become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
@@ -240,7 +236,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.4/jobs?id=3 HTTP/1.1
+	PUT /api/2.0/jobs?id=3 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: python-requests/2.20.1
 	Accept-Encoding: gzip, deflate
@@ -307,8 +303,6 @@ Response Structure
 
 ``DELETE``
 ==========
-.. versionadded:: 1.4
-
 Deletes a content invalidation job.
 
 .. tip:: Content invalidation jobs that have passed their :abbr:`TTL (Time To Live)` are not automatically deleted - for record-keeping purposes - so use this to clean up old jobs that are no longer useful.
@@ -332,7 +326,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.4/jobs?id=3 HTTP/1.1
+	DELETE /api/2.0/jobs?id=3 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: python-requests/2.20.1
 	Accept-Encoding: gzip, deflate

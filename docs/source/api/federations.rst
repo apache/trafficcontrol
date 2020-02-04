@@ -89,24 +89,8 @@ Allows a user to create :term:`Federation` Resolvers for :term:`Delivery Service
 
 Request Structure
 -----------------
-.. versionchanged:: 1.4
-	Prior to API version 1.4, the request body had to be wrapped in a top-level ``federations`` key, as can be seen in the :ref:`Legacy Request <legacy-post-request>` example. That behavior is still supported but no longer necessary.
 
-.. _legacy-post-request:
-.. code-block:: json
-	:caption: Legacy Request
-
-	{
-		"federations": [{
-			"deliveryService": "demo1",
-			"mappings": {
-				"resolve4": ["0.0.0.0"],
-				"resolve6": ["::1"]
-			}
-		}]
-	}
-
-The request payload is an array of objects that describe Delivery Service :term:`Federation` Resolver mappings. Each object in the array must be in the following format.
+The request paylad is an array of objects that describe Delivery Service :term:`Federation` Resolver mappings. Each object in the array must be in the following format.
 
 :deliveryService: The :ref:`ds-xmlid` of the :term:`Delivery Service` which will use the :term:`Federation` Resolvers specified in ``mappings``
 :mappings:        An object containing two arrays of IP addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) to use as :term:`Federation` Resolvers
@@ -117,7 +101,7 @@ The request payload is an array of objects that describe Delivery Service :term:
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/federations HTTP/1.1
+	POST /api/2.0/federations HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -176,7 +160,7 @@ No parameters available
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.4/federations HTTP/1.1
+	DELETE /api/2.0/federations HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -218,23 +202,6 @@ Replaces **all** :term:`Federations` associated with a user's :term:`Delivery Se
 
 Request Structure
 -----------------
-.. versionchanged:: 1.4
-	Prior to API version 1.4, the request body had to be wrapped in a top-level ``federations`` key, as can be seen in the :ref:`legacy-put-request` example. That behavior is still supported but no longer necessary.
-
-.. _legacy-put-request:
-.. code-block:: json
-	:caption: Legacy Request
-
-	{
-		"federations": [{
-			"deliveryService": "demo1",
-			"mappings": {
-				"resolve4": ["0.0.0.0"],
-				"resolve6": ["::1"]
-			}
-		}]
-	}
-
 The request payload is an array of objects that describe Delivery Service :term:`Federation` Resolver mappings. Each object in the array must be in the following format.
 
 :deliveryService: The :ref:`ds-xmlid` of the :term:`Delivery Service` which will use the :term:`Federation` Resolvers specified in ``mappings``
@@ -246,7 +213,7 @@ The request payload is an array of objects that describe Delivery Service :term:
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/1.4/federations HTTP/1.1
+	PUT /api/2.0/federations HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

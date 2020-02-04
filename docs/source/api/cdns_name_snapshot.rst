@@ -41,7 +41,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/cdns/CDN-in-a-Box/snapshot HTTP/1.1
+	GET /api/2.0/cdns/CDN-in-a-Box/snapshot HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -164,13 +164,7 @@ Response Structure
 
 	:consistentHashQueryParameters: A set of query parameters that Traffic Router should consider when determining a consistent hash for a given client request.
 
-		.. versionadded:: ATCv4
-			This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0.
-
 	:consistentHashRegex: An optional regular expression that will ensure clients are consistently routed to a :term:`cache server` based on matches to it.
-
-		.. versionadded:: ATCv4
-			This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0.
 
 	:coverageZoneOnly: A string containing a boolean that tells whether or not this :term:`Delivery Service` routes traffic based only on its :term:`Coverage Zone File`
 
@@ -365,7 +359,7 @@ Response Structure
 			"dnssec.enabled": "false",
 			"domain_name": "mycdn.ciab.test",
 			"federationmapping.polling.interval": "60000",
-			"federationmapping.polling.url": "https://${toHostname}/internal/api/1.3/federations.json",
+			"federationmapping.polling.url": "https://${toHostname}/internal/api/2.0/federations.json",
 			"geolocation.polling.interval": "86400000",
 			"geolocation.polling.url": "https://trafficops.infra.ciab.test:443/GeoLite2-City.mmdb.gz",
 			"keystore.maintenance.interval": "300",
