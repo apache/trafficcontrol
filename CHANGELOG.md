@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /deliveryservice_user/:dsId/:userId
   - /deliveryservice_user
   - /user/current/jobs
+  - /cdns/usage/overview
 
 ## [4.0.0] - 2019-12-16
 ### Added
