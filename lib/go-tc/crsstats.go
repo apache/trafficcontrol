@@ -1,10 +1,31 @@
 package tc
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// CRSStats is the returned data from TRs stats endpoint.
 type CRSStats struct {
 	App   CRSStatsApp   `json:"app"`
 	Stats CRSStatsStats `json:"stats"`
 }
 
+// CRSStatsApp represents metadata about a given TR.
 type CRSStatsApp struct {
 	BuildTimestamp string `json:"buildTimestamp"`
 	Name           string `json:"name"`
@@ -13,6 +34,7 @@ type CRSStatsApp struct {
 	Version        string `json:"version"`
 }
 
+// CRSStatsStats represents stats about a given TR.
 type CRSStatsStats struct {
 	DNSMap           map[string]CRSStatsStat
 	HTTPMap          map[string]CRSStatsStat
@@ -25,6 +47,7 @@ type CRSStatsStats struct {
 	UpdateTracker    CRSStatsUpdateTracker `json:"updateTracker"`
 }
 
+// CRSStatsStat represents an individual stat.
 type CRSStatsStat struct {
 	CZCount                uint64 `json:"czCount"`
 	GeoCount               uint64 `json:"geoCount"`
@@ -38,6 +61,7 @@ type CRSStatsStat struct {
 	RegionalAlternateCount uint64 `json:"regionalAlternateCount"`
 }
 
+// CRSStatsUpdateTracker ...
 type CRSStatsUpdateTracker struct {
 	LastHttpsCertificatesCheck           uint64 `json:"lastHttpsCertificatesCheck"`
 	LastGeolocationDatabaseUpdaterUpdate uint64 `json:"lastGeolocationDatabaseUpdaterUpdate"`

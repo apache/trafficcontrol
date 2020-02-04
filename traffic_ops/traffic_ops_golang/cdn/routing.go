@@ -52,6 +52,7 @@ const (
 	RouterOnlineStatus   = "ONLINE"
 )
 
+// GetRouting is the handler for getting aggregated routing percentages across CDNs.
 func GetRouting(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
