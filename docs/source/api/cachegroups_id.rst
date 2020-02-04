@@ -57,7 +57,7 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbacks: An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
+:fallbacks:                     An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
 :lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
@@ -132,7 +132,7 @@ Request Structure
 	| ID        | The :ref:`cache-group-id` of a :term:`Cache Group` |
 	+-----------+----------------------------------------------------+
 
-:fallbacks: An optional field which, when present, should contain an array of strings that are the :ref:`Names <cache-group-name>` of other :term:`Cache Groups` which will be the :ref:`cache-group-fallbacks`\ [#fallbacks]_
+:fallbacks:         An optional field which, when present, should contain an array of strings that are the :ref:`Names <cache-group-name>` of other :term:`Cache Groups` which will be the :ref:`cache-group-fallbacks`\ [#fallbacks]_
 :fallbackToClosest: A boolean that sets the :ref:`cache-group-fallback-to-closest` behavior of the :term:`Cache Group`\ [#fallbacks]_
 
 	.. note:: The default value of ``fallbackToClosest`` is ``true``, and if it is ``null`` Traffic Control components will still interpret it as though it were ``true``.
@@ -175,7 +175,7 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbacks: An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
+:fallbacks:                     An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
 :lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format

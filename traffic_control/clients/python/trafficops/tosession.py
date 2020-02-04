@@ -669,7 +669,6 @@ class TOSession(RestApiSession):
 	def get_cdns_usage(self):
 		"""
 		Retrieves the high-level CDN usage metrics.
-		:ref:`to-api-cdns-usage-overview`
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

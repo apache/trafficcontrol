@@ -70,7 +70,7 @@ Response Structure
 :id:          The integral, unique identifier of the resolver
 :ipAddress:   The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
 :lastUpdated: The date and time at which this resolver was last updated, in an ISO-like format
-:type: The :term:`Type` of the resolver
+:type:        The :term:`Type` of the resolver
 
 .. code-block:: http
 	:caption: Response Example
@@ -135,7 +135,7 @@ Response Structure
 :id:        The integral, unique identifier of the resolver
 :ipAddress: The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
 :type:      The :term:`Type` of the resolver
-:typeId: The integral, unique identifier of the :term:`Type` of the resolver
+:typeId:    The integral, unique identifier of the :term:`Type` of the resolver
 
 
 .. code-block:: http

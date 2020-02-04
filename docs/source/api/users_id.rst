@@ -136,16 +136,16 @@ Request Structure
 :company:            An optional field which should contain the name of the company for which the user works
 :confirmLocalPasswd: The 'confirm' field in a new user's password specification - must match ``localPasswd``
 :country:            An optional field which should contain the name of the country wherein the user resides
-:email:              The user's email address.
-:fullName:        The user's full name, e.g. "John Quincy Adams"
-:localPasswd:     The user's password
-:newUser:         An optional meta field with no apparent purpose - don't use this
-:phoneNumber:     An optional field which should contain the user's phone number
-:postalCode:      An optional field which should contain the user's postal code
-:publicSshKey:    An optional field which should contain the user's public encryption key used for the SSH protocol
-:role:            The number that corresponds to the highest permission role which will be permitted to the user
-:stateOrProvince: An optional field which should contain the name of the state or province in which the user resides
-:tenantId:        The integral, unique identifier of the tenant to which the new user shall belong
+:email:              The user's email address The given email is validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that it can't actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
+:fullName:           The user's full name, e.g. "John Quincy Adams"
+:localPasswd:        The user's password
+:newUser:            An optional meta field with no apparent purpose - don't use this
+:phoneNumber:        An optional field which should contain the user's phone number
+:postalCode:         An optional field which should contain the user's postal code
+:publicSshKey:       An optional field which should contain the user's public encryption key used for the SSH protocol
+:role:               The number that corresponds to the highest permission role which will be permitted to the user
+:stateOrProvince:    An optional field which should contain the name of the state or province in which the user resides
+:tenantId:           The integral, unique identifier of the tenant to which the new user shall belong
 
 	.. note:: This field is optional if and only if tenancy is not enabled in Traffic Control
 

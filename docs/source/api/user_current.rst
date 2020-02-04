@@ -120,19 +120,19 @@ Request Structure
 	:company:            The name of the company for which the user works
 	:confirmLocalPasswd: An optional 'confirm' field in a new user's password specification. This has no known effect and in fact *doesn't even need to match* ``localPasswd``
 	:country:            The name of the country wherein the user resides
-	:email:              The user's email address - cannot be an empty string\ [#notnull]_
-	:fullName:        The user's full name, e.g. "John Quincy Adams"
-	:gid:             A legacy field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - please don't use this
-	:id:              The user's integral, unique, identifier - this cannot be changed\ [#notnull]_
-	:localPasswd:     Optionally, the user's password. This should never be given if it will not be changed. An empty string or ``null`` can be used to explicitly specify no change.
-	:phoneNumber:     The user's phone number
-	:postalCode:      The user's postal code
-	:publicSshKey:    The user's public encryption key used for the SSH protocol
-	:role:            The integral, unique identifier of the highest permission :term:`Role` which will be permitted to the user - this cannot be altered from the user's current :term:`Role`\ [#notnull]_
-	:stateOrProvince: The state or province in which the user resides
-	:tenantId:        The integral, unique identifier of the :term:`Tenant` to which the new user shall belong\ [#tenancy]_\ [#notnull]_
-	:uid:             A legacy field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - please don't use this
-	:username:        The user's new username\ [#notnull]_
+	:email:              The user's email address - cannot be an empty string\ [#notnull]_. The given email is validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that it can't actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
+	:fullName:           The user's full name, e.g. "John Quincy Adams"
+	:gid:                A legacy field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - please don't use this
+	:id:                 The user's integral, unique, identifier - this cannot be changed\ [#notnull]_
+	:localPasswd:        Optionally, the user's password. This should never be given if it will not be changed. An empty string or ``null`` can be used to explicitly specify no change.
+	:phoneNumber:        The user's phone number
+	:postalCode:         The user's postal code
+	:publicSshKey:       The user's public encryption key used for the SSH protocol
+	:role:               The integral, unique identifier of the highest permission :term:`Role` which will be permitted to the user - this cannot be altered from the user's current :term:`Role`\ [#notnull]_
+	:stateOrProvince:    The state or province in which the user resides
+	:tenantId:           The integral, unique identifier of the :term:`Tenant` to which the new user shall belong\ [#tenancy]_\ [#notnull]_
+	:uid:                A legacy field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - please don't use this
+	:username:           The user's new username\ [#notnull]_
 
 .. code-block:: http
 	:caption: Request Example
@@ -172,7 +172,7 @@ Response Structure
 :city:             The name of the city wherein the user resides
 :company:          The name of the company for which the user works
 :country:          The name of the country wherein the user resides
-:email:            The user's email address
+:email:            The user's email address validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that it can't actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
 :fullName:         The user's full name, e.g. "John Quincy Adams"
 :gid:              A legacy field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user
 :id:               An integral, unique identifier for this user

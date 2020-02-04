@@ -66,10 +66,10 @@ Request Structure
 Response Structure
 ------------------
 :capabilities: An array of the names of the Capabilities given to this :term:`Role`
-:description: A description of the :term:`Role`
-:id:          The integral, unique identifier for this :term:`Role`
-:name:        The name of the :term:`Role`
-:privLevel:   An integer that allows for comparison between :term:`Roles`
+:description:  A description of the :term:`Role`
+:id:           The integral, unique identifier for this :term:`Role`
+:name:         The name of the :term:`Role`
+:privLevel:    An integer that allows for comparison between :term:`Roles`
 
 .. code-block:: http
 	:caption: Response Example

@@ -90,7 +90,7 @@ Allows a user to create :term:`Federation` Resolvers for :term:`Delivery Service
 Request Structure
 -----------------
 
-The request paylad is an array of objects that describe Delivery Service :term:`Federation` Resolver mappings. Each object in the array must be in the following format.
+The request payload is an array of objects that describe Delivery Service :term:`Federation` Resolver mappings. Each object in the array must be in the following format.
 
 :deliveryService: The :ref:`ds-xmlid` of the :term:`Delivery Service` which will use the :term:`Federation` Resolvers specified in ``mappings``
 :mappings:        An object containing two arrays of IP addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) to use as :term:`Federation` Resolvers

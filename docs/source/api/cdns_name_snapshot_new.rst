@@ -163,9 +163,9 @@ Response Structure
 
 	:consistentHashQueryParameters: A set of query parameters that Traffic Router should consider when determining a consistent hash for a given client request.
 
-	:consistentHashRegex: An optional regular expression that will ensure clients are consistently routed to a :term:`cache server` based on matches to it.
+	:consistentHashRegex:           An optional regular expression that will ensure clients are consistently routed to a :term:`cache server` based on matches to it.
 
-	:coverageZoneOnly: A string containing a boolean that tells whether or not this :term:`Delivery Service` routes traffic based only on its :term:`Coverage Zone File`
+	:coverageZoneOnly:              A string containing a boolean that tells whether or not this :term:`Delivery Service` routes traffic based only on its :term:`Coverage Zone File`
 
 		.. seealso:: :ref:`ds-geo-limit`
 
