@@ -72,7 +72,7 @@ Options
 
 	If given, SSL certificate errors will be ignored when communicating with Traffic Ops.
 
-	.. caution:: For (hopefully) obvious reasons, the use of this option in production environments is discouraged.
+	.. caution:: The use of this option in production environments is discouraged.
 
 .. option:: -t TIMEOUT, --traffic-ops-timeout-milliseconds TIMEOUT
 
