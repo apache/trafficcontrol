@@ -25,6 +25,7 @@ type AllCacheGroupParametersResponse struct {
 	Alerts
 }
 
+// CacheGroupParametersList ...
 type CacheGroupParametersList struct {
 	CacheGroupParameters []CacheGroupParametersResponseNullable `json:"cachegroupParameters"`
 }
