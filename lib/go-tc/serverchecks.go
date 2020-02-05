@@ -62,13 +62,11 @@ type CommonCheckFields struct {
 
 	// UpdPending is a flag that indicates if updates are pending for the checked server.
 	UpdPending bool `json:"updPending"`
-
 }
 
 // Servercheck is a single Servercheck struct for GET response.
 // swagger:model Servercheck
 type Servercheck struct {
-
 	CommonCheckFields
 
 	// Various check types
@@ -167,7 +165,6 @@ func (scp ServercheckRequestNullable) Validate(tx *sql.Tx) error {
 type ServercheckPostResponse struct {
 	Alerts []Alert `json:"alerts"`
 }
-
 
 // GenericServerCheck represents a server with some associated meta data presented
 // along with its arbitrary "checks". This is unlike a Servercheck in that the
