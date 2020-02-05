@@ -111,7 +111,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
             "ignore_unknown_routes": false,
             "perl_routes": [],
             "disabled_routes": []
-        },
+        }
     },
     "cors" : {
         "access_control_allow_origin" : "*"
