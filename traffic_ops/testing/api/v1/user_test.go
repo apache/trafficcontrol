@@ -310,7 +310,7 @@ func GetTestOperationsUsers(t *testing.T) {
 		t.Errorf("cannot GET users: %v", err)
 	}
 	if *opsUsers[0].RoleName != "operations" {
-		t.Errorf("users get: RoleName expected %v actual %v", "admin", *opsUsers[0].RoleName)
+		t.Errorf("users get: RoleName expected %v actual %v", "operations", *opsUsers[0].RoleName)
 	}
 }
 
