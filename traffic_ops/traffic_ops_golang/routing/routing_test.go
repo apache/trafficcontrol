@@ -121,6 +121,18 @@ var testRoutes = []routeTest{
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
+	routeTest{
+		Method:      `GET`,
+		Path:        `api/1.5/servers`,
+		ExpectMatch: true,
+		Params:      map[string]string{},
+	},
+	routeTest{
+		Method:      `GET`,
+		Path:        `api/2.1/servers`,
+		ExpectMatch: true,
+		Params:      map[string]string{},
+	},
 }
 
 func TestCompileRoutes(t *testing.T) {

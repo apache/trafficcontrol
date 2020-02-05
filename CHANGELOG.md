@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an optimistic quorum feature to Traffic Monitor to prevent false negative states from propagating to downstream components in the event of network isolation.
 - Added the ability to fetch users by role
 - Traffic Ops Golang Endpoints
+  - /api/2.1 for all of the most recent route versions
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
   - /api/1.5/to_extensions/:id `(DELETE)`
   - /api/1.5/to_extensions `(GET, POST)`
