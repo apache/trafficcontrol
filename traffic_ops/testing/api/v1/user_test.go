@@ -297,7 +297,7 @@ func GetTestUsers(t *testing.T) {
 func GetTestAdminUsers(t *testing.T) {
 	adminUsers, _, err := TOSession.GetUsersByRole("admin")
 	if err != nil {
-		t.Errorf("cannot GET users: %v", err)
+		t.Errorf("cannot GET users by role: %v", err)
 	}
 	if *adminUsers[0].RoleName != "admin" {
 		t.Errorf("users get: RoleName expected %v actual %v", "admin", *adminUsers[0].RoleName)
@@ -307,7 +307,7 @@ func GetTestAdminUsers(t *testing.T) {
 func GetTestOperationsUsers(t *testing.T) {
 	opsUsers, _, err := TOSession.GetUsersByRole("operations")
 	if err != nil {
-		t.Errorf("cannot GET users: %v", err)
+		t.Errorf("cannot GET users by role: %v", err)
 	}
 	if *opsUsers[0].RoleName != "operations" {
 		t.Errorf("users get: RoleName expected %v actual %v", "operations", *opsUsers[0].RoleName)
