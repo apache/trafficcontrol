@@ -158,7 +158,7 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 	respBts, err := json.Marshal(tc.CreateErrorAlerts(userErr))
 	if err != nil {
 		log.Errorln("marshalling error: " + err.Error())
-		w.Write(append([]byte(http.StatusText(http.StatusInternalServerError)),'\n'))
+		w.Write(append([]byte(http.StatusText(http.StatusInternalServerError)), '\n'))
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)

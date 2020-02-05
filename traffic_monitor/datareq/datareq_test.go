@@ -36,10 +36,10 @@ import (
 
 type AvailabilityType string
 
-const(
-	Random AvailabilityType = "Random"
-	Available = "Available"
-	Unavailable = "Unavailable"
+const (
+	Random      AvailabilityType = "Random"
+	Available                    = "Available"
+	Unavailable                  = "Unavailable"
 )
 
 func getMockStaticAppData() config.StaticAppData {

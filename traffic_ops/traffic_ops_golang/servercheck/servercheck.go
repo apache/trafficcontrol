@@ -267,7 +267,7 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for colName, checkName := range extensions {
-			switch (colName) {
+			switch colName {
 			case "aa":
 				serverInfo.Checks[checkName] = serverCheckCols.AA
 			case "ab":

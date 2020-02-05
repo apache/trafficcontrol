@@ -294,7 +294,7 @@ func (rc *RequiredCapability) checkServerCap() (error, error, int) {
 	if err := tx.QueryRow(`
 		SELECT name 
 		FROM server_capability 
-		WHERE name = $1`, rc.RequiredCapability).Scan(&name); err != nil && err != sql.ErrNoRows{
+		WHERE name = $1`, rc.RequiredCapability).Scan(&name); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("querying server capability for name '%v': %v", rc.RequiredCapability, err), http.StatusInternalServerError
 	}
 
