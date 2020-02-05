@@ -163,6 +163,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Issue #4131 - The "Clone Delivery Service Assignments" menu item is hidden on a cache when the cache has zero delivery service assignments to clone.
 - Traffic Portal - Turn off TLSv1
 - Removed Traffic Portal dependency on Restangular
+- Issue #1486 - Dashboard graph for bandwidth now displays units in the tooltip when hovering over a data point
 
 ### Deprecated/Removed
 - Traffic Ops API Endpoints
