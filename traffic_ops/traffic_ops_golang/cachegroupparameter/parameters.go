@@ -290,7 +290,7 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	for _, p := range params {
 		ppExists, err := dbhelpers.ProfileParameterExistsByParameterID(*p.Parameter, inf.Tx.Tx)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, err)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}
 		if ppExists {
