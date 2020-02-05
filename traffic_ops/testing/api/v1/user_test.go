@@ -36,6 +36,8 @@ func TestUsers(t *testing.T) {
 		UserSelfUpdateTest(t)
 		UserUpdateOwnRoleTest(t)
 		GetTestUsers(t)
+		GetTestAdminUsers(t)
+		GetTestOperationsUsers(t)
 		GetTestUserCurrent(t)
 		UserTenancyTest(t)
 	})
@@ -289,6 +291,26 @@ func GetTestUsers(t *testing.T) {
 	_, _, err := TOSession.GetUsers()
 	if err != nil {
 		t.Errorf("cannot GET users: %v", err)
+	}
+}
+
+func GetTestAdminUsers(t *testing.T) {
+	adminUsers, _, err := TOSession.GetUsersByRole("admin")
+	if err != nil {
+		t.Errorf("cannot GET users: %v", err)
+	}
+	if *adminUsers[0].RoleName != "admin" {
+		t.Errorf("users get: RoleName expected %v actual %v", "admin", *adminUsers[0].RoleName)
+	}
+}
+
+func GetTestOperationsUsers(t *testing.T) {
+	adminUsers, _, err := TOSession.GetUsersByRole("operations")
+	if err != nil {
+		t.Errorf("cannot GET users: %v", err)
+	}
+	if *adminUsers[0].RoleName != "operations" {
+		t.Errorf("users get: RoleName expected %v actual %v", "admin", *adminUsers[0].RoleName)
 	}
 }
 

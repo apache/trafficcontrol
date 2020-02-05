@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -36,8 +37,26 @@ func (to *Session) Users() ([]tc.User, error) {
 
 // GetUsers returns all users accessible from current user
 func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
-	route := apiBase + "/users.json"
-	resp, remoteAddr, err := to.request("GET", route, nil)
+	route := apiBase + "/users"
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.UsersResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GetUsersByRole returns all users accessible from current user for a given role
+func (to *Session) GetUsersByRole(roleName string) ([]tc.User, ReqInf, error) {
+	route := apiBase + "/users?role=" + url.QueryEscape(roleName)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
