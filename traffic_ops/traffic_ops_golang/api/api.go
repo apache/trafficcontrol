@@ -1,3 +1,5 @@
+// Package api provides general purpose tools for implementing the Traffic Ops
+// API.
 package api
 
 /*
@@ -46,10 +48,13 @@ import (
 	"github.com/lib/pq"
 )
 
-const DBContextKey = "db"
-const ConfigContextKey = "context"
-const ReqIDContextKey = "reqid"
-const APIRespWrittenKey = "respwritten"
+// Common context.Context value keys.
+const (
+	DBContextKey      = "db"
+	ConfigContextKey  = "context"
+	ReqIDContextKey   = "reqid"
+	APIRespWrittenKey = "respwritten"
+)
 
 const influxServersQuery = `
 SELECT (host_name||'.'||domain_name) as fqdn,
@@ -130,24 +135,32 @@ func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode in
 	handleSimpleErr(w, r, statusCode, userErr, sysErr)
 }
 
+// LogErr handles the logging of errors and setting up possibly nil errors without actually writing anything to a
+// http.ResponseWriter, unlike handleSimpleErr. It returns the userErr which will be initialized to the
+// http.StatusText of errCode if it was passed as nil - otherwise left alone.
+func LogErr(r *http.Request, errCode int, userErr error, sysErr error) error {
+	if sysErr != nil {
+		log.Errorf(r.RemoteAddr + " " + sysErr.Error())
+	}
+	if userErr == nil {
+		userErr = errors.New(http.StatusText(errCode))
+	}
+	log.Debugln(userErr.Error())
+	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, errCode))
+	return userErr
+}
+
 // handleSimpleErr is a helper for HandleErr.
 // This exists to prevent exposing HandleErr calls in this file with nil transactions, which might be copy-pasted creating bugs.
 func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, userErr error, sysErr error) {
-	if sysErr != nil {
-		log.Errorln(r.RemoteAddr + " " + sysErr.Error())
-	}
-	if userErr == nil {
-		userErr = errors.New(http.StatusText(statusCode))
-	}
+	userErr = LogErr(r, statusCode, userErr, sysErr)
+
 	respBts, err := json.Marshal(tc.CreateErrorAlerts(userErr))
 	if err != nil {
 		log.Errorln("marshalling error: " + err.Error())
-		*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, http.StatusInternalServerError))
-		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		w.Write(append([]byte(http.StatusText(http.StatusInternalServerError)),'\n'))
 		return
 	}
-	log.Debugln(userErr.Error())
-	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, statusCode))
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write(append(respBts, '\n'))
 }
@@ -326,14 +339,17 @@ type ParseValidator interface {
 	Validate(tx *sql.Tx) error
 }
 
-// Decode decodes a JSON object from r into the given v, validating and sanitizing the input. This helper should be used in API endpoints, rather than the json package, to safely decode and validate PUT and POST requests.
-// TODO change to take data loaded from db, to remove sql from tc package.
+// Parse decodes a JSON object from r into v, validating and sanitizing the
+// input. Use this function instead of the json package when writing API
+// endpoints to safely decode and validate PUT and POST requests.
+//
+// TODO: change to take data loaded from db, to remove sql from tc package.
 func Parse(r io.Reader, tx *sql.Tx, v ParseValidator) error {
 	if err := json.NewDecoder(r).Decode(&v); err != nil {
-		return errors.New("decoding: " + err.Error())
+		return fmt.Errorf("decoding: %v", err)
 	}
 	if err := v.Validate(tx); err != nil {
-		return errors.New("validating: " + err.Error())
+		return fmt.Errorf("validating: %v", err)
 	}
 	return nil
 }
@@ -348,7 +364,8 @@ type APIInfo struct {
 	Config    *config.Config
 }
 
-// Creates a deprecation warning for an endpoint, with a proposed alternative.
+// DeprecationWarning creates a deprecation warning with the proposed
+// alternative.
 func DeprecationWarning(alternative string) tc.Alert {
 	return tc.Alert{
 		Level: tc.WarnLevel.String(),
@@ -470,7 +487,7 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 	return http.StatusOK, nil, nil
 }
 
-// CreateInfluxClient onstructs and returns an InfluxDB HTTP client, if enabled and when possible.
+// CreateInfluxClient constructs and returns an InfluxDB HTTP client, if enabled and when possible.
 // The error this returns should not be exposed to the user; it's for logging purposes only.
 //
 // If Influx connections are not enabled, this will return `nil` - but also no error. It is expected
@@ -681,10 +698,20 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 	return fmt.Errorf("%v %s '%s' already exists.", err.Table, match[1], match[2]), nil, http.StatusBadRequest
 }
 
+// parses pq errors for database enum constraint violations
+func parseEnumConstraint(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`invalid input value for enum (.+): \"(.+)\"`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("invalid enum value %s for field %s.", match[2], match[1]), nil, http.StatusBadRequest
+}
+
 // parses pq errors for ON DELETE RESTRICT fk constraint violations
 //
 // Note: This method would also catch an ON UPDATE RESTRICT fk constraint,
-// but only an error message appropiate for delete is returned. Currently,
+// but only an error message appropriate for delete is returned. Currently,
 // no API endpoint can trigger an ON UPDATE RESTRICT fk constraint since
 // no API endpoint updates the primary key of any table.
 //
@@ -692,7 +719,7 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 // names that are captured in the regex to not contain any underscores.
 // This function fixes issues like #3410. If an error message needs to be made
 // for tables with underscores in particular, it should be made into an issue
-// and this function should be udated then. At the moment, there are no documented
+// and this function should be updated then. At the moment, there are no documented
 // issues for this case, so I won't include it.
 //
 // It may be helpful to look at constraints for api_capability, role_capability,
@@ -740,6 +767,10 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseEmptyConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseEnumConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 

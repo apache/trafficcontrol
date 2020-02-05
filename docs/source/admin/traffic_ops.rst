@@ -233,6 +233,8 @@ To upgrade from older Traffic Ops versions, stop the service, use :manpage:`yum(
 
 After this completes, see Guide_ for instructions on running the :program:`postinstall` script. Once the :program:`postinstall` script, has finished, run the following command as the root user (or with :manpage:`sudo(8)`): ``systemctl start traffic_ops`` to start the service.
 
+.. _to-running:
+
 Running
 =======
 Currently, Traffic Ops consists of two programs, as it is in the middle of a transition from one code-base to another. It is not recommended that either one be run on its own. Also, while this section contains instructions for running each piece manually, the only truly supported method is via :manpage:`systemd(8)`, e.g. :bash:`systemctl start traffic_ops` (this method also starts both programs properly and uses their default configuration file locations).
@@ -300,6 +302,8 @@ The main :program:`traffic_ops_golang` binary and the `Legacy Perl Script`_ use 
 
 Configuration Files
 -------------------
+
+.. _cdn.conf:
 
 cdn.conf
 """"""""
@@ -611,7 +615,7 @@ You will need to update `cdn.conf`_ with any necessary changes.
 	:caption: Sample 'listen' Line When Path to ``trafficops.crt`` and ``trafficops.key`` are Known
 
 	'hypnotoad' => ...
-	    'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
+		'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
 		 ...
 
 .. _admin-to-ext-script:

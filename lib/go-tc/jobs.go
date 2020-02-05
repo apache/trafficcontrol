@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-// Represents a content invalidation job as stored in the database
+// Job represents a content invalidation job as stored in the database.
 //
 // Deprecated: Use InvalidationJob instead, as it's more flexible
 type Job struct {
@@ -62,7 +62,7 @@ const JobRequestTimeFormat = `2006-01-02 15:04:05`
 // Deprecated: this format is the same as TimeLayout - which should be used instead.
 const JobTimeFormat = `2006-01-02 15:04:05-07`
 
-// Implements the encoding/json.Marshaler interface.
+// MarshalJSON implements the encoding/json.Marshaler interface.
 func (jr JobRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(JobRequestAPI{
 		TTLSeconds: int64(jr.TTL / time.Second),
@@ -73,7 +73,7 @@ func (jr JobRequest) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// Implements the encoding/json Unmarshaler interface.
+// UnmarshalJSON implements the encoding/json Unmarshaler interface.
 func (jr *JobRequest) UnmarshalJSON(b []byte) error {
 	jri := JobRequestAPI{}
 	if err := json.Unmarshal(b, &jri); err != nil {
@@ -93,7 +93,8 @@ func (jr *JobRequest) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Represents the JSON input accepted by the API for creating new content invalidation jobs
+// JobRequestAPI represents the JSON input accepted by the API for creating new
+// content invalidation jobs.
 //
 // Deprecated: This structure is technically incorrect, and has been superseded by the
 // InvalidationJobInput structure.

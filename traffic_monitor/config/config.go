@@ -54,6 +54,7 @@ type Config struct {
 	HTTPTimeout                  time.Duration `json:"-"`
 	PeerPollingInterval          time.Duration `json:"-"`
 	PeerOptimistic               bool          `json:"peer_optimistic"`
+	PeerOptimisticQuorumMin      int           `json:"peer_optimistic_quorum_min"`
 	MaxEvents                    uint64        `json:"max_events"`
 	MaxStatHistory               uint64        `json:"max_stat_history"`
 	MaxHealthHistory             uint64        `json:"max_health_history"`
@@ -91,6 +92,7 @@ var DefaultConfig = Config{
 	HTTPTimeout:                  2 * time.Second,
 	PeerPollingInterval:          5 * time.Second,
 	PeerOptimistic:               true,
+	PeerOptimisticQuorumMin:      0,
 	MaxEvents:                    200,
 	MaxStatHistory:               5,
 	MaxHealthHistory:             5,
@@ -125,6 +127,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		HTTPTimeoutMS                  uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          uint64 `json:"peer_polling_interval_ms"`
 		PeerOptimistic                 bool   `json:"peer_optimistic"`
+		PeerOptimisticQuorumMin        int    `json:"peer_optimistic_quorum_min"`
 		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
 		StatBufferIntervalMs           uint64 `json:"stat_buffer_interval_ms"`
@@ -138,6 +141,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		HTTPTimeoutMS:                  uint64(c.HTTPTimeout / time.Millisecond),
 		PeerPollingIntervalMs:          uint64(c.PeerPollingInterval / time.Millisecond),
 		PeerOptimistic:                 bool(true),
+		PeerOptimisticQuorumMin:        int(c.PeerOptimisticQuorumMin),
 		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
 		StatFlushIntervalMs:            uint64(c.StatFlushInterval / time.Millisecond),
 		StatBufferIntervalMs:           uint64(c.StatBufferInterval / time.Millisecond),
@@ -155,6 +159,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		HTTPTimeoutMS                  *uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          *uint64 `json:"peer_polling_interval_ms"`
 		PeerOptimistic                 *bool   `json:"peer_optimistic"`
+		PeerOptimisticQuorumMin        *int    `json:"peer_optimistic_quorum_min"`
 		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
 		StatBufferIntervalMs           *uint64 `json:"stat_buffer_interval_ms"`
@@ -206,6 +211,9 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.PeerOptimistic != nil {
 		c.PeerOptimistic = *aux.PeerOptimistic
+	}
+	if aux.PeerOptimisticQuorumMin != nil {
+		c.PeerOptimisticQuorumMin = *aux.PeerOptimisticQuorumMin
 	}
 	if aux.TrafficOpsMinRetryIntervalMs != nil {
 		c.TrafficOpsMinRetryInterval = time.Duration(*aux.TrafficOpsMinRetryIntervalMs) * time.Millisecond

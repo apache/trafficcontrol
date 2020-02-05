@@ -19,7 +19,7 @@ import (
 )
 
 func init() {
-	AddPlugin(10000, Funcs{onStartup: helloCtxStart, onRequest: helloCtxOnReq})
+	AddPlugin(10000, Funcs{onStartup: helloCtxStart, onRequest: helloCtxOnReq}, "example plugin for passing context data between hook functions", "1.0.0")
 }
 
 func helloCtxStart(d StartupData) {

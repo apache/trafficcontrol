@@ -144,6 +144,48 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 	}
 }
 
+// DeprecatedReadHandler creates a net/http.HandlerFunc for the passed Reader object, and adds a deprecation
+// notice, optionally with a passed alternative route suggestion.
+func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var alerts tc.Alerts
+		if alternative != nil {
+			alerts = tc.CreateAlerts(tc.WarnLevel, fmt.Sprintf("This endpoint is deprecated, please use %s instead", *alternative))
+		} else {
+			alerts = tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
+		}
+
+		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			userErr = LogErr(r, http.StatusInternalServerError, userErr, sysErr)
+			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
+			WriteAlerts(w, r, errCode, alerts)
+			return
+		}
+
+		interfacePtr := reflect.ValueOf(reader)
+		if interfacePtr.Kind() != reflect.Ptr {
+			userErr = LogErr(r, http.StatusInternalServerError, nil, errors.New(" reflect: can only indirect from a pointer"))
+			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
+			WriteAlerts(w, r, errCode, alerts)
+			return
+		}
+
+		objectType := reflect.Indirect(interfacePtr).Type()
+		obj := reflect.New(objectType).Interface().(Reader)
+		obj.SetInfo(inf)
+
+		results, userErr, sysErr, errCode := obj.Read()
+		if userErr != nil || sysErr != nil {
+			userErr = LogErr(r, http.StatusInternalServerError, userErr, sysErr)
+			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
+			WriteAlerts(w, r, errCode, alerts)
+			return
+		}
+		WriteAlertsObj(w, r, http.StatusOK, alerts, results)
+	}
+}
+
 // UpdateHandler creates a handler function from the pointer to a struct implementing the Updater interface
 //   this generic handler encapsulates the logic for handling:
 //   *fetching the id from the path parameter

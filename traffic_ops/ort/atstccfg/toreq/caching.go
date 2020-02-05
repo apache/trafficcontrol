@@ -77,7 +77,7 @@ func WriteCacheJSON(tempDir string, cacheFileName string, obj interface{}) {
 
 	objPath := filepath.Join(tempDir, cacheFileName)
 	// Use os.OpenFile, not os.Create, in order to set perms to 0600 - cookies allow login, therefore the file MUST only allow access by the current user, for security reasons
-	objFile, err := os.OpenFile(objPath, os.O_RDWR|os.O_CREATE, 0600)
+	objFile, err := os.OpenFile(objPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		log.Errorln("creating object cache file '" + objPath + "': " + err.Error())
 		return
@@ -116,6 +116,7 @@ func GetJSONObjFromFile(tempDir string, cacheFileName string, cacheFileMaxAge ti
 	}
 
 	if err := json.Unmarshal(bts, obj); err != nil {
+		log.Errorln("GetJSONObjFromFile loaded '" + cacheFileName + "' but failed to parse JSON: " + err.Error())
 		return errors.New("unmarshalling object from file '" + objPath + "':" + err.Error())
 	}
 

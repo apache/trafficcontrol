@@ -55,7 +55,7 @@ sub aadata {
 		);
 		push( @{ $data{'aaData'} }, \@line );
 	}
-	return $self->render( json => \%data );
+	return $self->deprecation_with_no_alternative(200, \%data);
 }
 
 # read for not crazy Datatables
@@ -74,7 +74,7 @@ sub read {
 	my @data;
 	while ( my $server = $rs->next ) {
 		my $v;
-		$v->{id}		= $server->id;
+		$v->{id}		= $server->id + 0;
 		$v->{hostName}		= $server->host_name;
 		$v->{profile}		= $server->profile->name;
 		$v->{adminState}	= $server->status->name;
@@ -84,7 +84,11 @@ sub read {
 		$v->{revalPending}	= \$server->reval_pending;
 		foreach my $col (qw/aa ab ac ad ae af ag ah ai aj ak al am an ao ap aq ar at au av aw ax ay az ba bb bc bd be bf/) {
 			if ( defined( $mapping{$col} ) && defined( $server->servercheck ) ) {
-				$v->{checks}->{ $mapping{$col} } = $server->servercheck->$col();
+				my $server_check_val = $server->servercheck->$col();
+				if ( defined($server_check_val) ) {
+					$server_check_val = $server_check_val + 0; # coerce to a number, if it's not null
+				}
+				$v->{checks}->{ $mapping{$col} } = $server_check_val;
 			}
 		}
 		push( @data, $v );

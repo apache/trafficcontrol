@@ -20,20 +20,43 @@
 package datareq
 
 import (
+	"fmt"
+	"net/http"
 	"net/url"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 )
 
-func srvTRState(params url.Values, localStates peer.CRStatesThreadsafe, combinedStates peer.CRStatesThreadsafe) ([]byte, error) {
+func srvTRState(params url.Values, localStates peer.CRStatesThreadsafe, combinedStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, int, error) {
+	// local state requested (peer polling case)
 	if _, raw := params["raw"]; raw {
-		return srvTRStateSelf(localStates)
+		data, err := srvTRStateSelf(localStates)
+		return data, http.StatusOK, err
 	}
-	return srvTRStateDerived(combinedStates)
+
+	// This covers the case where we have lost connectivity to all peers, but multiple peers exist. In this case, it is
+	// more likely that the local machine has lost all connectivity than both peers losing connectivity or crashing. If
+	// the peers really did crash, the health protocol is essentially broken, and serving a 503 will cause Traffic Router
+	// to use the last good state fetched from a Traffic Monitor within the CDN. If the peers are simply unreachable from
+	// this Traffic Monitor, serving 503s until connectivity is restored will cause Traffic Router to ignore this instance
+	// until the health protocol can be relied upon once again.
+	if peerStates.OptimisticQuorumEnabled() {
+		optimisticQuorum, peersAvailable, peerCount, minimum := peerStates.HasOptimisticQuorum()
+		log.Debugf("optimisticQuorum=%v, peerCount=%v, peersAvailable=%v, minimum=%v", optimisticQuorum, peerCount, peersAvailable, minimum)
+
+		if !optimisticQuorum {
+			return nil, http.StatusServiceUnavailable, fmt.Errorf("number of peers available (%d/%d) is less than the minimum number of %d required for optimistic peer quorum", peersAvailable, peerCount, minimum)
+		}
+	}
+
+	data, err := srvTRStateDerived(combinedStates, peerStates)
+
+	return data, http.StatusOK, err
 }
 
-func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe) ([]byte, error) {
+func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, error) {
 	return tc.CRStatesMarshall(combinedStates.Get())
 }
 

@@ -20,9 +20,16 @@ package cachegroupparameter
  */
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
+
+	"github.com/jmoiron/sqlx"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -33,14 +40,16 @@ import (
 )
 
 const (
-	CacheGroupIDQueryParam = "id"
-	ParameterIDQueryParam  = "parameterId"
+	CacheGroupIDQueryParam      = "id"
+	CacheGroupIDNamedQueryParam = "cachegroupID"
+	ParameterIDQueryParam       = "parameterId"
 )
 
-//we need a type alias to define functions on
+// TOCacheGroupParameter is a type alias that is used to define CRUD functions on.
 type TOCacheGroupParameter struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CacheGroupParameterNullable
+	CacheGroupID int `json:"-" db:"cachegroup_id"`
 }
 
 func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
@@ -51,7 +60,7 @@ func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereC
 }
 
 func (cgparam *TOCacheGroupParameter) GetType() string {
-	return "cachegroup_params"
+	return "cachegroup parameter"
 }
 
 func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) {
@@ -108,4 +117,214 @@ p.secure
 FROM parameter p
 LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id`
 	return query
+}
+
+// GetKeyFieldsInfo implements the api.Identifier interface.
+func (cgparam *TOCacheGroupParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{
+		{
+			Field: CacheGroupIDNamedQueryParam,
+			Func:  api.GetIntKey,
+		},
+		{
+			Field: ParameterIDQueryParam,
+			Func:  api.GetIntKey,
+		},
+	}
+}
+
+// SetKeys implements the api.Identifier interface and allows the
+// delete handler to assign cachegroup and parameter ids.
+func (cgparam *TOCacheGroupParameter) SetKeys(keys map[string]interface{}) {
+	id, _ := keys[CacheGroupIDNamedQueryParam].(int)
+	cgparam.CacheGroupID = id
+
+	paramID, _ := keys[ParameterIDQueryParam].(int)
+	cgparam.ID = &paramID
+}
+
+// DeleteQuery implements the api.GenericDeleter interface.
+func (cgparam *TOCacheGroupParameter) DeleteQuery() string {
+	return `DELETE FROM cachegroup_parameter
+	WHERE cachegroup = :cachegroup_id AND parameter = :id`
+}
+
+// GetAuditName implements the api.Identifier interface.
+func (cgparam *TOCacheGroupParameter) GetAuditName() string {
+	if cgparam.ID != nil {
+		return strconv.Itoa(cgparam.CacheGroupID) + "-" + strconv.Itoa(*cgparam.ID)
+	}
+	return "unknown"
+}
+
+// GetKeys implements the api.Identifier interface.
+func (cgparam *TOCacheGroupParameter) GetKeys() (map[string]interface{}, bool) {
+	if cgparam.ID == nil {
+		return map[string]interface{}{ParameterIDQueryParam: 0}, false
+	}
+	return map[string]interface{}{
+		CacheGroupIDNamedQueryParam: cgparam.CacheGroupID,
+		ParameterIDQueryParam:       *cgparam.ID,
+	}, true
+}
+
+// Delete implements the api.CRUDer interface.
+func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
+	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgparam.ReqInfo.Tx.Tx, int64(cgparam.CacheGroupID))
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	} else if !ok {
+		return fmt.Errorf("cachegroup %v does not exist", cgparam.CacheGroupID), nil, http.StatusNotFound
+	}
+
+	_, ok, err = dbhelpers.GetParamNameByID(cgparam.ReqInfo.Tx.Tx, *cgparam.ID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	} else if !ok {
+		return fmt.Errorf("parameter %v does not exist", *cgparam.ID), nil, http.StatusNotFound
+	}
+
+	return api.GenericDelete(cgparam)
+}
+
+// ReadAllCacheGroupParameters reads all cachegroup parameter associations.
+func ReadAllCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	output, err := GetAllCacheGroupParameters(inf.Tx, inf.Params)
+	if err != nil {
+		api.WriteRespAlertObj(w, r, tc.ErrorLevel, "querying cachegroupparameters with error: "+err.Error(), output)
+		return
+	}
+	api.WriteResp(w, r, output)
+}
+
+// GetAllCacheGroupParameters gets all cachegroup associations from the database and returns as slice.
+func GetAllCacheGroupParameters(tx *sqlx.Tx, parameters map[string]string) (tc.CacheGroupParametersList, error) {
+	if _, ok := parameters["orderby"]; !ok {
+		parameters["orderby"] = "cachegroup"
+	}
+
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"cachegroup": dbhelpers.WhereColumnInfo{"cgp.cachegroup", api.IsInt},
+		"parameter":  dbhelpers.WhereColumnInfo{"cgp.parameter", api.IsInt},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return tc.CacheGroupParametersList{}, util.JoinErrs(errs)
+	}
+
+	query := selectAllQuery() + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return tc.CacheGroupParametersList{}, errors.New("querying cachegroupParameters: " + err.Error())
+	}
+	defer rows.Close()
+
+	paramsList := tc.CacheGroupParametersList{}
+	params := []tc.CacheGroupParametersResponseNullable{}
+	for rows.Next() {
+		var p tc.CacheGroupParametersNullable
+		if err = rows.Scan(&p.CacheGroup, &p.Parameter, &p.LastUpdated, &p.CacheGroupName); err != nil {
+			return tc.CacheGroupParametersList{}, errors.New("scanning cachegroupParameters: " + err.Error())
+		}
+		params = append(params, tc.FormatForResponse(p))
+	}
+	paramsList.CacheGroupParameters = params
+	return paramsList, nil
+}
+
+// AddCacheGroupParameters performs a Create for cachegroup parameter associations.
+// AddCacheGroupParameters accepts data as a single association or an array of multiple.
+func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("reading request body: "+err.Error()), nil)
+		return
+	}
+
+	buf := ioutil.NopCloser(bytes.NewReader(data))
+
+	var paramsInt interface{}
+
+	decoder := json.NewDecoder(buf)
+	err = decoder.Decode(&paramsInt)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing json: "+err.Error()), nil)
+		return
+	}
+
+	var params []tc.CacheGroupParametersNullable
+	_, ok := paramsInt.([]interface{})
+	var parseErr error = nil
+	if !ok {
+		var singleParam tc.CacheGroupParametersNullable
+		parseErr = json.Unmarshal(data, &singleParam)
+		if singleParam.CacheGroup == nil || singleParam.Parameter == nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid cachegroup parameter."), nil)
+			return
+		}
+		params = append(params, singleParam)
+	} else {
+		parseErr = json.Unmarshal(data, &params)
+	}
+	if parseErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing cachegroup parameter: "+parseErr.Error()), nil)
+		return
+	}
+
+	for _, p := range params {
+		ppExists, err := dbhelpers.ProfileParameterExistsByParameterID(*p.Parameter, inf.Tx.Tx)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		if ppExists {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parameter: "+strconv.Itoa(*p.Parameter)+" already associated with one or more profiles."), nil)
+			return
+		}
+	}
+
+	values := []string{}
+	for _, param := range params {
+		values = append(values, "("+strconv.Itoa(*param.CacheGroup)+", "+strconv.Itoa(*param.Parameter)+")")
+	}
+
+	insQuery := strings.Join(values, ", ")
+	_, err = inf.Tx.Tx.Query(insertQuery() + insQuery)
+
+	if err != nil {
+		userErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Cachegroup parameter associations were created.", params)
+}
+
+func selectAllQuery() string {
+	return `SELECT cgp.cachegroup, cgp.parameter, cgp.last_updated, cg.name 
+				FROM cachegroup_parameter AS cgp 
+				JOIN cachegroup AS cg ON cg.id = cachegroup`
+}
+
+func insertQuery() string {
+	return `INSERT INTO cachegroup_parameter 
+		(cachegroup, 
+		parameter) 
+		VALUES `
 }

@@ -93,9 +93,9 @@ When the CDN is to be shut down, it is often best to do so using ``sudo docker-c
 
 variables.env
 """""""""""""
-.. include:: ../../../../infrastructure/cdn-in-a-box/variables.env
-	:code: shell
-	:start-line: 16
+.. literalinclude:: ../../../../infrastructure/cdn-in-a-box/variables.env
+	:language: shell
+	:lines: 17-
 	:tab-width: 4
 
 .. note:: While these port settings can be changed without hampering the function of the CDN in a Box system, note that changing a port without also changing the matching port-mapping in :file:`infrastructure/cdn-in-a-box/docker-compose.yml` for the affected service *will* make it unreachable from the host.
@@ -247,14 +247,19 @@ The TightVNC optional container provides a basic lightweight window manager (flu
 		:caption: CIAB Startup Using Bash Alias
 
 		# From infrastructure/cdn-in-a-box
-		alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.vnc.yml"
+		alias mydc="docker-compose "` \
+			`"-f $PWD/docker-compose.yml "` \
+			`"-f $PWD/docker-compose.expose-ports.yml "` \
+			`"-f $PWD/optional/docker-compose.vnc.yml "` \
+			`"-f $PWD/optional/docker-compose.vnc.expose-ports.yml"
 		docker volume prune -f
 		mydc build
 		mydc kill
 		mydc rm -fv
 		mydc up
 
-#. Connect with a VNC client to localhost port 9080.
+
+#. Connect with a VNC client to localhost port 5909.
 #. When Traffic Portal becomes available, the Firefox within the VNC instance will subsequently be started.
 #. An xterm with bash shell is also automatically spawned and minimized for convenience.
 

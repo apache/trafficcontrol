@@ -191,6 +191,13 @@ Response Structure
 				:term:`Cache servers` will be chosen at random
 
 	:domains:             An array of domains served by this :term:`Delivery Service`
+	:ecsEnabled:          A string containing a boolean from :ref:`ds-ecs` that tells whether EDNS0 client subnet is enabled on this :term:`Delivery Service`; one of:
+
+		"false"
+			EDNS0 client subnet is not enabled on this :term:`Delivery Service`
+		"true"
+			EDNS0 client subnet is enabled on this :term:`Delivery Service`
+
 	:geolocationProvider: The name of a provider for IP-to-geographic-location mapping services - currently the only valid value is ``"maxmindGeolocationService"``
 	:ip6RoutingEnabled:   A string containing a boolean that defines the :ref:`ds-ipv6-routing` setting for this :term:`Delivery Service`; one of:
 
@@ -483,6 +490,7 @@ Response Structure
 					"SOA": "86400"
 				},
 				"ip6RoutingEnabled": "true",
+				"ecsEnabled": "false",
 				"routingName": "video",
 				"deepCachingType": "NEVER"
 			}

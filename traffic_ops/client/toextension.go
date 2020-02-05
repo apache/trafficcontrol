@@ -21,7 +21,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const API_V14_TO_EXTENSION = "/api/1.4/to_extensions"
+const API_TO_EXTENSION = apiBase + "/to_extensions"
 
 // CreateTOExtension creates a to_extension
 func (to *Session) CreateTOExtension(toExtension tc.TOExtensionNullable) (tc.Alerts, ReqInf, error) {
@@ -31,7 +31,7 @@ func (to *Session) CreateTOExtension(toExtension tc.TOExtensionNullable) (tc.Ale
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_V14_TO_EXTENSION, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_TO_EXTENSION, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -43,8 +43,8 @@ func (to *Session) CreateTOExtension(toExtension tc.TOExtensionNullable) (tc.Ale
 
 // DeleteToExtension deletes a to_extension
 func (to *Session) DeleteTOExtension(id int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d/delete", API_V14_TO_EXTENSION, id)
-	resp, remoteAddr, err := to.request(http.MethodPost, URI, nil)
+	URI := fmt.Sprintf("%s/%d", API_TO_EXTENSION, id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -57,7 +57,7 @@ func (to *Session) DeleteTOExtension(id int) (tc.Alerts, ReqInf, error) {
 
 // GetTOExtensions gets all to_extensions
 func (to *Session) GetTOExtensions() (tc.TOExtensionResponse, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_V14_TO_EXTENSION, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_TO_EXTENSION, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.TOExtensionResponse{}, reqInf, err

@@ -45,5 +45,11 @@ Installing The Traffic Portal Developer Environment
 #. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
 #. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
 #. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
-#. Valid SSL certificates and keys are needed for Traffic Portal to run. Generate these (e.g. using `this SuperUser answer <https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information#answer-226229>`_) and edit the ``traffic_portal/conf/config.js`` file to reflect their names and locations
+#. Modify ``traffic_portal/conf/config.js``:
+
+	#. Valid SSL certificates and keys are needed for Traffic Portal to run. Generate these (e.g. using `this SuperUser answer <https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information#answer-226229>`_) and update ``ssl``.
+	#. Modify ``api.base_url`` to point to your Traffic Ops API endpoint.
+	#. Modify ``files.static`` to be ``./app/dist/public``.
+	#. Modify ``log.stream`` to be ``./server/log/access.log``.
+
 #. Navigate to http(s)://localhost:[port|sslPort defined in ``traffic_portal/conf/config.js``]

@@ -77,6 +77,16 @@ func TestCreateDeliveryServicesRequiredCapability(t *testing.T) {
 
 	mockTenantID(t, mock, 1)
 
+	typeRows := sqlmock.NewRows([]string{"name"}).AddRow(
+		"HTTP",
+	)
+	mock.ExpectQuery("SELECT t.name FROM deliveryservice as ds").WillReturnRows(typeRows)
+
+	scRows := sqlmock.NewRows([]string{"name"}).AddRow(
+		"mem",
+	)
+	mock.ExpectQuery("SELECT name FROM server_capability").WillReturnRows(scRows)
+
 	arrayRows := sqlmock.NewRows([]string{"array"})
 	mock.ExpectQuery("SELECT ds.server FROM deliveryservice_server").WillReturnRows(arrayRows)
 
@@ -325,4 +335,51 @@ func mockTenantID(t *testing.T, mock sqlmock.Sqlmock, x int) {
 		true,
 	)
 	mock.ExpectQuery("WITH RECURSIVE user_tenant_id as").WillReturnRows(rows)
+}
+
+func TestCreateDeliveryServicesRequiredCapabilityInvalidDSType(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	mock.ExpectBegin()
+	rc := RequiredCapability{
+		api.APIInfoImpl{
+			ReqInfo: &api.APIInfo{
+				Tx:   db.MustBegin(),
+				User: &auth.CurrentUser{PrivLevel: 30},
+			},
+		},
+		tc.DeliveryServicesRequiredCapability{
+			DeliveryServiceID: util.IntPtr(1),
+			XMLID:             util.StrPtr("ds1"),
+		},
+	}
+
+	mockTenantID(t, mock, 1)
+
+	typeRows := sqlmock.NewRows([]string{"name"}).AddRow(
+		"ANY_MAP",
+	)
+	mock.ExpectQuery("SELECT t.name FROM deliveryservice as ds").WillReturnRows(typeRows)
+
+	userErr, sysErr, errCode := rc.Create()
+	if userErr == nil {
+		t.Fatal("Expected to get user error with invalid ds type")
+	}
+	if sysErr != nil {
+		t.Fatalf(sysErr.Error())
+	}
+	if got, want := errCode, http.StatusBadRequest; got != want {
+		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err.Error())
+	}
 }

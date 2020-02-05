@@ -25,13 +25,14 @@ type CacheGroupParameterRequest struct {
 	ParameterID  int `json:"parameterId"`
 }
 
-// CacheGroupParameterPostResponse Response body when Posting to associate a Parameter with a Cache Group
+// CacheGroupParametersPostResponse Response body when Posting to associate a
+// Parameter with a Cache Group.
 type CacheGroupParametersPostResponse struct {
 	Response []CacheGroupParameterRequest `json:"response"`
 	Alerts
 }
 
-// CacheGroupParameterResponse Cache Group Parameter response body
+// CacheGroupParametersResponse is a Cache Group Parameter response body.
 type CacheGroupParametersResponse struct {
 	Response []CacheGroupParameter `json:"response"`
 	Alerts

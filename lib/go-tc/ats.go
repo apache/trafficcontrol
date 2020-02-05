@@ -23,6 +23,8 @@ import (
 	"strings"
 )
 
+// ATSConfigMetaData contains metadata and information relating to files for a
+// single cache server.
 type ATSConfigMetaData struct {
 	Info        ATSConfigMetaDataInfo         `json:"info"`
 	ConfigFiles []ATSConfigMetaDataConfigFile `json:"configFiles"`
@@ -44,8 +46,8 @@ type ATSConfigMetaDataInfo struct {
 type ATSConfigMetaDataConfigFile struct {
 	FileNameOnDisk string `json:"fnameOnDisk"`
 	Location       string `json:"location"`
-	APIURI         string `json:"apiUri, omitempty"`
-	URL            string `json:"url, omitempty"`
+	APIURI         string `json:"apiUri,omitempty"`
+	URL            string `json:"url,omitempty"`
 	Scope          string `json:"scope"`
 }
 

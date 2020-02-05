@@ -21,6 +21,9 @@
 
 .. versionadded:: 1.2
 
+.. deprecated:: ATCv4
+	This endpoint and its functionality is deprecated, and will be removed in the future.
+
 ``GET``
 =======
 Retrieves the high-level CDN usage metrics from Traffic Stats
@@ -46,10 +49,18 @@ Response Structure
 .. code-block:: json
 	:caption: Response Example
 
-	{ "response": {
-		"currentGbps": 975.920621333333,
-		"source": "TrafficStats",
-		"tps": 0,
-		"version": "1.2",
-		"maxGbps": 12085
-	}}
+	{
+		"alerts": [
+			{
+				"level": "warning",
+				"text": "This endpoint and its functionality is deprecated, and will be removed in the future"
+			}
+		],
+		"response": {
+			"currentGbps": 975.920621333333,
+			"source": "TrafficStats",
+			"tps": 0,
+			"version": "1.2",
+			"maxGbps": 12085
+		}
+	}

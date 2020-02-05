@@ -217,10 +217,11 @@ func (j *InvalidationJobInput) DSID(tx *sql.Tx) (uint, error) {
 	}
 }
 
-// Validate, given a transaction connected to the Traffic Ops database, validates that the user input
-// is correct. In particular, it enforces the constraints described on each field, as well as
-// ensuring they actually exist. This method calls InvalidationJobInput.DSID to validate the
-// DeliveryService field.
+// Validate validates that the user input is correct, given a transaction
+// connected to the Traffic Ops database. In particular, it enforces the
+// constraints described on each field, as well as ensuring they actually exist.
+// This method calls InvalidationJobInput.DSID to validate the DeliveryService
+// field.
 //
 // This returns an error describing any and all problematic fields encountered during validation.
 func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
@@ -304,13 +305,14 @@ func (job *InvalidationJob) Validate() error {
 	return nil
 }
 
-// Validate, given a transaction connected to the Traffic Ops database, validates that the user input
-// is correct.
+// Validate validates that the user input is correct, given a transaction
+// connected to the Traffic Ops database.
 //
-// This requires a database transaction to check that the DSID is a valid identifier for an existing
-// Delivery Service.
+// This requires a database transaction to check that the DSID is a valid
+// identifier for an existing Delivery Service.
 //
-// Returns an error describing any and all problematic fields encountered during validation.
+// Returns an error describing any and all problematic fields encountered during
+// validation.
 func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 	errs := []string{}
 	err := validation.ValidateStruct(job,

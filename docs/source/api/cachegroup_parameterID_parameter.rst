@@ -18,6 +18,7 @@
 *****************************************
 ``cachegroup/{{parameter ID}}/parameter``
 *****************************************
+.. deprecated:: ATCv4
 .. danger:: This endpoint does not appear to work, and thus its use is strongly discouraged!
 
 ``GET``
@@ -73,35 +74,42 @@ Response Structure
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: H03AKuJ2IjG3wb6SEplNtIjm8ka3JJdRxc2HyOkNzjHdsh8p7UcJ1teYvYUf8yMNDt8HHBaKzIDoHODLwhktjA==
 
-	{ "response": {
-		"cachegroups": [
+	{
+		"alerts": [
 			{
-				"name": "CDN_in_a_Box_Edge",
-				"id": 7
-			},
-			{
-				"name": "CDN_in_a_Box_Mid",
-				"id": 6
-			},
-			{
-				"name": "TRAFFIC_ANALYTICS",
-				"id": 1
-			},
-			{
-				"name": "TRAFFIC_OPS",
-				"id": 2
-			},
-			{
-				"name": "TRAFFIC_OPS_DB",
-				"id": 3
-			},
-			{
-				"name": "TRAFFIC_PORTAL",
-				"id": 4
-			},
-			{
-				"name": "TRAFFIC_STATS",
-				"id": 5
+				"level": "warning",
+				"text": "This endpoint is deprecated, please use 'GET /cachegroupparameters & GET /cachegroups' instead"
 			}
-		]
+		],
+		"response": {
+			"cachegroups": [
+				{
+					"name": "CDN_in_a_Box_Edge",
+					"id": 7
+				},
+				{
+					"name": "CDN_in_a_Box_Mid",
+					"id": 6
+				},
+				{
+					"name": "TRAFFIC_ANALYTICS",
+					"id": 1
+				},
+				{
+					"name": "TRAFFIC_OPS",
+					"id": 2
+				},
+				{
+					"name": "TRAFFIC_OPS_DB",
+					"id": 3
+				},
+				{
+					"name": "TRAFFIC_PORTAL",
+					"id": 4
+				},
+				{
+					"name": "TRAFFIC_STATS",
+					"id": 5
+				}
+			]
 	}}

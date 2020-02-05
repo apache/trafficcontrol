@@ -139,6 +139,11 @@ Response Structure
 :ipAddress: The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
 :type:      The :term:`Type` of the resolver
 
+	.. versionadded:: 1.4
+
+:typeId: The integral, unique identifier of the :term:`Type` of the resolver
+
+
 .. code-block:: http
 	:caption: Response Example
 
@@ -163,5 +168,72 @@ Response Structure
 	"response": {
 		"id": 1,
 		"ipAddress": "::1/1",
+		"type": "RESOLVE6",
+		"typeId": 37
+	}}
+
+``DELETE``
+==========
+Deletes a federation resolver.
+
+.. versionadded:: 1.5
+
+:Auth. Required: Yes
+:Roles Required: "admin"
+:Response Type:  Object
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+------+----------------------------------------------------------------------------------+
+	| Name | Required | Description                                                           |
+	+======+==========+=======================================================================+
+	|  id  | yes      | Integral, unique identifier for the federation resolver to be deleted |
+	+------+----------+-----------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.5/federation_resolvers?id=4 HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+	Content-Length: 0
+
+Response Structure
+------------------
+:id:        The integral, unique identifier of the resolver
+:ipAddress: The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
+:type:      The :term:`Type` of the resolver
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 2v4LYQdRVhaFJVd86Iv1BWVYzNPSlzpQ222bUB7Zz+Ss8A48FNyHZjPlq5a+a4g9KAQCTUIytWnIQk+L1fF6FQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Fri, 08 Nov 2019 23:19:01 GMT
+	Content-Length: 161
+
+	{ "alerts": [
+		{
+			"text": "Federation resolver deleted [ IP = 1.2.6.4/22 ] with id: 4",
+			"level": "success"
+		}
+	],
+	"response": {
+		"id": 4,
+		"ipAddress": "1.2.6.4/22",
 		"type": "RESOLVE6"
 	}}
+

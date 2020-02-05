@@ -25,11 +25,12 @@ import (
  * under the License.
  */
 
+// ServersResponse is a list of Servers as a response.
 type ServersResponse struct {
 	Response []Server `json:"response"`
 }
 
-// ServerDetailResponse is the JSON object returned for a single server
+// ServersDetailResponse is the JSON object returned for a single server.
 type ServersDetailResponse struct {
 	Response Server `json:"response"`
 }
@@ -193,4 +194,24 @@ type ServerDetail struct {
 	Type               string            `json:"type" db:"server_type"`
 	XMPPID             *string           `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd         *string           `json:"xmppPasswd" db:"xmpp_passwd"`
+}
+
+// ServerQueueUpdateRequest encodes the request data for the POST
+// servers/{{ID}}/queue_update endpoint.
+type ServerQueueUpdateRequest struct {
+	Action string `json:"action"`
+}
+
+// ServerQueueUpdateResponse decodes the full response with alerts from the POST
+// servers/{{ID}}/queue_update endpoint.
+type ServerQueueUpdateResponse struct {
+	Response ServerQueueUpdate `json:"response"`
+	Alerts
+}
+
+// ServerQueueUpdate decodes the update data from the POST
+// servers/{{ID}}/queue_update endpoint.
+type ServerQueueUpdate struct {
+	ServerID util.JSONIntStr `json:"serverId"`
+	Action   string          `json:"action"`
 }

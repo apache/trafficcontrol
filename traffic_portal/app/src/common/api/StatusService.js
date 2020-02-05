@@ -55,6 +55,7 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateStatus = function(status) {
         return $http.put(ENV.api['root'] + 'statuses/' + status.id, status).then(
             function(result) {
@@ -68,6 +69,7 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteStatus = function(id) {
         return $http.delete(ENV.api['root'] + "statuses/" + id).then(
             function(result) {

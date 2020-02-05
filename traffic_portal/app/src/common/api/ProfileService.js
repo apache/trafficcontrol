@@ -30,7 +30,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.getProfile = function(id, queryParams) {
+    this.getProfile = function(id) {
         return $http.get(ENV.api['root'] + 'profiles', {params: {id: id}}).then(
             function (result) {
                 return result.data.response[0];
@@ -55,6 +55,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.updateProfile = function(profile) {
         return $http.put(ENV.api['root'] + 'profiles/' + profile.id, profile).then(
             function(result) {
@@ -68,6 +69,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    // todo: change to use query param when it is supported
     this.deleteProfile = function(id) {
         return $http.delete(ENV.api['root'] + "profiles/" + id).then(
             function(result) {

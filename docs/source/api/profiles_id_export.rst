@@ -77,23 +77,21 @@ Response Structure
 	Transfer-Encoding: gzip
 
 
-	{
-	  "profile": {
-        "name": "GLOBAL",
-        "description": "Global Traffic Ops profile",
-        "cdn": "ALL",
-        "type": "UNK_PROFILE"
-      },
-	  "parameters": [
-        {
-            "config_file": "global",
-            "name": "tm.instance_name",
-            "value": "Traffic Ops CDN"
-        },
-        {
-            "config_file": "global",
-            "name": "tm.toolname",
-            "value": "Traffic Ops"
-        }
-	  ]
-	}
+	{ "profile": {
+		"name": "GLOBAL",
+		"description": "Global Traffic Ops profile",
+		"cdn": "ALL",
+		"type": "UNK_PROFILE"
+	},
+	"parameters": [
+		{
+			"config_file": "global",
+			"name": "tm.instance_name",
+			"value": "Traffic Ops CDN"
+		},
+		{
+			"config_file": "global",
+			"name": "tm.toolname",
+			"value": "Traffic Ops"
+		}
+	]}
