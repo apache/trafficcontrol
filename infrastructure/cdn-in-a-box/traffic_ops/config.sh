@@ -92,6 +92,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "proxy_read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "read_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "request_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "write_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "idle_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "log_location_error": "$TO_LOG_ERROR",

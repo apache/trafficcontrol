@@ -419,6 +419,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:proxy_tls_timeout: An optional field that sets the timeout in seconds for TLS handshakes from Traffic Ops to the `Legacy Perl Script`_. If set to zero, there is no timeout. The default if not specified is zero.
 	:read_header_timeout: An optional timeout in seconds before which Traffic Ops must be able to finish reading the headers of an incoming request or it will drop the connection. If set to zero, there is no timeout. Default if not specified is zero.
 	:read_timeout: An optional timeout in seconds before which Traffic Ops must be able to finish reading an entire incoming request (including body) or it will drop the connection. If set to zero, there is no timeout. Default if not specified is zero.
+	:request_timeout: An optional timeout in seconds that serves as the maximum time each Traffic Ops middleware can take to execute. If it is exceeded, the text "server timed out" is served in place of a response. If set to :code:`0`, :code:`60` is used instead. Default if not specified is :code:`60`.
 	:riak_port: An optional field that sets the port on which Traffic Ops will try to contact Traffic Vault for storage and retrieval of sensitive encryption keys.
 
 		.. impl-detail:: The name of this field is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
