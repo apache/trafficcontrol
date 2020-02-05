@@ -73,7 +73,7 @@ const (
 )
 
 // ISOs handler is responsible for generating and returning an ISO image,
-// either as a streaming download or a link to the image.
+// as a streaming download.
 //
 // Response types:
 //
@@ -87,7 +87,7 @@ const (
 //     ]
 //   }
 //
-// Success (streaming = true):
+// Success:
 //   HTTP 200
 //   Content-Disposition: attachment; filename="db.infra.ciab.test-centos72.iso"
 //   Content-Type: application/download
@@ -164,7 +164,7 @@ func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.Curr
 	defer genISOCmd.cleanup()
 
 	// Allow for the request context to carry a modifier function that can change the
-	// genISOCmd's command. This is used for testing.
+	// genISOCmd's command. This is purely used for testing.
 	if cmdMod, ok := req.Context().Value(cmdOverwriteCtxKey).(func(in *exec.Cmd) *exec.Cmd); ok {
 		genISOCmd.cmd = cmdMod(genISOCmd.cmd)
 	}
@@ -305,12 +305,10 @@ func (i *isoRequest) validate() []string {
 		}
 	}
 
-	// If stream is not set (isSet == false), then it's
-	// assumed to be part of the API v2.0 request which does
-	// not include this field (streaming = true always). Otherwise
-	// if present, assert that it's true.
+	// Use of stream is deprecated it will always stream
+	// regardless if this is set or not.
 	if v, ok := i.Stream.val(); ok && !v {
-		addErr("stream=no has been deprecated, please use stream=true")
+		addErr("stream request parameter is deprecated")
 	}
 
 	return errs

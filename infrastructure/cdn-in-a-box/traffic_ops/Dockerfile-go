@@ -31,7 +31,7 @@ RUN mkdir /etc/cron.d && \
         /$(basename $TRAFFIC_OPS_RPM) \
         http://yum.postgresql.org/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm && \
 	yum -y install epel-release && \
-	yum -y install jq bind-utils net-tools gettext perl-JSON-PP nmap-ncat openssl postgresql96 && \
+	yum -y install jq bind-utils net-tools gettext perl-JSON-PP mkisofs isomd5sum nmap-ncat openssl postgresql96 && \
 	yum clean all
 
 COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
