@@ -29,7 +29,26 @@ Extract information about the :ref:`cache-group-parameters` associated with :ter
 
 Response Structure
 ------------------
-No available parameters
+.. table:: Request Query Parameters
+
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                                          |
+	+=============+==========+======================================================================================================================================+
+	| cachegroup  | no       | Show only the :ref:`cache-group-parameters` with the :term:`Cache Group` identified by this integral, unique identifier              |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| parameter   | no       | Show only the :ref:`cache-group-parameters` with the :term:`Parameter` identified by this integral, unique identifier                |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array                  |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                             |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| limit       | no       | Choose the maximum number of results to return                                                                                       |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                 |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. |
+	|             |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                    |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -76,7 +95,15 @@ Assign :term:`Parameter`\ (s) to :term:`Cache Group`\ (s). :term:`Parameters` al
 
 Request Structure
 -----------------
-The request data can take the form of either a single object or an array of one or more objects.
+This endpoint accepts two formats for the request payload:
+
+Single Object Format
+	For assigning a single :term:`Parameter` to a single :term:`Cache Group`
+Array Format
+	For making multiple assignments of :term:`Parameters` to :term:`Cache Groups` simultaneously
+
+Single Object Format
+""""""""""""""""""""
 
 :cacheGroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` to which a :term:`Parameter` is being assigned
 :parameterId:  An integer that is the :ref:`parameter-id` of the :term:`Parameter` being assigned
@@ -96,6 +123,32 @@ The request data can take the form of either a single object or an array of one 
 		"cacheGroupId": 8,
 		"parameterId": 124
 	}
+
+Array Format
+""""""""""""
+
+:cacheGroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` to which a :term:`Parameter` is being assigned
+:parameterId:  An integer that is the :ref:`parameter-id` of the :term:`Parameter` being assigned
+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.1/cachegroupparameters HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 39
+	Content-Type: application/json
+
+	[{
+		"cacheGroupId": 8,
+		"parameterId": 124
+	},
+	{
+		"cacheGroupId": 8,
+		"parameterId": 125
+	}]
 
 Response Structure
 ------------------
@@ -122,7 +175,7 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Profile parameter associations were created."
+			"text": "Cachegroup parameter associations were created."
 		}
 	],
 	"response": [
