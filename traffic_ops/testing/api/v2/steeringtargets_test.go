@@ -41,7 +41,7 @@ func TestSteeringTargets(t *testing.T) {
 func SetupSteeringTargets(t *testing.T) {
 	var err error
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	SteeringUserSession, _, err = client.LoginWithAgent(TOSession.URL, "steering", "pa$$word", true, "to-api-v1-client-tests/steering", true, toReqTimeout)
+	SteeringUserSession, _, err = client.LoginWithAgent(TOSession.URL, "steering", "pa$$word", true, "to-api-v2-client-tests/steering", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to get log in with steering user: %v", err.Error())
 	}

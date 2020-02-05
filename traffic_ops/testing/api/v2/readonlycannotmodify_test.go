@@ -36,7 +36,7 @@ func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	readonlyTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "readonlyuser", "pa$$word", true, "to-api-v1-client-tests/readonlyuser", true, toReqTimeout)
+	readonlyTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "readonlyuser", "pa$$word", true, "to-api-v2-client-tests/readonlyuser", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to get log in with readonlyuser: " + err.Error())
 	}

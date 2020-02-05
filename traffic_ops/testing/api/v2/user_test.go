@@ -85,7 +85,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 	}`, *roles[0].ID, tenants[0].ID)
 
 	reader := strings.NewReader(blob)
-	request, err := http.NewRequest("POST", fmt.Sprintf("%v/api/1.4/users", TOSession.URL), reader)
+	request, err := http.NewRequest("POST", fmt.Sprintf("%v/api/2.0/users", TOSession.URL), reader)
 	if err != nil {
 		t.Errorf("could not make new request: %v", err)
 	}
@@ -101,7 +101,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 		t.Error("incorrect json was returned for POST")
 	}
 
-	request, err = http.NewRequest("GET", fmt.Sprintf("%v/api/1.4/users?username=test_user", TOSession.URL), nil)
+	request, err = http.NewRequest("GET", fmt.Sprintf("%v/api/2.0/users?username=test_user", TOSession.URL), nil)
 	resp, err = TOSession.Client.Do(request)
 
 	buf = new(bytes.Buffer)
@@ -115,7 +115,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 
 func OpsUpdateAdminTest(t *testing.T) {
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v1-client-tests/opsuser", true, toReqTimeout)
+	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v2-client-tests/opsuser", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
 	}
@@ -139,7 +139,7 @@ func OpsUpdateAdminTest(t *testing.T) {
 
 func UserSelfUpdateTest(t *testing.T) {
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v1-client-tests/opsuser", true, toReqTimeout)
+	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v2-client-tests/opsuser", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
 	}
@@ -333,7 +333,7 @@ func UserTenancyTest(t *testing.T) {
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v1-client-tests/tenant4user", true, toReqTimeout)
+	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v2-client-tests/tenant4user", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
 	}

@@ -16,7 +16,6 @@ package v2
 */
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -328,202 +327,12 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("expected MaxOriginConnections: %d, actual: %d", testDS.MaxOriginConnections, *ds.MaxOriginConnections)
 	}
 
-	// GET 1.1, verify 1.3 and 1.4 fields are nil
-	data := tc.DeliveryServicesNullableResponse{}
-	if err = makeV11Request(http.MethodGet, "deliveryservices/"+strconv.Itoa(*ds.ID), nil, &data); err != nil {
-		t.Errorf("cannot GET 1.1 deliveryservice: %s", err.Error())
-	}
-	respDS := data.Response[0]
-	if !dsV13FieldsAreNil(respDS) || !dsV14FieldsAreNil(respDS) {
-		t.Error("expected 1.3 and 1.4 values to be nil, actual: non-nil")
-	}
-
-	// GET 1.3, verify 1.3 fields are non-nil and 1.4 fields are nil
-	data = tc.DeliveryServicesNullableResponse{}
-	if err = makeV13Request(http.MethodGet, "deliveryservices/"+strconv.Itoa(*ds.ID), nil, &data); err != nil {
-		t.Errorf("cannot GET 1.3 deliveryservice: %s", err.Error())
-	}
-	respDS = data.Response[0]
-	if dsV13FieldsAreNil(respDS) {
-		t.Error("expected 1.3 values to be non-nil, actual: nil")
-	}
-	if !dsV14FieldsAreNil(respDS) {
-		t.Error("expected 1.4 values to be nil, actual: non-nil")
-	}
-	if _, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID)); err != nil {
-		t.Errorf("cannot DELETE deliveryservice: %s", err.Error())
-	}
-
 	ds.ID = nil
-	dsBody, err := json.Marshal(ds)
-	if err != nil {
-		t.Errorf("cannot POST deliveryservice, failed to marshal JSON: %s", err.Error())
-	}
-	dsV11Body, err := json.Marshal(ds.DeliveryServiceNullableV11)
+	_, err = json.Marshal(ds)
 	if err != nil {
 		t.Errorf("cannot POST deliveryservice, failed to marshal JSON: %s", err.Error())
 	}
 
-	// POST 1.3 w/ 1.4 data, verify 1.4 fields were ignored
-	postDSResp := tc.CreateDeliveryServiceNullableResponse{}
-	if err = makeV13Request(http.MethodPost, "deliveryservices", bytes.NewBuffer(dsBody), &postDSResp); err != nil {
-		t.Errorf("cannot POST 1.3 deliveryservice, failed to make request: %s", err.Error())
-	}
-	if !dsV14FieldsAreNil(postDSResp.Response[0]) {
-		t.Error("POST 1.3 expected 1.4 values to be nil, actual: non-nil")
-	}
-	respID := postDSResp.Response[0].ID
-	getDS, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*respID))
-	if err != nil {
-		t.Errorf("cannot GET deliveryservice: %s", err.Error())
-	}
-	if !dsV14FieldsAreNilOrDefault(*getDS) {
-		t.Error("POST 1.3 expected 1.4 values to be nil/default, actual: non-nil/default")
-	}
-	if _, err = TOSession.DeleteDeliveryService(strconv.Itoa(*respID)); err != nil {
-		t.Errorf("cannot DELETE deliveryservice: %s", err.Error())
-	}
-
-	// POST 1.1 w/ 1.4 data, verify 1.3 and 1.4 fields were ignored
-	postDSResp = tc.CreateDeliveryServiceNullableResponse{}
-	if err = makeV11Request(http.MethodPost, "deliveryservices", bytes.NewBuffer(dsBody), &postDSResp); err != nil {
-		t.Errorf("cannot POST 1.1 deliveryservice, failed to make request: %s", err.Error())
-	}
-	if !dsV13FieldsAreNil(postDSResp.Response[0]) || !dsV14FieldsAreNil(postDSResp.Response[0]) {
-		t.Errorf("POST 1.1 expected 1.3 and 1.4 values to be nil, actual: non-nil %+v", postDSResp.Response[0])
-	}
-	respID = postDSResp.Response[0].ID
-	getDS, _, err = TOSession.GetDeliveryServiceNullable(strconv.Itoa(*respID))
-	if err != nil {
-		t.Errorf("cannot GET deliveryservice: %s", err.Error())
-	}
-	if !dsV13FieldsAreNilOrDefault(*getDS) || !dsV14FieldsAreNilOrDefault(*getDS) {
-		t.Errorf("POST 1.1 expected 1.3 and 1.4 values to be nil/default, actual: non-nil/default %+v", *getDS)
-	}
-
-	// PUT 1.4 w/ 1.4 data, then verify that a PUT 1.1 with 1.1 data preserves the existing 1.3 and 1.4 data
-	if _, err = TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*respID), &ds); err != nil {
-		t.Errorf("cannot PUT deliveryservice: %s", err.Error())
-	}
-	putDSResp := tc.UpdateDeliveryServiceNullableResponse{}
-	if err = makeV11Request(http.MethodPut, "deliveryservices/"+strconv.Itoa(*respID), bytes.NewBuffer(dsV11Body), &putDSResp); err != nil {
-		t.Errorf("cannot PUT 1.1 deliveryservice, failed to make request: %s", err.Error())
-	}
-	if !dsV13FieldsAreNil(putDSResp.Response[0]) || !dsV14FieldsAreNil(putDSResp.Response[0]) {
-		t.Errorf("PUT 1.1 expected 1.3 and 1.4 values to be nil, actual: non-nil %+v", putDSResp.Response[0])
-	}
-	getDS, _, err = TOSession.GetDeliveryServiceNullable(strconv.Itoa(*respID))
-	if err != nil {
-		t.Errorf("cannot GET deliveryservice: %s", err.Error())
-	}
-	if getDS.FQPacingRate == nil {
-		t.Errorf("expected FQPacingRate: %d, actual: nil", testDS.FQPacingRate)
-	} else if *getDS.FQPacingRate != testDS.FQPacingRate {
-		t.Errorf("expected FQPacingRate: %d, actual: %d", testDS.FQPacingRate, *getDS.FQPacingRate)
-	}
-	if getDS.MaxOriginConnections == nil {
-		t.Errorf("expected MaxOriginConnections: %d, actual: nil", testDS.MaxOriginConnections)
-	} else if *getDS.MaxOriginConnections != testDS.MaxOriginConnections {
-		t.Errorf("expected MaxOriginConnections: %d, actual: %d", testDS.MaxOriginConnections, *getDS.MaxOriginConnections)
-	}
-
-	// PUT 1.3 w/ 1.1 data, verify that 1.4 fields were preserved
-	putDSResp = tc.UpdateDeliveryServiceNullableResponse{}
-	if err = makeV13Request(http.MethodPut, "deliveryservices/"+strconv.Itoa(*respID), bytes.NewBuffer(dsV11Body), &putDSResp); err != nil {
-		t.Errorf("cannot PUT 1.3 deliveryservice, failed to make request: %s", err.Error())
-	}
-	if !dsV14FieldsAreNil(putDSResp.Response[0]) {
-		t.Errorf("PUT 1.3 expected 1.4 values to be nil, actual: non-nil %+v", putDSResp.Response[0])
-	}
-	getDS, _, err = TOSession.GetDeliveryServiceNullable(strconv.Itoa(*respID))
-	if err != nil {
-		t.Errorf("cannot GET deliveryservice: %s", err.Error())
-	}
-	if getDS.MaxOriginConnections == nil {
-		t.Errorf("expected MaxOriginConnections: %d, actual: nil", testDS.MaxOriginConnections)
-	} else if *getDS.MaxOriginConnections != testDS.MaxOriginConnections {
-		t.Errorf("expected MaxOriginConnections: %d, actual: %d", testDS.MaxOriginConnections, *getDS.MaxOriginConnections)
-	}
-
-	// DELETE+POST 1.1 again, so that 1.3 and 1.4 fields are back to nil/default
-	if _, err = TOSession.DeleteDeliveryService(strconv.Itoa(*respID)); err != nil {
-		t.Errorf("cannot DELETE deliveryservice: %s", err.Error())
-	}
-	postDSResp = tc.CreateDeliveryServiceNullableResponse{}
-	if err = makeV11Request(http.MethodPost, "deliveryservices", bytes.NewBuffer(dsV11Body), &postDSResp); err != nil {
-		t.Errorf("cannot POST 1.1 deliveryservice, failed to make request: %s", err.Error())
-	}
-	respID = postDSResp.Response[0].ID
-
-	// PUT 1.1 w/ 1.4 data - make sure 1.3 and 1.4 fields were ignored
-	putDSResp = tc.UpdateDeliveryServiceNullableResponse{}
-	if err = makeV11Request(http.MethodPut, "deliveryservices/"+strconv.Itoa(*respID), bytes.NewBuffer(dsBody), &putDSResp); err != nil {
-		t.Errorf("cannot PUT 1.1 deliveryservice, failed to make request: %s", err.Error())
-	}
-	if !dsV13FieldsAreNil(putDSResp.Response[0]) || !dsV14FieldsAreNil(putDSResp.Response[0]) {
-		t.Errorf("PUT 1.1 expected 1.3 and 1.4 values to be nil, actual: non-nil %+v", putDSResp.Response[0])
-	}
-	respID = putDSResp.Response[0].ID
-	getDS, _, err = TOSession.GetDeliveryServiceNullable(strconv.Itoa(*respID))
-	if err != nil {
-		t.Errorf("cannot GET deliveryservice: %s", err.Error())
-	}
-	if !dsV13FieldsAreNilOrDefault(*getDS) || !dsV14FieldsAreNilOrDefault(*getDS) {
-		t.Errorf("PUT 1.1 expected 1.3 and 1.4 values to be nil/default, actual: non-nil/default %+v", *getDS)
-	}
-
-	// PUT 1.3 w/ 1.4 data, make sure 1.4 fields were ignored
-	putDSResp = tc.UpdateDeliveryServiceNullableResponse{}
-	if err = makeV13Request(http.MethodPut, "deliveryservices/"+strconv.Itoa(*respID), bytes.NewBuffer(dsBody), &putDSResp); err != nil {
-		t.Errorf("cannot PUT 1.1 deliveryservice, failed to make request: %s", err.Error())
-	}
-	if !dsV14FieldsAreNil(putDSResp.Response[0]) {
-		t.Error("PUT 1.3 expected 1.4 values to be nil, actual: non-nil")
-	}
-	respID = putDSResp.Response[0].ID
-	getDS, _, err = TOSession.GetDeliveryServiceNullable(strconv.Itoa(*respID))
-	if err != nil {
-		t.Errorf("cannot GET deliveryservice: %s", err.Error())
-	}
-	if !dsV14FieldsAreNilOrDefault(*getDS) {
-		t.Error("PUT 1.3 expected 1.4 values to be nil/default, actual: non-nil/default")
-	}
-}
-
-func dsV13FieldsAreNilOrDefault(ds tc.DeliveryServiceNullable) bool {
-	return (ds.DeepCachingType == nil || *ds.DeepCachingType == tc.DeepCachingTypeNever) &&
-		(ds.FQPacingRate == nil || *ds.FQPacingRate == 0) &&
-		(ds.TRRequestHeaders == nil || *ds.TRRequestHeaders == "") &&
-		(ds.TRResponseHeaders == nil || *ds.TRResponseHeaders == "")
-}
-
-func dsV14FieldsAreNilOrDefault(ds tc.DeliveryServiceNullable) bool {
-	return (ds.ConsistentHashRegex == nil || *ds.ConsistentHashRegex == "") &&
-		(ds.ConsistentHashQueryParams == nil || len(ds.ConsistentHashQueryParams) == 0) &&
-		(ds.MaxOriginConnections == nil || *ds.MaxOriginConnections == 0)
-}
-
-func dsV13FieldsAreNil(ds tc.DeliveryServiceNullable) bool {
-	return ds.DeepCachingType == nil &&
-		ds.FQPacingRate == nil &&
-		ds.SigningAlgorithm == nil &&
-		ds.Tenant == nil &&
-		ds.TRRequestHeaders == nil &&
-		ds.TRResponseHeaders == nil
-}
-
-func dsV14FieldsAreNil(ds tc.DeliveryServiceNullable) bool {
-	return ds.ConsistentHashRegex == nil &&
-		(ds.ConsistentHashQueryParams == nil || len(ds.ConsistentHashQueryParams) == 0) &&
-		ds.MaxOriginConnections == nil
-}
-
-func makeV11Request(method string, path string, body io.Reader, respStruct interface{}) error {
-	return makeRequest("1.1", method, path, body, respStruct)
-}
-
-func makeV13Request(method string, path string, body io.Reader, respStruct interface{}) error {
-	return makeRequest("1.3", method, path, body, respStruct)
 }
 
 // TODO: move this helper function into a better location
@@ -565,7 +374,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v1-client-tests/tenant4user", true, toReqTimeout)
+	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v2-client-tests/tenant4user", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
 	}

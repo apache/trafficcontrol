@@ -32,7 +32,7 @@ func TestCookies(t *testing.T) {
 }
 
 func CookiesTest(t *testing.T) {
-	s, _, err := toclient.LoginWithAgent(Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, true, "to-api-v1-client-tests", false, toReqTimeout)
+	s, _, err := toclient.LoginWithAgent(Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, true, "to-api-v2-client-tests", false, toReqTimeout)
 	credentials := tc.UserCredentials{
 		Username: Config.TrafficOps.Users.Admin,
 		Password: Config.TrafficOps.UserPassword,
@@ -42,7 +42,7 @@ func CookiesTest(t *testing.T) {
 	if err != nil {
 		t.Fatal("unable to json marshal login credentials")
 	}
-	path := "/api/1.4/user/login"
+	path := "/api/2.0/user/login"
 	loginResp, _, err := s.RawRequest(http.MethodPost, path, js)
 	if err != nil {
 		t.Fatal("unable to request POST /user/login")
@@ -54,7 +54,7 @@ func CookiesTest(t *testing.T) {
 	}
 	ensureCookie(loginResp, t)
 
-	cdnResp, _, err := s.RawRequest(http.MethodGet, "/api/1.4/cdns", nil)
+	cdnResp, _, err := s.RawRequest(http.MethodGet, "/api/2.0/cdns", nil)
 	if err != nil {
 		t.Fatal("unable to request GET /cdns")
 	}
