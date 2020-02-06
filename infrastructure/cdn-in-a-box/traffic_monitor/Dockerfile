@@ -48,4 +48,4 @@ ADD enroller/server_template.json \
 
 EXPOSE 80
 ADD traffic_monitor/run.sh /
-ENTRYPOINT /run.sh
+CMD /run.sh
