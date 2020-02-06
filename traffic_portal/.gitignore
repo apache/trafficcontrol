@@ -4,3 +4,4 @@ server/log/access.log
 node_modules
 app/bower_components
 app/dist
+pacakge-lock.json
