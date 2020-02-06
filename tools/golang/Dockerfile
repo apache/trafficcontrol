@@ -27,7 +27,7 @@ ADD . /go/src/$DIR
 
 WORKDIR /go/src/github.com/apache/trafficcontrol
 
-RUN go get -v ./...
+RUN go list -f {{.Deps}} ./... | tr -d '[]' | tr -s ' ' '\n' | sed -re 's/vendor\///g' | grep golang.org/x/ | grep -v chacha | sort | uniq | tr '_' '.' | xargs go get -v
 
 FROM base AS lint
 

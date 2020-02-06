@@ -32,5 +32,4 @@ services:
       dockerfile: tools/golang/Dockerfile
       target: unit
     volumes:
-      - ../..:/go/src/github.com/apache/trafficcontrol
       - ./junit:/junit

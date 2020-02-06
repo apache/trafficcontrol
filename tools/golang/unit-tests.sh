@@ -26,5 +26,5 @@ for pkg in $(go list ./lib/... ./traffic_monitor/... ./traffic_stats/... ./traff
 done
 
 rm "$covertmp"
-go tool cover --func=coverprofile
+go tool cover --func=coverprofile > /junit/coverage
 go-junit-report --package-name=golang.test --set-exit-code <result.txt >/junit/golang.test.xml
