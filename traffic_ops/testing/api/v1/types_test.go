@@ -18,7 +18,6 @@ package v1
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -30,20 +29,20 @@ func TestTypes(t *testing.T) {
 }
 
 func CreateTestTypes(t *testing.T) {
-	log.Debugln("---- CreateTestTypes ----")
+	t.Log("---- CreateTestTypes ----")
 
 	for _, typ := range testData.Types {
 		resp, _, err := TOSession.CreateType(typ)
 		if err != nil {
 			t.Errorf("could not CREATE types: %v", err)
 		}
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 	}
 
 }
 
 func UpdateTestTypes(t *testing.T) {
-	log.Debugln("---- UpdateTestTypes ----")
+	t.Log("---- UpdateTestTypes ----")
 
 	firstType := testData.Types[0]
 	// Retrieve the Type by name so we can get the id for the Update
@@ -70,7 +69,7 @@ func UpdateTestTypes(t *testing.T) {
 		t.Errorf("results do not match actual: %s, expected: %s", respType.Name, expectedTypeName)
 	}
 
-	log.Debugln("Response Type: ", respType)
+	t.Log("Response Type: ", respType)
 
 	respType.Name = firstType.Name
 	alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType)
@@ -80,7 +79,7 @@ func UpdateTestTypes(t *testing.T) {
 }
 
 func GetTestTypes(t *testing.T) {
-	log.Debugln("---- GetTestTypes ----")
+	t.Log("---- GetTestTypes ----")
 
 	for _, typ := range testData.Types {
 		resp, _, err := TOSession.GetTypeByName(typ.Name)
@@ -89,12 +88,12 @@ func GetTestTypes(t *testing.T) {
 
 		}
 
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 	}
 }
 
 func DeleteTestTypes(t *testing.T) {
-	log.Debugln("---- DeleteTestTypes ----")
+	t.Log("---- DeleteTestTypes ----")
 
 	for _, typ := range testData.Types {
 		// Retrieve the Type by name so we can get the id for the Update
