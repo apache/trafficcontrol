@@ -18,7 +18,6 @@ package v2
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -47,7 +46,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not POST the server capability %v to server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
 		}
-		log.Debugln("Response: ", server.HostName, " ", resp)
+		t.Log("Response: ", server.HostName, " ", resp)
 	}
 
 	// Invalid POSTs

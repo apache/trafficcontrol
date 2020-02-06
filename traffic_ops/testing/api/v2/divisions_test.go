@@ -19,7 +19,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -61,7 +60,7 @@ func TryToDeleteDivision(t *testing.T) {
 func CreateTestDivisions(t *testing.T) {
 	for _, division := range testData.Divisions {
 		resp, _, err := TOSession.CreateDivision(division)
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE division: %v", err)
 		}

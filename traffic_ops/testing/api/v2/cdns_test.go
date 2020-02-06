@@ -18,7 +18,6 @@ package v2
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -33,7 +32,7 @@ func CreateTestCDNs(t *testing.T) {
 
 	for _, cdn := range testData.CDNs {
 		resp, _, err := TOSession.CreateCDN(cdn)
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE cdns: %v", err)
 		}

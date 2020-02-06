@@ -19,7 +19,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -38,7 +37,7 @@ func CreateTestParameters(t *testing.T) {
 
 	for _, pl := range testData.Parameters {
 		resp, _, err := TOSession.CreateParameter(pl)
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE parameters: %v", err)
 		}

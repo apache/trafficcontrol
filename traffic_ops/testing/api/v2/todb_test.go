@@ -351,7 +351,7 @@ func Teardown(db *sql.DB) error {
 // execSQL ...
 func execSQL(db *sql.DB, sqlStmt string, dbTable string) error {
 
-	log.Debugln(dbTable + " data")
+	t.Log(dbTable + " data")
 	var err error
 
 	tx, err := db.Begin()

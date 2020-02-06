@@ -43,8 +43,8 @@ func CreateTestRoles(t *testing.T) {
 	for i, role := range testData.Roles {
 		var alerts tc.Alerts
 		alerts, _, status, err := TOSession.CreateRole(role)
-		log.Debugln("Status Code: ", status)
-		log.Debugln("Response: ", alerts)
+		t.Log("Status Code: ", status)
+		t.Log("Response: ", alerts)
 		if err != nil {
 			log.Debugf("error: %v", err)
 			//t.Errorf("could not CREATE role: %v", err)
@@ -60,7 +60,7 @@ func UpdateTestRoles(t *testing.T) {
 	firstRole := testData.Roles[0]
 	// Retrieve the Role by role so we can get the id for the Update
 	resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
 	}
@@ -70,14 +70,14 @@ func UpdateTestRoles(t *testing.T) {
 	remoteRole.Name = &expectedRole
 	var alert tc.Alerts
 	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the Role to check role got updated
 	resp, _, status, err = TOSession.GetRoleByID(*remoteRole.ID)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
 	}
@@ -89,7 +89,7 @@ func UpdateTestRoles(t *testing.T) {
 	// Set the name back to the fixture value so we can delete it after
 	remoteRole.Name = firstRole.Name
 	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)
 	}
@@ -99,7 +99,7 @@ func UpdateTestRoles(t *testing.T) {
 func GetTestRoles(t *testing.T) {
 	role := testData.Roles[roleGood]
 	resp, _, status, err := TOSession.GetRoleByName(*role.Name)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", err, resp)
 	}
@@ -112,13 +112,13 @@ func VerifyGetRolesOrder(t *testing.T) {
 		"sortOrder": "desc",
 	}
 	descResp, _, status, err := TOSession.GetRoleByQueryParams(params)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", err, descResp)
 	}
 	params["sortOrder"] = "asc"
 	ascResp, _, status, err := TOSession.GetRoleByQueryParams(params)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", err, ascResp)
 	}
@@ -141,14 +141,14 @@ func DeleteTestRoles(t *testing.T) {
 	role := testData.Roles[roleGood]
 	// Retrieve the Role by name so we can get the id
 	resp, _, status, err := TOSession.GetRoleByName(*role.Name)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by name: %v - %v", role.Name, err)
 	}
 	respRole := resp[0]
 
 	delResp, _, status, err := TOSession.DeleteRoleByID(*respRole.ID)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 
 	if err != nil {
 		t.Errorf("cannot DELETE Role by role: %v - %v", err, delResp)
@@ -156,7 +156,7 @@ func DeleteTestRoles(t *testing.T) {
 
 	// Retrieve the Role to see if it got deleted
 	roleResp, _, status, err := TOSession.GetRoleByName(*role.Name)
-	log.Debugln("Status Code: ", status)
+	t.Log("Status Code: ", status)
 
 	if err != nil {
 		t.Errorf("error deleting Role role: %s", err.Error())

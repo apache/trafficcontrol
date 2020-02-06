@@ -18,7 +18,6 @@ package v2
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -34,7 +33,7 @@ func CreateTestRegions(t *testing.T) {
 
 	for _, region := range testData.Regions {
 		resp, _, err := TOSession.CreateRegion(region)
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE region: %v", err)
 		}

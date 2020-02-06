@@ -18,7 +18,6 @@ package v2
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -33,7 +32,7 @@ func CreateTestStatuses(t *testing.T) {
 
 	for _, status := range testData.Statuses {
 		resp, _, err := TOSession.CreateStatusNullable(status)
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE types: %v", err)
 		}

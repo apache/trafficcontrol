@@ -22,7 +22,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
@@ -50,7 +49,7 @@ func CreateTestUsers(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE user: %v", err)
 		}
-		log.Debugln("Response: ", resp.Alerts)
+		t.Log("Response: ", resp.Alerts)
 	}
 }
 

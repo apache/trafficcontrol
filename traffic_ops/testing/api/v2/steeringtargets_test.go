@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/client"
 )
@@ -92,7 +91,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 		}
 
 		resp, _, err := SteeringUserSession.CreateSteeringTarget(st)
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("creating steering target: %v", err)
 		}

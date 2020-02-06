@@ -21,7 +21,6 @@ package v2
 
 import "testing"
 
-import "github.com/apache/trafficcontrol/lib/go-log"
 import "github.com/apache/trafficcontrol/lib/go-tc"
 
 // These capabilities are defined during the setup process in todb.go.
@@ -61,7 +60,7 @@ func TestCapabilities(t *testing.T) {
 func CreateTestCapabilities(t *testing.T) {
 	for _,c := range testData.Capabilities {
 		resp, _, err := TOSession.CreateCapability(c)
-		log.Debugln("Response: ", c.Name, " ", resp)
+		t.Log("Response: ", c.Name, " ", resp)
 		if err != nil {
 			t.Errorf("could not create capability: %v", err)
 		}

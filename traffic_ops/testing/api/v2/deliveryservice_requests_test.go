@@ -19,7 +19,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
@@ -39,11 +38,11 @@ func TestDeliveryServiceRequests(t *testing.T) {
 }
 
 func CreateTestDeliveryServiceRequests(t *testing.T) {
-	log.Debugln("CreateTestDeliveryServiceRequests")
+	t.Log("CreateTestDeliveryServiceRequests")
 
 	dsr := testData.DeliveryServiceRequests[dsrGood]
 	respDSR, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-	log.Debugln("Response: ", respDSR)
+	t.Log("Response: ", respDSR)
 	if err != nil {
 		t.Errorf("could not CREATE DeliveryServiceRequests: %v", err)
 	}
@@ -236,7 +235,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	respDSR.DeliveryService.DisplayName = expDisplayName
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR)
-	log.Debugln("Response: ", alert)
+	t.Log("Response: ", alert)
 	if err != nil {
 		t.Errorf("cannot UPDATE DeliveryServiceRequest by id: %v - %v", err, alert)
 		return
@@ -265,7 +264,7 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	}
 	respDSR := resp[0]
 	alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(respDSR.ID)
-	log.Debugln("Response: ", alert)
+	t.Log("Response: ", alert)
 	if err != nil {
 		t.Errorf("cannot DELETE DeliveryServiceRequest by id: %d - %v - %v", respDSR.ID, err, alert)
 	}

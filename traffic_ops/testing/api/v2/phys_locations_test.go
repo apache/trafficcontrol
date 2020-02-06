@@ -18,7 +18,6 @@ package v2
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -32,7 +31,7 @@ func TestPhysLocations(t *testing.T) {
 func CreateTestPhysLocations(t *testing.T) {
 	for _, pl := range testData.PhysLocations {
 		resp, _, err := TOSession.CreatePhysLocation(pl)
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE physlocations: %v", err)
 		}
