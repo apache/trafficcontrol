@@ -37,21 +37,10 @@ func (to *Session) Users() ([]tc.User, error) {
 
 // GetUsers returns all users accessible from current user
 func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
-	route := apiBase + "/users"
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.UsersResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	data := tc.UsersResponse{}
+	route := fmt.Sprintf("%s/users", apiBase)
+	inf, err := get(to, route, &data)
+	return data.Response, inf, err
 }
 
 // GetUsersByRole returns all users accessible from current user for a given role
