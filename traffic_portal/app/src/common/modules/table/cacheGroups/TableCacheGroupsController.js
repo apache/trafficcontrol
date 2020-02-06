@@ -19,6 +19,8 @@
 
 var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state, $uibModal, $window, locationUtils, cacheGroupService, cdnService, messageModel) {
 
+    let cacheGroupsTable;
+
     var queueServerUpdates = function(cacheGroup, cdnId) {
         cacheGroupService.queueServerUpdates(cacheGroup.id, cdnId);
     };
@@ -110,6 +112,16 @@ var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state
 
     $scope.cacheGroups = cacheGroups;
 
+    $scope.columns = [
+        { "name": "Name", "visible": true, "searchable": true },
+        { "name": "Short Name", "visible": true, "searchable": true },
+        { "name": "Type", "visible": true, "searchable": true },
+        { "name": "1st Parent", "visible": true, "searchable": true },
+        { "name": "2nd Parent", "visible": true, "searchable": true },
+        { "name": "Latitude", "visible": true, "searchable": true },
+        { "name": "Longitude", "visible": true, "searchable": true }
+    ];
+
     $scope.contextMenuItems = [
         {
             text: 'Open in New Tab',
@@ -176,11 +188,26 @@ var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state
         $state.reload(); // reloads all the resolves for the view
     };
 
+    $scope.toggleVisibility = function(colName) {
+        const col = cacheGroupsTable.column(colName + ':name');
+        col.visible(!col.visible());
+        cacheGroupsTable.rows().invalidate().draw();
+    };
+
     angular.element(document).ready(function () {
-        $('#cacheGroupsTable').dataTable({
+        cacheGroupsTable = $('#cacheGroupsTable').DataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
-            "aaSorting": []
+            "aaSorting": [],
+            "columns": $scope.columns,
+            "initComplete": function(settings, json) {
+                try {
+                    // need to create the show/hide column checkboxes and bind to the current visibility
+                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_cacheGroupsTable_/')).columns;
+                } catch (e) {
+                    console.error("Failure to retrieve required column info from localStorage (key=DataTables_cacheGroupsTable_/):", e);
+                }
+            }
         });
     });
 
