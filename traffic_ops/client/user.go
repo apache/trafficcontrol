@@ -40,6 +40,7 @@ func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 	route := apiBase + "/users"
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -55,20 +56,10 @@ func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 
 // GetUsersByRole returns all users accessible from current user for a given role
 func (to *Session) GetUsersByRole(roleName string) ([]tc.User, ReqInf, error) {
-	route := apiBase + "/users?role=" + url.QueryEscape(roleName)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.UsersResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	data := tc.UsersResponse{}
+	route := fmt.Sprintf("%s/users?role=%s", apiBase, url.QueryEscape(roleName))
+	inf, err := get(to, route, &data)
+	return data.Response, inf, err
 }
 
 func (to *Session) GetUserByID(id int) ([]tc.User, ReqInf, error) {
