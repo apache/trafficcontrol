@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -310,7 +311,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Server
 		{2.1, http.MethodGet, `servers/status$`, server.GetServersStatusCountsHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2252786293, noPerlBypass},
-		{2.1, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 2237840835, noPerlBypass},
 
 		//Serverchecks
 		{2.1, http.MethodGet, `servers/checks(/|\.json)?$`, servercheck.ReadServersChecks, auth.PrivLevelReadOnly, Authenticated, nil, 2796112922, noPerlBypass},
@@ -352,7 +352,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{2.1, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Get, auth.PrivLevelReadOnly, Authenticated, nil, 221047475, noPerlBypass},
 
 		//Type: CRUD
-		{2.1, http.MethodGet, `types/trimmed/?(\.json)?$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 266, noPerlBypass},
 		{2.1, http.MethodGet, `types/?(\.json)?$`, api.ReadHandler(&types.TOType{}), auth.PrivLevelReadOnly, Authenticated, nil, 2226701823, noPerlBypass},
 		{2.1, http.MethodGet, `types/{id}$`, api.ReadHandler(&types.TOType{}), auth.PrivLevelReadOnly, Authenticated, nil, 26037256, noPerlBypass},
 		{2.1, http.MethodPut, `types/{id}$`, api.UpdateHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 28860115, noPerlBypass},
@@ -1165,6 +1164,13 @@ func notImplementedHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(http.StatusText(code)))
 }
 
+// notFoundHandler returns a 404 Not Found to the client.  This should be the new rootHandler for API version 2.x in order to prevent falling back to Perl.
+func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+	code := http.StatusNotFound
+	w.WriteHeader(code)
+	w.Write([]byte(http.StatusText(code)))
+}
+
 //CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines
 func CreateThrottledHandler(handler http.Handler, maxConcurrentCalls int) ThrottledHandler {
 	return ThrottledHandler{handler, make(chan struct{}, maxConcurrentCalls)}
@@ -1177,7 +1183,18 @@ type ThrottledHandler struct {
 }
 
 func (m ThrottledHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	m.ReqChan <- struct{}{}
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 {
+		notFoundHandler(w, r)
+		return
+	}
+
+	version, err := strconv.ParseFloat(pathParts[2], 64)
+	if err != nil || version > 2 { // do not default to Perl for versions over 2.x
+		notFoundHandler(w, r)
+		return
+	}
+
 	defer func() { <-m.ReqChan }()
 	m.Handler.ServeHTTP(w, r)
 }
