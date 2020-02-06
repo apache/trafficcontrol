@@ -42,7 +42,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/deliveryservices/sslkeys/generate/letsencrypt HTTP/1.1
+	POST /api/1.5/deliveryservices/sslkeys/generate/letsencrypt HTTP/1.1
 	Content-Type: application/json
 
 	{

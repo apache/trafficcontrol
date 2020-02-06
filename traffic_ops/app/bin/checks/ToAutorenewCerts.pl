@@ -92,7 +92,7 @@ if ( ! $login_response->is_success ) {
 	exit(1);
 }
 
-my $url       = "$b_url/api/1.4/letsencrypt/autorenew/";
+my $url       = "$b_url/api/1.5/letsencrypt/autorenew/";
 TRACE "getting $url";
 my $response = $ua->post($url);
 if ( $response->is_success ) {
