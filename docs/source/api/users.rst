@@ -31,6 +31,8 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
+.. versionadded:: ATCv4.1 The ``role`` query parameter was added in version 4.1 of :abbr:`ATC (Apache Traffic Control)`.
+
 	+-----------+----------+------------------------------------------------------------------------------------------+
 	| Name      | Required | Description                                                                              |
 	+===========+==========+==========================================================================================+
