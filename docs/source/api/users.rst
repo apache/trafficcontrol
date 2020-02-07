@@ -31,8 +31,6 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-.. versionadded:: ATCv4.1 The ``role`` query parameter was added in version 4.1 of :abbr:`ATC (Apache Traffic Control)`.
-
 	+-----------+----------+------------------------------------------------------------------------------------------+
 	| Name      | Required | Description                                                                              |
 	+===========+==========+==========================================================================================+
@@ -59,8 +57,9 @@ Request Structure
 	|           |          | parameter has no effect. ``limit`` must be defined to make use of ``page``.              |
 	+-----------+----------+------------------------------------------------------------------------------------------+
 
-.. versionadded:: 1.4
-	The ``id`` and ``username`` query parameters were added in the 1.4 API.
+.. versionadded:: ATCv4.1 The ``role`` query parameter was added in version 4.1 of :abbr:`ATC (Apache Traffic Control)`.
+
+.. versionadded:: ATCv4.0 The ``id`` and ``username`` query parameters were added in version 4.0 of :abbr:`ATC (Apache Traffic Control)`.
 
 .. code-block:: http
 	:caption: Request Example
