@@ -165,3 +165,61 @@ Response Structure
 		"lastUpdated": "2018-12-06 02:14:45+00",
 		"name": "Manchester"
 	}}
+
+``DELETE``
+==========
+
+Deletes a region. If no query parameter is specified, a ``400 Bad Request`` response is returned.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object
+
+Request Structure
+-----------------
+
+.. table:: Request Query Parameters
+
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                   |
+	+===========+==========+===============================================================================================================+
+	| id        | no       | Delete :term:`Region` by integral, unique identifier                                                          |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| name      | no       | Delete :term:`Region` by name                                                                                 |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.5/regions?name=Manchester HTTP/1.1
+	User-Agent: curl/7.29.0
+	Host: trafficops.infra.ciab.test
+	Accept: */*
+	Cookie: mojolicious=...
+
+Response Structure
+------------------
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE1ODEwODM3ODQsImJ5IjoidHJhZmZpY2NvbnRyb2wtZ28tdG9jb29raWUifQ--f6b59c9dde67bcd545bde3bbb4e56b33e23827e9; Path=/; Expires=Fri, 07 Feb 2020 13:56:24 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: yNqXKcoiohEbJrEkH8LD1zifh87dIusuvUqgQnYueyKqCXkfd5bQvQ0OhQ2AAdSZa/oe2SAqMjojGsUlxHtIQw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Fri, 07 Feb 2020 12:56:24 GMT
+	Content-Length: 62
+
+	{
+		"alerts": [
+			{
+				"text": "region was deleted.",
+				"level": "success"
+			}
+		]
+	}

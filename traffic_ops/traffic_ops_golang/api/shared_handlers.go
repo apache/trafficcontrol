@@ -298,23 +298,36 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Deleter)
 		obj.SetInfo(inf)
 
-		keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
-		keys := make(map[string]interface{})
-		for _, kf := range keyFields {
-			paramKey := inf.Params[kf.Field]
-			if paramKey == "" {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
-				return
+		deleteKeyOptionExists := false
+		if d, ok := obj.(HasDeleteKeyOptions); ok {
+			options := d.DeleteKeyOptions()
+			for key, _ := range options {
+				if inf.Params[key] != "" {
+					deleteKeyOptionExists = true
+					break
+				}
 			}
-
-			paramValue, err := kf.Func(paramKey)
-			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
-				return
-			}
-			keys[kf.Field] = paramValue
 		}
-		obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
+
+		if !deleteKeyOptionExists {
+			keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
+			keys := make(map[string]interface{})
+			for _, kf := range keyFields {
+				paramKey := inf.Params[kf.Field]
+				if paramKey == "" {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
+					return
+				}
+
+				paramValue, err := kf.Func(paramKey)
+				if err != nil {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
+					return
+				}
+				keys[kf.Field] = paramValue
+			}
+			obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
+		}
 
 		if t, ok := obj.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
@@ -328,7 +341,13 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 			}
 		}
 
-		userErr, sysErr, errCode = obj.Delete()
+		if deleteKeyOptionExists {
+			obj := reflect.New(objectType).Interface().(OptionsDeleter)
+			obj.SetInfo(inf)
+			userErr, sysErr, errCode = obj.OptionsDelete()
+		} else {
+			userErr, sysErr, errCode = obj.Delete()
+		}
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return

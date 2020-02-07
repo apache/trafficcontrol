@@ -20,8 +20,10 @@ package api
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -56,6 +58,14 @@ type GenericDeleter interface {
 	GetType() string
 	APIInfo() *APIInfo
 	DeleteQuery() string
+}
+
+// GenericOptionsDeleter can use any key listed in DeleteKeyOptions() to delete a resource.
+type GenericOptionsDeleter interface {
+	GetType() string
+	APIInfo() *APIInfo
+	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
+	DeleteQueryBase() string
 }
 
 // GenericCreate does a Create (POST) for the given GenericCreator object and type. This exists as a generic function, for the common use case of a single "id" key and a lastUpdated field.
@@ -153,6 +163,37 @@ func GenericUpdate(val GenericUpdater) (error, error, int) {
 	if rows.Next() {
 		return nil, errors.New(val.GetType() + " update affected too many rows: >1"), http.StatusInternalServerError
 	}
+	return nil, nil, http.StatusOK
+}
+
+// GenericOptionsDelete does a Delete (DELETE) for the given GenericOptionsDeleter object and type. Unlike
+// GenericDelete, there is no requirement that a specific key is used as the parameter.
+// GenericOptionsDeleter.DeleteKeyOptions() specifies which keys can be used.
+func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
+	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.DeleteKeyOptions())
+	if len(errs) > 0 {
+		return util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+
+	query := val.DeleteQueryBase() + where
+	tx := val.APIInfo().Tx
+	result, err := tx.NamedExec(query, queryValues)
+	if err != nil {
+		return nil, errors.New("deleting " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
+	}
+
+	if rowsAffected, err := result.RowsAffected(); err != nil {
+		return nil, errors.New("deleting " + val.GetType() + ": getting rows affected: " + err.Error()), http.StatusInternalServerError
+	} else if rowsAffected < 1 {
+		return errors.New("no " + val.GetType() + " with that key found"), nil, http.StatusNotFound
+	} else if rowsAffected > 1 {
+		err := tx.Rollback()
+		if err != nil && err != sql.ErrTxDone {
+			log.Errorln("rolling back transaction: " + err.Error())
+		}
+		return nil, fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
+	}
+
 	return nil, nil, http.StatusOK
 }
 
