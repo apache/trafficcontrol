@@ -69,7 +69,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := inf.Tx.Tx.Query(`SELECT xml_id, ssl_key_version FROM deliveryservice`)
+	rows, err := inf.Tx.Tx.Query(`SELECT xml_id, ssl_key_version FROM deliveryservice WHERE ssl_key_version != 0`)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -77,24 +77,29 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	keysFound := ExpirationSummary{}
+	existingCerts := []ExistingCerts{}
 	for rows.Next() {
 		ds := DsKey{}
 		err := rows.Scan(&ds.XmlId, &ds.Version)
 		if err != nil {
-			log.Errorf("getting delivery services: %v", err)
-			continue
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		}
-		if ds.Version.Valid && ds.Version.Int64 != 0 {
+		existingCerts = append(existingCerts, ExistingCerts{Version: ds.Version, XmlId: ds.XmlId})
+	}
+
+	for _, ds := range existingCerts {
+		if !ds.Version.Valid || ds.Version.Int64 == 0 {
 			continue
 		}
 
 		dsExpInfo := DsExpirationInfo{}
-		keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+		keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 		if err != nil {
 			log.Errorf("getting ssl keys for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)) + " :" + err.Error())
 			dsExpInfo.XmlId = ds.XmlId
 			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
 			dsExpInfo.Error = errors.New("getting ssl keys for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)) + " :" + err.Error())
+			keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
 			continue
 		}
 		if !ok {
@@ -102,6 +107,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 			dsExpInfo.XmlId = ds.XmlId
 			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
 			dsExpInfo.Error = errors.New("no object found for the specified key with xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
+			keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
 			continue
 		}
 
@@ -121,6 +127,8 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 		if expiration.After(time.Now().Add(time.Hour * 24 * time.Duration(inf.Config.ConfigLetsEncrypt.RenewDaysBeforeExpiration)).Add(time.Hour * 24 * 3)) {
 			continue
 		}
+
+		log.Debugf("renewing certificate for xmlId = %s, version = %s, and auth type = %s ", ds.XmlId, ds.Version.Int64, keyObj.AuthType)
 
 		newVersion := util.JSONIntStr(keyObj.Version.ToInt64() + 1)
 
@@ -174,4 +182,9 @@ func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) (int
 		"Subject: Certificate Expiration Summary\r\n\r\n"
 
 	return api.SendEmailFromTemplate(config, header, certsFound, emailTemplateFile, config.ConfigLetsEncrypt.Email)
+}
+
+type ExistingCerts struct {
+	Version sql.NullInt64
+	XmlId   string
 }

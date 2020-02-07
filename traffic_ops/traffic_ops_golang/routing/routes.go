@@ -969,7 +969,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		{api.Version{1, 5}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLIDV15, auth.PrivLevelAdmin, Authenticated, nil, 1135772906, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLID, auth.PrivLevelAdmin, Authenticated, nil, 1135772907, noPerlBypass},
-		{api.Version{1, 4}, http.MethodGet, `deliveryservices/hostname/{hostname}/sslkeys$`, deliveryservice.GetSSLKeysByHostNameV14, auth.PrivLevelAdmin, Authenticated, nil, 2105792224, noPerlBypass},
+		{api.Version{1, 5}, http.MethodGet, `deliveryservices/hostname/{hostname}/sslkeys$`, deliveryservice.GetSSLKeysByHostNameV15, auth.PrivLevelAdmin, Authenticated, nil, 2105792224, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/hostname/{hostname}/sslkeys$`, deliveryservice.GetSSLKeysByHostName, auth.PrivLevelAdmin, Authenticated, nil, 2105792225, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `deliveryservices/sslkeys/add$`, deliveryservice.AddSSLKeys, auth.PrivLevelAdmin, Authenticated, nil, 1872878583, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys/delete$`, deliveryservice.DeleteSSLKeys, auth.PrivLevelOperations, Authenticated, nil, 1926734, noPerlBypass},

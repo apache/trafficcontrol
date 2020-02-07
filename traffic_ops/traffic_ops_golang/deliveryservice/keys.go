@@ -157,8 +157,8 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
 }
 
-// GetSSLKeysByHostName fetches the ssl keys for a deliveryservice specified by the fully qualified hostname. V14 includes expiration date.
-func GetSSLKeysByHostNameV14(w http.ResponseWriter, r *http.Request) {
+// GetSSLKeysByHostName fetches the ssl keys for a deliveryservice specified by the fully qualified hostname. V15 includes expiration date.
+func GetSSLKeysByHostNameV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"hostname"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -263,7 +263,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 	api.WriteResp(w, r, keyObj)
 }
 
-// GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID. V14 includes expiration date.
+// GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
 func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -295,16 +295,19 @@ func getSSLKeysByXMLIDHelperV15(xmlID string, inf *api.APIInfo, w http.ResponseW
 		api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{})
 		return
 	}
+
+	parsedCert := keyObj.Certificate
+	err = base64DecodeCertificate(&parsedCert)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
+		return
+	}
 	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
-		err = base64DecodeCertificate(&keyObj.Certificate)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
-			return
-		}
+		keyObj.Certificate = parsedCert
 	}
 
 	if keyObj.Certificate.Crt != "" && keyObj.Expiration.IsZero() {
-		exp, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
+		exp, err := parseExpirationFromCert([]byte(parsedCert.Crt))
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(xmlID+": "+err.Error()))
 			return
