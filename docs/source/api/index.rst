@@ -20,21 +20,32 @@ Traffic Ops API
 ***************
 The Traffic Ops API provides programmatic access to read and write Traffic Control data which allows for the monitoring of CDN performance and configuration of Traffic Control settings and parameters.
 
-API Routes
-==========
+API V1 Routes
+=============
+Documents all API version 1 routes.
 
 .. toctree::
 	:maxdepth: 4
 	:hidden:
 	:glob:
 
-	*
+	v1/*
+
+
+API V2 Routes
+=============
+Documents all API version 2 routes.
+
+.. toctree::
+	:maxdepth: 4
+	:hidden:
+	:glob:
+
+	v2/*
 
 How to Read this Documentation
 ==============================
-Each endpoint is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 1.1, 1.2, 1.3, 1.4, 1.5, 2.0. All endpoints are documented as though they were being used in version 2.0 and all other 1.x documentation is omitted. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
-
-.. note:: If desired documentation for 1.x can be viewed in the `4.0 release <https://traffic-control-cdn.readthedocs.io/en/release-4.0.0/api/index.html>`_
+Each endpoint for each version is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 1.1, 1.2, 1.3, 1.4, 1.5, 2.0. All endpoints are documented as though they were being used in version 1.5 in the version 1 documentation and version 2.0 in the version 2 documentation. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
 
 Every endpoint is documented with a section for each method, containing the subsections "Request Structure" and "Response Structure" which identify all properties and structure of the Request to and Response from the endpoint. Before these subsections, three key pieces of information will be provided:
 
