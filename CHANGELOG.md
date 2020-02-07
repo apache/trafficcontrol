@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/to_extensions/:id `(DELETE)`
   - /api/1.5/to_extensions `(GET, POST)`
   - /api/1.5/stats_summary `(POST)`
+  - /api/1.1/cdns/routing
+  - /api/1.1/cachegroupparameters/ `(GET, POST)`
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
@@ -43,6 +45,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /deliveryservice_user/:dsId/:userId
   - /deliveryservice_user
   - /user/current/jobs
+  - /cdns/usage/overview
 
 ## [4.0.0] - 2019-12-16
 ### Added
@@ -164,6 +167,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Issue #4131 - The "Clone Delivery Service Assignments" menu item is hidden on a cache when the cache has zero delivery service assignments to clone.
 - Traffic Portal - Turn off TLSv1
 - Removed Traffic Portal dependency on Restangular
+- Issue #1486 - Dashboard graph for bandwidth now displays units in the tooltip when hovering over a data point
 
 ### Deprecated/Removed
 - Traffic Ops API Endpoints

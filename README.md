@@ -19,22 +19,23 @@
 
 [![Build Status](https://builds.apache.org/buildStatus/icon?job=trafficcontrol-master-build)](https://builds.apache.org/job/trafficcontrol-master-build/) [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
 
+# Apache Traffic Control
 Apache Traffic Control is an Open Source implementation of a Content Delivery Network.
 
-#### Documentation
+## Documentation
 * [Intro](http://traffic-control-cdn.readthedocs.io/en/latest/index.html)
 * [CDN Basics](http://traffic-control-cdn.readthedocs.io/en/latest/basics/index.html)
 * [Traffic Control Overview](http://traffic-control-cdn.readthedocs.io/en/latest/overview/index.html)
 * [Administrator's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/admin/index.html)
 * [Developer's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/development/index.html)
 
-##### Releases
+## Releases
 * [https://github.com/apache/trafficcontrol/releases](https://github.com/apache/trafficcontrol/releases)
 
-##### Downloads
+## Downloads
 * [https://www.apache.org/dyn/closer.cgi/trafficcontrol](https://www.apache.org/dyn/closer.cgi/trafficcontrol)
 
-####  Questions, Comments, Bugs and More
+## Questions, Comments, Bugs and More
 * [Frequently Asked Questions](https://traffic-control-cdn.readthedocs.io/en/latest/faq.html)
 * [Found a bug or file a feature request](https://github.com/apache/trafficcontrol/issues)
 * [Subscribe to our users list](mailto:users-subscribe@trafficcontrol.apache.org)

@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the aggregate routing percentages of :term:`Cache Groups` assigned to any CDN.
+Retrieves the aggregated routing percentages across all CDNs. This is accomplished by polling stats from all online Traffic Routers via the ``/crs/stats`` route.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -33,16 +33,16 @@ No parameters available
 
 Response Structure
 ------------------
-:cz:                The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Coverage Zone File`
-:deepCz:            The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Deep Coverage Zone File`
-:dsr:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to an overflow :term:`Delivery Service`
-:err:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that resulted in an error
-:fed:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to a federated CDN
-:geo:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied using 3rd party geographic IP mapping
-:miss:              The percent of requests to the Traffic Router for this :term:`Delivery Service` that could not be satisfied
-:regionalAlternate: The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to the alternate, Regional Geo-blocking URL
-:regionalDenied:    The percent of Traffic Router requests for this :term:`Delivery Service` that were denied due to geographic location policy
-:staticRoute:       The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied with :ref:`ds-static-dns-entries`
+:cz:                The percent of requests to online Traffic Routers that were satisfied by a :term:`Coverage Zone File`
+:deepCz:            The percent of requests to online Traffic Routers that were satisfied by a :term:`Deep Coverage Zone File`
+:dsr:               The percent of requests to online Traffic Routers that were satisfied by sending the client to an overflow :term:`Delivery Service`
+:err:               The percent of requests to online Traffic Routers that resulted in an error
+:fed:               The percent of requests to online Traffic Routers that were satisfied by sending the client to a federated CDN
+:geo:               The percent of requests to online Traffic Routers that were satisfied using 3rd party geographic IP mapping
+:miss:              The percent of requests to online Traffic Routers that could not be satisfied
+:regionalAlternate: The percent of requests to online Traffic Routers that were satisfied by sending the client to the alternate, Regional Geo-blocking URL
+:regionalDenied:    The percent of requests to online Traffic Routers that were denied due to geographic location policy
+:staticRoute:       The percent of requests to online Traffic Routers that were satisfied with :ref:`ds-static-dns-entries`
 
 .. code-block:: http
 	:caption: Response Example

@@ -746,3 +746,12 @@ func GetUserByID(id int, tx *sql.Tx) (tc.User, bool, error) {
 	}
 	return u, true, err
 }
+
+// ProfileParameterExistsByParameterID returns whether a profile parameter association with the given parameter id exists, and any error.
+func ProfileParameterExistsByParameterID(id int, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) from profile_parameter where parameter = $1`, id).Scan(&count); err != nil {
+		return false, errors.New("querying profile parameter existence from parameter id: " + err.Error())
+	}
+	return count > 0, nil
+}
