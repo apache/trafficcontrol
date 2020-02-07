@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -37,7 +36,7 @@ func CreateTestServerChecks(t *testing.T) {
 
 	for _, servercheck := range testData.Serverchecks {
 		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
-		log.Debugf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
+		t.Logf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
 		if err != nil {
 			t.Errorf("could not CREATE servercheck: %v", err)
 		}
@@ -91,7 +90,7 @@ func UpdateTestServerChecks(t *testing.T) {
 	for _, servercheck := range testData.Serverchecks {
 		*servercheck.Value--
 		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
-		log.Debugf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
+		t.Logf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
 		if err != nil {
 			t.Errorf("could not update servercheck: %v", err)
 		}

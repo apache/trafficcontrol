@@ -17,7 +17,6 @@ package v1
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -49,10 +48,10 @@ func AssignTestDeliveryService(t *testing.T) {
 	if err != nil {
 		t.Errorf("Couldn't assign DS '%+v' to server '%+v': %v (alerts: %v)", firstDS, firstServer, err, alerts)
 	}
-	log.Debugf("alerts: %+v", alerts)
+	t.Logf("alerts: %+v", alerts)
 
 	response, _, err := TOSession.GetServerIDDeliveryServices(firstServer.ID)
-	log.Debugf("response: %+v", response)
+	t.Logf("response: %+v", response)
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", firstServer, err)
 	}
@@ -104,7 +103,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	}
 
 	response, _, err := TOSession.GetServerIDDeliveryServices(server.ID)
-	log.Debugf("response: %+v", response)
+	t.Logf("response: %+v", response)
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *server, err)
 	}

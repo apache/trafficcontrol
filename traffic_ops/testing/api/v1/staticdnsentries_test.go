@@ -18,7 +18,6 @@ package v1
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"reflect"
 )
@@ -92,7 +91,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
 	if err != nil {
-		log.Debugf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
+		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
 	}
 	if !reflect.DeepEqual(alert, expectedAlerts[0]) {
 		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[0])
@@ -111,7 +110,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
 	if err != nil {
-		log.Debugf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
+		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
 	}
 	if !reflect.DeepEqual(alert, expectedAlerts[1]) {
 		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[1])
@@ -130,7 +129,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	t.Log("Status Code [expect 400]: ", status)
 	if err != nil {
-		log.Debugf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
+		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
 	}
 	if !reflect.DeepEqual(alert, expectedAlerts[2]) {
 		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[2])
