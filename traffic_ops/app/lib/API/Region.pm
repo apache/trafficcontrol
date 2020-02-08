@@ -247,7 +247,7 @@ sub delete_by_name {
 	my $alt		 = 'DELETE /regions?name={{name}}';
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+		return $self->with_deprecation("Forbidden", "error", 403, $alt)
 	}
 
 	my $region = $self->db->resultset('Region')->find( { name => $name } );

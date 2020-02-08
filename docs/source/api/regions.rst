@@ -169,6 +169,8 @@ Response Structure
 ``DELETE``
 ==========
 
+.. versionadded:: 1.5
+
 Deletes a region. If no query parameter is specified, a ``400 Bad Request`` response is returned.
 
 :Auth. Required: Yes

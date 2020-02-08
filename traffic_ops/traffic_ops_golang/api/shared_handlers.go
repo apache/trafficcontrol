@@ -112,6 +112,21 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 	return v.Validate()
 }
 
+func hasDeleteKeyOption(obj interface{}, params map[string]string) (bool, error, error, int) {
+	optionsDeleter, ok := obj.(HasDeleteKeyOptions)
+	if !ok {
+		return false, nil, nil, http.StatusOK
+	}
+	options := optionsDeleter.DeleteKeyOptions()
+	for key, _ := range options {
+		if params[key] != "" {
+			return true, nil, nil, http.StatusOK
+		}
+	}
+	name := reflect.TypeOf(obj).Elem().Name()[2:]
+	return false, errors.New("Refusing to delete all resources of type " + name), nil, http.StatusBadRequest
+}
+
 // ReadHandler creates a handler function from the pointer to a struct implementing the Reader interface
 //      this handler retrieves the user from the context
 //      combines the path and query parameters
@@ -298,17 +313,11 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Deleter)
 		obj.SetInfo(inf)
 
-		deleteKeyOptionExists := false
-		if d, ok := obj.(HasDeleteKeyOptions); ok {
-			options := d.DeleteKeyOptions()
-			for key, _ := range options {
-				if inf.Params[key] != "" {
-					deleteKeyOptionExists = true
-					break
-				}
-			}
+		deleteKeyOptionExists, userErr, sysErr, errCode := hasDeleteKeyOption(obj, inf.Params)
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
 		}
-
 		if !deleteKeyOptionExists {
 			keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
 			keys := make(map[string]interface{})

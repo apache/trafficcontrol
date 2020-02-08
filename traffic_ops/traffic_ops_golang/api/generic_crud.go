@@ -20,10 +20,8 @@ package api
  */
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -179,7 +177,7 @@ func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
 	tx := val.APIInfo().Tx
 	result, err := tx.NamedExec(query, queryValues)
 	if err != nil {
-		return nil, errors.New("deleting " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		return ParseDBError(err)
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {
@@ -187,10 +185,6 @@ func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
 	} else if rowsAffected < 1 {
 		return errors.New("no " + val.GetType() + " with that key found"), nil, http.StatusNotFound
 	} else if rowsAffected > 1 {
-		err := tx.Rollback()
-		if err != nil && err != sql.ErrTxDone {
-			log.Errorln("rolling back transaction: " + err.Error())
-		}
 		return nil, fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
 	}
 

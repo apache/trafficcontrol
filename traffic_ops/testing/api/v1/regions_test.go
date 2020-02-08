@@ -105,7 +105,7 @@ func DeleteTestRegions(t *testing.T) {
 		}
 		respRegion := resp[0]
 
-		delResp, _, err := TOSession.DeleteRegionByName(nil, &respRegion.Name)
+		delResp, _, err := TOSession.DeleteRegion(nil, &respRegion.Name)
 		if err != nil {
 			t.Errorf("cannot DELETE Region by name: %v - %v", err, delResp)
 		}

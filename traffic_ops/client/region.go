@@ -161,8 +161,8 @@ func (to *Session) GetRegionByNamePath(name string) ([]tc.RegionName, ReqInf, er
 	return resp.Response, reqInf, nil
 }
 
-// DELETE a Region
-func (to *Session) DeleteRegionByName(id *int, name *string) (tc.Alerts, ReqInf, error) {
+// DeleteRegion lets you DELETE a Region
+func (to *Session) DeleteRegion(id *int, name *string) (tc.Alerts, ReqInf, error) {
 	v := url.Values{}
 	if id != nil {
 		v.Add("id", strconv.Itoa(*id))
@@ -170,7 +170,7 @@ func (to *Session) DeleteRegionByName(id *int, name *string) (tc.Alerts, ReqInf,
 	if name != nil {
 		v.Add("name", *name)
 	}
-	URI := API_v13_REGIONS
+	URI := apiBase + "/regions"
 	if qStr := v.Encode(); len(qStr) > 0 {
 		URI = fmt.Sprintf("%s?%s", URI, qStr)
 	}
