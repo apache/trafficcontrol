@@ -128,10 +128,9 @@ tr_cache_config_json_refresh_period: 60000
 # log4j.properties
 tr_log4j_opts:
   - "# ACCESS is set to be a Syslog Appender"
-  - log4j.appender.ACCESS=org.apache.log4j.RollingFileAppender
+  - log4j.appender.ACCESS=org.apache.log4j.DailyRollingFileAppender
   - "log4j.appender.ACCESS.File={{tr_log_dir}}/access.log"
-  - log4j.appender.ACCESS.MaxFileSize=200MB
-  - log4j.appender.ACCESS.MaxBackupIndex=10
+  - log4j.appender.ACCESS.DatePattern='.'yyyy-MM-dd-HH
   -
   - "# ACCESS uses PatternLayout."
   - log4j.appender.ACCESS.layout=org.apache.log4j.PatternLayout
