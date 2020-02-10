@@ -220,7 +220,7 @@ sub create_for_division {
 	return $self->with_deprecation("create region " . $params->{name} . " failed.", "error", 400, $alt);
 }
 
-sub delete_by_id {
+sub delete {
 	my $self = shift;
 	my $id     = $self->param('id');
 
