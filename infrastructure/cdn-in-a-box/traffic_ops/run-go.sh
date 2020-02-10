@@ -111,3 +111,7 @@ fi
 
 fg '"${traffic_ops_golang_command[@]}"'; # Bring traffic_ops_golang to foreground
 fg; # Bring to-enroll to foreground if it is still running
+
+if [[ "$TO_DEBUG_ENABLE" == true ]]; then
+  tail -f /dev/null;
+fi;
