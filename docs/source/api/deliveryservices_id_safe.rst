@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-----------------------------------------------------------------+
-	| Name | Description                                                     |
-	+======+=================================================================+
-	|  ID  | The :ref:`ds-id` of the :term:`Delivery Service` being modified |
-	+------+-----------------------------------------------------------------+
+	+------+--------------------------------------------------------------------------------+
+	| Name | Description                                                                    |
+	+======+================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being modified |
+	+------+--------------------------------------------------------------------------------+
 
 :displayName: A string that is the :ref:`ds-display-name`
 :infoUrl:     An optional\ [#optional]_ string containing the :ref:`ds-info-url`
