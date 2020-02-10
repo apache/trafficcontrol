@@ -183,5 +183,5 @@ func (to *Session) DeleteRegion(id *int, name *string) (tc.Alerts, ReqInf, error
 	defer resp.Body.Close()
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
