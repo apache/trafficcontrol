@@ -977,12 +977,12 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request(u'put', u'deliveryservices/{delivery_service_id:d}/safe', (u'1.1', u'1.2', u'1.3',))
+	@api_request(u'put', u'deliveryservices/{delivery_service_id:d}/safe', (u'1.1', u'1.2', u'1.3', u'1.4', u'1.5'))
 	def update_deliveryservice_safe(self, delivery_service_id=None, data=None):
 		"""
-		Allows a user to edit limited fields of an assigned delivery service.
+		Allows a user to edit limited fields of a Delivery Service.
 		:ref:`to-api-deliveryservices-id-safe`
-		:param delivery_service_id: The delivery service Id
+		:param delivery_service_id: The Delivery Service Id
 		:type delivery_service_id: int
 		:param data: The request data structure for the API request
 		:type data: Dict[str, Any]
