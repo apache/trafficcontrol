@@ -465,3 +465,25 @@ func (to *Session) GetDeliveryServiceURISigningKeys(dsName string) ([]byte, ReqI
 	}
 	return []byte(data), reqInf, nil
 }
+
+// UpdateDeliveryServiceSafe updates the given Delivery Service identified by 'id' with the given "safe" fields.
+func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUpdateRequest) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	path := apiBase + `/deliveryservices/` + strconv.Itoa(id) + `/safe`
+
+	var reqInf ReqInf
+	var resp tc.DeliveryServiceSafeUpdateResponse
+
+	req, err := json.Marshal(ds)
+	if err != nil {
+		return resp.Response, reqInf, err
+	}
+
+	if reqInf, err = put(to, path, req, &resp); err != nil {
+		return resp.Response, reqInf, err
+	}
+
+	if len(resp.Response) < 1 {
+		err = errors.New("Traffic Ops returned success, but response was missing the Delivery Service")
+	}
+	return resp.Response, reqInf, err
+}
