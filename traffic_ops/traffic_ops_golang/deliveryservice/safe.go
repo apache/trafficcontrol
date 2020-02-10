@@ -89,7 +89,7 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 
 	alertMsg := "Delivery Service safe update successful."
 	if inf.Version != nil && inf.Version.Major == 1 && inf.Version.Minor < 5 {
-		switch (inf.Version.Minor) {
+		switch inf.Version.Minor {
 		case 4:
 			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV14{ds.DeliveryServiceNullableV14})
 		case 3:

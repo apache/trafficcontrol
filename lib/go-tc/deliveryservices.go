@@ -612,9 +612,9 @@ type AssignedDsResponse struct {
 // Delivery Service.
 type DeliveryServiceSafeUpdateRequest struct {
 	DisplayName *string `json:"displayName`
-	InfoURL *string `json:"infoUrl"`
-	LongDesc *string `json:"longDesc"`
-	LongDesc1 *string `json:"longDesc1`
+	InfoURL     *string `json:"infoUrl"`
+	LongDesc    *string `json:"longDesc"`
+	LongDesc1   *string `json:"longDesc1`
 }
 
 // Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
