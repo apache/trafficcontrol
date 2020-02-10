@@ -45,6 +45,7 @@ my $skip_os_check = 0;
 my $override_hostname_short = '';
 my $override_hostname_full = '';
 my $override_domainname = '';
+my $use_cache = 1;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
@@ -55,6 +56,7 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "override_hostname_short=s" => \$override_hostname_short,
             "override_hostname_full=s" => \$override_hostname_full,
             "override_domainname=s" => \$override_domainname,
+            "use_cache=i" => \$use_cache,
           );
 
 if ( $#ARGV < 1 ) {
@@ -356,6 +358,7 @@ sub usage {
 	print "\t   override_hostname_short=<text> => override the short hostname of the OS for config generation. Default = ''.\n";
 	print "\t   override_hostname_full=<text>  => override the full hostname of the OS for config generation. Default = ''.\n";
 	print "\t   override_domainname=<text>     => override the domainname of the OS for config generation. Default = ''.\n";
+	print "\t   use_cache=<0|1>                => whether to use cached Traffic Ops data for config generation. Default = 1, use cache.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -1505,7 +1508,12 @@ sub lwp_get {
 
 	my ( $TO_USER, $TO_PASS ) = split( /:/, $TM_LOGIN );
 
-	$response_content = `$atstccfg_cmd --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
+	my $no_cache_arg = '';
+	if ( $use_cache == 0 ) {
+		$no_cache_arg = '--no-cache';
+	}
+
+	$response_content = `$atstccfg_cmd $no_cache_arg --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
 
 	my $atstccfg_exit_code = $?;
 	$atstccfg_exit_code = atstccfg_code_to_http_code($atstccfg_exit_code);
