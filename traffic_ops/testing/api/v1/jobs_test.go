@@ -37,24 +37,23 @@ func CreateTestJobs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
-	dsNameIDs := map[string]int64{}
-	for _, ds := range toDSes {
-		dsNameIDs[ds.XMLID] = int64(ds.ID)
-	}
 
-	for i, job := range testData.Jobs {
-		job.Request.StartTime = time.Now().UTC()
-		job.Request.DeliveryServiceID = dsNameIDs[job.DSName]
-		testData.Jobs[i] = job
-	}
-
-	for _, job := range testData.Jobs {
-		id, ok := dsNameIDs[job.DSName]
-		if !ok {
-			t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DSName)
+	for i, job := range testData.InvalidationJobs {
+		job.StartTime = &tc.Time{
+			Time: time.Now().Add(time.Minute).UTC(),
+			Valid: true,
 		}
-		job.Request.DeliveryServiceID = id
-		_, _, err := TOSession.CreateJob(job.Request)
+		testData.InvalidationJobs[i] = job
+	}
+
+	for _, job := range testData.InvalidationJobs {
+		request := tc.InvalidationJobInput{
+			DeliveryService: job.DeliveryService,
+			Regex:           job.Regex	,
+			StartTime:       job.StartTime,
+			TTL:             job.TTL,
+		}
+		_, _, err := TOSession.CreateInvalidationJob(request)
 		if err != nil {
 			t.Errorf("could not CREATE job: %v", err)
 		}
@@ -83,7 +82,7 @@ func CreateTestInvalidationJobs(t *testing.T) {
 }
 
 func GetTestJobs(t *testing.T) {
-	toJobs, _, err := TOSession.GetJobs(nil, nil)
+	toJobs, _, err := TOSession.GetInvalidationJobs(nil, nil)
 	if err != nil {
 		t.Fatalf("error getting jobs: %v", err)
 	}
@@ -93,36 +92,26 @@ func GetTestJobs(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
 
-	dsIDNames := map[int64]string{}
-	for _, ds := range toDSes {
-		dsIDNames[int64(ds.ID)] = ds.XMLID
-	}
-
-	for _, testJob := range testData.Jobs {
+	for _, testJob := range testData.InvalidationJobs {
 		found := false
 		for _, toJob := range toJobs {
-			if toJob.DeliveryService != dsIDNames[testJob.Request.DeliveryServiceID] {
+			if *toJob.DeliveryService != *testJob.DeliveryService {
 				continue
 			}
-			if !strings.HasSuffix(toJob.AssetURL, testJob.Request.Regex) {
+			if !strings.HasSuffix(*toJob.AssetURL, *testJob.Regex) {
 				continue
 			}
-			toJobTime, err := time.Parse(tc.TimeLayout, toJob.StartTime)
-			if err != nil {
-				t.Errorf("job ds %v regex %v start time expected format '%+v' actual '%+v' error '%+v'", testJob.Request.DeliveryServiceID, testJob.Request.Regex, tc.TimeLayout, toJob.StartTime, err)
-				continue
-			}
-			toJobTime = toJobTime.Round(time.Minute)
-			testJobTime := testJob.Request.StartTime.Round(time.Minute)
+			toJobTime := toJob.StartTime.Round(time.Minute)
+			testJobTime := testJob.StartTime.Round(time.Minute)
 			if !toJobTime.Equal(testJobTime) {
-				t.Errorf("test job ds %v regex %v start time expected '%+v' actual '%+v'", testJob.Request.DeliveryServiceID, testJob.Request.Regex, testJobTime, toJobTime)
+				t.Errorf("test job ds %v regex %v start time expected '%+v' actual '%+v'", *testJob.DeliveryService, *testJob.Regex, testJobTime, toJobTime)
 				continue
 			}
 			found = true
 			break
 		}
 		if !found {
-			t.Errorf("test job ds %v regex %v expected: exists, actual: not found", testJob.Request.DeliveryServiceID, testJob.Request.Regex)
+			t.Errorf("test job ds %v regex %v expected: exists, actual: not found", *testJob.DeliveryService, *testJob.Regex)
 		}
 	}
 }

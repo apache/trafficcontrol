@@ -73,14 +73,14 @@ func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
 }
 
 func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
-	dses, _, err := s.GetDeliveryServiceByXMLID(url.QueryEscape(n))
+	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
 	if len(dses) == 0 {
 		return -1, errors.New("no deliveryservice with name " + n)
 	}
-	return dses[0].ID, err
+	return *dses[0].ID, err
 }
 
 // enrollType takes a json file and creates a Type object using the TO API
@@ -227,14 +227,14 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLID(dss.XmlId)
+	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId)
 	if err != nil {
 		return err
 	}
 	if len(dses) == 0 {
 		return errors.New("no deliveryservice with name " + dss.XmlId)
 	}
-	dsID := dses[0].ID
+	dsID := *dses[0].ID
 
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {

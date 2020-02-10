@@ -31,25 +31,25 @@ const (
 
 func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	if sdns.CacheGroupID == 0 && sdns.CacheGroupName != "" {
-		p, _, err := to.GetCacheGroupByName(sdns.CacheGroupName)
+		p, _, err := to.GetCacheGroupNullableByName(sdns.CacheGroupName)
 		if err != nil {
 			return err
 		}
 		if len(p) == 0 {
 			return errors.New("no CacheGroup named " + sdns.CacheGroupName)
 		}
-		sdns.CacheGroupID = p[0].ID
+		sdns.CacheGroupID = *p[0].ID
 	}
 
 	if sdns.DeliveryServiceID == 0 && sdns.DeliveryService != "" {
-		dses, _, err := to.GetDeliveryServiceByXMLID(sdns.DeliveryService)
+		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(sdns.DeliveryService)
 		if err != nil {
 			return err
 		}
 		if len(dses) == 0 {
 			return errors.New("no deliveryservice with name " + sdns.DeliveryService)
 		}
-		sdns.DeliveryServiceID = dses[0].ID
+		sdns.DeliveryServiceID = *dses[0].ID
 	}
 
 	if sdns.TypeID == 0 && sdns.Type != "" {

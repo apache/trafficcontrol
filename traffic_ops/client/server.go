@@ -40,14 +40,14 @@ func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	if server.CachegroupID == 0 && server.Cachegroup != "" {
-		cg, _, err := to.GetCacheGroupByName(server.Cachegroup)
+		cg, _, err := to.GetCacheGroupNullableByName(server.Cachegroup)
 		if err != nil {
 			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + server.Cachegroup + ":" + err.Error())
 		}
 		if len(cg) == 0 {
 			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + server.Cachegroup)
 		}
-		server.CachegroupID = cg[0].ID
+		server.CachegroupID = *cg[0].ID
 	}
 	if server.CDNID == 0 && server.CDNName != "" {
 		c, _, err := to.GetCDNByName(server.CDNName)
@@ -134,13 +134,6 @@ func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf
 	return alerts, reqInf, nil
 }
 
-// Servers gets an array of servers
-// Deprecated: use GetServers
-func (to *Session) Servers() ([]tc.Server, error) {
-	s, _, err := to.GetServers()
-	return s, err
-}
-
 // Returns a list of Servers
 func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Servers, nil)
@@ -153,16 +146,6 @@ func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
 	var data tc.ServersResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
-}
-
-// Server gets a server by hostname
-// Deprecated: use GetServer
-func (to *Session) Server(name string) (*tc.Server, error) {
-	s, _, err := to.GetServerByHostName(name)
-	if len(s) > 0 {
-		return &s[0], err
-	}
-	return nil, errors.New("not found")
 }
 
 // GET a Server by the Server ID
@@ -215,13 +198,6 @@ func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// ServersByType gets an array of serves of a specified type.
-// Deprecated: use GetServersByType
-func (to *Session) ServersByType(qparams url.Values) ([]tc.Server, error) {
-	ss, _, err := to.GetServersByType(qparams)
-	return ss, err
-}
-
 func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, error) {
 	url := fmt.Sprintf("%s.json?%s", API_v13_Servers, qparams.Encode())
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
@@ -237,13 +213,6 @@ func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, er
 	}
 
 	return data.Response, reqInf, nil
-}
-
-// ServersFqdn returns a the full domain name for the server short name passed in.
-// Deprecated: use GetServersFQDN
-func (to *Session) ServersFqdn(n string) (string, error) {
-	f, _, err := to.GetServerFQDN(n)
-	return f, err
 }
 
 func (to *Session) GetServerFQDN(n string) (string, ReqInf, error) {
@@ -263,13 +232,6 @@ func (to *Session) GetServerFQDN(n string) (string, ReqInf, error) {
 		return "Error", reqInf, fmt.Errorf("No Server %s found", n)
 	}
 	return fdn, reqInf, nil
-}
-
-// ServersShortNameSearch returns a slice of short server names that match a greedy match.
-// Deprecated: use GetServersShortNameSearch
-func (to *Session) ServersShortNameSearch(shortname string) ([]string, error) {
-	ss, _, err := to.GetServersShortNameSearch(shortname)
-	return ss, err
 }
 
 func (to *Session) GetServersShortNameSearch(shortname string) ([]string, ReqInf, error) {

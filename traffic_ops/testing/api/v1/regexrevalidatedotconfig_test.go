@@ -32,9 +32,9 @@ func GetTestRegexRevalidateDotConfig(t *testing.T) {
 		t.Fatalf("Getting cdn '" + cdnName + "' config regex_revalidate.config: " + err.Error() + "\n")
 	}
 
-	for _, testJob := range testData.Jobs {
-		if !strings.Contains(cfg, testJob.Request.Regex) {
-			t.Errorf("regex_revalidate.config '''%+v''' expected: contains '%+v' actual: missing", cfg, testJob.Request.Regex)
+	for _, testJob := range testData.InvalidationJobs {
+		if !strings.Contains(cfg, *testJob.Regex) {
+			t.Errorf("regex_revalidate.config '''%+v''' expected: contains '%+v' actual: missing", cfg, *testJob.Regex)
 		}
 	}
 }

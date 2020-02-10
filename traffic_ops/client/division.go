@@ -130,19 +130,3 @@ func (to *Session) DeleteDivisionByID(id int) (tc.Alerts, ReqInf, error) {
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
-
-// DELETE a Division by Division name.
-//
-// Deprecated: This will be removed in the near(-ish) future. Use Session.DeleteDivisionByID instead.
-func (to *Session) DeleteDivisionByName(name string) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/name/%s", API_v13_Divisions, name)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
-}

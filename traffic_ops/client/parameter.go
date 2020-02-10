@@ -82,13 +82,6 @@ func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// Parameters gets an array of parameter structs for the profile given
-// Deprecated: use GetParameters
-func (to *Session) Parameters(profileName string) ([]tc.Parameter, error) {
-	ps, _, err := to.GetParametersByProfileName(profileName)
-	return ps, err
-}
-
 func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Parameter, ReqInf, error) {
 	url := fmt.Sprintf(API_v13_Parameters+"/profile/%s.json", profileName)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)

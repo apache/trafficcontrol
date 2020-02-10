@@ -20,12 +20,6 @@ import (
 	"net/http"
 )
 
-// CRConfigRaw Deprecated: use GetCRConfig instead
-func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
-	bytes, _, err := to.GetCRConfig(cdn)
-	return bytes, err
-}
-
 type OuterResponse struct {
 	Response json.RawMessage `json:"response"`
 }

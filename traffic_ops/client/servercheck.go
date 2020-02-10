@@ -42,22 +42,6 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable)
 	return &resp, reqInf, nil
 }
 
-// GetServerChecks Gets ServerChecks Data.
-//
-// Deprecated: This function cannot handle arbitrary check types, so if you're
-// using custom TO extensions it WILL quietly drop data. Please use
-// Session.GetServersChecks instead.
-func (to *Session) GetServerChecks() (*tc.ServerchecksResponse, ReqInf, error) {
-	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	resp := tc.ServerchecksResponse{}
-	reqInf, err := get(to, API_V1_SERVERCHECK_GET, &resp)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return &resp, reqInf, nil
-}
-
 // GetServersChecks fetches check and meta information about servers from /servers/checks.
 func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
 	var response struct {

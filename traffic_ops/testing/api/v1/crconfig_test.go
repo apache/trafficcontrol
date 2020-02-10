@@ -61,14 +61,14 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if serverID == 0 {
 		t.Errorf("GetServers expected EDGE server in cdn1, actual: %+v", servers)
 	}
-	res, _, err := TOSession.GetDeliveryServiceByXMLID("anymap-ds")
+	res, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("anymap-ds")
 	if err != nil {
 		t.Errorf("GetDeliveryServiceByXMLID err expected nil, actual %+v", err)
 	}
 	if len(res) != 1 {
 		t.Error("GetDeliveryServiceByXMLID expected 1 DS, actual 0")
 	}
-	anymapDSID := res[0].ID
+	anymapDSID := *res[0].ID
 	_, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
 	if err != nil {
 		t.Errorf("POST delivery service servers: %v", err)

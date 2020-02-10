@@ -70,23 +70,23 @@ func CreateTestSteeringTargets(t *testing.T) {
 			st.TypeID = util.IntPtr(respTypes[0].ID)
 		}
 		{
-			respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
+			respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
 			if err != nil {
 				t.Errorf("creating steering target: getting ds: %v", err)
 			} else if len(respDS) < 1 {
 				t.Error("creating steering target: getting ds: not found")
 			}
-			dsID := uint64(respDS[0].ID)
+			dsID := uint64(*respDS[0].ID)
 			st.DeliveryServiceID = &dsID
 		}
 		{
-			respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target))
+			respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.Target))
 			if err != nil {
 				t.Errorf("creating steering target: getting target ds: %v", err)
 			} else if len(respTarget) < 1 {
 				t.Error("creating steering target: getting target ds: not found")
 			}
-			targetID := uint64(respTarget[0].ID)
+			targetID := uint64(*respTarget[0].ID)
 			st.TargetID = &targetID
 		}
 
@@ -110,14 +110,14 @@ func UpdateTestSteeringTargets(t *testing.T) {
 		t.Error("updating steering target: test data missing target")
 	}
 
-	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
+	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
 	if err != nil {
 		t.Errorf("updating steering target: getting ds: %v", err)
 	}
 	if len(respDS) < 1 {
 		t.Error("updating steering target: getting ds: not found")
 	}
-	dsID := respDS[0].ID
+	dsID := *respDS[0].ID
 
 	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
@@ -194,13 +194,13 @@ func GetTestSteeringTargets(t *testing.T) {
 		t.Error("updating steering target: test data missing ds")
 	}
 
-	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
+	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
 	if err != nil {
 		t.Errorf("creating steering target: getting ds: %v", err)
 	} else if len(respDS) < 1 {
 		t.Error("steering target get: getting ds: not found")
 	}
-	dsID := respDS[0].ID
+	dsID := *respDS[0].ID
 
 	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
@@ -251,24 +251,24 @@ func DeleteTestSteeringTargets(t *testing.T) {
 			t.Error("deleting steering target: test data missing target")
 		}
 
-		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
+		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
 		if err != nil {
 			t.Errorf("deleting steering target: getting ds: %v", err)
 		} else if len(respDS) < 1 {
 			t.Error("deleting steering target: getting ds: not found")
 		}
-		dsID := uint64(respDS[0].ID)
+		dsID := uint64(*respDS[0].ID)
 		st.DeliveryServiceID = &dsID
 
 		dsIDs = append(dsIDs, dsID)
 
-		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target))
+		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.Target))
 		if err != nil {
 			t.Errorf("deleting steering target: getting target ds: %v", err)
 		} else if len(respTarget) < 1 {
 			t.Error("deleting steering target: getting target ds: not found")
 		}
-		targetID := uint64(respTarget[0].ID)
+		targetID := uint64(*respTarget[0].ID)
 		st.TargetID = &targetID
 
 		_, _, err = SteeringUserSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID))
