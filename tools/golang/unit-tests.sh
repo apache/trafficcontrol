@@ -27,4 +27,6 @@ done
 
 rm "$covertmp"
 go tool cover --func=coverprofile > /junit/coverage
+rm coverprofile
 go-junit-report --package-name=golang.test --set-exit-code <result.txt >/junit/golang.test.xml
+rm result.txt
