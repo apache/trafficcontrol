@@ -53,6 +53,9 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 
 	clientCG := clientCGs[0]
 
+	if clientCG.ID == nil {
+		t.Fatalf("Cachegroup has nil ID")
+	}
 	cgID := *clientCG.ID
 
 	dsIDs := []int64{}

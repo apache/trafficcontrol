@@ -63,10 +63,13 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 	res, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("anymap-ds")
 	if err != nil {
-		t.Errorf("GetDeliveryServiceByXMLID err expected nil, actual %+v", err)
+		t.Errorf("GetDeliveryServiceByXMLIDNullable err expected nil, actual %+v", err)
 	}
 	if len(res) != 1 {
-		t.Error("GetDeliveryServiceByXMLID expected 1 DS, actual 0")
+		t.Error("GetDeliveryServiceByXMLIDNullable expected 1 DS, actual 0")
+	}
+	if res[0].ID == nil {
+		t.Error("GetDeliveryServiceByXMLIDNullable Unknown delivery service ID")
 	}
 	anymapDSID := *res[0].ID
 	_, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)

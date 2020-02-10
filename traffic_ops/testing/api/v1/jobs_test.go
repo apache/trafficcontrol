@@ -94,6 +94,9 @@ func GetTestJobs(t *testing.T) {
 
 	for _, testJob := range testData.InvalidationJobs {
 		found := false
+		if testJob.DeliveryService == nil || testJob.Regex == nil {
+			continue
+		}
 		for _, toJob := range toJobs {
 			if *toJob.DeliveryService != *testJob.DeliveryService {
 				continue

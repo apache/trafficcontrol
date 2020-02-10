@@ -43,6 +43,9 @@ func AssignTestDeliveryService(t *testing.T) {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
 	firstDS := rd[0]
+	if firstDS.ID == nil {
+		t.Fatal("Fetch DS information returned unknown ID")
+	}
 
 	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(firstServer.ID, []int{*firstDS.ID}, true)
 	if err != nil {
@@ -96,6 +99,9 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
 	firstDS := rd[0]
+	if firstDS.ID == nil {
+		t.Fatal("Fetch DS information returned unknown ID")
+	}
 
 	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(server.ID, []int{*firstDS.ID}, false)
 	if err == nil {

@@ -80,6 +80,9 @@ func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
 	if len(dses) == 0 {
 		return -1, errors.New("no deliveryservice with name " + n)
 	}
+	if dses[0].ID == nil {
+		return -1, errors.New("Delivery service " + n + " has a nil ID")
+	}
 	return *dses[0].ID, err
 }
 
@@ -233,6 +236,9 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	}
 	if len(dses) == 0 {
 		return errors.New("no deliveryservice with name " + dss.XmlId)
+	}
+	if dses[0].ID == nil {
+		return errors.New("Deliveryservice with name " + dss.XmlId  + " has a nil ID")
 	}
 	dsID := *dses[0].ID
 

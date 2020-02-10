@@ -459,7 +459,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 
 	cacheStatPath := "/publish/CacheStats?hc=1&wildcard=1&stats="
 	dsStatPath := "/publish/DsStats?hc=1&wildcard=1&stats="
-	parameters, _, err := to.GetParameterByName("TRAFFIC_STATS")
+	parameters, _, err := to.GetParametersByProfileName("TRAFFIC_STATS")
 	if err != nil {
 		msg := fmt.Sprintf("Error getting parameter list from %v: %v", config.ToURL, err)
 		if init {

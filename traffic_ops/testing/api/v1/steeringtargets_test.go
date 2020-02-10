@@ -75,6 +75,8 @@ func CreateTestSteeringTargets(t *testing.T) {
 				t.Errorf("creating steering target: getting ds: %v", err)
 			} else if len(respDS) < 1 {
 				t.Error("creating steering target: getting ds: not found")
+			} else if respDS[0].ID == nil {
+				t.Error("creating steering target: getting ds: nil ID returned")
 			}
 			dsID := uint64(*respDS[0].ID)
 			st.DeliveryServiceID = &dsID
@@ -85,6 +87,8 @@ func CreateTestSteeringTargets(t *testing.T) {
 				t.Errorf("creating steering target: getting target ds: %v", err)
 			} else if len(respTarget) < 1 {
 				t.Error("creating steering target: getting target ds: not found")
+			} else if respTarget[0].ID == nill {
+				t.Error("creating steering target: getting target ds: nil ID returned")
 			}
 			targetID := uint64(*respTarget[0].ID)
 			st.TargetID = &targetID
@@ -116,6 +120,9 @@ func UpdateTestSteeringTargets(t *testing.T) {
 	}
 	if len(respDS) < 1 {
 		t.Error("updating steering target: getting ds: not found")
+	}
+	if respDS[0].ID == nil {
+		t.Error("updating steering target: getting ds: nil id returned")
 	}
 	dsID := *respDS[0].ID
 
@@ -199,6 +206,8 @@ func GetTestSteeringTargets(t *testing.T) {
 		t.Errorf("creating steering target: getting ds: %v", err)
 	} else if len(respDS) < 1 {
 		t.Error("steering target get: getting ds: not found")
+	} else if respDS[0].ID == nil {
+		t.Error("steering target get: getting ds: nil id returned")
 	}
 	dsID := *respDS[0].ID
 
@@ -256,6 +265,8 @@ func DeleteTestSteeringTargets(t *testing.T) {
 			t.Errorf("deleting steering target: getting ds: %v", err)
 		} else if len(respDS) < 1 {
 			t.Error("deleting steering target: getting ds: not found")
+		} else if respDS[0].ID == nil {
+			t.Error("deleting steering target: getting ds: nil ID returned")
 		}
 		dsID := uint64(*respDS[0].ID)
 		st.DeliveryServiceID = &dsID
@@ -266,6 +277,8 @@ func DeleteTestSteeringTargets(t *testing.T) {
 		if err != nil {
 			t.Errorf("deleting steering target: getting target ds: %v", err)
 		} else if len(respTarget) < 1 {
+			t.Error("deleting steering target: getting target ds: not found")
+		} else if respDS[0].ID == nil {
 			t.Error("deleting steering target: getting target ds: not found")
 		}
 		targetID := uint64(*respTarget[0].ID)

@@ -38,6 +38,9 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 		if len(p) == 0 {
 			return errors.New("no CacheGroup named " + sdns.CacheGroupName)
 		}
+		if p[0].ID == nil {
+			return errors.New("CacheGroup named " + sdns.CacheGroupName + " has a nil ID")
+		}
 		sdns.CacheGroupID = *p[0].ID
 	}
 
@@ -48,6 +51,9 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 		}
 		if len(dses) == 0 {
 			return errors.New("no deliveryservice with name " + sdns.DeliveryService)
+		}
+		if dses[0].ID == nil {
+			return errors.New("Deliveryservice with name " + sdns.DeliveryService + " has a nil ID")
 		}
 		sdns.DeliveryServiceID = *dses[0].ID
 	}

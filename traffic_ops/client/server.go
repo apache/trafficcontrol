@@ -47,6 +47,9 @@ func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
 		if len(cg) == 0 {
 			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + server.Cachegroup)
 		}
+		if cg[0].ID == nil {
+			return tc.Alerts{}, ReqInf{}, errors.New("Cachegroup named " + server.Cachegroup + " has a nil ID")
+		}
 		server.CachegroupID = *cg[0].ID
 	}
 	if server.CDNID == 0 && server.CDNName != "" {

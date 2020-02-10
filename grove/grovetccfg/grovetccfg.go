@@ -361,7 +361,7 @@ func createGroveCfg(toc *to.Session, server tc.Server) (bool, config.Config, err
 		}
 	}
 
-	serverParameters, _, err := toc.GetParameterByName(server.Profile)
+	serverParameters, _, err := toc.GetParametersByProfileName(server.Profile)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + server.HostName + "' profile '" + server.Profile + "': " + err.Error())
 		return false, currCfg, err
@@ -484,7 +484,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 	}
 	cdns := makeCDNMap(cdnsArr)
 
-	serverParameters, _, err := toc.GetParameterByName(hostServer.Profile)
+	serverParameters, _, err := toc.GetParametersByProfileName(hostServer.Profile)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + host + "' profile '" + hostServer.Profile + "': " + err.Error())
 		os.Exit(1)
@@ -661,7 +661,9 @@ func makeServersHostnameMap(servers []tc.Server) map[string]tc.Server {
 func makeCachegroupsNameMap(cgs []tc.CacheGroupNullable) map[string]tc.CacheGroupNullable {
 	m := map[string]tc.CacheGroupNullable{}
 	for _, cg := range cgs {
-		m[*cg.Name] = cg
+		if cg.Name != nil {
+			m[*cg.Name] = cg
+		}
 	}
 	return m
 }
@@ -748,7 +750,7 @@ func getParents(hostname string, servers map[string]tc.Server, cachegroups map[s
 
 	parents := []tc.Server{}
 	for _, server := range servers {
-		if server.Cachegroup == *cachegroup.ParentName {
+		if cachegroup.ParentName != nil && server.Cachegroup == *cachegroup.ParentName {
 			parents = append(parents, server)
 		}
 	}

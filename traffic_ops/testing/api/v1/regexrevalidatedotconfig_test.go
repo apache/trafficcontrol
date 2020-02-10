@@ -33,6 +33,9 @@ func GetTestRegexRevalidateDotConfig(t *testing.T) {
 	}
 
 	for _, testJob := range testData.InvalidationJobs {
+		if testJob.Regex == nil {
+			continue
+		}
 		if !strings.Contains(cfg, *testJob.Regex) {
 			t.Errorf("regex_revalidate.config '''%+v''' expected: contains '%+v' actual: missing", cfg, *testJob.Regex)
 		}
