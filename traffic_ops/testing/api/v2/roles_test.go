@@ -46,7 +46,7 @@ func CreateTestRoles(t *testing.T) {
 		t.Log("Status Code: ", status)
 		t.Log("Response: ", alerts)
 		if err != nil {
-			log.Debugf("error: %v", err)
+			t.Logf("error: %v", err)
 			//t.Errorf("could not CREATE role: %v", err)
 		}
 		if !reflect.DeepEqual(alerts, expectedAlerts[i]) {
@@ -56,7 +56,7 @@ func CreateTestRoles(t *testing.T) {
 }
 
 func UpdateTestRoles(t *testing.T) {
-	log.Debugf("testData.Roles contains: %+v\n", testData.Roles)
+	t.Logf("testData.Roles contains: %+v\n", testData.Roles)
 	firstRole := testData.Roles[0]
 	// Retrieve the Role by role so we can get the id for the Update
 	resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name)
@@ -64,7 +64,7 @@ func UpdateTestRoles(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
 	}
-	log.Debugf("got response: %+v\n", resp)
+	t.Logf("got response: %+v\n", resp)
 	remoteRole := resp[0]
 	expectedRole := "new admin2"
 	remoteRole.Name = &expectedRole

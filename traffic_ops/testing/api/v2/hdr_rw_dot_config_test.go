@@ -91,7 +91,7 @@ func GetTestHdrRwDotConfigWithNewline(t *testing.T) {
 	if expectedLines != count {
 		t.Errorf("expected %d lines in the config (actual = %d)", expectedLines, count)
 	} else {
-		log.Debugf("Tested %s sucessfully\n", filename)
+		t.Logf("Tested %s sucessfully\n", filename)
 	}
 }
 
@@ -111,7 +111,7 @@ func GetTestHdrRwDotConfig(t *testing.T) {
 	if expectedLines != count {
 		t.Errorf("expected %d lines in the config (actual = %d)", expectedLines, count)
 	} else {
-		log.Debugf("Tested %s sucessfully\n", filename)
+		t.Logf("Tested %s sucessfully\n", filename)
 	}
 }
 
@@ -131,7 +131,7 @@ func GetTestHdrRwMidDotConfig(t *testing.T) {
 	if expectedLines != count {
 		t.Errorf("expected %d lines in the config (actual = %d)", expectedLines, count)
 	} else {
-		log.Debugf("Tested %s sucessfully\n", filename)
+		t.Logf("Tested %s sucessfully\n", filename)
 	}
 }
 
