@@ -1990,11 +1990,35 @@ class TOSession(RestApiSession):
 	#
 	# Regions
 	#
-	@api_request(u'get', u'regions', (u'1.1', u'1.2', u'1.3',))
-	def get_regions(self):
+	@api_request(u'get', u'regions', (u'1.1', u'1.2', u'1.3', u'1.4', u'1.5'))
+	def get_regions(self, query_params=None):
 		"""
 		Get Regions.
 		:ref:`to-api-regions`
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request(u'post', u'regions', (u'1.1', u'1.2', u'1.3', u'1.4'))
+	def create_region(self, query_params=None, data=None):
+		"""
+		Create a region
+		:ref:`to-api-divisions-name-regions`
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request(u'delete', u'regions', u'1.5')
+	def delete_region(self, query_params=None):
+		"""
+		Delete a region by name or ID as a query parameter
+		:ref:`to-api-regions-id`
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
