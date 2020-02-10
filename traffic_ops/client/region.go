@@ -161,7 +161,7 @@ func (to *Session) GetRegionByNamePath(name string) ([]tc.RegionName, ReqInf, er
 	return resp.Response, reqInf, nil
 }
 
-// DeleteRegion lets you DELETE a Region
+// DeleteRegion lets you DELETE a Region. Only 1 parameter is required, not both.
 func (to *Session) DeleteRegion(id *int, name *string) (tc.Alerts, ReqInf, error) {
 	v := url.Values{}
 	if id != nil {

@@ -46,7 +46,7 @@ func (v *TORegion) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TORegion) UpdateQuery() string     { return updateQuery() }
 
-// DeleteQuery returns a query, including a WHERE clause
+// DeleteQuery returns a query, including a WHERE clause.
 func (v *TORegion) DeleteQuery() string     { return deleteQuery() }
 
 // DeleteQueryBase returns a query with no WHERE clause.
