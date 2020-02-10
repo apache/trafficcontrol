@@ -13,7 +13,6 @@ package v1
 */
 
 import (
-	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -30,13 +29,13 @@ func UpdateTestDeliveryServiceSafe(t *testing.T) {
 	if (len(testData.DeliveryServices) < 1) {
 		t.Fatalf("Need at least one test Delivery Service to test safe update")
 	}
-	firstDS := testData.DeliveryServices[0]
+	first := testData.DeliveryServices[0]
 
 	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(first.XMLID)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Service by XMLID '%s': %v", first.XMLID, err)
 	} else if len(dses) != 1 {
-		t.Fatalf("expected exactly one Delivery Service by XMLID '%s', got %d", fist.XMLID, len(dses))
+		t.Fatalf("expected exactly one Delivery Service by XMLID '%s', got %d", first.XMLID, len(dses))
 	} else if dses[0].XMLID == nil {
 		t.Fatalf("requested Delivery Service with XMLID '%s', but response contained Delivery Service with null/missing XMLID", first.XMLID)
 	} else if *dses[0].XMLID != first.XMLID {
@@ -54,18 +53,18 @@ func UpdateTestDeliveryServiceSafe(t *testing.T) {
 		LongDesc1:   util.StrPtr("safe update long desc one"),
 	}
 
-	resp _, err := TOSession.UpdateDeliveryServiceSafe(*remoteDS.ID, req)
-	err != nil {
+	resp, _, err := TOSession.UpdateDeliveryServiceSafe(*remoteDS.ID, req)
+	if err != nil {
 		t.Fatalf("unexpected error from PUT /deliveryservices/%d/safe: %v", *remoteDS.ID, err)
 	} else if len(resp) != 1 {
 		t.Fatalf("expected exactly one Delivery Service in response to PUT /deliveryservices/%d/safe, got %d", *remoteDS.ID, len(resp))
 	}
 
-	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(first.XMLID)
+	dses, _, err = TOSession.GetDeliveryServiceByXMLIDNullable(first.XMLID)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Service by ID: id %v xmlid '%v' - %v", remoteDS.ID, remoteDS.XMLID, err)
 	} else if len(dses) != 1 {
-		t.Fatalf("expected exactly one Delivery Service by XMLID '%s', got %d", fist.XMLID, len(dses))
+		t.Fatalf("expected exactly one Delivery Service by XMLID '%s', got %d", first.XMLID, len(dses))
 	} else if dses[0].XMLID == nil {
 		t.Fatalf("requested Delivery Service with XMLID '%s', but response contained Delivery Service with null/missing XMLID", first.XMLID)
 	} else if *dses[0].XMLID != first.XMLID {
