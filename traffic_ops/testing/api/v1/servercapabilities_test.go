@@ -18,7 +18,6 @@ package v1
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -36,7 +35,7 @@ func CreateTestServerCapabilities(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE server capability: %v", err)
 		}
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 	}
 
 }
