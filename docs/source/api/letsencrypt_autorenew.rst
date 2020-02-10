@@ -40,7 +40,7 @@ Response Structure
 
 	:XmlId:       The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
 	:Version:     An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
-	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service`
+	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service` following RFC3339 internet date/time format YYYY-MM-DDTHH:mm:ssZ
 	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
 	:Error:       Any errors received in the renewal process
 
@@ -48,7 +48,7 @@ Response Structure
 
 	:XmlId:       The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
 	:Version:     An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
-	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service`
+	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service` following RFC3339 internet date/time format YYYY-MM-DDTHH:mm:ssZ
 	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
 	:Error:       Any errors received in the renewal process
 
@@ -56,7 +56,7 @@ Response Structure
 
 	:XmlId:       The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
 	:Version:     An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
-	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service`
+	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service` following RFC3339 internet date/time format YYYY-MM-DDTHH:mm:ssZ
 	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
 	:Error:       Any errors received in the renewal process
 

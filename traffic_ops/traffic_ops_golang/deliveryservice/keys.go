@@ -34,7 +34,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -139,25 +138,21 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
 		return
 	}
 
 	hostName := inf.Params["hostname"]
-	xmlID, ok, err := getXmlIdFromHostname(inf, hostName)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	if !ok {
-		api.WriteRespAlert(w, r, tc.InfoLevel, "- error getting cdn or delivery service for hostname "+hostName)
+	xmlID, userErr, sysErr, errCode := getXmlIdFromHostname(inf, hostName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
 	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
 }
 
-// GetSSLKeysByHostName fetches the ssl keys for a deliveryservice specified by the fully qualified hostname. V15 includes expiration date.
+// GetSSLKeysByHostNameV15 fetches the ssl keys for a deliveryservice specified by the fully qualified hostname. V15 includes expiration date.
 func GetSSLKeysByHostNameV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"hostname"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -167,25 +162,21 @@ func GetSSLKeysByHostNameV15(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
 		return
 	}
 
 	hostName := inf.Params["hostname"]
-	xmlID, ok, err := getXmlIdFromHostname(inf, hostName)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	if !ok {
-		api.WriteRespAlert(w, r, tc.InfoLevel, "- error getting cdn or delivery service for hostname "+hostName)
+	xmlID, userErr, sysErr, errCode := getXmlIdFromHostname(inf, hostName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
 	getSSLKeysByXMLIDHelperV15(xmlID, inf, w, r)
 }
 
-func getXmlIdFromHostname(inf *api.APIInfo, hostName string) (string, bool, error) {
+func getXmlIdFromHostname(inf *api.APIInfo, hostName string) (string, error, error, int) {
 	domainName := ""
 	hostRegex := ""
 	strArr := strings.Split(hostName, ".")
@@ -201,23 +192,21 @@ func getXmlIdFromHostname(inf *api.APIInfo, hostName string) (string, bool, erro
 	// lookup the cdnID
 	cdnID, ok, err := getCDNIDByDomainname(domainName, inf.Tx.Tx)
 	if err != nil {
-		return "", false, errors.New("getting cdn id by domain name: " + err.Error())
+		return "", nil, errors.New("getting cdn id by domain name: " + err.Error()), http.StatusInternalServerError
 	}
 	if !ok {
-		log.Warnf(" - a cdn does not exist for the domain: " + domainName + " parsed from hostname: " + hostName)
-		return "", false, nil
+		return "", errors.New("a CDN does not exist for the domain: " + domainName + " parsed from hostname: " + hostName), nil, http.StatusNotFound
 	}
 	// now lookup the deliveryservice xmlID
 	xmlID, ok, err := getXMLID(cdnID, hostRegex, inf.Tx.Tx)
 	if err != nil {
-		return "", false, errors.New("getting xml id: " + err.Error())
+		return "", nil, errors.New("getting xml id: " + err.Error()), http.StatusInternalServerError
 	}
 	if !ok {
-		log.Warnf("  - a delivery service does not exist for a host with hostname of " + hostName)
-		return "", false, nil
+		return "", errors.New("a delivery service does not exist for a host with hostname of " + hostName), nil, http.StatusNotFound
 	}
 
-	return xmlID, true, nil
+	return xmlID, nil, nil, http.StatusOK
 }
 
 // GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID.
@@ -229,7 +218,7 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -249,7 +238,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 		return
 	}
 	if !ok {
-		api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{}) // empty response object because Perl
+		api.WriteRespAlertObj(w, r, tc.ErrorLevel, "no object found for the specified key", struct{}{}) // empty response object because Perl
 		return
 	}
 	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
@@ -263,7 +252,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 	api.WriteResp(w, r, keyObj)
 }
 
-// GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
+// GetSSLKeysByXMLIDV15 fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
 func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -272,7 +261,7 @@ func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -292,7 +281,7 @@ func getSSLKeysByXMLIDHelperV15(xmlID string, inf *api.APIInfo, w http.ResponseW
 		return
 	}
 	if !ok {
-		api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{})
+		api.WriteRespAlertObj(w, r, tc.ErrorLevel, "no object found for the specified key", struct{}{})
 		return
 	}
 

@@ -123,8 +123,8 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Renew only certificates within configured limit plus 3 days
-		if expiration.After(time.Now().Add(time.Hour * 24 * time.Duration(inf.Config.ConfigLetsEncrypt.RenewDaysBeforeExpiration)).Add(time.Hour * 24 * 3)) {
+		// Renew only certificates within configured limit
+		if expiration.After(time.Now().Add(time.Hour * 24 * time.Duration(inf.Config.ConfigLetsEncrypt.RenewDaysBeforeExpiration))) {
 			continue
 		}
 
