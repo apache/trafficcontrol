@@ -87,7 +87,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 				t.Fatalf("creating steering target: getting target ds: %v", err)
 			} else if len(respTarget) < 1 {
 				t.Fatal("creating steering target: getting target ds: not found")
-			} else if respTarget[0].ID == nill {
+			} else if respTarget[0].ID == nil {
 				t.Fatal("creating steering target: getting target ds: nil ID returned")
 			}
 			targetID := uint64(*respTarget[0].ID)
