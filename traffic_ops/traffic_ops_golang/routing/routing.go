@@ -60,7 +60,7 @@ type Route struct {
 }
 
 func (r Route) String() string {
-	return fmt.Sprintf("id=%d method=%s version=%d.%d.1f path=%s can_bypass_to_perl=%t", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path, r.CanBypassToPerl)
+	return fmt.Sprintf("id=%d method=%s version=%d.%d path=%s can_bypass_to_perl=%t", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path, r.CanBypassToPerl)
 }
 
 // RawRoute is an HTTP route to be served at the root, rather than under /api/version. Raw Routes should be rare, and almost exclusively converted old Perl routes which have yet to be moved to an API path.
