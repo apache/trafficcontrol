@@ -35,7 +35,15 @@ func GetName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(getName(inf.Tx.Tx, inf.Params["name"]))
+	regionNames, err := getName(inf.Tx.Tx, inf.Params["name"])
+
+	alerts := tc.Alerts{Alerts: []tc.Alert{api.DeprecationWarning("GET /regions?name={{name}}")}}
+	if err != nil {
+		alerts.AddNewAlert(tc.ErrorLevel, err.Error())
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
+		return
+	}
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, regionNames)
 }
 
 // getName returns a slice, even though only 1 region will ever be returned, because that's what the 1.x API responds with.

@@ -22,6 +22,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -158,4 +159,29 @@ func (to *Session) GetRegionByNamePath(name string) ([]tc.RegionName, ReqInf, er
 		return nil, reqInf, err
 	}
 	return resp.Response, reqInf, nil
+}
+
+// DeleteRegion lets you DELETE a Region. Only 1 parameter is required, not both.
+func (to *Session) DeleteRegion(id *int, name *string) (tc.Alerts, ReqInf, error) {
+	v := url.Values{}
+	if id != nil {
+		v.Add("id", strconv.Itoa(*id))
+	}
+	if name != nil {
+		v.Add("name", *name)
+	}
+	URI := apiBase + "/regions"
+	if qStr := v.Encode(); len(qStr) > 0 {
+		URI = fmt.Sprintf("%s?%s", URI, qStr)
+	}
+
+	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
 }
