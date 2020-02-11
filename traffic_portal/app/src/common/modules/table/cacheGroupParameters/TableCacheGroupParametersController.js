@@ -22,6 +22,8 @@ var TableCacheGroupParametersController = function(cacheGroup, parameters, $cont
 	// extends the TableParametersController to inherit common methods
 	angular.extend(this, $controller('TableParametersController', { parameters: parameters, $scope: $scope }));
 
+	let cacheGroupParametersTable;
+
 	$scope.cacheGroup = cacheGroup;
 
 	// adds some items to the base parameters context menu
@@ -74,17 +76,36 @@ var TableCacheGroupParametersController = function(cacheGroup, parameters, $cont
 		});
 	};
 
+	$scope.toggleVisibility = function(colName) {
+		const col = cacheGroupParametersTable.column(colName + ':name');
+		col.visible(!col.visible());
+		cacheGroupParametersTable.rows().invalidate().draw();
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#cacheGroupParametersTable').dataTable({
+		cacheGroupParametersTable = $('#cacheGroupParametersTable').DataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"aaSorting": [],
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 4 },
 				{ "width": "50%", "targets": 2 }
 			],
-			"aaSorting": []
+			"columns": [
+				{ "name": "Name", "visible": true, "searchable": true },
+				{ "name": "Config File", "visible": true, "searchable": true },
+				{ "name": "Value", "visible": true, "searchable": true },
+				{ "name": "Secure", "visible": true, "searchable": true }
+			],
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_cacheGroupParametersTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_cacheGroupParametersTable_/):", e);
+				}
+			}
 		});
 	});
 
