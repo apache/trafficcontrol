@@ -254,19 +254,19 @@ func DeleteTestSteeringTargets(t *testing.T) {
 	dsIDs := []uint64{}
 	for _, st := range testData.SteeringTargets {
 		if st.DeliveryService == nil {
-			t.Error("deleting steering target: test data missing ds")
+			t.Fatal("deleting steering target: test data missing ds")
 		}
 		if st.Target == nil {
-			t.Error("deleting steering target: test data missing target")
+			t.Fatal("deleting steering target: test data missing target")
 		}
 
 		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
 		if err != nil {
-			t.Errorf("deleting steering target: getting ds: %v", err)
+			t.Fatalf("deleting steering target: getting ds: %v", err)
 		} else if len(respDS) < 1 {
-			t.Error("deleting steering target: getting ds: not found")
+			t.Fatal("deleting steering target: getting ds: not found")
 		} else if respDS[0].ID == nil {
-			t.Error("deleting steering target: getting ds: nil ID returned")
+			t.Fatal("deleting steering target: getting ds: nil ID returned")
 		}
 		dsID := uint64(*respDS[0].ID)
 		st.DeliveryServiceID = &dsID
@@ -275,9 +275,9 @@ func DeleteTestSteeringTargets(t *testing.T) {
 
 		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.Target))
 		if err != nil {
-			t.Errorf("deleting steering target: getting target ds: %v", err)
+			t.Fatalf("deleting steering target: getting target ds: %v", err)
 		} else if len(respTarget) < 1 {
-			t.Error("deleting steering target: getting target ds: not found")
+			t.Fatal("deleting steering target: getting target ds: not found")
 		} else if respTarget[0].ID == nil {
 			t.Fatal("deleting steering target: getting target ds: not found")
 		}
@@ -286,17 +286,17 @@ func DeleteTestSteeringTargets(t *testing.T) {
 
 		_, _, err = SteeringUserSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID))
 		if err != nil {
-			t.Errorf("deleting steering target: deleting: %+v", err)
+			t.Fatalf("deleting steering target: deleting: %+v", err)
 		}
 	}
 
 	for _, dsID := range dsIDs {
 		sts, _, err := SteeringUserSession.GetSteeringTargets(int(dsID))
 		if err != nil {
-			t.Errorf("deleting steering targets: getting steering target: %v", err)
+			t.Fatalf("deleting steering targets: getting steering target: %v", err)
 		}
 		if len(sts) != 0 {
-			t.Errorf("deleting steering targets: after delete, getting steering target: expected 0 actual %+v", len(sts))
+			t.Fatalf("deleting steering targets: after delete, getting steering target: expected 0 actual %+v", len(sts))
 		}
 	}
 }
