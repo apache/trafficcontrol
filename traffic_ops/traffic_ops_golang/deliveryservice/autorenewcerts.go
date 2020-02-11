@@ -31,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
@@ -76,7 +77,6 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	keysFound := ExpirationSummary{}
 	existingCerts := []ExistingCerts{}
 	for rows.Next() {
 		ds := DsKey{}
@@ -87,15 +87,43 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 		existingCerts = append(existingCerts, ExistingCerts{Version: ds.Version, XmlId: ds.XmlId})
 	}
 
+	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout*time.Duration(len(existingCerts)))
+
+	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User)
+
+	api.WriteRespAlert(w, r, tc.InfoLevel, "Beginning async call to renew Let's Encrypt certificates.  This may take a few minutes.")
+
+}
+func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser) {
+	db, err := api.GetDB(ctx)
+	if err != nil {
+		log.Errorf("Error getting db: %s", err.Error())
+		return
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		log.Errorf("Error getting tx: %s", err.Error())
+		return
+	}
+
+	logTx, err := db.Begin()
+	if err != nil {
+		log.Errorf("Error getting logTx: %s", err.Error())
+		return
+	}
+	defer logTx.Commit()
+
+	keysFound := ExpirationSummary{}
+
 	for _, ds := range existingCerts {
 		if !ds.Version.Valid || ds.Version.Int64 == 0 {
 			continue
 		}
 
 		dsExpInfo := DsExpirationInfo{}
-		keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+		keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), tx, cfg.RiakAuthOptions, cfg.RiakPort)
 		if err != nil {
-			log.Errorf("getting ssl keys for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)) + " :" + err.Error())
+			log.Errorf("getting ssl keys for xmlId: %s and version: %s : %s", ds.XmlId, ds.Version.Int64, err.Error())
 			dsExpInfo.XmlId = ds.XmlId
 			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
 			dsExpInfo.Error = errors.New("getting ssl keys for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)) + " :" + err.Error())
@@ -103,7 +131,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		if !ok {
-			log.Errorf("no object found for the specified key with xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
+			log.Errorf("no object found for the specified key with xmlId: %s and version: %s", ds.XmlId, ds.Version.Int64)
 			dsExpInfo.XmlId = ds.XmlId
 			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
 			dsExpInfo.Error = errors.New("no object found for the specified key with xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
@@ -113,18 +141,18 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 
 		err = base64DecodeCertificate(&keyObj.Certificate)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+ds.XmlId+"': "+err.Error()))
+			log.Errorf("cert autorenewal: error getting SSL keys for XMLID '%s': %s", ds.XmlId, err.Error())
 			return
 		}
 
 		expiration, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(ds.XmlId+": "+err.Error()))
+			log.Errorf("cert autorenewal: %s: %s", ds.XmlId, err.Error())
 			return
 		}
 
 		// Renew only certificates within configured limit
-		if expiration.After(time.Now().Add(time.Hour * 24 * time.Duration(inf.Config.ConfigLetsEncrypt.RenewDaysBeforeExpiration))) {
+		if expiration.After(time.Now().Add(time.Hour * 24 * time.Duration(cfg.ConfigLetsEncrypt.RenewDaysBeforeExpiration))) {
 			continue
 		}
 
@@ -137,7 +165,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 		dsExpInfo.Expiration = expiration
 		dsExpInfo.AuthType = keyObj.AuthType
 
-		if keyObj.AuthType == tc.LetsEncryptAuthType || (keyObj.AuthType == tc.SelfSignedCertAuthType && inf.Config.ConfigLetsEncrypt.ConvertSelfSigned) {
+		if keyObj.AuthType == tc.LetsEncryptAuthType || (keyObj.AuthType == tc.SelfSignedCertAuthType && cfg.ConfigLetsEncrypt.ConvertSelfSigned) {
 			req := tc.DeliveryServiceLetsEncryptSSLKeysReq{
 				DeliveryServiceSSLKeysReq: tc.DeliveryServiceSSLKeysReq{
 					HostName:        &keyObj.Hostname,
@@ -146,9 +174,8 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 					Version:         &newVersion,
 				},
 			}
-			ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout)
 
-			if error := GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User); error != nil {
+			if error := GetLetsEncryptCertificates(cfg, req, ctx, currentUser); error != nil {
 				dsExpInfo.Error = error
 			}
 			keysFound.LetsEncryptExpirations = append(keysFound.LetsEncryptExpirations, dsExpInfo)
@@ -161,17 +188,14 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	if inf.Config.SMTP.Enabled && inf.Config.ConfigLetsEncrypt.SendExpEmail {
-		errCode, userErr, sysErr := AlertExpiringCerts(keysFound, *inf.Config)
+	if cfg.SMTP.Enabled && cfg.ConfigLetsEncrypt.SendExpEmail {
+		errCode, userErr, sysErr := AlertExpiringCerts(keysFound, *cfg)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			log.Errorf("cert autorenewal: sending email: errCode: %s userErr: %s sysErr: %s", errCode, userErr.Error(), sysErr.Error())
 			return
 		}
 
 	}
-
-	api.WriteResp(w, r, keysFound)
-
 }
 
 func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) (int, error, error) {
