@@ -26,13 +26,6 @@ import (
  * under the License.
  */
 
-// TrafficMonitorConfigMap ...
-// Deprecated: use GetTrafficMonitorConfigMap
-func (to *Session) TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
-	m, _, err := to.GetTrafficMonitorConfigMap(cdn)
-	return m, err
-}
-
 func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, ReqInf, error) {
 	tmConfig, reqInf, err := to.GetTrafficMonitorConfig(cdn)
 	if err != nil {
@@ -43,13 +36,6 @@ func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorCon
 		return nil, reqInf, err
 	}
 	return tmConfigMap, reqInf, nil
-}
-
-// TrafficMonitorConfig ...
-// Deprecated: use GetTrafficMonitorConfig
-func (to *Session) TrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, error) {
-	c, _, err := to.GetTrafficMonitorConfig(cdn)
-	return c, err
 }
 
 func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {

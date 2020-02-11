@@ -32,25 +32,25 @@ const (
 
 func originIDs(to *Session, origin *tc.Origin) error {
 	if origin.CachegroupID == nil && origin.Cachegroup != nil {
-		p, _, err := to.GetCacheGroupByName(*origin.Cachegroup)
+		p, _, err := to.GetCacheGroupNullableByName(*origin.Cachegroup)
 		if err != nil {
 			return err
 		}
 		if len(p) == 0 {
 			return errors.New("no cachegroup named " + *origin.Cachegroup)
 		}
-		origin.CachegroupID = &p[0].ID
+		origin.CachegroupID = p[0].ID
 	}
 
 	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
-		dses, _, err := to.GetDeliveryServiceByXMLID(*origin.DeliveryService)
+		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(*origin.DeliveryService)
 		if err != nil {
 			return err
 		}
 		if len(dses) == 0 {
 			return errors.New("no deliveryservice with name " + *origin.DeliveryService)
 		}
-		origin.DeliveryServiceID = &dses[0].ID
+		origin.DeliveryServiceID = dses[0].ID
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {

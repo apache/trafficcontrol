@@ -68,14 +68,6 @@ func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error
 	return alerts, reqInf, nil
 }
 
-// Types gets an array of Types.
-// optional parameter: userInTable
-// Deprecated: use GetTypes
-func (to *Session) Types(useInTable ...string) ([]tc.Type, error) {
-	t, _, err := to.GetTypes(useInTable...)
-	return t, err
-}
-
 func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 	if len(useInTable) > 1 {
 		return nil, ReqInf{}, errors.New("Please pass in a single value for the 'useInTable' parameter")
