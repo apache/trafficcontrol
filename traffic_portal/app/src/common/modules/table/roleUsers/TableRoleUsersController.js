@@ -17,11 +17,14 @@
  * under the License.
  */
 
-var TableRoleUsersController = function(roles, roleUsers, $scope, $state, locationUtils) {
+var TableRoleUsersController = function(roles, roleUsers, $controller, $scope, $state, locationUtils) {
+
+	// extends the TableUsersController to inherit common methods
+	angular.extend(this, $controller('TableUsersController', { users: roleUsers, $scope: $scope }));
+
+	let roleUsersTable;
 
 	$scope.role = roles[0];
-
-	$scope.roleUsers = roleUsers;
 
 	$scope.editUser = function(id) {
 		locationUtils.navigateToPath('/users/' + id);
@@ -31,17 +34,32 @@ var TableRoleUsersController = function(roles, roleUsers, $scope, $state, locati
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.toggleVisibility = function(colName) {
+		const col = roleUsersTable.column(colName + ':name');
+		col.visible(!col.visible());
+		roleUsersTable.rows().invalidate().draw();
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#roleUsersTable').dataTable({
+		roleUsersTable = $('#roleUsersTable').DataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_roleUsersTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_roleUsersTable_/):", e);
+				}
+			}
 		});
 	});
 
 };
 
-TableRoleUsersController.$inject = ['roles', 'roleUsers', '$scope', '$state', 'locationUtils'];
+TableRoleUsersController.$inject = ['roles', 'roleUsers', '$controller', '$scope', '$state', 'locationUtils'];
 module.exports = TableRoleUsersController;

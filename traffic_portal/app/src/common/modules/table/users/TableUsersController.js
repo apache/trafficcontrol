@@ -19,7 +19,17 @@
 
 var TableUsersController = function(users, $scope, $state, locationUtils) {
 
+    let usersTable;
+
     $scope.users = users;
+
+    $scope.columns = [
+        { "name": "Full Name", "visible": true, "searchable": true },
+        { "name": "Username", "visible": true, "searchable": true },
+        { "name": "Email", "visible": true, "searchable": true },
+        { "name": "Tenant", "visible": true, "searchable": true },
+        { "name": "Role", "visible": true, "searchable": true }
+    ];
 
     $scope.editUser = function(id) {
         locationUtils.navigateToPath('/users/' + id);
@@ -37,11 +47,26 @@ var TableUsersController = function(users, $scope, $state, locationUtils) {
         $state.reload(); // reloads all the resolves for the view
     };
 
+    $scope.toggleVisibility = function(colName) {
+        const col = usersTable.column(colName + ':name');
+        col.visible(!col.visible());
+        usersTable.rows().invalidate().draw();
+    };
+
     angular.element(document).ready(function () {
-        $('#usersTable').dataTable({
+        usersTable = $('#usersTable').DataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
-            "aaSorting": []
+            "aaSorting": [],
+            "columns": $scope.columns,
+            "initComplete": function(settings, json) {
+                try {
+                    // need to create the show/hide column checkboxes and bind to the current visibility
+                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_usersTable_/')).columns;
+                } catch (e) {
+                    console.error("Failure to retrieve required column info from localStorage (key=DataTables_usersTable_/):", e);
+                }
+            }
         });
     });
 
