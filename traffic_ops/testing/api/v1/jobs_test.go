@@ -92,12 +92,23 @@ func GetTestJobs(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
 
-	for _, testJob := range testData.InvalidationJobs {
+	for i, testJob := range testData.InvalidationJobs {
 		found := false
-		if testJob.DeliveryService == nil || testJob.Regex == nil {
+		if testJob.DeliveryService == nil {
+			t.Errorf("test job (index %v) has nil delivery service", i)
+			continue
+		} else if testJob.Regex == nil {
+			t.Errorf("test job (index %v) has nil regex", i)
 			continue
 		}
-		for _, toJob := range toJobs {
+		for j, toJob := range toJobs {
+			if toJob.DeliveryService == nil {
+				t.Errorf("to job (index %v) has nil delivery service", j)
+				continue
+			} else if toJob.AssetURL == nil {
+				t.Errorf("to job (index %v) has nil asset url", j)
+				continue
+			}
 			if *toJob.DeliveryService != *testJob.DeliveryService {
 				continue
 			}

@@ -192,6 +192,13 @@ func TestTenantsActive(t *testing.T) {
 	DeleteTestCDNs(t)
 }
 
+func ExtractXMLID(ds *tc.DeliveryServiceNullable) string {
+	if ds.XMLID != nil {
+		return *ds.XMLID
+	}
+	return "nil"
+}
+
 func UpdateTestTenantsActive(t *testing.T) {
 	originalTenants, _, err := TOSession.Tenants()
 	if err != nil {
@@ -234,9 +241,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// tenant3user with tenant3 has no access to ds3 with tenant3 when parent tenant2 is inactive
 	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
 	for _, ds := range dses {
-		if ds.XMLID != nil {
-			t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 parent tenant2 is inactive, expected: no ds", *ds.XMLID)
-		}
+		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 parent tenant2 is inactive, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant1", true)
@@ -246,9 +251,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// tenant3user with tenant3 has no access to ds3 with tenant3 when tenant3 is inactive
 	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
 	for _, ds := range dses {
-		if ds.XMLID != nil {
-			t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 is inactive, expected: no ds", *ds.XMLID)
-		}
+		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 is inactive, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant1", true)
@@ -269,9 +272,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// 4. Therefore, tenant3user should not have access to ds2
 	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds2")
 	for _, ds := range dses {
-		if ds.XMLID != nil {
-			t.Errorf("tenant3user got delivery service %+v with tenant2, expected: no ds", *ds.XMLID)
-		}
+		t.Errorf("tenant3user got delivery service %+v with tenant2, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	// 1. ds1 has tenant1.
@@ -280,17 +281,13 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// 4. Therefore, tenant4user should not have access to ds1
 	dses, _, _ = tenant4Session.GetDeliveryServiceByXMLIDNullable("ds1")
 	for _, ds := range dses {
-		if ds.XMLID != nil {
-			t.Errorf("tenant4user got delivery service %+v with tenant1, expected: no ds", *ds.XMLID)
-		}
+		t.Errorf("tenant4user got delivery service %+v with tenant1, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant3", false)
 	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
 	for _, ds := range dses {
-		if ds.XMLID != nil {
-			t.Errorf("tenant3user was inactive, but got delivery service %+v with tenant3, expected: no ds", *ds.XMLID)
-		}
+		t.Errorf("tenant3user was inactive, but got delivery service %+v with tenant3, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	for _, tn := range originalTenants {
