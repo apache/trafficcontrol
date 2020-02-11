@@ -74,6 +74,14 @@
     - traffic_ops.properties
     - server.xml
 
+- name: Deploy Access Cleanup Crontab
+  template:
+    src: crontab.j2
+    dest: /etc/cron.d/access_cleanup
+    owner: root
+    group: root
+    mode: u+rw
+
 - name: Copy traffic router systemd unit file
   template:
     src: traffic_router.service.j2
