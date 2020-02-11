@@ -278,8 +278,8 @@ func DeleteTestSteeringTargets(t *testing.T) {
 			t.Errorf("deleting steering target: getting target ds: %v", err)
 		} else if len(respTarget) < 1 {
 			t.Error("deleting steering target: getting target ds: not found")
-		} else if respDS[0].ID == nil {
-			t.Error("deleting steering target: getting target ds: not found")
+		} else if respTarget[0].ID == nil {
+			t.Fatal("deleting steering target: getting target ds: not found")
 		}
 		targetID := uint64(*respTarget[0].ID)
 		st.TargetID = &targetID
