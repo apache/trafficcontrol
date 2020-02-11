@@ -170,3 +170,11 @@ tr_logging_opts:
   - 1catalina.org.apache.juli.AsyncFileHandler.prefix = catalina.
   - 1catalina.org.apache.juli.AsyncFileHandler.rotatable = true
   - 1catalina.org.apache.juli.AsyncFileHandler.maxDays = 30
+
+# TR cronjobs to deploy
+tr_crontab:
+  # Cleanup log files more than 2 days old.
+  access_cleanup:
+    schedule: '10 */4 * * *'
+    user: root
+    job:  /bin/find /opt/traffic_router/var/log/access.log.* -mmin +$((60*48)) -exec rm -f {} \; > /dev/null 2>&1
