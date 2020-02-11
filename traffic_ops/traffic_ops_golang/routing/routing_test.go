@@ -20,6 +20,7 @@ package routing
  */
 
 import (
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -129,7 +130,7 @@ var testRoutes = []routeTest{
 	},
 	routeTest{
 		Method:      `GET`,
-		Path:        `api/2.1/servers`,
+		Path:        `api/2.0/servers`,
 		ExpectMatch: true,
 		Params:      map[string]string{},
 	},
@@ -239,11 +240,11 @@ func TestCreateRouteMap(t *testing.T) {
 	}
 
 	routes := []Route{
-		{1.2, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil, 0, false},
-		{1.2, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil, 1, false},
-		{1.2, http.MethodGet, `path3`, PathThreeHandler, 0, false, []middleware.Middleware{}, 2, false},
-		{1.2, http.MethodGet, `path4`, PathFourHandler, 0, false, []middleware.Middleware{}, 3, true},
-		{1.2, http.MethodGet, `path5`, PathFiveHandler, 0, false, []middleware.Middleware{}, 4, false},
+		{api.Version{1, 2}, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil, 0, false},
+		{api.Version{1, 2}, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil, 1, false},
+		{api.Version{1, 2}, http.MethodGet, `path3`, PathThreeHandler, 0, false, []middleware.Middleware{}, 2, false},
+		{api.Version{1, 2}, http.MethodGet, `path4`, PathFourHandler, 0, false, []middleware.Middleware{}, 3, true},
+		{api.Version{1, 2}, http.MethodGet, `path5`, PathFiveHandler, 0, false, []middleware.Middleware{}, 4, false},
 	}
 
 	perlRoutesIDs := []int{3}
