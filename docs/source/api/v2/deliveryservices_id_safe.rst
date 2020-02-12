@@ -32,38 +32,32 @@ Request Structure
 .. table:: Request Path Parameters
 
 	+------+--------------------------------------------------------------------------------+
-	| Name |                      Description                                               |
+	| Name | Description                                                                    |
 	+======+================================================================================+
 	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being modified |
 	+------+--------------------------------------------------------------------------------+
 
-:displayName: The :ref:`ds-display-name`
-:infoUrl:     An :ref:`ds-info-url`
-:longDesc:    The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:   The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:   The :ref:`ds-longdesc3` of this :term:`Delivery Service`
-
-.. note:: All of these fields are optional; this ``PUT`` behaves more like a ``PATCH``
+:displayName: A string that is the :ref:`ds-display-name`
+:infoUrl:     An optional\ [#optional]_ string containing the :ref:`ds-info-url`
+:longDesc:    An optional\ [#optional]_ string containing the :ref:`ds-longdesc` of this :term:`Delivery Service`
+:longDesc1:   An optional\ [#optional]_ string containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Request Example
 
 	PUT /api/2.0/deliveryservices/1/safe HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
 	Accept: */*
+	Connection: keep-alive
 	Cookie: mojolicious=...
-	Content-Length: 165
-	Content-Type: application/x-www-form-urlencoded
+	Content-Length: 132
 
 	{
-		"displayName": "demo",
-		"infoUrl": "www.info.com",
-		"longDesc": "A Delivery Service created for the CDN-in-a-Box project",
-		"longDesc1": null,
-		"longDesc2": null
+		"displayName": "test",
+		"infoUrl": "this is not even a real URL",
+		"longDesc": "longDesc1 is implicitly set to null in this example
 	}
-
 
 Response Structure
 ------------------
@@ -144,98 +138,102 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: mCLMjvACRKHNGP/OSx4javkOtxxzyiDdQzsV78IamUhVmvyKyKaCeOKRmpsG69w+nhh3OkPZ6e9MMeJpcJSKcA==
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 10 Feb 2020 16:33:03 GMT; Max-Age=3600; HttpOnly
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 15 Nov 2018 19:04:29 GMT
-	Transfer-Encoding: chunked
+	Date: Mon, 10 Feb 2020 15:33:03 GMT
+	Content-Length: 853
 
-	{ "response": [{
-		"active": true,
-		"anonymousBlockingEnabled": false,
-		"cacheurl": null,
-		"ccrDnsTtl": null,
-		"cdnId": 2,
-		"cdnName": "CDN-in-a-Box",
-		"checkPath": null,
-		"displayName": "demo",
-		"dnsBypassCname": null,
-		"dnsBypassIp": null,
-		"dnsBypassIp6": null,
-		"dnsBypassTtl": null,
-		"dscp": 0,
-		"edgeHeaderRewrite": null,
-		"geoLimit": 0,
-		"geoLimitCountries": null,
-		"geoLimitRedirectURL": null,
-		"geoProvider": 0,
-		"globalMaxMbps": null,
-		"globalMaxTps": null,
-		"httpBypassFqdn": null,
-		"id": 1,
-		"infoUrl": "www.info.com",
-		"initialDispersion": 1,
-		"ipv6RoutingEnabled": true,
-		"lastUpdated": "2019-05-15 14:32:05+00",
-		"logsEnabled": true,
-		"longDesc": "A Delivery Service created for the CDN-in-a-Box project",
-		"longDesc1": null,
-		"longDesc2": null,
-		"matchList": [
-			{
-				"type": "HOST_REGEXP",
-				"setNumber": 0,
-				"pattern": ".*\\.demo1\\..*"
-			}
-		],
-		"maxDnsAnswers": null,
-		"midHeaderRewrite": null,
-		"missLat": 42,
-		"missLong": -88,
-		"multiSiteOrigin": false,
-		"originShield": null,
-		"orgServerFqdn": "http://origin.infra.ciab.test",
-		"profileDescription": null,
-		"profileId": null,
-		"profileName": null,
-		"protocol": 2,
-		"qstringIgnore": 0,
-		"rangeRequestHandling": 0,
-		"regexRemap": null,
-		"regionalGeoBlocking": false,
-		"remapText": null,
-		"routingName": "video",
-		"signed": false,
-		"sslKeyVersion": null,
-		"tenantId": 1,
-		"type": "HTTP",
-		"typeId": 1,
-		"xmlId": "demo1",
-		"exampleURLs": [
-			"http://video.demo1.mycdn.ciab.test",
-			"https://video.demo1.mycdn.ciab.test"
-		],
-		"deepCachingType": "NEVER",
-		"fqPacingRate": null,
-		"signingAlgorithm": null,
-		"tenant": "root",
-		"trResponseHeaders": null,
-		"trRequestHeaders": null,
-		"consistentHashRegex": null,
-		"consistentHashQueryParams": [
-			"abc",
-			"pdq",
-			"xxx",
-			"zyx"
-		],
-		"maxOriginConnections": 0,
-		"ecsEnabled": false
-	}]}
-
+	{ "alerts": [
+		{
+			"text": "Delivery Service safe update successful.",
+			"level": "success"
+		}
+	],
+	"response": [
+		{
+			"active": true,
+			"anonymousBlockingEnabled": false,
+			"cacheurl": null,
+			"ccrDnsTtl": null,
+			"cdnId": 2,
+			"cdnName": "CDN-in-a-Box",
+			"checkPath": null,
+			"displayName": "test",
+			"dnsBypassCname": null,
+			"dnsBypassIp": null,
+			"dnsBypassIp6": null,
+			"dnsBypassTtl": null,
+			"dscp": 0,
+			"edgeHeaderRewrite": null,
+			"geoLimit": 0,
+			"geoLimitCountries": null,
+			"geoLimitRedirectURL": null,
+			"geoProvider": 0,
+			"globalMaxMbps": null,
+			"globalMaxTps": null,
+			"httpBypassFqdn": null,
+			"id": 1,
+			"infoUrl": "this is not even a real URL",
+			"initialDispersion": 1,
+			"ipv6RoutingEnabled": true,
+			"lastUpdated": "2020-02-10 15:33:03+00",
+			"logsEnabled": true,
+			"longDesc": "longDesc1 is implicitly set to null in this example",
+			"longDesc1": null,
+			"longDesc2": null,
+			"matchList": [
+				{
+					"type": "HOST_REGEXP",
+					"setNumber": 0,
+					"pattern": ".*\\.demo1\\..*"
+				}
+			],
+			"maxDnsAnswers": null,
+			"midHeaderRewrite": null,
+			"missLat": 42,
+			"missLong": -88,
+			"multiSiteOrigin": false,
+			"originShield": null,
+			"orgServerFqdn": "http://origin.infra.ciab.test",
+			"profileDescription": null,
+			"profileId": null,
+			"profileName": null,
+			"protocol": 2,
+			"qstringIgnore": 0,
+			"rangeRequestHandling": 0,
+			"regexRemap": null,
+			"regionalGeoBlocking": false,
+			"remapText": null,
+			"routingName": "video",
+			"signed": false,
+			"sslKeyVersion": 1,
+			"tenantId": 1,
+			"type": "HTTP",
+			"typeId": 1,
+			"xmlId": "demo1",
+			"exampleURLs": [
+				"http://video.demo1.mycdn.ciab.test",
+				"https://video.demo1.mycdn.ciab.test"
+			],
+			"deepCachingType": "NEVER",
+			"fqPacingRate": null,
+			"signingAlgorithm": null,
+			"tenant": "root",
+			"trResponseHeaders": null,
+			"trRequestHeaders": null,
+			"consistentHashRegex": null,
+			"consistentHashQueryParams": [
+				"abc",
+				"pdq",
+				"xxx",
+				"zyx"
+			],
+			"maxOriginConnections": 0,
+			"ecsEnabled": false
+		}
+	]}
 
 .. [#tenancy] Only those :term:`Delivery Services` assigned to :term:`Tenants` that are the requesting user's :term:`Tenant` or children thereof may be modified with this endpoint.
+.. [#optional] If these fields are not present in the request body they are *implicitly set to* ``null``.
