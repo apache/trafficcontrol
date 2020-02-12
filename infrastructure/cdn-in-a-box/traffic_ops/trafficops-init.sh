@@ -45,7 +45,7 @@ waitfor() {
     local value="$3"
 
     while true; do
-        v=$(to-get "api/1.4/$endpoint?$field=$value" | jq -r --arg field "$field" '.response[][$field]')
+        v=$(to-get "api/2.0/$endpoint?$field=$value" | jq -r --arg field "$field" '.response[][$field]')
         if [[ $v == $value ]]; then
             break
         fi

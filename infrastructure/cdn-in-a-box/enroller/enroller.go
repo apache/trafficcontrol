@@ -764,7 +764,7 @@ func startWatching(watchDir string, toSession *session, dispatcher map[string]fu
 }
 
 func startServer(httpPort string, toSession *session, dispatcher map[string]func(*session, io.Reader) error) error {
-	baseEP := "/api/1.4/"
+	baseEP := "/api/2.0/"
 	for d, f := range dispatcher {
 		http.HandleFunc(baseEP+d, func(w http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
