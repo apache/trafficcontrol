@@ -397,7 +397,7 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Creator)
 		obj.SetInfo(inf)
 
-		if c, ok := obj.(AllowMultipleCreates); ok && c.AllowMultipleCreates() {
+		if c, ok := obj.(MultipleCreator); ok && c.AllowMultipleCreates() {
 			data, err := ioutil.ReadAll(r.Body)
 			if err != nil {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
@@ -442,7 +442,9 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 					return
 				}
 			}
-			if len(objSlice) == 1 {
+			if len(objSlice) == 0 {
+				WriteRespAlert(w, r, tc.SuccessLevel, "No objects were provided in request.")
+			} else if len(objSlice) == 1 {
 				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+" was created.", objSlice[0])
 			} else {
 				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+"s were created.", objSlice)

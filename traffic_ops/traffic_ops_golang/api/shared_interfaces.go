@@ -59,7 +59,8 @@ type Creator interface {
 	Validator
 }
 
-type AllowMultipleCreates interface {
+// MultipleCreator indicates whether an object using the shared handlers allows an array of objects in the POST
+type MultipleCreator interface {
 	AllowMultipleCreates() bool
 }
 

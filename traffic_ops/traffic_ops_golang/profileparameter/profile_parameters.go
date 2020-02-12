@@ -44,6 +44,7 @@ type TOProfileParameter struct {
 	tc.ProfileParameterNullable
 }
 
+// AllowMultipleCreates indicates whether an array can be POSTed using the shared Create handler
 func (v *TOProfileParameter) AllowMultipleCreates() bool { return true }
 func (v *TOProfileParameter) NewReadObj() interface{}    { return &tc.ProfileParametersNullable{} }
 func (v *TOProfileParameter) SelectQuery() string        { return selectQuery() }
