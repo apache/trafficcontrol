@@ -17,9 +17,9 @@
 #  $1 is file or dir with correct ownership
 #  remaining args are files/dirs to be fixed, recursively
 setowner() {
-    own=$(stat -c '%u:%g' $1)
+    own=$(stat -c '%u:%g' "$1")
     shift
-    [[ -n $@ ]] && chown -R ${own} "$@"
+    [[ -n $* ]] && chown -R "${own}" "$@"
 }
 
 cleanup() {
@@ -39,4 +39,4 @@ cp -a /trafficcontrol /tmp/go/src/github.com/apache/. && \
 	rm -rf dist && \
 	mkdir -p /trafficcontrol/dist && \
 	ln -s /trafficcontrol/dist dist && \
-	((((./build/build.sh $1 2>&1; echo $? >&3) | tee ./dist/build-$1.log >&4) 3>&1) | (read x; exit $x)) 4>&1
+	( ( ( (./build/build.sh "$1" 2>&1; echo $? >&3) | tee ./dist/build-"$1".log >&4) 3>&1) | (read -r x; exit "$x"); ) 4>&1
