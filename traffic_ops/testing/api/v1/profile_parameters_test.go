@@ -108,7 +108,7 @@ func CreateMultipleTestProfileParameters(t *testing.T) {
 	}
 
 	resp, _, err := TOSession.CreateMultipleProfileParameters(ppSlice)
-	log.Debugln("Response: ", resp)
+	t.Log("Response: ", resp)
 	if err != nil {
 		t.Errorf("could not CREATE profile parameters: %v", err)
 	}

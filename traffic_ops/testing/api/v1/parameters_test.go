@@ -52,7 +52,7 @@ func CreateMultipleTestParameters(t *testing.T) {
 		pls = append(pls, pl)
 	}
 	resp, _, err := TOSession.CreateMultipleParameters(pls)
-	log.Debugln("Response: ", resp)
+	t.Log("Response: ", resp)
 	if err != nil {
 		t.Errorf("could not CREATE parameters: %v", err)
 	}
