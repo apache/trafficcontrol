@@ -1132,7 +1132,7 @@ func (m ThrottledHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	pathParts := strings.Split(r.URL.Path, "/")
 	if len(pathParts) >= 3 {
 		version, err := strconv.ParseFloat(pathParts[2], 64)
-		if err != nil || version >= 2 { // do not default to Perl for versions over 2.x
+		if err != nil && version >= 2 { // do not default to Perl for versions over 2.x
 			api.WriteRespAlertNotFound(w, r)
 			return
 		}
