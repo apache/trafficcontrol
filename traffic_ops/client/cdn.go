@@ -149,28 +149,3 @@ func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// Deprecated: use GetCDNs.
-func (to *Session) CDNs() ([]tc.CDN, error) {
-	cdns, _, err := to.GetCDNs()
-	return cdns, err
-}
-
-// CDNName gets an array of CDNs
-// Deprecated: use GetCDNByName
-func (to *Session) CDNName(name string) ([]tc.CDN, error) {
-	n, _, err := to.GetCDNByName(name)
-	return n, err
-}
-
-// CDNName gets an array of CDNs
-// Deprecated: use GetCDNByName
-func (to *Session) GetCDNName(name string) ([]tc.CDN, error) {
-	n, _, err := to.GetCDNByName(name)
-	return n, err
-}
-
-// Deprecated: use GetCDNSSLKeys
-func (to *Session) CDNSSLKeys(name string) ([]tc.CDNSSLKeys, error) {
-	ks, _, err := to.GetCDNSSLKeys(name)
-	return ks, err
-}

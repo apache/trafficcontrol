@@ -23,6 +23,7 @@ package routing
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -47,7 +48,7 @@ const RoutePrefix = "^api" // TODO config?
 // Route ...
 type Route struct {
 	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
-	Version           float64
+	Version           api.Version
 	Method            string
 	Path              string
 	Handler           http.HandlerFunc
@@ -59,7 +60,7 @@ type Route struct {
 }
 
 func (r Route) String() string {
-	return fmt.Sprintf("id=%d method=%s version=%.1f path=%s can_bypass_to_perl=%t", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl)
+	return fmt.Sprintf("id=%d method=%s version=%d.%d path=%s can_bypass_to_perl=%t", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path, r.CanBypassToPerl)
 }
 
 // RawRoute is an HTTP route to be served at the root, rather than under /api/version. Raw Routes should be rare, and almost exclusively converted old Perl routes which have yet to be moved to an API path.
@@ -88,17 +89,53 @@ type CompiledRoute struct {
 	Params  []string
 }
 
-func getSortedRouteVersions(rs []Route) []float64 {
-	m := map[float64]struct{}{}
+func getSortedRouteVersions(rs []Route) []api.Version {
+	majorsToMinors := map[uint64][]uint64{}
+	majors := map[uint64]struct{}{}
 	for _, r := range rs {
-		m[r.Version] = struct{}{}
+		majors[r.Version.Major] = struct{}{}
+		if _, ok := majorsToMinors[r.Version.Major]; ok {
+			previouslyIncluded := false
+			for _, prevMinor := range majorsToMinors[r.Version.Major] {
+				if prevMinor == r.Version.Minor {
+					previouslyIncluded = true
+				}
+			}
+			if !previouslyIncluded {
+				majorsToMinors[r.Version.Major] = append(majorsToMinors[r.Version.Major], r.Version.Minor)
+			}
+		} else {
+			majorsToMinors[r.Version.Major] = []uint64{r.Version.Minor}
+		}
 	}
-	versions := []float64{}
-	for v := range m {
-		versions = append(versions, v)
+
+	sortedMajors := []uint64{}
+	for major := range majors {
+		sortedMajors = append(sortedMajors, major)
 	}
-	sort.Float64s(versions)
+	sort.Slice(sortedMajors, func(i, j int) bool { return sortedMajors[i] < sortedMajors[j] })
+
+	versions := []api.Version{}
+	for _, major := range sortedMajors {
+		sort.Slice(majorsToMinors[major], func(i, j int) bool { return majorsToMinors[major][i] < majorsToMinors[major][j] })
+		for _, minor := range majorsToMinors[major] {
+			version := api.Version{major, minor}
+			versions = append(versions, version)
+		}
+	}
 	return versions
+}
+
+func indexOfApiVersion(versions []api.Version, desiredVersion api.Version) int {
+	for i, v := range versions {
+		if v.Major > desiredVersion.Major {
+			return i
+		}
+		if v.Major == desiredVersion.Major && v.Minor >= desiredVersion.Minor {
+			return i
+		}
+	}
+	return len(versions) - 1
 }
 
 // PathHandler ...
@@ -109,7 +146,7 @@ type PathHandler struct {
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
 // Returns the map of routes, and a map of API versions served.
-func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRouteIDs []int, perlHandler http.HandlerFunc, authBase middleware.AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[float64]struct{}) {
+func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRouteIDs []int, perlHandler http.HandlerFunc, authBase middleware.AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[api.Version]struct{}) {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
 	requestTimeout := middleware.DefaultRequestTimeout
@@ -120,15 +157,15 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRout
 	disabledRoutes := GetRouteIDMap(disabledRouteIDs)
 	m := map[string][]PathHandler{}
 	for _, r := range rs {
-		versionI := sort.SearchFloat64s(versions, r.Version)
-		nextMajorVer := float64(int(r.Version) + 1)
+		versionI := indexOfApiVersion(versions, r.Version)
+		nextMajorVer := r.Version.Major + 1
 		_, isPerlRoute := perlRoutes[r.ID]
 		_, isDisabledRoute := disabledRoutes[r.ID]
 		for _, version := range versions[versionI:] {
-			if version >= nextMajorVer {
+			if version.Major >= nextMajorVer {
 				break
 			}
-			vstr := strconv.FormatFloat(version, 'f', -1, 64)
+			vstr := strconv.FormatUint(version.Major, 10) + "." + strconv.FormatUint(version.Minor, 10)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
 			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
 
@@ -148,7 +185,7 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRout
 		log.Infof("adding raw route %v %v\n", r.Method, r.Path)
 	}
 
-	versionSet := map[float64]struct{}{}
+	versionSet := map[api.Version]struct{}{}
 	for _, version := range versions {
 		versionSet[version] = struct{}{}
 	}
@@ -195,7 +232,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 // Handler - generic handler func used by the Handlers hooking into the routes
 func Handler(
 	routes map[string][]CompiledRoute,
-	versions map[float64]struct{},
+	versions map[api.Version]struct{},
 	catchall http.Handler,
 	db *sqlx.DB,
 	cfg *config.Config,
@@ -260,7 +297,7 @@ func Handler(
 }
 
 // IsRequestAPIAndUnknownVersion returns true if the request starts with `/api` and is a version not in the list of versions.
-func IsRequestAPIAndUnknownVersion(req *http.Request, versions map[float64]struct{}) bool {
+func IsRequestAPIAndUnknownVersion(req *http.Request, versions map[api.Version]struct{}) bool {
 	pathParts := strings.Split(req.URL.Path, "/")
 	if len(pathParts) < 2 {
 		return false // path doesn't start with `/api`, so it's not an api request
@@ -272,7 +309,7 @@ func IsRequestAPIAndUnknownVersion(req *http.Request, versions map[float64]struc
 		return true // path starts with `/api` but not `/api/{version}`, so it's an api request, and an unknown/nonexistent version.
 	}
 
-	version, err := strconv.ParseFloat(pathParts[2], 64)
+	version, err := stringVersionToApiVersion(pathParts[2])
 	if err != nil {
 		return true // path starts with `/api`, and version isn't a number, so it's an unknown/nonexistent version
 	}
@@ -280,6 +317,22 @@ func IsRequestAPIAndUnknownVersion(req *http.Request, versions map[float64]struc
 		return false // path starts with `/api` and version exists, so it's API but a known version
 	}
 	return true // path starts with `/api`, and version is unknown
+}
+
+func stringVersionToApiVersion(version string) (api.Version, error) {
+	versionParts := strings.Split(version, ".")
+	if len(versionParts) < 2 {
+		return api.Version{}, errors.New("error parsing version " + version)
+	}
+	major, err := strconv.ParseUint(versionParts[0], 10, 64)
+	if err != nil {
+		return api.Version{}, errors.New("error parsing version " + version)
+	}
+	minor, err := strconv.ParseUint(versionParts[1], 10, 64)
+	if err != nil {
+		return api.Version{}, errors.New("error parsing version " + version)
+	}
+	return api.Version{major, minor}, nil
 }
 
 // RegisterRoutes - parses the routes and registers the handlers with the Go Router

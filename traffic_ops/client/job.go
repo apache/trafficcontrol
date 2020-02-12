@@ -26,26 +26,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// CreateJob creates a Job.
-//
-// Deprecated: Use CreateInvalidationJob instead
-func (to *Session) CreateJob(job tc.JobRequest) (tc.Alerts, ReqInf, error) {
-	remoteAddr := (net.Addr)(nil)
-	reqBody, err := json.Marshal(job)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+`/user/current/jobs`, reqBody)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-	alerts := tc.Alerts{}
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, err
-}
-
 // Creates a new Content Invalidation Job
 func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts, ReqInf, error) {
 	remoteAddr := (net.Addr)(nil)
