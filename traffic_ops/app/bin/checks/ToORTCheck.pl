@@ -105,7 +105,7 @@ my $ext = Extensions::Helper->new( { base_url => $b_url, token => '91504CE6-8E4A
 
 my $jdataserver = $ext->get(Extensions::Helper::SERVERLIST_PATH);
 
-my $glbl_prms = $ext->get( '/api/1.1/parameters/profile/global.json' );
+my $glbl_prms = $ext->get( '/api/2.0/parameters/profile/global' );
 my $to_url;
 foreach my $p (@{$glbl_prms}) {
    if ($p->{name} eq 'tm.url') {
