@@ -219,10 +219,11 @@ func WriteRespAlertNotFound(w http.ResponseWriter, r *http.Request) {
 	resp := struct{ tc.Alerts }{tc.CreateAlerts(tc.ErrorLevel, "Resource not found.")}
 	respBts, err := json.Marshal(resp)
 	if err != nil {
-		handleSimpleErr(w, r, http.StatusNotFound, nil, errors.New("marshalling JSON: "+err.Error()))
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.WriteHeader(http.StatusNotFound)
 	w.Write(append(respBts, '\n'))
 }
 
