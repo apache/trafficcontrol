@@ -20,6 +20,7 @@ package crstats
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -68,14 +69,18 @@ func GetDSRouting(w http.ResponseWriter, r *http.Request) {
 	} else if tc.DSType(dsType).IsDNS() {
 		stat = DNS
 	} else {
-		api.RespWriter(w, r, inf.Tx.Tx)(tc.Routing{}, nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("delivery service %v does not have a HTTP or DNS type", dsID), nil)
 		return
 	}
 
-	q := `SELECT ARRAY(select r.pattern FROM deliveryservice_regex dsr JOIN regex r ON dsr.regex = r.id JOIN type t ON r.type = t.id WHERE t.name = 'HOST_REGEXP' AND dsr.deliveryservice = $1)`
+	q := `SELECT ARRAY(SELECT r.pattern FROM deliveryservice_regex dsr JOIN regex r ON dsr.regex = r.id JOIN type t ON r.type = t.id WHERE t.name = 'HOST_REGEXP' AND dsr.deliveryservice = $1)`
 	patterns := []string{}
 	err = tx.QueryRow(q, dsID).Scan(pq.Array(&patterns))
 	if err != nil {
+		if err != sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("delivery service %v does not have host regexps to match routing stats to", dsID), nil)
+			return
+		}
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service %v patterns - %v", dsID, err))
 		return
 	}

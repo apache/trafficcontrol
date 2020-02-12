@@ -21,11 +21,16 @@
 
 ``GET``
 =======
-Retrieves routing method statistics for a particular :term:`Delivery Service`
+Retrieves the aggregated routing percentages for a given :term:`Delivery Service`. This is accomplished by polling stats from all online Traffic Routers via the ``/crs/stats`` route.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
 :Response Type:  Object
+
+.. versionchanged:: 1.5
+	Older versions of this endpoint had different behaviors in handling non HTTP/DNS :term:`Delivery Services` and :term:`Delivery Service` regexps.
+	It used to return an empty response object if the :term:`Delivery Service` being requested did not have a HTTP or DNS type. It will now return an error.
+	For :term:`Delivery Service` regexps it used to use all regexps to compare host names in the routing stats which was incorrect. It will now only compare :term:`Delivery Service` host regexps.
 
 Request Structure
 -----------------
@@ -40,7 +45,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/deliveryservices/1/routing HTTP/1.1
+	GET /api/1.5/deliveryservices/1/routing HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -48,16 +53,16 @@ Request Structure
 
 Response Structure
 ------------------
-:cz:                The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Coverage Zone File`
-:deepCz:            The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Deep Coverage Zone File`
-:dsr:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to an overflow :term:`Delivery Service`
-:err:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that resulted in an error
-:fed:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to a federated CDN
-:geo:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied using 3rd party geographic IP mapping
-:miss:              The percent of requests to the Traffic Router for this :term:`Delivery Service` that could not be satisfied
-:regionalAlternate: The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to the alternate, Regional Geo-blocking URL
-:regionalDenied:    The percent of Traffic Router requests for this :term:`Delivery Service` that were denied due to geographic location policy
-:staticRoute:       The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied with :ref:`ds-static-dns-entries`
+:cz:                The percent of requests to online Traffic Routers for this :term:`Delivery Service` that were satisfied by a :term:`Coverage Zone File`
+:deepCz:            The percent of requests to online Traffic Routers for this :term:`Delivery Service` that were satisfied by a :term:`Deep Coverage Zone File`
+:dsr:               The percent of requests to online Traffic Routers for this :term:`Delivery Service` that were satisfied by sending the client to an overflow :term:`Delivery Service`
+:err:               The percent of requests to online Traffic Routers for this :term:`Delivery Service` that resulted in an error
+:fed:               The percent of requests to online Traffic Routers for this :term:`Delivery Service` that were satisfied by sending the client to a federated CDN
+:geo:               The percent of requests to online Traffic Routers for this :term:`Delivery Service` that were satisfied using 3rd party geographic IP mapping
+:miss:              The percent of requests to online Traffic Routers for this :term:`Delivery Service` that could not be satisfied
+:regionalAlternate: The percent of requests to online Traffic Routers for this :term:`Delivery Service` that were satisfied by sending the client to the alternate, Regional Geo-blocking URL
+:regionalDenied:    The percent of requests to online Traffic Routers for this :term:`Delivery Service` that were denied due to geographic location policy
+:staticRoute:       The percent of requests to online Traffic Routers for this :term:`Delivery Service` that were satisfied with :ref:`ds-static-dns-entries`
 
 .. code-block:: http
 	:caption: Response Example
@@ -70,7 +75,7 @@ Response Structure
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
 	Date: Fri, 30 Nov 2018 15:08:07 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: UgPziRC/5u4+CfkZ9xm0EkEzjjJVu6cwBrFd/n3xH/ZmlkaXkQaa1y4+B7DyE46vxFLYE0ODOcQchyn7JkoQOg==
