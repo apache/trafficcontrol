@@ -17,13 +17,11 @@ package v1
 
 import (
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func GetTestDomains(t *testing.T) {
 	resp, _, err := TOSession.GetDomains()
-	log.Debugln("Response: ", resp)
+	t.Log("Response: ", resp)
 	if err != nil {
 		t.Errorf("could not GET domains: %v", err)
 	}

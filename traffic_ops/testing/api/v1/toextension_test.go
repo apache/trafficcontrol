@@ -21,8 +21,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 var (
@@ -40,7 +38,7 @@ func CreateTestTOExtensions(t *testing.T) {
 
 	for _, ext := range testData.TOExtensions {
 		resp, _, err := TOSession.CreateTOExtension(ext)
-		log.Debugf("Response: %v %v", *ext.Name, resp)
+		t.Logf("Response: %v %v", *ext.Name, resp)
 		if err != nil {
 			t.Errorf("could not create to_extension %v: %v", ext.Name, err)
 		}
@@ -107,7 +105,7 @@ func DeleteTestTOExtensions(t *testing.T) {
 
 	for _, id := range ids {
 		resp, _, err := TOSession.DeleteTOExtension(id)
-		log.Debugf("Response: %v %v", id, resp)
+		t.Logf("Response: %v %v", id, resp)
 		if err != nil {
 			t.Errorf("cannot delete to_extension: %v - %v", id, err)
 		}

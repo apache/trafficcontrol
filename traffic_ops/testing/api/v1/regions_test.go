@@ -18,7 +18,6 @@ package v1
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -34,7 +33,7 @@ func CreateTestRegions(t *testing.T) {
 
 	for _, region := range testData.Regions {
 		resp, _, err := TOSession.CreateRegion(region)
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE region: %v", err)
 		}
@@ -105,9 +104,9 @@ func DeleteTestRegions(t *testing.T) {
 		}
 		respRegion := resp[0]
 
-		delResp, _, err := TOSession.DeleteRegionByID(respRegion.ID)
+		delResp, _, err := TOSession.DeleteRegion(nil, &respRegion.Name)
 		if err != nil {
-			t.Errorf("cannot DELETE Region by region: %v - %v", err, delResp)
+			t.Errorf("cannot DELETE Region by name: %v - %v", err, delResp)
 		}
 
 		// Retrieve the Region to see if it got deleted

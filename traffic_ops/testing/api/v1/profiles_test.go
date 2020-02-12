@@ -19,7 +19,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -132,7 +131,7 @@ func CreateTestProfiles(t *testing.T) {
 	for _, pr := range testData.Profiles {
 		resp, _, err := TOSession.CreateProfile(pr)
 
-		log.Debugln("Response: ", resp)
+		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE profiles with name: %s %v", pr.Name, err)
 		}

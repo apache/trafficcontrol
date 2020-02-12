@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 ---
-version: '2.4'
+version: '2.3'
 
 services:
   lint:
@@ -33,3 +33,4 @@ services:
       target: unit
     volumes:
       - ../..:/go/src/github.com/apache/trafficcontrol
+      - ./junit:/junit

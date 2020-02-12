@@ -607,3 +607,31 @@ type AssignedDsResponse struct {
 	DSIds    []int `json:"dsIds"`
 	Replace  bool  `json:"replace"`
 }
+
+// DeliveryServiceSafeUpdateRequest represents a request to update the "safe" fields of a
+// Delivery Service.
+type DeliveryServiceSafeUpdateRequest struct {
+	DisplayName *string `json:"displayName`
+	InfoURL     *string `json:"infoUrl"`
+	LongDesc    *string `json:"longDesc"`
+	LongDesc1   *string `json:"longDesc1`
+}
+
+// Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
+func (r *DeliveryServiceSafeUpdateRequest) Validate(*sql.Tx) error {
+	if r.DisplayName == nil {
+		return errors.New("displayName: cannot be null/missing")
+	}
+	return nil
+}
+
+// DeliveryServiceSafeUpdateResponse represents Traffic Ops's response to a PUT request to its
+// /deliveryservices/{{ID}}/safe endpoint.
+type DeliveryServiceSafeUpdateResponse struct {
+	Alerts
+	// Response contains the representation of the Delivery Service after it has been updated.
+	// Note that this should be "cast" to the appropriate version of Delivery Service, reflecting
+	// the API version that was called.
+	Response []DeliveryServiceNullable `json:"response"`
+}

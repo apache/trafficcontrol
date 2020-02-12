@@ -242,45 +242,44 @@ func GetDeliveryServiceServers(cfg config.TCCfg, dsIDs []int, serverIDs []int) (
 		if err != nil {
 			return errors.New("getting delivery service servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
 		}
-
-		serverIDsMap := map[int]struct{}{}
-		for _, id := range serverIDs {
-			serverIDsMap[id] = struct{}{}
-		}
-
-		dsIDsMap := map[int]struct{}{}
-		for _, id := range dsIDs {
-			dsIDsMap[id] = struct{}{}
-		}
-
-		// Older TO's may ignore the server ID list, so we need to filter them out manually to be sure.
-		filteredDSServers := []tc.DeliveryServiceServer{}
-		for _, dsServer := range toDSS.Response {
-			if dsServer.Server == nil || dsServer.DeliveryService == nil {
-				continue // TODO warn? error?
-			}
-			if len(serverIDsMap) > 0 {
-				if _, ok := serverIDsMap[*dsServer.Server]; !ok {
-					continue
-				}
-			}
-			if len(dsIDsMap) > 0 {
-				if _, ok := dsIDsMap[*dsServer.DeliveryService]; !ok {
-					continue
-				}
-			}
-			filteredDSServers = append(filteredDSServers, dsServer)
-		}
-
 		dss := obj.(*[]tc.DeliveryServiceServer)
-		*dss = filteredDSServers
+		*dss = toDSS.Response
 		return nil
 	})
 	if err != nil {
 		return nil, errors.New("getting delivery service servers: " + err.Error())
 	}
 
-	return dsServers, nil
+	serverIDsMap := map[int]struct{}{}
+	for _, id := range serverIDs {
+		serverIDsMap[id] = struct{}{}
+	}
+	dsIDsMap := map[int]struct{}{}
+	for _, id := range dsIDs {
+		dsIDsMap[id] = struct{}{}
+	}
+
+	// Older TO's may ignore the server ID list, so we need to filter them out manually to be sure.
+	// Also, if DeliveryServiceServersAlwaysGetAll, we need to filter here anyway.
+	filteredDSServers := []tc.DeliveryServiceServer{}
+	for _, dsServer := range dsServers {
+		if dsServer.Server == nil || dsServer.DeliveryService == nil {
+			continue // TODO warn? error?
+		}
+		if len(serverIDsMap) > 0 {
+			if _, ok := serverIDsMap[*dsServer.Server]; !ok {
+				continue
+			}
+		}
+		if len(dsIDsMap) > 0 {
+			if _, ok := dsIDsMap[*dsServer.DeliveryService]; !ok {
+				continue
+			}
+		}
+		filteredDSServers = append(filteredDSServers, dsServer)
+	}
+
+	return filteredDSServers, nil
 }
 
 func GetServerProfileParameters(cfg config.TCCfg, profileName string) ([]tc.Parameter, error) {

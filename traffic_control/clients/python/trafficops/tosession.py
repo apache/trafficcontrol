@@ -977,12 +977,12 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request(u'put', u'deliveryservices/{delivery_service_id:d}/safe', (u'1.1', u'1.2', u'1.3',))
+	@api_request(u'put', u'deliveryservices/{delivery_service_id:d}/safe', (u'1.1', u'1.2', u'1.3', u'1.4', u'1.5'))
 	def update_deliveryservice_safe(self, delivery_service_id=None, data=None):
 		"""
-		Allows a user to edit limited fields of an assigned delivery service.
+		Allows a user to edit limited fields of a Delivery Service.
 		:ref:`to-api-deliveryservices-id-safe`
-		:param delivery_service_id: The delivery service Id
+		:param delivery_service_id: The Delivery Service Id
 		:type delivery_service_id: int
 		:param data: The request data structure for the API request
 		:type data: Dict[str, Any]
@@ -1990,11 +1990,35 @@ class TOSession(RestApiSession):
 	#
 	# Regions
 	#
-	@api_request(u'get', u'regions', (u'1.1', u'1.2', u'1.3',))
-	def get_regions(self):
+	@api_request(u'get', u'regions', (u'1.1', u'1.2', u'1.3', u'1.4', u'1.5'))
+	def get_regions(self, query_params=None):
 		"""
 		Get Regions.
 		:ref:`to-api-regions`
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request(u'post', u'regions', (u'1.1', u'1.2', u'1.3', u'1.4'))
+	def create_region(self, query_params=None, data=None):
+		"""
+		Create a region
+		:ref:`to-api-divisions-name-regions`
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request(u'delete', u'regions', u'1.5')
+	def delete_region(self, query_params=None):
+		"""
+		Delete a region by name or ID as a query parameter
+		:ref:`to-api-regions-id`
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

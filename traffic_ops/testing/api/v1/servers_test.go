@@ -18,7 +18,6 @@ package v1
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -34,7 +33,7 @@ func CreateTestServers(t *testing.T) {
 	// loop through servers, assign FKs and create
 	for _, server := range testData.Servers {
 		resp, _, err := TOSession.CreateServer(server)
-		log.Debugln("Response: ", server.HostName, " ", resp)
+		t.Log("Response: ", server.HostName, " ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE servers: %v", err)
 		}

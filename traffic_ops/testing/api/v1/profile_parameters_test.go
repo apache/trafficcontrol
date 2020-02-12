@@ -20,7 +20,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -54,7 +53,7 @@ func CreateTestProfileParameters(t *testing.T) {
 		ParameterID: parameterID,
 	}
 	resp, _, err := TOSession.CreateProfileParameter(pp)
-	log.Debugln("Response: ", resp)
+	t.Log("Response: ", resp)
 	if err != nil {
 		t.Errorf("could not CREATE profile parameters: %v", err)
 	}

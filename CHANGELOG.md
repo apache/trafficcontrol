@@ -8,7 +8,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added a boolean to delivery service in Traffic Portal and Traffic Ops to enable EDNS0 client subnet at the delivery service level and include it in the cr-config.
 - Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
 - Added an optimistic quorum feature to Traffic Monitor to prevent false negative states from propagating to downstream components in the event of network isolation.
+- Added the ability to fetch users by role
 - Traffic Ops Golang Endpoints
+  - /api/2.0 for all of the most recent route versions
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
   - /api/1.5/to_extensions/:id `(DELETE)`
   - /api/1.5/to_extensions `(GET, POST)`
@@ -21,31 +23,32 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Deprecated/Removed
 - Traffic Ops API Endpoints
-  - /servers/totals
-  - /cachegroups/:parameterID/parameter/available
-  - /cachegroup/:parameterID/parameter
   - /api_capabilities/:id
-  - /to_extensions/:id/delete
-  - /regions/:region_name/phys_locations
-  - /parameters/validate
-  - /divisions/:division_name/regions
-  - /parameters/:id/unassigned_profiles
-  - /parameters/:id/profiles
+  - /cachegroup/:parameterID/parameter
+  - /cachegroups/:parameterID/parameter/available
   - /cdns/:name/configs/routing
+  - /cdns/configs
+  - /cdns/usage/overview
+  - /deliveryservice_user
+  - /deliveryservice_user/:dsId/:userId
+  - /deliveryservices/:id/state
+  - /divisions/:division_name/regions
   - /divisions/name/:name
   - /hwinfo/dtdata
   - /jobs/:id
+  - /parameters/:id/profiles
+  - /parameters/:id/unassigned_profiles
+  - /parameters/validate
+  - /regions/:region_name/phys_locations
+  - /regions/name/:region_name
   - /riak/stats
-  - /stats_summary/create
-  - /deliveryservices/:id/state
-  - /cdns/configs
-  - /traffic_monitor/stats
   - /servercheck/aadata
+  - /servers/totals
+  - /stats_summary/create
+  - /to_extensions/:id/delete
+  - /traffic_monitor/stats
   - /types/trimmed
-  - /deliveryservice_user/:dsId/:userId
-  - /deliveryservice_user
   - /user/current/jobs
-  - /cdns/usage/overview
 
 ## [4.0.0] - 2019-12-16
 ### Added

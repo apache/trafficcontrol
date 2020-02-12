@@ -95,13 +95,6 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 	return alerts, reqInf, err
 }
 
-// Profiles gets an array of Profiles
-// Deprecated: use GetProfiles
-func (to *Session) Profiles() ([]tc.Profile, error) {
-	ps, _, err := to.GetProfiles()
-	return ps, err
-}
-
 // GetProfiles returns a list of Profiles
 func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}

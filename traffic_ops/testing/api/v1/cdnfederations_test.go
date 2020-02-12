@@ -54,7 +54,7 @@ func CreateTestCDNFederations(t *testing.T) {
 			t.Errorf("could not POST federations: " + err.Error())
 		}
 		bytes, _ := json.Marshal(data)
-		log.Debugf("POST Response: %s\n", bytes)
+		t.Logf("POST Response: %s\n", bytes)
 
 		// need to save the ids, otherwise the other tests won't be able to reference the federations
 		if data.Response.ID == nil {
@@ -80,14 +80,14 @@ func UpdateTestCDNFederations(t *testing.T) {
 			t.Errorf("cannot PUT federation by id: %v", err)
 		}
 		bytes, _ := json.Marshal(resp)
-		log.Debugf("PUT Response: %s\n", bytes)
+		t.Logf("PUT Response: %s\n", bytes)
 
 		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if err != nil {
 			t.Errorf("cannot GET federation by id after PUT: %v", err)
 		}
 		bytes, _ = json.Marshal(resp2)
-		log.Debugf("GET Response: %s\n", bytes)
+		t.Logf("GET Response: %s\n", bytes)
 
 		if resp2.Response[0].CName == nil {
 			log.Errorln("CName is nil after updating")
@@ -111,7 +111,7 @@ func GetTestCDNFederations(t *testing.T) {
 			t.Errorf("could not GET federations: " + err.Error())
 		}
 		bytes, _ := json.Marshal(data)
-		log.Debugf("GET Response: %s\n", bytes)
+		t.Logf("GET Response: %s\n", bytes)
 	}
 }
 
@@ -232,7 +232,7 @@ func DeleteTestCDNFederations(t *testing.T) {
 			t.Errorf("cannot DELETE federation by id: '%d' %v", id, err)
 		}
 		bytes, err := json.Marshal(resp)
-		log.Debugf("DELETE Response: %s\n", bytes)
+		t.Logf("DELETE Response: %s\n", bytes)
 
 		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if len(data.Response) != 0 {
