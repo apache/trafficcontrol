@@ -208,6 +208,24 @@ func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel,
 	w.Write(append(respBts, '\n'))
 }
 
+// WriteRespAlertNotFound creates an alert indicating that the resource was not found and writes that to w.
+func WriteRespAlertNotFound(w http.ResponseWriter, r *http.Request) {
+	if respWritten(r) {
+		log.Errorf("WriteRespAlert called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	resp := struct{ tc.Alerts }{tc.CreateAlerts(tc.ErrorLevel, "Resource not found.")}
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		handleSimpleErr(w, r, http.StatusNotFound, nil, errors.New("marshalling JSON: "+err.Error()))
+		return
+	}
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Write(append(respBts, '\n'))
+}
+
 // WriteRespAlertObj Writes the given alert, and the given response object.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLevel, msg string, obj interface{}) {

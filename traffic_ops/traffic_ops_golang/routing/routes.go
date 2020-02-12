@@ -293,7 +293,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodPut, `regions/{id}$`, api.UpdateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 222308224, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `regions/?$`, api.CreateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 2288334488, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `regions/?$`, api.DeleteHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 2232626758, noPerlBypass},
-		{api.Version{2, 0}, http.MethodDelete, `regions/name/{name}$`, handlerToFunc(proxyHandler), 0, NoAuth, nil, 2925881096, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 2181575271, noPerlBypass},
 
 		{api.Version{2, 0}, http.MethodDelete, `deliveryservice_server/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 2532184523, noPerlBypass},
@@ -428,7 +427,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices_regexes/?$`, deliveryservicesregexes.Get, auth.PrivLevelReadOnly, Authenticated, nil, 205501453, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{dsid}/regexes/?$`, deliveryservicesregexes.DSGet, auth.PrivLevelReadOnly, Authenticated, nil, 277432763, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{dsid}/regexes/{regexid}?$`, deliveryservicesregexes.DSGetID, auth.PrivLevelReadOnly, Authenticated, nil, 2044974567, noPerlBypass},
-		{api.Version{2, 0}, http.MethodPost, `deliveryservices/{dsid}/regexes/?(\.json)?$`, deliveryservicesregexes.Post, auth.PrivLevelOperations, Authenticated, nil, 212737800, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPost, `deliveryservices/{dsid}/regexes/?$`, deliveryservicesregexes.Post, auth.PrivLevelOperations, Authenticated, nil, 212737800, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `deliveryservices/{dsid}/regexes/{regexid}?$`, deliveryservicesregexes.Put, auth.PrivLevelOperations, Authenticated, nil, 2248339691, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `deliveryservices/{dsid}/regexes/{regexid}?$`, deliveryservicesregexes.Delete, auth.PrivLevelOperations, Authenticated, nil, 2246731663, noPerlBypass},
 
@@ -449,7 +448,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `parameters/profile/{name}/?$`, profileparameter.GetProfileName, auth.PrivLevelReadOnly, Authenticated, nil, 2802599194, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `profiles/name/{name}/parameters/?$`, profileparameter.PostProfileParamsByName, auth.PrivLevelOperations, Authenticated, nil, 2355945582, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `profiles/{id}/parameters/?$`, profileparameter.PostProfileParamsByID, auth.PrivLevelOperations, Authenticated, nil, 216818708, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `profileparameters/?(\.json)?$`, api.ReadHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 250609805, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `profileparameters/?$`, api.ReadHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 250609805, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `profileparameters/?$`, api.CreateHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelOperations, Authenticated, nil, 228809693, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `profileparameter/?$`, profileparameter.PostProfileParam, auth.PrivLevelOperations, Authenticated, nil, 224275, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `parameterprofile/?$`, profileparameter.PostParamProfile, auth.PrivLevelOperations, Authenticated, nil, 2080610861, noPerlBypass},
@@ -1118,13 +1117,6 @@ func notImplementedHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(http.StatusText(code)))
 }
 
-// notFoundHandler returns a 404 Not Found to the client.  This should be the new rootHandler for API version 2.x in order to prevent falling back to Perl.
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	code := http.StatusNotFound
-	w.WriteHeader(code)
-	w.Write([]byte(http.StatusText(code)))
-}
-
 //CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines
 func CreateThrottledHandler(handler http.Handler, maxConcurrentCalls int) ThrottledHandler {
 	return ThrottledHandler{handler, make(chan struct{}, maxConcurrentCalls)}
@@ -1138,17 +1130,15 @@ type ThrottledHandler struct {
 
 func (m ThrottledHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	pathParts := strings.Split(r.URL.Path, "/")
-	if len(pathParts) < 3 {
-		notFoundHandler(w, r)
-		return
+	if len(pathParts) >= 3 {
+		version, err := strconv.ParseFloat(pathParts[2], 64)
+		if err != nil || version >= 2 { // do not default to Perl for versions over 2.x
+			api.WriteRespAlertNotFound(w, r)
+			return
+		}
 	}
 
-	version, err := strconv.ParseFloat(pathParts[2], 64)
-	if err != nil || version >= 2 { // do not default to Perl for versions over 2.x
-		notFoundHandler(w, r)
-		return
-	}
-
+	m.ReqChan <- struct{}{}
 	defer func() { <-m.ReqChan }()
 	m.Handler.ServeHTTP(w, r)
 }
