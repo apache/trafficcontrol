@@ -339,7 +339,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :lets_encrypt:
 
-	.. versionadded:: 4.0
+	.. versionadded:: 4.1
 
 	:user_email: An optional email address to create an account with Let's Encrypt or to receive expiration updates
 	:send_expiration_email: A boolean option to send email summarizing certificate expiration status

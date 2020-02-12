@@ -138,7 +138,7 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
 		return
 	}
 
@@ -162,7 +162,7 @@ func GetSSLKeysByHostNameV15(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
 		return
 	}
 
@@ -218,7 +218,7 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -238,7 +238,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 		return
 	}
 	if !ok {
-		api.WriteRespAlertObj(w, r, tc.ErrorLevel, "no object found for the specified key", struct{}{}) // empty response object because Perl
+		api.WriteAlertsObj(w, r, http.StatusNotFound, tc.CreateAlerts(tc.ErrorLevel, "no object found for the specified key"), struct{}{}) // empty response object because Perl
 		return
 	}
 	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
@@ -261,7 +261,7 @@ func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -281,7 +281,7 @@ func getSSLKeysByXMLIDHelperV15(xmlID string, inf *api.APIInfo, w http.ResponseW
 		return
 	}
 	if !ok {
-		api.WriteRespAlertObj(w, r, tc.ErrorLevel, "no object found for the specified key", struct{}{})
+		api.WriteAlertsObj(w, r, http.StatusNotFound, tc.CreateAlerts(tc.ErrorLevel, "no object found for the specified key"), struct{}{}) // empty response object because Perl
 		return
 	}
 
