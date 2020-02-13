@@ -52,7 +52,6 @@ func CreateTestTypes(t *testing.T) {
 		}
 
 		if typ.UseInTable != "server" {
-			t.Log(fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable))
 			err = execSQL(db, fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable), "type")
 		} else {
 			_, _, err = TOSession.CreateType(typ)
