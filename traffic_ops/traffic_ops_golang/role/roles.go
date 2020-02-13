@@ -164,6 +164,11 @@ func (role *TORole) Read() ([]interface{}, error, error, int) {
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
+
+	if version.Major > 1 {
+		return vals, nil, nil, http.StatusOK
+	}
+
 	returnable := []interface{}{}
 	for _, val := range vals {
 		rl := val.(*TORole)
