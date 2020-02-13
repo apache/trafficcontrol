@@ -17,11 +17,14 @@
  * under the License.
  */
 
-var TableCapabilityUsersController = function(capability, capUsers, $scope, $state, locationUtils) {
+var TableCapabilityUsersController = function(capability, capUsers, $controller, $scope, $state, locationUtils) {
 
-	$scope.capability = capability;
+	// extends the TableUsersController to inherit common methods
+	angular.extend(this, $controller('TableUsersController', { users: capUsers, $scope: $scope }));
 
-	$scope.capUsers = capUsers;
+	let capUsersTable;
+
+	$scope.capability = capability[0];
 
 	$scope.editUser = function(id) {
 		locationUtils.navigateToPath('/users/' + id);
@@ -31,17 +34,32 @@ var TableCapabilityUsersController = function(capability, capUsers, $scope, $sta
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.toggleVisibility = function(colName) {
+		const col = capUsersTable.column(colName + ':name');
+		col.visible(!col.visible());
+		capUsersTable.rows().invalidate().draw();
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#capUsersTable').dataTable({
+		capUsersTable = $('#capUsersTable').DataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_capUsersTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_capUsersTable_/):", e);
+				}
+			}
 		});
 	});
 
 };
 
-TableCapabilityUsersController.$inject = ['capability', 'capUsers', '$scope', '$state', 'locationUtils'];
+TableCapabilityUsersController.$inject = ['capability', 'capUsers', '$controller', '$scope', '$state', 'locationUtils'];
 module.exports = TableCapabilityUsersController;
