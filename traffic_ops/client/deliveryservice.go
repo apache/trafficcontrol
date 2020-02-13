@@ -394,6 +394,16 @@ func (to *Session) GetDeliveryServiceCapacity(id string) (*tc.DeliveryServiceCap
 
 // GetDeliveryServiceServer returns associations between Delivery Services and servers using the
 // provided pagination controls.
+func (to *Session) GetDeliveryServiceRouting(id string) (*tc.DeliveryServiceRouting, ReqInf, error) {
+	var data tc.DeliveryServiceRoutingResponse
+	reqInf, err := get(to, deliveryServiceRoutingEp(id), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	return &data.Response, reqInf, nil
+}
+
 func (to *Session) GetDeliveryServiceServer(page, limit string) ([]tc.DeliveryServiceServer, ReqInf, error) {
 	var data tc.DeliveryServiceServerResponse
 	reqInf, err := get(to, API_DELIVERY_SERVICE_SERVER+"?page="+page+"&limit="+limit, &data)
