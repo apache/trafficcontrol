@@ -175,7 +175,7 @@ func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNu
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
-	reqInf, err := get(to, API_DELIVERY_SERVICES + "?cdn=" + strconv.Itoa(cdnID), &data)
+	reqInf, err := get(to, API_DELIVERY_SERVICES+"?cdn="+strconv.Itoa(cdnID), &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -203,7 +203,7 @@ func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNul
 // something very wicked has happened to Traffic Ops.
 func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var data tc.DeliveryServicesNullableResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICES + "?xmlid=" + XMLID, &data)
+	reqInf, err := get(to, API_DELIVERY_SERVICES+"?xmlid="+XMLID, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -396,7 +396,7 @@ func (to *Session) GetDeliveryServiceCapacity(id string) (*tc.DeliveryServiceCap
 // provided pagination controls.
 func (to *Session) GetDeliveryServiceServer(page, limit string) ([]tc.DeliveryServiceServer, ReqInf, error) {
 	var data tc.DeliveryServiceServerResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICE_SERVER + "?page=" + page + "&limit=" + limit, &data)
+	reqInf, err := get(to, API_DELIVERY_SERVICE_SERVER+"?page="+page+"&limit="+limit, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}

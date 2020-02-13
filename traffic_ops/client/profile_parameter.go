@@ -26,8 +26,8 @@ import (
 
 const (
 	API_PROFILE_PARAMETERS = apiBase + "/profileparameters"
-	ProfileIdQueryParam        = "profileId"
-	ParameterIdQueryParam      = "parameterId"
+	ProfileIdQueryParam    = "profileId"
+	ParameterIdQueryParam  = "parameterId"
 )
 
 // Create a ProfileParameter

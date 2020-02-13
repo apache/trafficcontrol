@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	API_SERVERS                        = apiBase + "/servers"
+	API_SERVERS                         = apiBase + "/servers"
 	API_SERVER_ASSIGN_DELIVERY_SERVICES = API_SERVER_DELIVERY_SERVICES + "?replace=%t"
 )
 

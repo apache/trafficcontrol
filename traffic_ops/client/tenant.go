@@ -24,7 +24,6 @@ import (
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-
 const API_TENANTS = apiBase + "/tenants"
 const API_TENANT_ID = API_TENANTS + "/%v"
 

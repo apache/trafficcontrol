@@ -81,7 +81,9 @@ func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf,
 	var a net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: a}
 
-	user := struct{ User tc.User `json:"user"` }{ u }
+	user := struct {
+		User tc.User `json:"user"`
+	}{u}
 	reqBody, err := json.Marshal(user)
 	if err != nil {
 		return nil, reqInf, err
