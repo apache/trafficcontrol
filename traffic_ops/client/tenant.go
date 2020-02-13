@@ -18,15 +18,20 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// Tenants gets an array of Tenants
+
+const API_TENANTS = apiBase + "/tenants"
+const API_TENANT_ID = API_TENANTS + "/%v"
+
+// Tenants gets an array of Tenants.
 func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := get(to, tenantsEp(), &data)
+	reqInf, err := get(to, API_TENANTS, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -34,10 +39,11 @@ func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// Tenant gets the Tenant for the ID it's passed
+// Tenant gets the Tenant identified by the passed integral, unique identifer - which
+// must be passed as a string.
 func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := get(to, tenantEp(id), &data)
+	reqInf, err := get(to, fmt.Sprintf(API_TENANT_ID, id), &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -45,10 +51,10 @@ func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 	return &data.Response[0], reqInf, nil
 }
 
-// TenantByName gets the Tenant for the name it's passed
+// TenantByName gets the Tenant with the name it's passed.
 func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	query := tenantsEp() + "?name=" + url.QueryEscape(name)
+	query := API_TENANTS + "?name=" + url.QueryEscape(name)
 	reqInf, err := get(to, query, &data)
 	if err != nil {
 		return nil, reqInf, err
@@ -63,7 +69,7 @@ func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
 	return ten, reqInf, err
 }
 
-// CreateTenant creates the Tenant it's passed
+// CreateTenant creates the Tenant it's passed.
 func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	if t.ParentID == 0 && t.ParentName != "" {
 		tenant, _, err := to.TenantByName(t.ParentName)
@@ -81,7 +87,7 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = post(to, tenantsEp(), jsonReq, &data)
+	_, err = post(to, API_TENANTS, jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -90,14 +96,14 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 }
 
 // UpdateTenant updates the Tenant matching the ID it's passed with
-// the Tenant it is passed
+// the Tenant it is passed.
 func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, error) {
 	var data tc.TenantResponse
 	jsonReq, err := json.Marshal(t)
 	if err != nil {
 		return nil, err
 	}
-	_, err = put(to, tenantEp(id), jsonReq, &data)
+	_, err = put(to, fmt.Sprintf(API_TENANT_ID, id), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -105,10 +111,10 @@ func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, er
 	return &data, nil
 }
 
-// DeleteTenant deletes the Tenant matching the ID it's passed
+// DeleteTenant deletes the Tenant matching the ID it's passed.
 func (to *Session) DeleteTenant(id string) (*tc.DeleteTenantResponse, error) {
 	var data tc.DeleteTenantResponse
-	_, err := del(to, tenantEp(id), &data)
+	_, err := del(to, fmt.Sprintf(API_TENANT_ID, id), &data)
 	if err != nil {
 		return nil, err
 	}

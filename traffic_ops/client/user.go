@@ -135,7 +135,7 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 	if err != nil {
 		return nil, reqInf, err
 	}
-	route := apiBase + "/users.json"
+	route := apiBase + "/users"
 	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
 	if err != nil {
 		return nil, reqInf, err
