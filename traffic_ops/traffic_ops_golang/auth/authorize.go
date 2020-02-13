@@ -210,3 +210,27 @@ func CheckLDAPUser(form PasswordForm, cfg *config.ConfigLDAP) (bool, error) {
 	}
 	return false, errors.New("User not found in LDAP")
 }
+
+// GetUserByID returns a user object, whether the user existed, and any error. If the user exists and its tenant ID is null in the database, the tenant ID of -1 is returned.
+func GetUserByID(tx *sql.Tx, userID int) (*CurrentUser, bool, error) {
+	qry := `
+SELECT
+  u.username,
+  COALESCE(r.priv_level, -1),
+  COALESCE(u.tenant_id, -1) as tenant_id,
+  ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id = r.id) AS capabilities
+FROM
+  tm_user u
+LEFT JOIN role r ON r.id = u.role
+WHERE
+  u.id = $1
+`
+	u := &CurrentUser{ID: userID}
+	if err := tx.QueryRow(qry, u.ID).Scan(&u.UserName, &u.PrivLevel, &u.TenantID, &u.Capabilities); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, false, nil
+		}
+		return nil, false, errors.New("querying user by id: " + err.Error())
+	}
+	return u, true, nil
+}

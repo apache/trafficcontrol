@@ -22,6 +22,7 @@ package user
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -62,7 +63,17 @@ func GetAvailableDSes(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	dsUserID := inf.IntParams["id"]
-	dses, err := getUserAvailableDSes(inf.Tx.Tx, dsUserID)
+	dsUser, ok, err := auth.GetUserByID(inf.Tx.Tx, dsUserID)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("getting delivery service user %v tenant ID: %+v", dsUserID, err))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, http.StatusNotFound, fmt.Errorf("delivery service user '%v' does not exist", dsUserID), nil)
+		return
+	}
+
+	dses, err := getUserAvailableDSes(inf.Tx.Tx, dsUser, inf.User)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
 		return
@@ -204,7 +215,7 @@ WHERE dsu.tm_user_id = $1
 	return dses, nil
 }
 
-func getUserAvailableDSes(tx *sql.Tx, userID int) ([]tc.UserAvailableDS, error) {
+func getUserAvailableDSes(tx *sql.Tx, dsUser *auth.CurrentUser, user *auth.CurrentUser) ([]tc.UserAvailableDS, error) {
 	q := `
 SELECT
 ds.id,
@@ -212,10 +223,11 @@ ds.display_name,
 ds.xml_id,
 ds.tenant_id
 FROM deliveryservice as ds
-JOIN deliveryservice_tmuser dsu ON ds.id = dsu.deliveryservice
-WHERE dsu.tm_user_id = $1
+WHERE ds.id NOT IN (
+  SELECT deliveryservice from deliveryservice_tmuser dsu where dsu.tm_user_id = $1
+)
 `
-	rows, err := tx.Query(q, userID)
+	rows, err := tx.Query(q, dsUser.ID)
 	if err != nil {
 		return nil, errors.New("querying user available delivery services: " + err.Error())
 	}
@@ -229,16 +241,11 @@ WHERE dsu.tm_user_id = $1
 		}
 		dses = append(dses, ds)
 	}
-	return dses, nil
-}
-
-func getUserTenantIDByID(tx *sql.Tx, id int) (*int, bool, error) {
-	tenantID := (*int)(nil)
-	if err := tx.QueryRow(`SELECT tenant_id FROM tm_user WHERE id = $1`, id).Scan(&tenantID); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, false, nil
-		}
-		return nil, false, errors.New("querying user: " + err.Error())
+	if dses, err = filterAvailableAuthorized(tx, dses, user); err != nil {
+		return nil, errors.New("filtering authorized delivery services: " + err.Error())
 	}
-	return tenantID, true, nil
+	if dses, err = filterAvailableAuthorized(tx, dses, dsUser); err != nil {
+		return nil, errors.New("filtering authorized delivery services: " + err.Error())
+	}
+	return dses, nil
 }
