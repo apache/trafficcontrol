@@ -47,7 +47,7 @@ func CreateTestTypes(t *testing.T) {
 	for _, typ := range testData.Types {
 		foundTypes, _, err := TOSession.GetTypeByName(typ.Name)
 		if err == nil && len(foundTypes) > 0 {
-			t.Logf("Type %v already exists (%v matche(s))", typ.Name, len(foundTypes))
+			t.Logf("Type %v already exists (%v match(es))", typ.Name, len(foundTypes))
 			continue
 		}
 
