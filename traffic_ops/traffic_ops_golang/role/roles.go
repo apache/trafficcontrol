@@ -165,15 +165,11 @@ func (role *TORole) Read() ([]interface{}, error, error, int) {
 		return nil, userErr, sysErr, errCode
 	}
 
-	if version.Major > 1 {
-		return vals, nil, nil, http.StatusOK
-	}
-
 	returnable := []interface{}{}
 	for _, val := range vals {
 		rl := val.(*TORole)
 		switch {
-		case version.Minor >= 3:
+		case version.Major > 1 || version.Minor >= 3:
 			caps := ([]string)(*rl.PQCapabilities)
 			rl.Capabilities = &caps
 			returnable = append(returnable, rl)
