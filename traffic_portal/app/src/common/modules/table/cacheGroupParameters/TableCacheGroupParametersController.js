@@ -90,13 +90,15 @@ var TableCacheGroupParametersController = function(cacheGroup, parameters, $cont
 			"iDisplayLength": 25,
 			"aaSorting": [],
 			"columnDefs": [
-				{ "width": "50%", "targets": 2 }
+				{ "width": "50%", "targets": 2 },
+				{ "orderable": false, "targets": 4 }
 			],
 			"columns": [
 				{ "name": "Name", "visible": true, "searchable": true },
 				{ "name": "Config File", "visible": true, "searchable": true },
 				{ "name": "Value", "visible": true, "searchable": true },
-				{ "name": "Secure", "visible": true, "searchable": true }
+				{ "name": "Secure", "visible": true, "searchable": true },
+				{ "name": "Action", "visible": true, "searchable": false }
 			],
 			"initComplete": function(settings, json) {
 				try {

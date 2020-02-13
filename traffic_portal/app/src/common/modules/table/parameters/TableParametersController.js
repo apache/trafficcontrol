@@ -134,6 +134,13 @@ var TableParametersController = function(parameters, $scope, $state, $uibModal, 
         parametersTable.rows().invalidate().draw();
     };
 
+    $scope.columnFilterFn = function(column) {
+        if (column.name === 'Action') {
+            return false;
+        }
+        return true;
+    };
+
     angular.element(document).ready(function () {
         parametersTable = $('#parametersTable').DataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],

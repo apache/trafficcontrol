@@ -33,7 +33,7 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name' | filter:columnFilterFn">
                         <div class="checkbox">
                             <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
                         </div>
@@ -52,6 +52,7 @@ under the License.
                 <th>Config File</th>
                 <th>value</th>
                 <th>Secure</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -60,6 +61,9 @@ under the License.
                 <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
                 <td data-search="^{{::p.value}}$">{{::p.value}}</td>
                 <td data-search="^{{::p.secure}}$">{{::p.secure}}</td>
+                <td style="text-align: right;">
+                    <a class="link action-link" title="Unlink Parameter from Cache Group" ng-click="removeParameter(p.id)"><i class="fa fa-sm fa-chain-broken"></i></a>
+                </td>
             </tr>
             </tbody>
         </table>
