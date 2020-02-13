@@ -16,7 +16,7 @@
 .. _to-api-v2-deliveryservices-dnsseckeys-generate:
 
 ****************************************
-``deliveryservices/dnsseckeys/generate``
+``cdns/dnsseckeys/generate``
 ****************************************
 
 ``POST``
@@ -33,16 +33,47 @@ Request Structure
 :key:               Name of the CDN
 :kskExpirationDays: Expiration (in days) for the :abbr:`KSKs (Key-Signing Keys)`
 :name:              Domain name used by the CDN
-:ttl:               Time for which the keypairs shall remain valid
+:ttl:               Time, in seconds, for which the keypairs shall remain valid
 :zskExpirationDays: Expiration (in days) for the :abbr:`ZSKs (Zone-Signing Keys)`
+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/2.0/cdns/dnsseckeys/generate HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+	Content-Length: 130
+
+	{
+		"key": "CDN-in-a-Box",
+		"kskExpirationDays": 1095,
+		"name": "mycdn.ciab.test",
+		"ttl": 3600,
+		"zskExpirationDays": 1095
+	}
 
 
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
-	{
-		"response": "Successfully created dnssec keys for cdn1"
-	}
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 24 Feb 2020 19:42:15 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: O9SPWzeMNFgg6I/PPeXittBIhdh3/zUKK1NwNlYIM9SszSrk0h/Dfz7tnwgnA7h/s6M4eYBJxykDpCfVC7xpeg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Mon, 24 Feb 2020 18:42:15 GMT
+	Content-Length: 89
 
+	{
+		"response": "Successfully created dnssec keys for CDN-in-a-Box"
+	}
