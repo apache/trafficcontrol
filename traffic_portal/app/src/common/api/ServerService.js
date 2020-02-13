@@ -118,7 +118,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getServerConfigFiles = function(id) {
-        return $http.get(ENV.api['root'] + 'servers/' + id + '/configfiles/ats').then(
+        return $http.get(ENV.api['legacy'] + 'servers/' + id + '/configfiles/ats').then(
             function (result) {
                 return result.data;
             },

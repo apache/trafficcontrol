@@ -30,6 +30,8 @@ var FormNewJobController = function(job, $scope, $controller, jobService, messag
 	};
 
 	$scope.save = function(job) {
+		// Sets the start time to "immediately" (5 minute leeway for latency)
+		job.startTime = new Date((new Date()).getTime() + 5*60*1000);
 		jobService.createJob(job)
 			.then(
 				function() {

@@ -43,7 +43,7 @@
       }
     },
     "cacheChecks": {
-      "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions. The extensions array should include an entry for each of your extensions or you can check GET api/1.3/servers/checks to see which checks you have configured.",
+      "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions. The extensions array should include an entry for each of your extensions or you can check the /servers/checks Traffic Ops API endpoint to see which checks you have configured.",
       "show": true,
       "updatePending": {
         "show": true,
