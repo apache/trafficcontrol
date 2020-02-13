@@ -20,6 +20,8 @@ package types
  */
 
 import (
+	"errors"
+	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -96,8 +98,21 @@ func (typ *TOType) Validate() error {
 
 func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
 func (tp *TOType) Update() (error, error, int)              { return api.GenericUpdate(tp) }
-func (tp *TOType) Create() (error, error, int)              { return api.GenericCreate(tp) }
 func (tp *TOType) Delete() (error, error, int)              { return api.GenericDelete(tp) }
+
+func (tp *TOType) Create() (error, error, int)              {
+	if !usedInServerTable(tp) {
+		return nil, errors.New("can not create type"), http.StatusBadRequest
+	}
+	return api.GenericCreate(tp)
+}
+
+func usedInServerTable(tp *TOType) bool {
+	if tp.UseInTable == nil || *tp.UseInTable != "server" {
+		return false
+	}
+	return true
+}
 
 func selectQuery() string {
 	return `SELECT

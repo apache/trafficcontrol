@@ -21,6 +21,7 @@ package types
 
 import (
 	"errors"
+	"net/http"
 	"reflect"
 	"testing"
 	"time"
@@ -120,6 +121,25 @@ func TestInterfaces(t *testing.T) {
 	}
 	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("Type must be Identifier")
+	}
+}
+
+func TestCreateType(t *testing.T) {
+	field := "test"
+	p := TOType{
+		TypeNullable: tc.TypeNullable{
+			Name: &field,
+			Description: &field,
+			UseInTable: &field,
+		},
+	}
+
+	_, err, statusCode := p.Create()
+	if err == nil {
+		t.Errorf("expected create type to have an error")
+	}
+	if statusCode != http.StatusBadRequest {
+		t.Errorf("expected create type to return a 400 error")
 	}
 }
 

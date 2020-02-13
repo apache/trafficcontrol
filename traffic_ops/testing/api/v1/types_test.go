@@ -16,6 +16,7 @@ package v1
 */
 
 import (
+	"fmt"
 	"testing"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
@@ -31,12 +32,35 @@ func TestTypes(t *testing.T) {
 func CreateTestTypes(t *testing.T) {
 	t.Log("---- CreateTestTypes ----")
 
+	db, err := OpenConnection()
+	if err != nil {
+		t.Fatal("cannot open db")
+	}
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			t.Errorf("unable to close connection to db, error: %v", err.Error())
+		}
+	}()
+	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%v', '%v', '%v');"
+
 	for _, typ := range testData.Types {
-		resp, _, err := TOSession.CreateType(typ)
+		foundTypes, _, err := TOSession.GetTypeByName(typ.Name)
+		if err == nil && len(foundTypes) > 0 {
+			t.Logf("Type %v already exists (%v matche(s))", typ.Name, len(foundTypes))
+			continue
+		}
+
+		if typ.UseInTable != "server" {
+			t.Log(fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable))
+			err = execSQL(db, fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable), "type")
+		} else {
+			_, _, err = TOSession.CreateType(typ)
+		}
+
 		if err != nil {
 			t.Errorf("could not CREATE types: %v", err)
 		}
-		t.Log("Response: ", resp)
 	}
 
 }
