@@ -101,7 +101,7 @@ Using API Endpoints
 
 #. Pass the Mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint.
 
-.. note:: Many endpoints support a ``.json`` suffix. This should be avoided at all costs, because there's no real consistency regarding when it may be used, and the output of API endpoints, in general, are not capable of representing POSIX-compliant files (as a 'file extension' might imply).
+.. note:: Although many endpoints in API version 1.x supported a ``.json`` suffix, API version 2.x does not support it at all. Even when using API version 1.x using the ``.json`` suffix should be avoided at all costs, because there's no real consistency regarding when it may be used, and the output of API endpoints, in general, are not capable of representing POSIX-compliant files (as a 'file extension' might imply).
 
 Example Session
 ---------------

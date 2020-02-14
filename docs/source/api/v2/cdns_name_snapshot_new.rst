@@ -359,7 +359,7 @@ Response Structure
 			"dnssec.enabled": "false",
 			"domain_name": "mycdn.ciab.test",
 			"federationmapping.polling.interval": "60000",
-			"federationmapping.polling.url": "https://${toHostname}/internal/api/2.0/federations.json",
+			"federationmapping.polling.url": "https://${toHostname}/api/2.0/federations",
 			"geolocation.polling.interval": "86400000",
 			"geolocation.polling.url": "https://trafficops.infra.ciab.test:443/GeoLite2-City.mmdb.gz",
 			"keystore.maintenance.interval": "300",
