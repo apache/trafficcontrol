@@ -110,6 +110,10 @@ Glossary
 
 		.. seealso:: See :ref:`delivery-services` for a more in-depth explanation of :dfn:`Delivery Services`.
 
+	Delivery Service Request
+	DSR
+		A :dfn:`Delivery Service Request` is the result of attempting to modify a :term:`Delivery Service` when ``dsRequests.enabled`` is set to ``true`` in ``traffic_portal_properties.json``. See :ref:`ds_requests` for more information.
+
 	Delivery Service required capabilities
 		:dfn:`Delivery Services required capabilities` are capabilities, which correlate to server capabilities, that are required in order to assign a server to a delivery service.`
 
