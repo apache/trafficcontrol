@@ -128,10 +128,9 @@ tr_cache_config_json_refresh_period: 60000
 # log4j.properties
 tr_log4j_opts:
   - "# ACCESS is set to be a Syslog Appender"
-  - log4j.appender.ACCESS=org.apache.log4j.RollingFileAppender
+  - log4j.appender.ACCESS=org.apache.log4j.DailyRollingFileAppender
   - "log4j.appender.ACCESS.File={{tr_log_dir}}/access.log"
-  - log4j.appender.ACCESS.MaxFileSize=200MB
-  - log4j.appender.ACCESS.MaxBackupIndex=10
+  - log4j.appender.ACCESS.DatePattern='.'yyyy-MM-dd-HH
   -
   - "# ACCESS uses PatternLayout."
   - log4j.appender.ACCESS.layout=org.apache.log4j.PatternLayout
@@ -171,3 +170,11 @@ tr_logging_opts:
   - 1catalina.org.apache.juli.AsyncFileHandler.prefix = catalina.
   - 1catalina.org.apache.juli.AsyncFileHandler.rotatable = true
   - 1catalina.org.apache.juli.AsyncFileHandler.maxDays = 30
+
+# TR cronjobs to deploy
+tr_crontab:
+  # Cleanup log files more than 2 days old.
+  access_cleanup:
+    schedule: '10 */4 * * *'
+    user: root
+    job:  "/bin/find {{tr_log_dir}}/access.log.* -mmin +$((60*48)) -exec rm -f {} \; > /dev/null 2>&1"
