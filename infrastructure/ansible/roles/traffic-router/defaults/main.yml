@@ -177,4 +177,4 @@ tr_crontab:
   access_cleanup:
     schedule: '10 */4 * * *'
     user: root
-    job:  /bin/find {{tr_log_dir}}/access.log.* -mmin +$((60*48)) -exec rm -f {} \; > /dev/null 2>&1
+    job:  "/bin/find {{tr_log_dir}}/access.log.* -mmin +$((60*48)) -exec rm -f {} \; > /dev/null 2>&1"
