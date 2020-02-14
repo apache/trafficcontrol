@@ -65,13 +65,13 @@ func CreateMultipleTestProfileParameters(t *testing.T) {
 	firstProfile := testData.Profiles[0]
 	profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name)
 	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+		t.Fatalf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
 
 	firstParameter := testData.Parameters[0]
 	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		t.Fatalf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
 
 	profileID := profileResp[0].ID
@@ -85,13 +85,13 @@ func CreateMultipleTestProfileParameters(t *testing.T) {
 	secondProfile := testData.Profiles[1]
 	secondProfileResp, _, err := TOSession.GetProfileByName(secondProfile.Name)
 	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", secondProfile.Name, err)
+		t.Fatalf("cannot GET Profile by name: %v - %v", secondProfile.Name, err)
 	}
 
 	secondParameter := testData.Parameters[0]
 	secondParamResp, _, err := TOSession.GetParameterByName(secondParameter.Name)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		t.Fatalf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
 
 	profileID2 := secondProfileResp[0].ID
