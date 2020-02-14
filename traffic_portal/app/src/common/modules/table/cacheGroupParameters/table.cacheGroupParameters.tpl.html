@@ -27,6 +27,19 @@ under the License.
         <div class="pull-right" role="group" ng-show="!settings.isNew">
             <button class="btn btn-primary" title="Link Parameters to Cache Group" ng-click="selectParams()"><i class="fa fa-link"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-columns"></i>&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name' | filter:columnFilterFn">
+                        <div class="checkbox">
+                            <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
+                        </div>
+                    </li>
+                </menu>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -48,7 +61,9 @@ under the License.
                 <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
                 <td data-search="^{{::p.value}}$">{{::p.value}}</td>
                 <td data-search="^{{::p.secure}}$">{{::p.secure}}</td>
-                <td><button type="button" class="btn btn-link" title="Unlink Parameter from Cache Group" ng-click="removeParameter(p.id)"><i class="fa fa-chain-broken"></i></button></td>
+                <td style="text-align: right;">
+                    <a class="link action-link" title="Unlink Parameter from Cache Group" ng-click="removeParameter(p.id)"><i class="fa fa-sm fa-chain-broken"></i></a>
+                </td>
             </tr>
             </tbody>
         </table>

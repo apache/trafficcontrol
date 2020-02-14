@@ -30,7 +30,7 @@ describe('Traffic Portal Parameters Test Suite', function() {
 
 	it('should go to the parameters page', function() {
 		console.log("Go to the parameters page");
-		browser.get(browser.baseUrl + "/#!/parameters");
+		browser.setLocation("parameters");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/parameters");
 	});
 
@@ -55,6 +55,23 @@ describe('Traffic Portal Parameters Test Suite', function() {
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/parameters/[0-9]+/profiles");
+	});
+
+	it('should go back to the parameters page', function() {
+		console.log("Go to the parameters page");
+		browser.setLocation("parameters");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/parameters");
+	});
+
+	it('should toggle the visibility of the first table column ', function () {
+		browser.setLocation("parameters");
+		browser.driver.findElement(by.id('toggleColumns')).click();
+		let first = element.all(by.css('input[type=checkbox]')).first();
+		expect(first.isSelected()).toBe(true);
+		first.click();
+		expect(first.isSelected()).toBe(false);
+		let tableColumns = element.all(by.css('#parametersTable tr:first-child td'));
+		expect(tableColumns.count()).toBe(4);
 	});
 
 });

@@ -407,7 +407,7 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	if version == nil {
 		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError
 	}
-	if version.Major != 1 || version.Minor < 1 {
+	if version.Major == 1 && version.Minor < 1 {
 		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
 	}
 
@@ -425,7 +425,7 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Minor >= 5:
+		case version.Major > 1 || version.Minor >= 5:
 			returnable = append(returnable, ds)
 		case version.Minor >= 4:
 			returnable = append(returnable, ds.DeliveryServiceNullableV14)

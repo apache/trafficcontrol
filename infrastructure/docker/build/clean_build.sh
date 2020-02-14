@@ -17,26 +17,30 @@
 #  $1 is file or dir with correct ownership
 #  remaining args are files/dirs to be fixed, recursively
 setowner() {
-    own=$(stat -c '%u:%g' $1)
-    shift
-    [[ -n $@ ]] && chown -R ${own} "$@"
+	own=$(stat -c '%u:%g' "$1")
+	shift
+	[[ -n $* ]] && chown -R "${own}" "$@"
 }
 
 cleanup() {
-    setowner /trafficcontrol /trafficcontrol/dist
+	setowner /trafficcontrol /trafficcontrol/dist
 }
 
 trap cleanup EXIT
 
-set -x
+set -o xtrace;
 
 # set owner of dist dir -- cleans up existing dist permissions...
-mkdir -p /tmp/go/{src,pkg,bin}
-mkdir -p /tmp/go/src/github.com/apache/
-export GOPATH=/tmp/go
-cp -a /trafficcontrol /tmp/go/src/github.com/apache/. && \
-	cd /tmp/go/src/github.com/apache/trafficcontrol && \
-	rm -rf dist && \
-	mkdir -p /trafficcontrol/dist && \
-	ln -s /trafficcontrol/dist dist && \
-	((((./build/build.sh $1 2>&1; echo $? >&3) | tee ./dist/build-$1.log >&4) 3>&1) | (read x; exit $x)) 4>&1
+export GOPATH=/tmp/go;
+tc_dir=${GOPATH}/src/github.com/apache/trafficcontrol;
+mkdir -p ${GOPATH}/{src,pkg,bin} $tc_dir;
+( set -o errexit;
+	rsync -a /trafficcontrol/ $tc_dir;
+	if ! [[ -d ${tc_dir}/.git ]]; then
+		rsync -a /trafficcontrol/.git $tc_dir; # Docker for Windows compatibility
+	fi;
+	rm -rf ${tc_dir}/dist;
+	mkdir -p /trafficcontrol/dist;
+	ln -s /trafficcontrol/dist ${tc_dir}/dist; ) && \
+	cd $tc_dir &&
+	( ( ( (./build/build.sh "$1" 2>&1; echo $? >&3) | tee ./dist/build-"$1".log >&4) 3>&1) | (read -r x; exit "$x"); ) 4>&1
