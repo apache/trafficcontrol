@@ -35,7 +35,7 @@ import java.util.List;
 
 public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
     private static final Logger LOGGER = Logger.getLogger(LetsEncryptDnsChallengeWatcher.class);
-    public static final String DEFAULT_LE_DNS_CHALLENGE_URL = "https://${toHostname}/api/1.5/letsencrypt/dnsrecords/";
+    public static final String DEFAULT_LE_DNS_CHALLENGE_URL = "https://${toHostname}/api/2.0/letsencrypt/dnsrecords/";
     private static final String configFile = "/opt/traffic_router/db/cr-config.json";
 
     private ConfigHandler configHandler;

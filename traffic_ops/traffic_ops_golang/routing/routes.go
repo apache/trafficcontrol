@@ -509,6 +509,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/urlkeys/?$`, deliveryservice.GetURLKeysByID, auth.PrivLevelReadOnly, Authenticated, nil, 293197114, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?$`, apiriak.GetBucketKey, auth.PrivLevelAdmin, Authenticated, nil, 2220510801, noPerlBypass},
 
+		//Delivery service LetsEncrypt
+		{api.Version{2, 0}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?(\.json)?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelReadOnly, Authenticated, nil, 253439052, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `letsencrypt/dnsrecords/?(\.json)?$`, deliveryservice.GetDnsChallengeRecords, auth.PrivLevelReadOnly, Authenticated, nil, 253439055, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPost, `letsencrypt/autorenew/?(\.json)?$`, deliveryservice.RenewCertificates, auth.PrivLevelOperations, Authenticated, nil, 253439056, noPerlBypass},
+
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/health/?$`, deliveryservice.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 2234590101, noPerlBypass},
 
 		{api.Version{2, 0}, http.MethodGet, `steering/{deliveryservice}/targets/?$`, api.ReadHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelReadOnly, Authenticated, nil, 2569607824, noPerlBypass},
