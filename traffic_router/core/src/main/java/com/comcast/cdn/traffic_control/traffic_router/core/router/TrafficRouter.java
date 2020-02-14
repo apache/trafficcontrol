@@ -82,6 +82,8 @@ public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
 	public static final String XTC_STEERING_OPTION = "x-tc-steering-option";
 	public static final String CLIENT_STEERING_DIVERSITY = "client.steering.forced.diversity";
+	public static final String DNSSEC_ENABLED = "dnssec.enabled";
+	public static final String DNSSEC_ZONE_DIFFING = "dnssec.zone.diffing.enabled";
 
 	private final CacheRegister cacheRegister;
 	private final ZoneManager zoneManager;
@@ -91,6 +93,7 @@ public class TrafficRouter {
 	private final FederationRegistry federationRegistry;
 	private final boolean consistentDNSRouting;
 	private final boolean clientSteeringDiversityEnabled;
+	private final boolean dnssecZoneDiffingEnabled;
 
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
@@ -117,6 +120,7 @@ public class TrafficRouter {
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing");
 		this.clientSteeringDiversityEnabled = JsonUtils.optBoolean(cr.getConfig(), CLIENT_STEERING_DIVERSITY);
+		this.dnssecZoneDiffingEnabled = JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ENABLED) && JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ZONE_DIFFING);
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 
 		if (cr.getConfig() != null) {
@@ -1256,6 +1260,10 @@ public class TrafficRouter {
 
 	public boolean isClientSteeringDiversityEnabled() {
 		return clientSteeringDiversityEnabled;
+	}
+
+	public boolean isDnssecZoneDiffingEnabled() {
+		return dnssecZoneDiffingEnabled;
 	}
 
 	private List<Cache> enforceGeoRedirect(final Track track, final DeliveryService ds, final String clientIp, final Geolocation queriedClientLocation) {

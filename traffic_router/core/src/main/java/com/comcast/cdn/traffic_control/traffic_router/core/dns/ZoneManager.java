@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,8 +56,10 @@ import org.xbill.DNS.AAAARecord;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.CNAMERecord;
 import org.xbill.DNS.DClass;
+import org.xbill.DNS.NSECRecord;
 import org.xbill.DNS.NSRecord;
 import org.xbill.DNS.Name;
+import org.xbill.DNS.RRSIGRecord;
 import org.xbill.DNS.RRset;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.SOARecord;
@@ -94,6 +98,7 @@ public class ZoneManager extends Resolver {
 	private final TrafficRouter trafficRouter;
 	private static LoadingCache<ZoneKey, Zone> dynamicZoneCache = null;
 	private static LoadingCache<ZoneKey, Zone> zoneCache = null;
+	private static ConcurrentMap<String, ZoneKey> domainsToZoneKeys = new ConcurrentHashMap<>();
 	private static ScheduledExecutorService zoneMaintenanceExecutor = null;
 	private static ExecutorService zoneExecutor = null;
 	private static final int DEFAULT_PRIMER_LIMIT = 500;
@@ -163,17 +168,7 @@ public class ZoneManager extends Resolver {
 			final CacheRegister cacheRegister = tr.getCacheRegister();
 			final JsonNode config = cacheRegister.getConfig();
 
-			int poolSize = 1;
-			final double scale = JsonUtils.optDouble(config, "zonemanager.threadpool.scale", 0.75);
-			final int cores = Runtime.getRuntime().availableProcessors();
-
-			if (cores > 2) {
-				final Double s = Math.floor((double) cores * scale);
-
-				if (s.intValue() > 1) {
-					poolSize = s.intValue();
-				}
-			}
+			final int poolSize = calcThreadPoolSize(config);
 
 			final ExecutorService initExecutor = Executors.newFixedThreadPool(poolSize);
 			final List<Runnable> generationTasks = new ArrayList<>();
@@ -187,11 +182,21 @@ public class ZoneManager extends Resolver {
 			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, getDynamicZoneCacheSpec(config, poolSize));
 			final LoadingCache<ZoneKey, Zone> zc = createZoneCache(ZoneCacheType.STATIC);
 
-			initZoneDirectory();
+			final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys = new ConcurrentHashMap<>();
+
+			if (tr.isDnssecZoneDiffingEnabled()) {
+				if (ZoneManager.dynamicZoneCache == null || ZoneManager.zoneCache == null) {
+					initZoneDirectory();
+				} else {
+					copyExistingDynamicZones(tr, dzc);
+				}
+			} else {
+				initZoneDirectory();
+			}
 
 			try {
 				LOGGER.info("Generating zone data");
-				generateZones(tr, zc, dzc, generationTasks, primingTasks);
+				generateZones(tr, zc, dzc, generationTasks, primingTasks, newDomainsToZoneKeys);
 				initExecutor.invokeAll(generationTasks.stream().map(Executors::callable).collect(Collectors.toList()));
 				LOGGER.info("Zone generation complete");
 				final Instant primingStart = Instant.now();
@@ -216,6 +221,8 @@ public class ZoneManager extends Resolver {
 				ZoneManager.dynamicZoneCache = dzc;
 				ZoneManager.zoneCache = zc;
 
+				ZoneManager.domainsToZoneKeys = newDomainsToZoneKeys;
+
 				if (tze != null) {
 					tze.shutdownNow();
 				}
@@ -238,6 +245,34 @@ public class ZoneManager extends Resolver {
 				LOGGER.fatal("Caught fatal exception while generating zone data!", ex);
 			}
 		}
+	}
+
+	private static void copyExistingDynamicZones(final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> dzc) {
+		final Map<String, DeliveryService> allZones = getAllDeliveryServiceDomains(tr);
+		allZones.put(getTopLevelDomain().toString(true), null);
+		final Map<ZoneKey, Zone> dzcMap = dynamicZoneCache.asMap();
+		for (final ZoneKey zoneKey : dzcMap.keySet()) {
+			if (allZones.containsKey(zoneKey.getName().toString(true))) {
+				dzc.put(zoneKey, dzcMap.get(zoneKey));
+			} else {
+				LOGGER.info("domain for old zone " + zoneKey.getName().toString(true) + " not found; will not copy it into new dynamic zone cache");
+			}
+		}
+	}
+
+	private static int calcThreadPoolSize(final JsonNode config) {
+		int poolSize = 1;
+		final double scale = JsonUtils.optDouble(config, "zonemanager.threadpool.scale", 0.75);
+		final int cores = Runtime.getRuntime().availableProcessors();
+
+		if (cores > 2) {
+			final Double s = Math.floor((double) cores * scale);
+
+			if (s.intValue() > 1) {
+				poolSize = s.intValue();
+			}
+		}
+		return poolSize;
 	}
 
 	private static CacheBuilderSpec getDynamicZoneCacheSpec(final JsonNode config, final int poolSize) {
@@ -359,35 +394,38 @@ public class ZoneManager extends Resolver {
 		return zone;
 	}
 
-	private static void generateZones(final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks) throws IOException {
+	private static Map<String, DeliveryService> getAllDeliveryServiceDomains(final TrafficRouter tr) {
 		final CacheRegister data = tr.getCacheRegister();
-		final Map<String, List<Record>> zoneMap = new HashMap<String, List<Record>>();
 		final Map<String, DeliveryService> dsMap = new HashMap<String, DeliveryService>();
 		final String tld = getTopLevelDomain().toString(true); // Name.toString(true) - omit the trailing dot
 
 		for (final DeliveryService ds : data.getDeliveryServices().values()) {
-			final JsonNode domains = ds.getDomains();
+			String domain = ds.getDomain();
 
-			if (domains == null) {
+			if (domain == null) {
 				continue;
 			}
 
-			for (final JsonNode domainNode : domains) {
-				String domain = domainNode.asText();
+			if (domain.endsWith("+")) {
+				domain = domain.replaceAll("\\+\\z", ".") + tld;
+			}
 
-				if (domain.endsWith("+")) {
-					domain = domain.replaceAll("\\+\\z", ".") + tld;
-				}
-
-				if (domain.endsWith(tld)) {
-					dsMap.put(domain, ds);
-				}
+			if (domain.endsWith(tld)) {
+				dsMap.put(domain, ds);
 			}
 		}
+		return dsMap;
+	}
 
+	private static void generateZones(final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc,
+			final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks,
+			final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys) throws java.io.IOException {
+		final Map<String, DeliveryService> dsMap = getAllDeliveryServiceDomains(tr);
+		final CacheRegister data = tr.getCacheRegister();
+		final Map<String, List<Record>> zoneMap = new HashMap<>();
 		final Map<String, List<Record>> superDomains = populateZoneMap(zoneMap, dsMap, data);
-		final List<Record> superRecords = fillZones(zoneMap, dsMap, tr, zc, dzc, generationTasks, primingTasks);
-		final List<Record> upstreamRecords = fillZones(superDomains, dsMap, tr, superRecords, zc, dzc, generationTasks, primingTasks);
+		final List<Record> superRecords = fillZones(zoneMap, dsMap, tr, zc, dzc, generationTasks, primingTasks, newDomainsToZoneKeys);
+		final List<Record> upstreamRecords = fillZones(superDomains, dsMap, tr, superRecords, zc, dzc, generationTasks, primingTasks, newDomainsToZoneKeys);
 
 		for (final Record record : upstreamRecords) {
 			if (record.getType() == Type.DS) {
@@ -396,12 +434,12 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
-	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks)
+	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys)
 			throws IOException {
-		return fillZones(zoneMap, dsMap, tr, null, zc, dzc, generationTasks, primingTasks);
+		return fillZones(zoneMap, dsMap, tr, null, zc, dzc, generationTasks, primingTasks, newDomainsToZoneKeys);
 	}
 
-	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final List<Record> superRecords, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks)
+	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final List<Record> superRecords, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys)
 			throws IOException {
 		final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
 
@@ -412,15 +450,16 @@ public class ZoneManager extends Resolver {
 				zoneMap.get(domain).addAll(superRecords);
 			}
 
-			records.addAll(createZone(domain, zoneMap, dsMap, tr, zc, dzc, generationTasks, primingTasks, hostname));
+			records.addAll(createZone(domain, zoneMap, dsMap, tr, zc, dzc, generationTasks, primingTasks, hostname, newDomainsToZoneKeys));
 		}
 
 		return records;
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, 
-			final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks, final String hostname) throws IOException {
+	@SuppressWarnings({"PMD.ExcessiveParameterList"})
+	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap,
+			final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks,
+			final BlockingQueue<Runnable> primingTasks, final String hostname, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
 		final CacheRegister data = tr.getCacheRegister();
 		final JsonNode trafficRouters = data.getTrafficRouters();
@@ -460,18 +499,37 @@ public class ZoneManager extends Resolver {
 			LOGGER.fatal("Unable to create zone: " + ex.getMessage(), ex);
 		}
 
-		primeZoneCache(domain, name, list, tr, zc, dzc, generationTasks, primingTasks, ds);
+		primeZoneCache(domain, name, list, tr, zc, dzc, generationTasks, primingTasks, ds, newDomainsToZoneKeys);
 
 		return records;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.ExcessiveParameterList"})
 	private static void primeZoneCache(final String domain, final Name name, final List<Record> list, final TrafficRouter tr,
 			final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks,
-			final BlockingQueue<Runnable> primingTasks, final DeliveryService ds) {
+			final BlockingQueue<Runnable> primingTasks, final DeliveryService ds, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys) {
 		generationTasks.add(() -> {
 			try {
-				final Zone zone = zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
+				final ZoneKey newZoneKey = signatureManager.generateZoneKey(name, list);
+				if (tr.isDnssecZoneDiffingEnabled() && domainsToZoneKeys.containsKey(domain)) {
+					final ZoneKey oldZoneKey = domainsToZoneKeys.get(domain);
+					if (zonesAreEqual(newZoneKey.getRecords(), oldZoneKey.getRecords())) {
+						final Zone oldZone = ZoneManager.zoneCache.getIfPresent(oldZoneKey);
+						if (oldZone != null) {
+							LOGGER.info("found matching ZoneKey for " + domain + " - copying from current Zone cache into new Zone cache - no re-signing necessary");
+							zc.put(oldZoneKey, oldZone);
+							newDomainsToZoneKeys.put(domain, oldZoneKey);
+							return;
+						}
+						LOGGER.warn("found matching ZoneKey for " + domain + " but the Zone was not found in the Zone cache");
+					} else {
+						LOGGER.info("new zone for " + domain + " is not equal to the old zone - re-signing necessary");
+					}
+				}
+				final Zone zone = zc.get(newZoneKey); // cause the zone to be loaded into the new cache
+				if (tr.isDnssecZoneDiffingEnabled()) {
+					newDomainsToZoneKeys.put(domain, newZoneKey);
+				}
 				final CacheRegister data = tr.getCacheRegister();
 				final JsonNode config = data.getConfig();
 				final boolean primeDynCache = JsonUtils.optBoolean(config, "dynamic.cache.primer.enabled", true);
@@ -536,6 +594,42 @@ public class ZoneManager extends Resolver {
 				}
 			}
 		}
+	}
+
+	// Check if the zones are equal except for the SOA record serial number, NSEC, or RRSIG records
+	private static boolean zonesAreEqual(final List<Record> newRecords, final List<Record> oldRecords) {
+		final List<Record> oldRecordsCopy = oldRecords.stream()
+				.filter(r -> !(r instanceof NSECRecord) && !(r instanceof RRSIGRecord))
+				.collect(Collectors.toList());
+		final List<Record> newRecordsCopy = newRecords.stream()
+				.filter(r -> !(r instanceof NSECRecord) && !(r instanceof RRSIGRecord))
+				.collect(Collectors.toList());
+		if (oldRecordsCopy.size() != newRecordsCopy.size()) {
+			return false;
+		}
+		Collections.sort(oldRecordsCopy);
+		Collections.sort(newRecordsCopy);
+		for (int i = 0; i < newRecordsCopy.size(); i++) {
+			final Record newRec = newRecordsCopy.get(i);
+			final Record oldRec = oldRecordsCopy.get(i);
+			if (newRec instanceof SOARecord && oldRec instanceof SOARecord) {
+				final SOARecord newSOA = (SOARecord) newRec;
+				final SOARecord oldSOA = (SOARecord) oldRec;
+				// cmpSOA is a copy of newSOA except with the serial of oldSOA
+				final SOARecord cmpSOA = new SOARecord(newSOA.getName(), newSOA.getDClass(), newSOA.getTTL(),
+						newSOA.getHost(), newSOA.getAdmin(), oldSOA.getSerial(), newSOA.getRefresh(),
+						newSOA.getRetry(), newSOA.getExpire(), newSOA.getMinimum());
+				if (oldSOA.equals(cmpSOA)) {
+					continue;
+				}
+				return false;
+			}
+			if (newRec.equals(oldRec)) {
+				continue;
+			}
+			return false;
+		}
+		return true;
 	}
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")

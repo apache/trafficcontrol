@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
@@ -76,7 +77,7 @@ public final class SignatureManager {
 		synchronized(SignatureManager.class) {
 			final JsonNode config = cacheRegister.getConfig();
 
-			final boolean dnssecEnabled = JsonUtils.optBoolean(config, "dnssec.enabled");
+			final boolean dnssecEnabled = JsonUtils.optBoolean(config, TrafficRouter.DNSSEC_ENABLED);
 			if (dnssecEnabled) {
 				setDnssecEnabled(true);
 				setExpiredKeyAllowed(JsonUtils.optBoolean(config, "dnssec.allow.expired.keys", true)); // allowing this by default is the safest option
