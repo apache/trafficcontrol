@@ -135,15 +135,28 @@ func createDummyType(field string) *TOType {
 
 }
 
+func TestUpdateInvalidType(t *testing.T) {
+	invalidUpdateType := createDummyType("test")
+
+	_, err, statusCode := invalidUpdateType.Update()
+	if err == nil {
+		t.Fatalf("expected update type tp have an error")
+	}
+	if statusCode != http.StatusBadRequest {
+		t.Fatalf("expected update to return a 400 error")
+	}
+}
+
+
 func TestCreateInvalidType(t *testing.T) {
 	invalidCreateType := createDummyType("test")
 
 	_, err, statusCode := invalidCreateType.Create()
 	if err == nil {
-		t.Errorf("expected create type to have an error")
+		t.Fatalf("expected create type to have an error")
 	}
 	if statusCode != http.StatusBadRequest {
-		t.Errorf("expected create type to return a 400 error")
+		t.Fatalf("expected create type to return a 400 error")
 	}
 }
 
@@ -152,10 +165,10 @@ func TestDeleteInvalidType(t *testing.T) {
 
 	_, err, statusCode := invalidDeleteType.Delete()
 	if err == nil {
-		t.Errorf("expected delete type to have an error")
+		t.Fatalf("expected delete type to have an error")
 	}
 	if statusCode != http.StatusBadRequest {
-		t.Errorf("expected delete type to return a 400 error")
+		t.Fatalf("expected delete type to return a 400 error")
 	}
 }
 

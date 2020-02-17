@@ -98,7 +98,13 @@ func (typ *TOType) Validate() error {
 }
 
 func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
-func (tp *TOType) Update() (error, error, int)              { return api.GenericUpdate(tp) }
+
+func (tp *TOType) Update() (error, error, int) {
+	if !usedInServerTable(tp.UseInTable) {
+		return nil, errors.New("can not update type"), http.StatusBadRequest
+	}
+	return api.GenericUpdate(tp)
+}
 
 func (tp *TOType) Delete() (error, error, int) {
 	if tp.UseInTable == nil {

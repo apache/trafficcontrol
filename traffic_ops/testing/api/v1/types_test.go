@@ -66,38 +66,44 @@ func CreateTestTypes(t *testing.T) {
 
 func UpdateTestTypes(t *testing.T) {
 	t.Log("---- UpdateTestTypes ----")
+	expectedTypeName := "testType%v"
 
-	firstType := testData.Types[0]
-	// Retrieve the Type by name so we can get the id for the Update
-	resp, _, err := TOSession.GetTypeByName(firstType.Name)
-	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v", firstType.Name, err)
-	}
-	remoteType := resp[0]
-	expectedTypeName := "testType1"
-	remoteType.Name = expectedTypeName
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
-	if err != nil {
-		t.Errorf("cannot UPDATE Type by id: %v - %v", err, alert)
-	}
+	for i, typ := range testData.Types {
+		expectedTypeName = fmt.Sprintf(expectedTypeName, i)
+		originalType := typ
+		resp, _, err := TOSession.GetTypeByName(originalType.Name)
+		if err != nil {
+			t.Fatalf("cannot GET Type by name: %v - %v", originalType.Name, err)
+		}
+		remoteType := resp[0]
+		remoteType.Name = expectedTypeName
+		var alert tc.Alerts
+		alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
+		if remoteType.UseInTable != "server"  {
+			if err == nil {
+				t.Fatalf("expected UPDATE on type %v to fail", remoteType.ID)
+			}
+			continue
+		} else if err != nil {
+			t.Fatalf("cannot UPDATE Type by id: %v - %v", err, alert)
+		}
 
-	// Retrieve the Type to check Type name got updated
-	resp, _, err = TOSession.GetTypeByID(remoteType.ID)
-	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v", firstType.Name, err)
-	}
-	respType := resp[0]
-	if respType.Name != expectedTypeName {
-		t.Errorf("results do not match actual: %s, expected: %s", respType.Name, expectedTypeName)
-	}
+		// Retrieve the Type to check Type name got updated
+		resp, _, err = TOSession.GetTypeByID(remoteType.ID)
+		if err != nil {
+			t.Fatalf("cannot GET Type by ID: %v - %v", originalType.ID, err)
+		}
+		respType := resp[0]
+		if respType.Name != expectedTypeName {
+			t.Fatalf("results do not match actual: %s, expected: %s", respType.Name, expectedTypeName)
+		}
 
-	t.Log("Response Type: ", respType)
-
-	respType.Name = firstType.Name
-	alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType)
-	if err != nil {
-		t.Errorf("cannot restore UPDATE Type by id: %v - %v", err, alert)
+		// Revert name change
+		respType.Name = originalType.Name
+		alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType)
+		if err != nil {
+			t.Fatalf("cannot restore UPDATE Type by id: %v - %v", err, alert)
+		}
 	}
 }
 
