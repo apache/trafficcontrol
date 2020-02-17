@@ -305,7 +305,7 @@ to-add-sslkeys() {
 		json_response=$(to-post 'api/2.0/deliveryservices/sslkeys/add' "$json_request")
 		if [[ -n "$json_response" ]] ; then
 			sleep 3
-			cdn_sslkeys_response=$(to-get "api/2.0/cdns/name/$1/sslkeys.json" | jq '.response[] | length')
+			cdn_sslkeys_response=$(to-get "api/2.0/cdns/name/$1/sslkeys" | jq '.response[] | length')
 			if ((cdn_sslkeys_response>0)); then
 				break
 			else
