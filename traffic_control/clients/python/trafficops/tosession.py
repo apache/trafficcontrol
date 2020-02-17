@@ -1217,7 +1217,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'cdns/{cdn_name:s}/federations/{federation_id:d}', ('2.0',,))
+	@api_request('delete', 'cdns/{cdn_name:s}/federations/{federation_id:d}', ('2.0',))
 	def delete_federation_in_cdn(self, cdn_name=None, federation_id=None):
 		"""
 		Delete a federation.
