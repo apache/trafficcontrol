@@ -22,13 +22,16 @@ package api
  */
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
+	"net/mail"
 	"net/smtp"
 	"regexp"
 	"strconv"
@@ -849,6 +852,36 @@ func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, u)
 	*r = *r.WithContext(ctx)
+}
+
+// SendEmailFromTemplate allows a user to input an html template to format an email.  It parses the template and creates a message before calling the SendMail method.
+// SendEmailFromTemplate returns (in order) an HTTP status code, a user-friendly error, and an error fit for
+// logging to system error logs. If either the user or system error is non-nil, the operation failed,
+// and the HTTP status code indicates the type of failure.
+func SendEmailFromTemplate(config config.Config, header string, data interface{}, templateFile string, toEmail string) (int, error, error) {
+	email := rfc.EmailAddress{
+		Address: mail.Address{Name: "", Address: toEmail},
+	}
+
+	msgBodyBuffer, err := parseTemplate(templateFile, data)
+	if err != nil {
+		return http.StatusInternalServerError, err, nil
+	}
+	msg := append([]byte(header), msgBodyBuffer.Bytes()...)
+
+	return SendMail(email, msg, &config)
+
+}
+
+func parseTemplate(templateFileName string, data interface{}) (*bytes.Buffer, error) {
+	t, err := template.ParseFiles(templateFileName)
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	err = t.Execute(buf, data)
+
+	return buf, err
 }
 
 type loginAuth struct {

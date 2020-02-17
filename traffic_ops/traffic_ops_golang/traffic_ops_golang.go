@@ -83,11 +83,11 @@ func main() {
 			for _, r := range routes {
 				_, isBypassedToPerl := perlRoutes[r.ID]
 				_, isDisabled := disabledRoutes[r.ID]
-				fmt.Printf("id=%d\tmethod=%s\tversion=%.1f\tpath=%s\tcan_bypass_to_perl=%t\tis_bypassed_to_perl=%t\tis_disabled=%t\n", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl, isBypassedToPerl, isDisabled)
+				fmt.Printf("id=%d\tmethod=%s\tversion=%d.%d\tpath=%s\tcan_bypass_to_perl=%t\tis_bypassed_to_perl=%t\tis_disabled=%t\n", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path, r.CanBypassToPerl, isBypassedToPerl, isDisabled)
 			}
 		} else {
 			for _, r := range routes {
-				fmt.Printf("id=%d\tmethod=%s\tversion=%.1f\tpath=%s\tcan_bypass_to_perl=%t\n", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl)
+				fmt.Printf("id=%d\tmethod=%s\tversion=%d.%d\tpath=%s\tcan_bypass_to_perl=%t\n", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path, r.CanBypassToPerl)
 			}
 		}
 		os.Exit(0)

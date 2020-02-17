@@ -89,6 +89,9 @@ func generatePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, cfg *c
 		return errors.New("generating certificate: " + err.Error())
 	}
 	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(crt), Key: string(key), CSR: string(csr)}
+
+	dsSSLKeys.AuthType = tc.SelfSignedCertAuthType
+
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		return errors.New("putting riak keys: " + err.Error())
 	}
