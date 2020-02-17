@@ -21,6 +21,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -98,17 +99,33 @@ func (typ *TOType) Validate() error {
 
 func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
 func (tp *TOType) Update() (error, error, int)              { return api.GenericUpdate(tp) }
-func (tp *TOType) Delete() (error, error, int)              { return api.GenericDelete(tp) }
+
+func (tp *TOType) Delete() (error, error, int) {
+	if tp.UseInTable == nil {
+		var tableType *string
+		if tp.ID != nil {
+			query := `SELECT use_in_table from type where id=$1`
+			err := tp.ReqInfo.Tx.Tx.QueryRow( query, tp.ID).Scan(&tp.UseInTable)
+			if err == nil {
+				tableType = tp.UseInTable
+			}
+		}
+		if !usedInServerTable(tableType) {
+			return nil, errors.New(fmt.Sprintf("can not delete type")), http.StatusBadRequest
+		}
+	}
+	return api.GenericDelete(tp)
+}
 
 func (tp *TOType) Create() (error, error, int)              {
-	if !usedInServerTable(tp) {
+	if !usedInServerTable(tp.UseInTable) {
 		return nil, errors.New("can not create type"), http.StatusBadRequest
 	}
 	return api.GenericCreate(tp)
 }
 
-func usedInServerTable(tp *TOType) bool {
-	if tp.UseInTable == nil || *tp.UseInTable != "server" {
+func usedInServerTable(useInTable *string) bool {
+	if useInTable == nil || *useInTable != "server" {
 		return false
 	}
 	return true

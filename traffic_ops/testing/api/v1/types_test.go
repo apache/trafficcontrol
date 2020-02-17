@@ -118,17 +118,36 @@ func GetTestTypes(t *testing.T) {
 func DeleteTestTypes(t *testing.T) {
 	t.Log("---- DeleteTestTypes ----")
 
+	db, err := OpenConnection()
+	if err != nil {
+		t.Fatal("cannot open db")
+	}
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			t.Errorf("unable to close connection to db, error: %v", err.Error())
+		}
+	}()
+	dbDeleteTemplate := "DELETE FROM type WHERE name='%v';"
+
 	for _, typ := range testData.Types {
 		// Retrieve the Type by name so we can get the id for the Update
 		resp, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil || len(resp) == 0 {
-			t.Errorf("cannot GET Type by name: %v - %v", typ.Name, err)
+			t.Fatalf("cannot GET Type by name: %v - %v", typ.Name, err.Error())
 		}
 		respType := resp[0]
 
-		delResp, _, err := TOSession.DeleteTypeByID(respType.ID)
-		if err != nil {
-			t.Errorf("cannot DELETE Type by name: %v - %v", err, delResp)
+		if respType.UseInTable != "server" {
+			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, respType.Name), "type")
+			if  err != nil {
+				t.Fatalf("cannot DELETE Type by name: %v", err.Error())
+			}
+		} else {
+			delResp, _, err := TOSession.DeleteTypeByID(respType.ID)
+			if err != nil {
+				t.Fatalf("cannot DELETE Type by name: %v - %v", err, delResp)
+			}
 		}
 
 		// Retrieve the Type to see if it got deleted

@@ -124,9 +124,8 @@ func TestInterfaces(t *testing.T) {
 	}
 }
 
-func TestCreateType(t *testing.T) {
-	field := "test"
-	p := TOType{
+func createDummyType(field string) *TOType {
+	return &TOType{
 		TypeNullable: tc.TypeNullable{
 			Name: &field,
 			Description: &field,
@@ -134,12 +133,29 @@ func TestCreateType(t *testing.T) {
 		},
 	}
 
-	_, err, statusCode := p.Create()
+}
+
+func TestCreateInvalidType(t *testing.T) {
+	invalidCreateType := createDummyType("test")
+
+	_, err, statusCode := invalidCreateType.Create()
 	if err == nil {
 		t.Errorf("expected create type to have an error")
 	}
 	if statusCode != http.StatusBadRequest {
 		t.Errorf("expected create type to return a 400 error")
+	}
+}
+
+func TestDeleteInvalidType(t *testing.T) {
+	invalidDeleteType := createDummyType("other")
+
+	_, err, statusCode := invalidDeleteType.Delete()
+	if err == nil {
+		t.Errorf("expected delete type to have an error")
+	}
+	if statusCode != http.StatusBadRequest {
+		t.Errorf("expected delete type to return a 400 error")
 	}
 }
 
