@@ -597,7 +597,7 @@ public class ZoneManager extends Resolver {
 	}
 
 	// Check if the zones are equal except for the SOA record serial number, NSEC, or RRSIG records
-	private static boolean zonesAreEqual(final List<Record> newRecords, final List<Record> oldRecords) {
+	protected static boolean zonesAreEqual(final List<Record> newRecords, final List<Record> oldRecords) {
 		final List<Record> oldRecordsCopy = oldRecords.stream()
 				.filter(r -> !(r instanceof NSECRecord) && !(r instanceof RRSIGRecord))
 				.collect(Collectors.toList());
@@ -619,12 +619,12 @@ public class ZoneManager extends Resolver {
 				final SOARecord cmpSOA = new SOARecord(newSOA.getName(), newSOA.getDClass(), newSOA.getTTL(),
 						newSOA.getHost(), newSOA.getAdmin(), oldSOA.getSerial(), newSOA.getRefresh(),
 						newSOA.getRetry(), newSOA.getExpire(), newSOA.getMinimum());
-				if (oldSOA.equals(cmpSOA)) {
+				if (oldSOA.equals(cmpSOA) && oldSOA.getTTL() == cmpSOA.getTTL()) {
 					continue;
 				}
 				return false;
 			}
-			if (newRec.equals(oldRec)) {
+			if (newRec.equals(oldRec) && newRec.getTTL() == oldRec.getTTL()) {
 				continue;
 			}
 			return false;
