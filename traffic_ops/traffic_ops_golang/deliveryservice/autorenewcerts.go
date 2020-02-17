@@ -123,7 +123,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		dsExpInfo := DsExpirationInfo{}
 		keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), tx, cfg.RiakAuthOptions, cfg.RiakPort)
 		if err != nil {
-			log.Errorf("getting ssl keys for xmlId: %s and version: %s : %s", ds.XmlId, ds.Version.Int64, err.Error())
+			log.Errorf("getting ssl keys for xmlId: %s and version: %d : %s", ds.XmlId, ds.Version.Int64, err.Error())
 			dsExpInfo.XmlId = ds.XmlId
 			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
 			dsExpInfo.Error = errors.New("getting ssl keys for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)) + " :" + err.Error())
@@ -131,7 +131,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			continue
 		}
 		if !ok {
-			log.Errorf("no object found for the specified key with xmlId: %s and version: %s", ds.XmlId, ds.Version.Int64)
+			log.Errorf("no object found for the specified key with xmlId: %s and version: %d", ds.XmlId, ds.Version.Int64)
 			dsExpInfo.XmlId = ds.XmlId
 			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
 			dsExpInfo.Error = errors.New("no object found for the specified key with xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
@@ -156,7 +156,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			continue
 		}
 
-		log.Debugf("renewing certificate for xmlId = %s, version = %s, and auth type = %s ", ds.XmlId, ds.Version.Int64, keyObj.AuthType)
+		log.Debugf("renewing certificate for xmlId = %s, version = %d, and auth type = %s ", ds.XmlId, ds.Version.Int64, keyObj.AuthType)
 
 		newVersion := util.JSONIntStr(keyObj.Version.ToInt64() + 1)
 
@@ -191,7 +191,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 	if cfg.SMTP.Enabled && cfg.ConfigLetsEncrypt.SendExpEmail {
 		errCode, userErr, sysErr := AlertExpiringCerts(keysFound, *cfg)
 		if userErr != nil || sysErr != nil {
-			log.Errorf("cert autorenewal: sending email: errCode: %s userErr: %s sysErr: %s", errCode, userErr.Error(), sysErr.Error())
+			log.Errorf("cert autorenewal: sending email: errCode: %d userErr: %s sysErr: %s", errCode, userErr.Error(), sysErr.Error())
 			return
 		}
 
