@@ -158,24 +158,29 @@ func WriteAndBackup(path string, backupDirectory string, bts []byte) error {
 
 // hasUpdatePending returns whether an update is pending, the revalPending status (which will be needed later in the clear update POST), and any error.
 func hasUpdatePending(toc *to.Session, hostname string) (bool, bool, error) {
-	upd, _, err := toc.GetUpdate(hostname)
+	upd, _, err := toc.GetServerByHostName(hostname)
 	if err != nil {
 		return false, false, errors.New("getting update from Traffic Ops: " + err.Error())
+	} else if len(upd) != 1 {
+		return false, false, fmt.Errorf("Want exactly one server with hostname '%s', got %d", hostname, len(upd))
 	}
-	return upd.UpdatePending, upd.RevalPending, nil
+	return upd[0].UpdPending, upd[0].RevalPending, nil
 }
 
 // clearUpdatePending clears the given host's update pending flag in Traffic Ops. It takes the host to clear, and the old revalPending flag to send.
 func clearUpdatePending(toc *to.Session, hostname string, revalPending bool) error {
-	revalPendingPostVal := 0
-	if revalPending == false {
-		revalPendingPostVal = to.UpdateStatusClear
-	} else {
-		revalPendingPostVal = to.UpdateStatusPending
-	}
-	_, err := toc.SetUpdate(hostname, to.UpdateStatusClear, revalPendingPostVal)
+	srv, _, err := toc.GetServerByHostName(hostname)
 	if err != nil {
-		return errors.New("setting update pending on Traffic Ops: " + err.Error())
+		return fmt.Errorf("Failed to update reval_pending: %v", err)
+	} else if len(srv) != 1 {
+		return fmt.Errorf("Want exactly one server with hostname '%s', got '%d'", hostname, len(srv))
+	}
+
+	srv[0].RevalPending = revalPending
+	srv[0].UpdPending = false
+	alerts, _, err := toc.UpdateServerByID(srv[0].ID, srv[0])
+	if err != nil {
+		return fmt.Errorf("setting update pending on Traffic Ops: %v (Alerts: %+v)", err, alerts.Alerts)
 	}
 	return nil
 }
