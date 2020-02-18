@@ -10,7 +10,7 @@
 			"prefix": "app",
 			"schematics": {
 				"@schematics/angular:component": {
-					"styleext": "scss",
+					"style": "scss",
 					"lintFix": true,
 					"prefix": ""
 				},
@@ -32,6 +32,7 @@
 				"build": {
 					"builder": "@angular-devkit/build-angular:browser",
 					"options": {
+						"aot": true,
 						"outputPath": "dist/browser",
 						"index": "src/index.html",
 						"main": "src/main.ts",
@@ -67,6 +68,10 @@
 									"type": "initial",
 									"maximumWarning": "2mb",
 									"maximumError": "5mb"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "6kb"
 								}
 							]
 						}
@@ -132,7 +137,8 @@
 									"replace": "src/environments/environment.ts",
 									"with": "src/environments/environment.prod.ts"
 								}
-							]
+							],
+							"optimization": true
 						}
 					}
 				}

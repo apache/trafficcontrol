@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+export { renderModule, renderModuleFactory } from '@angular/platform-server';
 import { enableProdMode } from '@angular/core';
 
 import { environment } from './environments/environment';
