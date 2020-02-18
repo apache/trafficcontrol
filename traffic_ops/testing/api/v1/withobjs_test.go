@@ -50,9 +50,11 @@ const (
 	FederationResolvers
 	FederationUsers
 	Origins
+	Parameter
 	Parameters
 	PhysLocations
 	Profiles
+	ProfileParameter
 	ProfileParameters
 	Regions
 	Roles
@@ -90,10 +92,12 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	FederationUsers:                      {CreateTestFederationUsers, DeleteTestFederationUsers},
 	FederationResolvers:                  {CreateTestFederationResolvers, DeleteTestFederationResolvers},
 	Origins:                              {CreateTestOrigins, DeleteTestOrigins},
-	Parameters:                           {CreateTestParameters, DeleteTestParameters},
+	Parameter:                            {CreateTestParameters, DeleteTestParameters},
+	Parameters:                           {CreateMultipleTestParameters, DeleteTestParameters},
 	PhysLocations:                        {CreateTestPhysLocations, DeleteTestPhysLocations},
 	Profiles:                             {CreateTestProfiles, DeleteTestProfiles},
-	ProfileParameters:                    {CreateTestProfileParameters, DeleteTestProfileParameters},
+	ProfileParameter:                     {CreateTestProfileParameters, DeleteTestProfileParameters},
+	ProfileParameters:                    {CreateMultipleTestProfileParameters, DeleteTestProfileParameters},
 	Regions:                              {CreateTestRegions, DeleteTestRegions},
 	Roles:                                {CreateTestRoles, DeleteTestRoles},
 	ServerCapabilities:                   {CreateTestServerCapabilities, DeleteTestServerCapabilities},
