@@ -97,7 +97,9 @@ const appRoutes: Routes = [
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),
-		RouterModule.forRoot(appRoutes),
+		RouterModule.forRoot(appRoutes, {
+			initialNavigation: 'enabled'
+		}),
 		AppRoutingModule,
 		HttpClientModule,
 		ReactiveFormsModule,
