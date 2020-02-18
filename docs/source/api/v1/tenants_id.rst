@@ -80,8 +80,6 @@ Response Structure
 
 ``PUT``
 =======
-.. warning:: Inactive tenants cannot be deleted or modified in any way by this request method, so be careful whenever setting ``active`` to ``false``. This is a known bug in Traffic Ops, and is tracked by `GitHub Issue #2732 <https://github.com/apache/trafficcontrol/issues/2732>`_.
-
 Updates a specific tenant.
 
 :Auth. Required: Yes
@@ -157,8 +155,6 @@ Response Structure
 
 ``DELETE``
 ==========
-.. warning:: Inactive tenants cannot be deleted or modified in any way by this request method, so be careful whenever setting ``active`` to ``false``. This is a known bug in Traffic Ops, and is tracked by `GitHub Issue #2732 <https://github.com/apache/trafficcontrol/issues/2732>`_.
-
 Deletes a specific tenant.
 
 :Auth. Required: Yes

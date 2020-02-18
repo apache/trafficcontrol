@@ -19,8 +19,6 @@
 ``deliveryservices/sslkeys/generate/letsencrypt``
 *************************************************
 
-.. versionadded:: 1.5
-
 ``POST``
 ========
 Generates an SSL certificate and private key using Let's Encrypt for a :term:`Delivery Service`
@@ -42,7 +40,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.5/deliveryservices/sslkeys/generate/letsencrypt HTTP/1.1
+	POST /api/2.0/deliveryservices/sslkeys/generate/letsencrypt HTTP/1.1
 	Content-Type: application/json
 
 	{

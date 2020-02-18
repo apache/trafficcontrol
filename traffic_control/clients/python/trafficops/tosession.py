@@ -841,7 +841,7 @@ class TOSession(RestApiSession):
 	def get_server_config_files(self, host_name=None, query_params=None):
 		"""
 		Get the configuiration files for a given host name
-		:ref:`to-api-servers-server-configfiles-ats`
+		:ref:`to-api-v1-servers-server-configfiles-ats`
 		:param host_name: The host name to get config files for
 		:type host_name: String
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -852,7 +852,7 @@ class TOSession(RestApiSession):
 	def get_server_specific_config_file(self, host_name=None, config_file=None, query_params=None):
 		"""
 		Get the configuiration files for a given host name and config file
-		:ref:`to-api-servers-server-configfiles-ats-filename`
+		:ref:`to-api-v1-servers-server-configfiles-ats-filename`
 		:param host_name: The host name to get config files for
 		:type host_name: String
 		:param config_file: The config file name to retrieve for host
@@ -867,7 +867,7 @@ class TOSession(RestApiSession):
 	                                      query_params=None):
 		"""
 		Get the configuiration files for a given profile name and config file
-		:ref:`to-api-profiles-profile-configfiles-ats-filename`
+		:ref:`to-api-v1-profiles-profile-configfiles-ats-filename`
 		:param profile_name: The profile name to get config files for
 		:type host_name: String
 		:param config_file: The config file name to retrieve for host
@@ -880,7 +880,7 @@ class TOSession(RestApiSession):
 	def get_cdn_specific_config_file(self, cdn_name=None, config_file=None, query_params=None):
 		"""
 		Get the configuiration files for a given cdn name and config file
-		:ref:`to-api-cdns-cdn-configfiles-ats-filename`
+		:ref:`to-api-v1-cdns-cdn-configfiles-ats-filename`
 		:param cdn_name: The cdn name to get config files for
 		:type cdn_name: String
 		:param config_file: The config file name to retrieve for host

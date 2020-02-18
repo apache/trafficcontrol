@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the aggregate capacity percentages of all locations (cache groups) for a given CDN.
+Retrieves the aggregate capacity percentages of all :term:`Cache Groups` for a given CDN.
 
 :Auth. Required: Yes
 :Roles Required: None

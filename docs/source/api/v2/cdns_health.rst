@@ -18,7 +18,7 @@
 ***************
 ``cdns/health``
 ***************
-Extract health information from all Cache Groups across all CDNs
+Extract health information from all :term:`Cache Groups` across all CDNs
 
 .. seealso:: :ref:`health-proto`
 

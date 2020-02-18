@@ -13,6 +13,8 @@
 .. limitations under the License.
 ..
 
+.. _to-api-v1-user-id-deliveryservices-available:
+
 ******************************************
 ``user/{{ID}}/deliveryservices/available``
 ******************************************

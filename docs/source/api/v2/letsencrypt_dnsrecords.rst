@@ -13,13 +13,11 @@
 .. limitations under the License.
 ..
 
-.. _to-letsencrypt-dnsrecord:
+.. _to-api-letsencrypt-dnsrecord:
 
 **************************
 ``letsencrypt/dnsrecords``
 **************************
-
-.. versionadded:: 1.5
 
 ``GET``
 ========
@@ -42,7 +40,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.5/letsencrypt/dnsrecord?fqdn=_acme-challenge.demo1.example.com. HTTP/1.1
+	GET /api/2.0/letsencrypt/dnsrecord?fqdn=_acme-challenge.demo1.example.com. HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

@@ -101,8 +101,6 @@ Response Structure
 
 ``POST``
 ========
-.. warning:: Inactive tenants cannot be deleted or modified in any way, so be careful whenever setting ``active`` to ``false``. This is a known bug in Traffic Ops, and is tracked by `GitHub Issue #2732 <https://github.com/apache/trafficcontrol/issues/2732>`_.
-
 Create a new tenant.
 
 :Auth. Required: Yes

@@ -39,7 +39,7 @@ Request Structure
 :organization: An optional field which, if present, will represent the organization for which the SSL certificate was generated
 :state:        An optional field which, if present, will represent the resident state or province of the generated SSL certificate
 :businessUnit: An optional field which, if present, will represent the business unit for which the SSL certificate was generated
-:version:      version of the keys being generated
+:version:      An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
 
 .. code-block:: http
 	:caption: Request Example
