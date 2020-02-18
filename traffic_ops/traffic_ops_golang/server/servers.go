@@ -96,11 +96,11 @@ func (s *TOServer) Validate() error {
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
 	errs := []error{}
-	if server.IPAddress == nil && server.IP6Address == nil {
+	if s.IPAddress == nil && s.IP6Address == nil {
 		errs = append(errs, tc.NeedsAtLeastOneIPError)
 	}
 
-	if server.IPGateway == nil && server.IP6Gateway == nil {
+	if s.IPGateway == nil && s.IP6Gateway == nil {
 		errs = append(errs, tc.NeedsAtLeastOneGatewayError)
 	}
 	validateErrs := validation.Errors{
@@ -379,7 +379,7 @@ func (s *TOServer) Update() (error, error, int) {
 	}
 
 	current := TOServer{}
-	err := s.ReqInfo.Tx.QueryRowx(selectV14UpdatesQuery() + ` WHERE sv.id=` + strconv.Itoa(*sv.ID)).StructScan(&current)
+	err := s.ReqInfo.Tx.QueryRowx(selectV14UpdatesQuery() + ` WHERE sv.id=` + strconv.Itoa(*s.ID)).StructScan(&current)
 	if err != nil {
 		return api.ParseDBError(err)
 	}

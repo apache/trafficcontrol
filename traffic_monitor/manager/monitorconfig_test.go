@@ -20,14 +20,11 @@ package manager
  */
 
 import (
-	"regexp"
 	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
-
-var url6Regex = regexp.MustCompile(`/\d+`)
 
 func TestCreateServerHealthPollURL(t *testing.T) {
 	tmpl := `http://${hostname}/_astats?application=&inf.name=${interface_name}`
@@ -35,7 +32,7 @@ func TestCreateServerHealthPollURL(t *testing.T) {
 
 	expectedV4 := `http://` + srv.IP + `/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + `]/_astats?application=system&inf.name=` + srv.InterfaceName
-	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv, url6Regex)
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
 	if expectedV4 != actualV4 {
 		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
@@ -52,7 +49,7 @@ func TestCreateServerHealthPollURLTemplatePort(t *testing.T) {
 
 	expectedV4 := `http://` + srv.IP + `:1234/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + `]:1234/_astats?application=system&inf.name=` + srv.InterfaceName
-	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv, url6Regex)
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
 	if expectedV4 != actualV4 {
 		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
@@ -69,7 +66,7 @@ func TestCreateServerHealthPollURLServerPort(t *testing.T) {
 
 	expectedV4 := `http://` + srv.IP + ":" + strconv.Itoa(srv.Port) + `/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + "]:" + strconv.Itoa(srv.Port) + `/_astats?application=system&inf.name=` + srv.InterfaceName
-	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv, url6Regex)
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
 	if expectedV4 != actualV4 {
 		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
@@ -86,7 +83,7 @@ func TestCreateServerHealthPollURLServerPortHTTPS(t *testing.T) {
 
 	expectedV4 := `https://` + srv.IP + ":" + strconv.Itoa(srv.HTTPSPort) + `/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `https://[` + srv.IP6 + "]:" + strconv.Itoa(srv.HTTPSPort) + `/_astats?application=system&inf.name=` + srv.InterfaceName
-	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv, url6Regex)
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
 	if expectedV4 != actualV4 {
 		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
@@ -106,7 +103,7 @@ func TestCreateServerHealthPollURLTemplateAndServerPort(t *testing.T) {
 
 	expectedV4 := `http://` + srv.IP + `:1234/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + `]:1234/_astats?application=system&inf.name=` + srv.InterfaceName
-	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv, url6Regex)
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
 	if expectedV4 != actualV4 {
 		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
@@ -124,7 +121,7 @@ func TestCreateServerStatPollURL(t *testing.T) {
 	expectedV4 := `http://` + srv.IP + `/_astats?application=&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + `]/_astats?application=&inf.name=` + srv.InterfaceName
 
-	healthV4, healthV6 := createServerHealthPollURLs(tmpl, srv, url6Regex)
+	healthV4, healthV6 := createServerHealthPollURLs(tmpl, srv)
 	actualV4 := createServerStatPollURL(healthV4)
 	actualV6 := createServerStatPollURL(healthV6)
 

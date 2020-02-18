@@ -24,7 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
-	"regexp"
+	"strings"
 
 	"golang.org/x/sys/unix"
 
@@ -45,8 +45,6 @@ import (
 //
 func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData, trafficMonitorConfigFileName string) error {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil, cfg.CRConfigHistoryCount, cfg))
-
-	url6Regex := regexp.MustCompile(`/\d+`)
 
 	localStates := peer.NewCRStatesThreadsafe() // this is the local state as discoverer by this traffic_monitor
 	fetchCount := threadsafe.NewUint()          // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
@@ -86,7 +84,6 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		appData,
 		toSession,
 		toData,
-		url6Regex,
 	)
 
 	combinedStates, combineStateFunc := StartStateCombiner(events, peerStates, localStates, toData)
@@ -203,4 +200,14 @@ func startSignalFileReloader(filename string, sig os.Signal, f func([]byte, erro
 			f(ioutil.ReadFile(filename))
 		}
 	}()
+}
+
+// ipv6CIDRStrToAddr takes an IPv6 CIDR string, e.g. `2001:DB8::1/32` returns `2001:DB8::1`.
+// It does not verify cidr is a valid CIDR or IPv6. It only removes the first slash and everything after it, for performance.
+func ipv6CIDRStrToAddr(cidr string) string {
+	i := strings.Index(cidr, `/`)
+	if i == -1 {
+		return cidr
+	}
+	return cidr[:i]
 }

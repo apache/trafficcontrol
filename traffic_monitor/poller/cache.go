@@ -181,25 +181,19 @@ func poller(
 			pollID := atomic.AddUint64(&pollNum, 1)
 			pollFinishedChan := make(chan uint64)
 			log.Debugf("poll %v %v start\n", pollID, time.Now())
-			if usingIPv4 {
-				bts, reqEnd, reqTime, err := pollFunc(pollCtx, url, host, pollID)
-				rdr := io.Reader(nil)
-				if bts != nil {
-					rdr = bytes.NewReader(bts) // TODO change handler to take bytes? Benchmark?
-				} else {
-				}
-				log.Debugf("poll %v %v poller end\n", pollID, time.Now())
-				go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, usingIPv4, pollFinishedChan)
-			} else {
-				bts, reqEnd, reqTime, err := pollFunc(pollCtx, url6, host, pollID)
-				rdr := io.Reader(nil)
-				if bts != nil {
-					rdr = bytes.NewReader(bts) // TODO change handler to take bytes? Benchmark?
-				} else {
-				}
-				log.Debugf("poll %v %v poller end\n", pollID, time.Now())
-				go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, usingIPv4, pollFinishedChan)
+			pollUrl := url
+			if !usingIPv4 {
+				pollUrl = url6
 			}
+
+			bts, reqEnd, reqTime, err := pollFunc(pollCtx, pollUrl, host, pollID)
+			rdr := io.Reader(nil)
+			if bts != nil {
+				rdr = bytes.NewReader(bts) // TODO change handler to take bytes? Benchmark?
+			}
+
+			log.Debugf("poll %v %v poller end\n", pollID, time.Now())
+			go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, usingIPv4, pollFinishedChan)
 
 			if oscillateProtocols {
 				usingIPv4 = !usingIPv4
