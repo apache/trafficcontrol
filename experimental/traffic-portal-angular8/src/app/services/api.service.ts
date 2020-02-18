@@ -23,6 +23,7 @@ import { DeliveryService } from '../models/deliveryservice';
 import { InvalidationJob } from '../models/invalidation';
 import { Type } from '../models/type';
 import { Role, User, Capability } from '../models/user';
+import { Server } from '../models/server';
 
 function constructDataSetFromResponse (r: any): DataSetWithSummary {
 	if (!r.series || !r.series.name) {
@@ -631,6 +632,15 @@ export class APIService {
 		return this.post(path, job).pipe(map(
 			r => true,
 			e => false
+		));
+	}
+
+	public getServers(): Observable<Array<Server>> {
+		let path = `/api/${this.API_VERSION}/servers`;
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as Array<Server>;
+			}
 		));
 	}
 }

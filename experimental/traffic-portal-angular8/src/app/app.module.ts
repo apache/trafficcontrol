@@ -50,6 +50,7 @@ import { LinechartDirective } from './directives/linechart.directive';
 import { OpenableDirective } from './directives/openable.directive';
 import { CustomvalidityDirective } from './directives/customvalidity.directive';
 import { CurrentuserComponent } from './components/currentuser/currentuser.component';
+import { ServersPageComponent } from './components/servers-page/servers-page.component';
 
 Chart.plugins.register({
 	id: 'whiteBackground',
@@ -73,7 +74,8 @@ const appRoutes: Routes = [
 	{ path: 'me', component: CurrentuserComponent},
 	{ path: 'new.Delivery.Service', component: NewDeliveryServiceComponent},
 	{ path: 'deliveryservice/:id', component: DeliveryserviceComponent},
-	{ path: 'deliveryservice/:id/invalidation-jobs', component: InvalidationJobsComponent}
+	{ path: 'deliveryservice/:id/invalidation-jobs', component: InvalidationJobsComponent},
+	{ path: 'servers', component: ServersPageComponent}
 ];
 
 @NgModule({
@@ -94,6 +96,7 @@ const appRoutes: Routes = [
 		OpenableDirective,
 		CustomvalidityDirective,
 		CurrentuserComponent,
+		ServersPageComponent,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),

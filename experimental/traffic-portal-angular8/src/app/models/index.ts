@@ -18,3 +18,4 @@ export * from './deliveryservice';
 export * from './invalidation';
 export * from './type';
 export * from './user';
+export * from './server';
