@@ -48,6 +48,9 @@ services:
       - "5000:5000" #Camelcade debugging port
     depends_on:
       - trafficops-perl-nondebug
+  trafficrouter:
+    ports:
+      - "5005:5005" # JPDA debugging port
   # The trafficmonitor-nondebug service exists to ensure that the trafficmonitor
   # base image exists before building trafficmonitor-debug.
   trafficmonitor-nondebug:

@@ -98,5 +98,26 @@ load_data_from() {
     cd -
 }
 
-# First,  load required data at the top level
+# If Traffic Router debugging is enabled, keep zone generation from timing out
+# (for 5 minutes), in case that is what you are debugging
+traffic_router_zonemanager_timeout() {
+  if [[ "$TR_DEBUG_ENABLE" != true ]]; then
+    return;
+  fi;
+
+  local modified_crconfig crconfig_path zonemanager_timeout;
+  crconfig_path=/traffic_ops_data/profiles/040-CCR_CIAB.json;
+  modified_crconfig="$(mktemp)";
+  # 5 minutes, which is the default zonemanager.cache.maintenance.interval value
+  zonemanager_timeout="$(( 60 * 5 ))";
+  jq \
+    --arg zonemanager_timeout $zonemanager_timeout \
+    '.params = .params + [{"configFile": "CRConfig.json", "name": "zonemanager.init.timeout", "value": $zonemanager_timeout}]' \
+    <$crconfig_path >"$modified_crconfig";
+  mv "$modified_crconfig" $crconfig_path;
+}
+
+traffic_router_zonemanager_timeout
+
+# Load required data at the top level
 load_data_from /traffic_ops_data
