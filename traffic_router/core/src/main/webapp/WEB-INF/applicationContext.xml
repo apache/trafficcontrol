@@ -89,6 +89,16 @@
 		<property name="steeringRegistry" ref="steeringRegistry" />
 	</bean>
 
+    <bean id="letsEncryptDnsChallengeWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher">
+        <property name="executorService" ref="ScheduledExecutorService" />
+        <property name="databasesDirectory" ref="databasesDir" />
+        <property name="databaseName" value="$[cache.letsencrypt.database:letsencrypt.json]" />
+        <property name="trafficOpsUtils" ref="trafficOpsUtils" />
+        <property name="trafficRouterManager" ref="trafficRouterManager" />
+		<property name="pollingInterval" value="60000" />
+        <property name="configHandler" ref="ConfigHandler" />
+	</bean>
+
 	<bean id="certificatesQueue" class="java.util.concurrent.ArrayBlockingQueue" >
 		<constructor-arg value="1"/>
 	</bean>
@@ -119,6 +129,7 @@
 		<property name="federationsWatcher" ref="federationsWatcher" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
 		<property name="steeringWatcher" ref="steeringWatcher" />
+		<property name="letsEncryptDnsChallengeWatcher" ref="letsEncryptDnsChallengeWatcher" />
 		<property name="certificatesPublisher" ref="certificatesPublisher"/>
 		<property name="certificatesPoller" ref="certificatesPoller"/>
 		<property name="publishStatusQueue" ref="publishStatusQueue" />
