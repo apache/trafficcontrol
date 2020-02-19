@@ -125,8 +125,6 @@ Single Object Format
 
 Array Format
 """"""""""""
-.. caution:: Array format is broken as of the time of this writing. Follow :issue:`3103` for further developments.
-
 :parameterId: The :ref:`parameter-id` of a :term:`Parameter` to assign to some :term:`Profile`
 :profileId:   The :ref:`profile-id` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameterId`` will be assigned
 
