@@ -41,9 +41,9 @@ var TableTenantDeliveryServicesController = function(tenant, deliveryServices, $
 			"initComplete": function(settings, json) {
 				try {
 					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_tenantDeliveryServicesTable_/')).columns;
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_tenantDSsTable_/')).columns;
 				} catch (e) {
-					console.error("Failure to retrieve required column info from localStorage (key=DataTables_tenantDeliveryServicesTable_/):", e);
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_tenantDSsTable_/):", e);
 				}
 			}
 		});

@@ -59,6 +59,11 @@ type Creator interface {
 	Validator
 }
 
+// MultipleCreator indicates whether an object using the shared handlers allows an array of objects in the POST
+type MultipleCreator interface {
+	AllowMultipleCreates() bool
+}
+
 type Reader interface {
 	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
 	Read() ([]interface{}, error, error, int)

@@ -115,8 +115,6 @@ Request Structure
 -----------------
 The request body may be in one of two formats, a single :term:`Parameter` object or an array of :term:`Parameter` objects. Each :term:`Parameter` object shall have the following keys:
 
-.. caution:: At the time of this writing, there is a bug in the Go rewrite of this endpoint such that the "array format" will not be accepted by the server. Watch :issue:`3093` for further developments
-
 :configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
 :name:        :ref:`parameter-name` of the :term:`Parameter`
 :secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`

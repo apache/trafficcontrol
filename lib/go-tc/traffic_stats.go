@@ -159,6 +159,19 @@ func (c *TrafficStatsConfig) OffsetString() string {
 	return fmt.Sprintf("%ds", int64(c.Start.Sub(time.Unix(0, 0))/time.Second)%iSecs)
 }
 
+// TrafficDSStatsResponseV1 represents a response from the
+// deliveryservice_stats "Traffic Stats" endpoints.
+// It contains the deprecated, legacy fields "Source" and "Version"
+type TrafficDSStatsResponseV1 struct {
+	TrafficDSStatsResponse
+	// Source has an unknown purpose. I believe this is supposed to name the "plugin" that provided
+	// the data - kept for compatibility with the Perl version(s) of the "Traffic Stats endpoints".
+	Source string `json:"source"`
+	// Version is supposed to represent the API version - but actually the API just reports a static
+	// number (TRAFFIC_STATS_VERSION).
+	Version string `json:"version"`
+}
+
 // TrafficDSStatsResponse represents a response from the
 // deliveryservice_stats` "Traffic Stats" endpoints.
 type TrafficDSStatsResponse struct {
@@ -166,14 +179,6 @@ type TrafficDSStatsResponse struct {
 	Series *TrafficStatsSeries `json:"series,omitempty"`
 	// Summary contains summary statistics of the data in Series
 	Summary *TrafficDSStatsSummary `json:"summary,omitempty"`
-	// Source has an unknown purpose. I believe this is supposed to name the "plugin" that provided
-	// the data - kept for compatibility with the Perl version(s) of the "Traffic Stats endpoints".
-	// Deprecated: this'll be removed or reworked to make more sense in the future
-	Source string `json:"source"`
-	// Version is supposed to represent the API version - but actually the API just reports a static
-	// number (TRAFFIC_STATS_VERSION).
-	// Deprecated: this'll be removed or reworked to make more sense in the future
-	Version string `json:"version"`
 }
 
 // TrafficStatsResponse represents the generic response from one of the "Traffic Stats endpoints" of the
