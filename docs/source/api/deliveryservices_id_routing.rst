@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the aggregated routing percentages for a given :term:`Delivery Service`. This is accomplished by polling stats from all online Traffic Routers via the ``/crs/stats`` route.
+Retrieves the aggregated routing percentages for a given :term:`Delivery Service`. This is accomplished by polling stats from all online Traffic Routers via the :ref:`tr-api-crs-stats` route.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
@@ -30,7 +30,7 @@ Retrieves the aggregated routing percentages for a given :term:`Delivery Service
 .. versionchanged:: 1.5
 	Older versions of this endpoint had different behaviors in handling non HTTP/DNS :term:`Delivery Services` and :term:`Delivery Service` regexps.
 	It used to return an empty response object if the :term:`Delivery Service` being requested did not have a HTTP or DNS type. It will now return an error.
-	For :term:`Delivery Service` regexps it used to use all regexps to compare host names in the routing stats which was incorrect. It will now only compare :term:`Delivery Service` host regexps.
+	For :term:`Delivery Service` regexps it used to use all regexps to compare host names in the routing stats which was incorrect. It will now only compare :term:`Delivery Service` host regular expression(s).
 
 Request Structure
 -----------------
