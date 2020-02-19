@@ -185,15 +185,9 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := struct {
-		Response tc.TrafficDSStatsResponse `json:"response"`
-	}{
-		Response: tc.TrafficDSStatsResponse{
-			Source:  tc.TRAFFIC_STATS_SOURCE,
-			Version: tc.TRAFFIC_STATS_VERSION,
-			Series:  nil,
-			Summary: nil,
-		},
+	resp :=tc.TrafficDSStatsResponseV1{
+		Source:  tc.TRAFFIC_STATS_SOURCE,
+		Version: tc.TRAFFIC_STATS_VERSION,
 	}
 
 	// TODO: as above, this could be done on TO itself, thus sending only one synchronous request
@@ -210,9 +204,9 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 
 		// match Perl implementation and set summary to zero values if no data
 		if summary != nil {
-			resp.Response.Summary = summary
+			resp.Summary = summary
 		} else {
-			resp.Response.Summary = &tc.TrafficDSStatsSummary{}
+			resp.Summary = &tc.TrafficDSStatsSummary{}
 		}
 
 	}
@@ -232,11 +226,20 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 				series.FormatTimestamps()
 			}
 
-			resp.Response.Series = series
+			resp.Series = series
 		}
 	}
 
-	respBts, err := json.Marshal(resp)
+	var respObj struct {
+		Response interface{} `json:"response"`
+	}
+	if inf.Version.Major > 1 {
+		respObj.Response = resp.TrafficDSStatsResponse
+	} else {
+		respObj.Response = resp
+	}
+
+	respBts, err := json.Marshal(respObj)
 	if err != nil {
 		sysErr = fmt.Errorf("Marshalling response: %v", err)
 		errCode = http.StatusInternalServerError
