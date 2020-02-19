@@ -1,3 +1,4 @@
+#!/usr/bin/env pwsh
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -68,7 +69,7 @@ if ($COMPOSE -eq "") {
 	$COMPOSE_ARGS = "run --rm '$env:COMPOSE_OPTIONS' -v '${PSScriptRoot}:$PSScriptRoot' -v '${USERHOME}:/root'";
 }
 
-$PROJECTS = & $COMPOSE $COMPOSE_ARGS, "-f", $COMPOSE_FILE, "config", "--services" | Out-String;
+$PROJECTS = & $COMPOSE $COMPOSE_ARGS "-f" $COMPOSE_FILE "config" "--services" | Out-String;
 
 if ($l) {
 	Write-Host $PROJECTS;
@@ -88,9 +89,9 @@ for ($i=0; $i -lt $args.Length; $i++) {
 	Write-Host "Building $PROJECT";
 
 	if ($v) {
-		& $COMPOSE $COMPOSE_ARGS, "-f", $COMPOSE_FILE, "build", $PROJECT | Write-Verbose;
+		& $COMPOSE $COMPOSE_ARGS "-f" $COMPOSE_FILE "build" $PROJECT | Write-Verbose;
 		if ($?) {
-			& $COMPOSE $COMPOSE_ARGS, "-f", $COMPOSE_FILE, "run", "--rm", $PROJECT | Write-Verbose;
+			& $COMPOSE $COMPOSE_ARGS "-f" $COMPOSE_FILE "run" "--rm" $PROJECT | Write-Verbose;
 			if ($? -eq $false) {
 				Write-Error "Failed to execute $PROJECT";
 				$code=$false;
@@ -100,9 +101,9 @@ for ($i=0; $i -lt $args.Length; $i++) {
 			$code=$false;
 		}
 	} else {
-		& $COMPOSE $COMPOSE_ARGS, "-f", $COMPOSE_FILE, "build", $PROJECT | Out-Null;
+		& $COMPOSE $COMPOSE_ARGS "-f" $COMPOSE_FILE "build" $PROJECT | Out-Null;
 		if ($?) {
-			& $COMPOSE $COMPOSE_ARGS, "-f", $COMPOSE_FILE, "run", "--rm", $PROJECT | Out-Null;
+			& $COMPOSE $COMPOSE_ARGS "-f" $COMPOSE_FILE "run" "--rm" $PROJECT | Out-Null;
 			if ($? -eq $false) {
 				Write-Error "Failed to execute $PROJECT";
 				$code=$false;

@@ -18,24 +18,37 @@
  */
 
 var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel, ENV) {
+    this.successMessage = 'SSL Keys generated and updated for ';
+    this.letsEncryptSuccessMessage = 'Call to Lets Encrypt has been made successfully. This may take a few minutes. Please watch for a notification in the Change Log. Delivery Service = ';
+
 	this.generateSslKeys = function(deliveryService, sslKeys, generateSslKeyForm) {
-		if (sslKeys.hasOwnProperty('version')){
-			generateSslKeyForm.version = parseInt(sslKeys.version, 10) + 1;
-		} else {
-			generateSslKeyForm.version = 1;
-		}
+		 return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate', this.successMessage);
+	};
+
+    this.generateSslKeysWithLetsEncrypt = function(deliveryService, sslKeys, generateSslKeyForm) {
+        return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate/letsencrypt', this.letsEncryptSuccessMessage);
+    };
+
+	this.generateSslKeysBase = function(deliveryService, sslKeys, generateSslKeyForm, endpoint, message) {
+        if (sslKeys.hasOwnProperty('version')){
+            generateSslKeyForm.version = parseInt(sslKeys.version, 10) + 1;
+        } else {
+            generateSslKeyForm.version = 1;
+        }
 
 		generateSslKeyForm.cdn = deliveryService.cdnName;
 		generateSslKeyForm.deliveryservice = deliveryService.xmlId;
 		generateSslKeyForm.key = deliveryService.xmlId;
 
-        return $http.post(ENV.api['root'] + "deliveryservices/sslkeys/generate", generateSslKeyForm).then(
+        return $http.post(ENV.api['root'] + endpoint, generateSslKeyForm).then(
             function(result) {
-            	messageModel.setMessages([{level: "success", text: result.data.response}], true);
+            	messageModel.setMessages([{level: 'success', text: message + deliveryService.xmlId}], true);
                 return result.data.response;
             },
             function(err) {
-            	messageModel.setMessages(err.data.alerts, false);
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
                 throw err;
             }
         );
@@ -59,7 +72,9 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
                 return result.data.response;
             },
             function(err) {
-            	messageModel.setMessages(err.data.alerts, false);
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
                 throw err;
             }
         );
@@ -71,7 +86,9 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
                 return result.data.response;
             },
             function(err) {
-            	messageModel.setMessages(err.data.alerts, true);
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
                 throw err;
             }
         );

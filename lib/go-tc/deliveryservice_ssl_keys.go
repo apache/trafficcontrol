@@ -30,6 +30,11 @@ const DNSSECZSKType = "zsk"
 const DNSSECKeyStatusNew = "new"
 const DNSSECKeyStatusExpired = "expired"
 const DNSSECStatusExisting = "existing"
+const (
+	SelfSignedCertAuthType           = "Self Signed"
+	CertificateAuthorityCertAuthType = "Certificate Authority"
+	LetsEncryptAuthType              = "Lets Encrypt"
+)
 
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
@@ -38,6 +43,7 @@ type DeliveryServiceSSLKeysResponse struct {
 
 // DeliveryServiceSSLKeys ...
 type DeliveryServiceSSLKeys struct {
+	AuthType        string                            `json:"authType,omitempty"`
 	CDN             string                            `json:"cdn,omitempty"`
 	DeliveryService string                            `json:"deliveryservice,omitempty"`
 	BusinessUnit    string                            `json:"businessUnit,omitempty"`
@@ -51,7 +57,13 @@ type DeliveryServiceSSLKeys struct {
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
+type DeliveryServiceSSLKeysV15 struct {
+	DeliveryServiceSSLKeys
+	Expiration time.Time `json:"expiration,omitempty"`
+}
+
 type DeliveryServiceSSLKeysReq struct {
+	AuthType        *string `json:authType,omitempty`
 	CDN             *string `json:"cdn,omitempty"`
 	DeliveryService *string `json:"deliveryservice,omitempty"`
 	BusinessUnit    *string `json:"businessUnit,omitempty"`
@@ -124,7 +136,7 @@ func (r *DeliveryServiceAddSSLKeysReq) Validate(tx *sql.Tx) error {
 		if r.Certificate.Crt == "" {
 			errs = append(errs, "certificate.crt required")
 		}
-		if r.Certificate.CSR == "" {
+		if r.Certificate.CSR == "" && *r.AuthType != LetsEncryptAuthType {
 			errs = append(errs, "certificate.csr required")
 		}
 	}
@@ -156,6 +168,19 @@ func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
 	if checkNilOrEmpty(r.State) {
 		errs = append(errs, "state required")
 	}
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+type DeliveryServiceLetsEncryptSSLKeysReq struct {
+	DeliveryServiceSSLKeysReq
+}
+
+func (r *DeliveryServiceLetsEncryptSSLKeysReq) Validate(tx *sql.Tx) error {
+	r.Sanitize()
+	errs := r.validateSharedRequiredRequestFields()
 	if len(errs) > 0 {
 		return errors.New("missing fields: " + strings.Join(errs, "; "))
 	}

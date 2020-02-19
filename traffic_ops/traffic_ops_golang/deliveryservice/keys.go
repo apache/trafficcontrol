@@ -32,6 +32,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -92,6 +93,11 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 	req.Certificate.Key = certPrivateKey
 
 	base64EncodeCertificate(req.Certificate)
+
+	authType := ""
+	if req.AuthType != nil {
+		authType = *req.AuthType
+	}
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
 		CDN:             *req.CDN,
 		DeliveryService: *req.DeliveryService,
@@ -99,7 +105,9 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		Key:             *req.Key,
 		Version:         *req.Version,
 		Certificate:     *req.Certificate,
+		AuthType:        authType,
 	}
+
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting SSL keys in Riak for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
@@ -130,11 +138,45 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
 		return
 	}
 
 	hostName := inf.Params["hostname"]
+	xmlID, userErr, sysErr, errCode := getXmlIdFromHostname(inf, hostName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
+}
+
+// GetSSLKeysByHostNameV15 fetches the ssl keys for a deliveryservice specified by the fully qualified hostname. V15 includes expiration date.
+func GetSSLKeysByHostNameV15(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"hostname"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
+		return
+	}
+
+	hostName := inf.Params["hostname"]
+	xmlID, userErr, sysErr, errCode := getXmlIdFromHostname(inf, hostName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	getSSLKeysByXMLIDHelperV15(xmlID, inf, w, r)
+}
+
+func getXmlIdFromHostname(inf *api.APIInfo, hostName string) (string, error, error, int) {
 	domainName := ""
 	hostRegex := ""
 	strArr := strings.Split(hostName, ".")
@@ -150,25 +192,21 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	// lookup the cdnID
 	cdnID, ok, err := getCDNIDByDomainname(domainName, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id by domain name: "+err.Error()))
-		return
+		return "", nil, errors.New("getting cdn id by domain name: " + err.Error()), http.StatusInternalServerError
 	}
 	if !ok {
-		api.WriteRespAlert(w, r, tc.InfoLevel, " - a cdn does not exist for the domain: "+domainName+" parsed from hostname: "+hostName)
-		return
+		return "", errors.New("a CDN does not exist for the domain: " + domainName + " parsed from hostname: " + hostName), nil, http.StatusNotFound
 	}
 	// now lookup the deliveryservice xmlID
 	xmlID, ok, err := getXMLID(cdnID, hostRegex, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting xml id: "+err.Error()))
-		return
+		return "", nil, errors.New("getting xml id: " + err.Error()), http.StatusInternalServerError
 	}
 	if !ok {
-		api.WriteRespAlert(w, r, tc.InfoLevel, "  - a delivery service does not exist for a host with hostname of "+hostName)
-		return
+		return "", errors.New("a delivery service does not exist for a host with hostname of " + hostName), nil, http.StatusNotFound
 	}
 
-	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
+	return xmlID, nil, nil, http.StatusOK
 }
 
 // GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID.
@@ -180,7 +218,7 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -200,7 +238,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 		return
 	}
 	if !ok {
-		api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{}) // empty response object because Perl
+		api.WriteAlertsObj(w, r, http.StatusNotFound, tc.CreateAlerts(tc.ErrorLevel, "no object found for the specified key"), struct{}{}) // empty response object because Perl
 		return
 	}
 	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
@@ -210,7 +248,76 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 			return
 		}
 	}
+
 	api.WriteResp(w, r, keyObj)
+}
+
+// GetSSLKeysByXMLIDV15 fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
+func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+		return
+	}
+	xmlID := inf.Params["xmlid"]
+	getSSLKeysByXMLIDHelperV15(xmlID, inf, w, r)
+}
+
+func getSSLKeysByXMLIDHelperV15(xmlID string, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+	version := inf.Params["version"]
+	decode := inf.Params["decode"]
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.WriteAlertsObj(w, r, http.StatusNotFound, tc.CreateAlerts(tc.ErrorLevel, "no object found for the specified key"), struct{}{}) // empty response object because Perl
+		return
+	}
+
+	parsedCert := keyObj.Certificate
+	err = base64DecodeCertificate(&parsedCert)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
+		return
+	}
+	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
+		keyObj.Certificate = parsedCert
+	}
+
+	if keyObj.Certificate.Crt != "" && keyObj.Expiration.IsZero() {
+		exp, err := parseExpirationFromCert([]byte(parsedCert.Crt))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(xmlID+": "+err.Error()))
+			return
+		}
+		keyObj.Expiration = exp
+	}
+	api.WriteResp(w, r, keyObj)
+}
+
+func parseExpirationFromCert(cert []byte) (time.Time, error) {
+	block, _ := pem.Decode(cert)
+	if block == nil {
+		return time.Time{}, errors.New("Error decoding cert to parse expiration")
+	}
+
+	x509cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return time.Time{}, errors.New("Error parsing cert to get expiration - " + err.Error())
+	}
+
+	return x509cert.NotAfter, nil
 }
 
 func base64DecodeCertificate(cert *tc.DeliveryServiceSSLKeysCertificate) error {

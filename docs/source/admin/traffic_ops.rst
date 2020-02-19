@@ -337,6 +337,16 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	.. warning:: While relative paths are allowed, they are discouraged, as the path will be relative to the working directory of the `traffic_ops_golang`_ process itself, not relative to the ``cdn.conf`` configuration file, which can be confusing.
 
+:lets_encrypt:
+
+	.. versionadded:: 4.1
+
+	:user_email: An optional email address to create an account with Let's Encrypt or to receive expiration updates
+	:send_expiration_email: A boolean option to send email summarizing certificate expiration status
+	:convert_self_signed: A boolean option to convert self signed to Let's Encrypt certificates as they expire. This only works for certificates labeled as Self Signed in the Certificate Source field.
+	:renew_days_before_expiration: Set the number of days before expiration date to renew certificates.
+	:environment: This specifies which Let's Encrypt environment to use: 'staging' or 'production'. It defaults to 'production'.
+
 :portal: This section provides information regarding a connected UI with which users interact, so that emails can include links to it.
 
 	:base_url: This URL should be the root and/or landing page of the UI. For Traffic Portal instances, this should include the fragment part of the URL, e.g. ``https://trafficportal.infra.ciab.test/#!/``.
