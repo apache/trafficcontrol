@@ -28,9 +28,9 @@ Retrieves the aggregated routing percentages for a given :term:`Delivery Service
 :Response Type:  Object
 
 .. versionchanged:: 1.5
-	Older versions of this endpoint had different behaviors in handling non HTTP/DNS :term:`Delivery Services` and :term:`Delivery Service` regexps.
+	Older versions of this endpoint had different behaviors in handling non HTTP/DNS :term:`Delivery Services` and :term:`Delivery Service` regular expression(s).
 	It used to return an empty response object if the :term:`Delivery Service` being requested did not have a HTTP or DNS type. It will now return an error.
-	For :term:`Delivery Service` regexps it used to use all regexps to compare host names in the routing stats which was incorrect. It will now only compare :term:`Delivery Service` host regular expression(s).
+	For :term:`Delivery Service` regular expression(s) it used to use all regular expression(s) to compare host names in the routing stats which was incorrect. It will now only compare :term:`Delivery Service` host regular expression(s).
 
 Request Structure
 -----------------
