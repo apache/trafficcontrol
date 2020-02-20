@@ -287,10 +287,11 @@ WITH cdn_profile_ids AS (
   FROM
     cdn c
     LEFT JOIN profile p ON c.id = p.cdn AND (p.name like 'CCR%' OR p.name like 'TR%')
-    GROUP BY c.name, c.dnssec_enabled
+    GROUP BY c.name, c.dnssec_enabled, c.domain_name
 )
 SELECT
   DISTINCT(pi.cdn_name),
+  pi.cdn_domain,
   pi.cdn_dnssec_enabled,
   MAX(pa.name) as parameter_name,
   MAX(pa.value) as parameter_value
@@ -303,7 +304,7 @@ FROM
     OR pa.name = 'DNSKEY.effective.multiplier'
     OR pa.name = 'DNSKEY.generation.multiplier'
   )
-GROUP BY pi.cdn_name, pi.cdn_dnssec_enabled
+GROUP BY pi.cdn_name, pi.cdn_domain, pi.cdn_dnssec_enabled
 `
 	rows, err := tx.Query(qry)
 	if err != nil {
