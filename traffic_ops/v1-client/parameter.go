@@ -48,6 +48,25 @@ func (to *Session) CreateParameter(pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
+// CreateMultipleParameters performs a POST to create multiple Parameters at once.
+func (to *Session) CreateMultipleParameters(pls []tc.Parameter) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(pls)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Parameters, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
 // Update a Parameter by ID
 func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 
