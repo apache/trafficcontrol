@@ -159,6 +159,7 @@ my $CFG_FILE_ALREADY_PROCESSED = 4;
 #### LWP globals
 my $api_in_use = 1;
 my $rev_proxy_in_use = 0;
+my $atstccfg_cache_cleared = 0;
 my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
@@ -1511,8 +1512,13 @@ sub lwp_get {
 
 	my ( $TO_USER, $TO_PASS ) = split( /:/, $TM_LOGIN );
 
+	# atstccfg_cache_cleared is a global variable we use to clear the atstccfg cache on the first atstccfg call.
+	# Telling atstccfg to use-cache=false will cause it to delete the cache directory
+	# Which is what we want: when ORT starts to run, delete the cache. We only want to use the atstccfg cache within the same ORT run, not across different runs.
+
 	my $no_cache_arg = '';
-	if ( $use_cache == 0 ) {
+	if ( $use_cache == 0 || $atstccfg_cache_cleared == 0 ) {
+		$atstccfg_cache_cleared = 1;
 		$no_cache_arg = '--no-cache';
 	}
 
@@ -1855,12 +1861,7 @@ sub get_cfg_file_list {
 	my $cdn_name;
 	my $uri = "/api/1.4/servers/$host_name/configfiles/ats";
 
-	# Telling atstccfg to use-cache=false will cause it to delete the cache directory
-	# Which is what we want: when ORT starts to run, delete the cache. We only want to use the atstccfg cache within the same ORT run, not across different runs.
-	my $real_use_cache = $use_cache;
-	$use_cache = 0;
 	my $result = &lwp_get($uri);
-	$use_cache = $real_use_cache;
 
 	if ($result eq '404') {
 		$api_in_use = 0;
