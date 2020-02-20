@@ -272,7 +272,7 @@ func DSSDecode(r io.Reader, iObj interface{}) error {
 		svStr, err := objFileReader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				return errors.New("malformed object file: final line had ds but not server")
+				return errors.New("malformed object file: final line had ds but not server, or file is missing a trailing newline")
 			}
 			return errors.New("malformed object file:" + err.Error())
 		}
