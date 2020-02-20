@@ -49,7 +49,7 @@ func (to *Session) CreateProfileParameter(pp tc.ProfileParameter) (tc.Alerts, Re
 	return alerts, reqInf, nil
 }
 
-// Create multiple ProfileParameters
+// CreateMultipleProfileParameters creates multiple ProfileParameters at once.
 func (to *Session) CreateMultipleProfileParameters(pps []tc.ProfileParameter) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr

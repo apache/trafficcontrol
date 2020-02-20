@@ -49,6 +49,25 @@ func (to *Session) CreateProfileParameter(pp tc.ProfileParameter) (tc.Alerts, Re
 	return alerts, reqInf, nil
 }
 
+// CreateMultipleProfileParameters creates multiple ProfileParameters at once.
+func (to *Session) CreateMultipleProfileParameters(pps []tc.ProfileParameter) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(pps)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Profile_Parameters, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
 // Returns a list of Profile Parameters
 func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Profile_Parameters, nil)
