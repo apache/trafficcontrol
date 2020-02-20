@@ -46,6 +46,7 @@ my $override_hostname_short = '';
 my $override_hostname_full = '';
 my $override_domainname = '';
 my $use_cache = 1;
+my $cache_max_age_seconds = 900;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
@@ -57,6 +58,7 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "override_hostname_full=s" => \$override_hostname_full,
             "override_domainname=s" => \$override_domainname,
             "use_cache=i" => \$use_cache,
+            "cache_max_age_seconds=i" => \$cache_max_age_seconds,
           );
 
 if ( $#ARGV < 1 ) {
@@ -359,6 +361,7 @@ sub usage {
 	print "\t   override_hostname_full=<text>  => override the full hostname of the OS for config generation. Default = ''.\n";
 	print "\t   override_domainname=<text>     => override the domainname of the OS for config generation. Default = ''.\n";
 	print "\t   use_cache=<0|1>                => whether to use cached Traffic Ops data for config generation. Default = 1, use cache.\n";
+	print "\t   cache_max_age_seconds=<time>   => the max time in seconds to use cache files. Default = 900 (15 minutes).\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -1513,7 +1516,12 @@ sub lwp_get {
 		$no_cache_arg = '--no-cache';
 	}
 
-	$response_content = `$atstccfg_cmd $no_cache_arg --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
+	my $cache_age_arg='';
+	if (length $cache_max_age_seconds > 0) {
+		$cache_age_arg = "--cache-file-max-age-seconds=$cache_max_age_seconds";
+	}
+
+	$response_content = `$atstccfg_cmd $no_cache_arg $cache_age_arg --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
 
 	my $atstccfg_exit_code = $?;
 	$atstccfg_exit_code = atstccfg_code_to_http_code($atstccfg_exit_code);
@@ -1847,7 +1855,12 @@ sub get_cfg_file_list {
 	my $cdn_name;
 	my $uri = "/api/1.4/servers/$host_name/configfiles/ats";
 
+	# Telling atstccfg to use-cache=false will cause it to delete the cache directory
+	# Which is what we want: when ORT starts to run, delete the cache. We only want to use the atstccfg cache within the same ORT run, not across different runs.
+	my $real_use_cache = $use_cache;
+	$use_cache = 0;
 	my $result = &lwp_get($uri);
+	$use_cache = $real_use_cache;
 
 	if ($result eq '404') {
 		$api_in_use = 0;
