@@ -188,10 +188,7 @@ func (s TOServer) ChangeLogMessage(action string) (string, error) {
 func (s *TOServer) Read() ([]interface{}, error, error, int) {
 	version := s.APIInfo().Version
 	if version == nil {
-		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError
-	}
-	if version.Major != 1 || version.Minor < 1 {
-		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+		return nil, nil, errors.New("TOServer.Read called with nil API version"), http.StatusInternalServerError
 	}
 
 	returnable := []interface{}{}
@@ -205,9 +202,9 @@ func (s *TOServer) Read() ([]interface{}, error, error, int) {
 	for _, server := range servers {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Minor >= 4:
+		case version.Major >= 2:
 			returnable = append(returnable, server)
-		case version.Minor >= 1:
+		case version.Major == 1 && version.Minor >= 1:
 			returnable = append(returnable, server.ServerNullableV11)
 		default:
 			return nil, nil, fmt.Errorf("TOServer.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
@@ -379,7 +376,7 @@ func (s *TOServer) Update() (error, error, int) {
 	}
 
 	current := TOServer{}
-	err := s.ReqInfo.Tx.QueryRowx(selectV14UpdatesQuery() + ` WHERE sv.id=` + strconv.Itoa(*s.ID)).StructScan(&current)
+	err := s.ReqInfo.Tx.QueryRowx(selectV20UpdatesQuery() + ` WHERE sv.id=` + strconv.Itoa(*s.ID)).StructScan(&current)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
@@ -426,7 +423,7 @@ func (s *TOServer) Create() (error, error, int) {
 
 func (s *TOServer) Delete() (error, error, int) { return api.GenericDelete(s) }
 
-func selectV14UpdatesQuery() string {
+func selectV20UpdatesQuery() string {
 	return `SELECT 
 sv.ip_address_is_service, 
 sv.ip6_address_is_service 

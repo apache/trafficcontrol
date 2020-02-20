@@ -89,13 +89,13 @@ Response Structure
 :ip6Address:     The IPv6 address and subnet mask of ``interfaceName``
 :ip6IsService:   A boolean value which if ``true`` indicates that the IPv6 address will be used for routing content.
 
-	.. versionadded:: 1.4
+	.. versionadded:: 2.0
 
 :ip6Gateway:     The IPv6 address of the gateway used by ``interfaceName``
 :ipAddress:      The IPv4 address of ``interfaceName``
 :ipIsService:    A boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.
 
-	.. versionadded:: 1.4
+	.. versionadded:: 2.0
 
 :ipGateway:      The IPv4 address of the gateway used by ``interfaceName``
 :ipNetmask:      The IPv4 subnet mask used by ``interfaceName``
@@ -234,13 +234,13 @@ Request Structure
 :ip6Address:     An optional IPv6 address and subnet mask of ``interfaceName``
 :ip6IsService:   An optional boolean value which if ``true`` indicates that the IPv6 address will be used for routing content.  Defaults to ``true``.
 
-	.. versionadded:: 1.4
+	.. versionadded:: 2.0
 
 :ip6Gateway:     An optional IPv6 address of the gateway used by ``interfaceName``
 :ipAddress:      The IPv4 address of ``interfaceName``
 :ipIsService:    An optional boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.  Defaults to ``true``.
 
-	.. versionadded:: 1.4
+	.. versionadded:: 2.0
 
 :ipGateway:      The IPv4 address of the gateway used by ``interfaceName``
 :ipNetmask:      The IPv4 subnet mask used by ``interfaceName``
@@ -335,13 +335,13 @@ Response Structure
 :ip6Address:     The IPv6 address and subnet mask of ``interfaceName``
 :ip6IsService:   A boolean value which if ``true`` indicates that the IPv6 address will be used for routing content.
 
-	.. versionadded:: 1.4
+	.. versionadded:: 2.0
 
 :ip6Gateway:     The IPv6 address of the gateway used by ``interfaceName``
 :ipAddress:      The IPv4 address of ``interfaceName``
 :ipIsService:    A boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.
 
-	.. versionadded:: 1.4
+	.. versionadded:: 2.0
 
 :ipGateway:      The IPv4 address of the gateway used by ``interfaceName``
 :ipNetmask:      The IPv4 subnet mask used by ``interfaceName``

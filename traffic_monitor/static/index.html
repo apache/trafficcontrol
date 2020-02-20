@@ -269,7 +269,7 @@ under the License.
 
                     cell = row.insertCell(2);
                     cell.id = row.id + "-ipv4";
-                    if (server.status.indexOf("ONLINE") != 0) {
+                    if (server.status.indexOf("ONLINE") !== 0) {
                         cell.textContent = server.ipv4_available;
                     } else {
                         cell.textContent = "N/A";
@@ -277,7 +277,7 @@ under the License.
 
                     cell = row.insertCell(3);
                     cell.id = row.id + "-ipv6";
-                    if (server.status.indexOf("ONLINE") != 0) {
+                    if (server.status.indexOf("ONLINE") !== 0) {
                         cell.textContent = server.ipv6_available;
                     } else {
                         cell.textContent = "N/A";
@@ -290,7 +290,7 @@ under the License.
 							row.classList.add("warning");
 							row.classList.remove("error");
 							row.classList.remove("stripes");
-						} else if (server.combined_available && server.status.indexOf("ONLINE") !== 0) {
+						} else if (!server.combined_available && server.status.indexOf("ONLINE") !== 0) {
 							row.classList.add("error");
 							row.classList.remove("warning");
 							row.classList.remove("stripes");

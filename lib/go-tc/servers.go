@@ -133,7 +133,7 @@ type ServerNullableV11 struct {
 	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-type ServerNullableV14 ServerNullable
+type ServerNullableV20 ServerNullable
 
 type ServerNullable struct {
 	ServerNullableV11

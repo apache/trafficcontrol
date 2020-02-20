@@ -280,7 +280,7 @@ func monitorConfigListen(
 			healthURLs[srv.HostName] = poller.PollConfig{URL: pollURL4Str, URLv6: pollURL6Str, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 
 			statURL4 := createServerStatPollURL(pollURL4Str)
-			statURL6 := ipv6CIDRStrToAddr(createServerStatPollURL(pollURL6Str))
+			statURL6 := createServerStatPollURL(pollURL6Str)
 			statURLs[srv.HostName] = poller.PollConfig{URL: statURL4, URLv6: statURL6, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 		}
 
@@ -294,7 +294,7 @@ func monitorConfigListen(
 			}
 			// TODO: the URL should be config driven. -jse
 			url4 := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-			url6 := ipv6CIDRStrToAddr(fmt.Sprintf("http://[%s]:%d/publish/CrStates?raw", srv.IP6, srv.Port))
+			url6 := fmt.Sprintf("http://[%s]:%d/publish/CrStates?raw", ipv6CIDRStrToAddr(srv.IP6), srv.Port)
 			peerURLs[srv.HostName] = poller.PollConfig{URL: url4, URLv6: url6, Host: srv.FQDN} // TODO determine timeout.
 			peerSet[tc.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
