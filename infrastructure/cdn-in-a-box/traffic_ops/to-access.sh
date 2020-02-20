@@ -75,7 +75,7 @@ to-auth() {
 	# if cookiejar is current, nothing to do..
 	cookie_current $COOKIEJAR && return
 
-	local url=$TO_URL/api/1.4/user/login
+	local url=$TO_URL/api/2.0/user/login
 	local datatype='Accept: application/json'
 	cat >"$login" <<-CREDS
 { "u" : "$TO_USER", "p" : "$TO_PASSWORD" }
@@ -89,7 +89,7 @@ CREDS
 
 to-ping() {
 	# ping endpoint does not require authentication
-	curl $CURLAUTH $CURLOPTS -X GET "$TO_URL/api/1.4/ping"
+	curl $CURLAUTH $CURLOPTS -X GET "$TO_URL/api/2.0/ping"
 }
 
 to-get() {
@@ -140,21 +140,21 @@ to-delete() {
 #         MY_HTTPS_PORT - the tcp port, default is "443"
 to-enroll() {
 
-	# Force fflush() on /shared 
-	sync 
+	# Force fflush() on /shared
+	sync
 
 	# Wait for the initial data load to be copied
 	until [[ -f "$ENROLLER_DIR/initial-load-done" ]] ; do
 		echo "Waiting for enroller initial data load to complete...."
 		sleep 2
-		sync 
+		sync
 	done
 
 	# Wait for the Enroller servers directory to be created
-	until [[ -d "${ENROLLER_DIR}/servers" ]] ; do 
+	until [[ -d "${ENROLLER_DIR}/servers" ]] ; do
 		echo "Waiting for ${ENROLLER_DIR}/servers ..."
 		sleep 2
-		sync 
+		sync
 	done
 
 	# If the servers dir vanishes, the docker shared volume isn't working right
@@ -265,7 +265,7 @@ to-enroll() {
 
 # Tests that this server exists in Traffic Ops
 function testenrolled() {
-	local tmp="$(to-get	'api/1.3/servers?name='$MY_HOSTNAME'')"
+	local tmp="$(to-get	'api/2.0/servers?name='$MY_HOSTNAME'')"
 	tmp=$(echo $tmp | jq '.response[]|select(.hostName=="'"$MY_HOSTNAME"'")')
 	echo "$tmp"
 }
@@ -302,10 +302,10 @@ to-add-sslkeys() {
 	                 }")
 
 	while true; do
-		json_response=$(to-post 'api/1.4/deliveryservices/sslkeys/add' "$json_request")
+		json_response=$(to-post 'api/2.0/deliveryservices/sslkeys/add' "$json_request")
 		if [[ -n "$json_response" ]] ; then
 			sleep 3
-			cdn_sslkeys_response=$(to-get "api/1.3/cdns/name/$1/sslkeys.json" | jq '.response[] | length')
+			cdn_sslkeys_response=$(to-get "api/2.0/cdns/name/$1/sslkeys" | jq '.response[] | length')
 			if ((cdn_sslkeys_response>0)); then
 				break
 			else
@@ -329,7 +329,7 @@ to-auto-snapqueue() {
 		expected_servers_list=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|join(",")')
 		expected_servers_total=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|length')
 
-		current_servers_json=$(to-get 'api/1.4/servers' 2>/dev/null | jq -c -e '[.response[] | .xmppId] | sort')
+		current_servers_json=$(to-get 'api/2.0/servers' 2>/dev/null | jq -c -e '[.response[] | .xmppId] | sort')
 		[ -z "$current_servers_json" ] && current_servers_json='[]'
 		current_servers_list=$(jq -r -n --argjson current "$current_servers_json" '$current|join(",")')
 		current_servers_total=$(jq -r -n --argjson current "$current_servers_json" '$current|length')
@@ -346,11 +346,11 @@ to-auto-snapqueue() {
 			echo "AUTO-SNAPQUEUE - All expected servers enrolled."
 			sleep $AUTO_SNAPQUEUE_ACTION_WAIT
 			echo "AUTO-SNAPQUEUE - Do automatic snapshot..."
-			cdn_id=$(to-get "api/1.3/cdns?name=$2" |jq '.response[0].id')
-			to-put "api/1.3/cdns/$cdn_id/snapshot"
+			cdn_id=$(to-get "api/2.0/cdns?name=$2" |jq '.response[0].id')
+			to-put "api/2.0/cdns/$cdn_id/snapshot"
 			sleep $AUTO_SNAPQUEUE_ACTION_WAIT
 			echo "AUTO-SNAPQUEUE - Do queue updates..."
-			to-post "api/1.3/cdns/$cdn_id/queue_update" '{"action":"queue"}'
+			to-post "api/2.0/cdns/$cdn_id/queue_update" '{"action":"queue"}'
 			break
 		fi
 

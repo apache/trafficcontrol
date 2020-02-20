@@ -38,7 +38,7 @@ type ConfigProfileParams struct {
 // This is used to generate the meta config, which has API paths.
 // Note the version in the meta config is not used by the atstccfg generator, which isn't actually an API.
 // TODO change the config system to not use old API paths, and remove this.
-const APIVersion = "1.4"
+const APIVersion = "2.0"
 
 func MakeMetaConfig(
 	serverHostName tc.CacheName,

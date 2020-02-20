@@ -40,7 +40,7 @@ done
 source config.sh
 
 PGPASSWORD="$DB_USER_PASS" pg_dump --blobs --no-owner --format=c "--host=$DB_SERVER" "--port=$DB_PORT" "--username=$DB_USER" traffic_ops > dbdump.manual
-to-get api/1.4/dbdump > dbdump.api
+to-get api/2.0/dbdump > dbdump.api
 
 diff dbdump.api dbdump.manual && rm -f dbdump.api dbdump.manual
 

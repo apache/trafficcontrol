@@ -93,7 +93,7 @@
     {
       "configFile": "CRConfig.json",
       "name": "federationmapping.polling.url",
-      "value": "https://${toHostname}/internal/api/1.3/federations.json"
+      "value": "https://${toHostname}/internal/api/2.0/federations"
     },
     {
       "configFile": "CRConfig.json",
