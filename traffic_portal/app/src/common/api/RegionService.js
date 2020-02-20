@@ -70,7 +70,7 @@ var RegionService = function($http, ENV, messageModel) {
 
     // todo: change to use query param when it is supported
     this.deleteRegion = function(id) {
-        return $http.delete(ENV.api['root'] + "regions/" + id).then(
+        return $http.delete(ENV.api['root'] + "regions", {params: {id: id}}).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Region deleted' } ], true);
                 return result;
