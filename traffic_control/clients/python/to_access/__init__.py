@@ -78,6 +78,10 @@ Arguments and Flags
 	Request exactly :option:`PATH`; do not preface the request path with :file:`/api/{api_version}`.
 	This effectively means that :option:`--api-version` will have no effect. (Default: false)
 
+.. option:: -v, --version
+
+	Print version information and exit.
+
 .. option:: --request-headers
 
 	Output the request method line and any and all request headers. (Default: false)
@@ -180,10 +184,9 @@ import os
 import sys
 from urllib.parse import urlparse
 
-from future.utils import raise_from
-
 from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 from trafficops.tosession import TOSession
+from trafficops.__version__ import __version__
 
 from requests.exceptions import RequestException
 
@@ -294,7 +297,11 @@ def parse_arguments(program):
 	                    action="store_true",
 	                    help=("Pretty-print payloads as JSON. "
 	                         "Note that this will make Content-Type headers \"wrong\", in general"))
-	parser.add_argument("PATH", help="The path to the resource being requested - omit '/api/1.x'")
+	parser.add_argument("-v", "--version",
+	                    action="version",
+	                    help="Print version information and exit",
+	                    version="%(prog)s v"+__version__)
+	parser.add_argument("PATH", help="The path to the resource being requested - omit '/api/2.x'")
 	parser.add_argument("DATA",
 	                    help=("An optional data string to pass with the request. If this is a "
 	                         "filename, the contents of the file will be sent instead."),
@@ -321,12 +328,12 @@ def parse_arguments(program):
 
 	to_host = to_host.hostname
 	if not to_host:
-		raise KeyError("Invalid URL/host for Traffic Ops: '%s'" % original_to_host)
+		raise KeyError(f"Invalid URL/host for Traffic Ops: '{original_to_host}'")
 
 	s = TOSession(to_host,
 	              host_port=to_port,
 	              ssl=useSSL,
-	              api_version="{.1f}".format(args.api_version),
+	              api_version=f"{args.api_version:.1f}",
 	              verify_cert=not args.insecure)
 
 	data = args.DATA
