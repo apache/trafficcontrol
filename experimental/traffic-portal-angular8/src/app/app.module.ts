@@ -51,6 +51,7 @@ import { OpenableDirective } from './directives/openable.directive';
 import { CustomvalidityDirective } from './directives/customvalidity.directive';
 import { CurrentuserComponent } from './components/currentuser/currentuser.component';
 import { ServersPageComponent } from './components/servers-page/servers-page.component';
+import { ServerCardComponent } from './components/servers-page/server-card/server-card.component';
 
 Chart.plugins.register({
 	id: 'whiteBackground',
@@ -97,6 +98,7 @@ const appRoutes: Routes = [
 		CustomvalidityDirective,
 		CurrentuserComponent,
 		ServersPageComponent,
+		ServerCardComponent,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),

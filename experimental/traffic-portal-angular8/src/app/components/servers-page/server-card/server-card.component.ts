@@ -11,35 +11,22 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-main > div {
-	width: 50%;
-	margin: auto;
-	padding-right: 10px;
-	position: sticky;
-	top: 0;
-	z-index: 2;
-	input {
-		width: 100%;
-		margin: 15px 0;
-	}
-}
+import { Component, OnInit, Input } from '@angular/core';
 
-@media(max-width: 1230px) {
-	main > div {
-		margin: auto auto auto 15%;
-	}
-}
+import { Server } from '../../../models';
 
-@media(max-width: 630px) {
-	main > div {
-		width: 75%;
-		margin: auto;
-		position: fixed;
-		left: 12.5%;
+@Component({
+	selector: 'server-card',
+	templateUrl: './server-card.component.html',
+	styleUrls: ['./server-card.component.scss']
+})
+export class ServerCardComponent implements OnInit {
+
+	@Input() server: Server;
+
+	constructor() { }
+
+	ngOnInit(): void {
 	}
 
-	#servers {
-		margin: 25px auto 0;
-		width: 95%;
-	}
 }

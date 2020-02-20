@@ -11,8 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<tp-header></tp-header>
-<main>
-	<div><input type="search" role="search" aria-label="Fuzzy Search Server(s)" autofocus inputmode="search" name="fuzzControl" [formControl]="fuzzControl" (input)="updateURL($event)" accesskey="/" placeholder="Fuzzy Search"/></div>
-	<server-card *ngFor="let server of filteredServers; trackby: tracker" [server]="server"></server-card>
-</main>
+<details>
+	<summary>{{server.hostName}}.{{server.domainName}}</summary>
+	<div>{{server.status}}</div>
+</details>
