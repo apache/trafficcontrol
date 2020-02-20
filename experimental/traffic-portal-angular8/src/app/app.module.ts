@@ -52,6 +52,7 @@ import { CustomvalidityDirective } from './directives/customvalidity.directive';
 import { CurrentuserComponent } from './components/currentuser/currentuser.component';
 import { ServersPageComponent } from './components/servers-page/servers-page.component';
 import { ServerCardComponent } from './components/servers-page/server-card/server-card.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 Chart.plugins.register({
 	id: 'whiteBackground',
@@ -108,7 +109,8 @@ const appRoutes: Routes = [
 		AppRoutingModule,
 		HttpClientModule,
 		ReactiveFormsModule,
-		FormsModule
+		FormsModule,
+		FontAwesomeModule
 	],
 	providers: [
 		{provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},

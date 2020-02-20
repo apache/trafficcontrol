@@ -29,4 +29,15 @@ export class ServerCardComponent implements OnInit {
 	ngOnInit(): void {
 	}
 
+	public down(): boolean {
+		return this.server.status === 'ADMIN_DOWN' || this.server.status === 'OFFLINE';
+	}
+
+	/**
+	 * cacheServer returns 'true' if this component's server is a 'cache server', 'false' otherwise.
+	*/
+	public cacheServer(): boolean {
+		return this.server.type && (this.server.type.indexOf('EDGE') === 0 || this.server.type.indexOf('MID') === 0);
+	}
+
 }

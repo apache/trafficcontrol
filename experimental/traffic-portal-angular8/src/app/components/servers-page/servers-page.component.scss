@@ -11,6 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+article {
+	width: 80%;
+	margin: auto;
+}
+
 main > div {
 	width: 50%;
 	margin: auto;
@@ -38,7 +44,7 @@ main > div {
 		left: 12.5%;
 	}
 
-	#servers {
+	article {
 		margin: 25px auto 0;
 		width: 95%;
 	}

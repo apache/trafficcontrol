@@ -12,6 +12,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <details>
-	<summary>{{server.hostName}}.{{server.domainName}}</summary>
-	<div>{{server.status}}</div>
+	<summary [ngClass]="{'down': down()}">
+		<span>{{server.hostName}}.{{server.domainName}}</span>&nbsp;
+		<span>({{server.type}})</span>
+		<span>{{server.status}}
+			<span *ngIf="down() && server.offlineReason">&nbsp;({{server.offlineReason}})</span>
+		</span>
+	</summary>
+	<div class="card-content">
+		<div>
+			<span>CDN:</span><span>{{server.cdnName}}</span>
+			<span>Cache Group:</span><span>{{server.cachegroup}}</span>
+			<hr/>
+			<span *ngIf="server.iloIpAddress"><a href="{{server.iloIpAddress}}">Lights-Out Management Interface</a></span>
+			<span *ngIf="server.mgmtIpAddress"><a href="{{server.mgmtIpAddress}}">Management Interface</a></span>
+			<hr/>
+			<span *ngIf="server.type === 'TRAFFIC_PORTAL'"><a href="https://{{server.hostName}}.{{server.domainName}}" target="_blank">Open Portal</a></span>
+		</div>
+		<div>
+			<div *ngIf="cacheServer()">
+				<label for="{{server.id}}-update-pending">Updates Pending</label><input type="checkbox" name="update-pending" id="{{server.id}}-update-pending" [checked]="server.updPending" readonly/>
+				<label for="{{server.id}}-reval-pending">Revalidations Pending</label><input type="checkbox" name="reval-pending" id="{{server.id}}-reval-pending" [checked]="server.revalPending" readonly/>
+			</div>
+		</div>
+	</div>
 </details>

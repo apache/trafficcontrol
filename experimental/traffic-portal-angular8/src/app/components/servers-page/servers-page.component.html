@@ -14,5 +14,7 @@ limitations under the License.
 <tp-header></tp-header>
 <main>
 	<div><input type="search" role="search" aria-label="Fuzzy Search Server(s)" autofocus inputmode="search" name="fuzzControl" [formControl]="fuzzControl" (input)="updateURL($event)" accesskey="/" placeholder="Fuzzy Search"/></div>
-	<server-card *ngFor="let server of filteredServers; trackby: tracker" [server]="server"></server-card>
+	<article>
+		<server-card *ngFor="let server of filteredServers; trackby: tracker" [server]="server"></server-card>
+	</article>
 </main>

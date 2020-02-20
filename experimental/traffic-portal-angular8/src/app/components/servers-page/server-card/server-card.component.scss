@@ -11,3 +11,63 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import '../../../../styles.scss';
+
+details {
+	border: 2px solid gray;
+
+	&[open] {
+		border-radius: 12px;
+		& > summary {
+			border-radius: 10px 10px 0 0;
+		}
+	}
+}
+
+summary {
+	background-color: $theme_main;
+	color: white;
+	padding: 10px;
+	cursor: pointer;
+
+	& > span {
+		display: inline-block;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+
+		&:first-child {
+			max-width: 45%;
+		}
+
+		&:last-child {
+			max-width: 35%;
+			float: right;
+		}
+	}
+
+	&.down {
+		background-color: gray;
+		color: #d3d3d3;
+	}
+}
+
+
+.card-content {
+	display: grid;
+	grid-column-gap: 10px;
+	grid-row-gap: 20px;
+	padding: 10px;
+
+	grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 767px) {
+	.card-content {
+		grid-template-columns: 1fr;
+	}
+}
+
+label::after {
+	content: ": ";
+}

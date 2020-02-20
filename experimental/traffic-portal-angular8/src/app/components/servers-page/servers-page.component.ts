@@ -23,7 +23,7 @@ export class ServersPageComponent implements OnInit {
 
 	ngOnInit (): void {
 		const searchParam = this.route.snapshot.queryParamMap.get('search');
-		this.fuzzControl = new FormControl(searchParam);
+		this.fuzzControl = new FormControl(searchParam || "");
 		this.api.getServers().pipe(first()).subscribe(
 			(r: Server[]) => {
 				this.servers = orderBy(r, 'hostName') as Server[];
