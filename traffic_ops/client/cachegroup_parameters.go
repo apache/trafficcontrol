@@ -24,30 +24,30 @@ import (
 )
 
 const (
-	API_v1_CacheGroupParameters = apiBase + "/cachegroupparameters"
+	API_CACHEGROUPPARAMETERS = apiBase + "/cachegroupparameters"
 )
 
 // GetCacheGroupParameters Gets a Cache Group's Parameters
 func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/parameters", API_v13_CacheGroups, cacheGroupID)
+	route := fmt.Sprintf("%s/%d/parameters", API_CACHEGROUPS, cacheGroupID)
 	return to.getCacheGroupParameters(route, "")
 }
 
 // GetCacheGroupParametersByQueryParams Gets a Cache Group's Parameters with query parameters
 func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/parameters", API_v13_CacheGroups, cacheGroupID)
+	route := fmt.Sprintf("%s/%d/parameters", API_CACHEGROUPS, cacheGroupID)
 	return to.getCacheGroupParameters(route, queryParams)
 }
 
 // GetCacheGroupUnassignedParameters Gets a Cache Group's Unassigned Parameters
 func (to *Session) GetCacheGroupUnassignedParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/unassigned_parameters", API_v13_CacheGroups, cacheGroupID)
+	route := fmt.Sprintf("%s/%d/unassigned_parameters", API_CACHEGROUPS, cacheGroupID)
 	return to.getCacheGroupParameters(route, "")
 }
 
 // GetCacheGroupParametersByQueryParams Gets a Cache Group's Unassigned Parameters with query parameters
 func (to *Session) GetCacheGroupUnassignedParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/unassigned_parameters", API_v13_CacheGroups, cacheGroupID)
+	route := fmt.Sprintf("%s/%d/unassigned_parameters", API_CACHEGROUPS, cacheGroupID)
 	return to.getCacheGroupParameters(route, queryParams)
 }
 
@@ -69,7 +69,7 @@ func (to *Session) getCacheGroupParameters(route, queryParams string) ([]tc.Cach
 
 // GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
 func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
-	route := fmt.Sprintf("%s/", API_v1_CacheGroupParameters)
+	route := fmt.Sprintf("%s/", API_CACHEGROUPPARAMETERS)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -86,7 +86,7 @@ func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersRespon
 
 // DeleteCacheGroupParameter Deassociates a Parameter with a Cache Group
 func (to *Session) DeleteCacheGroupParameter(cacheGroupID, parameterID int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/%d", API_v1_CacheGroupParameters, cacheGroupID, parameterID)
+	route := fmt.Sprintf("%s/%d/%d", API_CACHEGROUPPARAMETERS, cacheGroupID, parameterID)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -111,7 +111,7 @@ func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int) (*tc
 	if err != nil {
 		return nil, ReqInf{}, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v1_CacheGroupParameters, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_CACHEGROUPPARAMETERS, reqBody)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

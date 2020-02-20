@@ -21,14 +21,14 @@ import (
 	"net/url"
 )
 
-const APIServersStatus = apiBase + "/servers/status"
+const API_SERVERS_STATUS = apiBase + "/servers/status"
 
 // GetServerStatusCounts gets the counts of each server status in Traffic Ops.
 // If typeName is non-nil, only statuses of the given server type name will be counted.
 func (to *Session) GetServerStatusCounts(typeName *string) (map[string]int, ReqInf, error) {
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	reqUrl := APIServersStatus
+	reqUrl := API_SERVERS_STATUS
 	if typeName != nil {
 		reqUrl += fmt.Sprintf("?type=%s", url.QueryEscape(*typeName))
 	}

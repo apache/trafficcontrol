@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	API_v14_Server_Server_Capabilities = apiBase + "/server_server_capabilities"
+	API_SERVER_SERVER_CAPABILITIES = apiBase + "/server_server_capabilities"
 )
 
 // CreateServerServerCapability assigns a Server Capability to a Server
@@ -38,7 +38,7 @@ func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability) (
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	reqInf, err = post(to, API_v14_Server_Server_Capabilities, reqBody, &alerts)
+	reqInf, err = post(to, API_SERVER_SERVER_CAPABILITIES, reqBody, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -49,7 +49,7 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 	v.Add("serverId", strconv.Itoa(serverID))
 	v.Add("serverCapability", serverCapability)
 	qStr := v.Encode()
-	queryURL := fmt.Sprintf("%s?%s", API_v14_Server_Server_Capabilities, qStr)
+	queryURL := fmt.Sprintf("%s?%s", API_SERVER_SERVER_CAPABILITIES, qStr)
 	reqInf, err := del(to, queryURL, &alerts)
 	return alerts, reqInf, err
 }
@@ -67,7 +67,7 @@ func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, se
 	if serverCapability != nil {
 		v.Add("serverCapability", *serverCapability)
 	}
-	queryURL := API_v14_Server_Server_Capabilities
+	queryURL := API_SERVER_SERVER_CAPABILITIES
 	if qStr := v.Encode(); len(qStr) > 0 {
 		queryURL = fmt.Sprintf("%s?%s", queryURL, qStr)
 	}
