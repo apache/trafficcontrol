@@ -407,7 +407,7 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	if version == nil {
 		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError
 	}
-	if version.Major != 1 || version.Minor < 1 {
+	if version.Major == 1 && version.Minor < 1 {
 		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
 	}
 
@@ -425,7 +425,7 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Minor >= 5:
+		case version.Major > 1 || version.Minor >= 5:
 			returnable = append(returnable, ds)
 		case version.Minor >= 4:
 			returnable = append(returnable, ds.DeliveryServiceNullableV14)
@@ -1555,18 +1555,6 @@ func getDSTenantIDByName(tx *sql.Tx, ds tc.DeliveryServiceName) (*int, bool, err
 		return nil, false, fmt.Errorf("querying tenant ID for delivery service name '%v': %v", ds, err)
 	}
 	return tenantID, true, nil
-}
-
-// GetDeliveryServiceType returns the type of the deliveryservice.
-func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, bool, error) {
-	var dsType tc.DSType
-	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
-		if err == sql.ErrNoRows {
-			return tc.DSTypeInvalid, false, nil
-		}
-		return tc.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
-	}
-	return dsType, true, nil
 }
 
 // GetXMLID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.

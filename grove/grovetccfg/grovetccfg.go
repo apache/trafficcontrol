@@ -158,24 +158,29 @@ func WriteAndBackup(path string, backupDirectory string, bts []byte) error {
 
 // hasUpdatePending returns whether an update is pending, the revalPending status (which will be needed later in the clear update POST), and any error.
 func hasUpdatePending(toc *to.Session, hostname string) (bool, bool, error) {
-	upd, _, err := toc.GetUpdate(hostname)
+	upd, _, err := toc.GetServerByHostName(hostname)
 	if err != nil {
 		return false, false, errors.New("getting update from Traffic Ops: " + err.Error())
+	} else if len(upd) != 1 {
+		return false, false, fmt.Errorf("Want exactly one server with hostname '%s', got %d", hostname, len(upd))
 	}
-	return upd.UpdatePending, upd.RevalPending, nil
+	return upd[0].UpdPending, upd[0].RevalPending, nil
 }
 
 // clearUpdatePending clears the given host's update pending flag in Traffic Ops. It takes the host to clear, and the old revalPending flag to send.
 func clearUpdatePending(toc *to.Session, hostname string, revalPending bool) error {
-	revalPendingPostVal := 0
-	if revalPending == false {
-		revalPendingPostVal = to.UpdateStatusClear
-	} else {
-		revalPendingPostVal = to.UpdateStatusPending
-	}
-	_, err := toc.SetUpdate(hostname, to.UpdateStatusClear, revalPendingPostVal)
+	srv, _, err := toc.GetServerByHostName(hostname)
 	if err != nil {
-		return errors.New("setting update pending on Traffic Ops: " + err.Error())
+		return fmt.Errorf("Failed to update reval_pending: %v", err)
+	} else if len(srv) != 1 {
+		return fmt.Errorf("Want exactly one server with hostname '%s', got '%d'", hostname, len(srv))
+	}
+
+	srv[0].RevalPending = revalPending
+	srv[0].UpdPending = false
+	alerts, _, err := toc.UpdateServerByID(srv[0].ID, srv[0])
+	if err != nil {
+		return fmt.Errorf("setting update pending on Traffic Ops: %v (Alerts: %+v)", err, alerts.Alerts)
 	}
 	return nil
 }
@@ -232,7 +237,7 @@ func main() {
 	var profiles map[string]tc.Profile
 	var servers map[string]tc.Server
 
-	serversArr, err := toc.Servers()
+	serversArr, _, err := toc.GetServers()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Servers: " + err.Error())
 		os.Exit(ExitError)
@@ -361,7 +366,7 @@ func createGroveCfg(toc *to.Session, server tc.Server) (bool, config.Config, err
 		}
 	}
 
-	serverParameters, err := toc.Parameters(server.Profile)
+	serverParameters, _, err := toc.GetParametersByProfileName(server.Profile)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + server.HostName + "' profile '" + server.Profile + "': " + err.Error())
 		return false, currCfg, err
@@ -451,7 +456,7 @@ func setConfigParameter(cfg *config.Config, name string, value string) error {
 }
 
 func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map[string]tc.Server) (remap.RemapRules, error) {
-	cachegroupsArr, err := toc.CacheGroups()
+	cachegroupsArr, _, err := toc.GetCacheGroupsNullable()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Cachegroups: " + err.Error())
 		os.Exit(1)
@@ -464,27 +469,27 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 		os.Exit(1)
 	}
 
-	deliveryservices, err := toc.DeliveryServicesByServer(hostServer.ID)
+	deliveryservices, _, err := toc.GetDeliveryServicesByServer(hostServer.ID)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Deliveryservices: " + err.Error())
 		os.Exit(1)
 	}
 
-	deliveryserviceRegexArr, err := toc.DeliveryServiceRegexes()
+	deliveryserviceRegexArr, _, err := toc.GetDeliveryServiceRegexes()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Deliveryservice Regexes: " + err.Error())
 		os.Exit(1)
 	}
 	deliveryserviceRegexes := makeDeliveryserviceRegexMap(deliveryserviceRegexArr)
 
-	cdnsArr, err := toc.CDNs()
+	cdnsArr, _, err := toc.GetCDNs()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops CDNs: " + err.Error())
 		os.Exit(1)
 	}
 	cdns := makeCDNMap(cdnsArr)
 
-	serverParameters, err := toc.Parameters(hostServer.Profile)
+	serverParameters, _, err := toc.GetParametersByProfileName(hostServer.Profile)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + host + "' profile '" + hostServer.Profile + "': " + err.Error())
 		os.Exit(1)
@@ -510,7 +515,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 	parents = filterParents(parents, sameCDN)
 	parents = filterParents(parents, serverAvailable)
 
-	cdnSSLKeys, err := toc.CDNSSLKeys(hostServer.CDNName)
+	cdnSSLKeys, _, err := toc.GetCDNSSLKeys(hostServer.CDNName)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting '" + hostServer.CDNName + "' SSL keys: " + err.Error())
 		os.Exit(1)
@@ -658,10 +663,12 @@ func makeServersHostnameMap(servers []tc.Server) map[string]tc.Server {
 	return m
 }
 
-func makeCachegroupsNameMap(cgs []tc.CacheGroup) map[string]tc.CacheGroup {
-	m := map[string]tc.CacheGroup{}
+func makeCachegroupsNameMap(cgs []tc.CacheGroupNullable) map[string]tc.CacheGroupNullable {
+	m := map[string]tc.CacheGroupNullable{}
 	for _, cg := range cgs {
-		m[cg.Name] = cg
+		if cg.Name != nil {
+			m[*cg.Name] = cg
+		}
 	}
 	return m
 }
@@ -735,7 +742,7 @@ func getServerDeliveryservices(hostname string, servers map[string]tc.Server, ds
 	return serverDses, nil
 }
 
-func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tc.CacheGroup) ([]tc.Server, error) {
+func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tc.CacheGroupNullable) ([]tc.Server, error) {
 	server, ok := servers[hostname]
 	if !ok {
 		return nil, fmt.Errorf("hostname not found in Servers")
@@ -748,7 +755,7 @@ func getParents(hostname string, servers map[string]tc.Server, cachegroups map[s
 
 	parents := []tc.Server{}
 	for _, server := range servers {
-		if server.Cachegroup == cachegroup.ParentName {
+		if cachegroup.ParentName != nil && server.Cachegroup == *cachegroup.ParentName {
 			parents = append(parents, server)
 		}
 	}

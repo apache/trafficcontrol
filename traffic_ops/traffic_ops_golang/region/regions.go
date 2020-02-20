@@ -45,7 +45,12 @@ func (v *TORegion) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 func (v *TORegion) UpdateQuery() string { return updateQuery() }
+
+// DeleteQuery returns a query, including a WHERE clause.
 func (v *TORegion) DeleteQuery() string { return deleteQuery() }
+
+// DeleteQueryBase returns a query with no WHERE clause.
+func (v *TORegion) DeleteQueryBase() string { return deleteQueryBase() }
 
 func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
@@ -54,6 +59,14 @@ func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
 //Implementation of the Identifier, Validator interface functions
 func (region TORegion) GetKeys() (map[string]interface{}, bool) {
 	return map[string]interface{}{"id": region.ID}, true
+}
+
+// DeleteKeyOptions returns a map containing the different fields a resource can be deleted by.
+func (region TORegion) DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"id":   dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
+		"name": dbhelpers.WhereColumnInfo{"r.name", nil},
+	}
 }
 
 func (region *TORegion) SetKeys(keys map[string]interface{}) {
@@ -80,6 +93,9 @@ func (rg *TORegion) Read() ([]interface{}, error, error, int) { return api.Gener
 func (rg *TORegion) Update() (error, error, int)              { return api.GenericUpdate(rg) }
 func (rg *TORegion) Create() (error, error, int)              { return api.GenericCreate(rg) }
 func (rg *TORegion) Delete() (error, error, int)              { return api.GenericDelete(rg) }
+
+// OptionsDelete deletes a resource identified either as a route parameter or as a query string parameter.
+func (rg *TORegion) OptionsDelete() (error, error, int) { return api.GenericOptionsDelete(rg) }
 
 func selectQuery() string {
 	return `SELECT
@@ -110,8 +126,12 @@ name) VALUES (
 	return query
 }
 
+func deleteQueryBase() string {
+	query := `DELETE FROM region r`
+	return query
+}
+
 func deleteQuery() string {
-	query := `DELETE FROM region
-WHERE id=:id`
+	query := deleteQueryBase() + ` WHERE id=:id`
 	return query
 }

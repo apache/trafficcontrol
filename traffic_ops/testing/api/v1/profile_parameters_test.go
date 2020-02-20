@@ -20,7 +20,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -54,7 +53,62 @@ func CreateTestProfileParameters(t *testing.T) {
 		ParameterID: parameterID,
 	}
 	resp, _, err := TOSession.CreateProfileParameter(pp)
-	log.Debugln("Response: ", resp)
+	t.Log("Response: ", resp)
+	if err != nil {
+		t.Errorf("could not CREATE profile parameters: %v", err)
+	}
+
+}
+
+func CreateMultipleTestProfileParameters(t *testing.T) {
+
+	firstProfile := testData.Profiles[0]
+	profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name)
+	if err != nil {
+		t.Fatalf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+	}
+
+	firstParameter := testData.Parameters[0]
+	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
+	if err != nil {
+		t.Fatalf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+	}
+
+	profileID := profileResp[0].ID
+	parameterID := paramResp[0].ID
+
+	pp := tc.ProfileParameter{
+		ProfileID:   profileID,
+		ParameterID: parameterID,
+	}
+
+	secondProfile := testData.Profiles[1]
+	secondProfileResp, _, err := TOSession.GetProfileByName(secondProfile.Name)
+	if err != nil {
+		t.Fatalf("cannot GET Profile by name: %v - %v", secondProfile.Name, err)
+	}
+
+	secondParameter := testData.Parameters[0]
+	secondParamResp, _, err := TOSession.GetParameterByName(secondParameter.Name)
+	if err != nil {
+		t.Fatalf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+	}
+
+	profileID2 := secondProfileResp[0].ID
+	parameterID2 := secondParamResp[0].ID
+
+	pp2 := tc.ProfileParameter{
+		ProfileID:   profileID2,
+		ParameterID: parameterID2,
+	}
+
+	ppSlice := []tc.ProfileParameter{
+		pp,
+		pp2,
+	}
+
+	resp, _, err := TOSession.CreateMultipleProfileParameters(ppSlice)
+	t.Log("Response: ", resp)
 	if err != nil {
 		t.Errorf("could not CREATE profile parameters: %v", err)
 	}

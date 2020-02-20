@@ -242,7 +242,7 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 	}
 
 	// Ensure DS type is only of HTTP*, DNS* types
-	dsType, dsExists, err := GetDeliveryServiceType(*rc.DeliveryServiceID, rc.APIInfo().Tx.Tx)
+	dsType, dsExists, err := dbhelpers.GetDeliveryServiceType(*rc.DeliveryServiceID, rc.APIInfo().Tx.Tx)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
@@ -294,7 +294,7 @@ func (rc *RequiredCapability) checkServerCap() (error, error, int) {
 	if err := tx.QueryRow(`
 		SELECT name 
 		FROM server_capability 
-		WHERE name = $1`, rc.RequiredCapability).Scan(&name); err != nil && err != sql.ErrNoRows{
+		WHERE name = $1`, rc.RequiredCapability).Scan(&name); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("querying server capability for name '%v': %v", rc.RequiredCapability, err), http.StatusInternalServerError
 	}
 

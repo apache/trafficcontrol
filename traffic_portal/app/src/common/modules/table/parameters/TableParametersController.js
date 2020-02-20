@@ -19,6 +19,8 @@
 
 var TableParametersController = function(parameters, $scope, $state, $uibModal, $window, locationUtils, parameterService, profileService, messageModel) {
 
+    let parametersTable;
+
     var deleteParameter = function(parameter) {
         parameterService.deleteParameter(parameter.id)
             .then(function(result) {
@@ -77,6 +79,14 @@ var TableParametersController = function(parameters, $scope, $state, $uibModal, 
 
     $scope.parameters = parameters;
 
+    $scope.columns = [
+        { "name": "Name", "visible": true, "searchable": true },
+        { "name": "Config File", "visible": true, "searchable": true },
+        { "name": "Value", "visible": true, "searchable": true },
+        { "name": "Secure", "visible": true, "searchable": true },
+        { "name": "Profiles", "visible": true, "searchable": true }
+    ];
+
     $scope.contextMenuItems = [
         {
             text: 'Open in New Tab',
@@ -118,14 +128,36 @@ var TableParametersController = function(parameters, $scope, $state, $uibModal, 
         $state.reload(); // reloads all the resolves for the view
     };
 
+    $scope.toggleVisibility = function(colName) {
+        const col = parametersTable.column(colName + ':name');
+        col.visible(!col.visible());
+        parametersTable.rows().invalidate().draw();
+    };
+
+    $scope.columnFilterFn = function(column) {
+        if (column.name === 'Action') {
+            return false;
+        }
+        return true;
+    };
+
     angular.element(document).ready(function () {
-        $('#parametersTable').dataTable({
+        parametersTable = $('#parametersTable').DataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
             "aaSorting": [],
             "columnDefs": [
                 { "width": "50%", "targets": 2 }
-            ]
+            ],
+            "columns": $scope.columns,
+            "initComplete": function(settings, json) {
+                try {
+                    // need to create the show/hide column checkboxes and bind to the current visibility
+                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_parametersTable_/')).columns;
+                } catch (e) {
+                    console.error("Failure to retrieve required column info from localStorage (key=DataTables_parametersTable_/):", e);
+                }
+            }
         });
     });
 

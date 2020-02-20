@@ -21,12 +21,12 @@ import (
 )
 
 const (
-	API_v13_PING = "/api/1.3/ping"
+	API_PING = apiBase + "/ping"
 )
 
 // Ping returns a static json object to show that traffic_ops is responsive
 func (to *Session) Ping() (map[string]string, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_PING, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PING, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

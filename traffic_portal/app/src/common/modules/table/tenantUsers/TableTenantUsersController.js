@@ -17,11 +17,14 @@
  * under the License.
  */
 
-var TableTenantUsersController = function(tenant, tenantUsers, $scope, $state, locationUtils) {
+var TableTenantUsersController = function(tenant, tenantUsers, $controller, $scope, $state, locationUtils) {
+
+	// extends the TableUsersController to inherit common methods
+	angular.extend(this, $controller('TableUsersController', { users: tenantUsers, $scope: $scope }));
+
+	let tenantUsersTable;
 
 	$scope.tenant = tenant;
-
-	$scope.tenantUsers = tenantUsers;
 
 	$scope.editUser = function(id) {
 		locationUtils.navigateToPath('/users/' + id);
@@ -31,17 +34,32 @@ var TableTenantUsersController = function(tenant, tenantUsers, $scope, $state, l
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.toggleVisibility = function(colName) {
+		const col = tenantUsersTable.column(colName + ':name');
+		col.visible(!col.visible());
+		tenantUsersTable.rows().invalidate().draw();
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#tenantUsersTable').dataTable({
+		tenantUsersTable = $('#tenantUsersTable').DataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_tenantUsersTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_tenantUsersTable_/):", e);
+				}
+			}
 		});
 	});
 
 };
 
-TableTenantUsersController.$inject = ['tenant', 'tenantUsers', '$scope', '$state', 'locationUtils'];
+TableTenantUsersController.$inject = ['tenant', 'tenantUsers', '$controller', '$scope', '$state', 'locationUtils'];
 module.exports = TableTenantUsersController;

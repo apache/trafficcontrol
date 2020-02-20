@@ -1,11 +1,7 @@
 ************
 Introduction
 ************
-This is the Traffic Ops Python Client for Python 2.x and Python 3.x.
-
-.. attention:: Traffic Control version 3.0.0 officially deprecates Python 2.x support. Starting with Traffic Control version 4.0.0, Python 2.x support will be dropped, and only Python 3.x will be supported. Users and developers are encouraged to switch to Python 3 as soon as possible.
-
-.. note:: This client has only been tested against Python 2.7, 3.4, and 3.6. Other versions may or may not work.
+This is the Traffic Ops Python Client for Python 3.x.
 
 Installation
 ============
@@ -33,7 +29,7 @@ The preferred method is to use ``pip`` to install locally. Starting from the rep
 	# The above will install using the system's default Python interpreter - to use a specific
 	# version it will be necessary to specify the interpreter and pass the 'pip' module to it.
 	# e.g. for the system's default Python 2 interpreter, typically one would do:
-	# sudo -H /usr/bin/env python2 -m pip install .
+	# sudo -H /usr/bin/env python3 -m pip install .
 
 	# Developers may wish to use the '-e' flag. This will install the package 'edit-ably',
 	# meaning that changes made to the package within the repository structure will be effected on
@@ -51,7 +47,7 @@ The local installation method requires ``pip`` and ``setuptools``. ``setuptools`
 	:caption: Setuptools Package Installation
 
 	# Here I'm using 'python' because that points to a Python 3 interpreter on my system. You may
-	# wish to use 'python3' or 'python2' (please not that one) instead.
+	# wish to use 'python3' instead.
 	sudo -H python -m ensure_pip
 	sudo -H python -m pip install -U pip
 

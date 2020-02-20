@@ -26,11 +26,10 @@ import (
 )
 
 const (
-	v13Profiles = "/api/1.3/profiles"
-	v14Profiles = "/api/1.4/profiles"
+	API_PROFILES = apiBase + "/profiles"
 )
 
-// CreateProfile creates a Profile
+// CreateProfile creates a Profile.
 func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
@@ -59,7 +58,7 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 		return tc.Alerts{}, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, v13Profiles, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PROFILES, reqBody)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -72,7 +71,7 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, err
 }
 
-// UpdateProfileByID updates a Profile by ID
+// UpdateProfileByID updates a Profile by ID.
 func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
@@ -81,7 +80,7 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 		return tc.Alerts{}, reqInf, err
 	}
 
-	route := fmt.Sprintf("%s/%d", v13Profiles, id)
+	route := fmt.Sprintf("%s/%d", API_PROFILES, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
@@ -95,18 +94,11 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 	return alerts, reqInf, err
 }
 
-// Profiles gets an array of Profiles
-// Deprecated: use GetProfiles
-func (to *Session) Profiles() ([]tc.Profile, error) {
-	ps, _, err := to.GetProfiles()
-	return ps, err
-}
-
-// GetProfiles returns a list of Profiles
+// GetProfiles returns a list of Profiles.
 func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
-	resp, remoteAddr, err := to.request(http.MethodGet, v13Profiles, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILES, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return nil, reqInf, err
@@ -119,9 +111,9 @@ func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	return data.Response, reqInf, err
 }
 
-// GetProfileByID GET a Profile by the Profile ID
+// GetProfileByID GETs a Profile by the Profile ID.
 func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", v13Profiles, id)
+	route := fmt.Sprintf("%s/%d", API_PROFILES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -135,9 +127,9 @@ func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
 	return data.Response, reqInf, err
 }
 
-// GetProfileByName GET a Profile by the Profile name
+// GetProfileByName GETs a Profile by the Profile name.
 func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
-	URI := fmt.Sprintf("%s?name=%s", v13Profiles, url.QueryEscape(name))
+	URI := fmt.Sprintf("%s?name=%s", API_PROFILES, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -151,9 +143,9 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
 	return data.Response, reqInf, err
 }
 
-// GetProfileByParameter GETs a Profile by the Profile "param"
+// GetProfileByParameter GETs a Profile by the Profile "param".
 func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, error) {
-	URI := fmt.Sprintf("%s?param=%s", v13Profiles, url.QueryEscape(param))
+	URI := fmt.Sprintf("%s?param=%s", API_PROFILES, url.QueryEscape(param))
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -167,9 +159,9 @@ func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, er
 	return data.Response, reqInf, err
 }
 
-// GetProfileByCDNID GETs a Profile by the Profile cdn id
+// GetProfileByCDNID GETs a Profile by the Profile CDN ID.
 func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
-	URI := fmt.Sprintf("%s?cdn=%s", v13Profiles, strconv.Itoa(cdnID))
+	URI := fmt.Sprintf("%s?cdn=%s", API_PROFILES, strconv.Itoa(cdnID))
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -183,9 +175,9 @@ func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
 	return data.Response, reqInf, err
 }
 
-// DeleteProfileByID DELETEs a Profile by ID
+// DeleteProfileByID DELETEs a Profile by ID.
 func (to *Session) DeleteProfileByID(id int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", v13Profiles, id)
+	URI := fmt.Sprintf("%s/%d", API_PROFILES, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -199,9 +191,9 @@ func (to *Session) DeleteProfileByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, err
 }
 
-// ExportProfile Returns an exported Profile
+// ExportProfile Returns an exported Profile.
 func (to *Session) ExportProfile(id int) (*tc.ProfileExportResponse, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/export", v13Profiles, id)
+	route := fmt.Sprintf("%s/%d/export", API_PROFILES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -215,11 +207,11 @@ func (to *Session) ExportProfile(id int) (*tc.ProfileExportResponse, ReqInf, err
 	return &data, reqInf, err
 }
 
-// ImportProfile imports an exported Profile
+// ImportProfile imports an exported Profile.
 func (to *Session) ImportProfile(importRequest *tc.ProfileImportRequest) (*tc.ProfileImportResponse, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
-	route := fmt.Sprintf("%s/import", v13Profiles)
+	route := fmt.Sprintf("%s/import", API_PROFILES)
 	reqBody, err := json.Marshal(importRequest)
 	if err != nil {
 		return nil, reqInf, err
@@ -241,7 +233,7 @@ func (to *Session) ImportProfile(importRequest *tc.ProfileImportRequest) (*tc.Pr
 // CopyProfile creates a new profile from an existing profile.
 func (to *Session) CopyProfile(p tc.ProfileCopy) (tc.ProfileCopyResponse, ReqInf, error) {
 	var (
-		path   = fmt.Sprintf("%s/name/%s/copy/%s", v14Profiles, p.Name, p.ExistingName)
+		path   = fmt.Sprintf("%s/name/%s/copy/%s", API_PROFILES, p.Name, p.ExistingName)
 		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
 		resp   tc.ProfileCopyResponse
 	)

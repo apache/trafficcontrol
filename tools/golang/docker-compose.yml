@@ -15,21 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 ---
-version: '2.4'
+version: '2.3'
 
 services:
   lint:
     build:
-      context: ../..
-      dockerfile: tools/golang/Dockerfile
+      context: .
+      dockerfile: Dockerfile
       target: lint
     volumes:
       - ../..:/go/src/github.com/apache/trafficcontrol
 
   unit:
     build:
-      context: ../..
-      dockerfile: tools/golang/Dockerfile
+      context: .
+      dockerfile: Dockerfile
       target: unit
     volumes:
       - ../..:/go/src/github.com/apache/trafficcontrol
+      - ./junit:/junit

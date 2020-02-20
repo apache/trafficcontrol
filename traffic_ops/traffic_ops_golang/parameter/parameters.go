@@ -52,6 +52,8 @@ type TOParameter struct {
 	tc.ParameterNullable
 }
 
+// AllowMultipleCreates indicates whether an array can be POSTed using the shared Create handler
+func (v *TOParameter) AllowMultipleCreates() bool    { return true }
 func (v *TOParameter) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOParameter) InsertQuery() string           { return insertQuery() }
 func (v *TOParameter) NewReadObj() interface{}       { return &tc.ParameterNullable{} }

@@ -137,8 +137,10 @@ Built: %(date) by %{getenv: USER}
 %post
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
     %__mkdir -p /var/www/files
+    %__mkdir -p /etc/cron.d/
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_clean_isos /etc/cron.d/trafops_clean_isos
+    %__cp %{PACKAGEDIR}/etc/cron.d/autorenew_certs /etc/cron.d/autorenew_certs
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_golang /etc/logrotate.d/traffic_ops_golang
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
@@ -146,6 +148,7 @@ Built: %(date) by %{getenv: USER}
     %__cp %{PACKAGEDIR}/etc/profile.d/traffic_ops.sh /etc/profile.d/traffic_ops.sh
     %__chown root:root /etc/init.d/traffic_ops
     %__chown root:root /etc/cron.d/trafops_dnssec_refresh
+    %__chown root:root /etc/cron.d/autorenew_certs
     %__chown root:root /etc/cron.d/trafops_clean_isos
     %__chown root:root /etc/logrotate.d/traffic_ops
     %__chown root:root /etc/logrotate.d/traffic_ops_golang

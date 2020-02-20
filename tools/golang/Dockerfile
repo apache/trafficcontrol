@@ -21,13 +21,14 @@ RUN apk --no-cache add gcc musl-dev git
 
 ARG DIR=github.com/apache/trafficcontrol
 
-# Add repo and perform go get
-# Needed since we have no dependency manager and go source is throughout
-ADD . /go/src/$DIR
-
 WORKDIR /go/src/github.com/apache/trafficcontrol
 
-RUN go get -v ./...
+RUN go get golang.org/x/crypto/ed25519\
+           golang.org/x/crypto/scrypt\
+           golang.org/x/net/ipv4\
+           golang.org/x/net/ipv6\
+           golang.org/x/net/publicsuffix\
+           golang.org/x/sys/unix
 
 FROM base AS lint
 
@@ -42,4 +43,9 @@ CMD ["golangci-lint", "run", "./..."]
 
 FROM base AS unit
 
-CMD sh -c 'go test $(go list ./... | grep -v  -e experimental -e "test/router" -e "api/v1")'
+VOLUME ["/junit"]
+
+RUN go get github.com/wadey/gocovmerge &&\
+    go get -u github.com/jstemmer/go-junit-report
+
+CMD /go/src/github.com/apache/trafficcontrol/tools/golang/unit-tests.sh

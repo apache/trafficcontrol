@@ -84,7 +84,7 @@ export class APIService {
 	 * The current API version to use
 	 * @todo Get this from the environment
 	 */
-	public API_VERSION = '1.4';
+	public API_VERSION = '2.0';
 
 	private deliveryServiceTypes: Array<Type>;
 

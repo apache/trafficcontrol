@@ -305,12 +305,12 @@ func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 	if xmlID == nil {
 		t.Fatal("xml id must not be nil")
 	}
-	ds, _, err := TOSession.GetDeliveryServiceByXMLID(*xmlID)
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*xmlID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(ds) != 1 {
 		t.Fatalf("cannot GET deliveyservice by xml id: %v. Response did not include record.", *xmlID)
 	}
-	return &ds[0].ID
+	return ds[0].ID
 }

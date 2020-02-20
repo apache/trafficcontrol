@@ -45,6 +45,7 @@ my $skip_os_check = 0;
 my $override_hostname_short = '';
 my $override_hostname_full = '';
 my $override_domainname = '';
+my $use_cache = 1;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
@@ -55,6 +56,7 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "override_hostname_short=s" => \$override_hostname_short,
             "override_hostname_full=s" => \$override_hostname_full,
             "override_domainname=s" => \$override_domainname,
+            "use_cache=i" => \$use_cache,
           );
 
 if ( $#ARGV < 1 ) {
@@ -356,6 +358,7 @@ sub usage {
 	print "\t   override_hostname_short=<text> => override the short hostname of the OS for config generation. Default = ''.\n";
 	print "\t   override_hostname_full=<text>  => override the full hostname of the OS for config generation. Default = ''.\n";
 	print "\t   override_domainname=<text>     => override the domainname of the OS for config generation. Default = ''.\n";
+	print "\t   use_cache=<0|1>                => whether to use cached Traffic Ops data for config generation. Default = 1, use cache.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -794,6 +797,8 @@ sub update_trops {
 sub send_update_to_trops {
 	my $status = shift;
 	my $reval_status = shift;
+
+	# TODO: this is a non-standard API endpoint that will be removed with the Perl; need to update it.
 	my $uri    = "/update/$hostname_short";
 	( $log_level >> $DEBUG ) && print "DEBUG Setting update flag in Traffic Ops to $status.\n";
 
@@ -814,7 +819,7 @@ sub get_print_current_client_connections {
 }
 
 sub get_update_status {
-	my $uri     = "/api/1.3/servers/$hostname_short/update_status";
+	my $uri     = "/api/2.0/servers/$hostname_short/update_status";
 	my $upd_ref = &lwp_get($uri);
 	if ($upd_ref eq '404') {
 		( $log_level >> $ERROR ) && printf("ERROR ORT version incompatible with current version of Traffic Ops. Please upgrade to Traffic Ops 2.2.\n");
@@ -830,7 +835,7 @@ sub get_update_status {
 
 	##Some versions of Traffic Ops had the 1.3 API but did not have the use_reval_pending field.  If this field is not present, exit.
 	if ( !defined( $upd_json->[0]->{'use_reval_pending'} ) ) {
-		my $info_uri = "/api/1.4/system/info.json";
+		my $info_uri = "/api/2.0/system/info";
 		my $info_ref = &lwp_get($info_uri);
 		if ($info_ref eq '404') {
 			( $log_level >> $ERROR ) && printf("ERROR Unable to get status of use_reval_pending parameter.  Stopping.\n");
@@ -889,7 +894,7 @@ sub check_revalidate_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no revalidations are waiting to be applied.\n";
 		}
 
-		my $stj = &lwp_get("/api/1.4/statuses");
+		my $stj = &lwp_get("/api/2.0/statuses");
 		if ( $stj =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
 		}
@@ -979,7 +984,7 @@ sub check_syncds_state {
 						( $dispersion > 0 ) && &sleep_timer($dispersion);
 					}
 					($upd_json, $uri) = get_update_status();
-					
+
 					$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
 					if ( !defined($parent_pending) ) {
 						( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
@@ -993,7 +998,7 @@ sub check_syncds_state {
 						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
 					}
 				}
-			}			
+			}
 			else {
 				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
 			}
@@ -1006,7 +1011,7 @@ sub check_syncds_state {
 		else {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
 		}
-		my $stj = &lwp_get("/api/1.4/statuses");
+		my $stj = &lwp_get("/api/2.0/statuses");
 		if ( $stj =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
 		}
@@ -1077,9 +1082,9 @@ sub sleep_rand {
 sub sleep_timer {
 	my $duration = shift;
 	my $reval_clock = $reval_wait_time;
-	
-	my $proper_script_mode = $script_mode; 
-	
+
+	my $proper_script_mode = $script_mode;
+
 	if ( $reval_in_use == 1 && $proper_script_mode != $BADASS ) {
 		( $log_level >> $WARN ) && print "WARN Performing a revalidation check before sleeping... \n";
 		&revalidate_while_sleeping();
@@ -1114,7 +1119,7 @@ sub sleep_timer {
 		}
 	}
 
-	$script_mode = $proper_script_mode; 
+	$script_mode = $proper_script_mode;
 
 	( $log_level >> $WARN ) && print "\n";
 }
@@ -1505,7 +1510,12 @@ sub lwp_get {
 
 	my ( $TO_USER, $TO_PASS ) = split( /:/, $TM_LOGIN );
 
-	$response_content = `$atstccfg_cmd --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
+	my $no_cache_arg = '';
+	if ( $use_cache == 0 ) {
+		$no_cache_arg = '--no-cache';
+	}
+
+	$response_content = `$atstccfg_cmd $no_cache_arg --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
 
 	my $atstccfg_exit_code = $?;
 	$atstccfg_exit_code = atstccfg_code_to_http_code($atstccfg_exit_code);
@@ -1679,7 +1689,7 @@ sub get_cookie {
 		&sleep_rand($login_dispersion);
 	}
 
-	my $url = $to_host . "/api/1.3/user/login";
+	my $url = $to_host . "/api/2.0/user/login";
 	my $json = qq/{ "u": "$u", "p": "$p"}/;
 	my $response = $lwp_conn->post($url, Content => $json);
 
@@ -1837,7 +1847,7 @@ sub get_cfg_file_list {
 	my $cfg_files;
 	my $profile_name;
 	my $cdn_name;
-	my $uri = "/api/1.4/servers/$host_name/configfiles/ats";
+	my $uri = "/api/2.0/servers/$host_name/configfiles/ats"; #This doesn't actually exist in 2.0, but atstccfg doesn't care
 
 	my $result = &lwp_get($uri);
 
@@ -1848,7 +1858,7 @@ sub get_cfg_file_list {
 	}
 
 	my $ort_ref = decode_json($result);
-	
+
 	if ($api_in_use == 1) {
 		$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
 		if ( $to_rev_proxy_url && $rev_proxy_disable == 0 ) {
@@ -1948,7 +1958,7 @@ sub get_header_comment {
 	my $to_host = shift;
 	my $toolname;
 
-	my $uri    = "/api/1.4/system/info.json";
+	my $uri    = "/api/2.0/system/info";
 	my $result = &lwp_get($uri);
 
 	my $result_ref = decode_json($result);
@@ -2115,6 +2125,8 @@ sub process_packages {
 	my $tm_host   = shift;
 
 	my $proceed = 0;
+
+	# TODO: this is a non-standard API endpoint that will be removed with the Perl; need to update it.
 	my $uri     = "/ort/$host_name/packages";
 	my $result  = &lwp_get($uri);
 
@@ -2363,6 +2375,8 @@ sub process_chkconfig {
 	my $tm_host   = shift;
 
 	my $proceed = 0;
+
+	# TODO: this is a non-standard API endpoint that will be removed with the Perl; need to update it.
 	my $uri     = "/ort/$host_name/chkconfig";
 	my $result  = &lwp_get($uri);
 
@@ -2620,7 +2634,7 @@ sub validate_result {
 
 sub set_uri {
 	my $filename = shift;
-	
+
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
 	my $URI;
 	if ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'apiUri'}) ) {
@@ -2633,7 +2647,7 @@ sub set_uri {
 
 	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
 
-	return $URI; 
+	return $URI;
 }
 
 sub scrape_unencode_text {
@@ -2914,7 +2928,7 @@ sub adv_preprocessing_remap {
 
 	if ( 1 < $#file_lines ) { #header line is always present, so look for 2 lines or more
 		( $log_level >> $DEBUG ) && print "DEBUG Entering advanced pre-processing for remap.config.\n";
-		
+
 		# key on the FROM remap
 		my %override_hash=();
 
@@ -3049,7 +3063,7 @@ sub adv_processing_ssl {
 	my @db_file_lines = @{ $_[0] };
 	if (@db_file_lines > 1) { #header line is always present, so look for 2 lines or more
 		( $log_level >> $DEBUG ) && print "DEBUG Entering advanced processing for ssl_multicert.config.\n";
-		my $uri = "/api/1.4/cdns/name/$my_cdn_name/sslkeys.json";
+		my $uri = "/api/2.0/cdns/name/$my_cdn_name/sslkeys";
 		my $result = &lwp_get($uri);
 		if ( $result =~ m/^\d{3}$/ ) {
 			if ( $script_mode == $REPORT ) {

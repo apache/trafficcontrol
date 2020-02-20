@@ -36,6 +36,8 @@ class API(TOSession):
 	"""
 	This class extends :class:`trafficops.tosession.TOSession` to provide some ease-of-use
 	functionality for getting things needed by :term:`ORT`.
+
+	TODO: update to 2.0 if/when atstccfg support is integrated.
 	"""
 
 	#: This should always be the latest API version supported - note this breaks compatability with

@@ -150,7 +150,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CAPABILITY: %s, ACTION: Created", cap.Name), inf.User, tx)
 }
 
-
 func capabilityNameExists(c string, tx *sql.Tx) (bool, error) {
 	row := tx.QueryRow(`SELECT name FROM capability WHERE name=$1`, c)
 	var n string

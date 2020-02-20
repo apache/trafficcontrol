@@ -22,13 +22,16 @@ package api
  */
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
+	"net/mail"
 	"net/smtp"
 	"regexp"
 	"strconv"
@@ -158,7 +161,7 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 	respBts, err := json.Marshal(tc.CreateErrorAlerts(userErr))
 	if err != nil {
 		log.Errorln("marshalling error: " + err.Error())
-		w.Write(append([]byte(http.StatusText(http.StatusInternalServerError)),'\n'))
+		w.Write(append([]byte(http.StatusText(http.StatusInternalServerError)), '\n'))
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
@@ -205,6 +208,25 @@ func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel,
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.Write(append(respBts, '\n'))
+}
+
+// WriteRespAlertNotFound creates an alert indicating that the resource was not found and writes that to w.
+func WriteRespAlertNotFound(w http.ResponseWriter, r *http.Request) {
+	if respWritten(r) {
+		log.Errorf("WriteRespAlert called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	resp := struct{ tc.Alerts }{tc.CreateAlerts(tc.ErrorLevel, "Resource not found.")}
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
+		return
+	}
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.WriteHeader(http.StatusNotFound)
 	w.Write(append(respBts, '\n'))
 }
 
@@ -830,6 +852,36 @@ func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, u)
 	*r = *r.WithContext(ctx)
+}
+
+// SendEmailFromTemplate allows a user to input an html template to format an email.  It parses the template and creates a message before calling the SendMail method.
+// SendEmailFromTemplate returns (in order) an HTTP status code, a user-friendly error, and an error fit for
+// logging to system error logs. If either the user or system error is non-nil, the operation failed,
+// and the HTTP status code indicates the type of failure.
+func SendEmailFromTemplate(config config.Config, header string, data interface{}, templateFile string, toEmail string) (int, error, error) {
+	email := rfc.EmailAddress{
+		Address: mail.Address{Name: "", Address: toEmail},
+	}
+
+	msgBodyBuffer, err := parseTemplate(templateFile, data)
+	if err != nil {
+		return http.StatusInternalServerError, err, nil
+	}
+	msg := append([]byte(header), msgBodyBuffer.Bytes()...)
+
+	return SendMail(email, msg, &config)
+
+}
+
+func parseTemplate(templateFileName string, data interface{}) (*bytes.Buffer, error) {
+	t, err := template.ParseFiles(templateFileName)
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	err = t.Execute(buf, data)
+
+	return buf, err
 }
 
 type loginAuth struct {

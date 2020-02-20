@@ -22,10 +22,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 )
 
 func TestUsers(t *testing.T) {
@@ -36,6 +35,8 @@ func TestUsers(t *testing.T) {
 		UserSelfUpdateTest(t)
 		UserUpdateOwnRoleTest(t)
 		GetTestUsers(t)
+		GetTestAdminUsers(t)
+		GetTestOperationsUsers(t)
 		GetTestUserCurrent(t)
 		UserTenancyTest(t)
 	})
@@ -50,7 +51,7 @@ func CreateTestUsers(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE user: %v", err)
 		}
-		log.Debugln("Response: ", resp.Alerts)
+		t.Log("Response: ", resp.Alerts)
 	}
 }
 
@@ -289,6 +290,32 @@ func GetTestUsers(t *testing.T) {
 	_, _, err := TOSession.GetUsers()
 	if err != nil {
 		t.Errorf("cannot GET users: %v", err)
+	}
+}
+
+func GetTestAdminUsers(t *testing.T) {
+	adminUsers, _, err := TOSession.GetUsersByRole("admin")
+	if err != nil {
+		t.Errorf("users get: Cannot GET admin users by role: %v", err)
+	} else if len(adminUsers) == 0 {
+		t.Errorf("users get: No admin users found")
+	} else if adminUsers[0].RoleName == nil {
+		t.Errorf("users get: RoleName property doesn't exist")
+	} else if *adminUsers[0].RoleName != "admin" {
+		t.Errorf("users get: RoleName expected %v actual %v", "admin", *adminUsers[0].RoleName)
+	}
+}
+
+func GetTestOperationsUsers(t *testing.T) {
+	opsUsers, _, err := TOSession.GetUsersByRole("operations")
+	if err != nil {
+		t.Errorf("users get: Cannot GET operations users by role: %v", err)
+	} else if len(opsUsers) == 0 {
+		t.Errorf("users get: No operations users found")
+	} else if opsUsers[0].RoleName == nil {
+		t.Errorf("users get: RoleName property doesn't exist")
+	} else if *opsUsers[0].RoleName != "operations" {
+		t.Errorf("users get: RoleName expected %v actual %v", "operations", *opsUsers[0].RoleName)
 	}
 }
 

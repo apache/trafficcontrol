@@ -21,6 +21,7 @@ package api
 
 import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 type CRUDer interface {
@@ -58,6 +59,11 @@ type Creator interface {
 	Validator
 }
 
+// MultipleCreator indicates whether an object using the shared handlers allows an array of objects in the POST
+type MultipleCreator interface {
+	AllowMultipleCreates() bool
+}
+
 type Reader interface {
 	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
 	Read() ([]interface{}, error, error, int)
@@ -79,12 +85,25 @@ type Deleter interface {
 	Identifier
 }
 
+// OptionsDeleter calls the OptionsDelete() generic CRUD function, unlike Deleter, which calls Delete().
+type OptionsDeleter interface {
+	// OptionsDelete returns any user error, any system error, and the HTTP error code to be returned if there was an
+	// error.
+	OptionsDelete() (error, error, int)
+	APIInfoer
+	Identifier
+}
+
 type Validator interface {
 	Validate() error
 }
 
 type Tenantable interface {
 	IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
+}
+
+type HasDeleteKeyOptions interface {
+	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 }
 
 // APIInfoer is an interface that guarantees the existance of a variable through its setters and getters.

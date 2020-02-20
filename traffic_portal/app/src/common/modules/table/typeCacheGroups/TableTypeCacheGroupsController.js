@@ -22,9 +22,34 @@ var TableTypeCacheGroupsController = function(type, cacheGroups, $controller, $s
 	// extends the TableCacheGroupsController to inherit common methods
 	angular.extend(this, $controller('TableCacheGroupsController', { cacheGroups: cacheGroups, $scope: $scope }));
 
+	let typeCacheGroupsTable;
+
 	$scope.type = type;
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
+
+	$scope.toggleVisibility = function(colName) {
+		const col = typeCacheGroupsTable.column(colName + ':name');
+		col.visible(!col.visible());
+		typeCacheGroupsTable.rows().invalidate().draw();
+	};
+
+	angular.element(document).ready(function () {
+		typeCacheGroupsTable = $('#typeCacheGroupsTable').DataTable({
+			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+			"iDisplayLength": 25,
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_typeCacheGroupsTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_typeCacheGroupsTable_/):", e);
+				}
+			}
+		});
+	});
 
 };
 

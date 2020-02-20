@@ -27,6 +27,19 @@ under the License.
         <div class="pull-right">
             <button class="btn btn-primary" title="Link Parameters to Profile" ng-click="selectParams()"><i class="fa fa-link"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-columns"></i>&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name' | filter:columnFilterFn">
+                        <div class="checkbox">
+                            <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
+                        </div>
+                    </li>
+                </menu>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>

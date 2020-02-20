@@ -46,6 +46,7 @@ type Config struct {
 	ConfigTO               *ConfigTO   `json:"to"`
 	SMTP                   *ConfigSMTP `json:"smtp"`
 	ConfigPortal           `json:"portal"`
+	ConfigLetsEncrypt      `json:"lets_encrypt"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	ConfigGenISO           ConfigGenISO   `json:"geniso"`
@@ -146,6 +147,15 @@ type ConfigSMTP struct {
 // ConfigGenISO contains configuration options for the system ISO generation.
 type ConfigGenISO struct {
 	ISORootPath string `json:"iso_root_path"`
+}
+
+// ConfigLetsEncrypt contains configuration information for integration with the Let's Encrypt certificate authority.
+type ConfigLetsEncrypt struct {
+	Email                     string `json:"user_email,omitempty"`
+	SendExpEmail              bool   `json:"send_expiration_email"`
+	ConvertSelfSigned         bool   `json:"convert_self_signed"`
+	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
+	Environment               string `json:"environment"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file

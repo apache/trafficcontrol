@@ -28,26 +28,28 @@ import (
 )
 
 const (
-	API_v13_Servers                        = "/api/1.3/servers"
-	API_v14_Server_Assign_DeliveryServices = "/api/1.4/servers/%d/deliveryservices?replace=%t"
-	API_v14_Server_DeliveryServices        = "/api/1.4/servers/%d/deliveryservices"
+	API_SERVERS                         = apiBase + "/servers"
+	API_SERVER_ASSIGN_DELIVERY_SERVICES = API_SERVER_DELIVERY_SERVICES + "?replace=%t"
 )
 
-// Create a Server
+// CreateServer creates a Server.
 func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	if server.CachegroupID == 0 && server.Cachegroup != "" {
-		cg, _, err := to.GetCacheGroupByName(server.Cachegroup)
+		cg, _, err := to.GetCacheGroupNullableByName(server.Cachegroup)
 		if err != nil {
 			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + server.Cachegroup + ":" + err.Error())
 		}
 		if len(cg) == 0 {
 			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + server.Cachegroup)
 		}
-		server.CachegroupID = cg[0].ID
+		if cg[0].ID == nil {
+			return tc.Alerts{}, ReqInf{}, errors.New("Cachegroup named " + server.Cachegroup + " has a nil ID")
+		}
+		server.CachegroupID = *cg[0].ID
 	}
 	if server.CDNID == 0 && server.CDNName != "" {
 		c, _, err := to.GetCDNByName(server.CDNName)
@@ -104,7 +106,7 @@ func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
 		return tc.Alerts{}, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Servers, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -114,7 +116,7 @@ func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// Update a Server by ID
+// UpdateServerByID updates a Server by ID.
 func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -123,7 +125,7 @@ func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_Servers, id)
+	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -134,16 +136,9 @@ func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf
 	return alerts, reqInf, nil
 }
 
-// Servers gets an array of servers
-// Deprecated: use GetServers
-func (to *Session) Servers() ([]tc.Server, error) {
-	s, _, err := to.GetServers()
-	return s, err
-}
-
-// Returns a list of Servers
+// GetServers returns a list of Servers.
 func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Servers, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_SERVERS, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -155,19 +150,9 @@ func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// Server gets a server by hostname
-// Deprecated: use GetServer
-func (to *Session) Server(name string) (*tc.Server, error) {
-	s, _, err := to.GetServerByHostName(name)
-	if len(s) > 0 {
-		return &s[0], err
-	}
-	return nil, errors.New("not found")
-}
-
-// GET a Server by the Server ID
+// GetServerByID GETs a Server by the Server ID.
 func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_Servers, id)
+	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -183,9 +168,9 @@ func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a Server by the Server hostname
+// GetServerByHostName GETs Servers by the Server hostname.
 func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, error) {
-	url := fmt.Sprintf("%s?hostName=%s", API_v13_Servers, hostName)
+	url := fmt.Sprintf("%s?hostName=%s", API_SERVERS, hostName)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -201,9 +186,9 @@ func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, er
 	return data.Response, reqInf, nil
 }
 
-// DELETE a Server by ID
+// DeleteServerByID DELETEs a Server by ID.
 func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_Servers, id)
+	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -215,15 +200,11 @@ func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// ServersByType gets an array of serves of a specified type.
-// Deprecated: use GetServersByType
-func (to *Session) ServersByType(qparams url.Values) ([]tc.Server, error) {
-	ss, _, err := to.GetServersByType(qparams)
-	return ss, err
-}
-
+// GetServersByType returns all servers that match the given query parameter filters, NOT
+// - as the name might imply - all servers of a specific type (though type can be specified
+// in the query parameters).
 func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, error) {
-	url := fmt.Sprintf("%s.json?%s", API_v13_Servers, qparams.Encode())
+	url := fmt.Sprintf("%s?%s", API_SERVERS, qparams.Encode())
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -239,13 +220,8 @@ func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, er
 	return data.Response, reqInf, nil
 }
 
-// ServersFqdn returns a the full domain name for the server short name passed in.
-// Deprecated: use GetServersFQDN
-func (to *Session) ServersFqdn(n string) (string, error) {
-	f, _, err := to.GetServerFQDN(n)
-	return f, err
-}
-
+// GetServerFQDN returns the Fully Qualified Domain Name (FQDN) of the first server found to
+// have the Host Name 'n'.
 func (to *Session) GetServerFQDN(n string) (string, ReqInf, error) {
 	// TODO fix to only request one server
 	fdn := ""
@@ -265,13 +241,7 @@ func (to *Session) GetServerFQDN(n string) (string, ReqInf, error) {
 	return fdn, reqInf, nil
 }
 
-// ServersShortNameSearch returns a slice of short server names that match a greedy match.
-// Deprecated: use GetServersShortNameSearch
-func (to *Session) ServersShortNameSearch(shortname string) ([]string, error) {
-	ss, _, err := to.GetServersShortNameSearch(shortname)
-	return ss, err
-}
-
+// GetServersShortNameSearch returns all of the Host Names of servers that contain 'shortname'.
 func (to *Session) GetServersShortNameSearch(shortname string) ([]string, ReqInf, error) {
 	var serverlst []string
 	servers, reqInf, err := to.GetServers()
@@ -301,7 +271,7 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
-	endpoint := fmt.Sprintf(API_v14_Server_Assign_DeliveryServices, server, replace)
+	endpoint := fmt.Sprintf(API_SERVER_ASSIGN_DELIVERY_SERVICES, server, replace)
 
 	reqBody, err := json.Marshal(dsIDs)
 	if err != nil {
@@ -319,8 +289,10 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 	return alerts, reqInf, err
 }
 
+// GetServerIDDeliveryServices returns all of the Delivery Services assigned to the server identified
+// by the integral, unique identifier 'server'.
 func (to *Session) GetServerIDDeliveryServices(server int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
-	endpoint := fmt.Sprintf(API_v14_Server_DeliveryServices, server)
+	endpoint := fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, server)
 
 	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
