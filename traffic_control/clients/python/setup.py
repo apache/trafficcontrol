@@ -29,9 +29,9 @@ if pyversion.major < 3:
 	sys.stderr.write("Python 2 is no longer supported\n")
 	sys.exit(1)
 
-elif pyversion.major == 3 and (pyversion.minor < 4 or pyversion.minor > 6):
+elif pyversion.major == 3 and (pyversion.minor < 6 or pyversion.minor > 8):
 	MSG = ('WARNING: This library may not work properly with Python {0.major}.{0.minor}.{0.micro}, '
-	       'as it is untested for this version. (3.4 <= version <=3.6 recommended)\n')
+	       'as it is untested for this version. (3.6 <= version <=3.8 recommended)\n')
 	sys.stderr.write(MSG.format(pyversion))
 
 HERE = os.path.abspath(os.path.dirname(__file__))
