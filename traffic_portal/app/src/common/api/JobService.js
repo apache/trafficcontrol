@@ -33,7 +33,6 @@ var JobService = function($http, ENV) {
 	this.createJob = function(job) {
 		return $http.post(ENV.api['root'] + 'jobs', job).then(
 			function (result) {
-				console.info('new job created: ', result);
 				return result;
 			},
 			function (err) {
