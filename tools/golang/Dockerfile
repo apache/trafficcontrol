@@ -21,10 +21,6 @@ RUN apk --no-cache add gcc musl-dev git
 
 ARG DIR=github.com/apache/trafficcontrol
 
-# Add repo and perform go get
-# Needed since we have no dependency manager and go source is throughout
-ADD . /go/src/$DIR
-
 WORKDIR /go/src/github.com/apache/trafficcontrol
 
 RUN go get golang.org/x/crypto/ed25519\
