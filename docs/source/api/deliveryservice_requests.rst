@@ -13,11 +13,11 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice_request:
+.. _to-api-deliveryservice_requests:
 
-********************
-``deliveryservice_request``
-********************
+****************************
+``deliveryservice_requests``
+****************************
 
 ``GET``
 =======
@@ -189,7 +189,7 @@ Response Structure
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
 	Set-Cookie: mojolicious=...; Path=/; Expires=Wed, 12 Feb 2020 00:21:40 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: y2l8HRFbHzXhpXjKh6cV8Cdchj1NgCdgAfDKNJfyXRPRnbTI0c6/BpX+1Y8LI1RK0wMEMAQJY2PUi4ooHee+ZQ==
+	Whole-Content-Sha512: ME1ZLCtgXYrWlIXhS6qn4YqOzx2yk7aoe0hV7AxRsZfH0/TiCPOnLLkOHxS6YfuuIQK9UQNPxuOxDlAK78rkxA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 11 Feb 2020 23:21:40 GMT
 	Transfer-Encoding: chunked
@@ -211,7 +211,7 @@ Response Structure
             "cacheurl": null,
             "ccrDnsTtl": null,
             "cdnId": 2,
-            "cdnName": "CDN-in-a-Box",
+            "cdnName": null,
             "checkPath": null,
             "displayName": "Demo 1",
             "dnsBypassCname": null,
@@ -233,7 +233,7 @@ Response Structure
             "ipv6RoutingEnabled": true,
             "lastUpdated": "2019-05-15 14:32:05+00",
             "logsEnabled": true,
-            "longDesc": "Apachecon North America 2018",
+            "longDesc": "Demo Delivery Service Request",
             "longDesc1": null,
             "longDesc2": null,
             "matchList": [
@@ -292,7 +292,7 @@ Response Structure
 
 ``POST``
 ========
-Allows users to create :term:`Delivery Service`.
+Allows users to create :ref:`ds_requests`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [#tenancy]_
@@ -300,138 +300,138 @@ Allows users to create :term:`Delivery Service`.
 
 Request Structure
 -----------------
-:active:                   A boolean that defines :ref:`ds-active`.
-:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
-:cacheurl:                 A :ref:`ds-cacheurl`
+:changeType:           The type of change of this :ref:`ds_requests`
+:status:               The status of this :ref:`ds_requests`
 
-	.. deprecated:: ATCv3.0
-		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
+:deliveryService: An object describing the actual parameters for the Delivery Service request
+    :active:                   A boolean that defines :ref:`ds-active`.
+    :anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+    :cacheurl:                 A :ref:`ds-cacheurl`
 
-:ccrDnsTtl:           The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
-:cdnId:               The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
-:checkPath:           A :ref:`ds-check-path`
-:consistentHashRegex: A :ref:`ds-consistent-hashing-regex`
+        .. deprecated:: ATCv3.0
+            This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
-	.. versionadded:: 1.4
+    :ccrDnsTtl:           The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
+    :cdnId:               The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+    :checkPath:           A :ref:`ds-check-path`
+    :consistentHashRegex: A :ref:`ds-consistent-hashing-regex`
 
-:consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
+        .. versionadded:: 1.4
 
-	.. versionadded:: 1.4
+    :consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
 
-:deepCachingType: The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
+        .. versionadded:: 1.4
 
-	.. versionadded:: 1.3
+    :deepCachingType: The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
 
-:displayName:       The :ref:`ds-display-name`
-:dnsBypassCname:    A :ref:`ds-dns-bypass-cname`
-:dnsBypassIp:       A :ref:`ds-dns-bypass-ip`
-:dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
-:dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
-:dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
-:ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
+        .. versionadded:: 1.3
 
-	.. versionadded:: 1.4
+    :displayName:       The :ref:`ds-display-name`
+    :dnsBypassCname:    A :ref:`ds-dns-bypass-cname`
+    :dnsBypassIp:       A :ref:`ds-dns-bypass-ip`
+    :dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
+    :dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
+    :dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+    :ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 
-:edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
-:fqPacingRate:      The :ref:`ds-fqpr`
+        .. versionadded:: 1.4
 
-	.. versionadded:: 1.3
+    :edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
+    :fqPacingRate:      The :ref:`ds-fqpr`
 
-:geoLimit:             An integer that defines the :ref:`ds-geo-limit`
-:geoLimitCountries:    A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
-:geoLimitRedirectUrl:  A :ref:`ds-geo-limit-redirect-url`\ [#geolimit]_
-:geoProvider:          The :ref:`ds-geo-provider`
-:globalMaxMbps:        The :ref:`ds-global-max-mbps`
-:globalMaxTps:         The :ref:`ds-global-max-tps`
-:httpBypassFqdn:       A :ref:`ds-http-bypass-fqdn`
-:infoUrl:              An :ref:`ds-info-url`
-:initialDispersion:    The :ref:`ds-initial-dispersion`
-:ipv6RoutingEnabled:   A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
-:logsEnabled:          A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
-:longDesc:             The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:            An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:            An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
-:maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
-:maxOriginConnections: The :ref:`ds-max-origin-connections`
+        .. versionadded:: 1.3
 
-	.. versionadded:: 1.4
+    :geoLimit:             An integer that defines the :ref:`ds-geo-limit`
+    :geoLimitCountries:    A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
+    :geoLimitRedirectUrl:  A :ref:`ds-geo-limit-redirect-url`\ [#geolimit]_
+    :geoProvider:          The :ref:`ds-geo-provider`
+    :globalMaxMbps:        The :ref:`ds-global-max-mbps`
+    :globalMaxTps:         The :ref:`ds-global-max-tps`
+    :httpBypassFqdn:       A :ref:`ds-http-bypass-fqdn`
+    :infoUrl:              An :ref:`ds-info-url`
+    :initialDispersion:    The :ref:`ds-initial-dispersion`
+    :ipv6RoutingEnabled:   A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+    :logsEnabled:          A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+    :longDesc:             The :ref:`ds-longdesc` of this :term:`Delivery Service`
+    :longDesc1:            An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
+    :longDesc2:            An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
+    :maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
+    :maxOriginConnections: The :ref:`ds-max-origin-connections`
 
-:midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
-:missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
-:missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
-:multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
-:orgServerFqdn:        The :ref:`ds-origin-url`
-:originShield:         A :ref:`ds-origin-shield` string
-:profileId:            An optional :ref:`profile-id` of a :ref:`ds-profile` with which this :term:`Delivery Service` shall be associated
-:protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
-:qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
-:rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
-:regexRemap:           A :ref:`ds-regex-remap`
-:regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
-:remapText:            :ref:`ds-raw-remap`
-:signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
-:signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
+        .. versionadded:: 1.4
 
-	.. versionadded:: 1.3
+    :midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
+    :missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
+    :missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
+    :multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
+    :orgServerFqdn:        The :ref:`ds-origin-url`
+    :originShield:         A :ref:`ds-origin-shield` string
+    :profileId:            An optional :ref:`profile-id` of a :ref:`ds-profile` with which this :term:`Delivery Service` shall be associated
+    :protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
+    :qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
+    :rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
+    :regexRemap:           A :ref:`ds-regex-remap`
+    :regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+    :remapText:            :ref:`ds-raw-remap`
+    :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
+    :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 
-:sslKeyVersion: This integer indicates the :ref:`ds-ssl-key-version`
-:tenantId:      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+        .. versionadded:: 1.3
 
-	.. versionadded:: 1.3
+    :sslKeyVersion: This integer indicates the :ref:`ds-ssl-key-version`
+    :tenantId:      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 
-:trRequestHeaders: If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
+        .. versionadded:: 1.3
 
-	.. versionadded:: 1.3
+    :trRequestHeaders: If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 
-:trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
+        .. versionadded:: 1.3
 
-	.. versionadded:: 1.3
+    :trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 
-:type:   The :ref:`ds-types` of this :term:`Delivery Service`
-:typeId: The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
-:xmlId:  This :term:`Delivery Service`'s :ref:`ds-xmlid`
+        .. versionadded:: 1.3
+
+    :type:   The :ref:`ds-types` of this :term:`Delivery Service`
+    :typeId: The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+    :xmlId:  This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/deliveryservices HTTP/1.1
+	POST /api/1.3/deliveryservice_requests HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 761
+	Content-Length: 777
 	Content-Type: application/json
 
-	{
-		"active": false,
-		"anonymousBlockingEnabled": false,
-		"cdnId": 2,
-		"deepCachingType": "NEVER",
-		"displayName": "test",
-		"dscp": 0,
-		"ecsEnabled": true,
-		"geoLimit": 0,
-		"geoProvider": 0,
-		"initialDispersion": 1,
-		"ipv6RoutingEnabled": false,
-		"logsEnabled": true,
-		"longDesc": "A Delivery Service created expressly for API documentation examples",
-		"missLat": 0,
-		"missLong": 0,
-		"maxOriginConnections": 0,
-		"multiSiteOrigin": false,
-		"orgServerFqdn": "http://origin.infra.ciab.test",
-		"protocol": 0,
-		"qstringIgnore": 0,
-		"rangeRequestHandling": 0,
-		"regionalGeoBlocking": false,
-		"routingName": "test",
-		"signed": false,
-		"tenant": "root",
-		"tenantId": 1,
-		"typeId": 1,
-		"xmlId": "test"
-	}
+    {
+        "changeType": "create",
+        "deliveryService": {
+            "active": true,
+            "cdnId": 2,
+            "displayName": "test",
+            "dscp": 0,
+            "geoLimit": 0,
+            "geoProvider": 0,
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "logsEnabled": false,
+            "missLat": 0,
+            "missLong": 0,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://origin.infra.ciab.test",
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regionalGeoBlocking": false,
+            "tenantId": 1,
+            "typeId": 1,
+            "xmlId": "demo1"
+        },
+        "status": "submitted"
+    }
 
 
 Response Structure
@@ -554,84 +554,404 @@ Response Structure
 	Date: Mon, 19 Nov 2018 19:45:49 GMT
 	Content-Length: 1404
 
+    { "alerts": [
+        {
+            "text": "deliveryservice_request was created.",
+            "level": "success"
+        }
+    ],
+	"response": {
+	    "authorId": 2,
+        "author": null,
+        "changeType": "create",
+        "createdAt": null,
+        "id": 1,
+        "lastEditedBy": null,
+        "lastEditedById": 2,
+        "lastUpdated": "2020-02-12 18:18:33+00",
+        "deliveryService": {
+            "active": true,
+            "anonymousBlockingEnabled": false,
+            "cacheurl": null,
+            "ccrDnsTtl": null,
+            "cdnId": 2,
+            "cdnName": null,
+            "checkPath": null,
+            "displayName": "test",
+            "dnsBypassCname": null,
+            "dnsBypassIp": null,
+            "dnsBypassIp6": null,
+            "dnsBypassTtl": null,
+            "dscp": 0,
+            "edgeHeaderRewrite": null,
+            "geoLimit": 0,
+            "geoLimitCountries": null,
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": null,
+            "globalMaxTps": null,
+            "httpBypassFqdn": null,
+            "id": null,
+            "infoUrl": null,
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": null,
+            "logsEnabled": false,
+            "longDesc": null,
+            "longDesc1": null,
+            "longDesc2": null,
+            "matchList": null,
+            "maxDnsAnswers": null,
+            "midHeaderRewrite": null,
+            "missLat": 0,
+            "missLong": 0,
+            "multiSiteOrigin": false,
+            "originShield": null,
+            "orgServerFqdn": "http://origin.infra.ciab.test",
+            "profileDescription": null,
+            "profileId": null,
+            "profileName": null,
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "routingName": "cdn",
+            "signed": false,
+            "sslKeyVersion": null,
+            "tenantId": 1,
+            "type": null,
+            "typeId": 1,
+            "xmlId": "demo1",
+            "exampleURLs": null,
+            "deepCachingType": "NEVER",
+            "fqPacingRate": null,
+            "signingAlgorithm": null,
+            "tenant": null,
+            "trResponseHeaders": null,
+            "trRequestHeaders": null,
+            "consistentHashRegex": null,
+            "consistentHashQueryParams": null,
+            "maxOriginConnections": 0,
+            "ecsEnabled": false
+		},
+		"status": "submitted"
+	}}
+
+
+
+``PUT``
+=======
+Allows users to edit an existing :ref:`ds_requests`.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"\ [#tenancy]_
+:Response Type:
+
+Request Structure
+-----------------
+
+.. table:: Request Path Parameters
+
+	+------+-------------------------------------------------------------------------------+
+	| Name | Description                                                                   |
+	+======+===============================================================================+
+	| ID   | The integral, unique identifier of the :ref:`ds_requests` to be updated       |
+	+------+-------------------------------------------------------------------------------+
+
+:changeType:           The type of change of this :ref:`ds_requests`
+:status:               The status of this :ref:`ds_requests`
+
+:deliveryService: An object describing the actual parameters for the Delivery Service request
+    :active:                   A boolean that defines :ref:`ds-active`.
+    :anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+    :cacheurl:                 A :ref:`ds-cacheurl`
+
+        .. deprecated:: ATCv3.0
+            This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
+
+    :ccrDnsTtl:           The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
+    :cdnId:               The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+    :checkPath:           A :ref:`ds-check-path`
+    :consistentHashRegex: A :ref:`ds-consistent-hashing-regex`
+
+        .. versionadded:: 1.4
+
+    :consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
+
+        .. versionadded:: 1.4
+
+    :deepCachingType:     The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
+
+        .. versionadded:: 1.3
+
+    :displayName:       The :ref:`ds-display-name`
+    :dnsBypassCname:    A :ref:`ds-dns-bypass-cname`
+    :dnsBypassIp:       A :ref:`ds-dns-bypass-ip`
+    :dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
+    :dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
+    :dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+    :ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
+
+        .. versionadded:: 1.4
+
+    :edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
+    :fqPacingRate:      The :ref:`ds-fqpr`
+
+        .. versionadded:: 1.3
+
+    :geoLimit:            An integer that defines the :ref:`ds-geo-limit`
+    :geoLimitCountries:   A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
+    :geoLimitRedirectUrl: A :ref:`ds-geo-limit-redirect-url`\ [#geolimit]_
+    :geoProvider:         The :ref:`ds-geo-provider`
+    :globalMaxMbps:       The :ref:`ds-global-max-mbps`
+    :globalMaxTps:        The :ref:`ds-global-max-tps`
+    :httpBypassFqdn:      A :ref:`ds-http-bypass-fqdn`
+    :infoUrl:             An :ref:`ds-info-url`
+    :initialDispersion:   The :ref:`ds-initial-dispersion`
+    :ipv6RoutingEnabled:  A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+    :logsEnabled:         A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+    :longDesc:            The :ref:`ds-longdesc` of this :term:`Delivery Service`
+    :longDesc1:           An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
+    :longDesc2:           An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
+    :maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
+    :maxOriginConnections: The :ref:`ds-max-origin-connections`
+
+        .. versionadded:: 1.4
+
+    :midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
+    :missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
+    :missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
+    :multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
+    :orgServerFqdn:        The :ref:`ds-origin-url`
+    :originShield:         A :ref:`ds-origin-shield` string
+    :profileId:            An optional :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` will be associated
+    :protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
+    :qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
+    :rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
+    :regexRemap:           A :ref:`ds-regex-remap`
+    :regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+    :remapText:            :ref:`ds-raw-remap`
+    :routingName:          The :ref:`ds-routing-name` of this :term:`Delivery Service`
+    :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
+    :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
+
+        .. versionadded:: 1.3
+
+    :sslKeyVersion: This integer indicates the :ref:`ds-ssl-key-version`
+    :tenantId:      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+
+        .. versionadded:: 1.3
+
+    :trRequestHeaders: If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
+
+        .. versionadded:: 1.3
+
+    :trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
+
+        .. versionadded:: 1.3
+
+    :typeId: The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+    :xmlId:  This :term:`Delivery Service`'s :ref:`ds-xmlid`
+
+        .. note:: While this field **must** be present, it is **not** allowed to change; this must be the same as the ``xml_id`` the :term:`Delivery Service` already has. This should almost never be different from the :term:`Delivery Service`'s ``displayName``.
+
+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/1.3/deliveryservice_reques?id=1 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 756
+	Content-Type: application/json
+
+    {
+        "changeType": "create",
+        "deliveryService": {
+            "active": true,
+            "cdnId": 2,
+            "displayName": "test",
+            "dscp": 0,
+            "geoLimit": 0,
+            "geoProvider": 0,
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "logsEnabled": false,
+            "missLat": 0,
+            "missLong": 0,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://origin.infra.ciab.test",
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regionalGeoBlocking": false,
+            "tenantId": 1,
+            "typeId": 1,
+            "xmlId": "demo1"
+        },
+        "status": "draft"
+    }
+
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Set-Cookie: mojolicious=...; Path=/; Expires=Wed, 12 Feb 2020 21:08:53 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: CrvtsPOSStvRNophKIvKc7m2vyT1yLqDqORi8rkcQ7jJ8XSaw5mX5zqWb2BNavpgO3/k69Pcj4gB/RfYFv71eA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 12 Feb 2020 20:08:53 GMT
+	Content-Length: 756
+	Content-Type: text/plain; charset=utf-8
+
 	{ "alerts": [
-		{
-			"text": "Deliveryservice creation was successful.",
-			"level": "success"
-		}
-	],
-	"response": [
-		{
-			"active": false,
-			"anonymousBlockingEnabled": false,
-			"cacheurl": null,
-			"ccrDnsTtl": null,
-			"cdnId": 2,
-			"cdnName": "CDN-in-a-Box",
-			"checkPath": null,
-			"displayName": "test",
-			"dnsBypassCname": null,
-			"dnsBypassIp": null,
-			"dnsBypassIp6": null,
-			"dnsBypassTtl": null,
-			"dscp": 0,
-			"edgeHeaderRewrite": null,
-			"geoLimit": 0,
-			"geoLimitCountries": null,
-			"geoLimitRedirectURL": null,
-			"geoProvider": 0,
-			"globalMaxMbps": null,
-			"globalMaxTps": null,
-			"httpBypassFqdn": null,
-			"id": 2,
-			"infoUrl": null,
-			"initialDispersion": 1,
-			"ipv6RoutingEnabled": false,
-			"lastUpdated": "2018-11-19 19:45:49+00",
-			"logsEnabled": true,
-			"longDesc": "A Delivery Service created expressly for API documentation examples",
-			"longDesc1": null,
-			"longDesc2": null,
-			"matchList": [
-				{
-					"type": "HOST_REGEXP",
-					"setNumber": 0,
-					"pattern": ".*\\.test\\..*"
-				}
-			],
-			"maxDnsAnswers": null,
-			"maxOriginConnections": 0,
-			"midHeaderRewrite": null,
-			"missLat": -1,
-			"missLong": -1,
-			"multiSiteOrigin": false,
-			"originShield": null,
-			"orgServerFqdn": "http://origin.infra.ciab.test",
-			"profileDescription": null,
-			"profileId": null,
-			"profileName": null,
-			"protocol": 0,
-			"qstringIgnore": 0,
-			"rangeRequestHandling": 0,
-			"regexRemap": null,
-			"regionalGeoBlocking": false,
-			"remapText": null,
-			"routingName": "test",
-			"signed": false,
-			"sslKeyVersion": null,
-			"tenantId": 1,
-			"type": "HTTP",
-			"typeId": 1,
-			"xmlId": "test",
-			"exampleURLs": [
-				"http://test.test.mycdn.ciab.test"
-			],
-			"deepCachingType": "NEVER",
-			"signingAlgorithm": null,
-			"tenant": "root",
-			"ecsEnabled": true
-		}
-	]}
+            {
+                "text": "deliveryservice_request was updated.",
+                "level": "success"
+            }
+        ],
+    	"response": {
+    	    "authorId": 2,
+            "author": null,
+            "changeType": "create",
+            "createdAt": null,
+            "id": 1,
+            "lastEditedBy": null,
+            "lastEditedById": 2,
+            "lastUpdated": "2020-02-12 20:12:20+00",
+            "deliveryService": {
+                "active": true,
+                "anonymousBlockingEnabled": false,
+                "cacheurl": null,
+                "ccrDnsTtl": null,
+                "cdnId": 2,
+                "cdnName": null,
+                "checkPath": null,
+                "displayName": "test",
+                "dnsBypassCname": null,
+                "dnsBypassIp": null,
+                "dnsBypassIp6": null,
+                "dnsBypassTtl": null,
+                "dscp": 0,
+                "edgeHeaderRewrite": null,
+                "geoLimit": 0,
+                "geoLimitCountries": null,
+                "geoLimitRedirectURL": null,
+                "geoProvider": 0,
+                "globalMaxMbps": null,
+                "globalMaxTps": null,
+                "httpBypassFqdn": null,
+                "id": null,
+                "infoUrl": null,
+                "initialDispersion": 1,
+                "ipv6RoutingEnabled": true,
+                "lastUpdated": null,
+                "logsEnabled": false,
+                "longDesc": null,
+                "longDesc1": null,
+                "longDesc2": null,
+                "matchList": null,
+                "maxDnsAnswers": null,
+                "midHeaderRewrite": null,
+                "missLat": 0,
+                "missLong": 0,
+                "multiSiteOrigin": false,
+                "originShield": null,
+                "orgServerFqdn": "http://origin.infra.ciab.test",
+                "profileDescription": null,
+                "profileId": null,
+                "profileName": null,
+                "protocol": 0,
+                "qstringIgnore": 0,
+                "rangeRequestHandling": 0,
+                "regexRemap": null,
+                "regionalGeoBlocking": false,
+                "remapText": null,
+                "routingName": "cdn",
+                "signed": false,
+                "sslKeyVersion": null,
+                "tenantId": 1,
+                "type": null,
+                "typeId": 1,
+                "xmlId": "demo1",
+                "exampleURLs": null,
+                "deepCachingType": "NEVER",
+                "fqPacingRate": null,
+                "signingAlgorithm": null,
+                "tenant": null,
+                "trResponseHeaders": null,
+                "trRequestHeaders": null,
+                "consistentHashRegex": null,
+                "consistentHashQueryParams": null,
+                "maxOriginConnections": 0,
+                "ecsEnabled": false
+    		},
+    		"status": "draft"
+    	}}
+
+
+``DELETE``
+==========
+Deletes the target :term:`Delivery Service`
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"\ [#tenancy]_
+:Response Type:  ``undefined``
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+-------------------------------------------------------------------------------+
+	| Name | Description                                                                   |
+	+======+===============================================================================+
+	| ID   | The integral, unique identifier of the :ref:`ds_requests` to be deleted       |
+	+------+-------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.4/deliveryservice_requests?id=1 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Wed, 12 Feb 2020 21:14:03 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: jNCbNo8Tw+JMMaWpAYQgntSXPq2Xuj+n2zSEVRaDQFWMV1SYbT9djes6SPdwiBoKq6W0lNE04hOE92jBVcjtEw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 12 Feb 2020 20:14:03 GMT
+	Content-Length: 96
+
+    { "alerts": [
+        {
+            "text": "deliveryservice_request was deleted.",
+            "level": "success"
+        }
+    ]}
+
 
 .. [#tenancy] Only those :ref:`ds_requests` assigned to :term:`Tenants` that are the requesting user's :term:`Tenant` or children thereof will appear in the output of a ``GET`` request, and the same constraints are placed on the allowed values of the ``tenantId`` field of a ``POST`` request to create a new :term:`Delivery Service`
 .. [#geoLimit] These fields must be defined if and only if ``geoLimit`` is non-zero
