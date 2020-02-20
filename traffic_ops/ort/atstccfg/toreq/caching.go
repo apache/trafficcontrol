@@ -96,6 +96,11 @@ func GetCachedWithFormat(cfg config.TCCfg, cacheFileName string, obj interface{}
 // WriteCache attempts to write obj to tempDir/cacheFileName.
 // If there is an error, it is written to stderr but not returned.
 func WriteCache(encode EncodeFunc, tempDir string, cacheFileName string, obj interface{}) {
+	if encode == nil {
+		log.Errorln("object '" + cacheFileName + "': nil encode func! Should never happen! Can't write file!")
+		return
+	}
+
 	objPath := filepath.Join(tempDir, cacheFileName)
 	// Use os.OpenFile, not os.Create, in order to set perms to 0600 - cookies allow login, therefore the file MUST only allow access by the current user, for security reasons
 	objFile, err := os.OpenFile(objPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
@@ -114,6 +119,9 @@ func WriteCache(encode EncodeFunc, tempDir string, cacheFileName string, obj int
 // ReadCache gets obj from tempDir/cacheFileName, if it exists and isn't older than CacheFileMaxAge.
 // The obj must be a non-nil pointer to the object to decode into.
 func ReadCache(decode DecodeFunc, tempDir string, cacheFileName string, cacheFileMaxAge time.Duration, obj interface{}) error {
+	if decode == nil {
+		return errors.New("nil decode func")
+	}
 	objPath := filepath.Join(tempDir, cacheFileName)
 	objFile, err := os.Open(objPath)
 	if err != nil {
