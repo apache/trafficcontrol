@@ -27,7 +27,12 @@ ADD . /go/src/$DIR
 
 WORKDIR /go/src/github.com/apache/trafficcontrol
 
-RUN go list -f {{.Deps}} ./... | tr -d '[]' | tr -s ' ' '\n' | sed -re 's/vendor\///g' | grep golang.org/x/ | grep -v chacha | sort | uniq | tr '_' '.' | xargs go get -v
+RUN go get golang.org/x/crypto/ed25519\
+           golang.org/x/crypto/scrypt\
+           golang.org/x/net/ipv4\
+           golang.org/x/net/ipv6\
+           golang.org/x/net/publicsuffix\
+           golang.org/x/sys/unix
 
 FROM base AS lint
 
