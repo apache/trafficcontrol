@@ -57,7 +57,7 @@ func (to *Session) CreateMultipleParameters(pls []tc.Parameter) (tc.Alerts, ReqI
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_Parameters, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PARAMETERS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}

@@ -58,7 +58,7 @@ func (to *Session) CreateMultipleProfileParameters(pps []tc.ProfileParameter) (t
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Profile_Parameters, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PROFILE_PARAMETERS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
