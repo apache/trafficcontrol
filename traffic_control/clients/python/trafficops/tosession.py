@@ -409,17 +409,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'cachegroup/{parameter_id:d}/parameter', ('2.0',))
-	def get_cachegroup_parameters_by_id(self, parameter_id=None):
-		"""
-		Get a cache groups parameter by its ID
-		:ref:`to-api-v1-cachegroup-parameterID-parameter`
-		:param parameter_id: The parameter Id
-		:type parameter_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'cachegroupparameters', ('2.0',))
 	def get_all_cachegroup_parameters(self):
 		"""
@@ -1749,7 +1738,7 @@ class TOSession(RestApiSession):
 	def create_region(self, query_params=None, data=None):
 		"""
 		Create a region
-		:ref:`to-api-divisions-name-regions`
+		:ref:`to-api-regions`
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -2126,7 +2115,7 @@ class TOSession(RestApiSession):
 	def delete_to_extension(self, extension_id=None):
 		"""
 		Deletes a Traffic Ops extension.
-		:ref:`to-api-v1-to_extensions-id-delete`
+		:ref:`to-api-to_extensions-id`
 		:param extension_id: The extension id to delete
 		:type extension_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
