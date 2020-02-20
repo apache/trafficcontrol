@@ -24,11 +24,22 @@ import os
 import sys
 from setuptools import setup, find_packages
 
+pyversion = sys.version_info
+if pyversion.major < 3:
+	sys.stderr.write("Python 2 is no longer supported\n")
+	sys.exit(1)
+
+elif pyversion.major == 3 and (pyversion.minor < 4 or pyversion.minor > 6):
+	MSG = ('WARNING: This library may not work properly with Python {0.major}.{0.minor}.{0.micro}, '
+	       'as it is untested for this version. (3.4 <= version <=3.6 recommended)\n')
+	sys.stderr.write(MSG.format(pyversion))
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 about = {}
 with io.open(os.path.join(HERE, 'trafficops', '__version__.py'), mode='r', encoding='utf-8') as f:
 	exec(f.read(), about)
+
 
 with open(os.path.join(HERE, "README.rst")) as fd:
 	setup(
@@ -82,15 +93,6 @@ with open(os.path.join(HERE, "README.rst")) as fd:
 	       },
 	       # This will only be enforced by pip versions >=9.0 (18.1 being current at the time of
 	       # this writing) - i.e. not the pip installed as python34-pip from elrepo on CentOS
-	       python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*'
+	       python_requires='>=3.6'
 	)
 
-pyversion = sys.version_info
-if pyversion.major < 3:
-	sys.stderr.write(
-		"Python 2 is deprecated, and will not be supported in version 2 of this package (by 2020)\n"
-	)
-elif pyversion.major == 3 and (pyversion.minor < 4 or pyversion.minor > 6):
-	MSG = ('WARNING: This library may not work properly with Python {0.major}.{0.minor}.{0.micro}, '
-	       'as it is untested for this version. (3.4 <= version <=3.6 recommended)\n')
-	sys.stderr.write(MSG.format(pyversion))
