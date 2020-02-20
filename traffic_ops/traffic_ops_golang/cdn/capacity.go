@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/monitorhlp"
 )
 
@@ -76,7 +77,7 @@ type CapData struct {
 }
 
 func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (CapacityResp, error) {
-	monitorForwardProxy, monitorForwardProxyExists, err := getGlobalParam(tx, MonitorProxyParameter)
+	monitorForwardProxy, monitorForwardProxyExists, err := dbhelpers.GetGlobalParam(tx, MonitorProxyParameter)
 	if err != nil {
 		return CapacityResp{}, errors.New("getting global monitor proxy parameter: " + err.Error())
 	}
@@ -280,21 +281,4 @@ AND st.name = '` + MonitorOnlineStatus + `'
 		monitors[cdn] = append(monitors[cdn], fqdn)
 	}
 	return monitors, nil
-}
-
-// getGlobalParams returns the value of the global param, whether it existed, or any error
-func getGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
-	return getParam(tx, name, "global")
-}
-
-// getGlobalParams returns the value of the param, whether it existed, or any error.
-func getParam(tx *sql.Tx, name string, configFile string) (string, bool, error) {
-	val := ""
-	if err := tx.QueryRow(`select value from parameter where name = $1 and config_file = $2`, name, configFile).Scan(&val); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("Error querying global paramter '" + name + "': " + err.Error())
-	}
-	return val, true, nil
 }

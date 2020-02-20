@@ -1,4 +1,4 @@
-package cdn
+package crstats
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,16 +27,18 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 type (
-	routerResp struct {
+	RouterResp struct {
 		Error error
 		Stats tc.CRSStats
 	}
@@ -50,37 +52,20 @@ const (
 	RouterProxyParameter = "tm.traffic_rtr_fwd_proxy"
 	RouterRequestTimeout = time.Second * 10
 	RouterOnlineStatus   = "ONLINE"
+	HTTP                 = "HTTP"
+	DNS                  = "DNS"
 )
 
-// GetRouting is the handler for getting aggregated routing percentages across CDNs.
-func GetRouting(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(getRouting(inf.Tx.Tx))
-}
-
-func getRouting(tx *sql.Tx) (tc.CDNRouting, error) {
-	routers, err := getCDNRouterFQDNs(tx)
+func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string, statType *string, hostRegexs []string) (tc.Routing, error) {
+	forwardProxy, forwardProxyExists, err := dbhelpers.GetGlobalParam(tx, RouterProxyParameter)
 	if err != nil {
-		return tc.CDNRouting{}, errors.New("getting monitors: " + err.Error())
-	}
-	return getRoutersRouting(tx, routers)
-}
-
-func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string) (tc.CDNRouting, error) {
-	forwardProxy, forwardProxyExists, err := getGlobalParam(tx, RouterProxyParameter)
-	if err != nil {
-		return tc.CDNRouting{}, errors.New("getting global router proxy parameter: " + err.Error())
+		return tc.Routing{}, errors.New("getting global router proxy parameter: " + err.Error())
 	}
 	client := &http.Client{Timeout: RouterRequestTimeout}
 	if forwardProxyExists {
 		proxyURI, err := url.Parse(forwardProxy)
 		if err != nil {
-			return tc.CDNRouting{}, errors.New("router forward proxy '" + forwardProxy + "' in parameter '" + RouterProxyParameter + "' not a URI: " + err.Error())
+			return tc.Routing{}, errors.New("router forward proxy '" + forwardProxy + "' in parameter '" + RouterProxyParameter + "' not a URI: " + err.Error())
 		}
 		clientTransport := &http.Transport{Proxy: http.ProxyURL(proxyURI)}
 		// Disable HTTP/2. Go Transport Proxy does not support H2 Servers, and if the server does support it, the client will fail.
@@ -89,12 +74,20 @@ func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string) (tc.CDNRouti
 		client = &http.Client{Timeout: RouterRequestTimeout, Transport: clientTransport}
 	}
 
+	var hostRegex *regexp.Regexp
+	if len(hostRegexs) > 0 {
+		hostRegex, err = regexp.Compile(strings.Join(hostRegexs, "|"))
+		if err != nil {
+			return tc.Routing{}, errors.New("getting regex from host patterns: " + err.Error())
+		}
+	}
+
 	count := 0
 	for _, routerFQDNs := range routers {
 		count += len(routerFQDNs)
 	}
 
-	resp := make(chan routerResp, count)
+	resp := make(chan RouterResp, count)
 
 	wg := sync.WaitGroup{}
 	wg.Add(count)
@@ -112,18 +105,18 @@ func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string) (tc.CDNRouti
 
 	for r := range resp {
 		if r.Error != nil {
-			return tc.CDNRouting{}, err
+			return tc.Routing{}, err
 		}
-		dat = addCRSStats(dat, r.Stats)
+		dat = addCRSStats(dat, r.Stats, statType, hostRegex)
 	}
 	return sumRouterData(dat), nil
 }
 
-func sumRouterData(d RouterData) tc.CDNRouting {
+func sumRouterData(d RouterData) tc.Routing {
 	if d.Total == 0 {
-		return tc.CDNRouting{}
+		return tc.Routing{}
 	}
-	return tc.CDNRouting{
+	return tc.Routing{
 		CZ:                float64(d.StatTotal.CZCount) / float64(d.Total) * 100.0,
 		Geo:               float64(d.StatTotal.GeoCount) / float64(d.Total) * 100.0,
 		DeepCZ:            float64(d.StatTotal.DeepCZCount) / float64(d.Total) * 100.0,
@@ -137,16 +130,31 @@ func sumRouterData(d RouterData) tc.CDNRouting {
 	}
 }
 
-func addCRSStats(d RouterData, stats tc.CRSStats) RouterData {
-	// DNSMap
-	for _, stat := range stats.Stats.DNSMap {
-		d.StatTotal = sumCRSStat(d.StatTotal, stat)
-		d.Total += totalCRSStat(stat)
+func addCRSStats(d RouterData, stats tc.CRSStats, statType *string, hostRegex *regexp.Regexp) RouterData {
+	matchingHost := func(host string) bool {
+		if hostRegex == nil {
+			return true
+		}
+		return hostRegex.MatchString(host)
 	}
+	// DNSMap
+	if statType == nil || *statType == "DNS" {
+		for host, stat := range stats.Stats.DNSMap {
+			if matchingHost(host) {
+				d.StatTotal = sumCRSStat(d.StatTotal, stat)
+				d.Total += totalCRSStat(stat)
+			}
+		}
+	}
+
 	// HTTPMap
-	for _, stat := range stats.Stats.HTTPMap {
-		d.StatTotal = sumCRSStat(d.StatTotal, stat)
-		d.Total += totalCRSStat(stat)
+	if statType == nil || *statType == "HTTP" {
+		for host, stat := range stats.Stats.HTTPMap {
+			if matchingHost(host) {
+				d.StatTotal = sumCRSStat(d.StatTotal, stat)
+				d.Total += totalCRSStat(stat)
+			}
+		}
 	}
 	return d
 }
@@ -179,9 +187,9 @@ func sumCRSStat(a, b tc.CRSStatsStat) tc.CRSStatsStat {
 	}
 }
 
-func getCRSStats(respond chan<- routerResp, wg *sync.WaitGroup, routerFQDN, cdn string, client *http.Client) {
+func getCRSStats(respond chan<- RouterResp, wg *sync.WaitGroup, routerFQDN, cdn string, client *http.Client) {
 	defer wg.Done()
-	r := routerResp{}
+	r := RouterResp{}
 	resp, err := client.Get("http://" + routerFQDN + "/crs/stats")
 	if err != nil {
 		r.Error = fmt.Errorf("getting crs stats for CDN %s router %s: %v", cdn, routerFQDN, err)
@@ -199,7 +207,7 @@ func getCRSStats(respond chan<- routerResp, wg *sync.WaitGroup, routerFQDN, cdn 
 }
 
 func getRouterForwardProxy(tx *sql.Tx) (string, error) {
-	forwardProxy, forwardProxyExists, err := getGlobalParam(tx, RouterProxyParameter)
+	forwardProxy, forwardProxyExists, err := dbhelpers.GetGlobalParam(tx, RouterProxyParameter)
 	if err != nil {
 		return "", errors.New("getting global router proxy parameter: " + err.Error())
 	} else if !forwardProxyExists {
@@ -209,7 +217,7 @@ func getRouterForwardProxy(tx *sql.Tx) (string, error) {
 }
 
 // getCDNRouterFQDNs returns an FQDN, including port, of an online router for each CDN, for each router. If a CDN has no online routers, that CDN will not have an entry in the map. The port returned is the API port.
-func getCDNRouterFQDNs(tx *sql.Tx) (map[tc.CDNName][]string, error) {
+func getCDNRouterFQDNs(tx *sql.Tx, requiredCDN *string) (map[tc.CDNName][]string, error) {
 	rows, err := tx.Query(`
 SELECT s.host_name, s.domain_name, max(pa.value) as port, c.name as cdn
 FROM server as s
@@ -239,6 +247,9 @@ GROUP BY s.host_name, s.domain_name, c.name
 		fqdn := host + "." + domain
 		if port.Valid {
 			fqdn += ":" + strconv.FormatInt(port.Int64, 10)
+		}
+		if requiredCDN != nil && *requiredCDN != cdn {
+			continue
 		}
 		routers[tc.CDNName(cdn)] = append(routers[tc.CDNName(cdn)], fqdn)
 	}
