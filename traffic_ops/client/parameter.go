@@ -26,10 +26,10 @@ import (
 )
 
 const (
-	API_Parameters = apiBase + "/parameters"
+	API_PARAMETERS = apiBase + "/parameters"
 )
 
-// CreateParameter performs a POST to create a Parameter
+// CreateParameter performs a POST to create a Parameter.
 func (to *Session) CreateParameter(pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -38,7 +38,7 @@ func (to *Session) CreateParameter(pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_Parameters, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PARAMETERS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -48,7 +48,7 @@ func (to *Session) CreateParameter(pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// CreateMultipleParameters performs a POST to create multiple Parameters at once
+// CreateMultipleParameters performs a POST to create multiple Parameters at once.
 func (to *Session) CreateMultipleParameters(pls []tc.Parameter) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -57,7 +57,7 @@ func (to *Session) CreateMultipleParameters(pls []tc.Parameter) (tc.Alerts, ReqI
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_Parameters, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PARAMETERS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -67,7 +67,7 @@ func (to *Session) CreateMultipleParameters(pls []tc.Parameter) (tc.Alerts, ReqI
 	return alerts, reqInf, nil
 }
 
-// UpdateParameterByID performs a PUT to update a Parameter by ID
+// UpdateParameterByID performs a PUT to update a Parameter by ID.
 func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -76,7 +76,7 @@ func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqI
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_Parameters, id)
+	route := fmt.Sprintf("%s/%d", API_PARAMETERS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -87,9 +87,9 @@ func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqI
 	return alerts, reqInf, nil
 }
 
-// GetParameters returns a list of Parameters
+// GetParameters returns a list of Parameters.
 func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_Parameters, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PARAMETERS, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -101,9 +101,9 @@ func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GetParametersByProfileName returns a list of Parameters by ProfileName
+// GetParametersByProfileName gets all of the Parameters assigned to the Profile named 'profileName'.
 func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Parameter, ReqInf, error) {
-	url := fmt.Sprintf(API_Parameters+"/profile/%s.json", profileName)
+	url := fmt.Sprintf(API_PARAMETERS+"/profile/%s", profileName)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -119,9 +119,9 @@ func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Paramete
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByID returns a Parameter by the Parameter ID
+// GetParameterByID GETs a Parameter by the Parameter ID.
 func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_Parameters, id)
+	route := fmt.Sprintf("%s/%d", API_PARAMETERS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -137,9 +137,9 @@ func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByName returns a Parameter by the Parameter name
+// GetParameterByName GETs a Parameter by the Parameter name.
 func (to *Session) GetParameterByName(name string) ([]tc.Parameter, ReqInf, error) {
-	URI := API_Parameters + "?name=" + url.QueryEscape(name)
+	URI := API_PARAMETERS + "?name=" + url.QueryEscape(name)
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -155,9 +155,9 @@ func (to *Session) GetParameterByName(name string) ([]tc.Parameter, ReqInf, erro
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByConfigFile returns a Parameter by the Parameter ConfigFile
+// GetParameterByConfigFile GETs a Parameter by the Parameter ConfigFile.
 func (to *Session) GetParameterByConfigFile(configFile string) ([]tc.Parameter, ReqInf, error) {
-	URI := API_Parameters + "?configFile=" + url.QueryEscape(configFile)
+	URI := API_PARAMETERS + "?configFile=" + url.QueryEscape(configFile)
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -173,9 +173,9 @@ func (to *Session) GetParameterByConfigFile(configFile string) ([]tc.Parameter, 
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByNameAndConfigFile returns a Parameter by the Parameter Name and ConfigFile
+// GetParameterByNameAndConfigFile GETs a Parameter by the Parameter Name and ConfigFile.
 func (to *Session) GetParameterByNameAndConfigFile(name string, configFile string) ([]tc.Parameter, ReqInf, error) {
-	URI := fmt.Sprintf("%s?name=%s&configFile=%s", API_Parameters, url.QueryEscape(name), url.QueryEscape(configFile))
+	URI := fmt.Sprintf("%s?name=%s&configFile=%s", API_PARAMETERS, url.QueryEscape(name), url.QueryEscape(configFile))
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -191,9 +191,9 @@ func (to *Session) GetParameterByNameAndConfigFile(name string, configFile strin
 	return data.Response, reqInf, nil
 }
 
-// GetParameterByNameAndConfigFileAndValue returns a Parameter by the Parameter Name and ConfigFile and Value
-// TODO: API should support all 3,  but does not support filter by value
-// currently.  Until then, loop thru hits until you find one with that value
+// GetParameterByNameAndConfigFileAndValue GETs a Parameter by the Parameter Name and ConfigFile and Value.
+// TODO: API should support all 3, but does not support filter by value
+// currently. Until then, loop through hits until you find one with that value.
 func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, value string) ([]tc.Parameter, ReqInf, error) {
 	params, reqInf, err := to.GetParameterByNameAndConfigFile(name, configFile)
 	if err != nil {
@@ -207,9 +207,9 @@ func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, val
 	return nil, reqInf, err
 }
 
-// DeleteParameterByID deletes a Parameter by ID
+// DeleteParameterByID DELETEs a Parameter by ID.
 func (to *Session) DeleteParameterByID(id int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", API_Parameters, id)
+	URI := fmt.Sprintf("%s/%d", API_PARAMETERS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

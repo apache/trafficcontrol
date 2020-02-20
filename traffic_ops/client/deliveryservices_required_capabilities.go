@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	v1DeliveryServicesRequiredCapabilities = apiBase + "/deliveryservices_required_capabilities"
+	API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES = apiBase + "/deliveryservices_required_capabilities"
 )
 
 // CreateDeliveryServicesRequiredCapability assigns a Required Capability to a Delivery Service
@@ -38,7 +38,7 @@ func (to *Session) CreateDeliveryServicesRequiredCapability(capability tc.Delive
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	reqInf, err = post(to, v1DeliveryServicesRequiredCapabilities, reqBody, &alerts)
+	reqInf, err = post(to, API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES, reqBody, &alerts)
 	return alerts, reqInf, err
 }
 
@@ -48,7 +48,7 @@ func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID in
 	param := url.Values{}
 	param.Add("deliveryServiceID", strconv.Itoa(deliveryserviceID))
 	param.Add("requiredCapability", capability)
-	url := fmt.Sprintf("%s?%s", v1DeliveryServicesRequiredCapabilities, param.Encode())
+	url := fmt.Sprintf("%s?%s", API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES, param.Encode())
 	reqInf, err := del(to, url, &alerts)
 	return alerts, reqInf, err
 }
@@ -67,7 +67,7 @@ func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *in
 		param.Add("requiredCapability", *capability)
 	}
 
-	url := v1DeliveryServicesRequiredCapabilities
+	url := API_DELIVERY_SERVICES_REQUIRED_CAPABILITIES
 	if len(param) > 0 {
 		url = fmt.Sprintf("%s?%s", url, param.Encode())
 	}

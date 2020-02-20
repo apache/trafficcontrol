@@ -41,6 +41,7 @@ favicon.(ico|png)$, Apache
 ^traffic_ops/experimental/goto/testFiles/, Apache
 cron\.d/[^/]*$, Apache
 \.pem$, Apache # Single certificate file.
+traffic_router/core/src/test/resources/api/2.0/cdns/name/thecdn/sslkeys(-missing-1)?, Apache #JSON files with no extension
 
 # Images, created for this project or used under an Apache license.
 ^misc/traffic-control-cdn/images/atc_logo\.png, Apache
