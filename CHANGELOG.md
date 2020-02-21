@@ -40,6 +40,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cachegroups/:parameterID/parameter/available
   - /cdns/:name/configs/routing
   - /cdns/configs
+  - /cdns/:id (GET)
+  - /cdns/name/:name (GET)
   - /cdns/usage/overview
   - /deliveryservice_user
   - /deliveryservice_user/:dsId/:userId

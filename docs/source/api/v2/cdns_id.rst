@@ -19,58 +19,6 @@
 ``cdns/{{ID}}``
 ***************
 
-``GET``
-=======
-Extract information about a specific CDN.
-
-:Auth. Required: Yes
-:Roles Required: None
-:Response Type:  Array
-
-Request Structure
------------------
-.. table:: Request Path Parameters
-
-	+------+----------------------------------------------------+
-	| Name |                Description                         |
-	+======+====================================================+
-	|  ID  | Integral, unique identifier for the CDN to inspect |
-	+------+----------------------------------------------------+
-
-Response Structure
-------------------
-:dnssecEnabled: ``true`` if DNSSEC is enabled on this CDN, otherwise ``false``
-:domainName:    Top Level Domain name within which this CDN operates
-:id:            The integral, unique identifier for the CDN
-:lastUpdated:   Date and time when the CDN was last modified in ISO format
-:name:          The name of the CDN
-
-.. code-block:: http
-	:caption: Response Example
-
-	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
-	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: bTz86xdnGfbKhxnneb4geXohaw3lhG+h5wc21/ncHFATwp1h80h+txxySCIVfa0hgBrJHEdpGZQsH5w5IknsrQ==
-	X-Server-Name: traffic_ops_golang/
-	Date: Wed, 14 Nov 2018 20:59:34 GMT
-	Content-Length: 137
-
-	{ "response": [
-		{
-			"dnssecEnabled": false,
-			"domainName": "mycdn.ciab.test",
-			"id": 2,
-			"lastUpdated": "2018-11-14 18:21:14+00",
-			"name": "CDN-in-a-Box"
-		}
-	]}
-
-
 ``PUT``
 =======
 Allows a user to edit a specific CDN
