@@ -39,18 +39,6 @@ func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryP
 	return to.getCacheGroupParameters(route, queryParams)
 }
 
-// GetCacheGroupUnassignedParameters Gets a Cache Group's Unassigned Parameters
-func (to *Session) GetCacheGroupUnassignedParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/unassigned_parameters", API_CACHEGROUPS, cacheGroupID)
-	return to.getCacheGroupParameters(route, "")
-}
-
-// GetCacheGroupParametersByQueryParams Gets a Cache Group's Unassigned Parameters with query parameters
-func (to *Session) GetCacheGroupUnassignedParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/unassigned_parameters", API_CACHEGROUPS, cacheGroupID)
-	return to.getCacheGroupParameters(route, queryParams)
-}
-
 func (to *Session) getCacheGroupParameters(route, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
 	r := fmt.Sprintf("%s%s", route, queryParams)
 	resp, remoteAddr, err := to.request(http.MethodGet, r, nil)

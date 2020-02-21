@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api_capabilities/:id
   - /cachegroup/:parameterID/parameter
   - /cachegroups/:parameterID/parameter/available
+  - /cachegroups/:id/unassigned_parameters
   - /cdns/:name/configs/routing
   - /cdns/configs
   - /cdns/usage/overview
