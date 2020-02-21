@@ -23,6 +23,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/cfgfile"
@@ -37,6 +38,11 @@ var scopeConfigFileFuncs = map[string]func(cfg config.TCCfg, resource string, fi
 }
 
 func GetConfigFile(cfg config.TCCfg) (string, int, error) {
+	start := time.Now()
+	defer func() {
+		log.Infof("GetConfigFile %v took %v\n", cfg.TOURL.Path, time.Since(start).Round(time.Millisecond))
+	}()
+
 	pathParts := strings.Split(cfg.TOURL.Path, "/")
 
 	if len(pathParts) == 7 && pathParts[1] == `api` && pathParts[3] == `servers` && pathParts[5] == `configfiles` && pathParts[6] == `ats` {
