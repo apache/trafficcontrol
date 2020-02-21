@@ -33,7 +33,7 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name' | filter:columnFilterFn">
                         <div class="checkbox">
                             <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
                         </div>
@@ -113,6 +113,7 @@ under the License.
                     <th>TR Response Headers</th>
                     <th>Type</th>
                     <th>XML ID (Key)</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -172,6 +173,9 @@ under the License.
                     <td data-search="^{{::ds.trRequestHeaders}}$">{{::ds.trRequestHeaders}}</td>
                     <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
                     <td name="xmlId" data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+                    <td style="text-align: right;">
+                        <a class="link action-link" title="Unlink Delivery Service from Server" ng-click="confirmRemoveDS(ds, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
+                    </td>
                 </tr>
             </tbody>
         </table>
