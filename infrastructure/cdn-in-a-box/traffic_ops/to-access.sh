@@ -39,6 +39,8 @@ export TO_URL=${TO_URL:-https://$TO_FQDN:$TO_PORT}
 export TO_USER=${TO_USER:-$TO_ADMIN_USER}
 export TO_PASSWORD=${TO_PASSWORD:-$TO_ADMIN_PASSWORD}
 
+export TO_API_VERSION=${TO_API_VERSION:-"2.0"}
+
 export CURLOPTS=${CURLOPTS:--LfsS}
 export CURLAUTH=${CURLAUTH:--k}
 export COOKIEJAR=$(mktemp)
@@ -75,7 +77,7 @@ to-auth() {
 	# if cookiejar is current, nothing to do..
 	cookie_current $COOKIEJAR && return
 
-	local url=$TO_URL/api/2.0/user/login
+	local url=$TO_URL/api/$TO_API_VERSION/user/login
 	local datatype='Accept: application/json'
 	cat >"$login" <<-CREDS
 { "u" : "$TO_USER", "p" : "$TO_PASSWORD" }
@@ -89,7 +91,7 @@ CREDS
 
 to-ping() {
 	# ping endpoint does not require authentication
-	curl $CURLAUTH $CURLOPTS -X GET "$TO_URL/api/2.0/ping"
+	curl $CURLAUTH $CURLOPTS -X GET "$TO_URL/api/$TO_API_VERSION/ping"
 }
 
 to-get() {
@@ -265,7 +267,7 @@ to-enroll() {
 
 # Tests that this server exists in Traffic Ops
 function testenrolled() {
-	local tmp="$(to-get	'api/2.0/servers?name='$MY_HOSTNAME'')"
+	local tmp="$(to-get	'api/'$TO_API_VERSION'/servers?name='$MY_HOSTNAME'')"
 	tmp=$(echo $tmp | jq '.response[]|select(.hostName=="'"$MY_HOSTNAME"'")')
 	echo "$tmp"
 }
@@ -302,10 +304,10 @@ to-add-sslkeys() {
 	                 }")
 
 	while true; do
-		json_response=$(to-post 'api/2.0/deliveryservices/sslkeys/add' "$json_request")
+		json_response=$(to-post 'api/'$TO_API_VERSION'/deliveryservices/sslkeys/add' "$json_request")
 		if [[ -n "$json_response" ]] ; then
 			sleep 3
-			cdn_sslkeys_response=$(to-get "api/2.0/cdns/name/$1/sslkeys" | jq '.response[] | length')
+			cdn_sslkeys_response=$(to-get "api/$TO_API_VERSION/cdns/name/$1/sslkeys" | jq '.response[] | length')
 			if ((cdn_sslkeys_response>0)); then
 				break
 			else
@@ -329,7 +331,7 @@ to-auto-snapqueue() {
 		expected_servers_list=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|join(",")')
 		expected_servers_total=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|length')
 
-		current_servers_json=$(to-get 'api/2.0/servers' 2>/dev/null | jq -c -e '[.response[] | .xmppId] | sort')
+		current_servers_json=$(to-get 'api/'$TO_API_VERSION'/servers' 2>/dev/null | jq -c -e '[.response[] | .xmppId] | sort')
 		[ -z "$current_servers_json" ] && current_servers_json='[]'
 		current_servers_list=$(jq -r -n --argjson current "$current_servers_json" '$current|join(",")')
 		current_servers_total=$(jq -r -n --argjson current "$current_servers_json" '$current|length')
@@ -346,11 +348,11 @@ to-auto-snapqueue() {
 			echo "AUTO-SNAPQUEUE - All expected servers enrolled."
 			sleep $AUTO_SNAPQUEUE_ACTION_WAIT
 			echo "AUTO-SNAPQUEUE - Do automatic snapshot..."
-			cdn_id=$(to-get "api/2.0/cdns?name=$2" |jq '.response[0].id')
-			to-put "api/2.0/cdns/$cdn_id/snapshot"
+			cdn_id=$(to-get "api/$TO_API_VERSION/cdns?name=$2" |jq '.response[0].id')
+			to-put "api/$TO_API_VERSION/cdns/$cdn_id/snapshot"
 			sleep $AUTO_SNAPQUEUE_ACTION_WAIT
 			echo "AUTO-SNAPQUEUE - Do queue updates..."
-			to-post "api/2.0/cdns/$cdn_id/queue_update" '{"action":"queue"}'
+			to-post "api/$TO_API_VERSION/cdns/$cdn_id/queue_update" '{"action":"queue"}'
 			break
 		fi
 
