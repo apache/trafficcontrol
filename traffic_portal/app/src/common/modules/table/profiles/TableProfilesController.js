@@ -19,6 +19,8 @@
 
 var TableProfilesController = function(profiles, $scope, $state, $location, $uibModal, $window, locationUtils, profileService, messageModel, fileUtils) {
 
+    let profilesTable;
+
     var confirmDelete = function(profile) {
         var params = {
             title: 'Delete Profile: ' + profile.name,
@@ -82,6 +84,14 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
     };
 
     $scope.profiles = profiles;
+
+    $scope.columns = [
+        { "name": "Name", "visible": true, "searchable": true },
+        { "name": "Type", "visible": true, "searchable": true },
+        { "name": "Routing Disabled", "visible": true, "searchable": true },
+        { "name": "Description", "visible": true, "searchable": true },
+        { "name": "CDN", "visible": true, "searchable": true }
+    ];
 
     $scope.contextMenuItems = [
         {
@@ -193,11 +203,26 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
+    $scope.toggleVisibility = function(colName) {
+        const col = profilesTable.column(colName + ':name');
+        col.visible(!col.visible());
+        profilesTable.rows().invalidate().draw();
+    };
+
     angular.element(document).ready(function () {
-        $('#profilesTable').dataTable({
+        profilesTable = $('#profilesTable').DataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
-            "aaSorting": []
+            "aaSorting": [],
+            "columns": $scope.columns,
+            "initComplete": function(settings, json) {
+                try {
+                    // need to create the show/hide column checkboxes and bind to the current visibility
+                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_profilesTable_/')).columns;
+                } catch (e) {
+                    console.error("Failure to retrieve required column info from localStorage (key=DataTables_profilesTable_/):", e);
+                }
+            }
         });
     });
 
