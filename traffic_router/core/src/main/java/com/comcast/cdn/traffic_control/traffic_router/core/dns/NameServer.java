@@ -18,7 +18,6 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 import java.net.InetAddress;
 import java.util.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.ExtendedFlags;
@@ -167,23 +166,19 @@ public class NameServer {
 		boolean isEnabled = false;
 
 		for (final DeliveryService ds : ecsEnabledDses) {
-			final JsonNode domains = ds.getDomains();
+			String domain = ds.getDomain();
 
-			if (domains == null) {
+			if (domain == null) {
 				continue;
 			}
 
-			for (final JsonNode domainNode : domains) {
-				String domain = domainNode.asText();
+			if (domain.endsWith("+")) {
+				domain = domain.replaceAll("\\+\\z", ".") + ZoneManager.getTopLevelDomain();
+			}
 
-				if (domain.endsWith("+")) {
-					domain = domain.replaceAll("\\+\\z", ".") + ZoneManager.getTopLevelDomain();
-				}
-
-				if (name.relativize(Name.root).toString().contains(domain)) {
-					isEnabled = true;
-					break;
-				}
+			if (name.relativize(Name.root).toString().contains(domain)) {
+				isEnabled = true;
+				break;
 			}
 		}
 
