@@ -376,17 +376,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'cachegroups/{cache_group_id:d}', ('2.0',))
-	def get_cachegroup_by_id(self, cache_group_id=None):
-		"""
-		Get a Cache Group by Id.
-		:ref:`to-api-cachegroups-id`
-		:param cache_group_id: The cache group Id
-		:type cache_group_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'cachegroups/{cache_group_id:d}/parameters', ('2.0',))
 	def get_cachegroup_parameters(self, cache_group_id=None):
 		"""

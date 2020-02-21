@@ -165,7 +165,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CacheGroup: CRUD
 		{api.Version{2, 0}, http.MethodGet, `cachegroups/trimmed/?$`, cachegroup.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil, 229527916, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `cachegroups/?$`, api.ReadHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelReadOnly, Authenticated, nil, 223079110, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `cachegroups/{id}$`, api.ReadHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelReadOnly, Authenticated, nil, 291886338, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `cachegroups/{id}$`, api.UpdateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 212954546, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `cachegroups/?$`, api.CreateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 22982665, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `cachegroups/{id}$`, api.DeleteHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 227869365, noPerlBypass},
@@ -561,7 +560,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CacheGroup: CRUD
 		{api.Version{1, 1}, http.MethodGet, `cachegroups/trimmed/?(\.json)?$`, cachegroup.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil, 329527916, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `cachegroups/?(\.json)?$`, api.ReadHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelReadOnly, Authenticated, nil, 123079110, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `cachegroups/{id}$`, api.ReadHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelReadOnly, Authenticated, nil, 691886338, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cachegroups/{id}$`, api.DeprecatedReadHandler(&cachegroup.TOCacheGroup{}, util.StrPtr("GET /cachegroups with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 691886338, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `cachegroups/{id}$`, api.UpdateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 112954546, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `cachegroups/?$`, api.CreateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 32982665, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `cachegroups/{id}$`, api.DeleteHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 257869365, noPerlBypass},
