@@ -456,3 +456,11 @@ For the errors (commit 27936f6) component:
 For the go-acme/lego (version 2.7.2) component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/LICENSE
+
+For the fxamacker/cbor (commit e84e0b6) component:
+@traffic_ops/ort/atstccfg/vendor/github.com/fxamacker/cbor/*
+./traffic_ops/ort/atstccfg/vendor/github.com/fxamacker/cbor/LICENSE
+
+For the x448/float16 (commit e05feda) component:
+@traffic_ops/ort/atstccfg/vendor/github.com/x448/float16/*
+./traffic_ops/ort/atstccfg/vendor/github.com/x448/float16/LICENSE

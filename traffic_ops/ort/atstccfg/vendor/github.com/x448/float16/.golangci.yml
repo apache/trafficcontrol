@@ -1,0 +1,73 @@
+# github.com/x448/float16/.golangci.yml
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - dupl    
+    - errcheck
+    - goconst
+    - gocyclo
+    - gofmt
+    - golint
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - maligned
+    - misspell
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+   
+issues:
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gomnd
+        - lll
+
+# Do not remove linters-settings, some extra linters like gocritic are enabled from Github Actions or cli.
+linters-settings:
+  dupl:
+    threshold: 100
+  funlen:
+    lines: 100
+    statements: 50
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - ifElseChain
+      - octalLiteral
+      - paramTypeCombine
+      - whyNoLint
+      - wrapperFunc    
+  gocyclo:
+    min-complexity: 15
+  gofmt:
+    simplify: false    
+  goimports:
+    local-prefixes: github.com/x448/float16
+  golint:
+    min-confidence: 0
+  govet:
+    check-shadowing: true
+  lll:
+    line-length: 140
+  maligned:
+    suggest-new: true
+  misspell:
+    locale: US
