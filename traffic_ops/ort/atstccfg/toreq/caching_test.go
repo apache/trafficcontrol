@@ -20,10 +20,15 @@ package toreq
  */
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestWriteCacheJSON(t *testing.T) {
@@ -67,12 +72,12 @@ func TestWriteCacheJSON(t *testing.T) {
 	}
 }
 
-func TestWriteCacheGob(t *testing.T) {
+func TestWriteCacheCBOR(t *testing.T) {
 	type Obj struct {
 		S string `json:"s"`
 	}
 
-	fileName := "TestWriteCacheGob.gob"
+	fileName := "TestWriteCacheCBOR"
 	tmpDir := os.TempDir()
 	filePath := filepath.Join(tmpDir, fileName)
 	defer os.Remove(filePath)
@@ -86,9 +91,9 @@ func TestWriteCacheGob(t *testing.T) {
 `,
 		}
 
-		WriteCache(CacheFormatGob.Encoder, tmpDir, fileName, largeObj)
+		WriteCache(CacheFormatCBOR.Encoder, tmpDir, fileName, largeObj)
 		loadedLargeObj := Obj{}
-		if err := ReadCache(CacheFormatGob.Decoder, tmpDir, fileName, time.Hour, &loadedLargeObj); err != nil {
+		if err := ReadCache(CacheFormatCBOR.Decoder, tmpDir, fileName, time.Hour, &loadedLargeObj); err != nil {
 			t.Fatalf("ReadCache large error expected nil, actual: " + err.Error())
 		} else if largeObj.S != loadedLargeObj.S {
 			t.Fatalf("ReadCache expected %+v actual %+v\n", largeObj.S, loadedLargeObj.S)
@@ -96,14 +101,104 @@ func TestWriteCacheGob(t *testing.T) {
 	}
 
 	{
-		// Write a smaller object to the same file, to make sure it properly truncates, and doesn't leave old text lying around (resulting in malformed gob)
+		// Write a smaller object to the same file, to make sure it properly truncates, and doesn't leave old text lying around (resulting in malformed cbor)
 		smallObj := Obj{S: `foo`}
-		WriteCache(CacheFormatGob.Encoder, tmpDir, fileName, smallObj)
+		WriteCache(CacheFormatCBOR.Encoder, tmpDir, fileName, smallObj)
 		loadedSmallObj := Obj{}
-		if err := ReadCache(CacheFormatGob.Decoder, tmpDir, fileName, time.Hour, &loadedSmallObj); err != nil {
+		if err := ReadCache(CacheFormatCBOR.Decoder, tmpDir, fileName, time.Hour, &loadedSmallObj); err != nil {
 			t.Fatalf("ReadCache small error expected nil, actual: " + err.Error())
 		} else if smallObj.S != loadedSmallObj.S {
 			t.Fatalf("ReadCache expected %+v actual %+v\n", smallObj.S, loadedSmallObj.S)
 		}
+	}
+}
+
+func TestDefaultCacheFormatIsomorphic(t *testing.T) {
+	// Test whether DefaultCacheFormat is isomorphic.
+	// That is, whether serializing and deserializing produces the original object.
+	// This might seem silly, but encoding/gob is not isomorphic and fails this test.
+	// We requires an isomorphic cache format, or config files will be wrong.
+
+	// Delivery Service is one of TC's most complex objects, so use an array of it to test.
+	// It's important to test null pointers, as well as pointers to default values (a common failure).
+
+	dsMatchPtr := []tc.DeliveryServiceMatch{
+		tc.DeliveryServiceMatch{
+			Type:      tc.DSMatchTypeHostRegex,
+			SetNumber: 0,
+			Pattern:   "foo",
+		},
+		tc.DeliveryServiceMatch{
+			Type:      tc.DSMatchTypeInvalid,
+			SetNumber: 42,
+			Pattern:   "",
+		},
+	}
+	dsTypeInvalidPtr := tc.DSTypeInvalid
+
+	ds1 := tc.DeliveryServiceNullable{}
+	ds1.Active = util.BoolPtr(false)
+	ds1.AnonymousBlockingEnabled = nil
+	ds1.CacheURL = util.StrPtr("")
+	ds1.CCRDNSTTL = util.IntPtr(0)
+	ds1.CDNID = nil
+	ds1.CDNName = nil
+	ds1.CheckPath = util.StrPtr("foo")
+	ds1.DisplayName = util.StrPtr("")
+	ds1.DSCP = nil
+	ds1.LogsEnabled = util.BoolPtr(true)
+	// ds1.MatchList = &dsMatchPtr
+	ds1.MissLat = nil
+	ds1.MissLong = util.FloatPtr(0)
+	ds1.Signed = false
+	ds1.Type = &dsTypeInvalidPtr
+	// ds1.ExampleURLs = []string{"foo", ""}
+
+	ds2 := tc.DeliveryServiceNullable{}
+	ds2.Active = nil
+	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds2.CacheURL = util.StrPtr("")
+	ds2.CCRDNSTTL = util.IntPtr(0)
+	ds2.CDNID = nil
+	ds2.CDNName = nil
+	ds2.CheckPath = util.StrPtr("foo")
+	ds2.DisplayName = util.StrPtr("")
+	ds2.DSCP = nil
+	ds2.LogsEnabled = util.BoolPtr(true)
+	ds2.MatchList = &dsMatchPtr
+	ds2.MissLat = util.FloatPtr(0)
+	ds2.MissLong = util.FloatPtr(42)
+	ds2.Signed = true
+	ds2.Type = nil
+	ds2.ExampleURLs = nil
+
+	dses := []tc.DeliveryServiceNullable{ds1, ds2}
+
+	fileName := "TestDefaultCacheFormatIsomorphic"
+
+	tmpDir := os.TempDir()
+	filePath := filepath.Join(tmpDir, fileName)
+	defer os.Remove(filePath)
+
+	WriteCache(DefaultCacheFormat.Encoder, tmpDir, fileName, dses)
+
+	readDSes := []tc.DeliveryServiceNullable{}
+	if err := ReadCache(DefaultCacheFormat.Decoder, tmpDir, fileName, time.Hour, &readDSes); err != nil {
+		t.Fatalf("ReadCache error expected nil, actual: " + err.Error())
+	}
+	if len(readDSes) != 2 {
+		t.Fatalf("ReadCache error expected 2 dses, actual: %v", len(readDSes))
+	}
+
+	if !reflect.DeepEqual(dses[0], readDSes[0]) {
+		dsj, _ := json.MarshalIndent(dses[0], "", " ")
+		dsrj, _ := json.MarshalIndent(readDSes[0], "", " ")
+		t.Errorf("ReadCache expected %+v actual %+v\n", string(dsj), string(dsrj))
+	}
+
+	if !reflect.DeepEqual(dses[1], readDSes[1]) {
+		dsj, _ := json.MarshalIndent(dses[1], "", " ")
+		dsrj, _ := json.MarshalIndent(readDSes[1], "", " ")
+		t.Errorf("ReadCache expected %+v actual %+v\n", string(dsj), string(dsrj))
 	}
 }

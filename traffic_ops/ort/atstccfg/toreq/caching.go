@@ -21,7 +21,6 @@ package toreq
 
 import (
 	"bufio"
-	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -37,12 +36,14 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+
+	"github.com/fxamacker/cbor"
 )
 
 // DefaultCacheFormat is the encoder, decoder, and file extension to use for caching.
 // This may be changed at compile-time. See CacheFormatJSON.
-// Note this is not used for all cache files. Notably, Delivery Service Servers use a custom CSV format, which is faster than gob.
-var DefaultCacheFormat = CacheFormatGob
+// Note this is not used for all cache files. Notably, Delivery Service Servers use a custom CSV format, which is faster than cbor.
+var DefaultCacheFormat = CacheFormatCBOR
 
 // GetCached attempts to get the given object from tempDir/cacheFileName.
 // If the cache file doesn't exist, is too old, or is malformed, it uses getter to get the object, and stores it in cacheFileName.
@@ -149,7 +150,7 @@ type CacheFormat struct {
 	Extension string
 }
 
-var CacheFormatGob = CacheFormat{GobEncode, GobDecode, GobExtension}
+var CacheFormatCBOR = CacheFormat{CBOREncode, CBORDecode, CBORExtension}
 var CacheFormatJSON = CacheFormat{JSONEncode, JSONDecode, JSONExtension}
 
 // CacheFormatDSS is a special format encoder/decoder optimized for Delivery Service Servers.
@@ -164,10 +165,10 @@ const JSONExtension = ".json"
 func JSONDecode(r io.Reader, obj interface{}) error { return json.NewDecoder(r).Decode(obj) }
 func JSONEncode(w io.Writer, obj interface{}) error { return json.NewEncoder(w).Encode(obj) }
 
-const GobExtension = ".gob"
+const CBORExtension = ".cbor"
 
-func GobDecode(r io.Reader, obj interface{}) error { return gob.NewDecoder(r).Decode(obj) }
-func GobEncode(w io.Writer, obj interface{}) error { return gob.NewEncoder(w).Encode(obj) }
+func CBORDecode(r io.Reader, obj interface{}) error { return cbor.NewDecoder(r).Decode(obj) }
+func CBOREncode(w io.Writer, obj interface{}) error { return cbor.NewEncoder(w).Encode(obj) }
 
 func StringToCookies(cookiesStr string) []*http.Cookie {
 	hdr := http.Header{}
