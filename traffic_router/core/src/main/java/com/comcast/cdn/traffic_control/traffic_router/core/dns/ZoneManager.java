@@ -494,7 +494,7 @@ public class ZoneManager extends Resolver {
 		return records;
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.ExcessiveParameterList"})
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.ExcessiveParameterList", "PMD.NPathComplexity"})
 	private static void primeZoneCache(final String domain, final Name name, final List<Record> list, final TrafficRouter tr,
 			final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks,
 			final BlockingQueue<Runnable> primingTasks, final DeliveryService ds, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys) {
