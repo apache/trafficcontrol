@@ -17,6 +17,7 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { merge } from 'rxjs/index';
 import { map, mergeAll, first, catchError, reduce } from 'rxjs/operators';
 
+import { environment } from '../../environments/environment';
 import { CDN } from '../models/cdn';
 import { DataPoint, DataSet, DataSetWithSummary, TPSData } from '../models/data';
 import { DeliveryService } from '../models/deliveryservice';
@@ -83,16 +84,17 @@ export class APIService {
 
 	/**
 	 * The current API version to use
-	 * @todo Get this from the environment
 	 */
-	public API_VERSION = '2.0';
+	public API_VERSION: string = '2.0';
 
 	private deliveryServiceTypes: Array<Type>;
 
 	// private cookies: string;
 
 	constructor (private readonly http: HttpClient) {
-
+		if (environment.APIVersion) {
+			this.API_VERSION = environment.APIVersion;
+		}
 	}
 
 	private delete (path: string, data?: any): Observable<HttpResponse<any>> {
