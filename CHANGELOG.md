@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/stats_summary `(POST)`
   - /api/1.1/cdns/routing
   - /api/1.1/cachegroupparameters/ `(GET, POST)`
+  - /api/2.0/isos
   - /api/1.5/deliveryservice/:id/routing
   - /api/1.5/deliveryservices/sslkeys/generate/letsencrypt `POST`
   - /api/1.5/letsencrypt/autorenew `POST`

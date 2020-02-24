@@ -1,5 +1,6 @@
 ..
 ..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -25,7 +26,7 @@ Generates an ISO from the requested ISO source.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Response Type:  Object - unless the ``stream`` key is present in the request payload, in which case the actual ISO content will be returned instead of a JSON response string
+:Response Type:  undefined - ISO image as a streaming download
 
 Request Structure
 -----------------
@@ -54,9 +55,6 @@ Request Structure
 	.. seealso:: :ref:`to-api-osversions`
 
 :rootPass: The password used by the generated system image's ``root`` user
-:stream:   An optional string that must be 'yes' or 'no' (Default: no) - if it is given and is 'yes', the response payload will be the content of the ISO rather than the normal JSON response
-
-	.. note:: This is called 'stream' because it is implemented by writing the results of the ISO compression process directly into the TCP streaming socket after sending the necessary HTTP headers. As a result, this is much faster and more space-efficient than `"stream": "no"` (which will first write the entire ISO to disk, then return a URL that can be used to download it) and so it is recommended in most cases that this be "yes".
 
 .. code-block:: http
 	:caption: Request Example
@@ -82,43 +80,30 @@ Request Structure
 		"ip6Address": "1::3:3:7",
 		"ip6Gateway": "8::8",
 		"interfaceName": "eth0",
-		"disk": "hda",
-		"stream": "no"
+		"disk": "hda"
 	}
 
 .. [1] This optional key is required if and only if ``dhcp`` is "no".
 
 Response Structure
 ------------------
-Assuming the ``stream`` key isn't defined in the request payload JSON object (or it's ``"no"``), then the following keys will be present in the ``response`` object:
-
-:isoName: The name of the generated ``.iso`` file
-:isoURL:  The URL location of the ISO
+ISO image as a streaming download.
 
 .. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-	Content-Type: application/json
-	Date: Fri, 30 Nov 2018 20:27:10 GMT
+	Connection: keep-alive
+	Content-Disposition: attachment; filename="test-centos72_centos72-netinstall.iso"
+	Content-Encoding: gzip
+	Content-Type: application/download
+	Date: Wed, 05 Feb 2020 21:59:15 GMT
+	Set-Cookie: mojolicious=...; Path=/; Expires=Wed, 05 Feb 2020 22:59:11 GMT; Max-Age=3600; HttpOnly
+	Transfer-Encoding: chunked
+	Whole-Content-sha512: sLSVQGrLCQ4hGQhv2reragQHWNi2aKMcz2c/HMAH45tLcZ1LenPyOzWRcRfHUNbV4PEEKOoiTfwE2HlA+WtRIQ==
 	X-Server-Name: traffic_ops_golang/
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Vary: Accept-Encoding
-	Whole-Content-Sha512: pdlIVEfbcEiz6+JPWpD1+RVw6j66yzM3l9Bp/4Yl9bh0Mh+aXel06WWq05XnU1szM/APWRwEYUvUHtEdobGSAQ==
-	Content-Length: 243
 
-	{ "alerts": [
-		{
-			"level": "success",
-			"text": "Generate ISO was successful."
-		}
-	],
-	"response": {
-		"isoURL": "https://some-weird-url.biz.co.uk/iso/test.quest-centos72.iso",
-		"isoName": "test.quest-centos72.iso"
-	}}

@@ -106,7 +106,7 @@ Assuming the ``stream`` key isn't defined in the request payload JSON object (or
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
 	Date: Fri, 30 Nov 2018 20:27:10 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: pdlIVEfbcEiz6+JPWpD1+RVw6j66yzM3l9Bp/4Yl9bh0Mh+aXel06WWq05XnU1szM/APWRwEYUvUHtEdobGSAQ==
@@ -116,6 +116,10 @@ Assuming the ``stream`` key isn't defined in the request payload JSON object (or
 		{
 			"level": "success",
 			"text": "Generate ISO was successful."
+		},
+		{
+			"level": "warning",
+			"text": "Non streaming ISO generation is deprecated."
 		}
 	],
 	"response": {

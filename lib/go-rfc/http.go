@@ -26,12 +26,16 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-const ApplicationJSON = "application/json" // RFC4627§6
-const Gzip = "gzip"                        // RFC7230§4.2.3
-const ContentType = "Content-Type"         // RFC7231§3.1.1.5
-const ContentEncoding = "Content-Encoding" // RFC7231§3.1.2.2
-const ContentTypeTextPlain = "text/plain"  // RFC2046§4.1
-const AcceptEncoding = "Accept-Encoding"   // RFC7231§5.3.4
+const (
+	ApplicationJSON        = "application/json"         // RFC4627§6
+	Gzip                   = "gzip"                     // RFC7230§4.2.3
+	ContentType            = "Content-Type"             // RFC7231§3.1.1.5
+	ContentEncoding        = "Content-Encoding"         // RFC7231§3.1.2.2
+	ContentTypeTextPlain   = "text/plain"               // RFC2046§4.1
+	AcceptEncoding         = "Accept-Encoding"          // RFC7231§5.3.4
+	ContentDisposition     = "Content-Disposition"      // RFC6266
+	ApplicationOctetStream = "application/octet-stream" // RFC2046§4.5.2
+)
 
 // AcceptsGzip returns whether r accepts gzip encoding, per RFC7231§5.3.4.
 func AcceptsGzip(r *http.Request) bool {
