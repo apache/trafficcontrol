@@ -102,7 +102,6 @@ export function app(to_host: string, to_url: string, to_port: number, to_use_SSL
 		} catch (e) {
 			console.error(e);
 			res.end();
-			req.end();
 		}
 	});
 
