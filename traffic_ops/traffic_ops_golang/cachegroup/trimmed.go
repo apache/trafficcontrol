@@ -43,6 +43,8 @@ func GetTrimmed(w http.ResponseWriter, r *http.Request) {
 
 	cg, err := getCachegroupsTrimmed(inf.Tx.Tx)
 	if err != nil {
+		userErr = api.LogErr(r, http.StatusInternalServerError, nil, err)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
