@@ -1253,9 +1253,9 @@
   },
   "config": {
     "certificate.api.url": "http://${toHostname}/api/1.3/cdns/name/${cdnName}/sslkeys.json",
-    "federationmapping.polling.url": "http://${toHostname}/internal/api/1.3/federations.json",
+    "federationmapping.polling.url": "http://${toHostname}/api/2.0/federations.json",
     "federationmapping.polling.interval": "600000",
-    "steeringmapping.polling.url": "http://${toHostname}/internal/api/1.3/steering.json",
+    "steeringmapping.polling.url": "http://${toHostname}/api/2.0/steering.json",
     "steeringmapping.polling.interval": "15000",
     "weight": "1.0",
     "requestHeaders": [
