@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-cdns-name-federations` with the query parameter ``id`` instead.
+
 Retrieves a specific federation used within a specific CDN.
 
 :Auth. Required: Yes
@@ -108,6 +111,12 @@ Response Structure
 				"id": 1,
 				"xmlId": "demo1"
 			}
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /cdns/{name}/federations with query parameter id instead",
+			"level": "warning"
 		}
 	]}
 

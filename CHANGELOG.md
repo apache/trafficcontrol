@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cachegroup/:parameterID/parameter
   - /cachegroups/:parameterID/parameter/available
   - /cdns/:name/configs/routing
+  - /cdns/:name/federations/:id (GET)
   - /cdns/configs
   - /cdns/usage/overview
   - /deliveryservice_user
