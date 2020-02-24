@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cdns/:name/configs/routing
   - /cdns/configs
   - /cdns/usage/overview
+  - /deliveryservice_matches
   - /deliveryservice_user
   - /deliveryservice_user/:dsId/:userId
   - /deliveryservices/:id/state
