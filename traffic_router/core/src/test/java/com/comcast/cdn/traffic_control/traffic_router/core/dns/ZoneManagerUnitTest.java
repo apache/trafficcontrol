@@ -27,13 +27,24 @@ import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.xbill.DNS.ARecord;
+import org.xbill.DNS.DClass;
+import org.xbill.DNS.NSECRecord;
 import org.xbill.DNS.Name;
+import org.xbill.DNS.RRSIGRecord;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.SOARecord;
 import org.xbill.DNS.SetResponse;
 import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
 import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.*;
@@ -83,5 +94,96 @@ public class ZoneManagerUnitTest {
         zoneManager.getZone(qname, Type.A, client, false, builder);
         verify(builder).resultType(any(ResultType.class));
         verify(builder).resultLocation(null);
+    }
+
+    @Test
+    public void testZonesAreEqual() throws java.net.UnknownHostException, org.xbill.DNS.TextParseException {
+        class TestCase {
+            String reason;
+            Record[] r1;
+            Record[] r2;
+            boolean expected;
+
+            TestCase(String r, Record[] a, Record[] b, boolean e) {
+                reason = r;
+                r1 = a;
+                r2 = b;
+                expected = e;
+            }
+        }
+
+        final TestCase[] testCases = {
+                new TestCase("empty lists are equal", new Record[]{}, new Record[]{}, true),
+                new TestCase("different length lists are unequal", new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4"))
+                }, new Record[]{}, false),
+                new TestCase("same records but different order lists are equal", new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                }, new Record[]{
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                }, true),
+                new TestCase("same non-empty lists are equal", new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                }, new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                }, true),
+                new TestCase("lists that only differ in the SOA serial number are equal", new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                        new SOARecord(new Name("example.com."), DClass.IN, 60, new Name("example.com."), new Name("example.com."), 1, 60, 1, 1, 1),
+                }, new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                        new SOARecord(new Name("example.com."), DClass.IN, 60, new Name("example.com."), new Name("example.com."), 2, 60, 1, 1, 1),
+                }, true),
+                new TestCase("lists that differ in the SOA (other than the serial number) are not equal", new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                        new SOARecord(new Name("example.com."), DClass.IN, 60, new Name("example.com."), new Name("example.com."), 1, 60, 1, 1, 1),
+                }, new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                        new SOARecord(new Name("example.com."), DClass.IN, 61, new Name("example.com."), new Name("example.com."), 2, 60, 1, 1, 1),
+                }, false),
+                new TestCase("lists that only differ in NSEC or RRSIG records are equal", new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                        new SOARecord(new Name("example.com."), DClass.IN, 60, new Name("example.com."), new Name("example.com."), 1, 60, 1, 1, 1),
+                        new NSECRecord(new Name("foo.example.com."), DClass.IN, 60, new Name("example.com."), new int[]{1}),
+                        new RRSIGRecord(new Name("foo.example.com."), DClass.IN, 60, 1, 1, 60, new Date(), new Date(), 1, new Name("example.com."), new byte[]{1})
+                }, new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                        new SOARecord(new Name("example.com."), DClass.IN, 60, new Name("example.com."), new Name("example.com."), 2, 60, 1, 1, 1),
+                }, true),
+                new TestCase("lists that only differ in NSEC or RRSIG records are equal", new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                        new SOARecord(new Name("example.com."), DClass.IN, 60, new Name("example.com."), new Name("example.com."), 1, 60, 1, 1, 1),
+                }, new Record[]{
+                        new ARecord(new Name("foo.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.4")),
+                        new ARecord(new Name("bar.example.com."), DClass.IN, 60, InetAddress.getByName("1.2.3.5")),
+                        new SOARecord(new Name("example.com."), DClass.IN, 60, new Name("example.com."), new Name("example.com."), 2, 60, 1, 1, 1),
+                        new NSECRecord(new Name("foo.example.com."), DClass.IN, 60, new Name("example.com."), new int[]{1}),
+                        new RRSIGRecord(new Name("foo.example.com."), DClass.IN, 60, 1, 1, 60, new Date(), new Date(), 1, new Name("example.com."), new byte[]{1})
+                }, true),
+        };
+
+        for (TestCase t : testCases) {
+            List<Record> input1 = Arrays.asList(t.r1);
+            List<Record> input2 = Arrays.asList(t.r2);
+            List<Record> copy1 = Arrays.asList(t.r1);
+            List<Record> copy2 = Arrays.asList(t.r2);
+            boolean actual = ZoneManager.zonesAreEqual(input1, input2);
+            assertThat(t.reason, actual, equalTo(t.expected));
+
+            // assert that the input lists were not modified
+            assertThat("zonesAreEqual input lists should not be modified", input1, equalTo(copy1));
+            assertThat("zonesAreEqual input lists should not be modified", input2, equalTo(copy2));
+        }
     }
 }

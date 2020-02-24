@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 - Added a boolean to delivery service in Traffic Portal and Traffic Ops to enable EDNS0 client subnet at the delivery service level and include it in the cr-config.
 - Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
+- Traffic Router DNSSEC zone diffing: if enabled via the new "dnssec.zone.diffing.enabled" TR profile parameter, TR will diff existing zones against newly generated zones in order to determine if a zone needs to be re-signed. Zones are typically generated on every snapshot and whenever new DNSSEC keys are found, and since signing a zone is a relatively CPU-intensive operation, this optimization can drastically reduce the CPU time taken to process new snapshots and new DNSSEC keys.
 - Added an optimistic quorum feature to Traffic Monitor to prevent false negative states from propagating to downstream components in the event of network isolation.
 - Added the ability to fetch users by role
 - Added an API 1.5 endpoint to generate delivery service certificates using Let's Encrypt
@@ -21,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/stats_summary `(POST)`
   - /api/1.1/cdns/routing
   - /api/1.1/cachegroupparameters/ `(GET, POST)`
+  - /api/2.0/isos
   - /api/1.5/deliveryservice/:id/routing
   - /api/1.5/deliveryservices/sslkeys/generate/letsencrypt `POST`
   - /api/1.5/letsencrypt/autorenew `POST`

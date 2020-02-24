@@ -70,4 +70,21 @@ describe('Traffic Portal Profiles Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles/[0-9]+/parameters");
 	});
 
+	it('should go back to the profiles page', function() {
+		console.log("Go to the profiles page");
+		browser.setLocation("profiles");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles");
+	});
+
+	it('should toggle the visibility of the first table column ', function () {
+		browser.driver.findElement(by.id('toggleColumns')).click();
+		let first = element.all(by.css('input[type=checkbox]')).first();
+		expect(first.isSelected()).toBe(true);
+		first.click();
+		expect(first.isSelected()).toBe(false);
+		let tableColumns = element.all(by.css('#profilesTable tr:first-child td'));
+		expect(tableColumns.count()).toBe(4);
+	});
+
+
 });

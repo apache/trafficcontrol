@@ -33,7 +33,26 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 			);
 	};
 
-	var confirmRemoveDS = function(ds, $event) {
+	$scope.server = server;
+
+	// adds some items to the base delivery services context menu
+	$scope.contextMenuItems.splice(2, 0,
+		{
+			text: 'Unlink Delivery Service from Server',
+			hasBottomDivider: function() {
+				return true;
+			},
+			click: function ($itemScope) {
+				$scope.confirmRemoveDS($itemScope.ds);
+			}
+		}
+	);
+
+	$scope.isEdge = serverUtils.isEdge;
+
+	$scope.isOrigin = serverUtils.isOrigin;
+
+	$scope.confirmRemoveDS = function(ds, $event) {
 		if ($event) {
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		}
@@ -58,26 +77,6 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 			// do nothing
 		});
 	};
-
-	$scope.server = server;
-
-	// adds some items to the base delivery services context menu
-	$scope.contextMenuItems.splice(2, 0,
-		{
-			text: 'Unlink Delivery Service from Server',
-			hasBottomDivider: function() {
-				return true;
-			},
-			click: function ($itemScope) {
-				confirmRemoveDS($itemScope.ds);
-			}
-		}
-	);
-
-	$scope.isEdge = serverUtils.isEdge;
-
-	$scope.isOrigin = serverUtils.isOrigin;
-
 
 	$scope.cloneDsAssignments = function(server) {
 		var params = {
@@ -149,12 +148,22 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 		serverDeliveryServicesTable.rows().invalidate().draw();
 	};
 
+	$scope.columnFilterFn = function(column) {
+		if (column.name === 'Action') {
+			return false;
+		}
+		return true;
+	};
+
 	angular.element(document).ready(function () {
 		serverDeliveryServicesTable = $('#serverDeliveryServicesTable').DataTable({
 			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"aaSorting": [],
-			"columns": $scope.columns,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 55 }
+			],
+			"columns": $scope.columns.concat([{ "name": "Action", "visible": true, "searchable": false }]),
 			"initComplete": function(settings, json) {
 				try {
 					// need to create the show/hide column checkboxes and bind to the current visibility

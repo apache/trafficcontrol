@@ -31,8 +31,7 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 	];
 
 	$scope.iso = {
-		dhcp: 'no',
-		stream: 'no'
+		dhcp: 'no'
 	};
 
 	$scope.isDHCP = function() {
@@ -49,13 +48,9 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 
 	$scope.generate = function(iso) {
 		toolsService.generateISO(iso)
-			.then(function(result) {
+			.then(function() {
 				$anchorScroll(); // scrolls window to top
-				if (iso.stream != 'yes') {
-					messageModel.setMessages([{level: 'success', text: 'ISO created at ' + result.isoURL}], false);
-				} else {
-					messageModel.setMessages([{level: 'success', text: 'ISO successfully downloaded'}], false);
-				}
+				messageModel.setMessages([{level: 'success', text: 'ISO successfully downloaded'}], false);
 			});
 	};
 
