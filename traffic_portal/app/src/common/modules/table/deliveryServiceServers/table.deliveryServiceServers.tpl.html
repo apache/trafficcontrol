@@ -33,7 +33,7 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name' | filter:columnFilterFn">
                         <div class="checkbox">
                             <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
                         </div>
@@ -80,6 +80,7 @@ under the License.
                     <th>TCP Port</th>
                     <th>Type</th>
                     <th>Update Pending</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -124,6 +125,9 @@ under the License.
                     <td data-search="{{(s.updPending) ? 'UPD' : ''}}" data-order="{{::s.updPending}}">
                         <i title="Updates Pending (UPD)" ng-show="s.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
                         <i title="Updates Applied" ng-show="!s.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    </td>
+                    <td style="text-align: right;">
+                        <a class="link action-link" title="Unlink Server from Delivery Service" ng-click="confirmRemoveServer(s, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
                     </td>
                 </tr>
             </tbody>
