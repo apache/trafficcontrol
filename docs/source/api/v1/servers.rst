@@ -90,16 +90,8 @@ Response Structure
 :interfaceMtu:   The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
 :interfaceName:  The name of the primary network interface used by the server
 :ip6Address:     The IPv6 address and subnet mask of ``interfaceName``
-:ip6IsService:   A boolean value which if ``true`` indicates that the IPv6 address will be used for routing content.
-
-	.. versionadded:: 2.0
-
 :ip6Gateway:     The IPv6 address of the gateway used by ``interfaceName``
 :ipAddress:      The IPv4 address of ``interfaceName``
-:ipIsService:    A boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.
-
-	.. versionadded:: 2.0
-
 :ipGateway:      The IPv4 address of the gateway used by ``interfaceName``
 :ipNetmask:      The IPv4 subnet mask used by ``interfaceName``
 :lastUpdated:    The date and time at which this server description was last modified
@@ -193,9 +185,7 @@ Response Structure
 			"typeId": 12,
 			"updPending": false,
 			"xmppId": "mid",
-			"xmppPasswd": "",
-			"ipIsService": true,
-			"ip6IsService": true
+			"xmppPasswd": ""
 		}
 	]}
 
@@ -225,16 +215,8 @@ Request Structure
 
 :interfaceName:  The name of the primary network interface used by the server
 :ip6Address:     An optional IPv6 address and subnet mask of ``interfaceName``
-:ip6IsService:   An optional boolean value which if ``true`` indicates that the IPv6 address will be used for routing content.  Defaults to ``true``.
-
-	.. versionadded:: 2.0
-
 :ip6Gateway:     An optional IPv6 address of the gateway used by ``interfaceName``
 :ipAddress:      The IPv4 address of ``interfaceName``
-:ipIsService:    An optional boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.  Defaults to ``true``.
-
-	.. versionadded:: 2.0
-
 :ipGateway:      The IPv4 address of the gateway used by ``interfaceName``
 :ipNetmask:      The IPv4 subnet mask used by ``interfaceName``
 :mgmtIpAddress:  An optional IPv4 address of some network interface on the server used for 'management'
@@ -299,9 +281,7 @@ Request Structure
 		"statusId": 3,
 		"tcpPort": 80,
 		"typeId": 12,
-		"updPending": false,
-		"ipIsService": true,
-		"ip6IsService": true
+		"updPending": false
 	}
 
 Response Structure
@@ -326,16 +306,8 @@ Response Structure
 :interfaceMtu:   The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
 :interfaceName:  The name of the primary network interface used by the server
 :ip6Address:     The IPv6 address and subnet mask of ``interfaceName``
-:ip6IsService:   A boolean value which if ``true`` indicates that the IPv6 address will be used for routing content.
-
-	.. versionadded:: 2.0
-
 :ip6Gateway:     The IPv6 address of the gateway used by ``interfaceName``
 :ipAddress:      The IPv4 address of ``interfaceName``
-:ipIsService:   A boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.
-
-	.. versionadded:: 2.0
-
 :ipGateway:      The IPv4 address of the gateway used by ``interfaceName``
 :ipNetmask:      The IPv4 subnet mask used by ``interfaceName``
 :lastUpdated:    The date and time at which this server description was last modified
@@ -434,9 +406,7 @@ Response Structure
 		"typeId": 12,
 		"updPending": false,
 		"xmppId": "test",
-		"xmppPasswd": null,
-		"ipIsService": true,
-		"ip6IsService": true
+		"xmppPasswd": null
 	}}
 
 .. [1] For more information see the `Wikipedia page on Lights-Out management <https://en.wikipedia.org/wiki/Out-of-band_management>`_\ .
