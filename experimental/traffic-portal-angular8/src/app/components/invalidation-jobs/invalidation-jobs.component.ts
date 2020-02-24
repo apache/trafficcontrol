@@ -17,7 +17,7 @@ import { ActivatedRoute } from '@angular/router';
 
 import { Subject } from 'rxjs';
 
-import { APIService } from '../../services';
+import { DeliveryServiceService, InvalidationJobService } from '../../services/api';
 
 import { DeliveryService, InvalidationJob } from '../../models';
 
@@ -40,7 +40,7 @@ export class InvalidationJobsComponent implements OnInit {
 	regexpIsValid: Subject<string>;
 
 
-	constructor (private readonly route: ActivatedRoute, private readonly api: APIService) {
+	constructor (private readonly route: ActivatedRoute, private readonly jobAPI: InvalidationJobService, private readonly dsAPI: DeliveryServiceService) {
 		this.deliveryservice = {active: true} as DeliveryService;
 		this.jobs = new Array<InvalidationJob>();
 		this.showDialog = new Subject<boolean>();
@@ -50,7 +50,7 @@ export class InvalidationJobsComponent implements OnInit {
 	ngOnInit () {
 		this.now = new Date();
 		const id = parseInt(this.route.snapshot.paramMap.get('id'), 10);
-		this.api.getInvalidationJobs({dsId: id}).subscribe(
+		this.jobAPI.getInvalidationJobs({dsId: id}).subscribe(
 			r => {
 				// The values returned by the API are not RFC-compliant at the time of this writing,
 				// so we need to do some pre-processing on them.
@@ -62,7 +62,7 @@ export class InvalidationJobsComponent implements OnInit {
 				}
 			}
 		);
-		this.api.getDeliveryServices(id).subscribe(
+		this.dsAPI.getDeliveryServices(id).subscribe(
 			(r: DeliveryService) => {
 				this.deliveryservice = r;
 			}
@@ -119,10 +119,10 @@ export class InvalidationJobsComponent implements OnInit {
 			ttl: this.ttl.value
 		};
 
-		this.api.createInvalidationJob(job).subscribe(
+		this.jobAPI.createInvalidationJob(job).subscribe(
 			r => {
 				if (r) {
-					this.api.getInvalidationJobs({dsId: this.deliveryservice.id}).subscribe(
+					this.jobAPI.getInvalidationJobs({dsId: this.deliveryservice.id}).subscribe(
 						r => {
 							this.jobs = new Array<InvalidationJob>();
 							for (const j of r) {

@@ -11,5 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export * from './authentication.service';
-export * from './alert.service';
+
+export * from './CDNService';
+export * from './DeliveryServiceService';
+export * from './InvalidationJobService';
+export * from './ServerService';
+export * from './UserService';

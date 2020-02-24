@@ -4,7 +4,7 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 
 import { first } from 'rxjs/operators';
 
-import { APIService } from '../../services';
+import { ServerService } from '../../services/api';
 import { Server } from '../../models';
 import { orderBy, fuzzyScore } from '../../utils';
 
@@ -19,7 +19,7 @@ export class ServersPageComponent implements OnInit {
 	servers: Server[];
 	filteredServers: Server[];
 
-	constructor (private readonly router: Router, private readonly route: ActivatedRoute, private readonly api: APIService) { }
+	constructor (private readonly router: Router, private readonly route: ActivatedRoute, private readonly api: ServerService) { }
 
 	ngOnInit (): void {
 		const searchParam = this.route.snapshot.queryParamMap.get('search');

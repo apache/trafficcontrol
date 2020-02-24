@@ -16,7 +16,7 @@ import { Component, Input, ElementRef, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 
-import { APIService } from '../../services';
+import { UserService } from '../../services/api';
 import { Role, User } from '../../models';
 
 @Component({
@@ -37,7 +37,7 @@ export class UserCardComponent implements OnInit {
 	*/
 	@Input() roleMap?: Observable<Map<number, string>>;
 
-	constructor (private readonly api: APIService) { }
+	constructor (private readonly api: UserService) { }
 
 	ngOnInit () {
 		this.user = this.user as User;

@@ -17,7 +17,8 @@ import { FormControl } from '@angular/forms';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 
-import { APIService, AuthenticationService } from '../../services';
+import { AuthenticationService } from '../../services';
+import { UserService } from '../../services/api';
 import { Role, User } from '../../models';
 import { orderBy } from '../../utils';
 
@@ -36,7 +37,7 @@ export class UsersComponent implements OnInit {
 	private readonly rolesMapSubject: BehaviorSubject<Map<number, string>>;
 	public rolesMap: Observable<Map<number, string>>;
 
-	constructor (private readonly api: APIService, private readonly auth: AuthenticationService) {
+	constructor (private readonly api: UserService, private readonly auth: AuthenticationService) {
 		this.rolesMapSubject = new BehaviorSubject<Map<number, string>>(new Map<number, string>());
 		this.rolesMap = this.rolesMapSubject.asObservable();
 		this.users = new Array<User>();

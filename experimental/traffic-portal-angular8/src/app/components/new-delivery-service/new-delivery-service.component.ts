@@ -16,7 +16,8 @@ import { FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
 
-import { APIService, AuthenticationService } from '../../services';
+import { AuthenticationService } from '../../services';
+import { CDNService, DeliveryServiceService } from '../../services/api';
 
 import { bypassable, CDN, DeliveryService, GeoLimit, GeoProvider, Protocol, QStringHandling, RangeRequestHandling, Type } from '../../models';
 
@@ -75,7 +76,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 	step = 0;
 
-	constructor (private readonly api: APIService, private readonly auth: AuthenticationService, private readonly router: Router) { }
+	constructor (private readonly dsAPI: DeliveryServiceService, private readonly cdnAPI: CDNService, private readonly auth: AuthenticationService, private readonly router: Router) { }
 
 	ngOnInit () {
 		this.auth.updateCurrentUser().subscribe( success => {
@@ -99,7 +100,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 			this.deliveryService.regionalGeoBlocking = false;
 			this.deliveryService.tenant = this.auth.currentUserValue.tenant;
 			this.deliveryService.tenantId = this.auth.currentUserValue.tenantId;
-			this.api.getDSTypes().pipe(first()).subscribe(
+			this.dsAPI.getDSTypes().pipe(first()).subscribe(
 				(types: Array<Type>) => {
 					this.dsTypes = types;
 					for (const t of types) {
@@ -112,7 +113,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 					}
 				}
 			);
-			this.api.getDeliveryServices().pipe(first()).subscribe(
+			this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
 				d => {
 					const cdnsInUse = new Map<number, number>();
 					for (const ds of d) {
@@ -149,7 +150,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * the first CDN in lexigraphical order by name.
 	*/
 	private setDefaultCDN (id: number) {
-		this.api.getCDNs().pipe(first()).subscribe(
+		this.cdnAPI.getCDNs().pipe(first()).subscribe(
 			(cdns: Map<string, CDN>) => {
 				this.cdns = new Array<CDN>();
 				let def: CDN;
@@ -288,7 +289,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 			}
 		}
 
-		this.api.createDeliveryService(this.deliveryService).pipe(first()).subscribe(
+		this.dsAPI.createDeliveryService(this.deliveryService).pipe(first()).subscribe(
 			v => {
 				if (v) {
 					console.log("New Delivery Service '%s' created", this.deliveryService.displayName);

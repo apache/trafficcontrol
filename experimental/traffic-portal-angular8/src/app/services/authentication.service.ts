@@ -18,7 +18,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { first, map } from 'rxjs/operators';
 
 import { Role, User } from '../models/user';
-import { APIService } from './api.service';
+import { UserService } from './api';
 
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
@@ -29,7 +29,7 @@ export class AuthenticationService {
 	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Set<string>>;
 	public currentUserCapabilities: Observable<Set<string>>;
 
-	constructor (private readonly http: HttpClient, private readonly api: APIService) {
+	constructor (private readonly http: HttpClient, private readonly api: UserService) {
 		this.currentUserSubject = new BehaviorSubject<User>(null);
 		this.loggedInSubject = new BehaviorSubject<boolean>(false);
 		this.currentUserCapabilitiesSubject = new BehaviorSubject<Set<string>>(new Set<string>());

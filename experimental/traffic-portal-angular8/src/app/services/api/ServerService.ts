@@ -11,5 +11,23 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export * from './authentication.service';
-export * from './alert.service';
+
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import { APIService } from './apiservice';
+
+import { Server } from '../../models';
+
+@Injectable({providedIn: 'root'})
+export class ServerService extends APIService {
+	public getServers(): Observable<Array<Server>> {
+		let path = `/api/${this.API_VERSION}/servers`;
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as Array<Server>;
+			}
+		));
+	}
+}

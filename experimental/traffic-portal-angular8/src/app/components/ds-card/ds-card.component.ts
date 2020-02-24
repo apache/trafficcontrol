@@ -16,7 +16,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { first } from 'rxjs/operators';
 
-import { APIService } from '../../services';
+import { DeliveryServiceService } from '../../services/api';
 import { DataPoint, DataSet, DeliveryService, Protocol } from '../../models';
 
 @Component({
@@ -51,7 +51,7 @@ export class DsCardComponent implements OnInit {
 	private loaded: boolean;
 	public graphDataLoaded: boolean;
 
-	constructor (private readonly api: APIService) {
+	constructor (private readonly dsAPI: DeliveryServiceService) {
 		this.available = 100;
 		this.maintenance = 0;
 		this.utilized = 0;
@@ -98,7 +98,7 @@ export class DsCardComponent implements OnInit {
 		if ((e.target as HTMLDetailsElement).open) {
 			if (!this.loaded) {
 				this.loaded = true;
-				this.api.getDSCapacity(this.deliveryService.id).pipe(first()).subscribe(
+				this.dsAPI.getDSCapacity(this.deliveryService.id).pipe(first()).subscribe(
 					r => {
 						if (r) {
 							this.available = r.availablePercent;
@@ -107,7 +107,7 @@ export class DsCardComponent implements OnInit {
 						}
 					}
 				);
-				this.api.getDSHealth(this.deliveryService.id).pipe(first()).subscribe(
+				this.dsAPI.getDSHealth(this.deliveryService.id).pipe(first()).subscribe(
 					r => {
 						if (r) {
 							if (r.totalOnline === 0) {
@@ -129,7 +129,7 @@ export class DsCardComponent implements OnInit {
 	}
 
 	private loadChart () {
-		this.api.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '1m', false, true).pipe(first()).subscribe(
+		this.dsAPI.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '1m', false, true).pipe(first()).subscribe(
 			(data: Array<DataPoint>) => {
 				for (const d of data) {
 					if (d.y === null) {
@@ -147,7 +147,7 @@ export class DsCardComponent implements OnInit {
 			}
 		);
 
-		this.api.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '1m', true, true).pipe(first()).subscribe(
+		this.dsAPI.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '1m', true, true).pipe(first()).subscribe(
 			(data: Array<DataPoint>) => {
 				for (const d of data) {
 					if (d.y === null) {

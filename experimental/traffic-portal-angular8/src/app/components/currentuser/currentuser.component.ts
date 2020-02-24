@@ -17,7 +17,8 @@ import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
 
 import { Role, User } from '../../models';
-import { APIService, AuthenticationService } from '../../services';
+import { AuthenticationService } from '../../services';
+import { UserService } from '../../services/api';
 
 @Component({
 	selector: 'currentuser',
@@ -29,7 +30,7 @@ export class CurrentuserComponent implements OnInit, OnDestroy {
 	currentUser: User;
 	private subscription: Subscription;
 
-	constructor(private readonly auth: AuthenticationService, private readonly api: APIService) {
+	constructor(private readonly auth: AuthenticationService, private readonly api: UserService) {
 	}
 
 	ngOnInit() {

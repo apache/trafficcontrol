@@ -17,7 +17,8 @@ import { ActivatedRoute } from '@angular/router';
 
 import { Subject } from 'rxjs';
 
-import { AlertService, APIService } from '../../services';
+import { AlertService } from '../../services';
+import { DeliveryServiceService } from '../../services/api';
 import { DataPoint, DataSet, DeliveryService, TPSData } from '../../models';
 
 @Component({
@@ -45,7 +46,7 @@ export class DeliveryserviceComponent implements OnInit {
 
 	bucketSize = 300; // seconds
 
-	constructor (private readonly route: ActivatedRoute, private readonly api: APIService, private readonly alerts: AlertService) {
+	constructor (private readonly route: ActivatedRoute, private readonly api: DeliveryServiceService, private readonly alerts: AlertService) {
 		this.midBandwidth = {
 			label: 'Mid-Tier',
 			borderColor: '#3CBA9F',

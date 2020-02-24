@@ -18,7 +18,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
 
-import { APIService, AuthenticationService } from '../../services';
+import { AuthenticationService } from '../../services';
+import { DeliveryServiceService } from '../../services/api';
 import { DeliveryService } from '../../models';
 import { orderBy, fuzzyScore } from '../../utils';
 
@@ -44,14 +45,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	// Fuzzy search control
 	fuzzControl = new FormControl('', {updateOn: 'change'});
 
-	constructor (private readonly api: APIService, private readonly route: ActivatedRoute, private readonly router: Router, private readonly auth: AuthenticationService) {
+	constructor (private readonly dsAPI: DeliveryServiceService, private readonly route: ActivatedRoute, private readonly router: Router, private readonly auth: AuthenticationService) {
 		this.now = new Date();
 		this.now.setUTCMilliseconds(0);
 		this.today = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate());
 	}
 
 	ngOnInit () {
-		this.api.getDeliveryServices().pipe(first()).subscribe(
+		this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
 			(r: DeliveryService[]) => {
 				this.deliveryServices = orderBy(r, 'displayName') as DeliveryService[];
 				this.filteredDSes = Array.from(this.deliveryServices);
