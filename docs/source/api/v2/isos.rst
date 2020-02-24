@@ -52,7 +52,7 @@ Request Structure
 :ipNetmask:    An optional\ [1]_ string specifying the subnet mask of the generated system image
 :osversionDir: The name of the directory containing the ISO source
 
-	.. seealso:: :ref:`to-api-v1-osversions`
+	.. seealso:: :ref:`to-api-osversions`
 
 :rootPass: The password used by the generated system image's ``root`` user
 
