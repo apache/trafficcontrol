@@ -39,6 +39,9 @@ form {
 	label {
 		margin: 5px 0 5px auto;
 		text-align: right;
+		&::after {
+			content: ":";
+		}
 	}
 	input {
 		margin-left: 5px;
