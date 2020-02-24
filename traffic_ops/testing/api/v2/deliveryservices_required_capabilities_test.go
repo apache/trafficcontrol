@@ -256,6 +256,9 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
+	if len(capabilities) < 1 {
+		t.Fatal("no delivery services returned")
+	}
 
 	type testCase struct {
 		description string
@@ -309,7 +312,7 @@ func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ds) != 1 {
+	if len(ds) < 1 {
 		t.Fatalf("cannot GET deliveyservice by xml id: %v. Response did not include record.", *xmlID)
 	}
 	return ds[0].ID

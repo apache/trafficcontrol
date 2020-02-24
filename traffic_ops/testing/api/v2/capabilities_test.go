@@ -19,7 +19,10 @@ package v2
  * under the License.
  */
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -58,9 +61,15 @@ func TestCapabilities(t *testing.T) {
 }
 
 func CreateTestCapabilities(t *testing.T) {
+	db, err := OpenConnection()
+	if err != nil {
+		t.Fatal("cannot open db")
+	}
+	defer db.Close()
+	dbInsertTemplate := `INSERT INTO capability (name, description) VALUES ('%v', '%v');`
+
 	for _,c := range testData.Capabilities {
-		resp, _, err := TOSession.CreateCapability(c)
-		t.Log("Response: ", c.Name, " ", resp)
+		err = execSQL(db, fmt.Sprintf(dbInsertTemplate, c.Name, c.Description), "capability")
 		if err != nil {
 			t.Errorf("could not create capability: %v", err)
 		}
