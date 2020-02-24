@@ -61,7 +61,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/2.0/isos HTTP/1.1
+	POST /api/1.3/isos HTTP/1.1
 	Host: some.trafficops.host
 	User-Agent: curl/7.47.0
 	Accept: */*

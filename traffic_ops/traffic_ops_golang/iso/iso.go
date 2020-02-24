@@ -21,7 +21,7 @@ package iso
  */
 
 import (
-	"encoding/json"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net"
@@ -32,7 +32,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -65,13 +64,6 @@ const (
 	ksFilesParamConfigFile = "mkisofs"
 )
 
-// Various HTTP-related values.
-const (
-	httpHeaderContentDisposition = "Content-Disposition"
-	httpHeaderContentType        = "Content-Type"
-	httpHeaderContentDownload    = "application/download"
-)
-
 // ISOs handler is responsible for generating and returning an ISO image,
 // as a streaming download.
 //
@@ -99,12 +91,10 @@ func ISOs(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer inf.Close()
+	ir := isoRequest{}
 
-	// Decode request body into isoRequest instance.
-	var ir isoRequest
-	if err := json.NewDecoder(req.Body).Decode(&ir); err != nil {
-		userErr := errors.New("unable to decode JSON request")
-		api.HandleErr(w, req, inf.Tx.Tx, http.StatusBadRequest, userErr, fmt.Errorf("%v: %v", userErr, err))
+	if err := api.Parse(req.Body, inf.Tx.Tx, &ir); err != nil {
+		api.HandleErr(w, req, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
@@ -118,24 +108,15 @@ var cmdOverwriteCtxKey struct{}
 // isos performs the majority of work for the /isos endpoint handler. It is separated out from
 // the exported handler for testability.
 func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.CurrentUser, ir isoRequest) {
-	// Ensure isoRequest is valid.
-	if errMsgs := ir.validate(); len(errMsgs) > 0 {
-		writeRespErrorAlerts(w, req, errMsgs)
-		return
-	}
 
 	// Ensure that the given OSVersionDir is defined in the osversions.json config
 	// file as a valid directory. This directory is later referenced for ISO creation
 	// and therefore must an allowed value.
 	if ok, err := ir.validateOSDir(tx); err != nil {
-		statusCode := http.StatusInternalServerError
-		userErr := errors.New("unable to read osversions configuration")
-		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
+		api.HandleErr(w, req, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("unable to read osversions configuration: %v", err))
 		return
 	} else if !ok {
-		statusCode := http.StatusBadRequest
-		err := fmt.Errorf("invalid OS version directory: %q", ir.OSVersionDir)
-		api.HandleErr(w, req, tx.Tx, statusCode, err, err)
+		api.HandleErr(w, req, tx.Tx, http.StatusBadRequest, fmt.Errorf("invalid OS version directory: %q", ir.OSVersionDir), nil)
 		return
 	}
 
@@ -143,9 +124,7 @@ func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.Curr
 	// value or may be overridden by a database/Parameter entry.
 	ksDir, err := kickstarterDir(tx, ir.OSVersionDir)
 	if err != nil {
-		statusCode := http.StatusInternalServerError
-		userErr := errors.New("unable to determine kickstarter directory")
-		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
+		api.HandleErr(w, req, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("unable to determine kickstarter directory: %v", err))
 		return
 	}
 
@@ -156,9 +135,7 @@ func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.Curr
 
 	genISOCmd, err := newStreamISOCmd(ksDir)
 	if err != nil {
-		statusCode := http.StatusInternalServerError
-		userErr := errors.New("unable to initialize genISO command")
-		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
+		api.HandleErr(w, req, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("unable to initialize genISO command: %v", err))
 		return
 	}
 	defer genISOCmd.cleanup()
@@ -172,9 +149,7 @@ func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.Curr
 	log.Infof("Using %s ISO generation command: %s", genISOCmd.cmdType, genISOCmd.String())
 
 	if err = writeKSCfgs(cfgDir, ir, genISOCmd.String()); err != nil {
-		statusCode := http.StatusInternalServerError
-		userErr := errors.New("unable to create kickstarter files")
-		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
+		api.HandleErr(w, req, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("unable to create kickstarter files: %v", err))
 		return
 	}
 
@@ -182,13 +157,11 @@ func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.Curr
 	// strings.ReplaceAll was added in Go 1.12
 	isoFilename = strings.Replace(isoFilename, "/", "_", -1)
 
-	w.Header().Set(httpHeaderContentDisposition, fmt.Sprintf("attachment; filename=%q", isoFilename))
-	w.Header().Set(httpHeaderContentType, httpHeaderContentDownload)
+	w.Header().Set(rfc.ContentDisposition, fmt.Sprintf("attachment; filename=%q", isoFilename))
+	w.Header().Set(rfc.ContentType, rfc.ApplicationOctetStream)
 
 	if err = genISOCmd.stream(w); err != nil {
-		statusCode := http.StatusInternalServerError
-		userErr := errors.New("unable to generate ISO")
-		api.HandleErr(w, req, tx.Tx, statusCode, userErr, fmt.Errorf("%v: %v", userErr, err))
+		api.HandleErr(w, req, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("unable to generate ISO: %v", err))
 		return
 	}
 
@@ -206,25 +179,6 @@ func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.Curr
 		// At this point, it's not possible to modify the HTTP response.
 		log.Errorf("error creating changelog entry for ISO creation: %v", err)
 	}
-}
-
-// writeRespErrorAlerts writes to w an Alerts JSON response with
-// an error level. Note: api.WriteRespAlertObj could not be used here
-// because it accepts a single "alert", whereas this response
-// may contain multiple alerts.
-func writeRespErrorAlerts(w http.ResponseWriter, req *http.Request, errMsgs []string) {
-	alerts := tc.CreateAlerts(tc.ErrorLevel, errMsgs...)
-
-	body, err := json.Marshal(alerts)
-	if err != nil {
-		statusCode := http.StatusInternalServerError
-		api.HandleErr(w, req, nil, statusCode, errors.New(http.StatusText(statusCode)), fmt.Errorf("error marshalling JSON: %v", err))
-		return
-	}
-
-	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write(body)
 }
 
 // isoRequest represents the JSON object clients use to
@@ -247,7 +201,6 @@ type isoRequest struct {
 	MgmtIPNetmask net.IP          `json:"mgmtIpNetmask"`
 	MgmtIPGateway net.IP          `json:"mgmtIpGateway"`
 	MgmtInterface string          `json:"mgmtInterface"`
-	Stream        boolStr         `json:"stream"`
 }
 
 func (i *isoRequest) fqdn() string {
@@ -260,9 +213,9 @@ func (i *isoRequest) fqdn() string {
 
 // validate returns an empty slice if the isoRequest is valid. Otherwise,
 // it returns a slice of error messages.
-func (i *isoRequest) validate() []string {
-	var errs []string
-	addErr := func(msg string) { errs = append(errs, msg) }
+func (i *isoRequest) Validate(tx *sql.Tx) error {
+	errs := []error{}
+	addErr := func(msg string) { errs = append(errs, errors.New(msg)) }
 
 	if i.OSVersionDir == "" {
 		addErr("osversionDir is required")
@@ -305,13 +258,7 @@ func (i *isoRequest) validate() []string {
 		}
 	}
 
-	// Use of stream is deprecated it will always stream
-	// regardless if this is set or not.
-	if v, ok := i.Stream.val(); ok && !v {
-		addErr("stream request parameter is deprecated")
-	}
-
-	return errs
+	return util.JoinErrs(errs)
 }
 
 // validateOSDir ensures that the OSDir value corresponds to a

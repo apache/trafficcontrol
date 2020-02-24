@@ -49,7 +49,6 @@ type Config struct {
 	ConfigLetsEncrypt      `json:"lets_encrypt"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
-	ConfigGenISO           ConfigGenISO   `json:"geniso"`
 	// NOTE: don't care about any other fields for now..
 	RiakAuthOptions  *riak.AuthOptions
 	RiakEnabled      bool
@@ -142,11 +141,6 @@ type ConfigSMTP struct {
 	Enabled  bool   `json:"enabled"`
 	Password string `json:"password"`
 	User     string `json:"user"`
-}
-
-// ConfigGenISO contains configuration options for the system ISO generation.
-type ConfigGenISO struct {
-	ISORootPath string `json:"iso_root_path"`
 }
 
 // ConfigLetsEncrypt contains configuration information for integration with the Let's Encrypt certificate authority.

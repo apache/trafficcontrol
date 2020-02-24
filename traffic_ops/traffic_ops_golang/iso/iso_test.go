@@ -51,7 +51,6 @@ func TestISOS(t *testing.T) {
 			name: "cmd success",
 			input: isoRequest{
 				DHCP:          boolStr{true, false},
-				Stream:        boolStr{true, true},
 				OSVersionDir:  "centos72",
 				HostName:      "db",
 				DomainName:    "infra.ciab.test",
@@ -85,17 +84,17 @@ func TestISOS(t *testing.T) {
 				}
 
 				// Validate Content-Disposition header
-				if got, expectedPrefix := gotResp.Header().Get(httpHeaderContentDisposition), "attachment; filename="; !strings.HasPrefix(got, expectedPrefix) {
-					t.Errorf("header %q = %q; expected prefix: %q", httpHeaderContentDisposition, got, expectedPrefix)
+				if got, expectedPrefix := gotResp.Header().Get(rfc.ContentDisposition), "attachment; filename="; !strings.HasPrefix(got, expectedPrefix) {
+					t.Errorf("header %q = %q; expected prefix: %q", rfc.ContentDisposition, got, expectedPrefix)
 				} else {
-					t.Logf("header %q = %q", httpHeaderContentDisposition, got)
+					t.Logf("header %q = %q", rfc.ContentType, got)
 				}
 
 				// Validate Content-Type header
-				if got, expected := gotResp.Header().Get(httpHeaderContentType), httpHeaderContentDownload; got != expected {
-					t.Errorf("header %q = %q; expected: %q", httpHeaderContentType, got, expected)
+				if got, expected := gotResp.Header().Get(rfc.ContentType), rfc.ApplicationOctetStream; got != expected {
+					t.Errorf("header %q = %q; expected: %q", rfc.ContentType, got, expected)
 				} else {
-					t.Logf("header %q = %q", httpHeaderContentType, got)
+					t.Logf("header %q = %q", rfc.ContentType, got)
 				}
 
 				// Because of the mocked command, the data written to the response body should be
@@ -113,7 +112,6 @@ func TestISOS(t *testing.T) {
 			name: "cmd failure",
 			input: isoRequest{
 				DHCP:          boolStr{true, false},
-				Stream:        boolStr{true, true},
 				OSVersionDir:  "centos72",
 				HostName:      "db",
 				DomainName:    "infra.ciab.test",
@@ -140,10 +138,10 @@ func TestISOS(t *testing.T) {
 				// not possible to see the actual response code in the response recorder.
 
 				// Validate Content-Type header, which should be JSON for this error condition.
-				if got, expected := gotResp.Header().Get(httpHeaderContentType), rfc.ApplicationJSON; got != expected {
-					t.Errorf("header %q = %q; expected: %q", httpHeaderContentType, got, expected)
+				if got, expected := gotResp.Header().Get(rfc.ContentType), rfc.ApplicationJSON; got != expected {
+					t.Errorf("header %q = %q; expected: %q", rfc.ContentType, got, expected)
 				} else {
-					t.Logf("header %q = %q", httpHeaderContentType, got)
+					t.Logf("header %q = %q", rfc.ContentType, got)
 				}
 
 				// Validate that the response body is a JSON-encoded tc.Alerts object.
@@ -240,45 +238,6 @@ func TestISOS(t *testing.T) {
 	}
 }
 
-func TestWriteRespErrorAlerts(t *testing.T) {
-	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodPost, "/isos", nil) // The path doesn't matter here
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	errMsgs := []string{
-		"error 1",
-		"another error",
-	}
-
-	writeRespErrorAlerts(w, req, errMsgs)
-
-	if got, expected := w.Code, http.StatusBadRequest; got != expected {
-		t.Errorf("got response code %d; expected %d", got, expected)
-	}
-
-	var gotResp libtc.Alerts
-	if err := json.NewDecoder(w.Body).Decode(&gotResp); err != nil {
-		t.Fatalf("unable to decode response body into expected JSON structure: %v", err)
-	}
-
-	t.Logf("got response: %v", gotResp)
-
-	if got, expected := len(gotResp.Alerts), len(errMsgs); got != expected {
-		t.Fatalf("got %d error messages; expected %d", got, expected)
-	}
-
-	for i, v := range errMsgs {
-		if got, expected := gotResp.Alerts[i].Level, libtc.ErrorLevel.String(); got != expected {
-			t.Errorf("got response with alerts[%d].Level = %s; expected %s", i, got, expected)
-		}
-		if got, expected := gotResp.Alerts[i].Text, v; got != expected {
-			t.Errorf("got response with alerts[%d].Text = %s; expected %s", i, got, expected)
-		}
-	}
-}
-
 func TestISORequest_validate(t *testing.T) {
 	cases := []struct {
 		name             string
@@ -290,7 +249,6 @@ func TestISORequest_validate(t *testing.T) {
 			true,
 			isoRequest{
 				DHCP:          boolStr{true, false},
-				Stream:        boolStr{true, true},
 				OSVersionDir:  "centos72",
 				HostName:      "db",
 				DomainName:    "infra.ciab.test",
@@ -314,7 +272,6 @@ func TestISORequest_validate(t *testing.T) {
 			true,
 			isoRequest{
 				DHCP:          boolStr{true, true},
-				Stream:        boolStr{true, true},
 				OSVersionDir:  "centos72",
 				HostName:      "db",
 				DomainName:    "infra.ciab.test",
@@ -338,7 +295,6 @@ func TestISORequest_validate(t *testing.T) {
 			false,
 			isoRequest{
 				DHCP:          boolStr{true, false},
-				Stream:        boolStr{true, true},
 				OSVersionDir:  "centos72",
 				HostName:      "db",
 				DomainName:    "infra.ciab.test",
@@ -363,7 +319,6 @@ func TestISORequest_validate(t *testing.T) {
 			true,
 			isoRequest{
 				DHCP:          boolStr{true, true},
-				Stream:        boolStr{true, true},
 				OSVersionDir:  "centos72",
 				HostName:      "db",
 				DomainName:    "infra.ciab.test",
@@ -387,7 +342,6 @@ func TestISORequest_validate(t *testing.T) {
 			false,
 			isoRequest{
 				DHCP:          boolStr{true, true},
-				Stream:        boolStr{true, true},
 				OSVersionDir:  "centos72",
 				HostName:      "db",
 				DomainName:    "infra.ciab.test",
@@ -412,7 +366,6 @@ func TestISORequest_validate(t *testing.T) {
 			false,
 			isoRequest{
 				DHCP:          boolStr{false, false},
-				Stream:        boolStr{false, false},
 				OSVersionDir:  "",
 				HostName:      "",
 				DomainName:    "",
@@ -430,65 +383,16 @@ func TestISORequest_validate(t *testing.T) {
 				RootPass:      "",
 			},
 		},
-
-		{
-			"invalid with stream true",
-			false,
-			isoRequest{
-				DHCP:          boolStr{true, true},
-				Stream:        boolStr{true, false},
-				OSVersionDir:  "centos72",
-				HostName:      "db",
-				DomainName:    "infra.ciab.test",
-				IPAddr:        net.IP{},
-				InterfaceMTU:  1500,
-				InterfaceName: "eth0",
-				IP6Address:    net.IP{},
-				IP6Gateway:    net.IP{},
-				IPGateway:     net.IP{},
-				IPNetmask:     net.IP{},
-				MgmtInterface: "not empty",
-				MgmtIPAddress: net.IP{192, 168, 0, 1},
-				MgmtIPGateway: net.IP{192, 168, 0, 2},
-				MgmtIPNetmask: net.IP{},
-				Disk:          "sda",
-				RootPass:      "12345678",
-			},
-		},
-		{
-			"valid with stream unset",
-			true,
-			isoRequest{
-				DHCP:          boolStr{true, true},
-				Stream:        boolStr{false, false},
-				OSVersionDir:  "centos72",
-				HostName:      "db",
-				DomainName:    "infra.ciab.test",
-				IPAddr:        net.IP{},
-				InterfaceMTU:  1500,
-				InterfaceName: "eth0",
-				IP6Address:    net.IP{},
-				IP6Gateway:    net.IP{},
-				IPGateway:     net.IP{},
-				IPNetmask:     net.IP{},
-				MgmtInterface: "not empty",
-				MgmtIPAddress: net.IP{192, 168, 0, 1},
-				MgmtIPGateway: net.IP{192, 168, 0, 2},
-				MgmtIPNetmask: net.IP{},
-				Disk:          "sda",
-				RootPass:      "12345678",
-			},
-		},
 	}
 
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			gotErrs := tc.input.validate()
-			if tc.expectedValidate != (len(gotErrs) == 0) {
-				t.Fatalf("isoRequest.validate() = %v; expected errors = %v", gotErrs, !tc.expectedValidate)
+			errs := tc.input.Validate(nil)
+			if tc.expectedValidate != (errs == nil) {
+				t.Fatalf("isoRequest.validate() = %v; expected errors = %v", errs, !tc.expectedValidate)
 			}
-			t.Logf("isoRequest.validate() = %+v", gotErrs)
+			t.Logf("isoRequest.validate() = %+v", errs)
 		})
 	}
 }

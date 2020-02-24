@@ -79,19 +79,20 @@ func TestRndSalt(t *testing.T) {
 			if gotL := len(got); gotL != i {
 				t.Fatalf("rndSalt(%d) = %q (length = %d); expected length = %d", i, got, gotL, i)
 			}
-
 			// Ensure proper characters
-		MATCH:
+			equal := false
 			for _, c := range got {
 				for _, r := range saltChars {
 					if c == r {
-						continue MATCH
+						equal = true
+						break
 					}
 				}
-				t.Fatalf("rndSalt(%d) = %q; unexpected character %q", i, got, c)
+				if !equal {
+					t.Fatalf("rndSalt(%d) = %q; unexpected character %q", i, got, c)
+				}
 			}
 
-			t.Logf("rndSalt(%d) = %q", i, got)
 		})
 	}
 }
