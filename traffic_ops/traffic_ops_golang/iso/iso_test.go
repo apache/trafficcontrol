@@ -180,7 +180,7 @@ func TestISOS(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err = ioutil.WriteFile(filepath.Join(tmpDir, cfgFilename), osVersions, 0777); err != nil {
+			if err = ioutil.WriteFile(filepath.Join(tmpDir, cfgFilename), osVersions, 0600); err != nil {
 				t.Fatal(err)
 			}
 
