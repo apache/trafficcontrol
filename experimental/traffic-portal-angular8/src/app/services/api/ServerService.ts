@@ -19,7 +19,7 @@ import { map } from 'rxjs/operators';
 
 import { APIService } from './apiservice';
 
-import { Server, Servercheck } from '../../models';
+import { Server, Servercheck, checkMap } from '../../models';
 
 @Injectable({providedIn: 'root'})
 export class ServerService extends APIService {
@@ -49,11 +49,13 @@ export class ServerService extends APIService {
 				if (id) {
 					for (const sc of response) {
 						if (sc.id === id) {
+							sc.checkMap = checkMap;
 							return sc;
 						}
 					}
 					throw new ReferenceError(`No server #${id} found in checks response`);
 				}
+				response.forEach(x=>x.checkMap = checkMap);
 				return response;
 			}
 		));

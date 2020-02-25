@@ -81,7 +81,7 @@ fa-icon {
 }
 
 .server-specifics {
-	span::after {
+	span::after, label::after {
 		content: ": ";
 	}
 }

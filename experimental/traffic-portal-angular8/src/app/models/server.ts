@@ -62,7 +62,7 @@ export interface Server {
 export interface Servercheck {
 	profile: string;
 	cacheGroup: string;
-	checks: {[key:string]: number};
+	checks?: {[key:string]: number};
 	updPending: boolean;
 	revalPending: boolean;
 	hostName: string;
@@ -75,6 +75,9 @@ export interface Servercheck {
 
 export function checkMap(this: Servercheck): Map<string, number|boolean> {
 	const ret = new Map();
+	if (!this.checks) {
+		return ret;
+	}
 	for (const [key, value] of Object.entries(this.checks)) {
 		switch (key) {
 			case "ILO":

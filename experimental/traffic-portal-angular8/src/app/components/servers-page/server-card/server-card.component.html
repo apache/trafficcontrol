@@ -32,10 +32,46 @@ limitations under the License.
 		<div>
 			<div *ngIf="cacheServer()" class="server-specifics">
 				<div>
-					<span>Updates Pending</span><fa-icon [icon]="updPendingIcon()" [ngClass]="{'pending': server.updPending}" [title]="updPendingTitle()"></fa-icon>
+					<span>Updates Pending</span>
+					<fa-icon [icon]="updPendingIcon()" [ngClass]="{'pending': server.updPending}" [title]="updPendingTitle()"></fa-icon>
 				</div>
 				<div>
-					<span>Revalidations Pending</span><fa-icon [icon]="revalPendingIcon()" [ngClass]="{'pending': server.revalPending}" [title]="revalPendingTitle()"></fa-icon>
+					<span>Revalidations Pending</span>
+					<fa-icon [icon]="revalPendingIcon()" [ngClass]="{'pending': server.revalPending}" [title]="revalPendingTitle()"></fa-icon>
+				</div>
+				<div>
+					<span>Ping</span>
+					<fa-icon [icon]="checkIcon('10G')" [title]="checkTitle('10G')" [ngClass]="checkClass('10G')"></fa-icon>
+				</div>
+				<div>
+					<span><abbr title="Integrated Lights-Out">ILO</abbr> Ping</span>
+					<fa-icon [icon]="checkIcon('ILO')" [title]="checkTitle('ILO')" [ngClass]="checkClass('ILO')"></fa-icon>
+				</div>
+				<div>
+					<span>DNS responses match server <abbr title="Fully Qualified Domain Name">FQDN</abbr></span>
+					<fa-icon [icon]="checkIcon('FQDN')" [title]="checkTitle('FQDN')" [ngClass]="checkClass('FQDN')"></fa-icon>
+				</div>
+				<div>
+					<span><abbr title="Differentiated Services Code Point">DSCP</abbr></span>
+					<fa-icon [icon]="checkIcon('DSCP')" [title]="checkTitle('DSCP')" [ngClass]="checkClass('DSCP')"></fa-icon>
+				</div>
+				<div>
+					<span>IPv6 Ping</span>
+					<fa-icon [icon]="checkIcon('10G6')" [title]="checkTitle('10G6')" [ngClass]="checkClass('10G6')"></fa-icon>
+				</div>
+				<div>
+					<span><abbr title="Maximum Transmission Unit">MTU</abbr> handled</span>
+					<fa-icon [icon]="checkIcon('MTU')" [title]="checkTitle('MTU')" [ngClass]="checkClass('MTU')"></fa-icon>
+				</div>
+				<div>
+					<label for="{{server.id}}-CHR">Cache Hit Ratio</label>
+					<meter id="{{server.id}}-CHR" min="0" max="100" low="60" optimum="80" *ngIf="checks.has('CHR')" [value]="checkValue('CHR')" title="{{checkValue('CHR')/100 | percent}}">{{checkValue('CHR')/100 | percent}}</meter>
+					<fa-icon [icon]="unknownIcon" class="pending" title="Unknown" *ngIf="!checks.has('CHR')"></fa-icon>
+				</div>
+				<div>
+					<label for="{{server.id}}-CDU">Cache Disk Utilization</label>
+					<meter id="{{server.id}}-CDU" min="0" max="100" high="60" optimum="40" low="20" *ngIf="checks.has('CDU')" [value]="checkValue('CDU')" title="{{checkValue('CDU')/100 | percent}}">{{checkValue('CDU')/100 | percent}}</meter>
+					<fa-icon [icon]="unknownIcon" class="pending" title="Unknown" *ngIf="!checks.has('CDU')"></fa-icon>
 				</div>
 			</div>
 		</div>
