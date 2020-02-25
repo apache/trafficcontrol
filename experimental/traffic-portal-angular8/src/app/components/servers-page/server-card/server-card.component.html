@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<details>
+<details (toggle)="toggle($event)">
 	<summary [ngClass]="{'down': down()}">
 		<span>{{server.hostName}}.{{server.domainName}}</span>&nbsp;
 		<span>({{server.type}})</span>
@@ -30,9 +30,13 @@ limitations under the License.
 			<span *ngIf="server.type === 'TRAFFIC_PORTAL'"><a href="https://{{server.hostName}}.{{server.domainName}}" target="_blank">Open Portal</a></span>
 		</div>
 		<div>
-			<div *ngIf="cacheServer()">
-				<label for="{{server.id}}-update-pending">Updates Pending</label><input type="checkbox" name="update-pending" id="{{server.id}}-update-pending" [checked]="server.updPending" readonly/>
-				<label for="{{server.id}}-reval-pending">Revalidations Pending</label><input type="checkbox" name="reval-pending" id="{{server.id}}-reval-pending" [checked]="server.revalPending" readonly/>
+			<div *ngIf="cacheServer()" class="server-specifics">
+				<div>
+					<span>Updates Pending</span><fa-icon [icon]="updPendingIcon()" [ngClass]="{'pending': server.updPending}" [title]="updPendingTitle()"></fa-icon>
+				</div>
+				<div>
+					<span>Revalidations Pending</span><fa-icon [icon]="revalPendingIcon()" [ngClass]="{'pending': server.revalPending}" [title]="revalPendingTitle()"></fa-icon>
+				</div>
 			</div>
 		</div>
 	</div>

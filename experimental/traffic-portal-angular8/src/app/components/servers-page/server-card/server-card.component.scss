@@ -68,6 +68,20 @@ summary {
 	}
 }
 
-label::after {
-	content: ": ";
+fa-icon {
+	color: green;
+
+	&.pending {
+		color: gray;
+	}
+
+	&.bad {
+		color: red;
+	}
+}
+
+.server-specifics {
+	span::after {
+		content: ": ";
+	}
 }

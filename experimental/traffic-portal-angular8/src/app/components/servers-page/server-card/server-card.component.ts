@@ -12,8 +12,12 @@
 * limitations under the License.
 */
 import { Component, OnInit, Input } from '@angular/core';
+import { first } from 'rxjs/operators';
 
-import { Server } from '../../../models';
+import { faTimesCircle, faCheckCircle, faClock } from '@fortawesome/free-solid-svg-icons';
+
+import { Server, Servercheck, checkMap } from '../../../models';
+import { ServerService } from '../../../services/api';
 
 @Component({
 	selector: 'server-card',
@@ -24,7 +28,12 @@ export class ServerCardComponent implements OnInit {
 
 	@Input() server: Server;
 
-	constructor() { }
+	checks: Map<string, number|boolean>;
+	open: boolean;
+
+	constructor(private readonly api: ServerService) {
+		this.open = false;
+	}
 
 	ngOnInit(): void {
 	}
@@ -40,4 +49,30 @@ export class ServerCardComponent implements OnInit {
 		return this.server.type && (this.server.type.indexOf('EDGE') === 0 || this.server.type.indexOf('MID') === 0);
 	}
 
+	public updPendingIcon() {
+		return this.server.updPending ? faClock : faCheckCircle;
+	}
+
+	public updPendingTitle() {
+		return this.server.updPending ? "Updates are pending" : "No updates are pending";
+	}
+
+	public revalPendingIcon() {
+		return this.server.revalPending ? faClock : faCheckCircle;
+	}
+
+	public revalPendingTitle() {
+		return this.server.revalPending ? "Revalidations are pending" : "No revalidations are pending";
+	}
+
+	public toggle(e: Event): void {
+		this.open = !this.open;
+		if (this.open) {
+			this.api.getServerChecks(this.server.id).pipe(first()).subscribe(
+				(s: Servercheck) => {
+					this.checks = s.checkMap()
+				}
+			);
+		}
+	}
 }

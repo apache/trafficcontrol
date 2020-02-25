@@ -58,3 +58,36 @@ export interface Server {
 	xmppId?: string;
 	xmppPasswd?: string;
 }
+
+export interface Servercheck {
+	profile: string;
+	cacheGroup: string;
+	checks: {[key:string]: number};
+	updPending: boolean;
+	revalPending: boolean;
+	hostName: string;
+	adminState: string;
+	id: number;
+	type: string;
+
+	checkMap(): Map<string, number|boolean>;
+}
+
+export function checkMap(this: Servercheck): Map<string, number|boolean> {
+	const ret = new Map();
+	for (const [key, value] of Object.entries(this.checks)) {
+		switch (key) {
+			case "ILO":
+			case "10G":
+			case "FQDN":
+			case "DSCP":
+			case "10G6":
+			case "MTU":
+				ret.set(key, value === 1);
+			default:
+				ret.set(key, value);
+				break;
+		}
+	}
+	return ret;
+}
