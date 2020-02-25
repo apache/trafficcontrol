@@ -58,7 +58,7 @@ public class ConsistentHashTest {
 	public void before() throws Exception {
 		closeableHttpClient = HttpClientBuilder.create().build();
 
-		String resourcePath = "api/2.0/steering.json";
+		String resourcePath = "api/2.0/steering";
 		InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
 
 		if (inputStream == null) {

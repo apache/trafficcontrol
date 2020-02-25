@@ -22,7 +22,7 @@ public class SteeringWatcher extends AbstractResourceWatcher {
 	private static final Logger LOGGER = Logger.getLogger(SteeringWatcher.class);
 	private SteeringRegistry steeringRegistry;
 
-	public static final String DEFAULT_STEERING_DATA_URL = "https://${toHostname}/api/2.0/steering.json";
+	public static final String DEFAULT_STEERING_DATA_URL = "https://${toHostname}/api/2.0/steering";
 
 	public SteeringWatcher() {
 		setDatabaseUrl(DEFAULT_STEERING_DATA_URL);

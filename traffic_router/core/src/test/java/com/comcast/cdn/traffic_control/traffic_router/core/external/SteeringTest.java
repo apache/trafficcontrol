@@ -140,7 +140,7 @@ public class SteeringTest {
 
 	@Before
 	public void before() throws Exception {
-		steeringDeliveryServiceId = setupSteering(targetDomains, targetWeights, "api/2.0/steering.json");
+		steeringDeliveryServiceId = setupSteering(targetDomains, targetWeights, "api/2.0/steering");
 		setupCrConfig();
 
 		httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
@@ -272,7 +272,7 @@ public class SteeringTest {
 		Map<String, String> domains = new HashMap<>();
 		Map<String, Integer> weights = new HashMap<>();
 
-		setupSteering(domains, weights, "api/2.0/steering2.json");
+		setupSteering(domains, weights, "api/2.0/steering2");
 
 		List<String> randomPaths = new ArrayList<>();
 
