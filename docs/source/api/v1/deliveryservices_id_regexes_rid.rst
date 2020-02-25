@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-deliveryservices-id-regexes` with the query parameter ``id`` instead.
+
 Retrieves a specific routing regular expression for a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
@@ -78,6 +81,12 @@ Response Structure
 			"typeName": "HOST_REGEXP",
 			"setNumber": 0,
 			"pattern": ".*\\.demo1\\..*"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET '/deliveryservices/{dsid}/regexes' with query parameter id instead",
+			"level": "warning"
 		}
 	]}
 
