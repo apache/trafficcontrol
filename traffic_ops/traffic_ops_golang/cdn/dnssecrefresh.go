@@ -251,6 +251,10 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 				if err != nil {
 					log.Errorln("refreshing DNSSEC Keys: regenerating expired ZSK keys for ds '" + string(ds.DSName) + "': " + err.Error())
 				} else {
+					if existingNewKeys, ok := keys[string(ds.DSName)]; ok {
+						existingNewKeys.ZSK = newKeys.ZSK
+						newKeys = existingNewKeys
+					}
 					keys[string(ds.DSName)] = newKeys
 					updatedAny = true
 				}
