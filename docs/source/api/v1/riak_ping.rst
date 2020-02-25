@@ -18,7 +18,7 @@
 ``riak/ping``
 *************
 .. deprecated:: ATCv4
-	Use the ``GET`` method of :ref:`to-api-v1-vault-ping` instead.
+	Use the ``GET`` method of :ref:`to-api-vault-ping` instead.
 
 ``GET``
 =======
