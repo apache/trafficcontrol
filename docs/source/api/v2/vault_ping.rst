@@ -32,8 +32,8 @@ No parameters available.
 
 Response Properties
 -------------------
-:id:          The integral, unique identifier for this CDN
-:name:        The CDN's name
+:status:        The status returned from the ping request to the Traffic Vault server
+:server:        The Traffic Vault server that was pinged
 
 .. code-block:: http
 	:caption: Response Example
