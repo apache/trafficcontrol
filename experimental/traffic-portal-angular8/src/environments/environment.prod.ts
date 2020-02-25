@@ -15,5 +15,5 @@
 
 export const environment = {
 	production: true,
-	APIVersion: "1.5"
+	APIVersion: "1.4"
 };
