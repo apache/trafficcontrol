@@ -269,7 +269,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Ping
 		{api.Version{2, 0}, http.MethodGet, `ping$`, ping.PingHandler(), 0, NoAuth, nil, 2555661597, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `riak/ping/?$`, ping.Riak, auth.PrivLevelReadOnly, Authenticated, nil, 2884012114, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `vault/ping/?$`, ping.Vault, auth.PrivLevelReadOnly, Authenticated, nil, 2884012114, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `keys/ping/?$`, ping.Keys, auth.PrivLevelReadOnly, Authenticated, nil, 218416022, noPerlBypass},
 
 		//Profile: CRUD
