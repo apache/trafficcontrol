@@ -22,8 +22,6 @@
 ``GET``
 =======
 
-.. versionadded:: 1.3
-
 Returns info about the Traffic Ops build that is currently running, generated at startup. The output will be the same until the Traffic Ops :ref:`version changes <to-upgrading>`.
 
 :Auth. Required: Yes

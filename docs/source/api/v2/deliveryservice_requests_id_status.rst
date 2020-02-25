@@ -20,7 +20,7 @@
 ******************************************
 Sets the status of a :term:`Delivery Service Request`.
 
-``GET``
+``PUT``
 =======
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
