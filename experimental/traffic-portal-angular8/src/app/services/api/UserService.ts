@@ -13,7 +13,7 @@
 */
 
 import { Injectable } from '@angular/core';
-import { HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -170,6 +170,10 @@ export class UserService extends APIService {
 				return r.body.response as Array<Capability>;
 			}
 		));
+	}
+
+	constructor(http: HttpClient) {
+		super(http);
 	}
 
 }

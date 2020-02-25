@@ -11,8 +11,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { merge } from 'rxjs/index';
 import { map, mergeAll, reduce } from 'rxjs/operators';
@@ -75,6 +75,10 @@ function constructDataSetFromResponse (r: any): DataSetWithSummary {
 export class DeliveryServiceService extends APIService {
 
 	private deliveryServiceTypes: Array<Type>;
+
+	constructor(http: HttpClient) {
+		super(http);
+	}
 
 	/**
 	 * Gets a list of all visible Delivery Services

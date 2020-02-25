@@ -11,6 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -50,5 +51,9 @@ export class CDNService extends APIService {
 				return ret;
 			}
 		));
+	}
+
+	constructor(http: HttpClient) {
+		super(http);
 	}
 }
