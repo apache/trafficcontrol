@@ -70,7 +70,7 @@ limitations under the License.
 				</div>
 				<div>
 					<label for="{{server.id}}-CDU">Cache Disk Utilization</label>
-					<meter id="{{server.id}}-CDU" min="0" max="100" high="60" optimum="40" low="20" *ngIf="checks.has('CDU')" [value]="checkValue('CDU')" title="{{checkValue('CDU')/100 | percent}}">{{checkValue('CDU')/100 | percent}}</meter>
+					<meter id="{{server.id}}-CDU" min="0" max="100" optimum="40" low="60" *ngIf="checks.has('CDU')" [value]="checkValue('CDU')" title="{{checkValue('CDU')/100 | percent}}">{{checkValue('CDU')/100 | percent}}</meter>
 					<fa-icon [icon]="unknownIcon" class="pending" title="Unknown" *ngIf="!checks.has('CDU')"></fa-icon>
 				</div>
 			</div>
