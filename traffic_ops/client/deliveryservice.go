@@ -73,13 +73,6 @@ const (
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v2/deliveryservices_xmlid_xmlid_sslkeys.html
 	API_DELIVERY_SERVICE_XMLID_SSL_KEYS = API_DELIVERY_SERVICES + "/xmlid/%s/sslkeys"
 
-	// API_DELIVERY_SERVICES_HOSTNAME_SSL_KEYS is the API path on which Traffic Ops serves information about
-	// and functionality relating to the SSL keys used by a Delivery Service identified by its 'host name'.
-	// It is intended to be used with fmt.Sprintf to insert its required path parameter (namely the 'host
-	// name' of the Delivery Service of interest).
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v2/deliveryservices_hostname_hostname_sslkeys.html
-	API_DELIVERY_SERVICE_HOSTNAME_SSL_KEYS = API_DELIVERY_SERVICES + "/hostname/%s/sslkeys"
-
 	// API_DELIVERY_SERVICE_URI_SIGNING_KEYS is the API path on which Traffic Ops serves information
 	// about and functionality relating to the URI-signing keys used by a Delivery Service identified
 	// by its XMLID. It is intended to be used with fmt.Sprintf to insert its required path parameter
@@ -421,18 +414,6 @@ func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, Req
 func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
 	var data tc.DeliveryServiceSSLKeysResponse
 	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, XMLID), &data)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	return &data.Response, reqInf, nil
-}
-
-// GetDeliveryServiceSSLKeysByHostname returns information about the SSL keys used by the Delivery
-// Service identified by the passed 'host name'.
-func (to *Session) GetDeliveryServiceSSLKeysByHostname(hostname string) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
-	var data tc.DeliveryServiceSSLKeysResponse
-	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_HOSTNAME_SSL_KEYS, hostname), &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
