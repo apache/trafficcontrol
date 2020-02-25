@@ -27,10 +27,10 @@ import (
 )
 
 const (
-	API_v13_CacheGroups = "/api/1.3/cachegroups"
+	API_CACHEGROUPS = apiBase + "/cachegroups"
 )
 
-// Create a CacheGroup
+// Create a CacheGroup.
 func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
 	if cachegroup.TypeID == nil && cachegroup.Type != nil {
 		ty, _, err := to.GetTypeByName(*cachegroup.Type)
@@ -69,7 +69,7 @@ func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*
 	if err != nil {
 		return nil, ReqInf{}, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CacheGroups, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_CACHEGROUPS, reqBody)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -82,7 +82,7 @@ func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*
 	return &cachegroupResp, reqInf, nil
 }
 
-// Update a CacheGroup by ID
+// Update a CacheGroup by ID.
 func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -91,7 +91,7 @@ func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroup
 	if err != nil {
 		return nil, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
+	route := fmt.Sprintf("%s/%d", API_CACHEGROUPS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return nil, reqInf, err
@@ -104,9 +104,9 @@ func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroup
 	return &cachegroupResp, reqInf, nil
 }
 
-// Returns a list of CacheGroups
+// Returns a list of CacheGroups.
 func (to *Session) GetCacheGroupsNullable() ([]tc.CacheGroupNullable, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_CacheGroups, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_CACHEGROUPS, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -120,10 +120,9 @@ func (to *Session) GetCacheGroupsNullable() ([]tc.CacheGroupNullable, ReqInf, er
 	return data.Response, reqInf, nil
 }
 
-
-// GET a CacheGroup by the CacheGroup id
+// GET a CacheGroup by the CacheGroup ID.
 func (to *Session) GetCacheGroupNullableByID(id int) ([]tc.CacheGroupNullable, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
+	route := fmt.Sprintf("%s/%d", API_CACHEGROUPS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -139,9 +138,9 @@ func (to *Session) GetCacheGroupNullableByID(id int) ([]tc.CacheGroupNullable, R
 	return data.Response, reqInf, nil
 }
 
-// GET a CacheGroup by the CacheGroup name
+// GET a CacheGroup by the CacheGroup name.
 func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNullable, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, url.QueryEscape(name))
+	url := fmt.Sprintf("%s?name=%s", API_CACHEGROUPS, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -157,9 +156,9 @@ func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNull
 	return data.Response, reqInf, nil
 }
 
-// DELETE a CacheGroup by ID
+// DELETE a CacheGroup by ID.
 func (to *Session) DeleteCacheGroupByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
+	route := fmt.Sprintf("%s/%d", API_CACHEGROUPS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

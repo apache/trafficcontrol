@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	basePathSummaryStats = apiBase + "/stats_summary"
+	API_STATS_SUMMARY = apiBase + "/stats_summary"
 )
 
 // GetSummaryStats gets a list of summary stats with the ability to filter on cdn,deliveryService and/or stat
@@ -40,9 +40,9 @@ func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.S
 		param.Add("statName", *statName)
 	}
 
-	url := basePathSummaryStats
+	url := API_STATS_SUMMARY
 	if len(param) > 0 {
-		url = fmt.Sprintf("%s?%s", basePathSummaryStats, param.Encode())
+		url = fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
 	}
 	reqInf, err := get(to, url, &resp)
 	return resp, reqInf, err
@@ -57,7 +57,7 @@ func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummary
 	if statName != nil {
 		param.Add("statName", *statName)
 	}
-	url := fmt.Sprintf("%s?%s", basePathSummaryStats, param.Encode())
+	url := fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
 
 	reqInf, err := get(to, url, &resp)
 	return resp, reqInf, err
@@ -72,6 +72,6 @@ func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, 
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	reqInf, err = post(to, basePathSummaryStats, reqBody, &alerts)
+	reqInf, err = post(to, API_STATS_SUMMARY, reqBody, &alerts)
 	return alerts, reqInf, err
 }

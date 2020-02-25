@@ -28,10 +28,10 @@ import (
 )
 
 const (
-	API_v13_REGIONS = "/api/1.3/regions"
+	API_REGIONS = apiBase + "/regions"
 )
 
-// Create a Region
+// CreateRegion creates a Region.
 func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 	if region.Division == 0 && region.DivisionName != "" {
 		divisions, _, err := to.GetDivisionByName(region.DivisionName)
@@ -50,7 +50,7 @@ func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_REGIONS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_REGIONS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -60,7 +60,7 @@ func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// Update a Region by ID
+// UpdateRegionByID updates a Region by ID.
 func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -69,7 +69,7 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_REGIONS, id)
+	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -80,9 +80,9 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 	return alerts, reqInf, nil
 }
 
-// Returns a list of regions
+// GetRegions returns a list of regions.
 func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_REGIONS, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_REGIONS, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -94,9 +94,9 @@ func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a Region by the Region id
+// GetRegionByID GETs a Region by the Region ID.
 func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_REGIONS, id)
+	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -112,9 +112,9 @@ func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a Region by the Region name
+// GetRegionByName GETs a Region by the Region name.
 func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_REGIONS, url.QueryEscape(name))
+	url := fmt.Sprintf("%s?name=%s", API_REGIONS, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -130,9 +130,9 @@ func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// DELETE a Region by ID
+// DeleteRegionByID DELETEs a Region by ID.
 func (to *Session) DeleteRegionByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_REGIONS, id)
+	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -144,7 +144,8 @@ func (to *Session) DeleteRegionByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// GetRegionByNamePath gets a region by name, using the /api/version/region/name path. This gets the same data as GetRegionByName, but uses a different API path to get the same data, and returns a slightly different format.
+// GetRegionByNamePath gets a region by name, using the /api/version/region/name path.
+// This gets the same data as GetRegionByName, but uses a different API path to get the same data, and returns a slightly different format.
 func (to *Session) GetRegionByNamePath(name string) ([]tc.RegionName, ReqInf, error) {
 	url := apiBase + `/regions/name/` + url.QueryEscape(name)
 	reqResp, remoteAddr, err := to.request(http.MethodGet, url, nil)

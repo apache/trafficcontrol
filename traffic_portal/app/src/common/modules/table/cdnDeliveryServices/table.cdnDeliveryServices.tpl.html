@@ -61,6 +61,7 @@ under the License.
                     <th>DNS Bypass TTL</th>
                     <th>DNS TTL</th>
                     <th>DSCP</th>
+                    <th>ECS Enabled</th>
                     <th>Edge Header Rewrite Rules</th>
                     <th>FQ Pacing Rate</th>
                     <th>Geo Limit</th>
@@ -119,6 +120,7 @@ under the License.
                     <td data-search="^{{::ds.dnsBypassTtl}}$">{{::ds.dnsBypassTtl}}</td>
                     <td data-search="^{{::ds.ccrDnsTtl}}$">{{::ds.ccrDnsTtl}}</td>
                     <td data-search="^{{::ds.dscp}}$">{{::ds.dscp}}</td>
+                    <td data-search="^{{::ds.ecsEnabled}}$">{{::ds.ecsEnabled}}</td>
                     <td data-search="^{{::ds.edgeHeaderRewrite}}$">{{::ds.edgeHeaderRewrite}}</td>
                     <td data-search="^{{::ds.fqPacingRate}}$">{{::ds.fqPacingRate}}</td>
                     <td data-search="^{{::geoLimit(ds)}}$">{{::geoLimit(ds)}}</td>
@@ -158,7 +160,7 @@ under the License.
                     <td data-search="^{{::ds.trResponseHeaders}}$">{{::ds.trResponseHeaders}}</td>
                     <td data-search="^{{::ds.trRequestHeaders}}$">{{::ds.trRequestHeaders}}</td>
                     <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
-                    <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+                    <td name="xmlId" data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
                 </tr>
             </tbody>
         </table>

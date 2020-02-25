@@ -16,7 +16,7 @@
 ***********
 Traffic Ops
 ***********
-At its current stage in development, "Traffic Ops" actually refers to a concept with two implementations. The original Traffic Ops was written as a collection of Perl scripts based on the `Mojolicious framework <https://mojolicious.org/>`_ framework. At some point, the relatively poor performance and lack of knowledgeable developers as the project expanded became serious issues, and so for the past few years Traffic Ops has been undergoing a steady rewrite to Go.
+At its current stage in development, "Traffic Ops" actually refers to a concept with two implementations. The original Traffic Ops was written as a collection of Perl scripts based on the `Mojolicious framework <https://mojolicious.org/>`_ framework. At some point, the relatively poor performance and lack of knowledgeable developers as the project expanded became serious issues, and so for the past few years Traffic Ops has undergone a rewrite to Go.
 
 Introduction
 ============

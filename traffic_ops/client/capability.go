@@ -16,39 +16,16 @@ package client
 
 import "encoding/json"
 import "errors"
-import "net"
 import "net/http"
 import "net/url"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
 
-const API_v14_CAPABILITIES = "/api/1.4/capabilities"
-
-// CreateCapability creates the passed capability.
-func (to *Session) CreateCapability(c tc.Capability) (tc.Alerts, ReqInf, error) {
-	var remoteAddr net.Addr
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-
-	reqBody, err := json.Marshal(c)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v14_CAPABILITIES, reqBody)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-	reqInf.RemoteAddr = remoteAddr
-
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, err
-}
+const API_CAPABILITIES = apiBase + "/capabilities"
 
 // GetCapabilities retrieves all capabilities.
 func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v14_CAPABILITIES, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_CAPABILITIES, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -60,11 +37,11 @@ func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
 	return data.Response, reqInf, err
 }
 
-// GetCapability retrieves only the capability named 'c'
+// GetCapability retrieves only the capability named 'c'.
 func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
 	var v url.Values
 	v.Add("name", c)
-	endpoint := API_v14_CAPABILITIES + "?" + v.Encode()
+	endpoint := API_CAPABILITIES + "?" + v.Encode()
 	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

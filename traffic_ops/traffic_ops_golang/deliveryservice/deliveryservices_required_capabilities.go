@@ -242,7 +242,7 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 	}
 
 	// Ensure DS type is only of HTTP*, DNS* types
-	dsType, dsExists, err := GetDeliveryServiceType(*rc.DeliveryServiceID, rc.APIInfo().Tx.Tx)
+	dsType, dsExists, err := dbhelpers.GetDeliveryServiceType(*rc.DeliveryServiceID, rc.APIInfo().Tx.Tx)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}

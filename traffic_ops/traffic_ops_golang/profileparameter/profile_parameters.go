@@ -44,8 +44,10 @@ type TOProfileParameter struct {
 	tc.ProfileParameterNullable
 }
 
-func (v *TOProfileParameter) NewReadObj() interface{} { return &tc.ProfileParametersNullable{} }
-func (v *TOProfileParameter) SelectQuery() string     { return selectQuery() }
+// AllowMultipleCreates indicates whether an array can be POSTed using the shared Create handler
+func (v *TOProfileParameter) AllowMultipleCreates() bool { return true }
+func (v *TOProfileParameter) NewReadObj() interface{}    { return &tc.ProfileParametersNullable{} }
+func (v *TOProfileParameter) SelectQuery() string        { return selectQuery() }
 func (v *TOProfileParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"profileId":   dbhelpers.WhereColumnInfo{"pp.profile", nil},

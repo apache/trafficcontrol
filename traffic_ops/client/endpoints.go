@@ -15,4 +15,4 @@
 
 package client
 
-const apiBase = "/api/1.5"
+const apiBase = "/api/2.0"

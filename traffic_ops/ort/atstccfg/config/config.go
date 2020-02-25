@@ -95,7 +95,7 @@ func GetCfg() (Cfg, error) {
 	printGeneratedFilesPtr := flag.BoolP("print-generated-files", "g", false, "Whether to print a list of files which are generated (and not proxied to Traffic Ops).")
 	toInsecurePtr := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
 	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 10000, "Timeout in seconds for Traffic Ops requests.")
-	cacheFileMaxAgeSecondsPtr := flag.IntP("cache-file-max-age-seconds", "a", 60, "Maximum age to use cached files.")
+	cacheFileMaxAgeSecondsPtr := flag.IntP("cache-file-max-age-seconds", "a", 900, "Maximum age to use cached files.")
 	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
 	listPluginsPtr := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
 	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")

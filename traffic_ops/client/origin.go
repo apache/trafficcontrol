@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	API_v13_Origins = "/api/1.3/origins"
+	API_ORIGINS = apiBase + "/origins"
 )
 
 func originIDs(to *Session, origin *tc.Origin) error {
@@ -100,7 +100,7 @@ func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, Req
 	if err != nil {
 		return nil, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Origins, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_ORIGINS, reqBody)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -126,7 +126,7 @@ func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailR
 	if err != nil {
 		return nil, reqInf, err
 	}
-	route := fmt.Sprintf("%s?id=%d", API_v13_Origins, id)
+	route := fmt.Sprintf("%s?id=%d", API_ORIGINS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return nil, reqInf, err
@@ -141,7 +141,7 @@ func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailR
 
 // GET a list of Origins by a query parameter string
 func (to *Session) GetOriginsByQueryParams(queryParams string) ([]tc.Origin, ReqInf, error) {
-	URI := API_v13_Origins + queryParams
+	URI := API_ORIGINS + queryParams
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -179,7 +179,7 @@ func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]tc.Origin, ReqInf, e
 
 // DELETE an Origin by ID
 func (to *Session) DeleteOriginByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_v13_Origins, id)
+	route := fmt.Sprintf("%s?id=%d", API_ORIGINS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

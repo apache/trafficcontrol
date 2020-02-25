@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_v2_ASNs = "/api/1.3/asns"
+	API_ASNS = apiBase + "/asns"
 )
 
 // Create a ASN
@@ -37,7 +37,7 @@ func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, ReqInf, error) {
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v2_ASNs, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_ASNS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -56,7 +56,7 @@ func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, erro
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v2_ASNs, id)
+	route := fmt.Sprintf("%s/%d", API_ASNS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -69,7 +69,7 @@ func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, erro
 
 // Returns a list of ASNs
 func (to *Session) GetASNs() ([]tc.ASN, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v2_ASNs, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_ASNS, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -83,7 +83,7 @@ func (to *Session) GetASNs() ([]tc.ASN, ReqInf, error) {
 
 // GET a ASN by the id
 func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v2_ASNs, id)
+	route := fmt.Sprintf("%s/%d", API_ASNS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -101,7 +101,7 @@ func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
 
 // GET an ASN by the asn number
 func (to *Session) GetASNByASN(asn int) ([]tc.ASN, ReqInf, error) {
-	url := fmt.Sprintf("%s?asn=%d", API_v2_ASNs, asn)
+	url := fmt.Sprintf("%s?asn=%d", API_ASNS, asn)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -119,7 +119,7 @@ func (to *Session) GetASNByASN(asn int) ([]tc.ASN, ReqInf, error) {
 
 // DELETE an ASN by asn number
 func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/asn/%d", API_v2_ASNs, asn)
+	route := fmt.Sprintf("%s/asn/%d", API_ASNS, asn)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

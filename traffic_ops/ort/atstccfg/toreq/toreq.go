@@ -34,7 +34,7 @@ import (
 
 func GetProfile(cfg config.TCCfg, profileID int) (tc.Profile, error) {
 	profile := tc.Profile{}
-	err := GetCachedJSON(cfg, "profile_"+strconv.Itoa(profileID)+".json", &profile, func(obj interface{}) error {
+	err := GetCached(cfg, "profile_"+strconv.Itoa(profileID), &profile, func(obj interface{}) error {
 		toProfiles, reqInf, err := (*cfg.TOClient).GetProfileByID(profileID)
 		if err != nil {
 			return errors.New("getting profile '" + strconv.Itoa(profileID) + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -55,7 +55,7 @@ func GetProfile(cfg config.TCCfg, profileID int) (tc.Profile, error) {
 
 func GetProfileByName(cfg config.TCCfg, profileName string) (tc.Profile, error) {
 	profile := tc.Profile{}
-	err := GetCachedJSON(cfg, "profile_"+profileName+".json", &profile, func(obj interface{}) error {
+	err := GetCached(cfg, "profile_"+profileName, &profile, func(obj interface{}) error {
 		toProfiles, reqInf, err := (*cfg.TOClient).GetProfileByName(profileName)
 		if err != nil {
 			return errors.New("getting profile '" + profileName + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -76,7 +76,7 @@ func GetProfileByName(cfg config.TCCfg, profileName string) (tc.Profile, error) 
 
 func GetProfileParameters(cfg config.TCCfg, profileName string) ([]tc.Parameter, error) {
 	profileParameters := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "profile_"+profileName+"_parameters.json", &profileParameters, func(obj interface{}) error {
+	err := GetCached(cfg, "profile_"+profileName+"_parameters", &profileParameters, func(obj interface{}) error {
 		toParams, reqInf, err := (*cfg.TOClient).GetParametersByProfileName(profileName)
 		if err != nil {
 			return errors.New("getting profile '" + profileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -93,7 +93,7 @@ func GetProfileParameters(cfg config.TCCfg, profileName string) ([]tc.Parameter,
 
 func GetGlobalParameters(cfg config.TCCfg) ([]tc.Parameter, error) {
 	globalParams := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "profile_global_parameters.json", &globalParams, func(obj interface{}) error {
+	err := GetCached(cfg, "profile_global_parameters", &globalParams, func(obj interface{}) error {
 		toParams, reqInf, err := (*cfg.TOClient).GetParametersByProfileName(config.GlobalProfileName)
 		if err != nil {
 			return errors.New("getting global profile '" + config.GlobalProfileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -142,7 +142,7 @@ func GetTOToolNameAndURLFromTO(cfg config.TCCfg) (string, string, error) {
 
 func GetServers(cfg config.TCCfg) ([]tc.Server, error) {
 	servers := []tc.Server{}
-	err := GetCachedJSON(cfg, "servers.json", &servers, func(obj interface{}) error {
+	err := GetCached(cfg, "servers", &servers, func(obj interface{}) error {
 		toServers, reqInf, err := (*cfg.TOClient).GetServers()
 		if err != nil {
 			return errors.New("getting servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -159,7 +159,7 @@ func GetServers(cfg config.TCCfg) ([]tc.Server, error) {
 
 func GetServerByHostName(cfg config.TCCfg, serverHostName string) (tc.Server, error) {
 	server := tc.Server{}
-	err := GetCachedJSON(cfg, "server-name-"+serverHostName+".json", &server, func(obj interface{}) error {
+	err := GetCached(cfg, "server-name-"+serverHostName, &server, func(obj interface{}) error {
 		toServers, reqInf, err := (*cfg.TOClient).GetServerByHostName(serverHostName)
 		if err != nil {
 			return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -178,7 +178,7 @@ func GetServerByHostName(cfg config.TCCfg, serverHostName string) (tc.Server, er
 
 func GetServerByID(cfg config.TCCfg, serverID int) (tc.Server, error) {
 	server := tc.Server{}
-	err := GetCachedJSON(cfg, "server-id-"+strconv.Itoa(serverID)+".json", &server, func(obj interface{}) error {
+	err := GetCached(cfg, "server-id-"+strconv.Itoa(serverID), &server, func(obj interface{}) error {
 		toServers, reqInf, err := (*cfg.TOClient).GetServerByID(serverID)
 		if err != nil {
 			return fmt.Errorf("getting server id %v from Traffic Ops '%v': %v", serverID, MaybeIPStr(reqInf), err)
@@ -197,7 +197,7 @@ func GetServerByID(cfg config.TCCfg, serverID int) (tc.Server, error) {
 
 func GetCacheGroups(cfg config.TCCfg) ([]tc.CacheGroupNullable, error) {
 	cacheGroups := []tc.CacheGroupNullable{}
-	err := GetCachedJSON(cfg, "cachegroups.json", &cacheGroups, func(obj interface{}) error {
+	err := GetCached(cfg, "cachegroups", &cacheGroups, func(obj interface{}) error {
 		toCacheGroups, reqInf, err := (*cfg.TOClient).GetCacheGroupsNullable()
 		if err != nil {
 			return errors.New("getting cachegroups from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -236,7 +236,7 @@ func GetDeliveryServiceServers(cfg config.TCCfg, dsIDs []int, serverIDs []int) (
 	}
 
 	dsServers := []tc.DeliveryServiceServer{}
-	err := GetCachedJSON(cfg, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr+".json", &dsServers, func(obj interface{}) error {
+	err := GetCachedDSS(cfg, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr, &dsServers, func(obj interface{}) error {
 		const noLimit = 999999 // TODO add "no limit" param to DSS endpoint
 		toDSS, reqInf, err := (*cfg.TOClient).GetDeliveryServiceServersWithLimits(noLimit, dsIDsToFetch, sIDsToFetch)
 		if err != nil {
@@ -284,7 +284,7 @@ func GetDeliveryServiceServers(cfg config.TCCfg, dsIDs []int, serverIDs []int) (
 
 func GetServerProfileParameters(cfg config.TCCfg, profileName string) ([]tc.Parameter, error) {
 	serverProfileParameters := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "profile_"+profileName+"_parameters.json", &serverProfileParameters, func(obj interface{}) error {
+	err := GetCached(cfg, "profile_"+profileName+"_parameters", &serverProfileParameters, func(obj interface{}) error {
 		toParams, reqInf, err := (*cfg.TOClient).GetParametersByProfileName(profileName)
 		if err != nil {
 			return errors.New("getting server profile '" + profileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -301,7 +301,7 @@ func GetServerProfileParameters(cfg config.TCCfg, profileName string) ([]tc.Para
 
 func GetCDNDeliveryServices(cfg config.TCCfg, cdnID int) ([]tc.DeliveryServiceNullable, error) {
 	deliveryServices := []tc.DeliveryServiceNullable{}
-	err := GetCachedJSON(cfg, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices"+".json", &deliveryServices, func(obj interface{}) error {
+	err := GetCached(cfg, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
 		toDSes, reqInf, err := (*cfg.TOClient).GetDeliveryServicesByCDNID(cdnID)
 		if err != nil {
 			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -318,7 +318,7 @@ func GetCDNDeliveryServices(cfg config.TCCfg, cdnID int) ([]tc.DeliveryServiceNu
 
 func GetConfigFileParameters(cfg config.TCCfg, configFile string) ([]tc.Parameter, error) {
 	params := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "config_file_"+configFile+"_parameters"+".json", &params, func(obj interface{}) error {
+	err := GetCached(cfg, "config_file_"+configFile+"_parameters", &params, func(obj interface{}) error {
 		toParams, reqInf, err := (*cfg.TOClient).GetParameterByConfigFile(configFile)
 		if err != nil {
 			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -335,7 +335,7 @@ func GetConfigFileParameters(cfg config.TCCfg, configFile string) ([]tc.Paramete
 
 func GetCDN(cfg config.TCCfg, cdnName tc.CDNName) (tc.CDN, error) {
 	cdn := tc.CDN{}
-	err := GetCachedJSON(cfg, "cdn_"+string(cdnName)+".json", &cdn, func(obj interface{}) error {
+	err := GetCached(cfg, "cdn_"+string(cdnName), &cdn, func(obj interface{}) error {
 		toCDNs, reqInf, err := (*cfg.TOClient).GetCDNByName(string(cdnName))
 		if err != nil {
 			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -355,7 +355,7 @@ func GetCDN(cfg config.TCCfg, cdnName tc.CDNName) (tc.CDN, error) {
 
 func GetCDNByID(cfg config.TCCfg, cdnID int) (tc.CDN, error) {
 	cdn := tc.CDN{}
-	err := GetCachedJSON(cfg, "cdn_id_"+strconv.Itoa(cdnID)+".json", &cdn, func(obj interface{}) error {
+	err := GetCached(cfg, "cdn_id_"+strconv.Itoa(cdnID), &cdn, func(obj interface{}) error {
 		toCDNs, reqInf, err := (*cfg.TOClient).GetCDNByID(cdnID)
 		if err != nil {
 			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -375,7 +375,7 @@ func GetCDNByID(cfg config.TCCfg, cdnID int) (tc.CDN, error) {
 
 func GetURLSigKeys(cfg config.TCCfg, dsName string) (tc.URLSigKeys, error) {
 	keys := tc.URLSigKeys{}
-	err := GetCachedJSON(cfg, "urlsigkeys_"+string(dsName)+".json", &keys, func(obj interface{}) error {
+	err := GetCached(cfg, "urlsigkeys_"+string(dsName), &keys, func(obj interface{}) error {
 		toKeys, reqInf, err := (*cfg.TOClient).GetDeliveryServiceURLSigKeys(dsName)
 		if err != nil {
 			return errors.New("getting url sig keys from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -392,7 +392,7 @@ func GetURLSigKeys(cfg config.TCCfg, dsName string) (tc.URLSigKeys, error) {
 
 func GetURISigningKeys(cfg config.TCCfg, dsName string) ([]byte, error) {
 	keys := []byte{}
-	err := GetCachedJSON(cfg, "urisigningkeys_"+string(dsName)+".json", &keys, func(obj interface{}) error {
+	err := GetCached(cfg, "urisigningkeys_"+string(dsName), &keys, func(obj interface{}) error {
 		toKeys, reqInf, err := (*cfg.TOClient).GetDeliveryServiceURISigningKeys(dsName)
 		if err != nil {
 			return errors.New("getting url sig keys from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -410,7 +410,7 @@ func GetURISigningKeys(cfg config.TCCfg, dsName string) ([]byte, error) {
 
 func GetParametersByName(cfg config.TCCfg, paramName string) ([]tc.Parameter, error) {
 	params := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "parameters_name_"+paramName+".json", &params, func(obj interface{}) error {
+	err := GetCached(cfg, "parameters_name_"+paramName, &params, func(obj interface{}) error {
 		toParams, reqInf, err := (*cfg.TOClient).GetParameterByName(paramName)
 		if err != nil {
 			return errors.New("getting parameters name '" + paramName + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -427,7 +427,7 @@ func GetParametersByName(cfg config.TCCfg, paramName string) ([]tc.Parameter, er
 
 func GetCacheGroupParameters(cfg config.TCCfg, cacheGroupID int) ([]tc.Parameter, error) {
 	params := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "cachegroup_parameters_id_"+strconv.Itoa(cacheGroupID)+".json", &params, func(obj interface{}) error {
+	err := GetCached(cfg, "cachegroup_parameters_id_"+strconv.Itoa(cacheGroupID), &params, func(obj interface{}) error {
 		toParams, reqInf, err := (*cfg.TOClient).GetCacheGroupParameters(cacheGroupID)
 		if err != nil {
 			return errors.New("getting cachegroup parameters id '" + strconv.Itoa(cacheGroupID) + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -451,11 +451,9 @@ func GetCacheGroupParameters(cfg config.TCCfg, cacheGroupID int) ([]tc.Parameter
 	return params, nil
 }
 
-// func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
-
 func GetDeliveryServiceRegexes(cfg config.TCCfg) ([]tc.DeliveryServiceRegexes, error) {
 	regexes := []tc.DeliveryServiceRegexes{}
-	err := GetCachedJSON(cfg, "ds_regexes.json", &regexes, func(obj interface{}) error {
+	err := GetCached(cfg, "ds_regexes", &regexes, func(obj interface{}) error {
 		toRegexes, reqInf, err := (*cfg.TOClient).GetDeliveryServiceRegexes()
 		if err != nil {
 			return errors.New("getting ds regexes from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -472,7 +470,7 @@ func GetDeliveryServiceRegexes(cfg config.TCCfg) ([]tc.DeliveryServiceRegexes, e
 
 func GetJobs(cfg config.TCCfg) ([]tc.Job, error) {
 	jobs := []tc.Job{}
-	err := GetCachedJSON(cfg, "jobs.json", &jobs, func(obj interface{}) error {
+	err := GetCached(cfg, "jobs", &jobs, func(obj interface{}) error {
 		toJobs, reqInf, err := (*cfg.TOClient).GetJobs(nil, nil)
 		if err != nil {
 			return errors.New("getting jobs from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -486,6 +484,7 @@ func GetJobs(cfg config.TCCfg) ([]tc.Job, error) {
 	}
 	return jobs, nil
 }
+
 func GetServerCapabilitiesByID(cfg config.TCCfg, serverIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, error) {
 	serverIDsStr := ""
 	if len(serverIDs) > 0 {
@@ -494,7 +493,7 @@ func GetServerCapabilitiesByID(cfg config.TCCfg, serverIDs []int) (map[int]map[a
 	}
 
 	serverCaps := map[int]map[atscfg.ServerCapability]struct{}{}
-	err := GetCachedJSON(cfg, "server_capabilities_s_"+serverIDsStr+".json", &serverCaps, func(obj interface{}) error {
+	err := GetCached(cfg, "server_capabilities_s_"+serverIDsStr, &serverCaps, func(obj interface{}) error {
 		// TODO add list of IDs to API+Client
 		toServerCaps, reqInf, err := (*cfg.TOClient).GetServerServerCapabilities(nil, nil, nil)
 		if err != nil {
@@ -530,7 +529,7 @@ func GetDeliveryServiceRequiredCapabilitiesByID(cfg config.TCCfg, dsIDs []int) (
 	}
 
 	dsCaps := map[int]map[atscfg.ServerCapability]struct{}{}
-	err := GetCachedJSON(cfg, "ds_capabilities_d_"+dsIDsStr+".json", &dsCaps, func(obj interface{}) error {
+	err := GetCached(cfg, "ds_capabilities_d_"+dsIDsStr, &dsCaps, func(obj interface{}) error {
 		// TODO add list of IDs to API+Client
 		toDSCaps, reqInf, err := (*cfg.TOClient).GetDeliveryServicesRequiredCapabilities(nil, nil, nil)
 		if err != nil {

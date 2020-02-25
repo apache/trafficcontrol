@@ -23,7 +23,7 @@
 
 To run `traffic_ops_golang` proxy locally the following prerequisites are needed:
 
-* Golang 1.8.4 or greater See: [https://golang.org/doc/install](https://golang.org/doc/install)
+* Golang 1.11 or greater See: [https://golang.org/doc/install](https://golang.org/doc/install)
 * Postgres 9.6 or greater
 * Because the Golang proxy is fronting Mojolicious Perl you need to have that service setup and running as well [TO Perl Setup Here](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/INSTALL.md)
 
@@ -40,16 +40,15 @@ To download the remaining `golang.org/x` dependencies you need to:
 
 ## Configuration
 
-To run the Golang proxy locally the following represents a typical sequence flow.  */api/1.2* will proxy through to Mojo Perl. */api/1.3* will serve the response from the Golang proxy directly and/or interact with Postgres accordingly.
+To run the Golang TO API locally the following represents a typical sequence flow.  */api/1.x* will proxy through to Mojo Perl if the given route is not found or the route is blacklisted else it will serve the response from the Golang API. */api/2.0* will always serve the response from the Golang directly and/or interact with Postgres accordingly.
 
-**/api/1.2** routes:
+**/api/1.x** routes:
 
-`TO Golang Proxy (port 8443)`<-->`TO Mojo Perl`<-->`TO Database (Postgres)`
+`TO Golang API (port 8443)`<-->`TO Mojo Perl`(if route not found or blacklisted)<-->`TO Database (Postgres)`
 
-**/api/1.3** routes:
+**/api/2.0** routes:
 
-`TO Golang Proxy (port 8443)`<-->`TO Database (Postgres)`
-
+`TO Golang API (port 8443)`<-->`TO Database (Postgres)`
 
 ### cdn.conf changes
 
@@ -189,37 +188,15 @@ NOTE: the `Delete` handler should not need any modification when adding a new mi
 
 NOTE: the `Read` and `Delete` handlers should always point to the lowest minor version since they are meant to handle requests of any minor version, so the routes for these handlers should not change when adding a new minor version.
 
-## Converting Routes to Traffic Ops Golang
+## Writing a new route
 
-Traffic Ops is moving to Go! You can help!
-
-We're in the process of migrating the Perl/Mojolicious Traffic Ops to Go. This involves converting each route, one-by-one. There are many small, simple routes, like `/api/1.2/regions` and `api/1.2/divisions`. If you want to help, you can convert some of these.
-
-You'll need at least a basic understanding of Perl and Go, or be willing to learn them. You'll also need a running Traffic Ops instance, to compare the old and new routes and make sure they're identical.
-
-### Converting an Endpoint
-
-#### Perl
-
-If you don't already have an endpoint in mind, open [TrafficOpsRoutes.pm](../app/lib/TrafficOpsRoutes.pm) and browse the routes. Start with `/api/` routes. We'll be moving others, like config files, but they're a bit more complex. We specifically won't be moving GUI routes (e.g. `/asns`), they'll go away when the new [Portal](https://github.com/apache/trafficcontrol/tree/master/traffic_portal) is done.
-
-After you pick a route, you'll need to look at the code that generates it. For example, if we look at `$r->get("/api/$version/cdns")->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#index', namespace => $namespace );`, we see it's calling `Cdn#index`, so we look in `app/lib/API/Cdn.pm` at `sub index`.
-
-As you can see, this is a very simple route. It queries the database `CDN` table, and puts the `id`, `name`, `domainName`, `dnssecEnabled`, and `lastUpdated` fields in an object, for every database entry, in an array.
-
-If you go to `/api/1.2/cdns` in a browser, you'll see Perl is also wrapping it in a `"response"` object.
-
-#### Go
-
-Now we need to create the Go endpoint.
-
-##### Getting a "Handle" on Routes
+### Getting a "Handle" on Routes
 
 Open [routes.go](./routing/routes.go). Routes are defined in the `Routes` function, of the form `{version, method, path, handler, ID}`. Notice the path can contain variables, of the form `/{var}/`. These variables will be made available to your handler.
 
 NOTE: Route IDs are immutable and unique. DO NOT change the ID of an existing Route; otherwise, existing configurations may break. New Route IDs can be any integer between 0 and 2147483647 (inclusive), as long as it's unique.
 
-##### Creating a Handler
+### Creating a Handler
 
 The first step is to create your handler. For an example, look at `monitoringHandler` in `monitoring.go`. Your handler arguments can be any data available to the router (the config and database, or what you can create from them). Passing the `db` or prepared `Stmt`s is common. The handler function must return a `RegexHandlerFunc`. In general, you want to return an inline function, `return func(w http.ResponseWriter, r *http.Request, p ParamMap) {...`.
 
@@ -227,13 +204,13 @@ The `ResponseWriter` and `Request` are standard Go `HandlerFunc` parameters. The
 
 Now, your handler just needs to load the data, format it, and write it to the `ResponseWriter`, like any other Go `HandlerFunc`.
 
-This is the hard part, where you have to recreate the Perl response. But it's all standard Go programming, reading from a database, creating JSON, and writing to the `http.ResponseWriter`. If you're just learning Go, look at some of the other endpoints like `monitoring.go`, and maybe google some Golang tutorials on SQL, JSON, and HTTP. The Go documentation is also helpful, particularly  https://golang.org/pkg/database/sql/ and https://golang.org/pkg/encoding/json/.
+ If you're just learning Go, look at some of the other endpoints like `monitoring.go`, and maybe google some Golang tutorials on SQL, JSON, and HTTP. The Go documentation is also helpful, particularly  https://golang.org/pkg/database/sql/ and https://golang.org/pkg/encoding/json/.
 
 Your handler should be in its own file, where you can create any structs and helper functions you need.
 
-##### Registering the Handler
+### Registering the Handler
 
-Back to `routes.go`, you need to add your handler to the `Routes` function. For example, `/api/1.2/cdns` would look like `{1.2, http.MethodGet, "cdns", wrapHeaders(wrapAuth(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},`.
+Back to `routes.go`, you need to add your handler to the `Routes` function. For example, `/api/2.0/cdns` would look like `{2.0, http.MethodGet, "cdns", wrapHeaders(wrapAuth(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},`.
 
 The only thing we haven't talked about are those `wrap` functions. They each take a `RegexHandlerFunc` and return a `RegexHandlerFunc`, which lets them 'wrap' your handler. You almost certainly need both of them; if you're not sure, ask on the mailing list or Slack. You'll notice the `wrapAuth` function also takes config parameters, as well as a `PrivLevel`. You should create a constant in your handler file of the form `EndpointPrivLevel` and pass that. If your endpoint modifies data, use `PrivLevelOperations`, otherwise `PrivLevelReadOnly`.
 
