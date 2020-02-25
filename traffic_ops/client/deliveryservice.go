@@ -203,7 +203,7 @@ func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNul
 // something very wicked has happened to Traffic Ops.
 func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var data tc.DeliveryServicesNullableResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICES+"?xmlid="+XMLID, &data)
+	reqInf, err := get(to, API_DELIVERY_SERVICES+"?xmlId="+XMLID, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
