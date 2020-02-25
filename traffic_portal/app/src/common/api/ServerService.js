@@ -197,17 +197,6 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.getEdgeStatusCount = function() {
-        return $http.get(ENV.api['root'] + "servers/status", {params: {type: "EDGE"}}).then(
-            function(result) {
-                return result.data.response;
-            },
-            function(err) {
-                throw err;
-            }
-        );
-    };
-
     this.getCacheStats = function() {
         return $http.get(ENV.api['root'] + "caches/stats").then(
             function(result) {
