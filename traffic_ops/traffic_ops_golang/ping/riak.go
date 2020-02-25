@@ -34,7 +34,7 @@ func Riak(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 
 	if userErr != nil || sysErr != nil {
-		userErr = api.LogErr(r, http.StatusInternalServerError, userErr, sysErr)
+		userErr = api.LogErr(r, errCode, userErr, sysErr)
 		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
 		api.WriteAlerts(w, r, errCode, alerts)
 		return
@@ -47,7 +47,7 @@ func Riak(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		userErr = api.LogErr(r, http.StatusInternalServerError, nil, errors.New("error pinging Riak: "+err.Error()))
 		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
-		api.WriteAlerts(w, r, errCode, alerts)
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, pingResp)
