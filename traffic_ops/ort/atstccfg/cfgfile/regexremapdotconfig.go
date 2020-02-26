@@ -20,48 +20,27 @@ package cfgfile
  */
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileCDNRegexRemap(cfg config.TCCfg, cdnNameOrID string, fileName string) (string, error) {
+func GetConfigFileCDNRegexRemap(toData *TOData, fileName string) (string, error) {
 	configSuffix := `.config`
 	if !strings.HasPrefix(fileName, atscfg.RegexRemapPrefix) || !strings.HasSuffix(fileName, configSuffix) {
 		return `{"alerts":[{"level":"error","text":"Error - regex remap file '` + fileName + `' not of the form 'regex_remap_*.config! Please file a bug with Traffic Control, this should never happen."}]}`, config.ErrBadRequest
 	}
+
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, atscfg.RegexRemapPrefix), configSuffix)
 	if dsName == "" {
 		return `{"alerts":[{"level":"error","text":"Error - regex remap file '` + fileName + `' has no delivery service name!"}]}`, config.ErrBadRequest
 	}
 
-	cdnName, err := toreq.GetCDNNameFromCDNNameOrID(cfg, cdnNameOrID)
-	if err != nil {
-		return "", errors.New("getting CDN name from '" + cdnNameOrID + "': " + err.Error())
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	cdn, err := toreq.GetCDN(cfg, cdnName)
-	if err != nil {
-		return "", errors.New("getting cdn '" + string(cdnName) + "': " + err.Error())
-	}
-
-	dses, err := toreq.GetCDNDeliveryServices(cfg, cdn.ID)
-	if err != nil {
-		return "", errors.New("getting delivery services: " + err.Error())
-	}
-
 	// only send the requested DS to atscfg. The atscfg.Make will work correctly even if we send it other DSes, but this will prevent atscfg.DeliveryServicesToCDNDSes from logging errors about AnyMap and Steering DSes without origins.
 	ds := tc.DeliveryServiceNullable{}
-	for _, dsesDS := range dses {
+	for _, dsesDS := range toData.DeliveryServices {
 		if dsesDS.XMLID == nil {
 			continue // TODO log?
 		}
@@ -76,6 +55,6 @@ func GetConfigFileCDNRegexRemap(cfg config.TCCfg, cdnNameOrID string, fileName s
 
 	cfgDSes := atscfg.DeliveryServicesToCDNDSes([]tc.DeliveryServiceNullable{ds})
 
-	txt := atscfg.MakeRegexRemapDotConfig(cdnName, toToolName, toURL, fileName, cfgDSes)
+	txt := atscfg.MakeRegexRemapDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes)
 	return txt, nil
 }

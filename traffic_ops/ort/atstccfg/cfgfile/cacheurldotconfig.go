@@ -20,46 +20,19 @@ package cfgfile
  */
 
 import (
-	"errors"
-
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileCDNCacheURL(cfg config.TCCfg, cdnNameOrID string, fileName string) (string, error) {
-	cdnName, err := toreq.GetCDNNameFromCDNNameOrID(cfg, cdnNameOrID)
-	if err != nil {
-		return "", errors.New("getting CDN name from '" + cdnNameOrID + "': " + err.Error())
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	cdn, err := toreq.GetCDN(cfg, cdnName)
-	if err != nil {
-		return "", errors.New("getting cdn '" + string(cdnName) + "': " + err.Error())
-	}
-
-	dses, err := toreq.GetCDNDeliveryServices(cfg, cdn.ID)
-	if err != nil {
-		return "", errors.New("getting delivery services: " + err.Error())
-	}
-
-	dsIDs := []int{}
-	for _, ds := range dses {
+func GetConfigFileCDNCacheURL(toData *TOData, fileName string) (string, error) {
+	dsIDs := map[int]struct{}{}
+	for _, ds := range toData.DeliveryServices {
 		if ds.ID != nil {
-			dsIDs = append(dsIDs, *ds.ID)
+			dsIDs[*ds.ID] = struct{}{}
 		}
 	}
 
-	dss, err := toreq.GetDeliveryServiceServers(cfg, dsIDs, nil)
-	if err != nil {
-		return "", errors.New("getting delivery service servers: " + err.Error())
-	}
+	dss := FilterDSS(toData.DeliveryServiceServers, dsIDs, nil)
 
 	dssMap := map[int][]int{} // map[dsID]serverID
 	for _, dss := range dss {
@@ -70,7 +43,7 @@ func GetConfigFileCDNCacheURL(cfg config.TCCfg, cdnNameOrID string, fileName str
 	}
 
 	dsesWithServers := []tc.DeliveryServiceNullable{}
-	for _, ds := range dses {
+	for _, ds := range toData.DeliveryServices {
 		if ds.ID == nil {
 			continue // TODO warn
 		}
@@ -86,10 +59,10 @@ func GetConfigFileCDNCacheURL(cfg config.TCCfg, cdnNameOrID string, fileName str
 
 	cfgDSes := atscfg.DeliveryServicesToCacheURLDSes(dsesWithServers)
 
-	txt := atscfg.MakeCacheURLDotConfig(cdnName, toToolName, toURL, fileName, cfgDSes)
+	txt := atscfg.MakeCacheURLDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes)
 	return txt, nil
 }
 
-func GetConfigFileCDNCacheURLPlain(cfg config.TCCfg, cdnNameOrID string) (string, error) {
-	return GetConfigFileCDNCacheURL(cfg, cdnNameOrID, "cacheurl.config")
+func GetConfigFileCDNCacheURLPlain(toData *TOData) (string, error) {
+	return GetConfigFileCDNCacheURL(toData, "cacheurl.config")
 }

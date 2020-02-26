@@ -36,15 +36,8 @@ import (
 )
 
 const AppName = "atstccfg"
-const Version = "0.1"
+const Version = "0.2"
 const UserAgent = AppName + "/" + Version
-
-const APIVersion = "1.2"
-const TempSubdir = AppName + "_cache"
-const TempCookieFileName = "cookies"
-const TOCookieName = "mojolicious"
-
-const GlobalProfileName = "GLOBAL"
 
 const ExitCodeSuccess = 0
 const ExitCodeErrGeneric = 1
@@ -55,19 +48,19 @@ var ErrNotFound = errors.New("not found")
 var ErrBadRequest = errors.New("bad request")
 
 type Cfg struct {
-	CacheFileMaxAge     time.Duration
+	CacheHostName       string
+	ListPlugins         bool
 	LogLocationErr      string
 	LogLocationInfo     string
 	LogLocationWarn     string
 	NumRetries          int
-	TempDir             string
+	OutputDir           string
+	PrintGeneratedFiles bool
 	TOInsecure          bool
 	TOPass              string
 	TOTimeout           time.Duration
 	TOURL               *url.URL
 	TOUser              string
-	ListPlugins         bool
-	PrintGeneratedFiles bool
 }
 
 type TCCfg struct {
@@ -87,7 +80,6 @@ func GetCfg() (Cfg, error) {
 	toURLPtr := flag.StringP("traffic-ops-url", "u", "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL.")
 	toUserPtr := flag.StringP("traffic-ops-user", "U", "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER.")
 	toPassPtr := flag.StringP("traffic-ops-password", "P", "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS.")
-	noCachePtr := flag.BoolP("no-cache", "n", false, "Whether not to use existing cache files. Optional. Cache files will still be created, existing ones just won't be used.")
 	numRetriesPtr := flag.IntP("num-retries", "r", 5, "The number of times to retry getting a file if it fails.")
 	logLocationErrPtr := flag.StringP("log-location-error", "e", "stderr", "Where to log errors. May be a file path, stdout, stderr, or null.")
 	logLocationWarnPtr := flag.StringP("log-location-warning", "w", "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null.")
@@ -95,10 +87,11 @@ func GetCfg() (Cfg, error) {
 	printGeneratedFilesPtr := flag.BoolP("print-generated-files", "g", false, "Whether to print a list of files which are generated (and not proxied to Traffic Ops).")
 	toInsecurePtr := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
 	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 10000, "Timeout in seconds for Traffic Ops requests.")
-	cacheFileMaxAgeSecondsPtr := flag.IntP("cache-file-max-age-seconds", "a", 900, "Maximum age to use cached files.")
 	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
 	listPluginsPtr := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
 	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")
+	outputDirPtr := flag.StringP("output-directory", "o", "", "Directory to output config files to.")
+	cacheHostNamePtr := flag.StringP("cache-host-name", "n", "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 
 	flag.Parse()
 
@@ -117,15 +110,15 @@ func GetCfg() (Cfg, error) {
 	toURL := *toURLPtr
 	toUser := *toUserPtr
 	toPass := *toPassPtr
-	noCache := *noCachePtr
 	numRetries := *numRetriesPtr
 	logLocationErr := *logLocationErrPtr
 	logLocationWarn := *logLocationWarnPtr
 	logLocationInfo := *logLocationInfoPtr
 	toInsecure := *toInsecurePtr
 	toTimeout := time.Millisecond * time.Duration(*toTimeoutMSPtr)
-	cacheFileMaxAge := time.Second * time.Duration(*cacheFileMaxAgeSecondsPtr)
 	listPlugins := *listPluginsPtr
+	outputDir := *outputDirPtr
+	cacheHostName := *cacheHostNamePtr
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -139,14 +132,21 @@ func GetCfg() (Cfg, error) {
 		toPass = os.Getenv("TO_PASS")
 	}
 
+	usageStr := "Usage: ./" + AppName + " --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache --output-directory=/opt/trafficserver/etc/trafficserver-temp/"
 	if strings.TrimSpace(toURL) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. Usage: ./" + AppName + " --traffic-ops-url myurl --traffic-ops-user myuser --traffic-ops-password mypass")
+		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. " + usageStr)
 	}
 	if strings.TrimSpace(toUser) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-user or TO_USER environment variable. Usage: ./" + AppName + " --traffic-ops-url myurl --traffic-ops-user myuser --traffic-ops-password mypass")
+		return Cfg{}, errors.New("Missing required argument --traffic-ops-user or TO_USER environment variable. " + usageStr)
 	}
 	if strings.TrimSpace(toPass) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-password or TO_PASS environment variable. Usage: ./" + AppName + " --traffic-ops-url myurl --traffic-ops-user myuser --traffic-ops-password mypass")
+		return Cfg{}, errors.New("Missing required argument --traffic-ops-password or TO_PASS environment variable. " + usageStr)
+	}
+	if strings.TrimSpace(outputDir) == "" {
+		return Cfg{}, errors.New("Missing required argument --output-directory. If you wish to use the current directory, pass '.'. " + usageStr)
+	}
+	if strings.TrimSpace(cacheHostName) == "" {
+		return Cfg{}, errors.New("Missing required argument --cache-host-name. " + usageStr)
 	}
 
 	toURLParsed, err := url.Parse(toURL)
@@ -156,39 +156,27 @@ func GetCfg() (Cfg, error) {
 		return Cfg{}, errors.New("invalid Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
 	}
 
-	tmpDir := os.TempDir()
-	tmpDir = filepath.Join(tmpDir, TempSubdir)
-
 	cfg := Cfg{
-		CacheFileMaxAge: cacheFileMaxAge,
 		LogLocationErr:  logLocationErr,
 		LogLocationWarn: logLocationWarn,
 		LogLocationInfo: logLocationInfo,
 		NumRetries:      numRetries,
-		TempDir:         tmpDir,
 		TOInsecure:      toInsecure,
 		TOPass:          toPass,
 		TOTimeout:       toTimeout,
 		TOURL:           toURLParsed,
 		TOUser:          toUser,
 		ListPlugins:     listPlugins,
+		OutputDir:       outputDir,
+		CacheHostName:   cacheHostName,
 	}
 
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
 	}
 
-	if noCache {
-		if err := os.RemoveAll(tmpDir); err != nil {
-			log.Errorln("deleting cache directory '" + tmpDir + "': " + err.Error())
-		}
-	}
-
-	if err := os.MkdirAll(tmpDir, 0700); err != nil {
-		return Cfg{}, errors.New("creating temp directory '" + tmpDir + "': " + err.Error())
-	}
-	if err := ValidateDirWriteable(tmpDir); err != nil {
-		return Cfg{}, errors.New("validating temp directory is writeable '" + tmpDir + "': " + err.Error())
+	if err := ValidateDirWriteable(outputDir); err != nil {
+		return Cfg{}, errors.New("validating output directory is writeable '" + outputDir + "': " + err.Error())
 	}
 
 	return cfg, nil

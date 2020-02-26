@@ -20,56 +20,21 @@ package cfgfile
  */
 
 import (
-	"errors"
-
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileProfileCacheDotConfig(cfg config.TCCfg, profileNameOrID string) (string, error) {
-	profileName, err := toreq.GetProfileNameFromProfileNameOrID(cfg, profileNameOrID)
-	if err != nil {
-		return "", errors.New("getting profile name from '" + profileNameOrID + "': " + err.Error())
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	servers, err := toreq.GetServers(cfg)
-	if err != nil {
-		return "", errors.New("getting servers: " + err.Error())
-	}
-
-	profileServerIDs := []int{}
+func GetConfigFileProfileCacheDotConfig(toData *TOData) (string, error) {
+	// TODO verify I didn't break something
 	profileServerIDsMap := map[int]struct{}{}
-	profileServers := []tc.Server{}
-	for _, sv := range servers {
-		if sv.Profile != profileName {
+	for _, sv := range toData.Servers {
+		if sv.Profile != toData.Server.Profile {
 			continue
 		}
-		profileServers = append(profileServers, sv)
-		profileServerIDs = append(profileServerIDs, sv.ID)
 		profileServerIDsMap[sv.ID] = struct{}{}
 	}
 
-	dsServers, err := toreq.GetDeliveryServiceServers(cfg, nil, profileServerIDs)
-	if err != nil {
-		return "", errors.New("getting parent.config cachegroup parent server delivery service servers: " + err.Error())
-	}
-
-	profile, err := toreq.GetProfileByName(cfg, profileName)
-	if err != nil {
-		return "", errors.New("getting profile '" + profileNameOrID + "': " + err.Error())
-	}
-
-	dses, err := toreq.GetCDNDeliveryServices(cfg, profile.CDNID)
-	if err != nil {
-		return "", errors.New("getting delivery services: " + err.Error())
-	}
+	dsServers := FilterDSS(toData.DeliveryServiceServers, nil, profileServerIDsMap)
 
 	dsIDs := map[int]struct{}{}
 	for _, dss := range dsServers {
@@ -83,7 +48,7 @@ func GetConfigFileProfileCacheDotConfig(cfg config.TCCfg, profileNameOrID string
 	}
 
 	profileDSes := []atscfg.ProfileDS{}
-	for _, ds := range dses {
+	for _, ds := range toData.DeliveryServices {
 		if ds.ID == nil || ds.Type == nil || ds.OrgServerFQDN == nil {
 			continue // TODO warn? err?
 		}
@@ -99,5 +64,6 @@ func GetConfigFileProfileCacheDotConfig(cfg config.TCCfg, profileNameOrID string
 		origin := *ds.OrgServerFQDN
 		profileDSes = append(profileDSes, atscfg.ProfileDS{Type: *ds.Type, OriginFQDN: &origin})
 	}
-	return atscfg.MakeCacheDotConfig(profileName, profileDSes, toToolName, toURL), nil
+
+	return atscfg.MakeCacheDotConfig(toData.Server.Profile, profileDSes, toData.TOToolName, toData.TOURL), nil
 }

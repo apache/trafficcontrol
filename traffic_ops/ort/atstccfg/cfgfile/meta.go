@@ -21,59 +21,23 @@ package cfgfile
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) {
-	servers, err := toreq.GetServers(cfg)
-	if err != nil {
-		return "", errors.New("getting servers: " + err.Error())
-	}
-
-	server := tc.Server{ID: atscfg.InvalidID}
-	if serverID, err := strconv.Atoi(serverNameOrID); err == nil {
-		for _, toServer := range servers {
-			if toServer.ID == serverID {
-				server = toServer
-				break
-			}
-		}
-	} else {
-		serverName := serverNameOrID
-		for _, toServer := range servers {
-			if toServer.HostName == serverName {
-				server = toServer
-				break
-			}
-		}
-	}
-	if server.ID == atscfg.InvalidID {
-		return "", errors.New("server '" + serverNameOrID + " not found in servers")
-	}
-
-	serverHostName := server.HostName
-
-	cacheGroups, err := toreq.GetCacheGroups(cfg)
-	if err != nil {
-		return "", errors.New("getting cachegroups: " + err.Error())
-	}
-
+func GetMeta(toData *TOData) (*tc.ATSConfigMetaData, error) {
 	cgMap := map[string]tc.CacheGroupNullable{}
-	for _, cg := range cacheGroups {
+	for _, cg := range toData.CacheGroups {
 		if cg.Name == nil {
-			return "", errors.New("got cachegroup with nil name!'")
+			return nil, errors.New("got cachegroup with nil name!'")
 		}
 		cgMap[*cg.Name] = cg
 	}
 
-	serverCG, ok := cgMap[server.Cachegroup]
+	serverCG, ok := cgMap[toData.Server.Cachegroup]
 	if !ok {
-		return "", errors.New("server '" + serverNameOrID + "' cachegroup '" + server.Cachegroup + "' not found in CacheGroups")
+		return nil, errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' not found in CacheGroups")
 	}
 
 	parentCGID := -1
@@ -81,15 +45,15 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
 		parentCG, ok := cgMap[*serverCG.ParentName]
 		if !ok {
-			return "", errors.New("server '" + serverNameOrID + "' cachegroup '" + server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+			return nil, errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
 		}
 		if parentCG.ID == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return nil, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		parentCGID = *parentCG.ID
 
 		if parentCG.Type == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return nil, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 		parentCGType = *parentCG.Type
 	}
@@ -99,46 +63,41 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
 		parentCG, ok := cgMap[*serverCG.SecondaryParentName]
 		if !ok {
-			return "", errors.New("server '" + serverNameOrID + "' cachegroup '" + server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+			return nil, errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
 		}
 
 		if parentCG.ID == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return nil, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		secondaryParentCGID = *parentCG.ID
 		if parentCG.Type == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return nil, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 
 		secondaryParentCGType = *parentCG.Type
 	}
 
 	serverInfo := atscfg.ServerInfo{
-		CacheGroupID:                  server.CachegroupID,
-		CDN:                           tc.CDNName(server.CDNName),
-		CDNID:                         server.CDNID,
-		DomainName:                    server.DomainName,
-		HostName:                      server.HostName,
-		ID:                            server.ID,
-		IP:                            server.IPAddress,
+		CacheGroupID:                  toData.Server.CachegroupID,
+		CDN:                           tc.CDNName(toData.Server.CDNName),
+		CDNID:                         toData.Server.CDNID,
+		DomainName:                    toData.Server.DomainName,
+		HostName:                      toData.Server.HostName,
+		ID:                            toData.Server.ID,
+		IP:                            toData.Server.IPAddress,
 		ParentCacheGroupID:            parentCGID,
 		ParentCacheGroupType:          parentCGType,
-		ProfileID:                     atscfg.ProfileID(server.ProfileID),
-		ProfileName:                   server.Profile,
-		Port:                          server.TCPPort,
+		ProfileID:                     atscfg.ProfileID(toData.Server.ProfileID),
+		ProfileName:                   toData.Server.Profile,
+		Port:                          toData.Server.TCPPort,
 		SecondaryParentCacheGroupID:   secondaryParentCGID,
 		SecondaryParentCacheGroupType: secondaryParentCGType,
-		Type:                          server.Type,
-	}
-
-	globalParams, err := toreq.GetGlobalParameters(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
+		Type:                          toData.Server.Type,
 	}
 
 	toReverseProxyURL := ""
 	toURL := ""
-	for _, param := range globalParams {
+	for _, param := range toData.GlobalParams {
 		if param.Name == "tm.rev_proxy.url" {
 			toReverseProxyURL = param.Value
 		} else if param.Name == "tm.url" {
@@ -149,23 +108,13 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 		}
 	}
 
-	scopeParamsRaw, err := toreq.GetParametersByName(cfg, "scope")
-	if err != nil {
-		return "", errors.New("getting scope parameters: " + err.Error())
-	}
-
 	scopeParams := map[string]string{}
-	for _, param := range scopeParamsRaw {
+	for _, param := range toData.ScopeParams {
 		scopeParams[param.ConfigFile] = param.Value
 	}
 
-	serverProfileParameters, err := toreq.GetServerProfileParameters(cfg, server.Profile)
-	if err != nil {
-		return "", errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
-	}
-
 	locationParams := map[string]atscfg.ConfigProfileParams{}
-	for _, param := range serverProfileParameters {
+	for _, param := range toData.ServerParams {
 		if param.Name == "location" {
 			p := locationParams[param.ConfigFile]
 			p.FileNameOnDisk = param.ConfigFile
@@ -178,37 +127,35 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 		}
 	}
 
-	deliveryServices, err := toreq.GetCDNDeliveryServices(cfg, server.CDNID)
-	if err != nil {
-		return "", errors.New("getting delivery services: " + err.Error())
-	}
-
 	dsNames := map[tc.DeliveryServiceName]struct{}{}
-	if tc.CacheTypeFromString(server.Type) != tc.CacheTypeMid {
-		dsIDs := []int{}
-		for _, ds := range deliveryServices {
+	if tc.CacheTypeFromString(toData.Server.Type) != tc.CacheTypeMid {
+		dsIDs := map[int]struct{}{}
+		for _, ds := range toData.DeliveryServices {
 			if ds.ID == nil {
 				// TODO log error?
 				continue
 			}
-			dsIDs = append(dsIDs, *ds.ID)
+			dsIDs[*ds.ID] = struct{}{}
 		}
 
-		serverIDs := []int{server.ID}
+		// TODO verify?
+		//		serverIDs := []int{toData.Server.ID}
 
-		dsServers, err := toreq.GetDeliveryServiceServers(cfg, dsIDs, serverIDs)
-		if err != nil {
-			return "", errors.New("getting meta config delivery service servers: " + err.Error())
-		}
-
-		dssMap := map[int]struct{}{} // set of map[dsID]. We know we only asked for our own server, so we don't care about the servers returned.
-		for _, dss := range dsServers {
-			if dss.DeliveryService == nil {
-				continue // TODO log?
+		dssMap := map[int]struct{}{}
+		for _, dss := range toData.DeliveryServiceServers {
+			if dss.Server == nil || dss.DeliveryService == nil {
+				continue // TODO warn?
+			}
+			if *dss.Server != toData.Server.ID {
+				continue
+			}
+			if _, ok := dsIDs[*dss.DeliveryService]; !ok {
+				continue
 			}
 			dssMap[*dss.DeliveryService] = struct{}{}
 		}
-		for _, ds := range deliveryServices {
+
+		for _, ds := range toData.DeliveryServices {
 			if ds.ID == nil {
 				continue
 			}
@@ -221,14 +168,14 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 			dsNames[tc.DeliveryServiceName(*ds.XMLID)] = struct{}{}
 		}
 	} else {
-		for _, ds := range deliveryServices {
+		for _, ds := range toData.DeliveryServices {
 			if ds.ID == nil {
 				continue
 			}
 			if ds.XMLID == nil {
 				continue // TODO log?
 			}
-			if ds.CDNID == nil || *ds.CDNID != server.CDNID {
+			if ds.CDNID == nil || *ds.CDNID != toData.Server.CDNID {
 				continue
 			}
 			dsNames[tc.DeliveryServiceName(*ds.XMLID)] = struct{}{}
@@ -236,7 +183,7 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 	}
 
 	uriSignedDSes := []tc.DeliveryServiceName{}
-	for _, ds := range deliveryServices {
+	for _, ds := range toData.DeliveryServices {
 		if ds.ID == nil {
 			continue
 		}
@@ -252,5 +199,6 @@ func GetConfigFileMeta(cfg config.TCCfg, serverNameOrID string) (string, error) 
 		uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(*ds.XMLID))
 	}
 
-	return atscfg.MakeMetaConfig(tc.CacheName(serverHostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames), nil
+	metaObj := atscfg.MakeMetaObj(tc.CacheName(toData.Server.HostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames)
+	return &metaObj, nil
 }

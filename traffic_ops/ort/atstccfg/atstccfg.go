@@ -48,13 +48,19 @@ package main
  */
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/cfgfile"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
@@ -81,15 +87,14 @@ func main() {
 	plugins.OnStartup(plugin.StartupData{Cfg: cfg})
 
 	log.Infoln("URL: '" + cfg.TOURL.String() + "' User: '" + cfg.TOUser + "' Pass len: '" + strconv.Itoa(len(cfg.TOPass)) + "'")
-	log.Infoln("TempDir: '" + cfg.TempDir + "'")
 
 	toFQDN := cfg.TOURL.Scheme + "://" + cfg.TOURL.Host
 	log.Infoln("TO FQDN: '" + toFQDN + "'")
 	log.Infoln("TO URL: '" + cfg.TOURL.String() + "'")
 
-	toClient, err := toreq.GetClient(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TempDir, cfg.CacheFileMaxAge, cfg.TOTimeout, cfg.TOInsecure)
+	toClient, toIP, err := toclient.LoginWithAgent(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, config.UserAgent, false, cfg.TOTimeout)
 	if err != nil {
-		log.Errorln("Logging in to Traffic Ops: " + err.Error())
+		log.Errorln("Logging in to Traffic Ops '" + toreq.MaybeIPStr(toIP) + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
@@ -100,17 +105,18 @@ func main() {
 		return
 	}
 
-	cfgFile, code, err := GetConfigFile(tccfg)
-	log.Infof("GetConfigFile returned %v %v\n", code, err)
+	configs, err := GetAllConfigs(tccfg)
 	if err != nil {
-		log.Errorln("Getting config file '" + cfg.TOURL.String() + "': " + err.Error())
-		if code == 0 {
-			code = config.ExitCodeErrGeneric
-		}
-		log.Infof("GetConfigFile exiting with code %v\n", code)
-		os.Exit(code)
+		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
+		os.Exit(config.ExitCodeErrGeneric)
 	}
-	fmt.Println(cfgFile)
+
+	for _, cfgFile := range configs {
+		path := filepath.Join(cfg.OutputDir, cfgFile.FileNameOnDisk)
+		if err := ioutil.WriteFile(path, []byte(cfgFile.Text), 0644); err != nil {
+			log.Errorln("Getting config for'" + path + "': " + err.Error())
+		}
+	}
 	os.Exit(config.ExitCodeSuccess)
 }
 
@@ -121,11 +127,9 @@ func GetGeneratedFilesList() []string {
 			names = append(names, scope+"/"+cfgFile)
 		}
 	}
-
 	names = append(names, "profiles/url_sig_*.config")     // url_sig configs are generated, but not in the funcs because they're not a literal match
 	names = append(names, "profiles/uri_signing_*.config") // uri_signing configs are generated, but not in the funcs because they're not a literal match
 	names = append(names, "profiles/*")                    // unknown profiles configs are generated, a.k.a. "take-and-bake"
-
 	return names
 }
 
@@ -135,4 +139,32 @@ func HTTPCodeToExitCode(httpCode int) int {
 		return config.ExitCodeNotFound
 	}
 	return config.ExitCodeErrGeneric
+}
+
+// GetAllConfigs returns a map[configFileName]configFileText
+func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
+	toData, err := cfgfile.GetTOData(cfg)
+	if err != nil {
+		return nil, errors.New("getting data from traffic ops: " + err.Error())
+	}
+
+	meta, err := cfgfile.GetMeta(toData)
+	if err != nil {
+		return nil, errors.New("creating meta: " + err.Error())
+	}
+
+	configs := []ATSConfigFile{}
+	for _, fi := range meta.ConfigFiles {
+		txt, _, err := GetConfigFile(toData, fi)
+		if err != nil {
+			return nil, errors.New("getting config file '" + fi.APIURI + "': " + err.Error())
+		}
+		configs = append(configs, ATSConfigFile{ATSConfigMetaDataConfigFile: fi, Text: txt})
+	}
+	return configs, nil
+}
+
+type ATSConfigFile struct {
+	tc.ATSConfigMetaDataConfigFile
+	Text string
 }

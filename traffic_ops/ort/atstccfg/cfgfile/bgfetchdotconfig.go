@@ -20,22 +20,10 @@ package cfgfile
  */
 
 import (
-	"errors"
-
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileCDNBGFetchDotConfig(cfg config.TCCfg, cdnNameOrID string) (string, error) {
-	cdnName, err := toreq.GetCDNNameFromCDNNameOrID(cfg, cdnNameOrID)
-	if err != nil {
-		return "", errors.New("getting CDN name from '" + cdnNameOrID + "': " + err.Error())
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-	return atscfg.MakeBGFetchDotConfig(cdnName, toToolName, toURL), nil
+func GetConfigFileCDNBGFetchDotConfig(toData *TOData) (string, error) {
+	return atscfg.MakeBGFetchDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL), nil
 }

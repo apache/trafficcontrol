@@ -24,34 +24,13 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileProfileURLSigConfig(cfg config.TCCfg, profileNameOrID string, fileName string) (string, error) {
-	profileName, err := toreq.GetProfileNameFromProfileNameOrID(cfg, profileNameOrID)
-	if err != nil {
-		return "", errors.New("getting profile name from '" + profileNameOrID + "': " + err.Error())
-	}
-
-	profileParameters, err := toreq.GetProfileParameters(cfg, profileName)
-	if err != nil {
-		return "", errors.New("getting profile '" + profileName + "' parameters: " + err.Error())
-	}
-	if len(profileParameters) == 0 {
-		// The TO endpoint behind toclient.GetParametersByProfileName returns an empty object with a 200, if the Profile doesn't exist.
-		// So we act as though we got a 404 if there are no params (and there should always be storage.config params), to make ORT behave correctly.
-		return "", config.ErrNotFound
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
+func GetConfigFileProfileURLSigConfig(toData *TOData, fileName string) (string, error) {
 	paramData := map[string]string{}
 	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
-	for _, param := range profileParameters {
+	for _, param := range toData.ServerParams {
 		if param.ConfigFile != fileName {
 			continue
 		}
@@ -67,12 +46,12 @@ func GetConfigFileProfileURLSigConfig(cfg config.TCCfg, profileNameOrID string, 
 		return "", errors.New("getting ds name: malformed config file '" + fileName + "'")
 	}
 
-	urlSigKeys, err := toreq.GetURLSigKeys(cfg, dsName)
-	if err != nil {
-		return "", errors.New("getting url sig keys for ds '" + dsName + "': " + err.Error())
+	urlSigKeys, ok := toData.URLSigKeys[tc.DeliveryServiceName(dsName)]
+	if !ok {
+		return "", errors.New("no keys fetched for ds '" + dsName + "!")
 	}
 
-	return atscfg.MakeURLSigConfig(profileName, urlSigKeys, paramData, toToolName, toURL), nil
+	return atscfg.MakeURLSigConfig(toData.Server.Profile, urlSigKeys, paramData, toData.TOToolName, toData.TOURL), nil
 }
 
 // GetDSFromURLSigConfigFileName returns the DS of a URLSig config file name.
