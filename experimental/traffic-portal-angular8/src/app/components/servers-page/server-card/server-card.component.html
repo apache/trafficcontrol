@@ -73,6 +73,9 @@ limitations under the License.
 					<meter id="{{server.id}}-CDU" min="0" max="100" optimum="40" low="60" *ngIf="checks.has('CDU')" [value]="checkValue('CDU')" title="{{checkValue('CDU')/100 | percent}}">{{checkValue('CDU')/100 | percent}}</meter>
 					<fa-icon [icon]="unknownIcon" class="pending" title="Unknown" *ngIf="!checks.has('CDU')"></fa-icon>
 				</div>
+				<div>
+					<label for="{{server.id}}-ORT">Number of configuration file differences</label>
+					<output id="{{server.id}}-ORT" *ngClass="checkClass('ORT')" [value]="checkValue('ORT')" [title]="checkTitle('ORT')"></output>
 			</div>
 		</div>
 	</div>
