@@ -19,7 +19,7 @@ limitations under the License.
 			<span *ngIf="down() && server.offlineReason">&nbsp;({{server.offlineReason}})</span>
 		</span>
 	</summary>
-	<div class="card-content">
+	<div class="card-content" *ngIf="open">
 		<div>
 			<span>CDN:</span><span>{{server.cdnName}}</span>
 			<span>Cache Group:</span><span>{{server.cachegroup}}</span>
