@@ -244,7 +244,7 @@ Response Structure
 
 ``POST``
 ========
-Assign an arbitrary number of delivery services to a single server.
+Assign an arbitrary number of :term:`Delivery Services` to a single server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -268,7 +268,7 @@ Request Structure
 	| replace | Yes      | Must be a 1, true, 0, or false. Although this query parameter is required, it is unused. |
 	+---------+----------+------------------------------------------------------------------------------------------+
 
-The request body is an array of IDs of delivery services that you want to assign to the server. The array can be empty, but it must be provided.
+The request body is an array of IDs of :term:`Delivery Services` that you want to assign to the server. The array can be empty, but it must be provided.
 
 .. code-block:: http
 	:caption: Request Example

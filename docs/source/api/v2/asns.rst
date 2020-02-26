@@ -192,7 +192,7 @@ Request Structure
 	|              |          | not pass this field, the cachegroup will be ``null``. For that reason, we list  |
 	|              |          | it as required.                                                                 |
 	+--------------+----------+---------------------------------------------------------------------------------+
-	| cachegroupId | Yes      | The integral, unique identifier of the status of the cache group.               |
+	| cachegroupId | Yes      | The integral, unique identifier of the status of the :term:`Cache Group`.       |
 	+--------------+----------+---------------------------------------------------------------------------------+
 
 .. code-block:: http
