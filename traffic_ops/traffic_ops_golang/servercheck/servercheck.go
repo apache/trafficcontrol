@@ -29,9 +29,12 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
+
+const ServerCheck_Get_Endpoint = "GET /servercheck"
 
 const serverInfoQuery = `
 SELECT server.host_name AS hostName,
@@ -195,8 +198,8 @@ DO UPDATE SET %[1]s = EXCLUDED.%[1]s`, colName)
 	return nil
 }
 
-// ReadServersChecks is the handler for GET requests for /servers/checks
-func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
+// ReadServerCheck is the handler for GET requests for /servercheck
+func ReadServerCheck(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -205,38 +208,62 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	data, userErr, sysErr, errCode := handleReadServerCheck(inf, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	}
+
+	api.WriteResp(w, r, data)
+}
+
+// DeprecatedReadServersChecks is the handler for deprecated GET requests for /servers/checks
+func DeprecatedReadServersChecks(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, util.StrPtr(ServerCheck_Get_Endpoint))
+		return
+	}
+	defer inf.Close()
+
+	data, userErr, sysErr, errCode := handleReadServerCheck(inf, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, util.StrPtr(ServerCheck_Get_Endpoint))
+	}
+
+	alerts := api.GetDeprecationAlerts(util.StrPtr(ServerCheck_Get_Endpoint))
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, data)
+}
+
+func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerCheck, error, error, int) {
 	extensions := make(map[string]string)
 	extRows, err := tx.Query(extensionsQuery)
 	if err != nil {
-		sysErr = fmt.Errorf("querying for extensions: %v", err)
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-		return
+		sysErr := fmt.Errorf("querying for extensions: %v", err)
+		return nil, nil, sysErr, http.StatusInternalServerError
 	}
 	for extRows.Next() {
 		var shortName string
 		var checkName string
 		if err = extRows.Scan(&shortName, &checkName); err != nil {
-			sysErr = fmt.Errorf("scanning extension: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
+			sysErr := fmt.Errorf("scanning extension: %v", err)
+			return nil, nil, sysErr, http.StatusInternalServerError
 		}
 		extensions[shortName] = checkName
 	}
 
 	colRows, err := inf.Tx.Queryx(serverChecksQuery)
 	if err != nil {
-		sysErr = fmt.Errorf("Querying server checks columns: %v", err)
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-		return
+		sysErr := fmt.Errorf("Querying server checks columns: %v", err)
+		return nil, nil, sysErr, http.StatusInternalServerError
 	}
 
 	columns := make(map[int]tc.ServerCheckColumns)
 	for colRows.Next() {
 		var cols tc.ServerCheckColumns
 		if err = colRows.StructScan(&cols); err != nil {
-			sysErr = fmt.Errorf("scanning server checks columns: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
+			sysErr := fmt.Errorf("scanning server checks columns: %v", err)
+			return nil, nil, sysErr, http.StatusInternalServerError
 		}
 
 		columns[cols.Server] = cols
@@ -244,18 +271,16 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 
 	serverRows, err := tx.Query(serverInfoQuery)
 	if err != nil {
-		sysErr = fmt.Errorf("Querying server info for checks: %v", err)
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-		return
+		sysErr := fmt.Errorf("Querying server info for checks: %v", err)
+		return nil, nil, sysErr, http.StatusInternalServerError
 	}
 
 	data := []tc.GenericServerCheck{}
 	for serverRows.Next() {
 		var serverInfo tc.GenericServerCheck
 		if err = serverRows.Scan(&serverInfo.HostName, &serverInfo.ID, &serverInfo.Profile, &serverInfo.AdminState, &serverInfo.CacheGroup, &serverInfo.Type, &serverInfo.UpdPending, &serverInfo.RevalPending); err != nil {
-			sysErr = fmt.Errorf("scanning server info for checks: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
+			sysErr := fmt.Errorf("scanning server info for checks: %v", err)
+			return nil, nil, sysErr, http.StatusInternalServerError
 		}
 
 		serverCheckCols, ok := columns[serverInfo.ID]
@@ -336,5 +361,5 @@ func ReadServersChecks(w http.ResponseWriter, r *http.Request) {
 		data = append(data, serverInfo)
 	}
 
-	api.WriteResp(w, r, data)
+	return data, nil, nil, http.StatusOK
 }
