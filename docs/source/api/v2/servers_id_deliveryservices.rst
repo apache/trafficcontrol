@@ -262,11 +262,11 @@ Request Structure
 
 .. table:: Request Query Parameters
 
-	+---------+----------+------------------------------------------------------------------------------------------+
-	| Name    | Required | Description                                                                              |
-	+=========+==========+==========================================================================================+
-	| replace | Yes      | Must be a 1, true, 0, or false. Although this query parameter is required, it is unused. |
-	+---------+----------+------------------------------------------------------------------------------------------+
+	+---------+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name    | Required | Description                                                                                                                                                           |
+	+---------+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| replace | Yes      | Whether the list of :term:`Delivery Services` you provide should replace the existing list or be merged with the existing list. Must be a 1, or true, or 0, or false. |
+	+---------+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 The request body is an array of IDs of :term:`Delivery Services` that you want to assign to the server. The array can be empty, but it must be provided.
 
@@ -287,6 +287,9 @@ The request body is an array of IDs of :term:`Delivery Services` that you want t
 
 Response Structure
 ------------------
+:dsIds:		An array of integral, unique identifiers for :term:`Delivery Services` which the request added to server. If ``:replace:`` is ``false``, :term:`Delivery Services` that are already assigned will remain, though they are not listed by ``:dsIds:``.
+:replace:	The ``:replace:`` value you provided in the body of the request, or ``null`` if none was provided.
+:serverId:	The server's integral, unique identifier
 
 .. code-block:: http
 	:caption: Response Example

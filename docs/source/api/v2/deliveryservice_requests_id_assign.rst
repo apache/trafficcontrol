@@ -28,6 +28,9 @@ Assign a :term:`Delivery Service Request` to a user.
 
 Request Structure
 -----------------
+:id:		The integral, unique identifier assigned to the :term:`DSR <Delivery Service Request>`
+:assignee:	The username of the user to whom the :term:`Delivery Service Request` is assigned.
+:assignee:	The username of the user to whom the :term:`Delivery Service Request` is assigned.
 
 .. code-block:: http
 	:caption: Request Example
@@ -47,7 +50,8 @@ Request Structure
 
 Response Structure
 ------------------
-:author:            The author of the Delivery Service Request
+:assignee:          The username of the user to whom the :term:`Delivery Service Request` is assigned.
+:author:            The author of the :term:`Delivery Service Request`
 :authorId:          The integral, unique identifier assigned to the author
 :changeType:        The change type of the :term:`DSR <Delivery Service Request>`. It can be ``create``, ``update``, or ``delete``....
 :createdAt:         The date and time at which the :term:`DSR <Delivery Service Request>` was created, in ISO format.
@@ -56,6 +60,7 @@ Response Structure
 :lastEditedBy:      The username of user who last edited this :term:`DSR <Delivery Service Request>`
 :lastEditedById:    The integral, unique identifier assigned to the user who last edited this :term:`DSR <Delivery Service Request>`
 :lastUpdated:       The date and time at which the :term:`DSR <Delivery Service Request>` was last updated, in ISO format.
+:status:            The status of the request. Can be "draft", "submitted", "rejected", "pending", or "complete".
 
 .. code-block:: http
 	:caption: Response Example

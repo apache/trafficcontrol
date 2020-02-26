@@ -41,6 +41,7 @@ No parameters available.
 
 Response Structure
 ------------------
+:ping:		Hard-coded to be ``"pong"``.
 
 .. code-block:: http
 	:caption: Response Example

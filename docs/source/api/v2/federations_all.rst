@@ -43,6 +43,10 @@ No parameters available.
 
 Response Structure
 ------------------
+:deliveryService:	The :ref:`ds-xmlid` of the delivery service.
+:mappings:		An array of objects that represent the mapping of a :term:`Federation`'s :abbr:`CNAME (Canonical Name)` to one or more Resolvers
+	:cname:		The actual CNAME used by the :term:`Federation`
+	:ttl:		The :abbr:`TTL (Time To Live)` of the CNAME in hours
 
 .. code-block:: http
 	:caption: Response Example

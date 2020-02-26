@@ -44,6 +44,14 @@ No parameters available.
 
 Response Structure
 ------------------
+:commitHash:	The `Git <https://git-scm.com/>` commit hash that Traffic Ops was built at.
+:commits:	The number of commits in the branch of the commit that Traffic Ops was built at, including that commit. Calculated by running ``git rev-list HEAD | wc -l``.
+:goVersion:	The version of `Go <https://golang.org/>`_ that was used to build Traffic Ops.
+:release:	The major version of CentOS or Red Hat Enterprise Linux that the build environment was running.
+:name:		The human-readable name of the `RPM <https://rpm-packaging-guide.github.io/#packaging-software>`_ file.
+:RPMVersion:	The entire name of the RPM file, excluding the file extension.
+:Version:	The version of :abbr:`ATC (Apache Traffic Control)` that this version of Traffic Control belongs to.
+
 .. code-block:: http
 	:caption: Response Example
 
