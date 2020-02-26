@@ -64,7 +64,7 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 	};
 
 	var getServerCount = function() {
-		serverService.getServers()
+		serverService.getServers({type: "EDGE"})
 			.then(function(result) {
 				serverCount.set("ONLINE", 0);
 				serverCount.set("OFFLINE", 0);
@@ -72,8 +72,8 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 				serverCount.set("ADMIN_DOWN", 0);
 				for (let s in result) {
 					const server = result[s]; // webpack won't handle a for...of loop
-					if (serverCount.has(s.status)) {
-						serverCount.set(s.status, serverCount.get(s.status) + 1);
+					if (serverCount.has(server.status)) {
+						serverCount.set(server.status, serverCount.get(server.status) + 1);
 					}
 				}
 			});
