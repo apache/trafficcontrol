@@ -19,7 +19,7 @@
 
 var TableCapabilityEndpointsController = function(capability, capEndpoints, $scope, $state, locationUtils) {
 
-	$scope.capability = capability;
+	$scope.capability = capability[0];
 
 	$scope.capEndpoints = capEndpoints;
 

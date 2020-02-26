@@ -144,7 +144,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getDeliveryServiceTarget = function(dsId, targetId) {
-        return $http.get(ENV.api['root'] + 'steering/' + dsId + '/targets/' + targetId).then(
+        return $http.get(ENV.api['root'] + 'steering/' + dsId + '/targets', {params: {target: targetId}}).then(
             function(result) {
                 return result.data.response[0];
             },
