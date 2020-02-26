@@ -125,14 +125,23 @@ func TestInterfaces(t *testing.T) {
 }
 
 func createDummyType(field string) *TOType {
+	version := api.Version{
+		Major: 2,
+		Minor: 0,
+	}
+	apiInfo := api.APIInfo{
+		Version:  &version,
+	}
 	return &TOType{
 		TypeNullable: tc.TypeNullable{
 			Name: &field,
 			Description: &field,
 			UseInTable: &field,
 		},
+		APIInfoImpl: api.APIInfoImpl{
+			ReqInfo: &apiInfo,
+		},
 	}
-
 }
 
 func TestUpdateInvalidType(t *testing.T) {

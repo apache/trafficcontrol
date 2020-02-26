@@ -100,7 +100,7 @@ func (typ *TOType) Validate() error {
 func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
 
 func (tp *TOType) Update() (error, error, int) {
-	if !usedInServerTable(tp.UseInTable) {
+	if !tp.AllowMutation() {
 		return nil, errors.New("can not update type"), http.StatusBadRequest
 	}
 	return api.GenericUpdate(tp)
@@ -108,30 +108,32 @@ func (tp *TOType) Update() (error, error, int) {
 
 func (tp *TOType) Delete() (error, error, int) {
 	if tp.UseInTable == nil {
-		var tableType *string
 		if tp.ID != nil {
 			query := `SELECT use_in_table from type where id=$1`
 			err := tp.ReqInfo.Tx.Tx.QueryRow( query, tp.ID).Scan(&tp.UseInTable)
-			if err == nil {
-				tableType = tp.UseInTable
+			if err != nil {
+				tp.UseInTable = nil
 			}
 		}
-		if !usedInServerTable(tableType) {
-			return nil, errors.New(fmt.Sprintf("can not delete type")), http.StatusBadRequest
-		}
+	}
+	if !tp.AllowMutation() {
+		return nil, errors.New(fmt.Sprintf("can not delete type")), http.StatusBadRequest
 	}
 	return api.GenericDelete(tp)
 }
 
 func (tp *TOType) Create() (error, error, int)              {
-	if !usedInServerTable(tp.UseInTable) {
+	if !tp.AllowMutation() {
 		return nil, errors.New("can not create type"), http.StatusBadRequest
 	}
 	return api.GenericCreate(tp)
 }
 
-func usedInServerTable(useInTable *string) bool {
-	if useInTable == nil || *useInTable != "server" {
+func (tp *TOType) AllowMutation() bool {
+	apiInfo := tp.APIInfo()
+	if apiInfo.Version.Major < 2 {
+		return true
+	} else if tp.UseInTable == nil || *tp.UseInTable != "server" {
 		return false
 	}
 	return true
