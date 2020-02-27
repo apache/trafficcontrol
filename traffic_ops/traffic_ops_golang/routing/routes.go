@@ -163,9 +163,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `caches/stats/?$`, cachesstats.Get, auth.PrivLevelReadOnly, Authenticated, nil, 2813206588, noPerlBypass},
 
 		//CacheGroup: CRUD
-		{api.Version{2, 0}, http.MethodGet, `cachegroups/trimmed/?$`, cachegroup.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil, 229527916, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `cachegroups/?$`, api.ReadHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelReadOnly, Authenticated, nil, 223079110, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `cachegroups/{id}$`, api.ReadHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelReadOnly, Authenticated, nil, 291886338, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `cachegroups/{id}$`, api.UpdateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 212954546, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `cachegroups/?$`, api.CreateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 22982665, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `cachegroups/{id}$`, api.DeleteHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 227869365, noPerlBypass},
@@ -196,7 +194,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `cdns/routing$`, crstats.GetCDNRouting, auth.PrivLevelReadOnly, Authenticated, nil, 26722982, noPerlBypass},
 
 		//CDN: CRUD
-		{api.Version{2, 0}, http.MethodGet, `cdns/name/{name}/?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 2235233288, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `cdns/name/{name}$`, cdn.DeleteName, auth.PrivLevelOperations, Authenticated, nil, 208804959, noPerlBypass},
 
 		//CDN: queue updates
@@ -242,6 +239,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//ISO
 		{api.Version{2, 0}, http.MethodGet, `osversions/?$`, iso.GetOSVersions, auth.PrivLevelReadOnly, Authenticated, nil, 276088657, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPost, `isos/?$`, iso.ISOs, auth.PrivLevelOperations, Authenticated, nil, 276033657, noPerlBypass},
 
 		//User: CRUD
 		{api.Version{2, 0}, http.MethodGet, `users/?$`, api.ReadHandler(&user.TOUser{}), auth.PrivLevelReadOnly, Authenticated, nil, 2491929900, noPerlBypass},
@@ -370,7 +368,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//CDN generic handlers:
 		{api.Version{2, 0}, http.MethodGet, `cdns/?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 2230318621, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `cdns/{id}$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 232290057, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 2311178934, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `cdns/?$`, api.CreateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 2160505289, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 227694657, noPerlBypass},
@@ -404,7 +401,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// Federations by CDN (the actual table for federation)
 		{api.Version{2, 0}, http.MethodGet, `cdns/{name}/federations/?$`, api.ReadHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelReadOnly, Authenticated, nil, 289225032, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `cdns/{name}/federations/{id}$`, api.ReadHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelReadOnly, Authenticated, nil, 22850599, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `cdns/{name}/federations/?$`, api.CreateHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelAdmin, Authenticated, nil, 2954894219, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `cdns/{name}/federations/{id}$`, api.UpdateHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelAdmin, Authenticated, nil, 226065466, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `cdns/{name}/federations/{id}$`, api.DeleteHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelAdmin, Authenticated, nil, 2442852902, noPerlBypass},
@@ -559,7 +555,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CacheGroup: CRUD
 		{api.Version{1, 1}, http.MethodGet, `cachegroups/trimmed/?(\.json)?$`, cachegroup.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil, 329527916, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `cachegroups/?(\.json)?$`, api.ReadHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelReadOnly, Authenticated, nil, 123079110, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `cachegroups/{id}$`, api.ReadHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelReadOnly, Authenticated, nil, 691886338, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cachegroups/{id}$`, api.DeprecatedReadHandler(&cachegroup.TOCacheGroup{}, util.StrPtr("GET /cachegroups with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 691886338, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `cachegroups/{id}$`, api.UpdateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 112954546, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `cachegroups/?$`, api.CreateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 32982665, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `cachegroups/{id}$`, api.DeleteHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 257869365, noPerlBypass},
@@ -592,13 +588,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `cdns/routing$`, crstats.GetCDNRouting, auth.PrivLevelReadOnly, Authenticated, nil, 66722982, perlBypass},
 
 		//CDN: CRUD
+		{api.Version{1, 1}, http.MethodGet, `cdns/name/{name}/?(\.json)?$`, api.DeprecatedReadHandler(&cdn.TOCDN{}, util.StrPtr("GET /cdns with query parameter name")), auth.PrivLevelReadOnly, Authenticated, nil, 2135233288, noPerlBypass},
+		{api.Version{1, 1}, http.MethodDelete, `cdns/name/{name}$`, cdn.DeleteName, auth.PrivLevelOperations, Authenticated, nil, 408804959, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `cdns/?(\.json)?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 1345914650, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `cdns/{id}$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 2122954075, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `cdns/name/{name}/?(\.json)?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 2135233288, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cdns/{id}$`, api.DeprecatedReadHandler(&cdn.TOCDN{}, util.StrPtr("GET /cdns with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 2122954075, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 549326357, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `cdns/?$`, api.CreateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 24013912, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 1595587002, noPerlBypass},
-		{api.Version{1, 1}, http.MethodDelete, `cdns/name/{name}$`, cdn.DeleteName, auth.PrivLevelOperations, Authenticated, nil, 408804959, noPerlBypass},
 
 		//CDN: queue updates
 		{api.Version{1, 1}, http.MethodPost, `cdns/{id}/queue_update$`, cdn.Queue, auth.PrivLevelOperations, Authenticated, nil, 271515980, noPerlBypass},
@@ -789,13 +785,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 3}, http.MethodPost, `asns/?$`, api.CreateHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil, 859114392, noPerlBypass},
 		{api.Version{1, 3}, http.MethodDelete, `asns/?$`, api.DeleteHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil, 680204898, noPerlBypass},
 
-		//CDN generic handlers:
-		{api.Version{1, 3}, http.MethodGet, `cdns/?(\.json)?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 1230318621, noPerlBypass},
-		{api.Version{1, 3}, http.MethodGet, `cdns/{id}$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 632290057, noPerlBypass},
-		{api.Version{1, 3}, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 1311178934, noPerlBypass},
-		{api.Version{1, 3}, http.MethodPost, `cdns/?$`, api.CreateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 1160505289, noPerlBypass},
-		{api.Version{1, 3}, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 2007694657, noPerlBypass},
-
 		//Delivery service requests
 		{api.Version{1, 3}, http.MethodGet, `deliveryservice_requests/?(\.json)?$`, api.ReadHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelReadOnly, Authenticated, nil, 1681163935, noPerlBypass},
 		{api.Version{1, 3}, http.MethodGet, `deliveryservice_requests/?$`, api.ReadHandler(&dsrequest.TODeliveryServiceRequest{}), auth.PrivLevelReadOnly, Authenticated, nil, 286812311, noPerlBypass},
@@ -826,7 +815,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// Federations by CDN (the actual table for federation)
 		{api.Version{1, 1}, http.MethodGet, `cdns/{name}/federations/?(\.json)?$`, api.ReadHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelReadOnly, Authenticated, nil, 989225032, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `cdns/{name}/federations/{id}$`, api.ReadHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelReadOnly, Authenticated, nil, 21850599, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cdns/{name}/federations/{id}$`, api.DeprecatedReadHandler(&cdnfederation.TOCDNFederation{}, util.StrPtr("GET /cdns/{name}/federations with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 21850599, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `cdns/{name}/federations/?(\.json)?$`, api.CreateHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelAdmin, Authenticated, nil, 1954894219, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `cdns/{name}/federations/{id}$`, api.UpdateHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelAdmin, Authenticated, nil, 2106065466, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `cdns/{name}/federations/{id}$`, api.DeleteHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelAdmin, Authenticated, nil, 1442852902, noPerlBypass},
