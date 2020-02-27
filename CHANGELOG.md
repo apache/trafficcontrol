@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops Python client no longer supports Python 2.
 - Traffic Ops API Endpoints
   - /api_capabilities/:id
+  - /cachegroups/:id (GET)
   - /cachegroup/:parameterID/parameter
   - /cachegroups/:parameterID/parameter/available
   - /cachegroups/trimmed
