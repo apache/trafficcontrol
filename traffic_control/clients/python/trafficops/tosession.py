@@ -308,8 +308,8 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'asns/{asn_id:d}', ('2.0',))
-	def get_asn_by_id(self, asn_id=None):
+	@api_request('get', 'asns', ('2.0',))
+	def get_asn_by_id(self, asn_id=None, query_params=None):
 		"""
 		Get ASN by ID
 		:ref:`to-api-asns-id`
@@ -319,7 +319,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'asns/{asn_id:d}', ('2.0',))
+	@api_request('put', 'asns', ('2.0',))
 	def update_asn(self, asn_id=None, query_params=None):
 		"""
 		Update ASN
@@ -330,8 +330,8 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'asns/{asn_id:d}', ('2.0',))
-	def delete_asn(self, asn_id=None):
+	@api_request('delete', 'asns', ('2.0',))
+	def delete_asn(self, asn_id=None, query_params=None):
 		"""
 		Delete ASN
 		:to-api-asns-id:
