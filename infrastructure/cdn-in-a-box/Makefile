@@ -48,13 +48,17 @@ TP_SOURCE := $(wildcard ../../traffic_portal/**/*)
 TR_SOURCE := $(wildcard ../../traffic_router/**/*)
 TS_SOURCE := $(wildcard ../../traffic_stats/**/*)
 
-.PHONY: clean very-clean all nearly-all
+.PHONY: clean very-clean all nearly-all debug
 
 # Default target; builds all pre-requisite rpms from source trees
 all: traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_ops/traffic_ops.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm traffic_stats/traffic_stats.rpm
 
 debug: PKG_FLAGS += -d
+ifneq ($(MAKECMDGOALS), debug)
+debug: $(MAKECMDGOALS)
+else
 debug: all
+endif
 
 # Actual output rpm recipies
 traffic_monitor/traffic_monitor.rpm: ../../dist/traffic_monitor-$(SPECIAL_SAUCE)
