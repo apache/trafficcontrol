@@ -16,7 +16,11 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.Inet4Address;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

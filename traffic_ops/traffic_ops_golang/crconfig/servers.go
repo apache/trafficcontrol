@@ -162,6 +162,8 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		}
 		if !ip6IsService {
 			s.Ip6 = util.StrPtr("")
+		} else {
+			s.Ip6 = &ip6.String // Don't check valid, assign empty string if null
 		}
 
 		s.LocationId = s.CacheGroup
@@ -172,8 +174,6 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 			i := int(port.Int64)
 			s.Port = &i
 		}
-
-		s.Ip6 = &ip6.String // Don't check valid, assign empty string if null
 
 		if hashId.String != "" {
 			s.HashId = &hashId.String

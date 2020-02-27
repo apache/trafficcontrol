@@ -376,7 +376,7 @@ func (s *TOServer) Update() (error, error, int) {
 	}
 
 	current := TOServer{}
-	err := s.ReqInfo.Tx.QueryRowx(selectV20UpdatesQuery() + ` WHERE sv.id=` + strconv.Itoa(*s.ID)).StructScan(&current)
+	err := s.ReqInfo.Tx.QueryRowx(selectV20UpdatesQuery()+` WHERE sv.id=$1`, strconv.Itoa(*s.ID)).StructScan(&current)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
