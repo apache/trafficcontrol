@@ -486,33 +486,13 @@ class TOSession(RestApiSession):
 	# CDN
 	#
 	@api_request('get', 'cdns', ('2.0',))
-	def get_cdns(self):
+	def get_cdns(self, query_params=None):
 		"""
 		Get all CDNs.
 		:ref:`to-api-cdns`
+		:param query_params: See API page for more information on accepted parameters
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'cdns/{cdn_id:d}', ('2.0',))
-	def get_cdn_by_id(self, cdn_id=None):
-		"""
-		Get a CDN by Id.
-		:ref:`to-api-cdns-id`
-		:param cdn_id: The CDN id
-		:type cdn_id: str
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'cdns/name/{cdn_name}', ('2.0',))
-	def get_cdn_by_name(self, cdn_name=None):
-		"""
-		Get a CDN by name.
-		:ref:`to-api-cdns-name-name`
-		:param cdn_name: The CDN name
-		:type cdn_name: str
-		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
