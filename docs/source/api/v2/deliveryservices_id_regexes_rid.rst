@@ -19,69 +19,6 @@
 ``deliveryservices/{{ID}}/regexes/{{rID}}``
 *******************************************
 
-``GET``
-=======
-Retrieves a specific routing regular expression for a specific :term:`Delivery Service`.
-
-:Auth. Required: Yes
-:Roles Required: None\ [#tenancy]_
-:Response Type:  Array
-
-Request Structure
------------------
-.. table:: Request Path Parameters
-
-	+------+-----------------------------------------------------------------------------------+
-	| Name |                Description                                                        |
-	+======+===================================================================================+
-	| ID   | The integral, unique identifier of the :term:`Delivery Service` being inspected   |
-	+------+-----------------------------------------------------------------------------------+
-	| rID  | The integral, unique identifier of the routing regular expression being inspected |
-	+------+-----------------------------------------------------------------------------------+
-
-.. code-block:: http
-	:caption: Request Example
-
-	GET /api/2.0/deliveryservices/1/regexes/1 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
-	Accept: */*
-	Cookie: mojolicious=...
-
-Response Structure
-------------------
-:id:        The integral, unique identifier of this regular expression
-:pattern:   The actual regular expression - ``\``\ s are escaped
-:setNumber: The order in which the regular expression is evaluated against requests
-:type:      The integral, unique identifier of the type of this regular expression
-:typeName:  The type of regular expression - determines that against which it will be evaluated
-
-.. code-block:: http
-	:caption: Response Example
-
-	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
-	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: fW9Fde4WRpp2ShRAC41P9s/PhU71LI/SEzHgYjGqfzhk45wq0kpaWy76JvPfLpowY8eDTp8Y8TL5rNGEc+bM+A==
-	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 27 Nov 2018 21:08:34 GMT
-	Content-Length: 100
-
-	{ "response": [
-		{
-			"id": 1,
-			"type": 31,
-			"typeName": "HOST_REGEXP",
-			"setNumber": 0,
-			"pattern": ".*\\.demo1\\..*"
-		}
-	]}
-
-
 ``PUT``
 =======
 Updates a routing regular expression.

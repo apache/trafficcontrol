@@ -961,25 +961,14 @@ class TOSession(RestApiSession):
 		"""
 
 	@api_request('get', 'deliveryservices/{delivery_service_id:d}/regexes', ('2.0',))
-	def get_deliveryservice_regexes_by_id(self, delivery_service_id=None):
+	def get_deliveryservice_regexes_by_id(self, delivery_service_id=None, query_params=None):
 		"""
 		Get RegExes for a Delivery Service by Id.
 		:ref:`to-api-deliveryservices-id-regexes`
 		:param delivery_service_id: The delivery service Id
 		:type delivery_service_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', ('2.0',))
-	def get_deliveryservice_regexes_by_regex_id(self, delivery_service_id=None, regex_id=None):
-		"""
-		Retrieves a regex for a specific delivery service.
-		:ref:`to-api-deliveryservices-id-regexes-rid`
-		:param delivery_service_id: The delivery service Id
-		:type delivery_service_id: int
-		:param regex_id: The delivery service regex id
-		:type regex_id: int
+		:param query_params: The url query parameters for the call
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
