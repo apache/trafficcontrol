@@ -30,7 +30,7 @@ import (
 )
 
 func Riak(w http.ResponseWriter, r *http.Request) {
-	alerts := tc.CreateAlerts(tc.WarnLevel, fmt.Sprintf("This endpoint is deprecated, please use GET /vault/ping instead"))
+	alerts := tc.CreateAlerts(tc.WarnLevel, fmt.Sprintf("This endpoint is deprecated, please use GET /api/2.0/vault/ping instead"))
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 
 	if userErr != nil || sysErr != nil {
