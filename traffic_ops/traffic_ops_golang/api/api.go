@@ -386,15 +386,6 @@ type APIInfo struct {
 	Config    *config.Config
 }
 
-// DeprecationWarning creates a deprecation warning with the proposed
-// alternative.
-func DeprecationWarning(alternative string) tc.Alert {
-	return tc.Alert{
-		Level: tc.WarnLevel.String(),
-		Text:  fmt.Sprintf("This request method of this endpoint is deprecated. You are advised to switch to '%s' at your earliest convenience", alternative),
-	}
-}
-
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
 //
 // It is encouraged to call APIInfo.Tx.Tx.Commit() manually when all queries are finished, to release database resources early, and also to return an error to the user if the commit failed.

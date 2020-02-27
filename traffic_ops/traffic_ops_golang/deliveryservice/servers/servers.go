@@ -510,6 +510,7 @@ func GetReadUnassigned(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRead(w http.ResponseWriter, r *http.Request, unassigned bool) {
+	alerts := api.CreateDeprecationAlert(nil)
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -519,10 +520,11 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool) {
 
 	servers, err := read(inf.Tx, inf.IntParams["id"], inf.User, unassigned)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		alerts.AddNewAlert(tc.ErrorLevel, err.Error())
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
-	api.WriteResp(w, r, servers)
+	api.WriteAlertsObj(w, r, 200, alerts, servers)
 }
 
 func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServer, error) {
