@@ -859,18 +859,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}/unassigned_servers', ('2.0',))
-	def get_deliveryservice_unassigned_servers(self, delivery_service_id=None):
-		"""
-		Retrieves properties of CDN EDGE or ORG servers not assigned to a delivery service.
-		(Currently call does not work)
-		:ref:`to-api-deliveryservices-id-unassigned_servers`
-		:param delivery_service_id: The delivery service Id
-		:type delivery_service_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'deliveryservices/{delivery_service_id:d}/servers/eligible', ('2.0',))
 	def get_deliveryservice_ineligible_servers(self, delivery_service_id=None):
 		"""
