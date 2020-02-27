@@ -212,7 +212,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Division: CRUD
 		{api.Version{2, 0}, http.MethodGet, `divisions/?$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 2085181534, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `divisions/{id}$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 2241497902, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `divisions/{id}$`, api.UpdateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 206369140, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `divisions/?$`, api.CreateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 253713800, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 2325382237, noPerlBypass},
@@ -615,7 +614,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Division: CRUD
 		{api.Version{1, 1}, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 1085181534, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `divisions/{id}$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 1241497902, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `divisions/{id}$`, api.DeprecatedReadHandler(&division.TODivision{}, util.StrPtr("GET /divisions with the 'id' parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 1241497902, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `divisions/{id}$`, api.UpdateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 306369140, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `divisions/?$`, api.CreateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 553713800, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 1325382237, noPerlBypass},
