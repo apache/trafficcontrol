@@ -915,3 +915,13 @@ func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 	}
 	return nil, nil
 }
+
+// CreateDeprecationAlerts creates a deprecation notice with an optional alternative route suggestion.
+func CreateDeprecationAlerts(alternative *string) tc.Alerts {
+	if alternative != nil {
+		return tc.CreateAlerts(tc.WarnLevel, fmt.Sprintf("This endpoint is deprecated, please use %s instead", *alternative))
+	} else {
+		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
+	}
+}
+
