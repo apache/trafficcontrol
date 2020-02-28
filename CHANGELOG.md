@@ -54,6 +54,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /deliveryservices/{dsid}/regexes/{regexid} (GET)
   - /deliveryservices/:id/state
   - /divisions/:division_name/regions
+  - /divisions/:id
   - /divisions/name/:name
   - /hwinfo/dtdata
   - /jobs/:id
