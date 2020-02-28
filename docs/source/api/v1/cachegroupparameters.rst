@@ -87,7 +87,7 @@ Response Structure
 
 ``POST``
 ========
-Assign :term:`Parameter`\ (s) to :term:`Cache Group`\ (s). :term:`Parameters` already assigned to one or more :term:`Profiles` cannot be assigned to :term:`Cache Groups`.
+Assign :term:`Parameter`\ (s) to :term:`Cache Group`\ (s).
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"

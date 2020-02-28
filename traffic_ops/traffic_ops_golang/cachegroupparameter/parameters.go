@@ -288,13 +288,13 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, p := range params {
-		ppExists, err := dbhelpers.ProfileParameterExistsByParameterID(*p.Parameter, inf.Tx.Tx)
+		ppExists, err := dbhelpers.CachegroupParameterExistsByParameterID(*p.Parameter, *p.CacheGroup, inf.Tx.Tx)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}
 		if ppExists {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parameter: "+strconv.Itoa(*p.Parameter)+" already associated with one or more profiles."), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parameter: "+strconv.Itoa(*p.Parameter)+" already associated with cachegroup: "+strconv.Itoa(*p.CacheGroup)+"."), nil)
 			return
 		}
 	}
