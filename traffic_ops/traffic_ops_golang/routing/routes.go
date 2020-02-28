@@ -218,7 +218,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 2325382237, noPerlBypass},
 
 		{api.Version{2, 0}, http.MethodGet, `logs/?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil, 248340550, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `logs/{days}/days/?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil, 2192414145, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `logs/newcount/?$`, logs.GetNewCount, auth.PrivLevelReadOnly, Authenticated, nil, 2405833012, noPerlBypass},
 
 		//Content invalidation jobs
@@ -620,7 +619,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `divisions/name/{name}/?(\.json)?$`, api.DeprecatedReadHandler(&division.TODivision{}, util.StrPtr("GET /divisions with the 'name' parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 1211408769, noPerlBypass},
 
 		{api.Version{1, 1}, http.MethodGet, `logs/?(\.json)?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil, 848340550, perlBypass},
-		{api.Version{1, 1}, http.MethodGet, `logs/{days}/days/?(\.json)?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil, 1192414145, perlBypass},
+		{api.Version{1, 1}, http.MethodGet, `logs/{days}/days/?(\.json)?$`, logs.GetDeprecated, auth.PrivLevelReadOnly, Authenticated, nil, 1192414145, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `logs/newcount/?(\.json)?$`, logs.GetNewCount, auth.PrivLevelReadOnly, Authenticated, nil, 1405833012, perlBypass},
 
 		//HWInfo
