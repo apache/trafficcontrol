@@ -406,20 +406,41 @@ under the License.
                                     <li>Do not cache (ranges requested from files that are already cached due to a non range request can still be served)</li>
                                     <li>Use the <a href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/background_fetch.en.html" target="_blank"><code>background_fetch</code> plugin.</a></li>
                                     <li>Use the <code>cache_range_requests</code> plugin.</li>
+                                    <li>Use the <a href="https://docs.trafficserver.apache.org/en/9.0.x/admin-guide/plugins/slice.en.html" target="_blank"><code>slice</code> plugin.</a></li>
                                 </ul>
                             </div>
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="rangeRequestHandling" name="rangeRequestHandling" class="form-control" ng-model="deliveryService.rangeRequestHandling" required>
+                            <select id="rangeRequestHandling" name="rangeRequestHandling" class="form-control" ng-model="deliveryService.rangeRequestHandling" ng-change="rangeRequestSelected()" required>
                                 <option ng-value="0">Don't cache Range Requests</option>
                                 <option ng-value="1">Use the background_fetch plugin</option>
                                 <option ng-value="2">Use the cache_range_requests plugin</option>
+                                <option ng-value="3">Use the slice plugin</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.rangeRequestHandling, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.rangeRequestHandling != dsCurrent.rangeRequestHandling">
                                 <h3>Current Value</h3>
                                 <pre>{{magicNumberLabel(rrhs, dsCurrent.rangeRequestHandling)}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.slicePluginBlockSize), 'has-feedback': hasError(cacheConfig.slicePluginBlockSize)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="slicePluginBlockSize">Slice Plugin Block Size<div class="helptooltip">
+                            <div class="helptext">
+                                The block size in bytes that is used for the slice plugin for range requests. Must be between <code>262144</code> - <code>33554432</code>.
+                                Can only be set if the Range Request Handling is set to <code>Use the slice plugin</code>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="slicePluginBlockSize" name="slicePluginBlockSize" type="number" class="form-control" ng-model="deliveryService.slicePluginBlockSize" min="262144" max="33554432" ng-readonly="dsCurrent.rangeRequestHandling != 3">
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.slicePluginBlockSize, 'min')">Too Small (must be greater than or equal to 262144)</small>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.slicePluginBlockSize, 'max')">Too Large (must be smaller than or equal to 33554432)</small>
+                            <small class="input-error" ng-show="dsCurrent.rangeRequestHandling == 3 && dsCurrent.slicePluginBlockSize == null && !(hasPropertyError(cacheConfig.slicePluginBlockSize, 'min') || hasPropertyError(cacheConfig.slicePluginBlockSize, 'max'))">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.slicePluginBlockSize != dsCurrent.slicePluginBlockSize">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.slicePluginBlockSize}}</pre>
                             </aside>
                         </div>
                     </div>

@@ -287,7 +287,8 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.TRResponseHeaders,
 		&ds.TypeID,
 		&ds.XMLID,
-		&ds.EcsEnabled)
+		&ds.EcsEnabled,
+		&ds.SlicePluginBlockSize)
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -734,6 +735,7 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.ConsistentHashRegex,
 		&ds.MaxOriginConnections,
 		&ds.EcsEnabled,
+		&ds.SlicePluginBlockSize,
 		&ds.ID)
 
 	if err != nil {
@@ -1112,6 +1114,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.RemapText,
 			&ds.RoutingName,
 			&ds.SigningAlgorithm,
+			&ds.SlicePluginBlockSize,
 			&ds.SSLKeyVersion,
 			&ds.TenantID,
 			&ds.Tenant,
@@ -1631,6 +1634,7 @@ ds.regional_geo_blocking,
 ds.remap_text,
 ds.routing_name,
 ds.signing_algorithm,
+ds.slice_plugin_block_size,
 ds.ssl_key_version,
 ds.tenant_id,
 tenant.name,
@@ -1704,8 +1708,9 @@ xml_id=$49,
 anonymous_blocking_enabled=$50,
 consistent_hash_regex=$51,
 max_origin_connections=$52,
-ecs_enabled=$53
-WHERE id=$54
+ecs_enabled=$53,
+slice_plugin_block_size=$54
+WHERE id=$55
 RETURNING last_updated
 `
 }
@@ -1765,9 +1770,10 @@ tr_request_headers,
 tr_response_headers,
 type,
 xml_id,
-ecs_enabled
+ecs_enabled,
+slice_plugin_block_size
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54)
 RETURNING id, last_updated
 `
 }

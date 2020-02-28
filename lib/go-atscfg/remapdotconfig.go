@@ -58,6 +58,7 @@ type RemapConfigDSData struct {
 	ProfileID                *int
 	Protocol                 *int
 	AnonymousBlockingEnabled *bool
+	SlicePluginBlockSize     *int
 	Active                   bool
 }
 
@@ -139,7 +140,7 @@ func GetServerConfigRemapDotConfigForMid(
 				midRemap += ` @pparam=--` + name + "=" + val
 			}
 		}
-		if ds.RangeRequestHandling != nil && *ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest {
+		if ds.RangeRequestHandling != nil && (*ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest || *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice) {
 			midRemap += ` @plugin=cache_range_requests.so`
 		}
 
@@ -287,6 +288,8 @@ func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int,
 			text += ` @plugin=background_fetch.so @pparam=bg_fetch.config`
 		} else if *ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest {
 			text += ` @plugin=cache_range_requests.so `
+		} else if *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && ds.SlicePluginBlockSize != nil {
+			text += ` @plugin=slice.so @pparam=--blockbytes=` + strconv.Itoa(*ds.SlicePluginBlockSize) + ` @plugin=cache_range_requests.so	`
 		}
 	}
 	if ds.RemapText != nil && *ds.RemapText != "" {

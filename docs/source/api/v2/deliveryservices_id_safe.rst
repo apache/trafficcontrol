@@ -126,6 +126,7 @@ Response Structure
 :remapText:            :ref:`ds-raw-remap`
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
+:slicePluginBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
 :sslKeyVersion:        This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 :trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
@@ -231,7 +232,8 @@ Response Structure
 				"zyx"
 			],
 			"maxOriginConnections": 0,
-			"ecsEnabled": false
+			"ecsEnabled": false,
+			"slicePluginBlockSize": null
 		}
 	]}
 

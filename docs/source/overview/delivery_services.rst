@@ -614,6 +614,10 @@ Describes how HTTP "Range Requests" should be handled by the Delivery Service at
 	Use the `background_fetch <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/background_fetch.en.html>`_ plugin to service the range request while caching the whole object. (Aliased as "1 - Use background_fetch plugin" in Traffic Portal forms)
 2
 	Use the `cache_range_requests <https://github.com/apache/trafficserver/tree/7.1.x/plugins/experimental/cache_range_requests>`_ plugin to cache ranges as unique objects. (Aliased as "2 - Use cache_range_requests plugin" in Traffic Portal forms)
+3
+	Use the `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin to slice range based requests into deterministic chunks. (Aliased as "3 - Use slice plugin" in Traffic Portal forms)
+
+		.. versionadded:: ATCv4.1
 
 .. note:: Range Request Handling can only be implemented on :term:`cache servers` using :abbr:`ATS (Apache Traffic Server)` because of its dependence on :abbr:`ATS (Apache Traffic Server)` plugins. The value may be set on any Delivery Service, but will have no effect when the :term:`cache servers` that ultimately end up serving the content are e.g. Grove, Nginx, etc.
 
@@ -720,6 +724,14 @@ uri_signing
 Keys for either algorithm can be generated within :ref:`Traffic Portal <tp-services-delivery-service>`.
 
 .. _ds-ssl-key-version:
+
+Slice Range Request Plugin Block Size
+-------------------------------------
+The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
+
+This can only and must be set if the :ref:`ds-range-request-handling` is set to ``3``.
+
+.. _ds-slice-block-size:
 
 SSL Key Version
 ---------------
