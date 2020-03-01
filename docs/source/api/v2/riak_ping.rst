@@ -23,7 +23,7 @@ Checks whether :ref:`tv-overview` is online.
 ``GET``
 =======
 :Auth. Required: Yes
-:Roles Required: "read-only"
+:Roles Required: None
 :Response Type:  Object
 
 Request Structure

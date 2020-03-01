@@ -24,7 +24,7 @@
 Retrieves :ref:`ds_requests`.
 
 :Auth. Required: Yes
-:Roles Required: "read-only"
+:Roles Required: None
 :Response Type:  Array
 
 Request Structure

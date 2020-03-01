@@ -24,7 +24,7 @@
 Gets delivery service request comments.
 
 :Auth. Required: Yes
-:Roles Required: "read-only"
+:Roles Required: None
 :Response Type:  Array
 
 Request Structure

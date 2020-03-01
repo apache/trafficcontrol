@@ -28,7 +28,7 @@ Retrieves URL signing keys for a :term:`Delivery Service`.
 .. caution:: This method will return the :term:`Delivery Service`'s **PRIVATE** URL signing keys! Be wary of using this endpoint and **NEVER** share the output with anyone who would be unable to see it on their own.
 
 :Auth. Required: Yes
-:Roles Required: "read-only"
+:Roles Required: None
 :Response Type:  Object
 
 Request Structure
