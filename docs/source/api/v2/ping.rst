@@ -23,7 +23,7 @@ Checks whether Traffic Ops is online.
 ``GET``
 =======
 :Auth. Required: No
-:Response Type:  Object
+:Response Type:  ``undefined``
 
 Request Structure
 -----------------
@@ -41,7 +41,7 @@ No parameters available.
 
 Response Structure
 ------------------
-:ping:		Hard-coded to be ``"pong"``.
+:ping:		Returns an object containing only the ``"ping"	 property, which always has the value ``"pong"``.
 
 .. code-block:: http
 	:caption: Response Example

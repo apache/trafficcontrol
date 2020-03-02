@@ -257,7 +257,7 @@ Request Structure
 	+------+----------+---------------------------------------------------------------------------------------------+
 	| Name | Required | Description                                                                                 |
 	+------+----------+---------------------------------------------------------------------------------------------+
-	| id   | Yes      | The integral, unique identifier of the server that you want to assign delivery services to. |
+	| ID   | Yes      | The integral, unique identifier of the server that you want to assign delivery services to. |
 	+------+----------+---------------------------------------------------------------------------------------------+
 
 .. table:: Request Query Parameters
