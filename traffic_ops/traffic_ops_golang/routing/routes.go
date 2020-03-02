@@ -501,7 +501,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodPost, `deliveryservices/xmlId/{name}/urlkeys/generate/?$`, deliveryservice.GenerateURLKeys, auth.PrivLevelOperations, Authenticated, nil, 2530482824, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/xmlId/{name}/urlkeys/?$`, deliveryservice.GetURLKeysByName, auth.PrivLevelReadOnly, Authenticated, nil, 2202719211, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/urlkeys/?$`, deliveryservice.GetURLKeysByID, auth.PrivLevelReadOnly, Authenticated, nil, 293197114, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?$`, apiriak.GetBucketKey, auth.PrivLevelAdmin, Authenticated, nil, 2220510801, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `vault/bucket/{bucket}/key/{key}/values/?$`, apiriak.GetBucketKey, auth.PrivLevelAdmin, Authenticated, nil, 2220510801, noPerlBypass},
 
 		//Delivery service LetsEncrypt
 		{api.Version{2, 0}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelReadOnly, Authenticated, nil, 253439052, noPerlBypass},
@@ -974,7 +974,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodPost, `deliveryservices/xmlId/{name}/urlkeys/generate/?(\.json)?$`, deliveryservice.GenerateURLKeys, auth.PrivLevelOperations, Authenticated, nil, 1530482824, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/xmlId/{name}/urlkeys/?(\.json)?$`, deliveryservice.GetURLKeysByName, auth.PrivLevelReadOnly, Authenticated, nil, 2102719211, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/{id}/urlkeys/?(\.json)?$`, deliveryservice.GetURLKeysByID, auth.PrivLevelReadOnly, Authenticated, nil, 393197114, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?(\.json)?$`, apiriak.GetBucketKey, auth.PrivLevelAdmin, Authenticated, nil, 2020510801, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?(\.json)?$`, apiriak.GetBucketKeyDeprecated, auth.PrivLevelAdmin, Authenticated, nil, 2020510801, noPerlBypass},
 
 		//Delivery service LetsEncrypt
 		{api.Version{1, 5}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?(\.json)?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelReadOnly, Authenticated, nil, 753439052, noPerlBypass},
