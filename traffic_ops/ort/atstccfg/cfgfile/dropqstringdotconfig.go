@@ -23,7 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
-func GetConfigFileProfileDropQStringDotConfig(toData *TOData) (string, error) {
+func GetConfigFileProfileDropQStringDotConfig(toData *TOData) (string, string, error) {
 	dropQStringVal := (*string)(nil)
 	for _, param := range toData.ServerParams {
 		if param.ConfigFile != atscfg.DropQStringDotConfigFileName {
@@ -36,5 +36,5 @@ func GetConfigFileProfileDropQStringDotConfig(toData *TOData) (string, error) {
 		break
 	}
 
-	return atscfg.MakeDropQStringDotConfig(toData.Server.Profile, toData.TOToolName, toData.TOURL, dropQStringVal), nil
+	return atscfg.MakeDropQStringDotConfig(toData.Server.Profile, toData.TOToolName, toData.TOURL, dropQStringVal), atscfg.ContentTypeDropQStringDotConfig, nil
 }

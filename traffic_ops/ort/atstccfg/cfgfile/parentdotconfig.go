@@ -32,18 +32,18 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileServerParentDotConfig(toData *TOData) (string, error) {
+func GetConfigFileServerParentDotConfig(toData *TOData) (string, string, error) {
 	cgMap := map[string]tc.CacheGroupNullable{}
 	for _, cg := range toData.CacheGroups {
 		if cg.Name == nil {
-			return "", errors.New("got cachegroup with nil name!'")
+			return "", "", errors.New("got cachegroup with nil name!'")
 		}
 		cgMap[*cg.Name] = cg
 	}
 
 	serverCG, ok := cgMap[toData.Server.Cachegroup]
 	if !ok {
-		return "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' not found in CacheGroups")
+		return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' not found in CacheGroups")
 	}
 
 	parentCGID := -1
@@ -51,15 +51,15 @@ func GetConfigFileServerParentDotConfig(toData *TOData) (string, error) {
 	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
 		parentCG, ok := cgMap[*serverCG.ParentName]
 		if !ok {
-			return "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+			return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
 		}
 		if parentCG.ID == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		parentCGID = *parentCG.ID
 
 		if parentCG.Type == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 		parentCGType = *parentCG.Type
 	}
@@ -69,15 +69,15 @@ func GetConfigFileServerParentDotConfig(toData *TOData) (string, error) {
 	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
 		parentCG, ok := cgMap[*serverCG.SecondaryParentName]
 		if !ok {
-			return "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+			return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
 		}
 
 		if parentCG.ID == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		secondaryParentCGID = *parentCG.ID
 		if parentCG.Type == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 
 		secondaryParentCGType = *parentCG.Type
@@ -106,10 +106,10 @@ func GetConfigFileServerParentDotConfig(toData *TOData) (string, error) {
 		log.Infoln("This cache Is Top Level!")
 		for _, cg := range toData.CacheGroups {
 			if cg.Type == nil {
-				return "", errors.New("cachegroup type is nil!")
+				return "", "", errors.New("cachegroup type is nil!")
 			}
 			if cg.Name == nil {
-				return "", errors.New("cachegroup type is nil!")
+				return "", "", errors.New("cachegroup type is nil!")
 			}
 
 			if *cg.Type != tc.CacheGroupOriginTypeName {
@@ -119,14 +119,14 @@ func GetConfigFileServerParentDotConfig(toData *TOData) (string, error) {
 		}
 	} else {
 		if toData.Server.Cachegroup == "" {
-			return "", errors.New("server cachegroup is nil!")
+			return "", "", errors.New("server cachegroup is nil!")
 		}
 		for _, cg := range toData.CacheGroups {
 			if cg.Type == nil {
-				return "", errors.New("cachegroup type is nil!")
+				return "", "", errors.New("cachegroup type is nil!")
 			}
 			if cg.Name == nil {
-				return "", errors.New("cachegroup type is nil!")
+				return "", "", errors.New("cachegroup type is nil!")
 			}
 
 			if *cg.Name == toData.Server.Cachegroup {
@@ -171,7 +171,7 @@ func GetConfigFileServerParentDotConfig(toData *TOData) (string, error) {
 	parentServerDSes := map[int]map[int]struct{}{} // map[serverID][dsID] // cgServerDSes
 	for _, dss := range cgDSServers {
 		if dss.Server == nil || dss.DeliveryService == nil {
-			return "", errors.New("getting parent.config cachegroup parent server delivery service servers: got dss with nil members!")
+			return "", "", errors.New("getting parent.config cachegroup parent server delivery service servers: got dss with nil members!")
 		}
 		if parentServerDSes[*dss.Server] == nil {
 			parentServerDSes[*dss.Server] = map[int]struct{}{}
@@ -193,12 +193,12 @@ func GetConfigFileServerParentDotConfig(toData *TOData) (string, error) {
 
 	atsMajorVer, err := atscfg.GetATSMajorVersionFromATSVersion(atsVersionParam)
 	if err != nil {
-		return "", errors.New("getting ATS major version from version parameter (profile '" + toData.Server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
+		return "", "", errors.New("getting ATS major version from version parameter (profile '" + toData.Server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
 	}
 
 	parentConfigParamsWithProfiles, err := TCParamsToParamsWithProfiles(toData.ParentConfigParams)
 	if err != nil {
-		return "", errors.New("unmarshalling parent.config parameters profiles: " + err.Error())
+		return "", "", errors.New("unmarshalling parent.config parameters profiles: " + err.Error())
 	}
 
 	// this is an optimization, to avoid looping over all params, for every DS. Instead, we loop over all params only once, and put them in a profile map.
@@ -454,7 +454,7 @@ func GetConfigFileServerParentDotConfig(toData *TOData) (string, error) {
 
 	parentInfos := atscfg.MakeParentInfo(&serverInfo, serverCDNDomain, profileCaches, originServers)
 
-	return atscfg.MakeParentDotConfig(&serverInfo, atsMajorVer, toData.TOToolName, toData.TOURL, parentConfigDSes, serverParams, parentInfos), nil
+	return atscfg.MakeParentDotConfig(&serverInfo, atsMajorVer, toData.TOToolName, toData.TOURL, parentConfigDSes, serverParams, parentInfos), atscfg.ContentTypeParentDotConfig, nil
 }
 
 // GetDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI.

@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileServerUnknownConfig(toData *TOData, fileName string) (string, error) {
+func GetConfigFileServerUnknownConfig(toData *TOData, fileName string) (string, string, error) {
 	params := ParamsToMultiMap(FilterParams(toData.ServerParams, fileName, "", "", ""))
-	return atscfg.MakeServerUnknown(tc.CacheName(toData.Server.HostName), toData.Server.DomainName, toData.TOToolName, toData.TOURL, params), nil
+	return atscfg.MakeServerUnknown(tc.CacheName(toData.Server.HostName), toData.Server.DomainName, toData.TOToolName, toData.TOURL, params), atscfg.ContentTypeServerUnknownConfig, nil
 }

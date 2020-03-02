@@ -23,6 +23,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
-func GetConfigFileProfile12MFacts(toData *TOData) (string, error) {
-	return atscfg.Make12MFacts(toData.Server.Profile, toData.TOToolName, toData.TOURL), nil
+func GetConfigFileProfile12MFacts(toData *TOData) (string, string, error) {
+	return atscfg.Make12MFacts(toData.Server.Profile, toData.TOToolName, toData.TOURL), atscfg.ContentType12MFacts, nil
 }

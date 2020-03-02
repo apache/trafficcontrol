@@ -25,7 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileCDNRegexRevalidateDotConfig(toData *TOData) (string, error) {
+func GetConfigFileCDNRegexRevalidateDotConfig(toData *TOData) (string, string, error) {
 	params := map[string][]string{}
 	for _, param := range toData.GlobalParams {
 		if param.ConfigFile != atscfg.RegexRevalidateFileName {
@@ -51,6 +51,5 @@ func GetConfigFileCDNRegexRevalidateDotConfig(toData *TOData) (string, error) {
 		jobs = append(jobs, job)
 	}
 
-	txt := atscfg.MakeRegexRevalidateDotConfig(tc.CDNName(toData.Server.CDNName), params, toData.TOToolName, toData.TOURL, jobs)
-	return txt, nil
+	return atscfg.MakeRegexRevalidateDotConfig(tc.CDNName(toData.Server.CDNName), params, toData.TOToolName, toData.TOURL, jobs), atscfg.ContentTypeRegexRevalidateDotConfig, nil
 }

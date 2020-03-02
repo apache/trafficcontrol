@@ -26,6 +26,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const ContentTypeSSLMultiCertDotConfig = ContentTypeTextASCII
+
 type SSLMultiCertDS struct {
 	Type        tc.DSType
 	Protocol    int

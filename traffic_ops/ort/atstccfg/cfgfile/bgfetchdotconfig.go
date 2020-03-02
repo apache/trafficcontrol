@@ -24,6 +24,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileCDNBGFetchDotConfig(toData *TOData) (string, error) {
-	return atscfg.MakeBGFetchDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL), nil
+func GetConfigFileCDNBGFetchDotConfig(toData *TOData) (string, string, error) {
+	return atscfg.MakeBGFetchDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL), atscfg.ContentTypeBGFetchDotConfig, nil
 }

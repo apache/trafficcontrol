@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileCDNCacheURL(toData *TOData, fileName string) (string, error) {
+func GetConfigFileCDNCacheURL(toData *TOData, fileName string) (string, string, error) {
 	dsIDs := map[int]struct{}{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.ID != nil {
@@ -59,10 +59,9 @@ func GetConfigFileCDNCacheURL(toData *TOData, fileName string) (string, error) {
 
 	cfgDSes := atscfg.DeliveryServicesToCacheURLDSes(dsesWithServers)
 
-	txt := atscfg.MakeCacheURLDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes)
-	return txt, nil
+	return atscfg.MakeCacheURLDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes), atscfg.ContentTypeCacheURLDotConfig, nil
 }
 
-func GetConfigFileCDNCacheURLPlain(toData *TOData) (string, error) {
+func GetConfigFileCDNCacheURLPlain(toData *TOData) (string, string, error) {
 	return GetConfigFileCDNCacheURL(toData, "cacheurl.config")
 }

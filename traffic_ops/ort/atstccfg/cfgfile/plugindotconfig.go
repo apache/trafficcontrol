@@ -23,7 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
-func GetConfigFileProfilePluginDotConfig(toData *TOData) (string, error) {
+func GetConfigFileProfilePluginDotConfig(toData *TOData) (string, string, error) {
 	params := ParamsToMap(FilterParams(toData.ServerParams, atscfg.PluginFileName, "", "", "location"))
-	return atscfg.MakePluginDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), nil
+	return atscfg.MakePluginDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypePluginDotConfig, nil
 }

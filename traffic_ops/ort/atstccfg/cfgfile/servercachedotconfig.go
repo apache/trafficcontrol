@@ -29,13 +29,13 @@ import (
 
 const ServerCacheDotConfigIncludeInactiveDSes = false // TODO move to lib/go-atscfg
 
-func GetConfigFileServerCacheDotConfig(toData *TOData) (string, error) {
+func GetConfigFileServerCacheDotConfig(toData *TOData) (string, string, error) {
 	// TODO TOAPI add /servers?cdn=1 query param
 
 	// TODO remove this, we generated the scope, we know it's right? Or should we have an extra safety check?
 	if !strings.HasPrefix(string(toData.Server.Type), tc.MidTypePrefix) {
 		// emulates Perl
-		return "", errors.New("Error - incorrect file scope for route used.  Please use the profiles route.")
+		return "", "", errors.New("Error - incorrect file scope for route used.  Please use the profiles route.")
 	}
 
 	dsData := map[tc.DeliveryServiceName]atscfg.ServerCacheConfigDS{}
@@ -53,6 +53,5 @@ func GetConfigFileServerCacheDotConfig(toData *TOData) (string, error) {
 
 	serverName := tc.CacheName(toData.Server.HostName)
 
-	txt := atscfg.MakeServerCacheDotConfig(serverName, toData.TOToolName, toData.TOURL, dsData)
-	return txt, nil
+	return atscfg.MakeServerCacheDotConfig(serverName, toData.TOToolName, toData.TOURL, dsData), atscfg.ContentTypeCacheDotConfig, nil
 }

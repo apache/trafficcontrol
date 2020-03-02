@@ -24,10 +24,12 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
@@ -104,169 +106,241 @@ type TOData struct {
 //       Getting all data for all profiles in TOData isn't reasonable.
 
 func GetTOData(cfg config.TCCfg) (*TOData, error) {
-	// TODO TOAPI add /servers?cdn=1 query param
-	servers, err := toreq.GetServers(cfg)
-	if err != nil {
-		return nil, errors.New("getting servers: " + err.Error())
-	}
+	start := time.Now()
+	defer func() { log.Infof("GetTOData took %v\n", time.Since(start)) }()
 
-	server := tc.Server{ID: atscfg.InvalidID}
-	for _, toServer := range servers {
-		if toServer.HostName == cfg.CacheHostName {
-			server = toServer
-			break
-		}
-	}
-	if server.ID == atscfg.InvalidID {
-		return nil, errors.New("server '" + cfg.CacheHostName + " not found in servers")
-	}
+	toData := &TOData{}
 
-	cacheGroups, err := toreq.GetCacheGroups(cfg)
-	if err != nil {
-		return nil, errors.New("getting cachegroups: " + err.Error())
-	}
-
-	// TODO test whether it's faster to get all params and then filter
-	globalParams, err := toreq.GetGlobalParameters(cfg)
-	if err != nil {
-		return nil, errors.New("getting global parameters: " + err.Error())
-	}
-
-	scopeParams, err := toreq.GetParametersByName(cfg, "scope")
-	if err != nil {
-		return nil, errors.New("getting scope parameters: " + err.Error())
-	}
-
-	// TODO check if len == 0 and return an error here?
-	//      Basically ever config file does, so we might as well do it here and reduce duplicate code.
-	//      It shouldn't ever be 0 anyway, because that should only happen if the profile doesn't exist, and a server's profile should always exist.
-	serverParams, err := toreq.GetServerProfileParameters(cfg, server.Profile)
-	if err != nil {
-		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
-	}
-	if len(serverParams) == 0 {
-		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: no parameters (profile not found?)")
-	}
-
-	deliveryServices, err := toreq.GetCDNDeliveryServices(cfg, server.CDNID)
-	if err != nil {
-		return nil, errors.New("getting delivery services: " + err.Error())
-	}
-
-	dsServers, err := toreq.GetDeliveryServiceServers(cfg, nil, nil)
-	if err != nil {
-		return nil, errors.New("getting delivery service servers: " + err.Error())
-	}
-
-	toToolName, toURL := toreq.GetTOToolNameAndURL(globalParams)
-
-	jobs, err := toreq.GetJobs(cfg) // TODO add cdn query param to jobs endpoint
-	if err != nil {
-		return nil, errors.New("getting jobs: " + err.Error())
-	}
-
-	cdn, err := toreq.GetCDN(cfg, tc.CDNName(server.CDNName))
-	if err != nil {
-		return nil, errors.New("getting cdn '" + server.CDNName + "': " + err.Error())
-	}
-
-	dsRegexes, err := toreq.GetDeliveryServiceRegexes(cfg)
-	if err != nil {
-		return nil, errors.New("getting delivery service regexes: " + err.Error())
-	}
-
-	cacheKeyParams, err := toreq.GetConfigFileParameters(cfg, atscfg.CacheKeyParameterConfigFile)
-	if err != nil {
-		return nil, errors.New("getting cache key parameters: " + err.Error())
-	}
-
-	parentConfigParams, err := toreq.GetConfigFileParameters(cfg, "parent.config") // TODO make const in lib/go-atscfg
-	if err != nil {
-		return nil, errors.New("getting parent.config parameters: " + err.Error())
-	}
-
-	// TODO verify used
-	profile, err := toreq.GetProfileByName(cfg, server.Profile)
-	if err != nil {
-		return nil, errors.New("getting profile '" + server.Profile + "': " + err.Error())
-	}
-
-	uriSigningKeys := map[tc.DeliveryServiceName][]byte{}
-	for _, ds := range deliveryServices {
-		if ds.XMLID == nil {
-			continue // TODO warn?
-		}
-		// TODO read meta config gen, and only include servers which are included in the meta (assigned to edge or all for mids? read the meta gen to find out)
-		if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
-			continue
-		}
-		keys, err := toreq.GetURISigningKeys(cfg, *ds.XMLID)
+	serversF := func() error {
+		defer func(start time.Time) { log.Infof("serversF took %v\n", time.Since(start)) }(time.Now())
+		// TODO TOAPI add /servers?cdn=1 query param
+		servers, err := toreq.GetServers(cfg)
 		if err != nil {
-			if strings.Contains(strings.ToLower(err.Error()), "not found") {
-				log.Errorln("Delivery service '" + *ds.XMLID + "' is uri_signing, but keys were not found! Skipping!")
-				continue
-			} else {
-				return nil, errors.New("getting uri signing keys for ds '" + *ds.XMLID + "': " + err.Error())
+			return errors.New("getting servers: " + err.Error())
+		}
+
+		toData.Servers = servers
+
+		server := tc.Server{ID: atscfg.InvalidID}
+		for _, toServer := range servers {
+			if toServer.HostName == cfg.CacheHostName {
+				server = toServer
+				break
 			}
 		}
-		uriSigningKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
-	}
+		if server.ID == atscfg.InvalidID {
+			return errors.New("server '" + cfg.CacheHostName + " not found in servers")
+		}
 
-	urlSigKeys := map[tc.DeliveryServiceName]tc.URLSigKeys{}
-	for _, ds := range deliveryServices {
-		if ds.XMLID == nil {
-			continue // TODO warn?
-		}
-		// TODO read meta config gen, and only include servers which are included in the meta (assigned to edge or all for mids? read the meta gen to find out)
-		if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURLSig {
-			continue
-		}
-		keys, err := toreq.GetURLSigKeys(cfg, *ds.XMLID)
-		if err != nil {
-			if strings.Contains(strings.ToLower(err.Error()), "not found") {
-				log.Errorln("Delivery service '" + *ds.XMLID + "' is url_sig, but keys were not found! Skipping!: " + err.Error())
-				continue
-			} else {
-				return nil, errors.New("getting url sig keys for ds '" + *ds.XMLID + "': " + err.Error())
+		toData.Server = server
+
+		dsF := func() error {
+			defer func(start time.Time) { log.Infof("dsF took %v\n", time.Since(start)) }(time.Now())
+			dses, err := toreq.GetCDNDeliveryServices(cfg, server.CDNID)
+			if err != nil {
+				return errors.New("getting delivery services: " + err.Error())
 			}
+			toData.DeliveryServices = dses
+
+			uriSignKeysF := func() error {
+				defer func(start time.Time) { log.Infof("uriF took %v\n", time.Since(start)) }(time.Now())
+				uriSigningKeys := map[tc.DeliveryServiceName][]byte{}
+				for _, ds := range dses {
+					if ds.XMLID == nil {
+						continue // TODO warn?
+					}
+					// TODO read meta config gen, and only include servers which are included in the meta (assigned to edge or all for mids? read the meta gen to find out)
+					if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
+						continue
+					}
+					keys, err := toreq.GetURISigningKeys(cfg, *ds.XMLID)
+					if err != nil {
+						if strings.Contains(strings.ToLower(err.Error()), "not found") {
+							log.Errorln("Delivery service '" + *ds.XMLID + "' is uri_signing, but keys were not found! Skipping!")
+							continue
+						} else {
+							return errors.New("getting uri signing keys for ds '" + *ds.XMLID + "': " + err.Error())
+						}
+					}
+					uriSigningKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
+				}
+				toData.URISigningKeys = uriSigningKeys
+				return nil
+			}
+
+			urlSigKeysF := func() error {
+				defer func(start time.Time) { log.Infof("urlF took %v\n", time.Since(start)) }(time.Now())
+				urlSigKeys := map[tc.DeliveryServiceName]tc.URLSigKeys{}
+				for _, ds := range dses {
+					if ds.XMLID == nil {
+						continue // TODO warn?
+					}
+					// TODO read meta config gen, and only include servers which are included in the meta (assigned to edge or all for mids? read the meta gen to find out)
+					if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURLSig {
+						continue
+					}
+					keys, err := toreq.GetURLSigKeys(cfg, *ds.XMLID)
+					if err != nil {
+						if strings.Contains(strings.ToLower(err.Error()), "not found") {
+							log.Errorln("Delivery service '" + *ds.XMLID + "' is url_sig, but keys were not found! Skipping!: " + err.Error())
+							continue
+						} else {
+							return errors.New("getting url sig keys for ds '" + *ds.XMLID + "': " + err.Error())
+						}
+					}
+					urlSigKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
+				}
+				toData.URLSigKeys = urlSigKeys
+				return nil
+			}
+			return util.JoinErrs(runParallel([]func() error{uriSignKeysF, urlSigKeysF}))
 		}
-		urlSigKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
+		serverParamsF := func() error {
+			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
+			params, err := toreq.GetServerProfileParameters(cfg, server.Profile)
+			if err != nil {
+				return errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
+			} else if len(params) == 0 {
+				return errors.New("getting server profile '" + server.Profile + "' parameters: no parameters (profile not found?)")
+			}
+			toData.ServerParams = params
+			return nil
+		}
+		cdnF := func() error {
+			defer func(start time.Time) { log.Infof("cdnF took %v\n", time.Since(start)) }(time.Now())
+			cdn, err := toreq.GetCDN(cfg, tc.CDNName(server.CDNName))
+			if err != nil {
+				return errors.New("getting cdn '" + server.CDNName + "': " + err.Error())
+			}
+			toData.CDN = cdn
+			return nil
+		}
+		profileF := func() error {
+			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
+			profile, err := toreq.GetProfileByName(cfg, server.Profile)
+			if err != nil {
+				return errors.New("getting profile '" + server.Profile + "': " + err.Error())
+			}
+			toData.Profile = profile
+			return nil
+		}
+		return util.JoinErrs(runParallel([]func() error{dsF, serverParamsF, cdnF, profileF}))
 	}
 
-	serverCapabilities, err := toreq.GetServerCapabilitiesByID(cfg, nil) // TODO change to not take a param; it doesn't use it to request TO anyway.
-	if err != nil {
-		log.Errorln("Server Capabilities error, skipping!")
-		// return nil, errors.New("getting server caps from Traffic Ops: " + err.Error())
+	cgF := func() error {
+		defer func(start time.Time) { log.Infof("cfF took %v\n", time.Since(start)) }(time.Now())
+		cacheGroups, err := toreq.GetCacheGroups(cfg)
+		if err != nil {
+			return errors.New("getting cachegroups: " + err.Error())
+		}
+		toData.CacheGroups = cacheGroups
+		return nil
+	}
+	globalParamsF := func() error {
+		defer func(start time.Time) { log.Infof("globalParamsF took %v\n", time.Since(start)) }(time.Now())
+		globalParams, err := toreq.GetGlobalParameters(cfg)
+		if err != nil {
+			return errors.New("getting global parameters: " + err.Error())
+		}
+		toData.GlobalParams = globalParams
+		toData.TOToolName, toData.TOURL = toreq.GetTOToolNameAndURL(globalParams)
+		return nil
+	}
+	scopeParamsF := func() error {
+		defer func(start time.Time) { log.Infof("scopeParamsF took %v\n", time.Since(start)) }(time.Now())
+		scopeParams, err := toreq.GetParametersByName(cfg, "scope")
+		if err != nil {
+			return errors.New("getting scope parameters: " + err.Error())
+		}
+		toData.ScopeParams = scopeParams
+		return nil
+	}
+	dssF := func() error {
+		defer func(start time.Time) { log.Infof("dssF took %v\n", time.Since(start)) }(time.Now())
+		dss, err := toreq.GetDeliveryServiceServers(cfg, nil, nil)
+		if err != nil {
+			return errors.New("getting delivery service servers: " + err.Error())
+		}
+		toData.DeliveryServiceServers = dss
+		return nil
+	}
+	jobsF := func() error {
+		defer func(start time.Time) { log.Infof("jobsF took %v\n", time.Since(start)) }(time.Now())
+		jobs, err := toreq.GetJobs(cfg) // TODO add cdn query param to jobs endpoint
+		if err != nil {
+			return errors.New("getting jobs: " + err.Error())
+		}
+		toData.Jobs = jobs
+		return nil
+	}
+	capsF := func() error {
+		defer func(start time.Time) { log.Infof("capsF took %v\n", time.Since(start)) }(time.Now())
+		caps, err := toreq.GetServerCapabilitiesByID(cfg, nil) // TODO change to not take a param; it doesn't use it to request TO anyway.
+		if err != nil {
+			log.Errorln("Server Capabilities error, skipping!")
+			// return errors.New("getting server caps from Traffic Ops: " + err.Error())
+		} else {
+			toData.ServerCapabilities = caps
+		}
+		return nil
+	}
+	dsCapsF := func() error {
+		defer func(start time.Time) { log.Infof("dscapsF took %v\n", time.Since(start)) }(time.Now())
+		caps, err := toreq.GetDeliveryServiceRequiredCapabilitiesByID(cfg, nil)
+		if err != nil {
+			log.Errorln("DS Required Capabilities error, skipping!")
+			// return errors.New("getting DS required capabilities: " + err.Error())
+		} else {
+			toData.DSRequiredCapabilities = caps
+		}
+		return nil
+	}
+	dsrF := func() error {
+		defer func(start time.Time) { log.Infof("dsrF took %v\n", time.Since(start)) }(time.Now())
+		dsr, err := toreq.GetDeliveryServiceRegexes(cfg)
+		if err != nil {
+			return errors.New("getting delivery service regexes: " + err.Error())
+		}
+		toData.DeliveryServiceRegexes = dsr
+		return nil
+	}
+	cacheKeyParamsF := func() error {
+		defer func(start time.Time) { log.Infof("cacheKeyParamsF took %v\n", time.Since(start)) }(time.Now())
+		params, err := toreq.GetConfigFileParameters(cfg, atscfg.CacheKeyParameterConfigFile)
+		if err != nil {
+			return errors.New("getting cache key parameters: " + err.Error())
+		}
+		toData.CacheKeyParams = params
+		return nil
+	}
+	parentConfigParamsF := func() error {
+		defer func(start time.Time) { log.Infof("parentConfigParamsF took %v\n", time.Since(start)) }(time.Now())
+		parentConfigParams, err := toreq.GetConfigFileParameters(cfg, "parent.config") // TODO make const in lib/go-atscfg
+		if err != nil {
+			return errors.New("getting parent.config parameters: " + err.Error())
+		}
+		toData.ParentConfigParams = parentConfigParams
+		return nil
 	}
 
-	dsRequiredCapabilities, err := toreq.GetDeliveryServiceRequiredCapabilitiesByID(cfg, nil)
-	if err != nil {
-		log.Errorln("DS Required Capabilities error, skipping!")
-		// return nil, errors.New("getting DS required capabilities: " + err.Error())
-	}
+	errs := runParallel([]func() error{dsrF, dssF, serversF, cgF, globalParamsF, scopeParamsF, jobsF, capsF, dsCapsF, cacheKeyParamsF, parentConfigParamsF})
+	return toData, util.JoinErrs(errs)
+}
 
-	return &TOData{
-		Servers:                servers,
-		CacheGroups:            cacheGroups,
-		GlobalParams:           globalParams,
-		ScopeParams:            scopeParams,
-		ServerParams:           serverParams,
-		CacheKeyParams:         cacheKeyParams,
-		ParentConfigParams:     parentConfigParams,
-		DeliveryServices:       deliveryServices,
-		DeliveryServiceServers: dsServers,
-		Server:                 server,
-		TOToolName:             toToolName,
-		TOURL:                  toURL,
-		Jobs:                   jobs,
-		CDN:                    cdn,
-		DeliveryServiceRegexes: dsRegexes,
-		Profile:                profile,
-		URISigningKeys:         uriSigningKeys,
-		URLSigKeys:             urlSigKeys,
-		ServerCapabilities:     serverCapabilities,
-		DSRequiredCapabilities: dsRequiredCapabilities,
-	}, nil
+// runParallel runs all funcs in fs in parallel goroutines, and returns after all funcs have returned.
+// Returns a slice of the errors returned by each func. The order of the errors will not be the same as the order of fs.
+// All funcs in fs must be safe to run in parallel.
+func runParallel(fs []func() error) []error {
+	errs := []error{}
+	doneChan := make(chan error, len(fs))
+	for _, fPtr := range fs {
+		f := fPtr // because functions are pointers, f will change in the loop. Need create a new variable here to close around.
+		go func() { doneChan <- f() }()
+	}
+	for i := 0; i < len(fs); i++ {
+		errs = append(errs, <-doneChan)
+	}
+	return errs
 }
 
 func FilterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverIDs map[int]struct{}) []tc.DeliveryServiceServer {
@@ -354,7 +428,7 @@ func FilterParams(params []tc.Parameter, configFile string, name string, value s
 	return filtered
 }
 
-// ParamArrToMap converts a []tc.Parameter to a map[paramName]paramValue.
+// ParamsToMap converts a []tc.Parameter to a map[paramName]paramValue.
 // If multiple params have the same value, the first one in params will be used an an error will be logged.
 // See ParamArrToMultiMap.
 func ParamsToMap(params []tc.Parameter) map[string]string {
@@ -377,26 +451,3 @@ func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
 	}
 	return mp
 }
-
-// type TOData struct {
-// 	Servers                []tc.Server
-// 	CacheGroups            []tc.CacheGroupNullable
-// 	GlobalParams           []tc.Parameter
-// 	ScopeParams            []tc.Parameter
-// 	ServerParams           []tc.Parameter
-// 	CacheKeyParams         []tc.Parameter
-// 	ParentConfigParams     []tc.Parameter
-// 	DeliveryServices       []tc.DeliveryServiceNullable
-// 	DeliveryServiceServers []tc.DeliveryServiceServer
-// 	Server                 tc.Server
-// 	TOToolName             string
-// 	TOURL                  string
-// 	Jobs                   []tc.Job
-// 	CDN                    tc.CDN
-// 	DeliveryServiceRegexes []tc.DeliveryServiceRegexes
-// 	Profile                tc.Profile
-// 	URISigningKeys         map[tc.DeliveryServiceName][]byte
-// 	URLSigKeys             map[tc.DeliveryServiceName]tc.URLSigKeys
-// 	ServerCapabilities     map[int]map[atscfg.ServerCapability]struct{}
-// 	DSRequiredCapabilities map[int]map[atscfg.ServerCapability]struct{}
-// }

@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileProfileCacheDotConfig(toData *TOData) (string, error) {
+func GetConfigFileProfileCacheDotConfig(toData *TOData) (string, string, error) {
 	// TODO verify I didn't break something
 	profileServerIDsMap := map[int]struct{}{}
 	for _, sv := range toData.Servers {
@@ -65,5 +65,5 @@ func GetConfigFileProfileCacheDotConfig(toData *TOData) (string, error) {
 		profileDSes = append(profileDSes, atscfg.ProfileDS{Type: *ds.Type, OriginFQDN: &origin})
 	}
 
-	return atscfg.MakeCacheDotConfig(toData.Server.Profile, profileDSes, toData.TOToolName, toData.TOURL), nil
+	return atscfg.MakeCacheDotConfig(toData.Server.Profile, profileDSes, toData.TOToolName, toData.TOURL), atscfg.ContentTypeCacheDotConfig, nil
 }

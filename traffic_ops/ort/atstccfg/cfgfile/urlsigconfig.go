@@ -27,7 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileProfileURLSigConfig(toData *TOData, fileName string) (string, error) {
+func GetConfigFileProfileURLSigConfig(toData *TOData, fileName string) (string, string, error) {
 	paramData := map[string]string{}
 	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
 	for _, param := range toData.ServerParams {
@@ -43,15 +43,15 @@ func GetConfigFileProfileURLSigConfig(toData *TOData, fileName string) (string, 
 	dsName := GetDSFromURLSigConfigFileName(fileName)
 	if dsName == "" {
 		// extra safety, this should never happen, the routing shouldn't get here
-		return "", errors.New("getting ds name: malformed config file '" + fileName + "'")
+		return "", "", errors.New("getting ds name: malformed config file '" + fileName + "'")
 	}
 
 	urlSigKeys, ok := toData.URLSigKeys[tc.DeliveryServiceName(dsName)]
 	if !ok {
-		return "", errors.New("no keys fetched for ds '" + dsName + "!")
+		return "", "", errors.New("no keys fetched for ds '" + dsName + "!")
 	}
 
-	return atscfg.MakeURLSigConfig(toData.Server.Profile, urlSigKeys, paramData, toData.TOToolName, toData.TOURL), nil
+	return atscfg.MakeURLSigConfig(toData.Server.Profile, urlSigKeys, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeParentDotConfig, nil
 }
 
 // GetDSFromURLSigConfigFileName returns the DS of a URLSig config file name.

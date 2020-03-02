@@ -30,13 +30,14 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-var scopeConfigFileFuncs = map[string]func(toData *cfgfile.TOData, fileName string) (string, int, error){
+var scopeConfigFileFuncs = map[string]func(toData *cfgfile.TOData, fileName string) (string, string, int, error){
 	"cdns":     GetConfigFileCDN,
 	"servers":  GetConfigFileServer,
 	"profiles": GetConfigFileProfile,
 }
 
-func GetConfigFile(toData *cfgfile.TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (string, int, error) {
+// GetConfigFile returns the text of the generated config file, the MIME Content Type of the config file, the exit code, and any error.
+func GetConfigFile(toData *cfgfile.TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (string, string, int, error) {
 	path := fileInfo.APIURI
 	// TODO remove the URL path parsing. It's a legacy from when config files were endpoints in the meta config.
 	// We should replace it with actually calling the right file and name directly.
@@ -47,7 +48,7 @@ func GetConfigFile(toData *cfgfile.TOData, fileInfo tc.ATSConfigMetaDataConfigFi
 
 	pathParts := strings.Split(path, "/")
 	if len(pathParts) < 8 {
-		return "", 0, errors.New("unknown config file '" + path + "'")
+		return "", "", 0, errors.New("unknown config file '" + path + "'")
 	}
 	scope := pathParts[3]
 	resource := pathParts[4]
@@ -59,26 +60,27 @@ func GetConfigFile(toData *cfgfile.TOData, fileInfo tc.ATSConfigMetaDataConfigFi
 		return scopeConfigFileFunc(toData, fileName)
 	}
 
-	return "", 0, errors.New("unknown config file '" + fileInfo.APIURI + "'")
+	return "", "", 0, errors.New("unknown config file '" + fileInfo.APIURI + "'")
 }
 
 type ConfigFilePrefixSuffixFunc struct {
 	Prefix string
 	Suffix string
-	Func   func(toData *cfgfile.TOData, fileName string) (string, error)
+	Func   func(toData *cfgfile.TOData, fileName string) (string, string, error)
 }
 
-func GetConfigFileCDN(toData *cfgfile.TOData, fileName string) (string, int, error) {
+func GetConfigFileCDN(toData *cfgfile.TOData, fileName string) (string, string, int, error) {
 	log.Infoln("GetConfigFileCDN cdn '" + toData.Server.CDNName + "' fileName '" + fileName + "'")
 
 	txt := ""
+	contentType := ""
 	err := error(nil)
 	if getCfgFunc, ok := CDNConfigFileFuncs()[fileName]; ok {
-		txt, err = getCfgFunc(toData)
+		txt, contentType, err = getCfgFunc(toData)
 	} else {
 		for _, prefixSuffixFunc := range ConfigFileCDNPrefixSuffixFuncs {
 			if strings.HasPrefix(fileName, prefixSuffixFunc.Prefix) && strings.HasSuffix(fileName, prefixSuffixFunc.Suffix) && len(fileName) > len(prefixSuffixFunc.Prefix)+len(prefixSuffixFunc.Suffix) {
-				txt, err = prefixSuffixFunc.Func(toData, fileName)
+				txt, contentType, err = prefixSuffixFunc.Func(toData, fileName)
 				break
 			}
 		}
@@ -95,24 +97,25 @@ func GetConfigFileCDN(toData *cfgfile.TOData, fileName string) (string, int, err
 		} else if err == config.ErrBadRequest {
 			code = config.ExitCodeBadRequest
 		}
-		return "", code, err
+		return "", "", code, err
 	}
-	return txt, config.ExitCodeSuccess, nil
+	return txt, contentType, config.ExitCodeSuccess, nil
 }
 
-func GetConfigFileProfile(toData *cfgfile.TOData, fileName string) (string, int, error) {
+func GetConfigFileProfile(toData *cfgfile.TOData, fileName string) (string, string, int, error) {
 	log.Infoln("GetConfigFileProfile profile '" + toData.Server.Profile + "' fileName '" + fileName + "'")
 
 	txt := ""
+	contentType := ""
 	err := error(nil)
 	if getCfgFunc, ok := ProfileConfigFileFuncs()[fileName]; ok {
-		txt, err = getCfgFunc(toData)
+		txt, contentType, err = getCfgFunc(toData)
 	} else if strings.HasPrefix(fileName, "url_sig_") && strings.HasSuffix(fileName, ".config") && len(fileName) > len("url_sig_")+len(".config") {
-		txt, err = cfgfile.GetConfigFileProfileURLSigConfig(toData, fileName)
+		txt, contentType, err = cfgfile.GetConfigFileProfileURLSigConfig(toData, fileName)
 	} else if strings.HasPrefix(fileName, "uri_signing_") && strings.HasSuffix(fileName, ".config") && len(fileName) > len("uri_signing")+len(".config") {
-		txt, err = cfgfile.GetConfigFileProfileURISigningConfig(toData, fileName)
+		txt, contentType, err = cfgfile.GetConfigFileProfileURISigningConfig(toData, fileName)
 	} else {
-		txt, err = cfgfile.GetConfigFileProfileUnknownConfig(toData, fileName)
+		txt, contentType, err = cfgfile.GetConfigFileProfileUnknownConfig(toData, fileName)
 	}
 
 	if err != nil {
@@ -122,22 +125,22 @@ func GetConfigFileProfile(toData *cfgfile.TOData, fileName string) (string, int,
 		} else if err == config.ErrBadRequest {
 			code = config.ExitCodeBadRequest
 		}
-		return "", code, err
+		return "", "", code, err
 	}
-	return txt, config.ExitCodeSuccess, nil
+	return txt, contentType, config.ExitCodeSuccess, nil
 }
 
 // ConfigFileFuncs returns a map[scope][configFile]configFileFunc.
-func ConfigFileFuncs() map[string]map[string]func(toData *cfgfile.TOData) (string, error) {
-	return map[string]map[string]func(toData *cfgfile.TOData) (string, error){
+func ConfigFileFuncs() map[string]map[string]func(toData *cfgfile.TOData) (string, string, error) {
+	return map[string]map[string]func(toData *cfgfile.TOData) (string, string, error){
 		"cdns":     CDNConfigFileFuncs(),
 		"servers":  ServerConfigFileFuncs(),
 		"profiles": ProfileConfigFileFuncs(),
 	}
 }
 
-func CDNConfigFileFuncs() map[string]func(toData *cfgfile.TOData) (string, error) {
-	return map[string]func(toData *cfgfile.TOData) (string, error){
+func CDNConfigFileFuncs() map[string]func(toData *cfgfile.TOData) (string, string, error) {
+	return map[string]func(toData *cfgfile.TOData) (string, string, error){
 		"regex_revalidate.config": cfgfile.GetConfigFileCDNRegexRevalidateDotConfig,
 		"bg_fetch.config":         cfgfile.GetConfigFileCDNBGFetchDotConfig,
 		"ssl_multicert.config":    cfgfile.GetConfigFileCDNSSLMultiCertDotConfig,
@@ -153,8 +156,8 @@ var ConfigFileCDNPrefixSuffixFuncs = []ConfigFilePrefixSuffixFunc{
 	{"set_dscp_", ".config", cfgfile.GetConfigFileCDNSetDSCP},
 }
 
-func ProfileConfigFileFuncs() map[string]func(toData *cfgfile.TOData) (string, error) {
-	return map[string]func(toData *cfgfile.TOData) (string, error){
+func ProfileConfigFileFuncs() map[string]func(toData *cfgfile.TOData) (string, string, error) {
+	return map[string]func(toData *cfgfile.TOData) (string, string, error){
 		"12M_facts":           cfgfile.GetConfigFileProfile12MFacts,
 		"50-ats.rules":        cfgfile.GetConfigFileProfileATSDotRules,
 		"astats.config":       cfgfile.GetConfigFileProfileAstatsDotConfig,
@@ -171,8 +174,8 @@ func ProfileConfigFileFuncs() map[string]func(toData *cfgfile.TOData) (string, e
 	}
 }
 
-func ServerConfigFileFuncs() map[string]func(toData *cfgfile.TOData) (string, error) {
-	return map[string]func(toData *cfgfile.TOData) (string, error){
+func ServerConfigFileFuncs() map[string]func(toData *cfgfile.TOData) (string, string, error) {
+	return map[string]func(toData *cfgfile.TOData) (string, string, error){
 		"parent.config":   cfgfile.GetConfigFileServerParentDotConfig,
 		"remap.config":    cfgfile.GetConfigFileServerRemapDotConfig,
 		"cache.config":    cfgfile.GetConfigFileServerCacheDotConfig,
@@ -183,17 +186,18 @@ func ServerConfigFileFuncs() map[string]func(toData *cfgfile.TOData) (string, er
 	}
 }
 
-func GetConfigFileServer(toData *cfgfile.TOData, fileName string) (string, int, error) {
+func GetConfigFileServer(toData *cfgfile.TOData, fileName string) (string, string, int, error) {
 	log.Infoln("GetConfigFileServer server '" + toData.Server.HostName + "' fileName '" + fileName + "'")
 	txt := ""
+	contentType := ""
 	err := error(nil)
 	if getCfgFunc, ok := ServerConfigFileFuncs()[fileName]; ok {
-		txt, err = getCfgFunc(toData)
+		txt, contentType, err = getCfgFunc(toData)
 	} else {
-		txt, err = cfgfile.GetConfigFileServerUnknownConfig(toData, fileName)
+		txt, contentType, err = cfgfile.GetConfigFileServerUnknownConfig(toData, fileName)
 	}
 	if err != nil {
-		return "", config.ExitCodeErrGeneric, err
+		return "", "", config.ExitCodeErrGeneric, err
 	}
-	return txt, config.ExitCodeSuccess, nil
+	return txt, contentType, config.ExitCodeSuccess, nil
 }

@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileUnknownConfig(toData *TOData, fileName string) (string, error) {
+func GetConfigFileProfileUnknownConfig(toData *TOData, fileName string) (string, string, error) {
 	inScope := false
 	for _, scopeParam := range toData.ScopeParams {
 		if scopeParam.ConfigFile != fileName {
@@ -37,8 +37,8 @@ func GetConfigFileProfileUnknownConfig(toData *TOData, fileName string) (string,
 		break
 	}
 	if !inScope {
-		return `{"alerts":[{"level":"error","text":"Error - incorrect file scope for route used.  Please use the servers route."}]}`, config.ErrBadRequest
+		return `{"alerts":[{"level":"error","text":"Error - incorrect file scope for route used.  Please use the servers route."}]}`, "", config.ErrBadRequest
 	}
 	params := ParamsToMap(FilterParams(toData.ServerParams, fileName, "", "", "location"))
-	return atscfg.MakeUnknownConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), nil
+	return atscfg.MakeUnknownConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeUnknownConfig, nil
 }

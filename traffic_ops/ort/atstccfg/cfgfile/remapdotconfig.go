@@ -31,7 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-func GetConfigFileServerRemapDotConfig(toData *TOData) (string, error) {
+func GetConfigFileServerRemapDotConfig(toData *TOData) (string, string, error) {
 	// TODO TOAPI add /servers?cdn=1 query param
 
 	atsVersionParam := ""
@@ -48,7 +48,7 @@ func GetConfigFileServerRemapDotConfig(toData *TOData) (string, error) {
 
 	atsMajorVer, err := atscfg.GetATSMajorVersionFromATSVersion(atsVersionParam)
 	if err != nil {
-		return "", errors.New("getting ATS major version from version parameter (profile '" + toData.Server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
+		return "", "", errors.New("getting ATS major version from version parameter (profile '" + toData.Server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
 	}
 
 	dsIDs := map[int]struct{}{}
@@ -182,7 +182,7 @@ func GetConfigFileServerRemapDotConfig(toData *TOData) (string, error) {
 
 	cacheKeyParamsWithProfiles, err := TCParamsToParamsWithProfiles(toData.CacheKeyParams)
 	if err != nil {
-		return "", errors.New("decoding cache key parameter profiles: " + err.Error())
+		return "", "", errors.New("decoding cache key parameter profiles: " + err.Error())
 	}
 
 	cacheKeyParamsWithProfilesMap := ParameterWithProfilesToMap(cacheKeyParamsWithProfiles)
@@ -218,14 +218,14 @@ func GetConfigFileServerRemapDotConfig(toData *TOData) (string, error) {
 	cgMap := map[string]tc.CacheGroupNullable{}
 	for _, cg := range toData.CacheGroups {
 		if cg.Name == nil {
-			return "", errors.New("got cachegroup with nil name!'")
+			return "", "", errors.New("got cachegroup with nil name!'")
 		}
 		cgMap[*cg.Name] = cg
 	}
 
 	serverCG, ok := cgMap[toData.Server.Cachegroup]
 	if !ok {
-		return "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' not found in CacheGroups")
+		return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' not found in CacheGroups")
 	}
 
 	parentCGID := -1
@@ -233,15 +233,15 @@ func GetConfigFileServerRemapDotConfig(toData *TOData) (string, error) {
 	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
 		parentCG, ok := cgMap[*serverCG.ParentName]
 		if !ok {
-			return "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+			return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
 		}
 		if parentCG.ID == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		parentCGID = *parentCG.ID
 
 		if parentCG.Type == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 		parentCGType = *parentCG.Type
 	}
@@ -251,15 +251,15 @@ func GetConfigFileServerRemapDotConfig(toData *TOData) (string, error) {
 	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
 		parentCG, ok := cgMap[*serverCG.SecondaryParentName]
 		if !ok {
-			return "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+			return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
 		}
 
 		if parentCG.ID == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		secondaryParentCGID = *parentCG.ID
 		if parentCG.Type == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 
 		secondaryParentCGType = *parentCG.Type
@@ -283,7 +283,7 @@ func GetConfigFileServerRemapDotConfig(toData *TOData) (string, error) {
 		SecondaryParentCacheGroupType: secondaryParentCGType,
 		Type:                          toData.Server.Type,
 	}
-	return atscfg.MakeRemapDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData), nil
+	return atscfg.MakeRemapDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData), atscfg.ContentTypeRemapDotConfig, nil
 }
 
 type DeliveryServiceRegexesSortByTypeThenSetNum []tc.DeliveryServiceRegex

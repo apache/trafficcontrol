@@ -23,7 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
-func GetConfigFileServerPackages(toData *TOData) (string, error) {
+func GetConfigFileServerPackages(toData *TOData) (string, string, error) {
 	params := ParamsToMultiMap(FilterParams(toData.ServerParams, atscfg.PackagesParamConfigFile, "", "", ""))
-	return atscfg.MakePackages(params), nil
+	return atscfg.MakePackages(params), atscfg.ContentTypePackages, nil
 }

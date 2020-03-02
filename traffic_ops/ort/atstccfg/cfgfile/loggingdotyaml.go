@@ -23,7 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
-func GetConfigFileProfileLoggingDotYAML(toData *TOData) (string, error) {
+func GetConfigFileProfileLoggingDotYAML(toData *TOData) (string, string, error) {
 	params := ParamsToMap(FilterParams(toData.ServerParams, atscfg.LoggingYAMLFileName, "", "", "location"))
-	return atscfg.MakeLoggingDotYAML(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), nil
+	return atscfg.MakeLoggingDotYAML(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeLoggingDotYAML, nil
 }

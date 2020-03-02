@@ -23,7 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
-func GetConfigFileProfileSysCtlDotConf(toData *TOData) (string, error) {
+func GetConfigFileProfileSysCtlDotConf(toData *TOData) (string, string, error) {
 	paramData := map[string]string{}
 	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
 	for _, param := range toData.ServerParams {
@@ -36,5 +36,5 @@ func GetConfigFileProfileSysCtlDotConf(toData *TOData) (string, error) {
 		paramData[param.Name] = param.Value
 	}
 
-	return atscfg.MakeSysCtlDotConf(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), nil
+	return atscfg.MakeSysCtlDotConf(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeSysctlDotConf, nil
 }

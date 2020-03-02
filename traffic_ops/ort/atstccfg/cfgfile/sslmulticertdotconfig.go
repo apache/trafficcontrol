@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileCDNSSLMultiCertDotConfig(toData *TOData) (string, error) {
+func GetConfigFileCDNSSLMultiCertDotConfig(toData *TOData) (string, string, error) {
 	filteredDSes := []tc.DeliveryServiceNullable{}
 	for _, ds := range toData.DeliveryServices {
 		// ANY_MAP and STEERING DSes don't have origins, and thus can't be put into the ssl config.
@@ -36,5 +36,5 @@ func GetConfigFileCDNSSLMultiCertDotConfig(toData *TOData) (string, error) {
 
 	cfgDSes := atscfg.DeliveryServicesToSSLMultiCertDSes(filteredDSes)
 
-	return atscfg.MakeSSLMultiCertDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDSes), nil
+	return atscfg.MakeSSLMultiCertDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDSes), atscfg.ContentTypeSSLMultiCertDotConfig, nil
 }

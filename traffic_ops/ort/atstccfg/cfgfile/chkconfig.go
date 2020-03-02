@@ -23,7 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
-func GetConfigFileServerChkconfig(toData *TOData) (string, error) {
+func GetConfigFileServerChkconfig(toData *TOData) (string, string, error) {
 	fileParams := map[string][]string{}
 	for _, param := range toData.ServerParams {
 		if param.ConfigFile != atscfg.ChkconfigParamConfigFile {
@@ -32,6 +32,5 @@ func GetConfigFileServerChkconfig(toData *TOData) (string, error) {
 		fileParams[param.Name] = append(fileParams[param.Name], param.Value)
 	}
 
-	txt := atscfg.MakeChkconfig(fileParams)
-	return txt, nil
+	return atscfg.MakeChkconfig(fileParams), atscfg.ContentTypeChkconfig, nil
 }
