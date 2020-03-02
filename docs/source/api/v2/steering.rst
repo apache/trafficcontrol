@@ -46,6 +46,11 @@ Response Structure
 :deliveryService:               A string that is the :ref:`ds-xmlid` of the steering :term:`Delivery Service`
 :clientSteering:                Whether this is a :ref:`client steering <ds-client-steering>` Delivery Service.
 :targets:                       The delivery services that the :ref`Steering Delivery Service <tr-steering>` targets.
+
+	:order:                 If this is a :ref:`ds-steering-order` target, this is the value of the order. Otherwise, ``0``.
+	:weight:                If this is a :ref:`ds-steering-weight` target, this is the value of the weight. Otherwise, ``0``.
+	:deliveryService:       A string that is the :ref:`ds-xmlid` of the steering :term:`Delivery Service`
+
 :filters:                       Filters of type :ref:`STEERING_REGEXP <ds-steering-regexp>` that exist on either of the targets.
 
 	:deliveryService:       A string that is the :ref:`ds-xmlid` of the steering :term:`Delivery Service`
