@@ -256,3 +256,5 @@ Response Structure
 			"status": "submitted"
 		}
 	}
+
+.. [#geoLimit] These fields must be defined if and only if ``geoLimit`` is non-zero
