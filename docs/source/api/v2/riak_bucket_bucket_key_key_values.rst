@@ -50,7 +50,7 @@ Request Structure
 
 Response Structure
 ------------------
-The response structure varies according to what is stored.
+The response structure varies according to what is stored. Top-level keys will always be ``String`` type, but the values can be any type.
 
 .. code-block:: http
 	:caption: Response Example
