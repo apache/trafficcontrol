@@ -22,7 +22,8 @@
 ``GET``
 =======
 .. deprecated:: ATCv4
-	Use the ``GET`` method of :ref:`to-api-v1-logs` with query parameters ``days`` and ``limit`` instead.
+    Use the ``GET`` method of :ref:`to-api-v1-logs` with query parameters ``days`` and ``limit`` instead.
+
 Fetches a list of changes that have been made to the Traffic Control system in the past ``days`` days
 
 :Auth. Required: Yes
