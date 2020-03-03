@@ -812,13 +812,6 @@ sub send_update_to_trops {
 	( $log_level >> $DEBUG ) && print "DEBUG Response from Traffic Ops is: " . $response->content() . ".\n";
 }
 
-sub get_print_current_client_connections {
-	my $cmd                 = $TRAFFIC_CTL . " metric get proxy.process.http.current_client_connections";
-	my $current_connections = `$cmd 2>/dev/null`;
-	chomp($current_connections);
-	( $log_level >> $DEBUG ) && print "DEBUG There are currently $current_connections connections.\n";
-}
-
 sub get_update_status {
 	my $uri     = "/api/2.0/servers/$hostname_short/update_status";
 	my $upd_ref = &lwp_get($uri);
@@ -1743,40 +1736,6 @@ sub check_lwp_response_code {
 	}
 }
 
-sub check_lwp_response_message_integrity {
-	my $lwp_response  = shift;
-	my $panic_level   = shift;
-	my $log_level_str = &log_level_to_string($panic_level);
-	my $url           = $lwp_response->request->uri;
-
-	my $mic_header = 'Whole-Content-SHA512';
-
-	if ( defined($lwp_response->header($mic_header)) ) {
-		if ( $lwp_response->header($mic_header) ne sha512_base64($lwp_response->content()) . '==') {
-			( $log_level >> $panic_level ) && print $log_level_str . " $url returned a $mic_header of " . $lwp_response->header($mic_header) . ", however actual body SHA512 is " . sha512_base64($lwp_response->content()) . '==' . "!\n";
-			exit 1 if ($log_level_str eq 'FATAL');
-			return 1;
-		} else {
-			( $log_level >> $DEBUG ) && print "DEBUG $url returned a $mic_header of " . $lwp_response->header($mic_header) . ", and actual body SHA512 is " . sha512_base64($lwp_response->content()) . '==' . "\n";
-			return 0;
-		}
-	}
-	elsif ( defined($lwp_response->header('Content-Length')) ) {
-		if ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
-			( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n";
-			exit 1 if ($log_level_str eq 'FATAL');
-			return 1;
-		} else {
-			( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n";
-			return 0;
-		}
-	}
-	else {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a $mic_header or Content-Length header! Cannot Message Integrity Check!\n";
-		return 1;
-	}
-}
-
 sub check_script_mode {
 	#### No default script mode
 	my $script_mode = undef;
@@ -2694,23 +2653,6 @@ sub can_read_write_file {
 
 	( $log_level >> $TRACE ) && print "TRACE RW perms okay for $filename!\n";
 	return 1;
-}
-
-sub file_exists {
-
-	my $filename = shift;
-	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
-	my $file     = $filepath . "/" . $filename;
-
-	if ( !-e $file ) {
-		( $log_level >> $ERROR ) && print "ERROR $filename does not exist!\n";
-		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
-		return 0;
-	}
-
-	( $log_level >> $TRACE ) && print "TRACE $filename exists on disk.\n";
-	return 1;
-
 }
 
 sub open_file_get_contents {
