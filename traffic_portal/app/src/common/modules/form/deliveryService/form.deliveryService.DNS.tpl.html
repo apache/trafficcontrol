@@ -412,7 +412,7 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="rangeRequestHandling" name="rangeRequestHandling" class="form-control" ng-model="deliveryService.rangeRequestHandling" required>
+                            <select id="rangeRequestHandling" name="rangeRequestHandling" class="form-control" ng-model="deliveryService.rangeRequestHandling" ng-change="rangeRequestSelected()" required>
                                 <option ng-value="0">Don't cache Range Requests</option>
                                 <option ng-value="1">Use the background_fetch plugin</option>
                                 <option ng-value="2">Use the cache_range_requests plugin</option>
@@ -434,10 +434,10 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="slicePluginBlockSize" name="slicePluginBlockSize" type="number" class="form-control" ng-model="deliveryService.slicePluginBlockSize" min="262144" max="33554432" ng-readonly="dsCurrent.rangeRequestHandling != 3">
+                            <input id="slicePluginBlockSize" name="slicePluginBlockSize" type="number" class="form-control" ng-model="deliveryService.slicePluginBlockSize" min="262144" max="33554432" ng-readonly="dsCurrent.rangeRequestHandling != 3" ng-required="dsCurrent.rangeRequestHandling == 3">
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.slicePluginBlockSize, 'min')">Too Small (must be greater than or equal to 262144)</small>
                             <small class="input-error" ng-show="hasPropertyError(cacheConfig.slicePluginBlockSize, 'max')">Too Large (must be smaller than or equal to 33554432)</small>
-                            <small class="input-error" ng-show="dsCurrent.rangeRequestHandling == 3 && dsCurrent.slicePluginBlockSize == null && !(hasPropertyError(cacheConfig.slicePluginBlockSize, 'min') || hasPropertyError(cacheConfig.slicePluginBlockSize, 'max'))">Required</small>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.slicePluginBlockSize, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.slicePluginBlockSize != dsCurrent.slicePluginBlockSize">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.slicePluginBlockSize}}</pre>
