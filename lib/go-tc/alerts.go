@@ -122,5 +122,10 @@ func (self *Alerts) AddAlerts(alerts Alerts) {
 	self.Alerts = newAlerts
 }
 
+// HasAlerts returns if the Alerts contains any "alert"s.
+func (self *Alerts) HasAlerts() bool {
+	return len(self.Alerts) > 0
+}
+
 // StatusKey holds the text of the status key of a Request Context.
 var StatusKey = "status"
