@@ -138,18 +138,6 @@ func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode in
 	handleSimpleErr(w, r, statusCode, userErr, sysErr)
 }
 
-// GetDeprecationAlerts returns a standard deprecation alert depending on if an alternative is provided.
-func GetDeprecationAlerts(alternative *string) tc.Alerts {
-	var alerts tc.Alerts
-	if alternative != nil {
-		alerts = tc.CreateAlerts(tc.WarnLevel, fmt.Sprintf("This endpoint is deprecated, please use %s instead", *alternative))
-	} else {
-		alerts = tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
-	}
-
-	return alerts
-}
-
 // HandleDeprecatedErr handles an API error, adding a deprecation alert, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
 //
 // The alternative may be nil if there is no alternative and the deprecation message will be selected appropriately.
@@ -170,7 +158,7 @@ func HandleDeprecatedErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, sta
 		}
 	}
 
-	alerts := GetDeprecationAlerts(alternative)
+	alerts := CreateDeprecationAlerts(alternative)
 
 	userErr = LogErr(r, statusCode, userErr, sysErr)
 	alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
@@ -963,4 +951,3 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
 	}
 }
-

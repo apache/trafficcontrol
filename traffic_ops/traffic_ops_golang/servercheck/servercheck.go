@@ -231,7 +231,7 @@ func DeprecatedReadServersChecks(w http.ResponseWriter, r *http.Request) {
 		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, util.StrPtr(ServerCheck_Get_Endpoint))
 	}
 
-	alerts := api.GetDeprecationAlerts(util.StrPtr(ServerCheck_Get_Endpoint))
+	alerts := api.CreateDeprecationAlerts(util.StrPtr(ServerCheck_Get_Endpoint))
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, data)
 }
 
