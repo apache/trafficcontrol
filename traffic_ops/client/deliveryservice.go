@@ -134,7 +134,7 @@ func (to *Session) GetDeliveryServices() ([]tc.DeliveryService, ReqInf, error) {
 func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, ReqInf, error) {
 	var data tc.DeliveryServicesResponse
 
-	reqInf, err := get(to, fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, strconv.Itoa(id)), &data)
+	reqInf, err := get(to, fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), &data)
 	if err != nil {
 		return nil, reqInf, err
 	}

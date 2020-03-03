@@ -191,7 +191,7 @@ Response Structure
 
 	{ "alerts": [{
 		"level": "warning",
-		"text": "This endpoint is deprecated, please use GET /deliveryservices instead."
+		"text": "This endpoint is deprecated, please use GET /deliveryservices with the query parameter id instead."
 	}],
 	"response": [{
 		"active": true,
