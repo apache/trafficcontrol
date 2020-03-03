@@ -99,12 +99,15 @@ type TOData struct {
 
 	// DSRequiredCapabilities must be a map of all delivery service IDs on this server's CDN, to a set of their required capabilities. Delivery Services with no required capabilities may not have an entry in the map.
 	DSRequiredCapabilities map[int]map[atscfg.ServerCapability]struct{}
+
+	// SSLKeys must be all the ssl keys for the server's cdn.
+	SSLKeys []tc.CDNSSLKeys
 }
 
 // TODO: validate all "profile scope" files are the server's profile.
 //       If they ever weren't, we'll send bad data, because we're only getting the server's profile data.
 //       Getting all data for all profiles in TOData isn't reasonable.
-
+// TODO info log profile name, cdn name (ORT was logging, and doesn't get that data anymore, so we need to log here)
 func GetTOData(cfg config.TCCfg) (*TOData, error) {
 	start := time.Now()
 	defer func() { log.Infof("GetTOData took %v\n", time.Since(start)) }()
@@ -134,6 +137,15 @@ func GetTOData(cfg config.TCCfg) (*TOData, error) {
 
 		toData.Server = server
 
+		sslF := func() error {
+			defer func(start time.Time) { log.Infof("sslF took %v\n", time.Since(start)) }(time.Now())
+			keys, err := toreq.GetCDNSSLKeys(cfg, tc.CDNName(server.CDNName))
+			if err != nil {
+				return errors.New("getting cdn '" + server.CDNName + "': " + err.Error())
+			}
+			toData.SSLKeys = keys
+			return nil
+		}
 		dsF := func() error {
 			defer func(start time.Time) { log.Infof("dsF took %v\n", time.Since(start)) }(time.Now())
 			dses, err := toreq.GetCDNDeliveryServices(cfg, server.CDNID)
@@ -224,7 +236,7 @@ func GetTOData(cfg config.TCCfg) (*TOData, error) {
 			toData.Profile = profile
 			return nil
 		}
-		return util.JoinErrs(runParallel([]func() error{dsF, serverParamsF, cdnF, profileF}))
+		return util.JoinErrs(runParallel([]func() error{sslF, dsF, serverParamsF, cdnF, profileF}))
 	}
 
 	cgF := func() error {
@@ -450,4 +462,10 @@ func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
 		mp[param.Name] = append(mp[param.Name], param.Value)
 	}
 	return mp
+}
+
+type ATSConfigFile struct {
+	tc.ATSConfigMetaDataConfigFile
+	Text        string
+	ContentType string
 }

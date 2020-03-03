@@ -198,7 +198,7 @@ func getScope(cfgFile string, scopeParams map[string]string) tc.ATSConfigMetaDat
 		return tc.ATSConfigMetaDataConfigFileScopeProfiles
 	case cfgFile == "bg_fetch.config",
 		cfgFile == "regex_revalidate.config",
-		cfgFile == "ssl_multicert.config",
+		cfgFile == SSLMultiCertConfigFileName,
 		strings.HasPrefix(cfgFile, "cacheurl") && strings.HasSuffix(cfgFile, ".config"),
 		strings.HasPrefix(cfgFile, "hdr_rw_") && strings.HasSuffix(cfgFile, ".config"),
 		strings.HasPrefix(cfgFile, "regex_remap_") && strings.HasSuffix(cfgFile, ".config"),

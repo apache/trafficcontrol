@@ -588,3 +588,54 @@ func GetCDNNameFromCDNNameOrID(cfg config.TCCfg, cdnNameOrID string) (tc.CDNName
 	}
 	return tc.CDNName(cdnName), nil
 }
+
+func GetCDNSSLKeys(cfg config.TCCfg, cdnName tc.CDNName) ([]tc.CDNSSLKeys, error) {
+	keys := []tc.CDNSSLKeys{}
+	err := GetCached(cfg, "cdn_sslkeys_"+string(cdnName), &keys, func(obj interface{}) error {
+		toKeys, reqInf, err := (*cfg.TOClient).GetCDNSSLKeys(string(cdnName))
+		if err != nil {
+			return errors.New("getting cdn ssl keys from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		keys := obj.(*[]tc.CDNSSLKeys)
+		*keys = toKeys
+		return nil
+	})
+	if err != nil {
+		return []tc.CDNSSLKeys{}, errors.New("getting cdn ssl keys: " + err.Error())
+	}
+	return keys, nil
+}
+
+func GetStatuses(cfg config.TCCfg) ([]tc.Status, error) {
+	statuses := []tc.Status{}
+	err := GetCached(cfg, "statuses", &statuses, func(obj interface{}) error {
+		toStatus, reqInf, err := (*cfg.TOClient).GetStatuses()
+		if err != nil {
+			return errors.New("getting server update status from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		status := obj.(*[]tc.Status)
+		*status = toStatus
+		return nil
+	})
+	if err != nil {
+		return nil, errors.New("getting server update status: " + err.Error())
+	}
+	return statuses, nil
+}
+
+func GetServerUpdateStatus(cfg config.TCCfg) (tc.ServerUpdateStatus, error) {
+	status := tc.ServerUpdateStatus{}
+	err := GetCached(cfg, "server_update_status_"+string(cfg.CacheHostName), &status, func(obj interface{}) error {
+		toStatus, reqInf, err := (*cfg.TOClient).GetServerUpdateStatus(string(cfg.CacheHostName))
+		if err != nil {
+			return errors.New("getting server update status from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		status := obj.(*tc.ServerUpdateStatus)
+		*status = toStatus
+		return nil
+	})
+	if err != nil {
+		return tc.ServerUpdateStatus{}, errors.New("getting server update status: " + err.Error())
+	}
+	return status, nil
+}

@@ -27,8 +27,10 @@ import (
 )
 
 const ContentTypeSSLMultiCertDotConfig = ContentTypeTextASCII
+const SSLMultiCertConfigFileName = `ssl_multicert.config`
 
 type SSLMultiCertDS struct {
+	XMLID       string
 	Type        tc.DSType
 	Protocol    int
 	ExampleURLs []string
@@ -58,7 +60,46 @@ func MakeSSLMultiCertDotConfig(
 ) string {
 	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
 
+	dses = GetSSLMultiCertDotConfigDeliveryServices(dses)
+
 	for dsName, ds := range dses {
+		cerName, keyName := GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
+		text += `ssl_cert_name=` + cerName + "\t" + ` ssl_key_name=` + keyName + "\n"
+	}
+	return text
+}
+
+// GetSSLMultiCertDotConfigCertAndKeyName returns the cert file name and key file name for the given delivery service.
+func GetSSLMultiCertDotConfigCertAndKeyName(dsName tc.DeliveryServiceName, ds SSLMultiCertDS) (string, string) {
+	hostName := ds.ExampleURLs[0] // first one is the one we want
+
+	scheme := "https://"
+	if !strings.HasPrefix(hostName, scheme) {
+		scheme = "http://"
+	}
+	newHost := hostName
+	if len(hostName) < len(scheme) {
+		log.Errorln("MakeSSLMultiCertDotConfig got ds '" + string(dsName) + "' example url '" + hostName + "' with no scheme! ssl_multicert.config will likely be malformed!")
+	} else {
+		newHost = hostName[len(scheme):]
+	}
+	keyName := newHost + ".key"
+
+	newHost = strings.Replace(newHost, ".", "_", -1)
+
+	cerName := newHost + "_cert.cer"
+	return cerName, keyName
+}
+
+// GetSSLMultiCertDotConfigDeliveryServices takes a list of delivery services, and returns the delivery services which will be inserted into the config by MakeSSLMultiCertDotConfig.
+// This is public, so users can see which Delivery Services are used, without parsing the config file.
+// For example, this is useful to determine which certificates are needed.
+func GetSSLMultiCertDotConfigDeliveryServices(dses map[tc.DeliveryServiceName]SSLMultiCertDS) map[tc.DeliveryServiceName]SSLMultiCertDS {
+	usedDSes := map[tc.DeliveryServiceName]SSLMultiCertDS{}
+	for dsName, ds := range dses {
+		if ds.Type == tc.DSTypeAnyMap {
+			continue
+		}
 		if ds.Type.IsSteering() {
 			continue // Steering delivery service SSLs should not be on the edges.
 		}
@@ -68,25 +109,7 @@ func MakeSSLMultiCertDotConfig(
 		if len(ds.ExampleURLs) == 0 {
 			continue // TODO warn? error? Perl doesn't
 		}
-
-		hostName := ds.ExampleURLs[0] // first one is the one we want
-
-		scheme := "https://"
-		if !strings.HasPrefix(hostName, scheme) {
-			scheme = "http://"
-		}
-		newHost := hostName
-		if len(hostName) < len(scheme) {
-			log.Errorln("MakeSSLMultiCertDotConfig got ds '" + string(dsName) + "' example url '" + hostName + "' with no scheme! ssl_multicert.config will likely be malformed!")
-		} else {
-			newHost = hostName[len(scheme):]
-		}
-		keyName := newHost + ".key"
-
-		newHost = strings.Replace(newHost, ".", "_", -1)
-
-		cerName := newHost + "_cert.cer"
-		text += `ssl_cert_name=` + cerName + "\t" + ` ssl_key_name=` + keyName + "\n"
+		usedDSes[dsName] = ds
 	}
-	return text
+	return usedDSes
 }

@@ -37,6 +37,22 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
+// GetTCCfg takes the config.Cfg and logs into Traffic Ops, returning the TCCfg which contains the logged-in client.
+func GetTCCfg(cfg config.Cfg) (config.TCCfg, error) {
+	log.Infoln("URL: '" + cfg.TOURL.String() + "' User: '" + cfg.TOUser + "' Pass len: '" + strconv.Itoa(len(cfg.TOPass)) + "'")
+
+	toFQDN := cfg.TOURL.Scheme + "://" + cfg.TOURL.Host
+	log.Infoln("TO FQDN: '" + toFQDN + "'")
+	log.Infoln("TO URL: '" + cfg.TOURL.String() + "'")
+
+	toClient, toIP, err := toclient.LoginWithAgent(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, config.UserAgent, false, cfg.TOTimeout)
+	if err != nil {
+		return config.TCCfg{}, errors.New("Logging in to Traffic Ops '" + MaybeIPStr(toIP) + "': " + err.Error())
+	}
+
+	return config.TCCfg{Cfg: cfg, TOClient: &toClient}, nil
+}
+
 // TrafficOpsRequest makes a request to Traffic Ops for the given method, url, and body.
 // If it gets an Unauthorized or Forbidden, it tries to log in again and makes the request again.
 func TrafficOpsRequest(cfg config.TCCfg, method string, url string, body []byte) (string, int, error) {

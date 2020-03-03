@@ -25,16 +25,7 @@ import (
 )
 
 func GetConfigFileCDNSSLMultiCertDotConfig(toData *TOData) (string, string, error) {
-	filteredDSes := []tc.DeliveryServiceNullable{}
-	for _, ds := range toData.DeliveryServices {
-		// ANY_MAP and STEERING DSes don't have origins, and thus can't be put into the ssl config.
-		if ds.Type != nil && (*ds.Type == tc.DSTypeAnyMap || *ds.Type == tc.DSTypeSteering) {
-			continue
-		}
-		filteredDSes = append(filteredDSes, ds)
-	}
-
-	cfgDSes := atscfg.DeliveryServicesToSSLMultiCertDSes(filteredDSes)
+	cfgDSes := atscfg.DeliveryServicesToSSLMultiCertDSes(toData.DeliveryServices)
 
 	return atscfg.MakeSSLMultiCertDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDSes), atscfg.ContentTypeSSLMultiCertDotConfig, nil
 }

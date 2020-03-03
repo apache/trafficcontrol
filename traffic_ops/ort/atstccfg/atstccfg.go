@@ -48,23 +48,15 @@ package main
  */
 
 import (
-	"errors"
 	"fmt"
-	"io"
-	"math/rand"
-	"mime/multipart"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/cfgfile"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/getdata"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
@@ -89,48 +81,50 @@ func main() {
 	plugins := plugin.Get(cfg)
 	plugins.OnStartup(plugin.StartupData{Cfg: cfg})
 
-	log.Infoln("URL: '" + cfg.TOURL.String() + "' User: '" + cfg.TOUser + "' Pass len: '" + strconv.Itoa(len(cfg.TOPass)) + "'")
-
-	toFQDN := cfg.TOURL.Scheme + "://" + cfg.TOURL.Host
-	log.Infoln("TO FQDN: '" + toFQDN + "'")
-	log.Infoln("TO URL: '" + cfg.TOURL.String() + "'")
-
-	toClient, toIP, err := toclient.LoginWithAgent(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, config.UserAgent, false, cfg.TOTimeout)
+	tccfg, err := toreq.GetTCCfg(cfg)
 	if err != nil {
-		log.Errorln("Logging in to Traffic Ops '" + toreq.MaybeIPStr(toIP) + "': " + err.Error())
+		log.Errorln(err)
 		os.Exit(config.ExitCodeErrGeneric)
 	}
-
-	tccfg := config.TCCfg{Cfg: cfg, TOClient: &toClient}
 
 	onReqData := plugin.OnRequestData{Cfg: tccfg}
 	if handled := plugins.OnRequest(onReqData); handled {
 		return
 	}
 
-	configs, err := GetAllConfigs(tccfg)
+	if tccfg.GetData != "" {
+		if err := getdata.WriteData(tccfg); err != nil {
+			log.Errorln("writing data: " + err.Error())
+			os.Exit(config.ExitCodeErrGeneric)
+		}
+		os.Exit(config.ExitCodeSuccess)
+	}
+
+	if tccfg.SetRevalStatus != "" || tccfg.SetQueueStatus != "" {
+		if err := getdata.SetQueueRevalStatuses(tccfg); err != nil {
+			log.Errorln("writing queue and reval statuses: " + err.Error())
+			os.Exit(config.ExitCodeErrGeneric)
+		}
+		os.Exit(config.ExitCodeSuccess)
+	}
+
+	configs, err := cfgfile.GetAllConfigs(tccfg)
 	if err != nil {
 		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	if err := WriteConfigs(configs, os.Stdout); err != nil {
+	if err := cfgfile.WriteConfigs(configs, os.Stdout); err != nil {
 		log.Errorln("Writing configs for '" + cfg.CacheHostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	// for _, cfgFile := range configs {
-	// 	path := filepath.Join(cfg.OutputDir, cfgFile.FileNameOnDisk)
-	// 	if err := ioutil.WriteFile(path, []byte(cfgFile.Text), 0644); err != nil {
-	// 		log.Errorln("Getting config for'" + path + "': " + err.Error())
-	// 	}
-	// }
 	os.Exit(config.ExitCodeSuccess)
 }
 
 func GetGeneratedFilesList() []string {
 	names := []string{}
-	for scope, fileFuncs := range ConfigFileFuncs() {
+	for scope, fileFuncs := range cfgfile.ConfigFileFuncs() {
 		for cfgFile, _ := range fileFuncs {
 			names = append(names, scope+"/"+cfgFile)
 		}
@@ -147,73 +141,4 @@ func HTTPCodeToExitCode(httpCode int) int {
 		return config.ExitCodeNotFound
 	}
 	return config.ExitCodeErrGeneric
-}
-
-// GetAllConfigs returns a map[configFileName]configFileText
-func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
-	toData, err := cfgfile.GetTOData(cfg)
-	if err != nil {
-		return nil, errors.New("getting data from traffic ops: " + err.Error())
-	}
-
-	meta, err := cfgfile.GetMeta(toData)
-	if err != nil {
-		return nil, errors.New("creating meta: " + err.Error())
-	}
-
-	configs := []ATSConfigFile{}
-	for _, fi := range meta.ConfigFiles {
-		txt, contentType, _, err := GetConfigFile(toData, fi)
-		if err != nil {
-			return nil, errors.New("getting config file '" + fi.APIURI + "': " + err.Error())
-		}
-		configs = append(configs, ATSConfigFile{ATSConfigMetaDataConfigFile: fi, Text: txt, ContentType: contentType})
-	}
-	return configs, nil
-}
-
-type ATSConfigFile struct {
-	tc.ATSConfigMetaDataConfigFile
-	Text        string
-	ContentType string
-}
-
-const HdrConfigFilePath = "Path"
-
-// WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
-func WriteConfigs(configs []ATSConfigFile, output io.Writer) error {
-	w := multipart.NewWriter(output)
-
-	// Create a unique boundary. Because we're using a text encoding, we need to make sure the boundary text doesn't occur in any body.
-	boundary := w.Boundary()
-	randSet := `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`
-	for _, cfg := range configs {
-		for strings.Contains(cfg.Text, boundary) {
-			boundary += string(randSet[rand.Intn(len(randSet))])
-		}
-	}
-	if err := w.SetBoundary(boundary); err != nil {
-		return errors.New("setting multipart writer boundary '" + boundary + "': " + err.Error())
-	}
-
-	io.WriteString(output, `MIME-Version: 1.0`+"\r\n"+`Content-Type: multipart/mixed; boundary="`+boundary+`"`+"\r\n\r\n")
-
-	for _, cfg := range configs {
-		hdr := map[string][]string{
-			rfc.ContentType:   {cfg.ContentType},
-			HdrConfigFilePath: []string{filepath.Join(cfg.Location, cfg.FileNameOnDisk)},
-		}
-		partW, err := w.CreatePart(hdr)
-		if err != nil {
-			return errors.New("creating multipart part for config file '" + cfg.FileNameOnDisk + "': " + err.Error())
-		}
-		if _, err := io.WriteString(partW, cfg.Text); err != nil {
-			return errors.New("writing to multipart part for config file '" + cfg.FileNameOnDisk + "': " + err.Error())
-		}
-	}
-
-	if err := w.Close(); err != nil {
-		return errors.New("closing multipart writer and writing final boundary: " + err.Error())
-	}
-	return nil
 }

@@ -61,6 +61,9 @@ type Cfg struct {
 	TOTimeout           time.Duration
 	TOURL               *url.URL
 	TOUser              string
+	GetData             string
+	SetQueueStatus      string
+	SetRevalStatus      string
 }
 
 type TCCfg struct {
@@ -92,6 +95,9 @@ func GetCfg() (Cfg, error) {
 	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")
 	outputDirPtr := flag.StringP("output-directory", "o", "", "Directory to output config files to.")
 	cacheHostNamePtr := flag.StringP("cache-host-name", "n", "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
+	getDataPtr := flag.StringP("get-data", "d", "", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
+	setQueueStatusPtr := flag.StringP("set-queue-status", "q", "", "POSTs to Traffic Ops setting the queue status of the server. Must be 'true' or 'false'. Requires --set-reval-status also be set")
+	setRevalStatusPtr := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revaliate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
 
 	flag.Parse()
 
@@ -119,6 +125,9 @@ func GetCfg() (Cfg, error) {
 	listPlugins := *listPluginsPtr
 	outputDir := *outputDirPtr
 	cacheHostName := *cacheHostNamePtr
+	getData := *getDataPtr
+	setQueueStatus := *setQueueStatusPtr
+	setRevalStatus := *setRevalStatusPtr
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -142,9 +151,9 @@ func GetCfg() (Cfg, error) {
 	if strings.TrimSpace(toPass) == "" {
 		return Cfg{}, errors.New("Missing required argument --traffic-ops-password or TO_PASS environment variable. " + usageStr)
 	}
-	if strings.TrimSpace(outputDir) == "" {
-		return Cfg{}, errors.New("Missing required argument --output-directory. If you wish to use the current directory, pass '.'. " + usageStr)
-	}
+	// if strings.TrimSpace(outputDir) == "" {
+	// 	return Cfg{}, errors.New("Missing required argument --output-directory. If you wish to use the current directory, pass '.'. " + usageStr)
+	// }
 	if strings.TrimSpace(cacheHostName) == "" {
 		return Cfg{}, errors.New("Missing required argument --cache-host-name. " + usageStr)
 	}
@@ -169,6 +178,9 @@ func GetCfg() (Cfg, error) {
 		ListPlugins:     listPlugins,
 		OutputDir:       outputDir,
 		CacheHostName:   cacheHostName,
+		GetData:         getData,
+		SetRevalStatus:  setRevalStatus,
+		SetQueueStatus:  setQueueStatus,
 	}
 
 	if err := log.InitCfg(cfg); err != nil {
