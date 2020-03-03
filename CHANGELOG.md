@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/deliveryservices/sslkeys/generate/letsencrypt `POST`
   - /api/1.5/letsencrypt/autorenew `POST`
   - /api/1.5/letsencrypt/dnsrecords `GET`
+  - /api/2.0/vault/ping `GET`
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
@@ -35,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated CDN-in-a-Box scripts and enroller to use TO API version 2.0
 - Updated numerous, miscellaneous tools to use TO API version 2.0
 - Updated TP to use TO API v2
+- Updated TP application build dependencies
 
 ### Deprecated/Removed
 - Traffic Ops Python client no longer supports Python 2.
@@ -55,14 +57,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /deliveryservices/{dsid}/regexes/{regexid} (GET)
   - /deliveryservices/:id/state
   - /divisions/:division_name/regions
+  - /divisions/:id
   - /divisions/name/:name
   - /hwinfo/dtdata
   - /jobs/:id
+  - /logs/:days/days
   - /parameters/:id/profiles
   - /parameters/:id/unassigned_profiles
   - /parameters/validate
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
+  - /riak/ping
   - /riak/stats
   - /servercheck/aadata
   - /servers/totals

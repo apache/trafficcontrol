@@ -670,20 +670,10 @@ class TOSession(RestApiSession):
 	# Change Logs
 	#
 	@api_request('get', 'logs', ('2.0',))
-	def get_change_logs(self):
+	def get_change_logs(self, query_params=None):
 		"""
 		Retrieve all change logs from traffic ops
 		:ref:`to-api-logs`
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'logs/{days:d}/days', ('2.0',))
-	def get_change_logs_for_days(self, days=None):
-		"""
-		Retrieve all change logs from Traffic Ops
-		:ref:`to-api-logs-days-days`
-		:param days: The number of days to retrieve change logs
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1023,21 +1013,10 @@ class TOSession(RestApiSession):
 	# Divisions
 	#
 	@api_request('get', 'divisions', ('2.0',))
-	def get_divisions(self):
+	def get_divisions(self, query_params=None):
 		"""
 		Get all divisions.
 		:ref:`to-api-divisions`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'divisions/{division_id:d}', ('2.0',))
-	def get_division_by_id(self, division_id=None):
-		"""
-		Get a division by division id
-		:ref:`to-api-divisions-id`
-		:param division_id: The division id to retrieve
-		:type division_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

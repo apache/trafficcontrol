@@ -212,13 +212,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Division: CRUD
 		{api.Version{2, 0}, http.MethodGet, `divisions/?$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 2085181534, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `divisions/{id}$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 2241497902, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `divisions/{id}$`, api.UpdateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 206369140, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `divisions/?$`, api.CreateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 253713800, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 2325382237, noPerlBypass},
 
 		{api.Version{2, 0}, http.MethodGet, `logs/?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil, 248340550, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `logs/{days}/days/?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil, 2192414145, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `logs/newcount/?$`, logs.GetNewCount, auth.PrivLevelReadOnly, Authenticated, nil, 2405833012, noPerlBypass},
 
 		//Content invalidation jobs
@@ -267,7 +265,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Ping
 		{api.Version{2, 0}, http.MethodGet, `ping$`, ping.PingHandler(), 0, NoAuth, nil, 2555661597, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `riak/ping/?$`, ping.Riak, auth.PrivLevelReadOnly, Authenticated, nil, 2884012114, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `vault/ping/?$`, ping.Vault, auth.PrivLevelReadOnly, Authenticated, nil, 2884012114, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `keys/ping/?$`, ping.Keys, auth.PrivLevelReadOnly, Authenticated, nil, 218416022, noPerlBypass},
 
 		//Profile: CRUD
@@ -613,14 +611,14 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Division: CRUD
 		{api.Version{1, 1}, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 1085181534, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `divisions/{id}$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 1241497902, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `divisions/{id}$`, api.DeprecatedReadHandler(&division.TODivision{}, util.StrPtr("GET /divisions with the 'id' parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 1241497902, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `divisions/{id}$`, api.UpdateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 306369140, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `divisions/?$`, api.CreateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 553713800, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 1325382237, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `divisions/name/{name}/?(\.json)?$`, api.DeprecatedReadHandler(&division.TODivision{}, util.StrPtr("GET /divisions with the 'name' parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 1211408769, noPerlBypass},
 
 		{api.Version{1, 1}, http.MethodGet, `logs/?(\.json)?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil, 848340550, perlBypass},
-		{api.Version{1, 1}, http.MethodGet, `logs/{days}/days/?(\.json)?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil, 1192414145, perlBypass},
+		{api.Version{1, 1}, http.MethodGet, `logs/{days}/days/?(\.json)?$`, logs.GetDeprecated, auth.PrivLevelReadOnly, Authenticated, nil, 1192414145, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `logs/newcount/?(\.json)?$`, logs.GetNewCount, auth.PrivLevelReadOnly, Authenticated, nil, 1405833012, perlBypass},
 
 		//HWInfo

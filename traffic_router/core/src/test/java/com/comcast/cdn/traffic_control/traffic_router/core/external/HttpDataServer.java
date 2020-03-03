@@ -130,8 +130,8 @@ public class HttpDataServer implements HttpHandler {
 				}
 
 				// Pretend that someone externally changed steering.json data
-				if (receivedSteeringPost && "internal/api/1.3/steering.json".equals(path)) {
-					path = "internal/api/1.3/steering2.json";
+				if (receivedSteeringPost && "api/2.0/steering".equals(path)) {
+					path = "api/2.0/steering2";
 				}
 
 				// pretend certificates have not been updated

@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-logs` with query parameters ``days`` and ``limit`` instead.
+
 Fetches a list of changes that have been made to the Traffic Control system in the past ``days`` days
 
 :Auth. Required: Yes
@@ -81,7 +84,14 @@ Response Structure
 	Whole-Content-Sha512: 40dV+azaZ3b6F30y6YHVbV3H2a3ekZrdoxICupwaxQnj62pwYfb7YCM7Qhe3OAItmB77Tbg9INy27ymaz3hr9A==
 	Content-Length: 357
 
-	{ "response": [
+	{
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use GET /logs instead"
+		}
+	],
+	"response": [
 		{
 			"ticketNum": null,
 			"level": "APICHANGE",
