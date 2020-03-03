@@ -157,7 +157,6 @@ my $CFG_FILE_PREREQ_FAILED     = 3;
 my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 #### LWP globals
-my $api_in_use = 1;
 my $rev_proxy_in_use = 0;
 my $atstccfg_cache_cleared = 0;
 my $lwp_conn                   = &setup_lwp();
@@ -396,18 +395,16 @@ sub process_cfg_file {
 	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$uri, \$result ) );
 
 	# Process __SERVER_TCP_PORT__, __HOSTNAME__, __FULL_HOSTNAME__ and __CACHE_IPV4__ values from traffic ops API.
-	if ( $api_in_use == 1 ) {
-		if ( $server_tcp_port != 80 ) {
-			$result =~ s/__SERVER_TCP_PORT__/$server_tcp_port/g;
-		}
-		else {
-			$result =~ s/:__SERVER_TCP_PORT__//g;
-		}
-		$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
-		$result =~ s/__HOSTNAME__/$hostname_short/g;
-		$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
-		$result =~ s/\s*__RETURN__\s*/\n/g;
+	if ( $server_tcp_port != 80 ) {
+		$result =~ s/__SERVER_TCP_PORT__/$server_tcp_port/g;
 	}
+	else {
+		$result =~ s/:__SERVER_TCP_PORT__//g;
+	}
+	$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
+	$result =~ s/__HOSTNAME__/$hostname_short/g;
+	$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
+	$result =~ s/\s*__RETURN__\s*/\n/g;
 
 	# Process ##OVERRIDE## remap rules (from anymap rawtext)
 	if ( $cfg_file eq "remap.config" ) {
@@ -1866,43 +1863,35 @@ sub get_cfg_file_list {
 	my $result = &lwp_get($uri);
 
 	if ($result eq '404') {
-		$api_in_use = 0;
 		( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support config files API. Please upgrade to Traffic Ops 2.2.\n");
 		exit 1;
 	}
 
 	my $ort_ref = decode_json($result);
 
-	if ($api_in_use == 1) {
-		$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
-		if ( $to_rev_proxy_url && $rev_proxy_disable == 0 ) {
-			$to_rev_proxy_url =~ s/\/*$//g;
-			# Note: If traffic_ops_url is changing, would be suggested to get a new cookie.
-			#       Secrets might not be the same on all Traffic Ops instance.
-			$traffic_ops_host = $to_rev_proxy_url;
-			$rev_proxy_in_use = 1;
-			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Reverse Proxy URL from Traffic Ops: $to_rev_proxy_url\n");
-		} else {
-			if ( $rev_proxy_disable == 1 ) {
-				( $log_level >> $INFO ) && printf("INFO Reverse proxy disabled - connecting directly to traffic ops for all files.\n");
-			}
-			$traffic_ops_host = $to_url;
+	$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
+	if ( $to_rev_proxy_url && $rev_proxy_disable == 0 ) {
+		$to_rev_proxy_url =~ s/\/*$//g;
+		# Note: If traffic_ops_url is changing, would be suggested to get a new cookie.
+		#       Secrets might not be the same on all Traffic Ops instance.
+		$traffic_ops_host = $to_rev_proxy_url;
+		$rev_proxy_in_use = 1;
+		( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Reverse Proxy URL from Traffic Ops: $to_rev_proxy_url\n");
+	} else {
+		if ( $rev_proxy_disable == 1 ) {
+			( $log_level >> $INFO ) && printf("INFO Reverse proxy disabled - connecting directly to traffic ops for all files.\n");
 		}
-		$profile_name = $ort_ref->{'info'}->{'profileName'};
-		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
-		$cdn_name = $ort_ref->{'info'}->{'cdnName'};
-		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
-		$server_tcp_port = $ort_ref->{'info'}->{'serverTcpPort'};
-		( $log_level >> $INFO ) && printf("INFO Found cache server tcp port from Traffic Ops: $server_tcp_port\n");
-		$server_ipv4 = $ort_ref->{'info'}->{'serverIpv4'};
-		( $log_level >> $INFO ) && printf("INFO Found cache server ipv4 from Traffic Ops: $server_ipv4\n");
+		$traffic_ops_host = $to_url;
 	}
-	else {
-		$profile_name = $ort_ref->{'profile'}->{'name'};
-		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
-		$cdn_name = $ort_ref->{'other'}->{'CDN_name'};
-		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
-	}
+	$profile_name = $ort_ref->{'info'}->{'profileName'};
+	( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
+	$cdn_name = $ort_ref->{'info'}->{'cdnName'};
+	( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
+	$server_tcp_port = $ort_ref->{'info'}->{'serverTcpPort'};
+	( $log_level >> $INFO ) && printf("INFO Found cache server tcp port from Traffic Ops: $server_tcp_port\n");
+	$server_ipv4 = $ort_ref->{'info'}->{'serverIpv4'};
+	( $log_level >> $INFO ) && printf("INFO Found cache server ipv4 from Traffic Ops: $server_ipv4\n");
+
 	if ( $script_mode == $REVALIDATE ) {
 		foreach my $cfg_file ( @{$ort_ref->{'configFiles'}} ) {
 			if ( $cfg_file->{'fnameOnDisk'} eq "regex_revalidate.config" ) {
@@ -1910,9 +1899,7 @@ sub get_cfg_file_list {
 				( $log_level >> $INFO )
 					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
 				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
-				if ($api_in_use == 1) {
-					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
-				}
+				$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
 				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
 			}
 		}
@@ -1920,43 +1907,23 @@ sub get_cfg_file_list {
 	else {
 		if ( $reval_in_use == 1 ) {
 			( $log_level >> $WARN ) && printf("WARN Instant Invalidate is enabled.  Skipping regex_revalidate.config.\n");
-			if ( $api_in_use == 1 ) {
-				my @new = grep { $_->{'fnameOnDisk'} ne 'regex_revalidate.config' } @{$ort_ref->{'configFiles'}};
-				$ort_ref->{'configFiles'} = \@new;
-			}
-			else {
-				delete $ort_ref->{'config_files'}->{'regex_revalidate.config'};
-			}
+			my @new = grep { $_->{'fnameOnDisk'} ne 'regex_revalidate.config' } @{$ort_ref->{'configFiles'}};
+			$ort_ref->{'configFiles'} = \@new;
 		}
-		if ( $api_in_use == 1 ) {
-			foreach my $cfg_file (@{$ort_ref->{'configFiles'}} ) {
-				my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'fnameOnDisk'} );
-				( $log_level >> $INFO )
-					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
-				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
-				if ( defined($cfg_file->{'apiUri'} ) ) {
-					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
-					( $log_level >> $DEBUG ) && print "DEBUG apiUri found: $cfg_files->{$fname_on_disk}->{'apiUri'}.\n";
-				}
-				elsif ( defined($cfg_file->{'url'} ) ) {
-					$cfg_files->{$fname_on_disk}->{'url'} = $cfg_file->{'url'};
-					( $log_level >> $DEBUG ) && print "DEBUG URL found: $cfg_files->{$fname_on_disk}->{'url'}.\n";
-				}
-				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
-
+		foreach my $cfg_file (@{$ort_ref->{'configFiles'}} ) {
+			my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'fnameOnDisk'} );
+			( $log_level >> $INFO )
+				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
+			$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
+			if ( defined($cfg_file->{'apiUri'} ) ) {
+				$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+				( $log_level >> $DEBUG ) && print "DEBUG apiUri found: $cfg_files->{$fname_on_disk}->{'apiUri'}.\n";
 			}
-		}
-		else {
-			foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
-				my $fname_on_disk = &get_filename_on_disk( $cfg_file );
-				( $log_level >> $INFO )
-					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-				$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
-				if ($api_in_use == 1) {
-					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
-				}
-				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
+			elsif ( defined($cfg_file->{'url'} ) ) {
+				$cfg_files->{$fname_on_disk}->{'url'} = $cfg_file->{'url'};
+				( $log_level >> $DEBUG ) && print "DEBUG URL found: $cfg_files->{$fname_on_disk}->{'url'}.\n";
 			}
+			$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
 		}
 	}
 	return ( $profile_name, $cfg_files, $cdn_name );
@@ -2651,10 +2618,10 @@ sub set_uri {
 
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
 	my $URI;
-	if ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'apiUri'}) ) {
+	if ( defined($cfg_file_tracker->{$filename}->{'apiUri'}) ) {
 		$URI = $cfg_file_tracker->{$filename}->{'apiUri'};
 	}
-	elsif ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'url'}) ) {
+	elsif ( defined($cfg_file_tracker->{$filename}->{'url'}) ) {
 		$URI = $cfg_file_tracker->{$filename}->{'url'};
 		( $log_level >> $DEBUG ) && print "DEBUG Setting external download URL.\n";
 	}
