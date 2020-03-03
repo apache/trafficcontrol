@@ -254,22 +254,22 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		for (final InetRecord record : ipAddresses) {
 			if (record.getAddress() == ip4 && !ipv4Available) {
 				newlyUnavailable.add(record);
-				LOGGER.info("disabling IPv4 address " + record.getAddress());
+				LOGGER.debug("disabling IPv4 address " + record.getAddress());
 			}
 			if (record.getAddress() == ip6 && !ipv6Available) {
 				newlyUnavailable.add(record);
-				LOGGER.info("disabling IPv6 address " + record.getAddress());
+				LOGGER.debug("disabling IPv6 address " + record.getAddress());
 			}
 		}
 
 		for (final InetRecord record : unavailableIpAddresses) {
 			if (record.getAddress() == ip4 && ipv4Available) {
 				newlyAvailable.add(record);
-				LOGGER.info("enabling IPv4 address " + record.getAddress());
+				LOGGER.debug("enabling IPv4 address " + record.getAddress());
 			}
 			if (record.getAddress() == ip6 && ipv6Available) {
 				newlyAvailable.add(record);
-				LOGGER.info("enabling IPv6 address " + record.getAddress());
+				LOGGER.debug("enabling IPv6 address " + record.getAddress());
 			}
 		}
 

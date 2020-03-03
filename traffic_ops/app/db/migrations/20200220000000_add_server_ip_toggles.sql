@@ -29,3 +29,5 @@ ALTER TABLE server ALTER COLUMN ip_address SET NOT NULL;
 ALTER TABLE server ALTER COLUMN ip_netmask SET NOT NULL;
 ALTER TABLE server ALTER COLUMN ip_gateway SET NOT NULL;
 ALTER TABLE server DROP CONSTRAINT need_at_least_one_ip;
+ALTER TABLE server DROP CONSTRAINT need_gateway_if_ip;
+ALTER TABLE server DROP CONSTRAINT need_netmask_if_ip;
