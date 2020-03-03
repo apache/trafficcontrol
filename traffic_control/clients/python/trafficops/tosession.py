@@ -699,18 +699,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}', ('2.0',))
-	def get_deliveryservice_by_id(self, delivery_service_id=None):
-		"""
-		Retrieves a specific delivery service. If not admin / ops, delivery service must be assigned
-		to user.
-		:ref:`to-api-deliveryservices-id`
-		:param delivery_service_id: The delivery service Id
-		:type delivery_service_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('post', 'deliveryservices', ('2.0',))
 	def create_deliveryservice(self, data=None):
 		"""

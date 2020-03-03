@@ -21,8 +21,8 @@
 
 ``GET``
 =======
-.. caution::
-	It's often much better to the ``id`` query parameter of a ``GET`` request to :ref:`to-api-v1-deliveryservices` instead.
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-deliveryservices` with the ``id`` query parameter.
 
 Retrieves a specific :term:`Delivery Service`
 
@@ -193,7 +193,11 @@ Response Structure
 	Date: Mon, 10 Jun 2019 13:43:48 GMT
 	Content-Length: 1500
 
-	{ "response": [{
+	{ "alerts": [{
+		"level": "warning",
+		"text": "This endpoint is deprecated, please use GET /deliveryservices with the query parameter id instead."
+	}],
+	"response": [{
 		"active": true,
 		"anonymousBlockingEnabled": false,
 		"cacheurl": null,

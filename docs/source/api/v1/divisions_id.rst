@@ -22,6 +22,7 @@
 ``GET``
 =======
 Get a specific Division.
+
 .. deprecated:: ATCv4
 	Use the ``GET`` method of :ref:`to-api-v1-divisions` with the ``id`` query parameter instead.
 
