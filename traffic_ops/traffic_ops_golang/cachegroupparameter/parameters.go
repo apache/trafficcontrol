@@ -288,7 +288,7 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, p := range params {
-		ppExists, err := dbhelpers.CachegroupParameterExistsByParameterID(*p.Parameter, *p.CacheGroup, inf.Tx.Tx)
+		ppExists, err := dbhelpers.CachegroupParameterAssociationExists(*p.Parameter, *p.CacheGroup, inf.Tx.Tx)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
