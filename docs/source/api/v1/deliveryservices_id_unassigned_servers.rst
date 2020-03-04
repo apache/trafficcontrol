@@ -20,6 +20,7 @@
 **********************************************
 
 .. danger:: This route does not appear to work properly, and its use is strongly discouraged! Also note that the documentation here is not being updated as a result of this, and may contain out-of-date and/or erroneous information.
+.. deprecated:: ATCv4
 
 ``GET``
 =======
@@ -86,6 +87,10 @@ Response Structure
 	:caption: Response Example
 
 	 {
+			"alerts": [{
+				"level": "warning",
+				"text": "This endpoint is deprecated, and will be removed in the future"
+			}],
 			"response": [
 					{
 							"cachegroup": "us-il-chicago",

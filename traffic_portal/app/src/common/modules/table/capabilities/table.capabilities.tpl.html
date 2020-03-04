@@ -23,8 +23,7 @@ under the License.
             <li class="active">Capabilities</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Create Capability" ng-click="createCapability()"><i class="fa fa-plus"></i></button>
-            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button type="button" class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -38,7 +37,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editCapability(c.name)" ng-repeat="c in ::capabilities">
+            <tr ng-repeat="c in ::capabilities">
                 <td>{{::c.name}}</td>
                 <td>{{::c.description}}</td>
             </tr>

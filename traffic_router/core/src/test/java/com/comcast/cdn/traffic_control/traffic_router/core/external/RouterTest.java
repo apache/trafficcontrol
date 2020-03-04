@@ -101,7 +101,7 @@ public class RouterTest {
 	public void before() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
-		String resourcePath = "internal/api/1.3/steering.json";
+		String resourcePath = "api/2.0/steering";
 		InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
 
 		if (inputStream == null) {

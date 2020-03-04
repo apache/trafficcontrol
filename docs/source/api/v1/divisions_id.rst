@@ -23,6 +23,9 @@
 =======
 Get a specific Division.
 
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-divisions` with the ``id`` query parameter instead.
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -86,13 +89,16 @@ Response Structure
 	Date: Thu, 29 Nov 2018 19:59:57 GMT
 	Content-Length: 78
 
-	{ "response": [
-		{
+	{ "alerts": [{
+			"text": "This endpoint is deprecated, please use GET /divisions with the 'id' parameter instead",
+			"level": "warning
+		}],
+		"response": [{
 			"id": 1,
 			"lastUpdated": "2018-11-29 18:38:28+00",
 			"name": "Quebec"
-		}
-	]}
+		}]
+	}
 
 ``PUT``
 =======

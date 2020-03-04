@@ -376,17 +376,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'cachegroups/{cache_group_id:d}', ('2.0',))
-	def get_cachegroup_by_id(self, cache_group_id=None):
-		"""
-		Get a Cache Group by Id.
-		:ref:`to-api-cachegroups-id`
-		:param cache_group_id: The cache group Id
-		:type cache_group_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'cachegroups/{cache_group_id:d}/parameters', ('2.0',))
 	def get_cachegroup_parameters(self, cache_group_id=None):
 		"""
@@ -497,33 +486,13 @@ class TOSession(RestApiSession):
 	# CDN
 	#
 	@api_request('get', 'cdns', ('2.0',))
-	def get_cdns(self):
+	def get_cdns(self, query_params=None):
 		"""
 		Get all CDNs.
 		:ref:`to-api-cdns`
+		:param query_params: See API page for more information on accepted parameters
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'cdns/{cdn_id:d}', ('2.0',))
-	def get_cdn_by_id(self, cdn_id=None):
-		"""
-		Get a CDN by Id.
-		:ref:`to-api-cdns-id`
-		:param cdn_id: The CDN id
-		:type cdn_id: str
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'cdns/name/{cdn_name}', ('2.0',))
-	def get_cdn_by_name(self, cdn_name=None):
-		"""
-		Get a CDN by name.
-		:ref:`to-api-cdns-name-name`
-		:param cdn_name: The CDN name
-		:type cdn_name: str
-		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
@@ -701,20 +670,10 @@ class TOSession(RestApiSession):
 	# Change Logs
 	#
 	@api_request('get', 'logs', ('2.0',))
-	def get_change_logs(self):
+	def get_change_logs(self, query_params=None):
 		"""
 		Retrieve all change logs from traffic ops
 		:ref:`to-api-logs`
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'logs/{days:d}/days', ('2.0',))
-	def get_change_logs_for_days(self, days=None):
-		"""
-		Retrieve all change logs from Traffic Ops
-		:ref:`to-api-logs-days-days`
-		:param days: The number of days to retrieve change logs
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -737,18 +696,6 @@ class TOSession(RestApiSession):
 		Retrieves all delivery services (if admin or ops) or all delivery services assigned to user.
 		:ref:`to-api-deliveryservices`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}', ('2.0',))
-	def get_deliveryservice_by_id(self, delivery_service_id=None):
-		"""
-		Retrieves a specific delivery service. If not admin / ops, delivery service must be assigned
-		to user.
-		:ref:`to-api-deliveryservices-id`
-		:param delivery_service_id: The delivery service Id
-		:type delivery_service_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
@@ -890,18 +837,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}/unassigned_servers', ('2.0',))
-	def get_deliveryservice_unassigned_servers(self, delivery_service_id=None):
-		"""
-		Retrieves properties of CDN EDGE or ORG servers not assigned to a delivery service.
-		(Currently call does not work)
-		:ref:`to-api-deliveryservices-id-unassigned_servers`
-		:param delivery_service_id: The delivery service Id
-		:type delivery_service_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'deliveryservices/{delivery_service_id:d}/servers/eligible', ('2.0',))
 	def get_deliveryservice_ineligible_servers(self, delivery_service_id=None):
 		"""
@@ -992,25 +927,14 @@ class TOSession(RestApiSession):
 		"""
 
 	@api_request('get', 'deliveryservices/{delivery_service_id:d}/regexes', ('2.0',))
-	def get_deliveryservice_regexes_by_id(self, delivery_service_id=None):
+	def get_deliveryservice_regexes_by_id(self, delivery_service_id=None, query_params=None):
 		"""
 		Get RegExes for a Delivery Service by Id.
 		:ref:`to-api-deliveryservices-id-regexes`
 		:param delivery_service_id: The delivery service Id
 		:type delivery_service_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', ('2.0',))
-	def get_deliveryservice_regexes_by_regex_id(self, delivery_service_id=None, regex_id=None):
-		"""
-		Retrieves a regex for a specific delivery service.
-		:ref:`to-api-deliveryservices-id-regexes-rid`
-		:param delivery_service_id: The delivery service Id
-		:type delivery_service_id: int
-		:param regex_id: The delivery service regex id
-		:type regex_id: int
+		:param query_params: The url query parameters for the call
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1077,21 +1001,10 @@ class TOSession(RestApiSession):
 	# Divisions
 	#
 	@api_request('get', 'divisions', ('2.0',))
-	def get_divisions(self):
+	def get_divisions(self, query_params=None):
 		"""
 		Get all divisions.
 		:ref:`to-api-divisions`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'divisions/{division_id:d}', ('2.0',))
-	def get_division_by_id(self, division_id=None):
-		"""
-		Get a division by division id
-		:ref:`to-api-divisions-id`
-		:param division_id: The division id to retrieve
-		:type division_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1159,24 +1072,14 @@ class TOSession(RestApiSession):
 
 
 	@api_request('get', 'cdns/{cdn_name:s}/federations', ('2.0',))
-	def get_federations_for_cdn(self, cdn_name=None):
+	def get_federations_for_cdn(self, cdn_name=None, query_params=None):
 		"""
 		Retrieves a list of federations for a cdn.
 		:ref:`to-api-cdns-name-federations`
 		:param cdn_name: The CDN name to find federation
 		:type cdn_name: String
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-
-	@api_request('get', 'cdns/{cdn_name:s}/federations/{federation_id:d}', ('2.0',))
-	def get_federation_for_cdn_by_id(self, cdn_name=None, federation_id=None):
-		"""
-		Retrieves a federation for a cdn.
-		:ref:`to-api-cdns-name-federations-id`
-		:param cdn_name: The CDN name to find federation
-		:type cdn_name: String
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

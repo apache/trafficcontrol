@@ -83,7 +83,7 @@ func (to *Session) GetDivisions() ([]tc.Division, ReqInf, error) {
 
 // GET a Division by the Division id
 func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_DIVISIONS, id)
+	route := fmt.Sprintf("%s?id=%d", API_DIVISIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

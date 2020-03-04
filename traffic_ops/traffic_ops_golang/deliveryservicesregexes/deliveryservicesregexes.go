@@ -98,17 +98,24 @@ func DSGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
 	q := `
 SELECT ds.tenant_id, dsr.set_number, r.id, r.pattern, rt.id as type, rt.name as type_name
 FROM deliveryservice_regex as dsr
 JOIN deliveryservice as ds ON dsr.deliveryservice = ds.id
 JOIN regex as r ON dsr.regex = r.id
 JOIN type as rt ON r.type = rt.id
-WHERE ds.ID = $1
-ORDER BY dsr.set_number ASC
 `
-	rows, err := inf.Tx.Tx.Query(q, inf.IntParams["dsid"])
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"dsid": dbhelpers.WhereColumnInfo{"ds.ID", api.IsInt},
+		"id":   dbhelpers.WhereColumnInfo{"r.id", api.IsInt}}
+	where, _, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	query := q + where + " ORDER BY dsr.set_number ASC" + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("querying deliveryserviceregexes get: "+err.Error()))
 		return
@@ -134,9 +141,13 @@ ORDER BY dsr.set_number ASC
 }
 
 func DSGetID(w http.ResponseWriter, r *http.Request) {
+	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, please use GET '/deliveryservices/{dsid}/regexes' with query parameter id instead")
+
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid", "regexid"}, []string{"dsid", "regexid"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		userErr = api.LogErr(r, errCode, userErr, sysErr)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 	defer inf.Close()
@@ -153,7 +164,9 @@ ORDER BY dsr.set_number ASC
 `
 	rows, err := inf.Tx.Tx.Query(q, inf.IntParams["dsid"], inf.IntParams["regexid"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("querying deliveryserviceregexes getid: "+err.Error()))
+		userErr = api.LogErr(r, errCode, userErr, errors.New("querying deliveryserviceregexes getid: "+err.Error()))
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 	defer rows.Close()
@@ -163,17 +176,21 @@ ORDER BY dsr.set_number ASC
 		dsTenantID := util.IntPtr(0)
 		rx := tc.DeliveryServiceIDRegex{}
 		if err = rows.Scan(&dsTenantID, &rx.SetNumber, &rx.ID, &rx.Pattern, &rx.Type, &rx.TypeName); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("scanning deliveryserviceregexes getid: "+err.Error()))
+			userErr = api.LogErr(r, errCode, userErr, errors.New("scanning deliveryserviceregexes getid: "+err.Error()))
+			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+			api.WriteAlerts(w, r, errCode, alerts)
 			return
 		}
 		regexes = append(regexes, rx)
 		dsTenants[rx.ID] = dsTenantID
 	}
 	if regexes, err = filterAuthorizedDSIDRegexes(inf.Tx.Tx, inf.User, regexes, dsTenants); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking deliveryserviceregexes tenancy: "+err.Error()))
+		userErr = api.LogErr(r, errCode, userErr, errors.New("checking deliveryserviceregexes tenancy: "+err.Error()))
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
-	api.WriteResp(w, r, regexes)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, regexes)
 }
 
 func Post(w http.ResponseWriter, r *http.Request) {

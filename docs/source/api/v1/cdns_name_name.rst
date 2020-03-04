@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-cdns` with the query parameter ``name`` instead.
+
 Extract information about a CDN, identified by name.
 
 :Auth. Required: Yes
@@ -67,6 +70,12 @@ Response Structure
 			"id": 2,
 			"lastUpdated": "2018-11-14 18:21:14+00",
 			"name": "CDN-in-a-Box"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /cdns with query parameter name instead",
+			"level": "warning"
 		}
 	]}
 
