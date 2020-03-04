@@ -84,7 +84,7 @@ func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 
 // GetCDNByID a CDN by the CDN ID.
 func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_CDNS, id)
+	route := fmt.Sprintf("%s?id=%v", API_CDNS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -148,3 +148,4 @@ func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
 
 	return data.Response, reqInf, nil
 }
+

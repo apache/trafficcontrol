@@ -29,45 +29,6 @@ var CapabilityService = function($http, messageModel, ENV) {
 			}
 		);
 	};
-
-	this.createCapability = function(cap) {
-		return $http.post(ENV.api['root'] + "capabilities", cap).then(
-			function(result) {
-				return result.data;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
-
-	// todo: change to use query param when it is supported
-	this.updateCapability = function(cap) {
-		return $http.put(ENV.api['root'] + "capabilities", {params: {"name": cap.name}, data: cap}).then(
-			function(result) {
-				return result.data;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
-
-	// todo: change to use query param when it is supported
-	this.deleteCapability = function(cap) {
-		return $http.delete(ENV.api['root'] + "capabilities", {params: {"name": cap.name}}).then(
-			function(result) {
-				return result.data;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
-	};
-
 };
 
 CapabilityService.$inject = ['$http', 'messageModel', 'ENV'];

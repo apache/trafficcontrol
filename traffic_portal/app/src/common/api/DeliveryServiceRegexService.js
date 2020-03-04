@@ -31,7 +31,7 @@ var DeliveryServiceRegexService = function($http, locationUtils, messageModel, E
 	};
 
 	this.getDeliveryServiceRegex = function(dsId, regexId) {
-		return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes/' + regexId).then(
+		return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes', {params: {id: regexId}}).then(
 			function(result) {
 				return result.data.response[0];
 			},

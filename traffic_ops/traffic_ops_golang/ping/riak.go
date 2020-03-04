@@ -21,24 +21,34 @@ package ping
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
 func Riak(w http.ResponseWriter, r *http.Request) {
+	alerts := tc.CreateAlerts(tc.WarnLevel, fmt.Sprintf("This endpoint is deprecated, please use GET /api/2.0/vault/ping instead"))
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		userErr = api.LogErr(r, errCode, userErr, sysErr)
+		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
+
 	defer inf.Close()
 
 	pingResp, err := riaksvc.Ping(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error pinging Riak: "+err.Error()))
+		userErr = api.LogErr(r, http.StatusInternalServerError, nil, errors.New("error pinging Riak: "+err.Error()))
+		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
-	api.WriteResp(w, r, pingResp)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, pingResp)
 }

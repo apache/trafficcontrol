@@ -122,7 +122,7 @@ func (to *Session) GetCacheGroupsNullable() ([]tc.CacheGroupNullable, ReqInf, er
 
 // GET a CacheGroup by the CacheGroup ID.
 func (to *Session) GetCacheGroupNullableByID(id int) ([]tc.CacheGroupNullable, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_CACHEGROUPS, id)
+	route := fmt.Sprintf("%s?id=%v", API_CACHEGROUPS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -140,8 +140,8 @@ func (to *Session) GetCacheGroupNullableByID(id int) ([]tc.CacheGroupNullable, R
 
 // GET a CacheGroup by the CacheGroup name.
 func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNullable, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_CACHEGROUPS, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	route := fmt.Sprintf("%s?name=%s", API_CACHEGROUPS, url.QueryEscape(name))
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

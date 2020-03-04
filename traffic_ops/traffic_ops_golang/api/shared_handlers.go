@@ -165,12 +165,7 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 // notice, optionally with a passed alternative route suggestion.
 func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var alerts tc.Alerts
-		if alternative != nil {
-			alerts = tc.CreateAlerts(tc.WarnLevel, fmt.Sprintf("This endpoint is deprecated, please use %s instead", *alternative))
-		} else {
-			alerts = tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
-		}
+		alerts := CreateDeprecationAlerts(alternative)
 
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {

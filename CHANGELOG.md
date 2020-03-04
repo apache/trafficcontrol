@@ -27,35 +27,48 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/deliveryservices/sslkeys/generate/letsencrypt `POST`
   - /api/1.5/letsencrypt/autorenew `POST`
   - /api/1.5/letsencrypt/dnsrecords `GET`
+  - /api/2.0/vault/ping `GET`
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
 - Updated The Traffic Ops Python, Go and Java clients to use API version 2.0 (when possible)
 - Updated CDN-in-a-Box scripts and enroller to use TO API version 2.0
 - Updated numerous, miscellaneous tools to use TO API version 2.0
+- Updated TP to use TO API v2
+- Updated TP application build dependencies
 
 ### Deprecated/Removed
 - Traffic Ops Python client no longer supports Python 2.
 - Traffic Ops API Endpoints
   - /api_capabilities/:id
+  - /cachegroups/:id (GET)
   - /cachegroup/:parameterID/parameter
   - /cachegroups/:parameterID/parameter/available
+  - /cachegroups/trimmed
   - /cdns/:name/configs/routing
+  - /cdns/:name/federations/:id (GET)
   - /cdns/configs
+  - /cdns/:id (GET)
+  - /cdns/name/:name (GET)
   - /cdns/usage/overview
   - /deliveryservice_user
   - /deliveryservice_user/:dsId/:userId
   - /deliveryservices/hostname/:name/sslkeys
+  - /deliveryservices/{dsid}/regexes/{regexid} (GET)
+  - /deliveryservices/:id (GET)
   - /deliveryservices/:id/state
   - /divisions/:division_name/regions
+  - /divisions/:id
   - /divisions/name/:name
   - /hwinfo/dtdata
   - /jobs/:id
+  - /logs/:days/days
   - /parameters/:id/profiles
   - /parameters/:id/unassigned_profiles
   - /parameters/validate
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
+  - /riak/ping
   - /riak/stats
   - /servercheck/aadata
   - /servers/totals
