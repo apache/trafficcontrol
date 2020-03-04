@@ -66,10 +66,9 @@ func CreateTestTypes(t *testing.T) {
 
 func UpdateTestTypes(t *testing.T) {
 	t.Log("---- UpdateTestTypes ----")
-	expectedTypeName := "testType%v"
 
 	for i, typ := range testData.Types {
-		expectedTypeName = fmt.Sprintf(expectedTypeName, i)
+		expectedTypeName := fmt.Sprintf("testType%v", i)
 		originalType := typ
 		resp, _, err := TOSession.GetTypeByName(originalType.Name)
 		if err != nil {
@@ -79,7 +78,7 @@ func UpdateTestTypes(t *testing.T) {
 		remoteType.Name = expectedTypeName
 		var alert tc.Alerts
 		alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
-		if remoteType.UseInTable != "server"  {
+		if remoteType.UseInTable != "server" {
 			if err == nil {
 				t.Fatalf("expected UPDATE on type %v to fail", remoteType.ID)
 			}
@@ -146,7 +145,7 @@ func DeleteTestTypes(t *testing.T) {
 
 		if respType.UseInTable != "server" {
 			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, respType.Name), "type")
-			if  err != nil {
+			if err != nil {
 				t.Fatalf("cannot DELETE Type by name: %v", err.Error())
 			}
 		} else {

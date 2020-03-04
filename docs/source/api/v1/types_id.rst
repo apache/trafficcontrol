@@ -89,7 +89,7 @@ Response Structure
 Updates a type
 
 :Auth. Required: Yes
-:Roles Required: None
+:Roles Required: "admin" or "operations"
 :Response Type:  Object
 
 Request Structure
@@ -105,6 +105,7 @@ Request Structure
 :description: A short description of this type
 :name:        The name of this type
 :useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type.
+
 .. note:: Only types with useInTable set to 'server' are allowed to be updated.
 
 .. code-block:: http
@@ -121,7 +122,7 @@ Request Structure
 	{
 		"name": "Example01",
 		"description": "Example2",
-		"useInServer": "server"
+		"useInTable": "server"
 	}
 
 Response Structure
@@ -168,7 +169,7 @@ Response Structure
 Deletes a type
 
 :Auth. Required: Yes
-:Roles Required: None
+:Roles Required: "admin" or "operations"
 :Response Type: Object
 
 Request Structure
@@ -181,7 +182,7 @@ Request Structure
 	|  ID  | The integral, unique identifier of the type being inspected |
 	+------+-------------------------------------------------------------+
 
-.. note:: Only types with useInTable set to "server" are allowed to be deleted.
+	.. note:: Only types with useInTable set to "server" are allowed to be deleted.
 
 .. code-block:: http
 	:caption: Request Structure

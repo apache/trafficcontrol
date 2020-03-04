@@ -83,26 +83,27 @@ Response Structure
 		}
 	]}
 
-
 ``POST``
 ========
 Creates a type
 
 :Auth. Required: Yes
-:Roles Required: None
-:Response Type:  Object
+:Roles Required: "admin" or "operations"
+:Response Type: Object
 
 Request Structure
 -----------------
+
 :description: A short description of this type
 :name:        The name of this type
 :useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type.
-.. note:: The only useInTable value that is allowed to be created dynamically is 'server'
+
+	.. note:: The only useInTable value that is allowed to be created dynamically is 'server'
 
 .. code-block:: http
 	:caption: Request Structure
 
-	POST /api/2.0/type
+	POST /api/2.0/type HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -113,11 +114,12 @@ Request Structure
 	{
 		"name": "Example01",
 		"description": "Example",
-		"useInServer": "server"
+		"useInTable": "server"
 	}
 
 Response Structure
 ------------------
+
 :description: A short description of this type
 :id:          An integral, unique identifier for this type
 :lastUpdated: The date and time at which this type was last updated, in ISO format
