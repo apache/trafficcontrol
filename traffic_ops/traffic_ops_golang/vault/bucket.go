@@ -30,7 +30,7 @@ import (
 )
 
 func GetBucketKeyDeprecated(w http.ResponseWriter, r *http.Request) {
-	getBucketKey(w, r, api.CreateDeprecationAlerts(util.StrPtr("/value/bucket/:bucket/key/:key/values")))
+	getBucketKey(w, r, api.CreateDeprecationAlerts(util.StrPtr("/vault/bucket/:bucket/key/:key/values")))
 }
 
 func GetBucketKey(w http.ResponseWriter, r *http.Request) {
