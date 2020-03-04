@@ -73,7 +73,7 @@ public class DeliveryService {
 	@JsonIgnore
 	private final JsonNode staticDnsEntries;
 	@JsonIgnore
-	private final JsonNode domains;
+	private final String domain;
 	@JsonIgnore
 	private final JsonNode bypassDestination;
 	@JsonIgnore
@@ -127,7 +127,7 @@ public class DeliveryService {
 		this.staticDnsEntries = dsJo.get("staticDnsEntries");
 		this.bypassDestination = dsJo.get("bypassDestination");
 		this.routingName = JsonUtils.getString(dsJo, "routingName").toLowerCase();
-		this.domains = dsJo.get("domains");
+		this.domain = getDomainFromJson(dsJo.get("domains"));
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
 		this.ecsEnabled = JsonUtils.optBoolean(dsJo, "ecsEnabled");
@@ -185,6 +185,13 @@ public class DeliveryService {
 		} finally {
 			this.deepCache = dct;
 		}
+	}
+
+	private String getDomainFromJson(final JsonNode domains) {
+		if (domains == null) {
+			return null;
+		}
+		return domains.get(0).asText();
 	}
 
 	public Set<String> getConsistentHashQueryParams() {
@@ -575,9 +582,8 @@ public class DeliveryService {
 		return staticDnsEntries;
 	}
 
-	@JsonIgnore
-	public JsonNode getDomains() {
-		return domains;
+	public String getDomain() {
+		return domain;
 	}
 
 	public String getRoutingName() {

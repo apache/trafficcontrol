@@ -147,7 +147,7 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, Re
 // Deprecated: Use GetDeliveryServiceNullable instead.
 func (to *Session) GetDeliveryService(id string) (*tc.DeliveryService, ReqInf, error) {
 	var data tc.DeliveryServicesResponse
-	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), &data)
+	reqInf, err := get(to, API_DELIVERY_SERVICES + "?id=" + id, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -188,7 +188,7 @@ func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNul
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
-	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), &data)
+	reqInf, err := get(to, API_DELIVERY_SERVICES+"?id="+id, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -203,7 +203,7 @@ func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNul
 // something very wicked has happened to Traffic Ops.
 func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var data tc.DeliveryServicesNullableResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICES+"?xmlid="+XMLID, &data)
+	reqInf, err := get(to, API_DELIVERY_SERVICES+"?xmlId="+XMLID, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}

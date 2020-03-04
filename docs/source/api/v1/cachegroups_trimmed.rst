@@ -18,6 +18,9 @@
 ***********************
 ``cachegroups/trimmed``
 ***********************
+.. deprecated:: ATCv4
+	This endpoint and all of its functionality is deprecated. All of the information it can return can be more completely obtained with :ref:`to-api-v1-cachegroups`.
+
 Extract just the :ref:`Names <cache-group-name>` of all :term:`Cache Groups`.
 
 ``GET``
@@ -73,6 +76,12 @@ Response Structure
 		},
 		{
 			"name": "test"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use '/cachegroups' instead",
+			"level": "warning"
 		}
 	]}
 

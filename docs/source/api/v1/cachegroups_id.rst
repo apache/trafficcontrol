@@ -22,6 +22,9 @@ Extracts information about a single :term:`Cache Group`
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-cachegroups` with the query parameter ``id`` instead.
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -120,6 +123,12 @@ Response Structure
 			"typeId": 23,
 			"lastUpdated": "2018-11-14 18:23:33+00",
 			"fallbacks": []
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /cachegroups with query parameter id instead",
+			"level": "warning"
 		}
 	]}
 

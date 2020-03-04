@@ -83,7 +83,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getParameterProfiles = function(paramId) {
-        return $http.get(ENV.api['root'] + 'parameters/' + paramId + '/profiles').then(
+        return $http.get(ENV.api['root'] + 'profiles', {params: {param: paramId}}).then(
             function (result) {
                 return result.data.response;
             },

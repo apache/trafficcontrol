@@ -34,6 +34,8 @@ Request Structure
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 	| Name      | Required | Description                                                                                                              |
 	+===========+==========+==========================================================================================================================+
+	| id        | no       | Return the only :term:`Cache Group` that has this id                                                                     |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 	| type      | no       | Return only :term:`Cache Groups` that are of the :ref:`cache-group-type` identified by this integral, unique identifier  |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array      |

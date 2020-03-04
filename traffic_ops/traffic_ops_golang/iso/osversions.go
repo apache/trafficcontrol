@@ -53,8 +53,8 @@ func GetOSVersions(w http.ResponseWriter, r *http.Request) {
 	api.RespWriter(w, r, inf.Tx.Tx)(getOSVersions(inf.Tx))
 }
 
-// getOSVersions is used in conjunction with GetOSVersions. It is a
-// separate function for ease of testing.
+// getOSVersions is used in conjunction with GetOSVersions. It returns
+// a mapping of OS names to their respective directories.
 func getOSVersions(tx *sqlx.Tx) (tc.OSVersionsResponse, error) {
 	cfgPath, err := osversionCfgPath(tx)
 	if err != nil {
@@ -79,15 +79,6 @@ func getOSVersions(tx *sqlx.Tx) (tc.OSVersionsResponse, error) {
 
 	return data, nil
 }
-
-const (
-	ksFilesParamName       = "kickstart.files.location"
-	ksFilesParamConfigFile = "mkisofs"
-
-	cfgDefaultDir   = "/var/www/files"  // default directory containing config file
-	cfgFilename     = "osversions.json" // the config file's name is constant, regardless of directory
-	cfgFilenamePerl = "osversions.cfg"  // config file name in the Perl version
-)
 
 // osversionsCfgPath returns a path to the configuration file
 // containing the OS versions data. The name of the configuration

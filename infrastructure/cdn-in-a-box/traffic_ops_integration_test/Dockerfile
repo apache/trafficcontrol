@@ -21,6 +21,7 @@ FROM golang:1.11 AS integration-builder
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
+COPY ./traffic_ops/v1-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v1-client/
 COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops_integration_test/
 COPY ./traffic_ops/testing/api /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api

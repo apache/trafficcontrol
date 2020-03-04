@@ -48,7 +48,7 @@ func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationRes
 
 func (to *Session) GetCDNFederationsByID(CDNName string, ID int) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
-	url := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, CDNName, ID)
+	url := fmt.Sprintf("%s/cdns/%s/federations?id=%v", apiBase, CDNName, ID)
 	inf, err := get(to, url, &data)
 	return &data, inf, err
 }

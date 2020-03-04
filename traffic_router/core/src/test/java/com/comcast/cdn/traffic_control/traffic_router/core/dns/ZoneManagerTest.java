@@ -103,53 +103,50 @@ public class ZoneManagerTest {
 				continue;
 			}
 
-			final JsonNode domains = ds.getDomains();
+			final String domain = ds.getDomain();
 
-			for (final JsonNode currDomain : domains) {
-				final String domain = currDomain.asText();
-				final Name edgeName = new Name(ds.getRoutingName() + "." + domain + ".");
+			final Name edgeName = new Name(ds.getRoutingName() + "." + domain + ".");
 
-				for (CacheLocation location : cacheRegister.getCacheLocations()) {
-					final List<Cache> caches = trafficRouter.selectCachesByCZ(ds, location);
+			for (CacheLocation location : cacheRegister.getCacheLocations()) {
+				final List<Cache> caches = trafficRouter.selectCachesByCZ(ds, location);
 
-					if (caches == null) {
-						continue;
-					}
+				if (caches == null) {
+					continue;
+				}
 
-					final InetAddress source = netMap.get(location.getId());
-					final DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(1, source);
-					final Set<Zone> zones = new HashSet<Zone>();
-					final int maxDnsIps = ds.getMaxDnsIps();
-					long combinations = 1;
+				final InetAddress source = netMap.get(location.getId());
+				final DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(1, source);
+				final Set<Zone> zones = new HashSet<Zone>();
+				final int maxDnsIps = ds.getMaxDnsIps();
+				long combinations = 1;
 
-					if (maxDnsIps > 0 && !trafficRouter.isConsistentDNSRouting() && caches.size() > maxDnsIps) {
-						final BigInteger top = fact(caches.size());
-						final BigInteger f = fact(caches.size() - maxDnsIps);
-						final BigInteger s = fact(maxDnsIps);
+				if (maxDnsIps > 0 && !trafficRouter.isConsistentDNSRouting() && caches.size() > maxDnsIps) {
+					final BigInteger top = fact(caches.size());
+					final BigInteger f = fact(caches.size() - maxDnsIps);
+					final BigInteger s = fact(maxDnsIps);
 
-						combinations = top.divide(f.multiply(s)).longValue();
-						int c = 0;
+					combinations = top.divide(f.multiply(s)).longValue();
+					int c = 0;
 
-						while (c < (combinations * 100)) {
-							final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder); // this should load the zone into the dynamicZoneCache if not already there
-							assertNotNull(zone);
-							zones.add(zone);
-							c++;
-						}
-					}
-
-					final CacheStats cacheStats = zoneManager.getDynamicCacheStats();
-
-					for (int j = 0; j <= (combinations * 100); j++) {
-						final long missCount = new Long(cacheStats.missCount());
-						final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder);
+					while (c < (combinations * 100)) {
+						final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder); // this should load the zone into the dynamicZoneCache if not already there
 						assertNotNull(zone);
-						assertEquals(missCount, cacheStats.missCount()); // should always be a cache hit so these should remain the same
+						zones.add(zone);
+						c++;
+					}
+				}
 
-						if (!zones.isEmpty()) {
-							assertThat(zones, hasItem(zone));
-							assertTrue(zones.contains(zone));
-						}
+				final CacheStats cacheStats = zoneManager.getDynamicCacheStats();
+
+				for (int j = 0; j <= (combinations * 100); j++) {
+					final long missCount = new Long(cacheStats.missCount());
+					final Zone zone = trafficRouter.getZone(edgeName, Type.A, source, true, builder);
+					assertNotNull(zone);
+					assertEquals(missCount, cacheStats.missCount()); // should always be a cache hit so these should remain the same
+
+					if (!zones.isEmpty()) {
+						assertThat(zones, hasItem(zone));
+						assertTrue(zones.contains(zone));
 					}
 				}
 			}

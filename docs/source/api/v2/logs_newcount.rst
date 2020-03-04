@@ -22,9 +22,9 @@
 
 ``GET``
 =======
-Gets the number of new changes made to the Traffic Control system - "new" being defined as the last time the client requested either :ref:`to-api-logs` or :ref:`to-api-logs-days-days`.
+Gets the number of new changes made to the Traffic Control system - "new" being defined as the last time the client requested either :ref:`to-api-logs`
 
-.. note:: This endpoint's functionality is implemented by the :ref:`to-api-logs` and :ref:`to-api-logs-days-days` endpoints' responses setting cookies for the client to use when requesting _this_ endpoint. Take care that your client respects cookies!
+.. note:: This endpoint's functionality is implemented by the :ref:`to-api-logs` endpoint's response setting cookies for the client to use when requesting _this_ endpoint. Take care that your client respects cookies!
 
 :Auth. Required: Yes
 :Roles Required: None
