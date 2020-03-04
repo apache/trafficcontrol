@@ -55,8 +55,11 @@ var TableCacheGroupParametersController = function(cacheGroup, parameters, $cont
 				cg: function() {
 					return cacheGroup;
 				},
-				parameters: function(parameterService) {
-					return parameterService.getCacheGroupUnassignedParams(cacheGroup.id);
+				allParams: function(parameterService) {
+					return parameterService.getParameters();
+				},
+				assignedParams: function() {
+					return parameters;
 				}
 			}
 		});
