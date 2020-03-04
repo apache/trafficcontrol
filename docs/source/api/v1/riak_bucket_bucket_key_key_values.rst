@@ -21,7 +21,7 @@
 Retrieves the `object <https://docs.riak.com/riak/kv/latest/learn/concepts/keys-and-objects/index.html#objects>`_ stored under a given `key <https://docs.riak.com/riak/kv/latest/learn/concepts/keys-and-objects/index.html#keys>`_ from a given `bucket <https://docs.riak.com/riak/kv/latest/learn/concepts/buckets/index.html>`_ in :ref:`tv-overview`.
 
 .. deprecated:: ATCv4
-	Use the ``GET`` method of :ref:`to-api-vault-bucket-bucket-key-key-value` instead.
+	Use the ``GET`` method of :ref:`to-api-vault-bucket-bucket-key-key-values` instead.
 
 ``GET``
 =======
@@ -74,7 +74,7 @@ The response structure varies according to what is stored. Top-level keys will a
 	{
 		"alerts": [
 		{
-			"text": "This endpoint is deprecated, please use GET /vault/bucket/:bucket/key/:key/value instead",
+			"text": "This endpoint is deprecated, please use GET /vault/bucket/:bucket/key/:key/values instead",
 			"level": "warning"
 		}],
 		"response": {

@@ -28,7 +28,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/letsencrypt/autorenew `POST`
   - /api/1.5/letsencrypt/dnsrecords `GET`
   - /api/2.0/vault/ping `GET`
-  - /api/2.0/vault/bucket/:bucket/key/:key/value `GET`
+  - /api/2.0/vault/bucket/:bucket/key/:key/values `GET`
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
@@ -66,7 +66,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /parameters/validate
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
-  - /riak/bucket/:bucket/key/:key/value
+  - /riak/bucket/:bucket/key/:key/vault
   - /riak/ping
   - /riak/stats
   - /servercheck/aadata
