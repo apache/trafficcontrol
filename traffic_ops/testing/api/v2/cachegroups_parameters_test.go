@@ -25,7 +25,6 @@ import (
 func TestCacheGroupParameters(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CacheGroupParameters}, func() {
 		GetTestCacheGroupParameters(t)
-		GetTestCacheGroupUnassignedParameters(t)
 	})
 }
 
@@ -75,25 +74,6 @@ func GetTestCacheGroupParameters(t *testing.T) {
 	}
 }
 
-func GetTestCacheGroupUnassignedParameters(t *testing.T) {
-	for _, cgp := range testData.CacheGroupParameterRequests {
-		// Check that Unassigned Parameters does not include Assigned Parameter
-		unassignedCGParamsResp, _, err := TOSession.GetCacheGroupUnassignedParameters(cgp.CacheGroupID)
-		if err != nil {
-			t.Errorf("could not get unassigned parameters for cache group %v: %v", cgp.CacheGroupID, err)
-		}
-		if unassignedCGParamsResp == nil {
-			t.Fatal("unassigned parameters response should not be nil")
-		}
-
-		for _, param := range unassignedCGParamsResp {
-			if cgp.ParameterID == param.ID {
-				t.Errorf("assigned parameter %v found in unassigned response", param.ID)
-			}
-		}
-	}
-}
-
 func DeleteTestCacheGroupParameters(t *testing.T) {
 	for _, cgp := range testData.CacheGroupParameterRequests {
 		DeleteTestCacheGroupParameter(t, cgp)
@@ -119,24 +99,6 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 	}
 	if len(parameters) > 0 {
 		t.Errorf("expected Parameter: %d to be to be disassociated from Cache Group: %d", cgp.ParameterID, cgp.CacheGroupID)
-	}
-
-	// Check that the disassociated Parameter is now apart of Unassigned Parameters
-	unassignedCGParamsResp, _, err := TOSession.GetCacheGroupUnassignedParameters(cgp.CacheGroupID)
-	if err != nil {
-		t.Errorf("could not get unassigned parameters for cache group %v: %v", cgp.CacheGroupID, err)
-	}
-	if unassignedCGParamsResp == nil {
-		t.Fatal("unassigned parameters response should not be nil")
-	}
-	found := false
-	for _, param := range unassignedCGParamsResp {
-		if cgp.ParameterID == param.ID {
-			found = true
-		}
-	}
-	if !found {
-		t.Fatalf("parameter %v removed from cache group %v was not found in unassigned parameters response", cgp.ParameterID, cgp.CacheGroupID)
 	}
 
 	// Attempt to delete it again and it should return an error now
