@@ -20,14 +20,15 @@ package vault
  */
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"net/http"
 )
+
 func GetBucketKeyDeprecated(w http.ResponseWriter, r *http.Request) {
 	getBucketKey(w, r, api.CreateDeprecationAlerts(util.StrPtr("/value/bucket/:bucket/key/:key/values")))
 }
@@ -65,7 +66,6 @@ func getBucketKey(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 		return
 	}
 
-	//if a.HasAlerts() {
 	if len(a.Alerts) > 0 {
 		api.WriteAlertsObj(w, r, http.StatusOK, a, valObj)
 	} else {
