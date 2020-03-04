@@ -138,7 +138,7 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
+	getSSLKeysByXMLIDHelper(xmlID, tc.CreateAlerts(tc.WarnLevel, hostnameKeyDepMsg), inf, w, r)
 }
 
 func getXmlIDFromRequest(w http.ResponseWriter, r *http.Request) (*api.APIInfo, string, error) {
@@ -178,7 +178,7 @@ func GetSSLKeysByHostNameV15(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	getSSLKeysByXMLIDHelperV15(xmlID, inf, w, r)
+	getSSLKeysByXMLIDHelperV15(xmlID, tc.CreateAlerts(tc.WarnLevel, hostnameKeyDepMsg), inf, w, r)
 }
 
 func getXmlIdFromHostname(inf *api.APIInfo, hostName string) (string, error, error, int) {
@@ -227,11 +227,10 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	xmlID := inf.Params["xmlid"]
-	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
+	getSSLKeysByXMLIDHelper(xmlID, tc.Alerts{}, inf, w, r)
 }
 
-func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
-	alerts := tc.CreateAlerts(tc.WarnLevel, hostnameKeyDepMsg)
+func getSSLKeysByXMLIDHelper(xmlID string, alerts tc.Alerts, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	version := inf.Params["version"]
 	decode := inf.Params["decode"]
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
@@ -262,7 +261,11 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 		}
 	}
 
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, keyObj)
+	if len(alerts.Alerts) == 0 {
+		api.WriteResp(w, r, keyObj)
+	} else {
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, keyObj)
+	}
 }
 
 // GetSSLKeysByXMLIDV15 fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
@@ -278,11 +281,10 @@ func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	xmlID := inf.Params["xmlid"]
-	getSSLKeysByXMLIDHelperV15(xmlID, inf, w, r)
+	getSSLKeysByXMLIDHelperV15(xmlID, tc.Alerts{}, inf, w, r)
 }
 
-func getSSLKeysByXMLIDHelperV15(xmlID string, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
-	alerts := tc.CreateAlerts(tc.WarnLevel, hostnameKeyDepMsg)
+func getSSLKeysByXMLIDHelperV15(xmlID string, alerts tc.Alerts, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	version := inf.Params["version"]
 	decode := inf.Params["decode"]
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
@@ -326,8 +328,11 @@ func getSSLKeysByXMLIDHelperV15(xmlID string, inf *api.APIInfo, w http.ResponseW
 		}
 		keyObj.Expiration = exp
 	}
-
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, keyObj)
+	if len(alerts.Alerts) == 0 {
+		api.WriteResp(w, r, keyObj)
+	} else {
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, keyObj)
+	}
 }
 
 func parseExpirationFromCert(cert []byte) (time.Time, error) {
