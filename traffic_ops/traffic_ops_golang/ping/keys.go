@@ -20,7 +20,7 @@ package ping
  */
 
 import (
-	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -28,17 +28,21 @@ import (
 )
 
 func Keys(w http.ResponseWriter, r *http.Request) {
+	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated")
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		userErr = api.LogErr(r, errCode, userErr, sysErr)
+		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 	defer inf.Close()
 
 	pingResp, err := riaksvc.Ping(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error pinging Riak keys: "+err.Error()))
+		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
-	api.WriteResp(w, r, pingResp.Status)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, pingResp)
 }
