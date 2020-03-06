@@ -15,29 +15,39 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.11 AS integration-builder
+FROM golang:1.11.13-alpine3.10 AS integration-builder
 
-# integration source and dependencies
-COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
-COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
-COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
-COPY ./traffic_ops/v1-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v1-client/
-COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
-COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops_integration_test/
-COPY ./traffic_ops/testing/api /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
-COPY ./traffic_ops/traffic_ops_golang /go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
-COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
+RUN apk add --no-cache --update git gcc
 
-# if we end up using a different versioning convention, the compile command will need to change
-WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 RUN go get -u golang.org/x/net/publicsuffix golang.org/x/crypto/scrypt
-RUN go test -c ./v1* -o traffic_ops_integration_test
-
 RUN go get -u github.com/jstemmer/go-junit-report
 RUN cd /go/src/github.com/jstemmer/go-junit-report && go build
 
-FROM debian:stretch
-RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools postgresql-client && apt-get clean
+# integration source and dependencies
+COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
+COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
+COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
+COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
+COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
+COPY ./traffic_ops/v1-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v1-client/
+COPY ./traffic_ops/testing/api /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
+COPY ./traffic_ops/traffic_ops_golang /go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
+
+# if we end up using a different versioning convention, the compile command will need to change
+WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
+RUN CGO_ENABLED=0 go test -c ./v1* -ldflags="-w -s" -o traffic_ops_v1_integration_test
+RUN CGO_ENABLED=0 go test -c ./v2* -ldflags="-w -s" -o traffic_ops_v2_integration_test
+
+FROM alpine:3.11
+
+RUN apk add --no-cache --update \
+  curl \
+  wget \
+  bash \
+  nmap \
+  bind-tools \
+  net-tools \
+  postgresql-client
 
 # MANIFEST
 # run.sh                        (wait on TO, then run bin)
@@ -50,7 +60,10 @@ COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/integration/app/
 COPY ./traffic_ops/testing/api/v1/tc-fixtures.json         /opt/integration/app/
 COPY --from=integration-builder \
-    /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_integration_test \
+    /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v1_integration_test \
+    /opt/integration/app/
+COPY --from=integration-builder \
+    /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v2_integration_test \
     /opt/integration/app/
 
 COPY --from=integration-builder \
