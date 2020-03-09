@@ -436,7 +436,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//ProfileParameters
 		{api.Version{2, 0}, http.MethodGet, `profiles/{id}/parameters/?$`, profileparameter.GetProfileID, auth.PrivLevelReadOnly, Authenticated, nil, 276464975, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `profiles/{id}/unassigned_parameters/?$`, profileparameter.GetUnassigned, auth.PrivLevelReadOnly, Authenticated, nil, 274429262, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `profiles/name/{name}/parameters/?$`, profileparameter.GetProfileName, auth.PrivLevelReadOnly, Authenticated, nil, 2267737832, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `parameters/profile/{name}/?$`, profileparameter.GetProfileName, auth.PrivLevelReadOnly, Authenticated, nil, 2802599194, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `profiles/name/{name}/parameters/?$`, profileparameter.PostProfileParamsByName, auth.PrivLevelOperations, Authenticated, nil, 2355945582, noPerlBypass},

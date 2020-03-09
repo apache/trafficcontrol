@@ -20,6 +20,8 @@
 *****************************************
 .. warning:: There are **very** few good reasons to use this endpoint - be sure not limit said use.
 
+.. deprecated::ATCv4
+
 ``GET``
 =======
 Retrieves all :term:`Parameters` *not* assigned to the specified :term:`Profile`.
