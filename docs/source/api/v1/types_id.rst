@@ -111,7 +111,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Structure
 
-	PUT /api/2.0/type/3004
+	PUT /api/2.0/type/3004 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -172,6 +172,7 @@ Deletes a type
 :Roles Required: "admin" or "operations"
 :Response Type: Object
 
+
 Request Structure
 -----------------
 .. table:: Request Path Parameters
@@ -182,12 +183,12 @@ Request Structure
 	|  ID  | The integral, unique identifier of the type being inspected |
 	+------+-------------------------------------------------------------+
 
-	.. note:: Only types with useInTable set to "server" are allowed to be deleted.
+.. note:: Only types with useInTable set to "server" are allowed to be deleted.
 
 .. code-block:: http
 	:caption: Request Structure
 
-	DELETE /api/2.0/type/3004
+	DELETE /api/2.0/type/3004 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
