@@ -27,6 +27,8 @@ Gets details about a specific :term:`Profile`'s :term:`Parameters`
 :Roles Required: None
 :Response Type:  Array
 
+.. deprecated:: ATCv4
+
 Request Structure
 -----------------
 .. table:: Request Path Parameters

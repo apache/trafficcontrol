@@ -67,6 +67,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /logs/:days/days
   - /parameters/:id/profiles
   - /parameters/:id/unassigned_profiles
+  - /parameters/profile/:name
   - /parameters/validate
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
