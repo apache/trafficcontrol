@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/letsencrypt/dnsrecords `GET`
   - /api/2.0/vault/ping `GET`
   - /api/2.0/vault/bucket/:bucket/key/:key/values `GET`
+  - /api/2.0/servercheck `GET`
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
@@ -79,6 +80,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /traffic_monitor/stats
   - /types/trimmed
   - /user/current/jobs
+  - /servers/checks
 
 ## [4.0.0] - 2019-12-16
 ### Added
