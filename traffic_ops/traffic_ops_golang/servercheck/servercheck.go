@@ -211,6 +211,7 @@ func ReadServerCheck(w http.ResponseWriter, r *http.Request) {
 	data, userErr, sysErr, errCode := handleReadServerCheck(inf, tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
 
 	api.WriteResp(w, r, data)
@@ -229,6 +230,7 @@ func DeprecatedReadServersChecks(w http.ResponseWriter, r *http.Request) {
 	data, userErr, sysErr, errCode := handleReadServerCheck(inf, tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, util.StrPtr(ServerCheck_Get_Endpoint))
+		return
 	}
 
 	alerts := api.CreateDeprecationAlerts(util.StrPtr(ServerCheck_Get_Endpoint))
