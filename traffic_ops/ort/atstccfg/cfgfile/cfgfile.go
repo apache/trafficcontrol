@@ -205,7 +205,12 @@ func GetTOData(cfg config.TCCfg) (*TOData, error) {
 				toData.URLSigKeys = urlSigKeys
 				return nil
 			}
-			return util.JoinErrs(runParallel([]func() error{uriSignKeysF, urlSigKeysF}))
+
+			fs := []func() error{}
+			if !cfg.RevalOnly {
+				fs = append([]func() error{uriSignKeysF, urlSigKeysF}, fs...) // skip keys for reval-only, which doesn't need them
+			}
+			return util.JoinErrs(runParallel(fs))
 		}
 		serverParamsF := func() error {
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
@@ -236,7 +241,11 @@ func GetTOData(cfg config.TCCfg) (*TOData, error) {
 			toData.Profile = profile
 			return nil
 		}
-		return util.JoinErrs(runParallel([]func() error{sslF, dsF, serverParamsF, cdnF, profileF}))
+		fs := []func() error{dsF, serverParamsF, cdnF, profileF}
+		if !cfg.RevalOnly {
+			fs = append([]func() error{sslF}, fs...) // skip ssl keys for reval only, which doesn't need them
+		}
+		return util.JoinErrs(runParallel(fs))
 	}
 
 	cgF := func() error {
@@ -335,7 +344,12 @@ func GetTOData(cfg config.TCCfg) (*TOData, error) {
 		return nil
 	}
 
-	errs := runParallel([]func() error{dsrF, dssF, serversF, cgF, globalParamsF, scopeParamsF, jobsF, capsF, dsCapsF, cacheKeyParamsF, parentConfigParamsF})
+	fs := []func() error{dssF, serversF, cgF, globalParamsF, scopeParamsF, jobsF}
+	if !cfg.RevalOnly {
+		// skip data not needed for reval, if we're reval-only
+		fs = append([]func() error{dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF}, fs...)
+	}
+	errs := runParallel(fs)
 	return toData, util.JoinErrs(errs)
 }
 

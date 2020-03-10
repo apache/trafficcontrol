@@ -64,6 +64,7 @@ type Cfg struct {
 	GetData             string
 	SetQueueStatus      string
 	SetRevalStatus      string
+	RevalOnly           bool
 }
 
 type TCCfg struct {
@@ -89,7 +90,7 @@ func GetCfg() (Cfg, error) {
 	logLocationInfoPtr := flag.StringP("log-location-info", "i", "stderr", "Where to log information messages. May be a file path, stdout, stderr, or null.")
 	printGeneratedFilesPtr := flag.BoolP("print-generated-files", "g", false, "Whether to print a list of files which are generated (and not proxied to Traffic Ops).")
 	toInsecurePtr := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
-	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 10000, "Timeout in seconds for Traffic Ops requests.")
+	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 60000, "Timeout in seconds for Traffic Ops requests.")
 	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
 	listPluginsPtr := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
 	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")
@@ -98,6 +99,7 @@ func GetCfg() (Cfg, error) {
 	getDataPtr := flag.StringP("get-data", "d", "", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
 	setQueueStatusPtr := flag.StringP("set-queue-status", "q", "", "POSTs to Traffic Ops setting the queue status of the server. Must be 'true' or 'false'. Requires --set-reval-status also be set")
 	setRevalStatusPtr := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revaliate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
+	revalOnlyPtr := flag.BoolP("revalidate-only", "y", false, "Whether to exclude files not named 'regex_revalidate.config'")
 
 	flag.Parse()
 
@@ -128,6 +130,7 @@ func GetCfg() (Cfg, error) {
 	getData := *getDataPtr
 	setQueueStatus := *setQueueStatusPtr
 	setRevalStatus := *setRevalStatusPtr
+	revalOnly := *revalOnlyPtr
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -181,6 +184,7 @@ func GetCfg() (Cfg, error) {
 		GetData:         getData,
 		SetRevalStatus:  setRevalStatus,
 		SetQueueStatus:  setQueueStatus,
+		RevalOnly:       revalOnly,
 	}
 
 	if err := log.InitCfg(cfg); err != nil {

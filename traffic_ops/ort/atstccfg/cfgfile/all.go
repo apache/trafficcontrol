@@ -6,10 +6,13 @@ import (
 	"math/rand"
 	"mime/multipart"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
@@ -28,6 +31,9 @@ func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
 	hasSSLMultiCertConfig := false
 	configs := []ATSConfigFile{}
 	for _, fi := range meta.ConfigFiles {
+		if cfg.RevalOnly && fi.FileNameOnDisk != atscfg.RegexRevalidateFileName {
+			continue
+		}
 		txt, contentType, _, err := GetConfigFile(toData, fi)
 		if err != nil {
 			return nil, errors.New("getting config file '" + fi.APIURI + "': " + err.Error())
@@ -87,4 +93,25 @@ func WriteConfigs(configs []ATSConfigFile, output io.Writer) error {
 		return errors.New("closing multipart writer and writing final boundary: " + err.Error())
 	}
 	return nil
+}
+
+var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
+
+// PreprocessConfigFile does global preprocessing on the given config file cfgFile.
+// This is mostly string replacements of __X__ directives. See the code for the full list of replacements.
+// These things were formerly done by ORT, but need to be processed by atstccfg now, because ORT no longer has the metadata necessary.
+func PreprocessConfigFile(toData *TOData, meta *tc.ATSConfigMetaData, cfgFile string) string {
+	if meta.Info.ServerPort != 80 && meta.Info.ServerPort != 0 {
+		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(meta.Info.ServerPort), -1)
+	} else {
+		cfgFile = strings.Replace(cfgFile, `:__SERVER_TCP_PORT__`, ``, -1)
+	}
+	cfgFile = strings.Replace(cfgFile, `__CACHE_IPV4__`, toData.Server.IPAddress, -1)
+	cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, toData.Server.HostName, -1)
+	cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, toData.Server.HostName+`.`+toData.Server.DomainName, -1)
+	cfgFile = strings.Replace(cfgFile, `__RETURN__`, "\n", -1)
+
+	cfgFile = returnRegex.ReplaceAllString(cfgFile, "\n")
+
+	return cfgFile
 }
