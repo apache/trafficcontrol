@@ -2553,7 +2553,7 @@
             }
         }
     ],
-    "to_extensions": [
+    "servercheck_extensions": [
         {
             "name": "ILO_PING",
             "version": "1.0.0",

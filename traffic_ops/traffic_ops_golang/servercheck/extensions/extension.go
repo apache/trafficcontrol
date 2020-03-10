@@ -1,4 +1,4 @@
-package toextension
+package extensions
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -30,12 +30,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/jmoiron/sqlx"
 )
 
-// CreateTOExtension handler for creating a new TO Extension.
-func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
+// Create handler for creating a new servercheck extension.
+func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -43,26 +42,27 @@ func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	version := inf.Version.Major
 	if inf.User.UserName != "extension" {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("invalid user for this API. Only the \"extension\" user can use this"), nil)
+		handleError(w, r, inf.Tx.Tx, version, http.StatusForbidden, errors.New("invalid user for this API. Only the \"extension\" user can use this"), nil)
 		return
 	}
 
-	toExt := tc.TOExtensionNullable{}
+	toExt := tc.ServerCheckExtensionNullable{}
 
 	// Validate request body
 	if err := api.Parse(r.Body, inf.Tx.Tx, &toExt); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		handleError(w, r, inf.Tx.Tx, version, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// Get Type ID
 	typeID, exists, err := dbhelpers.GetTypeIDByName(*toExt.Type, inf.Tx.Tx)
 	if !exists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("type %v does not exist", *toExt.Type), nil)
+		handleError(w, r, inf.Tx.Tx, version, http.StatusBadRequest, fmt.Errorf("type %v does not exist", *toExt.Type), nil)
 		return
 	} else if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		handleError(w, r, inf.Tx.Tx, version, http.StatusInternalServerError, nil, err)
 		return
 	}
 	toExt.TypeID = &typeID
@@ -74,13 +74,18 @@ func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 		errCode = http.StatusBadRequest
 	}
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		handleError(w, r, inf.Tx.Tx, version, errCode, userErr, sysErr)
 		return
 	}
-	resp := tc.TOExtensionPostResponse{
-		Response: tc.TOExtensionID{ID: id},
+	resp := tc.ServerCheckExtensionPostResponse{
+		Response: tc.ServerCheckExtensionID{ID: id},
 		Alerts:   tc.CreateAlerts(tc.SuccessLevel, successMsg),
 	}
+
+	if version < 2 {
+		resp.AddNewAlert(tc.WarnLevel, "This endpoint is deprecated, please use POST /servercheck/extensions instead")
+	}
+
 	changeLogMsg := fmt.Sprintf("TO_EXTENSION: %s, ID: %d, ACTION: CREATED", *toExt.Name, id)
 
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
@@ -88,7 +93,7 @@ func CreateTOExtension(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespRaw(w, r, resp)
 }
 
-func createCheckExt(toExt tc.TOExtensionNullable, tx *sqlx.Tx) (int, error, error) {
+func createCheckExt(toExt tc.ServerCheckExtensionNullable, tx *sqlx.Tx) (int, error, error) {
 	id := 0
 	dupErr, sysErr := checkDupTOCheckExtension("name", *toExt.Name, tx)
 	if dupErr != nil || sysErr != nil {
@@ -175,75 +180,66 @@ func selectQuery() string {
 	`
 }
 
-// GetTOExtensionsHandler handler for getting TO Extensions.
-func GetTOExtensionsHandler(plugins plugin.Plugins) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+// Get handler for getting servercheck extensions.
+func Get(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	version := inf.Version.Major
+
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":          dbhelpers.WhereColumnInfo{"e.id", api.IsInt},
+		"name":        dbhelpers.WhereColumnInfo{"e.name", nil},
+		"script_file": dbhelpers.WhereColumnInfo{"e.script_file", nil},
+		"isactive":    dbhelpers.WhereColumnInfo{"e.isactive", api.IsBool},
+		"type":        dbhelpers.WhereColumnInfo{"t.name", nil},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
+	if len(errs) > 0 {
+		handleError(w, r, inf.Tx.Tx, version, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	openSlotCond := "t.name != 'CHECK_EXTENSION_OPEN_SLOT'"
+	if len(where) > 0 {
+		where = fmt.Sprintf("%s AND %s", where, openSlotCond)
+	} else {
+		where = fmt.Sprintf("%s %s", dbhelpers.BaseWhere, openSlotCond)
+	}
+
+	query := selectQuery() + where + orderBy + pagination
+	log.Infoln(query)
+
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		handleError(w, r, inf.Tx.Tx, version, http.StatusInternalServerError, nil, fmt.Errorf("querying to_extensions: %v", err))
+		return
+	}
+	defer rows.Close()
+
+	toExts := []tc.ServerCheckExtensionNullable{}
+	for rows.Next() {
+		toExt := tc.ServerCheckExtensionNullable{}
+		if err = rows.StructScan(&toExt); err != nil {
+			handleError(w, r, inf.Tx.Tx, version, http.StatusInternalServerError, nil, fmt.Errorf("scanning to_extensions: %v", err))
 			return
 		}
-		defer inf.Close()
-
-		// Query Parameters to Database Query column mappings
-		// see the fields mapped in the SQL query
-		queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-			"id":          dbhelpers.WhereColumnInfo{"e.id", api.IsInt},
-			"name":        dbhelpers.WhereColumnInfo{"e.name", nil},
-			"script_file": dbhelpers.WhereColumnInfo{"e.script_file", nil},
-			"isactive":    dbhelpers.WhereColumnInfo{"e.isactive", api.IsBool},
-			"type":        dbhelpers.WhereColumnInfo{"t.name", nil},
-		}
-
-		where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
-		if len(errs) > 0 {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
-			return
-		}
-
-		openSlotCond := "t.name != 'CHECK_EXTENSION_OPEN_SLOT'"
-		if len(where) > 0 {
-			where = fmt.Sprintf("%s AND %s", where, openSlotCond)
-		} else {
-			where = fmt.Sprintf("%s %s", dbhelpers.BaseWhere, openSlotCond)
-		}
-
-		query := selectQuery() + where + orderBy + pagination
-		log.Infoln(query)
-
-		rows, err := inf.Tx.NamedQuery(query, queryValues)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("querying to_extensions: %v", err))
-			return
-		}
-		defer rows.Close()
-
-		toExts := []tc.TOExtensionNullable{}
-		for rows.Next() {
-			toExt := tc.TOExtensionNullable{}
-			if err = rows.StructScan(&toExt); err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning to_extensions: %v", err))
-				return
-			}
-			toExts = append(toExts, toExt)
-		}
-
-		// Add plugins
-		for _, pi := range plugins.GetInfo() {
-			toExts = append(toExts, tc.TOExtensionNullable{
-				Name:        &pi.Name,
-				Version:     &pi.Version,
-				Description: &pi.Description,
-				Type:        util.StrPtr("TO_PLUGIN"),
-				IsActive:    util.IntPtr(1),
-			})
-		}
-
+		toExts = append(toExts, toExt)
+	}
+	if version < 2 {
+		api.WriteRespAlertObj(w, r, tc.WarnLevel, "This endpoint is deprecated, please use GET /servercheck/extensions instead", toExts)
+	} else {
 		api.WriteResp(w, r, toExts)
 	}
 }
 
-// Delete is the handler for deleting to_extensions.
+// Delete is the handler for deleting servercheck extensions.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
@@ -259,7 +255,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := inf.IntParams["id"]
-	userErr, sysErr, errCode = deleteTOExtension(id, inf.Tx)
+	userErr, sysErr, errCode = deleteServerCheckExtension(id, inf.Tx)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -270,7 +266,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Extension deleted.")
 }
 
-func deleteTOExtension(id int, tx *sqlx.Tx) (error, error, int) {
+func deleteServerCheckExtension(id int, tx *sqlx.Tx) (error, error, int) {
 	// Get Open Slot Type ID
 	openID, exists, err := dbhelpers.GetTypeIDByName("CHECK_EXTENSION_OPEN_SLOT", tx.Tx)
 	if !exists {
@@ -279,7 +275,7 @@ func deleteTOExtension(id int, tx *sqlx.Tx) (error, error, int) {
 		return nil, fmt.Errorf("getting CHECK_EXTENSION_OPEN_SLOT type id: %v", err), http.StatusInternalServerError
 	}
 
-	openTOExt := tc.TOExtensionNullable{
+	openTOExt := tc.ServerCheckExtensionNullable{
 		Name:                 util.StrPtr("OPEN"),
 		Version:              util.StrPtr("0"),
 		InfoURL:              util.StrPtr(""),
@@ -305,4 +301,12 @@ func deleteTOExtension(id int, tx *sqlx.Tx) (error, error, int) {
 	}
 
 	return nil, nil, http.StatusOK
+}
+
+func handleError(w http.ResponseWriter, r *http.Request, tx *sql.Tx, apiVersion uint64, errCode int, userErr, sysErr error) {
+	if apiVersion < 2 {
+		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, util.StrPtr(fmt.Sprintf("%s /servercheck/extensions", r.Method)))
+	} else {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	}
 }

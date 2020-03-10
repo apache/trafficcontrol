@@ -29,8 +29,8 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-// TOExtensionNullable represents a TO extension used by Traffic Ops.
-type TOExtensionNullable struct {
+// ServerCheckExtensionNullable represents a server check extension used by Traffic Ops.
+type ServerCheckExtensionNullable struct {
 	ID                    *int       `json:"id" db:"id"`
 	Name                  *string    `json:"name" db:"name"`
 	Version               *string    `json:"version" db:"version"`
@@ -46,24 +46,24 @@ type TOExtensionNullable struct {
 	LastUpdated           *TimeNoMod `json:"-" db:"last_updated"`
 }
 
-// TOExtensionResponse represents the response from Traffic Ops when getting TOExtension.
-type TOExtensionResponse struct {
-	Response []TOExtensionNullable `json:"response"`
+// ServerCheckExtensionResponse represents the response from Traffic Ops when getting ServerCheckExtension.
+type ServerCheckExtensionResponse struct {
+	Response []ServerCheckExtensionNullable `json:"response"`
 }
 
-// TOExtensionPostResponse represents the response from Traffic Ops when creating TOExtension.
-type TOExtensionPostResponse struct {
-	Response TOExtensionID `json:"supplemental"`
+// ServerCheckExtensionPostResponse represents the response from Traffic Ops when creating ServerCheckExtension.
+type ServerCheckExtensionPostResponse struct {
+	Response ServerCheckExtensionID `json:"supplemental"`
 	Alerts
 }
 
-// TOExtensionID ...
-type TOExtensionID struct {
+// ServerCheckExtensionID ...
+type ServerCheckExtensionID struct {
 	ID int `json:"id"`
 }
 
-// Validate ensures that the TOExtensionNullable request body is valid for creation.
-func (e *TOExtensionNullable) Validate(tx *sql.Tx) error {
+// Validate ensures that the ServerCheckExtensionNullable request body is valid for creation.
+func (e *ServerCheckExtensionNullable) Validate(tx *sql.Tx) error {
 	checkRegexType := regexp.MustCompile(`^CHECK_EXTENSION_`)
 	errs := tovalidate.ToErrors(validation.Errors{
 		"name":        validation.Validate(e.Name, validation.NotNil),
@@ -74,7 +74,7 @@ func (e *TOExtensionNullable) Validate(tx *sql.Tx) error {
 		"isactive":    validation.Validate(e.IsActive, validation.NotNil),
 	})
 	if e.ID != nil {
-		errs = append(errs, errors.New("ToExtension update not supported; delete and re-add."))
+		errs = append(errs, errors.New("ServerCheckExtension update not supported; delete and re-add."))
 	}
 	if e.IsActive != nil && !(*e.IsActive == 0 || *e.IsActive == 1) {
 		errs = append(errs, errors.New("isactive can only be 0 or 1."))

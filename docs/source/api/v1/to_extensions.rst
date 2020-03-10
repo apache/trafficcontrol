@@ -19,12 +19,11 @@
 ``to_extensions``
 *****************
 .. seealso:: :ref:`admin-to-ext-script`
+.. deprecated:: ATCv4
+	Use :ref:`to-api-servercheck_extensions` instead.
 
 ``GET``
 =======
-.. versionchanged:: 1.5
-	Starting in version 1.5 ``to_extensions`` returns stored extensions as well as configured TO Plugins. Prior ``to_extensions`` would return stored extensions as well as perl extensions, whose info would be loaded dynamically.
-
 Retrieves the list of Traffic Ops extensions.
 
 :Auth. Required: Yes
@@ -90,10 +89,6 @@ Response Structure
 	.. note:: This field has meaning only for "Check Extensions"
 
 :type:    The Check :term:`Type` of the extension.
-
-	.. versionchanged:: 1.5
-		Since ``to_extensions`` returns configured TO Plugins in 1.5, this type will either be the stored extension type or ``TO_PLUGIN`` for TO Plugins.
-
 :version: A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http
@@ -142,9 +137,6 @@ Response Structure
 
 ``POST``
 ========
-.. versionchanged:: 1.5
-	Only supports CHECK_EXTENSION extensions now. Previous implementation would attempt to accept CONFIG_EXTENSION or STATISTIC_EXTENSION extensions but would fail the creation.
-
 Creates a new Traffic Ops extension.
 
 :Auth. Required: Yes
@@ -163,9 +155,6 @@ Request Structure
 	1
 		enabled
 
-	.. versionchanged:: 1.5
-		Prior to version 1.5, ``isactive`` could be given as a string or an integer. Now it can only be given as an integer.
-
 :name:        The name of the extension
 :script_file: The base filename of the script that runs for the extension
 
@@ -176,10 +165,6 @@ Request Structure
 	.. note:: This field has meaning only for "Check Extensions"
 
 :type:    The :term:`Type` of extension.
-
-	.. versionchanged:: 1.5
-		``type`` now only accepts a CHECK_EXTENSION type with the naming convention of ``CHECK_EXTENSION_*``.
-
 :version: A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http

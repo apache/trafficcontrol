@@ -13,34 +13,27 @@
 .. limitations under the License.
 ..
 
-.. _to-api-to_extensions-id:
+.. _to-api-plugins:
 
-************************
-``to_extensions/{{ID}}``
-************************
- 
-``DELETE``
-==========
-Deletes a Traffic Ops extension definition. This does **not** delete the actual extension file.
+***********
+``plugins``
+***********
+.. seealso:: :ref:`to_go_plugins`
+
+``GET``
+=======
+Retrieves the list of configured enabled Traffic Ops plugins.
 
 :Auth. Required: Yes
-:Roles Required: None\ [1]_
-:Response Type:  ``undefined``
+:Roles Required: None
+:Response Type:  Array
 
 Request Structure
 -----------------
-.. table:: Request Path Parameters
-
-	+------+---------------------------------------------------------------------------+
-	| Name | Description                                                               |
-	+======+===========================================================================+
-	|  ID  | The integral, unique identifier of the extension definition to be deleted |
-	+------+---------------------------------------------------------------------------+
-
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/2.0/to_extensions/16 HTTP/1.1
+	GET /api/2.0/plugins HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -48,6 +41,10 @@ Request Structure
 
 Response Structure
 ------------------
+:description: A short description of the plugin.
+:name:        The name of the plugin.
+:version:     A (hopefully) semantic version number describing the version of the plugin.
+
 .. code-block:: http
 	:caption: Response Example
 
@@ -58,18 +55,17 @@ Response Structure
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Wed, 12 Dec 2018 16:33:52 GMT
+	Date: Tue, 11 Dec 2018 20:51:48 GMT
 	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: EB0Nu85azbGzaehDTAODP3NPqWbByIza1XQhgwtsW2WTXyK/dxQtncp0YiJXyO0tH9H+n+6BBfojBOb5h0dFPA==
-	Content-Length: 60
+	Whole-Content-Sha512: n73jg9XR4V5Cwqq56Rf3wuIi99k3mM5u2NAjcZ/gQBu8jvAFymDlnZqKeJ+wTll1vjIsHpXCOVXV7+5UGakLgA==
+	Transfer-Encoding: chunked
 
-	{ "alerts": [
+	{ "response": [
 		{
-			"level": "success",
-			"text": "Extension deleted."
+			"name": "helloworld",
+			"version": "1.0.0",
+			"description": "configuration plugin to run at startup"
 		}
 	]}
-
-.. [1] No roles are required to use this endpoint, however access is controlled by username. Only the reserved user ``extension`` is permitted the use of this endpoint.

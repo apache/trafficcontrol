@@ -64,7 +64,7 @@ const (
 	StaticDNSEntries
 	SteeringTargets
 	Tenants
-	TOExtensions
+	ServerCheckExtensions
 	Types
 	Users
 )
@@ -103,7 +103,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	StaticDNSEntries:                     {CreateTestStaticDNSEntries, DeleteTestStaticDNSEntries},
 	SteeringTargets:                      {SetupSteeringTargets, DeleteTestSteeringTargets},
 	Tenants:                              {CreateTestTenants, DeleteTestTenants},
-	TOExtensions:                         {CreateTestTOExtensions, DeleteTestTOExtensions},
+	ServerCheckExtensions:                         {CreateTestServerCheckExtensions, DeleteTestServerCheckExtensions},
 	Types:                                {CreateTestTypes, DeleteTestTypes},
 	Users:                                {CreateTestUsers, ForceDeleteTestUsers},
 }

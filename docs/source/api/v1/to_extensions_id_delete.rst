@@ -19,7 +19,7 @@
 ``to_extensions/{{ID}}/delete``
 *******************************
 .. deprecated:: ATCv4
-	Use the ``DELETE`` method of :ref:`to-api-v1-to_extensions-id` instead.
+	Use the ``DELETE`` method of :ref:`to-api-servercheck_extensions-id` instead.
 
 ``POST``
 ========
@@ -74,7 +74,7 @@ Response Structure
 		},
 		{
 			"level": "warning",
-			"text": "This endpoint is deprecated, please use 'DELETE /to_extensions/:id' instead"
+			"text": "This endpoint is deprecated, please use 'DELETE /servercheck_extensions/:id' instead"
 		}
 	]}
 

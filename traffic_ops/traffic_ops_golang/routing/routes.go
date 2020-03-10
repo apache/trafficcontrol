@@ -73,6 +73,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ping"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugins"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/profile"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/profileparameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/region"
@@ -81,12 +82,12 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/server"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercheck"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercheck/extensions"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/staticdnsentry"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/status"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/steering"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/steeringtargets"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/toextension"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficstats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/types"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/urisigning"
@@ -313,6 +314,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `servers/checks/?$`, servercheck.ReadServersChecks, auth.PrivLevelReadOnly, Authenticated, nil, 2796112922, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `servercheck/?$`, servercheck.CreateUpdateServercheck, auth.PrivLevelInvalid, Authenticated, nil, 2764281568, noPerlBypass},
 
+		// Servercheck Extensions
+		{api.Version{2, 0}, http.MethodPost, `servercheck/extensions$`, extensions.Create, auth.PrivLevelReadOnly, Authenticated, nil, 280498599, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `servercheck/extensions$`, extensions.Get, auth.PrivLevelReadOnly, Authenticated, nil, 283498599, noPerlBypass},
+		{api.Version{2, 0}, http.MethodDelete, `servercheck/extensions/{id}$`, extensions.Delete, auth.PrivLevelReadOnly, Authenticated, nil, 280498299, noPerlBypass},
+
 		//Server Details
 		{api.Version{2, 0}, http.MethodGet, `servers/details/?$`, server.GetDetailParamHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2261264714, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `servers/hostname/{hostName}/details/?$`, server.GetDetailHandler, auth.PrivLevelReadOnly, Authenticated, nil, 272366128, noPerlBypass},
@@ -520,15 +526,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `stats_summary/?$`, trafficstats.GetStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 280498598, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `stats_summary/?$`, trafficstats.CreateStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 280491598, noPerlBypass},
 
-		// TO Extensions
-		{api.Version{2, 0}, http.MethodPost, `to_extensions$`, toextension.CreateTOExtension, auth.PrivLevelReadOnly, Authenticated, nil, 280498599, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `to_extensions$`, toextension.GetTOExtensionsHandler(d.Plugins), auth.PrivLevelReadOnly, Authenticated, nil, 283498599, noPerlBypass},
-		{api.Version{2, 0}, http.MethodDelete, `to_extensions/{id}$`, toextension.Delete, auth.PrivLevelReadOnly, Authenticated, nil, 280498299, noPerlBypass},
-
 		//Pattern based consistent hashing endpoint
 		{api.Version{2, 0}, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil, 260755076, noPerlBypass},
 
 		{api.Version{2, 0}, http.MethodGet, `steering/?$`, steering.Get, auth.PrivLevelSteering, Authenticated, nil, 2174852457, noPerlBypass},
+
+		// Plugins
+		{api.Version{2, 0}, http.MethodGet, `plugins/?$`, plugins.Get(d.Plugins), auth.PrivLevelReadOnly, Authenticated, nil, 283498539, noPerlBypass},
 
 		// API 1.x routes will be deprecated.  Please add all new routes to 2.x.
 		// API Capability
@@ -992,9 +996,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 5}, http.MethodPost, `stats_summary/?(\.json)?$`, trafficstats.CreateStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380491598, noPerlBypass},
 
 		// TO Extensions
-		{api.Version{1, 5}, http.MethodPost, `to_extensions$`, toextension.CreateTOExtension, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, noPerlBypass},
-		{api.Version{1, 5}, http.MethodGet, `to_extensions$`, toextension.GetTOExtensionsHandler(d.Plugins), auth.PrivLevelReadOnly, Authenticated, nil, 383498599, noPerlBypass},
-		{api.Version{1, 5}, http.MethodDelete, `to_extensions/{id}$`, toextension.Delete, auth.PrivLevelReadOnly, Authenticated, nil, 380498299, noPerlBypass},
+		{api.Version{1, 5}, http.MethodPost, `to_extensions$`, extensions.Create, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, noPerlBypass},
+		{api.Version{1, 5}, http.MethodGet, `to_extensions$`, extensions.Get, auth.PrivLevelReadOnly, Authenticated, nil, 383498599, noPerlBypass},
+		{api.Version{1, 5}, http.MethodDelete, `to_extensions/{id}$`, extensions.Delete, auth.PrivLevelReadOnly, Authenticated, nil, 380498299, noPerlBypass},
 
 		//Pattern based consistent hashing endpoint
 		{api.Version{1, 4}, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil, 1960755076, noPerlBypass},
