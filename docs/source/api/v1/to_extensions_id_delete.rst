@@ -74,7 +74,7 @@ Response Structure
 		},
 		{
 			"level": "warning",
-			"text": "This endpoint is deprecated, please use 'DELETE /servercheck_extensions/:id' instead"
+			"text": "This endpoint is deprecated, please use 'DELETE /servercheck/extensions/:id' instead"
 		}
 	]}
 

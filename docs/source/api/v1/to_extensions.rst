@@ -133,10 +133,19 @@ Response Structure
 			"id": 2,
 			"servercheck_short_name": "10G"
 		}
+	],
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use GET /servercheck/extensions instead"
+		}
 	]}
 
 ``POST``
 ========
+.. versionchanged:: 1.5
+	Only supports CHECK_EXTENSION extensions now. Previous implementation would attempt to accept CONFIG_EXTENSION or STATISTIC_EXTENSION extensions but would fail the creation.
+
 Creates a new Traffic Ops extension.
 
 :Auth. Required: Yes
@@ -155,6 +164,9 @@ Request Structure
 	1
 		enabled
 
+	.. versionchanged:: 1.5
+		Prior to version 1.5, ``isactive`` could be given as a string or an integer. Now it can only be given as an integer.
+
 :name:        The name of the extension
 :script_file: The base filename of the script that runs for the extension
 
@@ -165,6 +177,10 @@ Request Structure
 	.. note:: This field has meaning only for "Check Extensions"
 
 :type:    The :term:`Type` of extension.
+
+	.. versionchanged:: 1.5
+		``type`` now only accepts a CHECK_EXTENSION type with the naming convention of ``CHECK_EXTENSION_*``.
+
 :version: A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http
@@ -216,6 +232,10 @@ Response Structure
 	"alerts": [{
 		"level": "success",
 		"text": "Check Extension Loaded."
+	},
+	{
+		"level": "warning",
+		"text": "This endpoint is deprecated, please use POST /servercheck/extensions instead"
 	}]}
 
 .. [1] No roles are required to use this endpoint, however access is controlled by username. Only the reserved user ``extension`` is permitted the use of this endpoint.
