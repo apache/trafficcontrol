@@ -183,6 +183,22 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.serviceCategory), 'has-feedback': hasError(generalConfig.serviceCategory)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="serviceCategory">Service Category<div class="helptooltip">
+                                <div class="helptext">The CDN service category to which the Delivery Service belongs. Previously specified in the header rewrite rules.</div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="serviceCategory" name="serviceCategory" class="form-control" ng-model="deliveryService.serviceCategory" ng-options="serviceCategory.id as serviceCategory.name for serviceCategory in serviceCategories">
+                                <option hidden disabled selected value="">Select...</option>
+                            </select>
+                            <small ng-show="deliveryService.serviceCategory"><a href="/#!/servicecategories/{{deliveryService.serviceCategory}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.serviceCategory != dsCurrent.serviceCategory">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.serviceCategoryName}}</pre>
+                            </aside>
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc), 'has-feedback': hasError(generalConfig.longDesc)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description 1<div class="helptooltip">
                             <div class="helptext">Free text field not currently used in configuration.</div>

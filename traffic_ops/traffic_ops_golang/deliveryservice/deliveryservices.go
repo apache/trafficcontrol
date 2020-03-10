@@ -313,6 +313,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.RegionalGeoBlocking,
 		&ds.RemapText,
 		&ds.RoutingName,
+		&ds.ServiceCategoryId,
 		&ds.SigningAlgorithm,
 		&ds.SSLKeyVersion,
 		&ds.TenantID,
@@ -709,7 +710,8 @@ SELECT
   ds.topology,
   ds.first_header_rewrite,
   ds.inner_header_rewrite,
-  ds.last_header_rewrite
+  ds.last_header_rewrite,
+  ds.service_category
 FROM
   deliveryservice ds
 WHERE
@@ -719,6 +721,7 @@ WHERE
 		&dsV30.FirstHeaderRewrite,
 		&dsV30.InnerHeaderRewrite,
 		&dsV30.LastHeaderRewrite,
+		&dsV30.ServiceCategoryName,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV30.ID), nil
@@ -822,6 +825,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.RegionalGeoBlocking,
 		&ds.RemapText,
 		&ds.RoutingName,
+		&ds.ServiceCategoryId,
 		&ds.SigningAlgorithm,
 		&ds.SSLKeyVersion,
 		&ds.TenantID,
@@ -1009,6 +1013,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"tenant":           {"ds.tenant_id", api.IsInt},
 		"signingAlgorithm": {"ds.signing_algorithm", nil},
 		"topology":         {"ds.topology", nil},
+		"serviceCategory":	{"ds.service_category", api.IsInt},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
@@ -1256,6 +1261,8 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.RegionalGeoBlocking,
 			&ds.RemapText,
 			&ds.RoutingName,
+			&ds.ServiceCategoryId,
+			&ds.ServiceCategoryName,
 			&ds.SigningAlgorithm,
 			&ds.RangeSliceBlockSize,
 			&ds.SSLKeyVersion,
@@ -1780,6 +1787,8 @@ ds.regex_remap,
 ds.regional_geo_blocking,
 ds.remap_text,
 ds.routing_name,
+ds.service_category,
+service_category.name as service_category_name,
 ds.signing_algorithm,
 ds.range_slice_block_size,
 ds.ssl_key_version,
@@ -1797,6 +1806,7 @@ JOIN type ON ds.type = type.id
 JOIN cdn ON ds.cdn_id = cdn.id
 LEFT JOIN profile ON ds.profile = profile.id
 LEFT JOIN tenant ON ds.tenant_id = tenant.id
+LEFT JOIN service_category ON ds.service_category = service_category.id
 `
 }
 
@@ -1861,8 +1871,9 @@ range_slice_block_size=$54,
 topology=$55,
 first_header_rewrite=$56,
 inner_header_rewrite=$57,
-last_header_rewrite=$58
-WHERE id=$59
+last_header_rewrite=$58,
+service_category=$59
+WHERE id=$60
 RETURNING last_updated
 `
 }
@@ -1927,9 +1938,10 @@ ecs_enabled,
 range_slice_block_size,
 first_header_rewrite,
 inner_header_rewrite,
-last_header_rewrite
+last_header_rewrite,
+service_category
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59)
 RETURNING id, last_updated
 `
 }

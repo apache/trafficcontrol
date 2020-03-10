@@ -167,6 +167,8 @@ type DeliveryServiceNullable struct {
 	FirstHeaderRewrite *string `json:"firstHeaderRewrite" db:"first_header_rewrite"`
 	InnerHeaderRewrite *string `json:"innerHeaderRewrite" db:"inner_header_rewrite"`
 	LastHeaderRewrite  *string `json:"lastHeaderRewrite" db:"last_header_rewrite"`
+	ServiceCategoryId *int `json:"serviceCategory" db:"service_category"`
+	ServiceCategoryName *string `json:"serviceCategoryName"`
 }
 
 type DeliveryServiceNullableV15 struct {

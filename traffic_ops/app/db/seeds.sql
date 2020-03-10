@@ -175,6 +175,9 @@ insert into capability (name, description) values ('server-capabilities-write', 
 -- servers
 insert into capability (name, description) values ('servers-read', 'Ability to view servers') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('servers-write', 'Ability to edit servers') ON CONFLICT (name) DO NOTHING;
+-- service categories
+insert into capability (name, description) values ('service-categories-read', 'Ability to view service categories') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('service-categories-write', 'Ability to edit service categories') ON CONFLICT (name) DO NOTHING;
 -- stats
 insert into capability (name, description) values ('stats-read', 'Ability to view cache stats') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('stats-write', 'Ability to edit cache stats') ON CONFLICT (name) DO NOTHING;
@@ -262,6 +265,8 @@ insert into role_capability (role_id, cap_name) values ((select id from role whe
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'server-capabilities-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'servers-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'servers-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'service-categories-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'service-categories-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'stats-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'stats-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'statuses-read') ON CONFLICT (role_id, cap_name) DO NOTHING;

@@ -20,8 +20,8 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/types')">Types</a></li>
-            <li><a ng-click="navigateToPath('/types/' + type.id)">{{::type.name}}</a></li>
+            <li><a ng-click="navigateToPath('/servicecategories')">Service Categories</a></li>
+            <li><a ng-click="navigateToPath('/servicecategories/' + serviceCategory.id)">{{serviceCategory.name}}</a></li>
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right">
@@ -44,7 +44,7 @@ under the License.
     </div>
     <div class="x_content">
         <br>
-        <table id="typeDeliveryServicesTable" class="table responsive-utilities jambo_table">
+        <table id="serviceCategoryDSsTable" class="table responsive-utilities jambo_table">
             <thead>
                 <tr class="headings">
                     <th>Active</th>
@@ -63,7 +63,6 @@ under the License.
                     <th>DSCP</th>
                     <th>ECS Enabled</th>
                     <th>Edge Header Rewrite Rules</th>
-                    <th>First Header Rewrite Rules</th>
                     <th>FQ Pacing Rate</th>
                     <th>Geo Limit</th>
                     <th>Geo Limit Countries</th>
@@ -77,9 +76,7 @@ under the License.
                     <th>ID</th>
                     <th>Info URL</th>
                     <th>Initial Dispersion</th>
-                    <th>Inner Header Rewrite Rules</th>
                     <th>IPv6 Routing</th>
-                    <th>Last Header Rewrite Rules</th>
                     <th>Last Updated</th>
                     <th>Long Desc 1</th>
                     <th>Long Desc 2</th>
@@ -101,9 +98,7 @@ under the License.
                     <th>Service Category</th>
                     <th>Signed</th>
                     <th>Signing Algorithm</th>
-                    <th>Range Slice Block Size</th>
                     <th>Tenant</th>
-                    <th>Topology</th>
                     <th>TR Request Headers</th>
                     <th>TR Response Headers</th>
                     <th>Type</th>
@@ -128,7 +123,6 @@ under the License.
                     <td data-search="^{{::ds.dscp}}$">{{::ds.dscp}}</td>
                     <td data-search="^{{::ds.ecsEnabled}}$">{{::ds.ecsEnabled}}</td>
                     <td data-search="^{{::ds.edgeHeaderRewrite}}$">{{::ds.edgeHeaderRewrite}}</td>
-                    <td data-search="^{{::ds.firstHeaderRewrite}}$">{{::ds.firstHeaderRewrite}}</td>
                     <td data-search="^{{::ds.fqPacingRate}}$">{{::ds.fqPacingRate}}</td>
                     <td data-search="^{{::geoLimit(ds)}}$">{{::geoLimit(ds)}}</td>
                     <td data-search="^{{::ds.geoLimitCountries}}$">{{::ds.geoLimitCountries}}</td>
@@ -142,9 +136,7 @@ under the License.
                     <td data-search="^{{::ds.id}}$">{{::ds.id}}</td>
                     <td data-search="^{{::ds.infoUrl}}$">{{::ds.infoUrl}}</td>
                     <td data-search="^{{::ds.initialDispersion}}$">{{::ds.initialDispersion}}</td>
-                    <td data-search="^{{::ds.innerHeaderRewrite}}$">{{::ds.innerHeaderRewrite}}</td>
                     <td data-search="^{{::ds.ipv6RoutingEnabled}}$">{{::ds.ipv6RoutingEnabled}}</td>
-                    <td data-search="^{{::ds.lastHeaderRewrite}}$">{{::ds.lastHeaderRewrite}}</td>
                     <td data-search="^{{::getRelativeTime(ds.lastUpdated)}}$" data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
                     <td data-search="^{{::ds.longDesc}}$">{{::ds.longDesc}}</td>
                     <td data-search="^{{::ds.longDesc1}}$">{{::ds.longDesc1}}</td>
@@ -166,9 +158,7 @@ under the License.
                     <td data-search="^{{::ds.serviceCategoryName}}$">{{::ds.serviceCategoryName}}</td>
                     <td data-search="^{{::ds.signed}}$">{{::ds.signed}}</td>
                     <td data-search="^{{::ds.signingAlgorithm}}$">{{::ds.signingAlgorithm}}</td>
-                    <td data-search="^{{::ds.rangeSliceBlockSize}}$">{{::ds.rangeSliceBlockSize}}</td>
                     <td data-search="^{{::ds.tenant}}$">{{::ds.tenant}}</td>
-                    <td data-search="^{{::ds.topology}}$">{{::ds.topology}}</td>
                     <td data-search="^{{::ds.trResponseHeaders}}$">{{::ds.trResponseHeaders}}</td>
                     <td data-search="^{{::ds.trRequestHeaders}}$">{{::ds.trRequestHeaders}}</td>
                     <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
