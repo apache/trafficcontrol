@@ -21,7 +21,7 @@ USER root
 ARG TRAFFIC_TS_RPM=traffic_stats/traffic_stats.rpm
 
 RUN apt-get update && \
-    apt-get install -y dnsutils net-tools gettext-base p7zip-full netcat && \
+    apt-get --no-install-recommends install -y dnsutils net-tools gettext-base p7zip-full netcat && \
     rm -rf /var/lib/apt/lists/*
 
 ADD enroller/server_template.json \

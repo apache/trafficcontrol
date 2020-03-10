@@ -25,7 +25,7 @@
 FROM ubuntu:15.10
 MAINTAINER dev@trafficcontrol.apache.org
 
-RUN apt-get install -y curl tar xz-utils postgresql-client
+RUN apt-get --no-install-recommends install -y curl tar xz-utils postgresql-client
 RUN curl -LO https://github.com/begriffs/postgrest/releases/download/v0.3.1.1/postgrest-0.3.1.1-ubuntu.tar.xz
 RUN tar xf postgrest-0.3.1.1-ubuntu.tar.xz
 

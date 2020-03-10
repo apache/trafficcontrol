@@ -136,7 +136,7 @@ On each Traffic Vault server follow these steps.
 		yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel
 
 		# On Ubuntu/Debian/Linux Mint
-		apt install -y openjdk-8-jdk
+		apt-get --no-install-recommends install -y openjdk-8-jdk
 
 		# Arch/Manjaro
 		pacman -Sy jdk8-openjdk

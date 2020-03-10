@@ -23,7 +23,7 @@ RUN rm -rfv /etc/riak/prestart.d/* /etc/riak/poststart.d/*
 RUN echo 'APT::Install-Recommends 0;' >> /etc/apt/apt.conf.d/01norecommends \
  && echo 'APT::Install-Suggests 0;' >> /etc/apt/apt.conf.d/01norecommends \
  && apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y net-tools ca-certificates dnsutils gettext-base \
+ && DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y net-tools ca-certificates dnsutils gettext-base \
  && rm -rf /var/lib/apt/lists/* && rm -rf /etc/apt/apt.conf.d/docker-gzip-indexes
 
 ADD traffic_vault/prestart.d/* /etc/riak/prestart.d/

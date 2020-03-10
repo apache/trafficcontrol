@@ -31,7 +31,7 @@ RUN go clean && go get -v && go build
 
 FROM debian:stretch
 
-RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools && apt-get clean
+RUN apt-get update && apt-get --no-install-recommends install -y netcat curl dnsutils net-tools && apt-get clean
 COPY --from=enroller-builder \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/enroller \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/run.sh \

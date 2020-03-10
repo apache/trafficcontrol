@@ -18,7 +18,7 @@
 FROM influxdb:1.7.3
 
 RUN apt-get update && \
-    apt-get install -y dnsutils net-tools gettext-base netcat && \
+    apt-get --no-install-recommends install -y dnsutils net-tools gettext-base netcat && \
     rm -rf /var/lib/apt/lists/*
 
 ADD enroller/server_template.json \

@@ -376,7 +376,7 @@ On Linux, we suggest ``openvpn``. On most Linux distributions, this will also be
 .. code-block:: shell
 	:caption: Install openvpn on ubuntu/debian
 
-	apt-get update && apt-get install -y openvpn
+	apt-get update && apt-get --no-install-recommends install -y openvpn
 
 On OSX, it only works with brew installed openvpn client, not the *OpenVPN GUI client*.
 

@@ -39,7 +39,7 @@ On Linux, you could choose ``openvpn``. Take ubuntu/debian as an example, you ca
 
 .. code-block:: shell
 
-    apt-get update && apt-get install -y openvpn
+    apt-get update && apt-get --no-install-recommends install -y openvpn
 
 On OSX, it only works with brew installed openvpn client, not the *OpenVPN GUI client*. You can install it by the following instruction.
 

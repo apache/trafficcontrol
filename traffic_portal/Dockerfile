@@ -14,7 +14,7 @@
 FROM node:4-onbuild
 #FROM buildpack-deps:jessie
 
-RUN apt-get update -y && apt-get install libffi-dev ruby-dev rubygems vim -y
+RUN apt-get update -y && apt-get --no-install-recommends install -y libffi-dev ruby-dev rubygems vim -y
 
 # replace this with your application's default port
 RUN gem update --system && gem install --no-rdoc --no-ri compass && gem install --no-rdoc --no-ri sass -v 3.4.22

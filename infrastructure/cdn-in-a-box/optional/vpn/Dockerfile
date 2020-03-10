@@ -16,7 +16,7 @@
 # under the License.
 
 FROM ubuntu:18.04
-RUN apt-get update && apt-get install -y vim tree wget iptables openvpn iputils-ping net-tools dnsutils
+RUN apt-get update && apt-get --no-install-recommends install -y vim tree wget iptables openvpn iputils-ping net-tools dnsutils
 ENV EASYRSA_BIN https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.5/EasyRSA-nix-3.0.5.tgz
 RUN cd /root && \
     wget $EASYRSA_BIN && \
