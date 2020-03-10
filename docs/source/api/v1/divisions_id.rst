@@ -91,7 +91,7 @@ Response Structure
 
 	{ "alerts": [{
 			"text": "This endpoint is deprecated, please use GET /divisions with the 'id' parameter instead",
-			"level": "warning
+			"level": "warning"
 		}],
 		"response": [{
 			"id": 1,
