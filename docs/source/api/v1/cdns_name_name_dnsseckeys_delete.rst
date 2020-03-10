@@ -23,6 +23,9 @@
 =======
 Delete DNSSEC keys for a CDN and all associated :term:`Delivery Services`.
 
+.. deprecated:: ATCv4
+	Use the ``DELETE`` method of :ref:`to-api-cdns-name-name-dnsseckeys` instead.
+
 :Auth. Required: Yes
 :Roles Required: "admin"
 :Response Type:  Object (string)

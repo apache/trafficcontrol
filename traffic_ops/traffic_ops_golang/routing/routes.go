@@ -199,7 +199,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CDN: queue updates
 		{api.Version{2, 0}, http.MethodPost, `cdns/{id}/queue_update$`, cdn.Queue, auth.PrivLevelOperations, Authenticated, nil, 221515980, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `cdns/dnsseckeys/generate?$`, cdn.CreateDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 275336, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `cdns/name/{name}/dnsseckeys/delete/?$`, cdn.DeleteDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 271104207, noPerlBypass},
+		{api.Version{2, 0}, http.MethodDelete, `cdns/name/{name}/dnsseckeys?$`, cdn.DeleteDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 271104207, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `cdns/name/{name}/dnsseckeys/?$`, cdn.GetDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 279010609, noPerlBypass},
 
 		{api.Version{2, 0}, http.MethodGet, `cdns/dnsseckeys/refresh/?$`, cdn.RefreshDNSSECKeys, auth.PrivLevelOperations, Authenticated, nil, 2771997116, noPerlBypass},
@@ -596,7 +596,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CDN: queue updates
 		{api.Version{1, 1}, http.MethodPost, `cdns/{id}/queue_update$`, cdn.Queue, auth.PrivLevelOperations, Authenticated, nil, 271515980, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `cdns/dnsseckeys/generate(\.json)?$`, cdn.CreateDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 675336, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `cdns/name/{name}/dnsseckeys/delete/?(\.json)?$`, cdn.DeleteDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 571104207, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cdns/name/{name}/dnsseckeys/delete/?(\.json)?$`, cdn.DeleteDNSSECKeysDeprecated, auth.PrivLevelAdmin, Authenticated, nil, 571104207, noPerlBypass},
 		{api.Version{1, 4}, http.MethodGet, `cdns/name/{name}/dnsseckeys/?(\.json)?$`, cdn.GetDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 479010609, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `cdns/name/{name}/dnsseckeys/?(\.json)?$`, cdn.GetDNSSECKeysV11, auth.PrivLevelAdmin, Authenticated, nil, 1427173311, noPerlBypass},
 

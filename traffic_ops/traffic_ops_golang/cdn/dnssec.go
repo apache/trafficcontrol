@@ -299,6 +299,15 @@ WHERE cdn.name = $1
 }
 
 func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
+	deleteDNSSECKeys(w, r, &tc.Alerts{})
+}
+
+func DeleteDNSSECKeysDeprecated(w http.ResponseWriter, r *http.Request) {
+	alerts := tc.CreateAlerts(tc.WarnLevel, "")
+	deleteDNSSECKeys(w, r, &alerts)
+}
+
+func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, a *tc.Alerts) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -327,7 +336,7 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, "Successfully deleted "+CDNDNSSECKeyType+" for "+key)
+	api.WriteAlertsObj(w, r, http.StatusOK, *a, "Successfully deleted "+CDNDNSSECKeyType+" for "+key)
 }
 
 // getCDNIDFromName returns the CDN's ID if a CDN with the given name exists
