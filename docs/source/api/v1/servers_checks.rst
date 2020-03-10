@@ -62,7 +62,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 23 Jan 2020 20:00:19 GMT; Max-Age=3600; HttpOnly
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 23 Jan 2020 19:00:19 GMT
-	Content-Length: 202
+	Content-Length: 449
 
 	{ "alerts": [
 		{
