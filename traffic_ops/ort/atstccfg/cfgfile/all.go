@@ -16,7 +16,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-// GetAllConfigs returns a map[configFileName]configFileText
+// GetAllConfigs gets all config files for cfg.CacheHostName.
 func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
 	toData, err := GetTOData(cfg)
 	if err != nil {
@@ -41,6 +41,7 @@ func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
 		if fi.FileNameOnDisk == atscfg.SSLMultiCertConfigFileName {
 			hasSSLMultiCertConfig = true
 		}
+		txt = PreprocessConfigFile(toData, meta, txt)
 		configs = append(configs, ATSConfigFile{ATSConfigMetaDataConfigFile: fi, Text: txt, ContentType: contentType})
 	}
 
