@@ -79,7 +79,7 @@ func WriteConfigs(configs []ATSConfigFile, output io.Writer) error {
 	for _, cfg := range configs {
 		hdr := map[string][]string{
 			rfc.ContentType:   {cfg.ContentType},
-			HdrConfigFilePath: []string{filepath.Join(cfg.Location, cfg.FileNameOnDisk)},
+			HdrConfigFilePath: {filepath.Join(cfg.Location, cfg.FileNameOnDisk)},
 		}
 		partW, err := w.CreatePart(hdr)
 		if err != nil {
