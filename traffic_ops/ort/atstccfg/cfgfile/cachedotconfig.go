@@ -25,7 +25,6 @@ import (
 )
 
 func GetConfigFileProfileCacheDotConfig(toData *TOData) (string, string, error) {
-	// TODO verify I didn't break something
 	profileServerIDsMap := map[int]struct{}{}
 	for _, sv := range toData.Servers {
 		if sv.Profile != toData.Server.Profile {
