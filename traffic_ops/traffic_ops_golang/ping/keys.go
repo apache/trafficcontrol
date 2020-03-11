@@ -20,25 +20,27 @@ package ping
  */
 
 import (
-	"errors"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
+const API_VAULT_PING = "/vault/ping"
+
 func Keys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, nil, errCode, userErr, sysErr, util.StrPtr(API_VAULT_PING))
 		return
 	}
 	defer inf.Close()
 
 	pingResp, err := riaksvc.Ping(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error pinging Riak keys: "+err.Error()))
+		api.HandleDeprecatedErr(w, r, nil, http.StatusInternalServerError, err, nil, util.StrPtr(API_VAULT_PING))
 		return
 	}
-	api.WriteResp(w, r, pingResp.Status)
+	api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(util.StrPtr(API_VAULT_PING)), pingResp)
 }

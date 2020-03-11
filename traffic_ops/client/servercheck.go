@@ -23,7 +23,6 @@ import (
 )
 
 const API_SERVERCHECK = apiBase + "/servercheck"
-const API_SERVERS_CHECKS = apiBase + "/servers/checks"
 
 // InsertServerCheckStatus Will insert/update the servercheck value based on if it already exists or not.
 func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
@@ -42,13 +41,13 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable)
 	return &resp, reqInf, nil
 }
 
-// GetServersChecks fetches check and meta information about servers from /servers/checks.
+// GetServersChecks fetches check and meta information about servers from /servercheck.
 func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqInf, error) {
 	var response struct {
 		tc.Alerts
 		Response []tc.GenericServerCheck `json:"response"`
 	}
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
-	reqInf, err := get(to, API_SERVERS_CHECKS, &response)
+	reqInf, err := get(to, API_SERVERCHECK, &response)
 	return response.Response, response.Alerts, reqInf, err
 }

@@ -18,6 +18,9 @@
 ******************
 ``servers/checks``
 ******************
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-servercheck` instead.
+
 Deals with the various checks associated with certain types of servers.
 
 .. seealso:: :ref:`to-check-ext`
@@ -59,9 +62,15 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 23 Jan 2020 20:00:19 GMT; Max-Age=3600; HttpOnly
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 23 Jan 2020 19:00:19 GMT
-	Content-Length: 202
+	Content-Length: 449
 
-	{ "response": [
+	{ "alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /servercheck instead",
+			"level": "warning"
+		}
+	],
+	"response": [
 		{
 			"adminState": "REPORTED",
 			"cacheGroup": "CDN_in_a_Box_Edge",

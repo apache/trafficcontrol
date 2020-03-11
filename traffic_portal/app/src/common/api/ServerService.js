@@ -209,7 +209,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getCacheChecks = function() {
-        return $http.get(ENV.api['root'] + "servers/checks").then(
+        return $http.get(ENV.api['root'] + "servercheck").then(
             function(result) {
                 return result.data.response;
             },

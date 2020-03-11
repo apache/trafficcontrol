@@ -138,6 +138,33 @@ func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode in
 	handleSimpleErr(w, r, statusCode, userErr, sysErr)
 }
 
+// HandleDeprecatedErr handles an API error, adding a deprecation alert, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
+//
+// The alternative may be nil if there is no alternative and the deprecation message will be selected appropriately.
+//
+// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common APIInfo use case.
+//
+// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+func HandleDeprecatedErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, alternative *string) {
+	if respWritten(r) {
+		log.Errorf("HandleDeprecatedErr called after a write already occurred! Attempting to write the error anyway! Path %s", r.URL.Path)
+		// Don't return, attempt to rollback and write the error anyway
+	}
+	setRespWritten(r)
+
+	if tx != nil {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Errorln("rolling back transaction: " + err.Error())
+		}
+	}
+
+	alerts := CreateDeprecationAlerts(alternative)
+
+	userErr = LogErr(r, statusCode, userErr, sysErr)
+	alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
+	WriteAlerts(w, r, statusCode, alerts)
+}
+
 // LogErr handles the logging of errors and setting up possibly nil errors without actually writing anything to a
 // http.ResponseWriter, unlike handleSimpleErr. It returns the userErr which will be initialized to the
 // http.StatusText of errCode if it was passed as nil - otherwise left alone.
@@ -924,4 +951,3 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
 	}
 }
-
