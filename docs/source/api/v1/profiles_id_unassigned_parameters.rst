@@ -74,7 +74,11 @@ Response Structure
 	Date: Wed, 05 Dec 2018 21:37:50 GMT
 	Transfer-Encoding: chunked
 
-	{ "response": [
+	{	"alerts": [{
+			"level": "warning",
+			"text": "This endpoint is deprecated, and will be removed in the future"
+		}],
+		"response": [
 		{
 			"configFile": "parent.config",
 			"id": 1,
@@ -90,7 +94,7 @@ Response Structure
 			"name": "mso.parent_retry",
 			"secure": false,
 			"value": "unavailable_server_retry"
-		}
-	]
+		}]
+	}
 
 .. note:: The response example for this endpoint has been truncated to only the first two elements of the resulting array, as the output was hundreds of lines long.
