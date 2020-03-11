@@ -18,15 +18,9 @@ use warnings;
 use feature qw(switch);
 use JSON;
 use File::Basename;
-use File::Path;
 use Fcntl qw(:flock);
 use MIME::Base64;
-use LWP::UserAgent;
-use Crypt::SSLeay;
 use Getopt::Long;
-use Digest::SHA qw(sha512_base64);
-use Data::Dumper;
-use Time::HiRes qw(gettimeofday tv_interval);
 
 $| = 1;
 my $date           = `/bin/date`;
@@ -1224,8 +1218,6 @@ sub run_traffic_ctl {
 }
 
 sub check_plugins {
-	my $ctp_sum = 0;
-
 	my $cfg_file       = shift;
 	my $file_lines_ref = shift;
 	my @file_lines     = @{$file_lines_ref};
@@ -1241,9 +1233,7 @@ sub check_plugins {
 			$plugin_name =~ s/\s+//g;
 			( $log_level >> $DEBUG ) && print "DEBUG Found plugin $plugin_name in $cfg_file.\n";
 
-			my $ctp_start = [gettimeofday()];
 			my $return_code = &check_this_plugin($plugin_name);
-			$ctp_sum += (tv_interval($ctp_start));
 
 			if ( $return_code == $PLUGIN_YES ) {
 				( $log_level >> $DEBUG ) && print "DEBUG Package for plugin: $plugin_name is installed.\n";
@@ -1284,9 +1274,7 @@ sub check_plugins {
 				$plugin_name =~ s/\s//g;
 				( $log_level >> $DEBUG ) && print "DEBUG Found plugin $plugin_name in $cfg_file.\n";
 
-				my $ctp_start = [gettimeofday()];
 				$return_code = &check_this_plugin($plugin_name);
-				$ctp_sum += (tv_interval($ctp_start));
 
 				if ( $return_code == $PLUGIN_YES ) {
 					( $log_level >> $DEBUG ) && print "DEBUG Package for plugin: $plugin_name is installed.\n";
