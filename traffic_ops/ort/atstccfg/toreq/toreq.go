@@ -522,6 +522,6 @@ func GetRetry(cfg config.TCCfg, cacheFileName string, obj interface{}, getter fu
 		time.Sleep(time.Second * time.Duration(sleepSeconds)) // TODO make backoff configurable?
 	}
 
-	log.Infof("GetCachedJSON %v (miss) took %v\n", cacheFileName, time.Since(start).Round(time.Millisecond))
+	log.Infof("GetRetry %v retries %v took %v\n", cacheFileName, currentRetry, time.Since(start).Round(time.Millisecond))
 	return nil
 }
