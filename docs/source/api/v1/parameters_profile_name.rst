@@ -28,6 +28,7 @@ Gets details about a specific :term:`Profile`'s :term:`Parameters`
 :Response Type:  Array
 
 .. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-profiles-name-name-parameters` instead.
 
 Request Structure
 -----------------
@@ -76,7 +77,7 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "warning",
-			"text": "This endpoint is deprecated, and will be removed in the future"
+			"text": "This endpoint is deprecated, please use /profiles/name/:name/parameters instead"
 		}],
 			"response": [
 		{

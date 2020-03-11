@@ -22,25 +22,50 @@ package profileparameter
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
+const API_PROFILES_NAME_NAME_PARAMETERS = "profiles/name/:name/parameters"
+
+func GetProfileNameDeprecated(w http.ResponseWriter, r *http.Request) {
+	getProfileName(w, r, true)
+}
+
 func GetProfileName(w http.ResponseWriter, r *http.Request) {
+	getProfileName(w, r, false)
+}
+
+func deprecationString(deprecated bool) *string {
+	if deprecated {
+		return util.StrPtr(API_PROFILES_NAME_NAME_PARAMETERS)
+	} else {
+		return nil
+	}
+}
+
+func getProfileName(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleDeprecatedErr(w, r, nil, errCode, userErr, sysErr, nil)
+		api.HandleDeprecatedErr(w, r, nil, errCode, userErr, sysErr, deprecationString(deprecated))
 		return
 	}
 	defer inf.Close()
-	profiles, err := getParametersByProfileName(inf.Tx.Tx, inf.Params["name"])
-	if err != nil {
-		api.HandleDeprecatedErr(w, r, nil, http.StatusInternalServerError, err, nil, nil)
-		return
+
+	name := inf.Params["name"]
+	if deprecated {
+		profiles, err := getParametersByProfileName(inf.Tx.Tx, name)
+		if err != nil {
+			api.HandleDeprecatedErr(w, r, nil, http.StatusInternalServerError, err, nil, deprecationString(deprecated))
+			return
+		}
+		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(nil), profiles)
+	} else {
+		api.RespWriter(w, r, inf.Tx.Tx)(getParametersByProfileName(inf.Tx.Tx, name))
 	}
-	api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(nil), profiles)
 }
 
 func getParametersByProfileName(tx *sql.Tx, profileName string) ([]tc.ProfileParameterByName, error) {
