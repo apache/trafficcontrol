@@ -25,7 +25,6 @@ import (
 	"math"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -54,7 +53,6 @@ type Cfg struct {
 	LogLocationInfo     string
 	LogLocationWarn     string
 	NumRetries          int
-	OutputDir           string
 	PrintGeneratedFiles bool
 	TOInsecure          bool
 	TOPass              string
@@ -94,7 +92,6 @@ func GetCfg() (Cfg, error) {
 	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
 	listPluginsPtr := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
 	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")
-	outputDirPtr := flag.StringP("output-directory", "o", "", "Directory to output config files to.")
 	cacheHostNamePtr := flag.StringP("cache-host-name", "n", "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	getDataPtr := flag.StringP("get-data", "d", "", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
 	setQueueStatusPtr := flag.StringP("set-queue-status", "q", "", "POSTs to Traffic Ops setting the queue status of the server. Must be 'true' or 'false'. Requires --set-reval-status also be set")
@@ -125,7 +122,6 @@ func GetCfg() (Cfg, error) {
 	toInsecure := *toInsecurePtr
 	toTimeout := time.Millisecond * time.Duration(*toTimeoutMSPtr)
 	listPlugins := *listPluginsPtr
-	outputDir := *outputDirPtr
 	cacheHostName := *cacheHostNamePtr
 	getData := *getDataPtr
 	setQueueStatus := *setQueueStatusPtr
@@ -154,9 +150,6 @@ func GetCfg() (Cfg, error) {
 	if strings.TrimSpace(toPass) == "" {
 		return Cfg{}, errors.New("Missing required argument --traffic-ops-password or TO_PASS environment variable. " + usageStr)
 	}
-	// if strings.TrimSpace(outputDir) == "" {
-	// 	return Cfg{}, errors.New("Missing required argument --output-directory. If you wish to use the current directory, pass '.'. " + usageStr)
-	// }
 	if strings.TrimSpace(cacheHostName) == "" {
 		return Cfg{}, errors.New("Missing required argument --cache-host-name. " + usageStr)
 	}
@@ -179,22 +172,15 @@ func GetCfg() (Cfg, error) {
 		TOURL:           toURLParsed,
 		TOUser:          toUser,
 		ListPlugins:     listPlugins,
-		OutputDir:       outputDir,
 		CacheHostName:   cacheHostName,
 		GetData:         getData,
 		SetRevalStatus:  setRevalStatus,
 		SetQueueStatus:  setQueueStatus,
 		RevalOnly:       revalOnly,
 	}
-
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
 	}
-
-	if err := ValidateDirWriteable(outputDir); err != nil {
-		return Cfg{}, errors.New("validating output directory is writeable '" + outputDir + "': " + err.Error())
-	}
-
 	return cfg, nil
 }
 
@@ -208,27 +194,6 @@ func ValidateURL(u *url.URL) error {
 	if strings.TrimSpace(u.Host) == "" {
 		return errors.New("no host")
 	}
-	return nil
-}
-
-func ValidateDirWriteable(dir string) error {
-	testFileName := "testwrite.txt"
-	testFilePath := filepath.Join(dir, testFileName)
-	if err := os.RemoveAll(testFilePath); err != nil {
-		// TODO don't log? This can be normal
-		log.Infoln("error removing temp test file '" + testFilePath + "' (ok if it didn't exist): " + err.Error())
-	}
-
-	fl, err := os.Create(testFilePath)
-	if err != nil {
-		return errors.New("creating temp test file '" + testFilePath + "': " + err.Error())
-	}
-	defer fl.Close()
-
-	if _, err := fl.WriteString("test"); err != nil {
-		return errors.New("writing to temp test file '" + testFilePath + "': " + err.Error())
-	}
-
 	return nil
 }
 
