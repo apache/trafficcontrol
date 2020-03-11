@@ -21,7 +21,6 @@ package toreq
 
 import (
 	"errors"
-	"net/http"
 	"strings"
 	"time"
 
@@ -29,8 +28,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-// GetCached attempts to get the given object from tempDir/cacheFileName. // TODO rename; object is no longer cached.
-func GetCached(cfg config.TCCfg, cacheFileName string, obj interface{}, getter func(obj interface{}) error) error {
+// GetRetry attempts to get the given object from tempDir/cacheFileName, retrying with exponential backoff up to cfg.NumRetries.
+func GetRetry(cfg config.TCCfg, cacheFileName string, obj interface{}, getter func(obj interface{}) error) error {
 	start := time.Now()
 	currentRetry := 0
 	for {
@@ -54,19 +53,4 @@ func GetCached(cfg config.TCCfg, cacheFileName string, obj interface{}, getter f
 
 	log.Infof("GetCachedJSON %v (miss) took %v\n", cacheFileName, time.Since(start).Round(time.Millisecond))
 	return nil
-}
-
-func StringToCookies(cookiesStr string) []*http.Cookie {
-	hdr := http.Header{}
-	hdr.Add("Cookie", cookiesStr)
-	req := http.Request{Header: hdr}
-	return req.Cookies()
-}
-
-func CookiesToString(cookies []*http.Cookie) string {
-	strs := []string{}
-	for _, cookie := range cookies {
-		strs = append(strs, cookie.String())
-	}
-	return strings.Join(strs, "; ")
 }
