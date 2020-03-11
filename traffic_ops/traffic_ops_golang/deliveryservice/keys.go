@@ -299,7 +299,7 @@ func getSSLKeysByXMLIDHelperV15(xmlID string, alerts tc.Alerts, inf *api.APIInfo
 		return
 	}
 	if !ok {
-		keyObj := tc.DeliveryServiceSSLKeys{}
+		keyObj = tc.DeliveryServiceSSLKeysV15{}
 	} else {
 		parsedCert := keyObj.Certificate
 		err = base64DecodeCertificate(&parsedCert)
