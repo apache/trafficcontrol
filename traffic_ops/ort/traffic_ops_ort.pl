@@ -354,10 +354,10 @@ sub process_cfg_file {
 
 	# First, check if the file to be generated would be identical including order
 	my $change_needed = ( join( '\0', @disk_file_lines ) ne join( '\0', @db_file_lines ) );
-	
+
 	# if different, look deeper to see if we care about the diffs
 	if ( $change_needed ) {
-			# diff_file_lines has all the debug we want			
+		# diff_file_lines has all the debug we want
 		my @return = &diff_file_lines( $cfg_file, \@db_file_lines, \@disk_file_lines );
 		my $order_dependent = ( $cfg_file eq 'logs_xml.config' || $cfg_file =~ m/\.cer$/ || $cfg_file =~ m/hdr\_rw\_(.*)\.config$/ );
 
