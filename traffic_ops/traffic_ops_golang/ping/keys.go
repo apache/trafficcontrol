@@ -29,7 +29,6 @@ import (
 )
 
 func Keys(w http.ResponseWriter, r *http.Request) {
-	alerts := api.CreateDeprecationAlerts(util.StrPtr("/vault/ping"))
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		userErr = api.LogErr(r, errCode, userErr, sysErr)
