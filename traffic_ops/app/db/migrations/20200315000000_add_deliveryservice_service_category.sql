@@ -15,7 +15,7 @@
 ALTER TABLE deliveryservice ADD COLUMN service_category int;
 CREATE TABLE IF NOT EXISTS service_category (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
+    name TEXT,
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
                                             );
 
