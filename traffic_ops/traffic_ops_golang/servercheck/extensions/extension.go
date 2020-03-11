@@ -44,7 +44,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	version := inf.Version.Major
 	if inf.User.UserName != "extension" {
-		handleError(w, r, inf.Tx.Tx, version, http.StatusForbidden, errors.New("invalid user for this API. Only the \"extension\" user can use this"), nil)
+		handleError(w, r, r.Method, inf.Tx.Tx, version, http.StatusForbidden, errors.New("invalid user for this API. Only the \"extension\" user can use this"), nil)
 		return
 	}
 
@@ -52,17 +52,17 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	// Validate request body
 	if err := api.Parse(r.Body, inf.Tx.Tx, &toExt); err != nil {
-		handleError(w, r, inf.Tx.Tx, version, http.StatusBadRequest, err, nil)
+		handleError(w, r, r.Method, inf.Tx.Tx, version, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	// Get Type ID
 	typeID, exists, err := dbhelpers.GetTypeIDByName(*toExt.Type, inf.Tx.Tx)
 	if !exists {
-		handleError(w, r, inf.Tx.Tx, version, http.StatusBadRequest, fmt.Errorf("type %v does not exist", *toExt.Type), nil)
+		handleError(w, r, r.Method, inf.Tx.Tx, version, http.StatusBadRequest, fmt.Errorf("type %v does not exist", *toExt.Type), nil)
 		return
 	} else if err != nil {
-		handleError(w, r, inf.Tx.Tx, version, http.StatusInternalServerError, nil, err)
+		handleError(w, r, r.Method, inf.Tx.Tx, version, http.StatusInternalServerError, nil, err)
 		return
 	}
 	toExt.TypeID = &typeID
@@ -74,7 +74,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		errCode = http.StatusBadRequest
 	}
 	if userErr != nil || sysErr != nil {
-		handleError(w, r, inf.Tx.Tx, version, errCode, userErr, sysErr)
+		handleError(w, r, r.Method, inf.Tx.Tx, version, errCode, userErr, sysErr)
 		return
 	}
 	resp := tc.ServerCheckExtensionPostResponse{
@@ -202,7 +202,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		handleError(w, r, inf.Tx.Tx, version, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		handleError(w, r, r.Method, inf.Tx.Tx, version, http.StatusBadRequest, util.JoinErrs(errs), nil)
 		return
 	}
 
@@ -218,7 +218,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		handleError(w, r, inf.Tx.Tx, version, http.StatusInternalServerError, nil, fmt.Errorf("querying to_extensions: %v", err))
+		handleError(w, r, r.Method, inf.Tx.Tx, version, http.StatusInternalServerError, nil, fmt.Errorf("querying to_extensions: %v", err))
 		return
 	}
 	defer rows.Close()
@@ -227,7 +227,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		toExt := tc.ServerCheckExtensionNullable{}
 		if err = rows.StructScan(&toExt); err != nil {
-			handleError(w, r, inf.Tx.Tx, version, http.StatusInternalServerError, nil, fmt.Errorf("scanning to_extensions: %v", err))
+			handleError(w, r, r.Method, inf.Tx.Tx, version, http.StatusInternalServerError, nil, fmt.Errorf("scanning to_extensions: %v", err))
 			return
 		}
 		toExts = append(toExts, toExt)
@@ -248,22 +248,27 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+	version := inf.Version.Major
 
 	if inf.User.UserName != "extension" {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("invalid user for this API. Only the \"extension\" user can use this"), nil)
+		handleError(w, r, r.Method, inf.Tx.Tx, version, http.StatusForbidden, errors.New("invalid user for this API. Only the \"extension\" user can use this"), nil)
 		return
 	}
 
 	id := inf.IntParams["id"]
 	userErr, sysErr, errCode = deleteServerCheckExtension(id, inf.Tx)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		handleError(w, r, r.Method, inf.Tx.Tx, version, errCode, userErr, sysErr)
 		return
 	}
 
 	changeLogMsg := fmt.Sprintf("TO_EXTENSION: %d, ID: %d, ACTION: Deleted", id, id)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
-	api.WriteRespAlert(w, r, tc.SuccessLevel, "Extension deleted.")
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "Extensions deleted.")
+	if version < 2 {
+		alerts.AddNewAlert(tc.WarnLevel, "This endpoint is deprecated, please use DELETE /servercheck/extensions/:id instead")
+	}
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
 }
 
 func deleteServerCheckExtension(id int, tx *sqlx.Tx) (error, error, int) {
@@ -303,9 +308,13 @@ func deleteServerCheckExtension(id int, tx *sqlx.Tx) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func handleError(w http.ResponseWriter, r *http.Request, tx *sql.Tx, apiVersion uint64, errCode int, userErr, sysErr error) {
+func handleError(w http.ResponseWriter, r *http.Request, httpMethod string, tx *sql.Tx, apiVersion uint64, errCode int, userErr, sysErr error) {
 	if apiVersion < 2 {
-		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, util.StrPtr(fmt.Sprintf("%s /servercheck/extensions", r.Method)))
+		alt := "/servercheck/extensions"
+		if httpMethod == http.MethodDelete {
+			alt += "/:id"
+		}
+		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, util.StrPtr(fmt.Sprintf("%s %s", httpMethod, alt)))
 	} else {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 	}

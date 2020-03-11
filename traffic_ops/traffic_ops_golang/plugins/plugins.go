@@ -18,9 +18,11 @@ package plugins
  * specific language governing permissions and limitations
  * under the License.
  */
- 
+
 import (
 	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -30,7 +32,7 @@ import (
 // Get handler for getting enabled TO Plugins.
 func Get(p plugin.Plugins) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+		inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 		if sysErr != nil || userErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -39,12 +41,11 @@ func Get(p plugin.Plugins) http.HandlerFunc {
 		plugins := []tc.Plugin{}
 		for _, pi := range p.GetInfo() {
 			plugins = append(plugins, tc.Plugin{
-				Name:        &pi.Name,
-				Version:     &pi.Version,
-				Description: &pi.Description,
+				Name:        util.StrPtr(pi.Name),
+				Version:     util.StrPtr(pi.Version),
+				Description: util.StrPtr(pi.Description),
 			})
 		}
-
 		api.WriteResp(w, r, plugins)
 	}
 }

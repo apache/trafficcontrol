@@ -43,8 +43,8 @@ func (to *Session) CreateTOExtension(toExtension tc.TOExtensionNullable) (tc.Ale
 
 // DeleteToExtension deletes a to_extension
 func (to *Session) DeleteTOExtension(id int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", API_TO_EXTENSION, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
+	URI := fmt.Sprintf("%s/%d/delete", API_TO_EXTENSION, id)
+	resp, remoteAddr, err := to.request(http.MethodPost, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

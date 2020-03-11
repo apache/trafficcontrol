@@ -997,8 +997,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// TO Extensions
 		{api.Version{1, 5}, http.MethodPost, `to_extensions$`, extensions.Create, auth.PrivLevelReadOnly, Authenticated, nil, 380498599, noPerlBypass},
-		{api.Version{1, 5}, http.MethodGet, `to_extensions$`, extensions.Get, auth.PrivLevelReadOnly, Authenticated, nil, 383498599, noPerlBypass},
-		{api.Version{1, 5}, http.MethodDelete, `to_extensions/{id}$`, extensions.Delete, auth.PrivLevelReadOnly, Authenticated, nil, 380498299, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `to_extensions$`, extensions.Get, auth.PrivLevelReadOnly, Authenticated, nil, 383498599, noPerlBypass},
+		{api.Version{1, 1}, http.MethodPost, `to_extensions/{id}/delete$`, extensions.Delete, auth.PrivLevelReadOnly, Authenticated, nil, 385118599, noPerlBypass},
 
 		//Pattern based consistent hashing endpoint
 		{api.Version{1, 4}, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil, 1960755076, noPerlBypass},
