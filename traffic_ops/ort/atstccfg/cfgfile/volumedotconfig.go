@@ -21,13 +21,11 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 const VolumeFileName = StorageFileName
 
 func GetConfigFileProfileVolumeDotConfig(toData *TOData) (string, string, error) {
 	params := ParamsToMap(FilterParams(toData.ServerParams, VolumeFileName, "", "", ""))
-	log.Errorf("DEBUG volume params: %+v\n", params)
 	return atscfg.MakeVolumeDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeVolumeDotConfig, nil
 }
