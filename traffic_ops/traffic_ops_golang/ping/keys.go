@@ -20,15 +20,16 @@ package ping
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
 func Keys(w http.ResponseWriter, r *http.Request) {
-	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated")
+	alerts := api.CreateDeprecationAlerts(util.StrPtr("/vault/ping"))
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		userErr = api.LogErr(r, errCode, userErr, sysErr)
