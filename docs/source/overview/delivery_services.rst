@@ -749,6 +749,12 @@ Servers
 -------
 Servers can be assigned to Delivery Services using the :ref:`tp-configure-servers` and :ref:`tp-services-delivery-service` Traffic Portal sections, or by directly using the :ref:`to-api-deliveryserviceserver` endpoint. Only :term:`Edge-tier cache servers` can be assigned to a Delivery Service, and once they are so assigned they will begin to serve content for the Delivery Service (after updates are queued and then applied). Any servers assigned to a Delivery Service must also belong to the same CDN_ as the Delivery Service itself. At least one server must be assigned to a Delivery Service in order for it to serve any content.
 
+.. _ds-service-category:
+
+Service Category
+------------
+Defines the type of content being delivered by the Delivery Service. Some example values are: "Linear", "VOD", and "OTT"
+
 .. _ds-signing-algorithm:
 
 Signing Algorithm
