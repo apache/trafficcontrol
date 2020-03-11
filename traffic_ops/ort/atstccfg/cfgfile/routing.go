@@ -29,14 +29,14 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-var scopeConfigFileFuncs = map[string]func(toData *TOData, fileName string) (string, string, int, error){
+var scopeConfigFileFuncs = map[string]func(toData *TOData, fileName string) (string, string, error){
 	"cdns":     GetConfigFileCDN,
 	"servers":  GetConfigFileServer,
 	"profiles": GetConfigFileProfile,
 }
 
-// GetConfigFile returns the text of the generated config file, the MIME Content Type of the config file, the exit code, and any error.
-func GetConfigFile(toData *TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (string, string, int, error) {
+// GetConfigFile returns the text of the generated config file, the MIME Content Type of the config file, and any error.
+func GetConfigFile(toData *TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (string, string, error) {
 	path := fileInfo.APIURI
 	// TODO remove the URL path parsing. It's a legacy from when config files were endpoints in the meta config.
 	// We should replace it with actually calling the right file and name directly.
@@ -47,7 +47,7 @@ func GetConfigFile(toData *TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (str
 
 	pathParts := strings.Split(path, "/")
 	if len(pathParts) < 8 {
-		return "", "", 0, errors.New("unknown config file '" + path + "'")
+		return "", "", errors.New("unknown config file '" + path + "'")
 	}
 	scope := pathParts[3]
 	resource := pathParts[4]
@@ -59,7 +59,7 @@ func GetConfigFile(toData *TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (str
 		return scopeConfigFileFunc(toData, fileName)
 	}
 
-	return "", "", 0, errors.New("unknown config file '" + fileInfo.APIURI + "'")
+	return "", "", errors.New("unknown config file '" + fileInfo.APIURI + "'")
 }
 
 type ConfigFilePrefixSuffixFunc struct {
@@ -68,7 +68,7 @@ type ConfigFilePrefixSuffixFunc struct {
 	Func   func(toData *TOData, fileName string) (string, string, error)
 }
 
-func GetConfigFileCDN(toData *TOData, fileName string) (string, string, int, error) {
+func GetConfigFileCDN(toData *TOData, fileName string) (string, string, error) {
 	log.Infoln("GetConfigFileCDN cdn '" + toData.Server.CDNName + "' fileName '" + fileName + "'")
 
 	txt := ""
@@ -90,18 +90,12 @@ func GetConfigFileCDN(toData *TOData, fileName string) (string, string, int, err
 	}
 
 	if err != nil {
-		code := config.ExitCodeErrGeneric
-		if err == config.ErrNotFound {
-			code = config.ExitCodeNotFound
-		} else if err == config.ErrBadRequest {
-			code = config.ExitCodeBadRequest
-		}
-		return "", "", code, err
+		return "", "", err
 	}
-	return txt, contentType, config.ExitCodeSuccess, nil
+	return txt, contentType, nil
 }
 
-func GetConfigFileProfile(toData *TOData, fileName string) (string, string, int, error) {
+func GetConfigFileProfile(toData *TOData, fileName string) (string, string, error) {
 	log.Infoln("GetConfigFileProfile profile '" + toData.Server.Profile + "' fileName '" + fileName + "'")
 
 	txt := ""
@@ -118,15 +112,9 @@ func GetConfigFileProfile(toData *TOData, fileName string) (string, string, int,
 	}
 
 	if err != nil {
-		code := config.ExitCodeErrGeneric
-		if err == config.ErrNotFound {
-			code = config.ExitCodeNotFound
-		} else if err == config.ErrBadRequest {
-			code = config.ExitCodeBadRequest
-		}
-		return "", "", code, err
+		return "", "", err
 	}
-	return txt, contentType, config.ExitCodeSuccess, nil
+	return txt, contentType, nil
 }
 
 // ConfigFileFuncs returns a map[scope][configFile]configFileFunc.
@@ -185,7 +173,7 @@ func ServerConfigFileFuncs() map[string]func(toData *TOData) (string, string, er
 	}
 }
 
-func GetConfigFileServer(toData *TOData, fileName string) (string, string, int, error) {
+func GetConfigFileServer(toData *TOData, fileName string) (string, string, error) {
 	log.Infoln("GetConfigFileServer server '" + toData.Server.HostName + "' fileName '" + fileName + "'")
 	txt := ""
 	contentType := ""
@@ -196,7 +184,7 @@ func GetConfigFileServer(toData *TOData, fileName string) (string, string, int, 
 		txt, contentType, err = GetConfigFileServerUnknownConfig(toData, fileName)
 	}
 	if err != nil {
-		return "", "", config.ExitCodeErrGeneric, err
+		return "", "", err
 	}
-	return txt, contentType, config.ExitCodeSuccess, nil
+	return txt, contentType, nil
 }

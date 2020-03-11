@@ -34,7 +34,7 @@ func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
 		if cfg.RevalOnly && fi.FileNameOnDisk != atscfg.RegexRevalidateFileName {
 			continue
 		}
-		txt, contentType, _, err := GetConfigFile(toData, fi)
+		txt, contentType, err := GetConfigFile(toData, fi)
 		if err != nil {
 			return nil, errors.New("getting config file '" + fi.APIURI + "': " + err.Error())
 		}
