@@ -73,21 +73,21 @@ Response Structure
 	Whole-Content-Sha512: F2NmDbTpXqrIQDX7IBKH9+1drtTL4XedSfJv6klMgLEZwbLCkddIXuSLpmgVCID6kTVqy3fTKjZS3U+HJ3YUEQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 02 Dec 2019 21:53:17 GMT
-	Content-Length: 128
+	Content-Length: 210
 
 	{ "alerts": [
 		{
 			"level": "warning",
-			"text": "This endpoint is deprecated, please use GET /asns instead"
+			"text": "this endpoint is deprecated, please use get /asns instead"
 		}
 	]],
 	"response": [
 		{
 			"asn": 1,
-			"cachegroup": "TRAFFIC_ANALYTICS",
-			"cachegroupId": 1,
+			"cachegroup": "traffic_analytics",
+			"cachegroupid": 1,
 			"id": 1,
-			"lastUpdated": "2019-12-02 21:49:08+00"
+			"lastupdated": "2019-12-02 21:49:08+00"
 		}
 	]}
 
