@@ -630,7 +630,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'cdns/name/{cdn_name:s}/dnsseckeys/delete', ('2.0',))
+	@api_request('delete', 'cdns/name/{cdn_name:s}/dnsseckeys', ('2.0',))
 	def delete_cdn_dns_sec_keys(self, cdn_name=None):
 		"""
 		Delete dnssec keys for a cdn and all associated delivery services

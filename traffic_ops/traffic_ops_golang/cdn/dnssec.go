@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -260,6 +261,8 @@ func generateStoreDNSSECKeys(
 	return nil
 }
 
+const API_DNSSECKEYS = "DELETE /cdns/name/:name/dnsseckeys"
+
 type CDNDS struct {
 	Name        string
 	Protocol    *int
@@ -299,44 +302,57 @@ WHERE cdn.name = $1
 }
 
 func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
-	deleteDNSSECKeys(w, r, &tc.Alerts{})
+	deleteDNSSECKeys(w, r, false)
 }
 
 func DeleteDNSSECKeysDeprecated(w http.ResponseWriter, r *http.Request) {
-	alerts := tc.CreateAlerts(tc.WarnLevel, "")
-	deleteDNSSECKeys(w, r, &alerts)
+	deleteDNSSECKeys(w, r, true)
 }
 
-func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, a *tc.Alerts) {
+func writeError(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, deprecated bool) {
+	if deprecated {
+		api.HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, util.StrPtr(API_DNSSECKEYS))
+	} else {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+	}
+}
+
+func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		writeError(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated)
 		return
 	}
 	defer inf.Close()
 
 	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()))
+		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()), deprecated)
 		return
 	}
 
 	key := inf.Params["name"]
 	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()))
+		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()), deprecated)
 		return
 	} else if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		writeError(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, deprecated)
 		return
 	}
 
 	if err := riaksvc.DeleteObject(key, CDNDNSSECKeyType, cluster); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()))
+		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()), deprecated)
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
-	api.WriteAlertsObj(w, r, http.StatusOK, *a, "Successfully deleted "+CDNDNSSECKeyType+" for "+key)
+	successMsg := "Successfully deleted "+CDNDNSSECKeyType+" for "+key
+	if deprecated {
+		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(util.StrPtr(API_DNSSECKEYS)), successMsg)
+	} else {
+		api.WriteResp(w, r, successMsg)
+
+	}
 }
 
 // getCDNIDFromName returns the CDN's ID if a CDN with the given name exists
