@@ -500,6 +500,7 @@ func GetServerUpdateStatus(cfg config.TCCfg) (tc.ServerUpdateStatus, error) {
 }
 
 // GetRetry attempts to get the given object from tempDir/cacheFileName, retrying with exponential backoff up to cfg.NumRetries.
+// The cacheFileName is not used in actual fetching or logic, but only for logging. It can be any printable string, but should be unique and reflect the object being fetched.
 func GetRetry(cfg config.TCCfg, cacheFileName string, obj interface{}, getter func(obj interface{}) error) error {
 	start := time.Now()
 	currentRetry := 0

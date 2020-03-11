@@ -1,5 +1,5 @@
 // package getdata gets and posts non-config data from Traffic Ops which is related to config generation and needed by ORT.
-// This is both the 'get-data' and '
+// For example, the --get-data, --set-queue-status, and --set-reval-status arguments.
 package getdata
 
 import (
@@ -136,7 +136,7 @@ func GetPackages(cfg config.TCCfg) ([]atscfg.Package, error) {
 	return packages, nil
 }
 
-// WriteORTServerPackages writes the packages for serverName to output.
+// WriteChkconfig writes the chkconfig for cfg.CacheHostName to output.
 // Note this is identical to /ort/serverName/chkconfig.
 func WriteChkconfig(cfg config.TCCfg, output io.Writer) error {
 	chkconfig, err := GetChkconfig(cfg)
