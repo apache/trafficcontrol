@@ -47,7 +47,7 @@ Response Structure
 
 	{
 		"alerts": [{
-			"level": "warning"
+			"level": "warning",
 			"text": "This endpoint is deprected, please use DELETE /cdns/name/:name/dnsseckeys instead"
 		}],
 		"response": "Successfully deleted dnssec keys for test"
