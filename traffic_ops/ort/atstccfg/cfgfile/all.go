@@ -110,9 +110,6 @@ func PreprocessConfigFile(toData *TOData, meta *tc.ATSConfigMetaData, cfgFile st
 	cfgFile = strings.Replace(cfgFile, `__CACHE_IPV4__`, toData.Server.IPAddress, -1)
 	cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, toData.Server.HostName, -1)
 	cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, toData.Server.HostName+`.`+toData.Server.DomainName, -1)
-	cfgFile = strings.Replace(cfgFile, `__RETURN__`, "\n", -1)
-
 	cfgFile = returnRegex.ReplaceAllString(cfgFile, "\n")
-
 	return cfgFile
 }
