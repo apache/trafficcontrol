@@ -49,7 +49,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
@@ -71,11 +70,6 @@ func main() {
 	if cfg.ListPlugins {
 		fmt.Println(strings.Join(plugin.List(), "\n"))
 		os.Exit(0)
-	}
-
-	if cfg.PrintGeneratedFiles {
-		fmt.Println(strings.Join(GetGeneratedFilesList(), "\n"))
-		os.Exit(config.ExitCodeSuccess)
 	}
 
 	plugins := plugin.Get(cfg)
@@ -120,25 +114,4 @@ func main() {
 	}
 
 	os.Exit(config.ExitCodeSuccess)
-}
-
-func GetGeneratedFilesList() []string {
-	names := []string{}
-	for scope, fileFuncs := range cfgfile.ConfigFileFuncs() {
-		for cfgFile, _ := range fileFuncs {
-			names = append(names, scope+"/"+cfgFile)
-		}
-	}
-	names = append(names, "profiles/url_sig_*.config")     // url_sig configs are generated, but not in the funcs because they're not a literal match
-	names = append(names, "profiles/uri_signing_*.config") // uri_signing configs are generated, but not in the funcs because they're not a literal match
-	names = append(names, "profiles/*")                    // unknown profiles configs are generated, a.k.a. "take-and-bake"
-	return names
-}
-
-func HTTPCodeToExitCode(httpCode int) int {
-	switch httpCode {
-	case http.StatusNotFound:
-		return config.ExitCodeNotFound
-	}
-	return config.ExitCodeErrGeneric
 }

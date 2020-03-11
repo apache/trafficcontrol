@@ -47,22 +47,21 @@ var ErrNotFound = errors.New("not found")
 var ErrBadRequest = errors.New("bad request")
 
 type Cfg struct {
-	CacheHostName       string
-	ListPlugins         bool
-	LogLocationErr      string
-	LogLocationInfo     string
-	LogLocationWarn     string
-	NumRetries          int
-	PrintGeneratedFiles bool
-	TOInsecure          bool
-	TOPass              string
-	TOTimeout           time.Duration
-	TOURL               *url.URL
-	TOUser              string
-	GetData             string
-	SetQueueStatus      string
-	SetRevalStatus      string
-	RevalOnly           bool
+	CacheHostName   string
+	ListPlugins     bool
+	LogLocationErr  string
+	LogLocationInfo string
+	LogLocationWarn string
+	NumRetries      int
+	TOInsecure      bool
+	TOPass          string
+	TOTimeout       time.Duration
+	TOURL           *url.URL
+	TOUser          string
+	GetData         string
+	SetQueueStatus  string
+	SetRevalStatus  string
+	RevalOnly       bool
 }
 
 type TCCfg struct {
@@ -77,7 +76,6 @@ func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(log.LogLoca
 func (cfg Cfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // atstccfg doesn't use the event logger.
 
 // GetCfg gets the application configuration, from arguments and environment variables.
-// Note if PrintGeneratedFiles is configured, the config will be returned with PrintGeneratedFiles true and all other values set to their defaults. This is because other values may have requirements and return errors, where if PrintGeneratedFiles is set by the user, no other setting should be considered.
 func GetCfg() (Cfg, error) {
 	toURLPtr := flag.StringP("traffic-ops-url", "u", "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL.")
 	toUserPtr := flag.StringP("traffic-ops-user", "U", "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER.")
@@ -86,7 +84,6 @@ func GetCfg() (Cfg, error) {
 	logLocationErrPtr := flag.StringP("log-location-error", "e", "stderr", "Where to log errors. May be a file path, stdout, stderr, or null.")
 	logLocationWarnPtr := flag.StringP("log-location-warning", "w", "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null.")
 	logLocationInfoPtr := flag.StringP("log-location-info", "i", "stderr", "Where to log information messages. May be a file path, stdout, stderr, or null.")
-	printGeneratedFilesPtr := flag.BoolP("print-generated-files", "g", false, "Whether to print a list of files which are generated (and not proxied to Traffic Ops).")
 	toInsecurePtr := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
 	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 60000, "Timeout in seconds for Traffic Ops requests.")
 	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
@@ -106,8 +103,6 @@ func GetCfg() (Cfg, error) {
 	} else if *helpPtr {
 		flag.PrintDefaults()
 		os.Exit(0)
-	} else if *printGeneratedFilesPtr {
-		return Cfg{PrintGeneratedFiles: true}, nil
 	} else if *listPluginsPtr {
 		return Cfg{ListPlugins: true}, nil
 	}
