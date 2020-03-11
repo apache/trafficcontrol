@@ -48,20 +48,20 @@ var ErrBadRequest = errors.New("bad request")
 
 type Cfg struct {
 	CacheHostName   string
+	GetData         string
 	ListPlugins     bool
 	LogLocationErr  string
 	LogLocationInfo string
 	LogLocationWarn string
 	NumRetries      int
+	RevalOnly       bool
+	SetQueueStatus  string
+	SetRevalStatus  string
 	TOInsecure      bool
 	TOPass          string
 	TOTimeout       time.Duration
 	TOURL           *url.URL
 	TOUser          string
-	GetData         string
-	SetQueueStatus  string
-	SetRevalStatus  string
-	RevalOnly       bool
 }
 
 type TCCfg struct {
