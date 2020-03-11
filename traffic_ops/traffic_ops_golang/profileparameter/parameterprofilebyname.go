@@ -29,22 +29,18 @@ import (
 )
 
 func GetProfileName(w http.ResponseWriter, r *http.Request) {
-	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated")
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		userErr = api.LogErr(r, errCode, userErr, sysErr)
-		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
-		api.WriteAlerts(w, r, errCode, alerts)
+		api.HandleDeprecatedErr(w, r, nil, errCode, userErr, sysErr, nil)
 		return
 	}
 	defer inf.Close()
 	profiles, err := getParametersByProfileName(inf.Tx.Tx, inf.Params["name"])
 	if err != nil {
-		alerts.AddAlerts(tc.CreateErrorAlerts(err))
-		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
+		api.HandleDeprecatedErr(w, r, nil, http.StatusInternalServerError, err, nil, nil)
 		return
 	}
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, profiles)
+	api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(nil), profiles)
 }
 
 func getParametersByProfileName(tx *sql.Tx, profileName string) ([]tc.ProfileParameterByName, error) {
