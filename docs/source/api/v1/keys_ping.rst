@@ -44,7 +44,7 @@ No parameters available.
 Response Structure
 ------------------
 :server:	The hostname and port of :ref:`tv-overview`.
-:status:	The `reaspon phrase <https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html#sec6.1.1>`_ of the response that :ref:`to-overview` received from :ref:`tv-overview`.
+:status:	The `reason phrase <https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html#sec6.1.1>`_ of the response that :ref:`to-overview` received from :ref:`tv-overview`.
 
 .. code-block:: http
 	:caption: Response Example
@@ -60,10 +60,14 @@ Response Structure
 	Whole-Content-Sha512: Y/Br43Y5SXXBIneAgHANBXDP0hqO4Lkguk0vmuTU7xktZq3EldK5SX9OkEm9gzRkPKjQVUy0hhldsq6Ax46k7A==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 24 Feb 2020 20:09:31 GMT
-	Content-Length: 87
+	Content-Length: 139
 
 	{ "alerts": [{
 			"level": "warning",
 			"text": "This endpoint is deprecated."
-		}]
+		}],
+		"response": {
+			"status": "OK",
+			"server": "trafficvault.infra.ciab.test:8087"
+		}
 	}

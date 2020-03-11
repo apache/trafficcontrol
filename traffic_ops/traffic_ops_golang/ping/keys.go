@@ -22,27 +22,25 @@ package ping
 import (
 	"net/http"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
+const API_VAULT_PING = "/vault/ping"
+
 func Keys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		userErr = api.LogErr(r, errCode, userErr, sysErr)
-		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
-		api.WriteAlerts(w, r, errCode, alerts)
+		api.HandleDeprecatedErr(w, r, nil, errCode, userErr, sysErr, util.StrPtr(API_VAULT_PING))
 		return
 	}
 	defer inf.Close()
 
 	pingResp, err := riaksvc.Ping(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
-		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
-		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
+		api.HandleDeprecatedErr(w, r, nil, http.StatusInternalServerError, err, nil, util.StrPtr(API_VAULT_PING))
 		return
 	}
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, pingResp)
+	api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(util.StrPtr(API_VAULT_PING)), pingResp)
 }
