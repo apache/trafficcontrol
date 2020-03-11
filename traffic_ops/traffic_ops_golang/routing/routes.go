@@ -38,7 +38,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apicapability"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apiriak"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats/atscdn"
@@ -92,6 +91,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/types"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/urisigning"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/user"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/vault"
 
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
@@ -266,7 +266,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Ping
 		{api.Version{2, 0}, http.MethodGet, `ping$`, ping.PingHandler(), 0, NoAuth, nil, 2555661597, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `vault/ping/?$`, ping.Vault, auth.PrivLevelReadOnly, Authenticated, nil, 2884012114, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `keys/ping/?$`, ping.Keys, auth.PrivLevelReadOnly, Authenticated, nil, 218416022, noPerlBypass},
 
 		//Profile: CRUD
 		{api.Version{2, 0}, http.MethodGet, `profiles/?$`, api.ReadHandler(&profile.TOProfile{}), auth.PrivLevelReadOnly, Authenticated, nil, 268758589, noPerlBypass},
@@ -302,7 +301,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `servers/{id}/deliveryservices$`, api.ReadHandler(&dsserver.TODSSDeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 233115411, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/servers$`, dsserver.GetReadAssigned, auth.PrivLevelReadOnly, Authenticated, nil, 2345121223, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `deliveryservices/request`, deliveryservicerequests.Request, auth.PrivLevelPortal, Authenticated, nil, 240875299, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `deliveryservice_matches/?$`, deliveryservice.GetMatches, auth.PrivLevelReadOnly, Authenticated, nil, 2191301170, noPerlBypass},
 
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/capacity/?$`, deliveryservice.GetCapacity, auth.PrivLevelReadOnly, Authenticated, nil, 2231409110, noPerlBypass},
 
@@ -310,7 +308,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `servers/status$`, server.GetServersStatusCountsHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2252786293, noPerlBypass},
 
 		//Serverchecks
-		{api.Version{2, 0}, http.MethodGet, `servers/checks/?$`, servercheck.ReadServersChecks, auth.PrivLevelReadOnly, Authenticated, nil, 2796112922, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `servercheck/?$`, servercheck.ReadServerCheck, auth.PrivLevelReadOnly, Authenticated, nil, 2796112922, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `servercheck/?$`, servercheck.CreateUpdateServercheck, auth.PrivLevelInvalid, Authenticated, nil, 2764281568, noPerlBypass},
 
 		//Server Details
@@ -498,7 +496,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodPost, `deliveryservices/xmlId/{name}/urlkeys/generate/?$`, deliveryservice.GenerateURLKeys, auth.PrivLevelOperations, Authenticated, nil, 2530482824, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/xmlId/{name}/urlkeys/?$`, deliveryservice.GetURLKeysByName, auth.PrivLevelReadOnly, Authenticated, nil, 2202719211, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/urlkeys/?$`, deliveryservice.GetURLKeysByID, auth.PrivLevelReadOnly, Authenticated, nil, 293197114, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?$`, apiriak.GetBucketKey, auth.PrivLevelAdmin, Authenticated, nil, 2220510801, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `vault/bucket/{bucket}/key/{key}/values/?$`, vault.GetBucketKey, auth.PrivLevelAdmin, Authenticated, nil, 2220510801, noPerlBypass},
 
 		//Delivery service LetsEncrypt
 		{api.Version{2, 0}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelReadOnly, Authenticated, nil, 253439052, noPerlBypass},
@@ -719,7 +717,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 2037840835, noPerlBypass},
 
 		//Serverchecks
-		{api.Version{1, 1}, http.MethodGet, `servers/checks(/|\.json)?$`, servercheck.ReadServersChecks, auth.PrivLevelReadOnly, Authenticated, nil, 1796112922, perlBypass},
+		{api.Version{1, 1}, http.MethodGet, `servers/checks(/|\.json)?$`, servercheck.DeprecatedReadServersChecks, auth.PrivLevelReadOnly, Authenticated, nil, 1796112922, perlBypass},
 		{api.Version{1, 1}, http.MethodPost, `servercheck/?(\.json)?$`, servercheck.CreateUpdateServercheck, auth.PrivLevelInvalid, Authenticated, nil, 1764281568, perlBypass},
 
 		//Server Details
@@ -971,7 +969,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodPost, `deliveryservices/xmlId/{name}/urlkeys/generate/?(\.json)?$`, deliveryservice.GenerateURLKeys, auth.PrivLevelOperations, Authenticated, nil, 1530482824, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/xmlId/{name}/urlkeys/?(\.json)?$`, deliveryservice.GetURLKeysByName, auth.PrivLevelReadOnly, Authenticated, nil, 2102719211, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/{id}/urlkeys/?(\.json)?$`, deliveryservice.GetURLKeysByID, auth.PrivLevelReadOnly, Authenticated, nil, 393197114, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?(\.json)?$`, apiriak.GetBucketKey, auth.PrivLevelAdmin, Authenticated, nil, 2020510801, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?(\.json)?$`, vault.GetBucketKeyDeprecated, auth.PrivLevelAdmin, Authenticated, nil, 2020510801, noPerlBypass},
 
 		//Delivery service LetsEncrypt
 		{api.Version{1, 5}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?(\.json)?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelReadOnly, Authenticated, nil, 753439052, noPerlBypass},

@@ -247,9 +247,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, alerts tc.Alerts, inf *api.APIInfo, w
 		return
 	}
 	if !ok {
-		alerts.AddNewAlert(tc.ErrorLevel, "no object found for the specified key")
-		api.WriteAlertsObj(w, r, http.StatusNotFound, alerts, struct{}{}) // empty response object because Perl
-		return
+		keyObj = tc.DeliveryServiceSSLKeys{}
 	}
 	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
 		err = base64DecodeCertificate(&keyObj.Certificate)
@@ -301,33 +299,32 @@ func getSSLKeysByXMLIDHelperV15(xmlID string, alerts tc.Alerts, inf *api.APIInfo
 		return
 	}
 	if !ok {
-		alerts.AddNewAlert(tc.ErrorLevel, "no object found for the specified key")
-		api.WriteAlertsObj(w, r, http.StatusNotFound, alerts, struct{}{}) // empty response object because Perl
-		return
-	}
-
-	parsedCert := keyObj.Certificate
-	err = base64DecodeCertificate(&parsedCert)
-	if err != nil {
-		userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
-		return
-	}
-	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
-		keyObj.Certificate = parsedCert
-	}
-
-	if keyObj.Certificate.Crt != "" && keyObj.Expiration.IsZero() {
-		exp, err := parseExpirationFromCert([]byte(parsedCert.Crt))
+		keyObj := tc.DeliveryServiceSSLKeys{}
+	} else {
+		parsedCert := keyObj.Certificate
+		err = base64DecodeCertificate(&parsedCert)
 		if err != nil {
-			userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New(xmlID+": "+err.Error()))
+			userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
 			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
 			api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 			return
 		}
-		keyObj.Expiration = exp
+		if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
+			keyObj.Certificate = parsedCert
+		}
+
+		if keyObj.Certificate.Crt != "" && keyObj.Expiration.IsZero() {
+			exp, err := parseExpirationFromCert([]byte(parsedCert.Crt))
+			if err != nil {
+				userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New(xmlID+": "+err.Error()))
+				alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+				api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
+				return
+			}
+			keyObj.Expiration = exp
+		}
 	}
+
 	if len(alerts.Alerts) == 0 {
 		api.WriteResp(w, r, keyObj)
 	} else {

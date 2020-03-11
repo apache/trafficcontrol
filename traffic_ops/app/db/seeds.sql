@@ -732,6 +732,7 @@ insert into api_capability (http_method, route, capability) values ('POST', 'del
 insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservice_user/*/*', 'users-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- vault
 insert into api_capability (http_method, route, capability) values ('GET', 'vault/ping', 'vault') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'vault/bucket/*/key/*/values', 'vault') ON CONFLICT (http_method, route, capability) DO NOTHING;
 
 -- types
 

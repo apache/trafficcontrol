@@ -44,4 +44,17 @@ to-get api/2.0/dbdump > dbdump.api
 
 diff dbdump.api dbdump.manual && rm -f dbdump.api dbdump.manual
 
-./traffic_ops_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi --set-exit-code > /junit/golang.test.toapi.xml && find /junit -type 'f' | xargs chmod 664 && cat /junit/golang.test.toapi.xml
+./traffic_ops_v1_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v1 --set-exit-code > /junit/golang.test.toapi.v1.xml && find /junit -type 'f' | xargs chmod 664
+export v1=$?
+./traffic_ops_v2_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v2 --set-exit-code > /junit/golang.test.toapi.v2.xml && find /junit -type 'f' | xargs chmod 664
+export v2=$?
+
+cat /junit/golang.test.toapi.v1.xml /junit/golang.test.toapi.v2.xml
+
+if [ $v1 -eq 0 ] && [ $v2 -eq 0 ]
+then
+  echo "TO API tests success"
+else
+  echo "TO API tests failed"
+  exit 1
+fi

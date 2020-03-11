@@ -92,11 +92,6 @@ const (
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v2/deliveryservices_regexes.html
 	API_DELIVERY_SERVICES_REGEXES = apiBase + "/deliveryservices_regexes"
 
-	// API_DELIVERY_SERVICE_MATCHES is the API path on which Traffic Ops serves information about
-	// the "matches" or "patterns" used by Delivery Services.
-	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v2/deliveryservice_matches.html
-	API_DELIVERY_SERVICE_MATCHES = apiBase + "/deliveryservice_matches"
-
 	// API_SERVER_DELIVERY_SERVICES is the API path on which Traffic Ops serves functionality
 	// related to the associations a specific server and its assigned Delivery Services. It is
 	// intended to be used with fmt.Sprintf to insert its required path parameter (namely the ID
@@ -419,17 +414,6 @@ func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string) (*tc.DeliveryServ
 	}
 
 	return &data.Response, reqInf, nil
-}
-
-// GetDeliveryServiceMatches returns the "matches" or "patterns" used by all (tenant-visible)
-// Delivery Services.
-func (to *Session) GetDeliveryServiceMatches() ([]tc.DeliveryServicePatterns, ReqInf, error) {
-	resp := tc.DeliveryServiceMatchesResponse{}
-	reqInf, err := get(to, API_DELIVERY_SERVICE_MATCHES, &resp)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return resp.Response, reqInf, nil
 }
 
 // GetDeliveryServicesEligible returns the servers eligible for assignment to the Delivery
