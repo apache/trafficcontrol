@@ -23,6 +23,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -495,4 +497,31 @@ func GetServerUpdateStatus(cfg config.TCCfg) (tc.ServerUpdateStatus, error) {
 		return tc.ServerUpdateStatus{}, errors.New("getting server update status: " + err.Error())
 	}
 	return status, nil
+}
+
+// GetRetry attempts to get the given object from tempDir/cacheFileName, retrying with exponential backoff up to cfg.NumRetries.
+func GetRetry(cfg config.TCCfg, cacheFileName string, obj interface{}, getter func(obj interface{}) error) error {
+	start := time.Now()
+	currentRetry := 0
+	for {
+		err := getter(obj)
+		if err == nil {
+			break
+		}
+		if strings.Contains(strings.ToLower(err.Error()), "not found") {
+			// if the server returned a 404, retrying won't help
+			return errors.New("getting uncached: " + err.Error())
+		}
+		if currentRetry == cfg.NumRetries {
+			return errors.New("getting uncached: " + err.Error())
+		}
+
+		sleepSeconds := config.RetryBackoffSeconds(currentRetry)
+		log.Warnf("getting '%v', sleeping for %v seconds: %v\n", cacheFileName, sleepSeconds, err)
+		currentRetry++
+		time.Sleep(time.Second * time.Duration(sleepSeconds)) // TODO make backoff configurable?
+	}
+
+	log.Infof("GetCachedJSON %v (miss) took %v\n", cacheFileName, time.Since(start).Round(time.Millisecond))
+	return nil
 }
