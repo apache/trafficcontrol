@@ -135,7 +135,7 @@ func GetCfg() (Cfg, error) {
 		toPass = os.Getenv("TO_PASS")
 	}
 
-	usageStr := "Usage: ./" + AppName + " --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache --output-directory=/opt/trafficserver/etc/trafficserver-temp/"
+	usageStr := "Usage: ./" + AppName + " --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
 	if strings.TrimSpace(toURL) == "" {
 		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. " + usageStr)
 	}
