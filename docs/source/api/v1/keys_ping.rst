@@ -60,11 +60,11 @@ Response Structure
 	Whole-Content-Sha512: Y/Br43Y5SXXBIneAgHANBXDP0hqO4Lkguk0vmuTU7xktZq3EldK5SX9OkEm9gzRkPKjQVUy0hhldsq6Ax46k7A==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 24 Feb 2020 20:09:31 GMT
-	Content-Length: 139
+	Content-Length: 166
 
 	{ "alerts": [{
 			"level": "warning",
-			"text": "This endpoint is deprecated."
+			"text": "This endpoint is deprecated, please use /vault/ping instead"
 		}],
 		"response": {
 			"status": "OK",
