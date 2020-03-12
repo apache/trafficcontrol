@@ -397,13 +397,14 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 				ds := dsi.(*DeliveryServiceNullable)
 				if ds.RangeRequestHandling != nil {
 					if *ds.RangeRequestHandling == 3 {
-						if ds.RangeSliceBlockSize == nil {
-							return errors.New("rangeSliceBlockSize must be set if the rangeRequestHandling is set to 3 (Use the Slice Plugin)")
-						}
-					} else {
-						if ds.RangeSliceBlockSize != nil {
-							return errors.New("rangeSliceBlockSize can only be set if the rangeRequestHandling is set to 3 (Use the Slice Plugin)")
-						}
+						return validation.Validate(ds.RangeSliceBlockSize, validation.Required,
+							// Per Slice Plugin implementation
+							validation.Min(262144),   // 256KiB
+							validation.Max(33554432), // 32MiB
+						)
+					}
+					if ds.RangeSliceBlockSize != nil {
+						return errors.New("rangeSliceBlockSize can only be set if the rangeRequestHandling is set to 3 (Use the Slice Plugin)")
 					}
 				}
 				return nil
