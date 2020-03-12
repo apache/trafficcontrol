@@ -23,18 +23,20 @@ var TableCacheGroupParamsUnassignedController = function(cg, allParams, assigned
 
 	$scope.cg = cg;
 
-	$scope.unassignedParams = _.filter(allParams, function(param) {
-		return !_.find(assignedParams, function(assignedParam) { return assignedParam.id == param.id });
-	});
+	$scope.unassignedParams = allParams.filter(
+		function(p) {
+			return !assignedParams.has(p.id);
+		}
+	);
 
 	var addParam = function(paramId) {
-		if (_.indexOf(selectedParams, paramId) == -1) {
+		if (selectedParams.indexOf(paramId) == -1) {
 			selectedParams.push(paramId);
 		}
 	};
 
 	var removeParam = function(paramId) {
-		selectedParams = _.without(selectedParams, paramId);
+		selectedParams = selectedParams.without(paramId);
 	};
 
 	$scope.updateParams = function($event, paramId) {

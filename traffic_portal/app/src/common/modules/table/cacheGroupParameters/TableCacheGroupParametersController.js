@@ -59,7 +59,7 @@ var TableCacheGroupParametersController = function(cacheGroup, parameters, $cont
 					return parameterService.getParameters();
 				},
 				assignedParams: function() {
-					return parameters;
+					return new Set(parameters.map(function(x){return x.id;}));
 				}
 			}
 		});
