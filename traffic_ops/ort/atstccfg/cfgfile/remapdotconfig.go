@@ -201,7 +201,7 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 				Protocol:                 ds.Protocol,
 				AnonymousBlockingEnabled: ds.AnonymousBlockingEnabled,
 				Active:                   *ds.Active,
-				SlicePluginBlockSize:     ds.SlicePluginBlockSize,
+				RangeSliceBlockSize:     ds.RangeSliceBlockSize,
 			})
 		}
 	}

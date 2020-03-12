@@ -137,7 +137,7 @@ Response Structure
 
 	.. versionadded:: 1.3
 
-:slicePluginBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
 
 	.. versionadded:: 1.5
 
@@ -239,7 +239,7 @@ Response Structure
 		"consistentHashQueryParams": null,
 		"maxOriginConnections": null,
 		"ecsEnabled": false,
-		"slicePluginBlockSize": null
+		"rangeSliceBlockSize": null
 	}]}
 
 .. [#tenancy] While it is totally possible to assign a :term:`Delivery Service` to a user who's :term:`Tenant` does not have permission to own said :term:`Delivery Service`, users that request this endpoint will only see :term:`Delivery Services` that their :term:`Tenant` has permission to see. This means that there's no real guarantee that the output of this endpoint shows all of the :term:`Delivery Services` assigned to the user requested, even if the user is requesting their own assigned :term:`Delivery Services`.

@@ -15,8 +15,11 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE deliveryservice ADD COLUMN slice_plugin_block_size int DEFAULT NULL;
+ALTER TABLE deliveryservice
+ADD COLUMN range_slice_block_size integer
+CHECK (range_slice_block_size >= 262144 AND range_slice_block_size <= 33554432)
+DEFAULT NULL;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-ALTER TABLE deliveryservice DROP COLUMN slice_plugin_block_size;
+ALTER TABLE deliveryservice DROP COLUMN range_slice_block_size;

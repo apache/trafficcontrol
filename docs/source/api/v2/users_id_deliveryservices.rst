@@ -117,7 +117,7 @@ Response Structure
 :remapText:            :ref:`ds-raw-remap`
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
-:slicePluginBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
 :sslKeyVersion:        This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 :trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
@@ -207,7 +207,7 @@ Response Structure
 		"consistentHashQueryParams": null,
 		"maxOriginConnections": null,
 		"ecsEnabled": false,
-		"slicePluginBlockSize": null
+		"rangeSliceBlockSize": null
 	}]}
 
 .. [#tenancy] While it is totally possible to assign a :term:`Delivery Service` to a user who's :term:`Tenant` does not have permission to own said :term:`Delivery Service`, users that request this endpoint will only see :term:`Delivery Services` that their :term:`Tenant` has permission to see. This means that there's no real guarantee that the output of this endpoint shows all of the :term:`Delivery Services` assigned to the user requested, even if the user is requesting their own assigned :term:`Delivery Services`.

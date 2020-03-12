@@ -1274,7 +1274,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 			Protocol:                 util.IntPtr(0),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
-			SlicePluginBlockSize:     util.IntPtr(262144),
+			RangeSliceBlockSize:     util.IntPtr(262144),
 		},
 	}
 
@@ -1287,7 +1287,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	txtLines := strings.Split(txt, "\n")
 
 	if len(txtLines) != 2 {
-		t.Errorf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+		t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
 	}
 
 	remapLine := txtLines[1]
@@ -4838,7 +4838,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
-			SlicePluginBlockSize:     util.IntPtr(262144),
+			RangeSliceBlockSize:     util.IntPtr(262144),
 		},
 	}
 

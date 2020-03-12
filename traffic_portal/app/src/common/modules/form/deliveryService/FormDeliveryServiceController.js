@@ -295,7 +295,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
     $scope.rangeRequestSelected = function() {
         if ($scope.deliveryService.rangeRequestHandling != 3) {
-            $scope.deliveryService.slicePluginBlockSize = null;
+            $scope.deliveryService.rangeSliceBlockSize = null;
         }
     };
 

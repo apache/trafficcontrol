@@ -163,8 +163,8 @@ type DeliveryServiceNullableV15 DeliveryServiceNullable // this type alias shoul
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV14
-	EcsEnabled           bool `json:"ecsEnabled" db:"ecs_enabled"`
-	SlicePluginBlockSize *int `json:"slicePluginBlockSize" db:"slice_plugin_block_size"`
+	EcsEnabled          bool `json:"ecsEnabled" db:"ecs_enabled"`
+	RangeSliceBlockSize *int `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
 }
 
 type DeliveryServiceNullableV14 struct {
@@ -392,19 +392,18 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
 			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
-		"slicePluginBlockSize": validation.Validate(ds,
+		"rangeSliceBlockSize": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
 				ds := dsi.(*DeliveryServiceNullable)
 				if ds.RangeRequestHandling != nil {
 					if *ds.RangeRequestHandling == 3 {
-						return validation.Validate(ds.SlicePluginBlockSize, validation.Required,
-							// Per Slice Plugin implementation
-							validation.Min(262144),   // 256KB
-							validation.Max(33554432), // 32MB
-						)
-					}
-					if ds.SlicePluginBlockSize != nil {
-						return errors.New("slicePluginBlockSize can only be set if the rangeRequestHandling is set to 3 (Use the Slice Plugin)")
+						if ds.RangeSliceBlockSize == nil {
+							return errors.New("rangeSliceBlockSize must be set if the rangeRequestHandling is set to 3 (Use the Slice Plugin)")
+						}
+					} else {
+						if ds.RangeSliceBlockSize != nil {
+							return errors.New("rangeSliceBlockSize can only be set if the rangeRequestHandling is set to 3 (Use the Slice Plugin)")
+						}
 					}
 				}
 				return nil

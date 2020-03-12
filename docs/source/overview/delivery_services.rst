@@ -725,7 +725,7 @@ Keys for either algorithm can be generated within :ref:`Traffic Portal <tp-servi
 
 .. _ds-ssl-key-version:
 
-Slice Range Request Plugin Block Size
+Range Slice Request Block Size
 -------------------------------------
 The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
 

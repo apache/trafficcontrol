@@ -153,7 +153,7 @@ Response Structure
 
 	.. versionadded:: 1.3
 
-:slicePluginBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
 
 	.. versionadded:: 1.5
 
@@ -269,7 +269,7 @@ Response Structure
 		],
 		"maxOriginConnections": 0,
 		"ecsEnabled": false,
-		"slicePluginBlockSize": null
+		"rangeSliceBlockSize": null
 	}]}
 
 

@@ -425,8 +425,8 @@ under the License.
                             </aside>
                         </div>
                     </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.slicePluginBlockSize), 'has-feedback': hasError(cacheConfig.slicePluginBlockSize)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="slicePluginBlockSize">Slice Plugin Block Size<div class="helptooltip">
+                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.rangeSliceBlockSize), 'has-feedback': hasError(cacheConfig.rangeSliceBlockSize)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="rangeSliceBlockSize">Range Slice Block Size<div class="helptooltip">
                             <div class="helptext">
                                 The block size in bytes that is used for the slice plugin for range requests. Must be between <code>262144</code> - <code>33554432</code>.
                                 Can only be set if the Range Request Handling is set to <code>Use the slice plugin</code>
@@ -434,13 +434,13 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="slicePluginBlockSize" name="slicePluginBlockSize" type="number" class="form-control" ng-model="deliveryService.slicePluginBlockSize" min="262144" max="33554432" ng-readonly="deliveryService.rangeRequestHandling != 3" ng-required="deliveryService.rangeRequestHandling == 3">
-                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.slicePluginBlockSize, 'min')">Too Small (must be greater than or equal to 262144)</small>
-                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.slicePluginBlockSize, 'max')">Too Large (must be smaller than or equal to 33554432)</small>
-                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.slicePluginBlockSize, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.slicePluginBlockSize != dsCurrent.slicePluginBlockSize">
+                            <input id="rangeSliceBlockSize" name="rangeSliceBlockSize" type="number" class="form-control" ng-model="deliveryService.rangeSliceBlockSize" min="262144" max="33554432" ng-readonly="deliveryService.rangeRequestHandling != 3" ng-required="deliveryService.rangeRequestHandling == 3">
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.rangeSliceBlockSize, 'min')">Too Small (must be greater than or equal to 262144)</small>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.rangeSliceBlockSize, 'max')">Too Large (must be smaller than or equal to 33554432)</small>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.rangeSliceBlockSize, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.rangeSliceBlockSize != dsCurrent.rangeSliceBlockSize">
                                 <h3>Current Value</h3>
-                                <pre>{{::dsCurrent.slicePluginBlockSize}}</pre>
+                                <pre>{{::dsCurrent.rangeSliceBlockSize}}</pre>
                             </aside>
                         </div>
                     </div>
