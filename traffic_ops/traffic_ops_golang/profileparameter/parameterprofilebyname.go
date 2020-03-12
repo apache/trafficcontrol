@@ -39,23 +39,11 @@ func GetProfileName(w http.ResponseWriter, r *http.Request) {
 	getProfileName(w, r, false)
 }
 
-func deprecationString(deprecated bool) *string {
-	if deprecated {
-		return util.StrPtr(API_PROFILES_NAME_NAME_PARAMETERS)
-	} else {
-		return nil
-	}
-}
-
 func getProfileName(w http.ResponseWriter, r *http.Request, deprecated bool) {
-	deprecation := deprecationString(deprecated)
+	deprecation := util.StrPtr(API_PROFILES_NAME_NAME_PARAMETERS)
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		if deprecation == nil {
-			api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecation)
-		} else {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		}
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, deprecation)
 		return
 	}
 	defer inf.Close()
@@ -64,11 +52,7 @@ func getProfileName(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	if deprecated {
 		profiles, err := getParametersByProfileName(inf.Tx.Tx, name)
 		if err != nil {
-			if deprecation == nil {
-				api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil, deprecation)
-			} else {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
-			}
+			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil, deprecated, deprecation)
 			return
 		}
 		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(nil), profiles)

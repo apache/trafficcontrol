@@ -854,7 +854,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `profiles/{id}/parameters/?(\.json)?$`, profileparameter.GetProfileID, auth.PrivLevelReadOnly, Authenticated, nil, 876464975, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `profiles/{id}/unassigned_parameters/?(\.json)?$`, profileparameter.GetUnassigned, auth.PrivLevelReadOnly, Authenticated, nil, 574429262, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `profiles/name/{name}/parameters/?(\.json)?$`, profileparameter.GetProfileName, auth.PrivLevelReadOnly, Authenticated, nil, 2067737832, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `parameters/profile/{name}/?(\.json)?$`, profileparameter.GetProfileName, auth.PrivLevelReadOnly, Authenticated, nil, 1802599194, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `parameters/profile/{name}/?(\.json)?$`, profileparameter.GetProfileNameDeprecated, auth.PrivLevelReadOnly, Authenticated, nil, 1802599194, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `profiles/name/{name}/parameters/?$`, profileparameter.PostProfileParamsByName, auth.PrivLevelOperations, Authenticated, nil, 1355945582, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `profiles/{id}/parameters/?$`, profileparameter.PostProfileParamsByID, auth.PrivLevelOperations, Authenticated, nil, 316818708, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `profileparameters/?(\.json)?$`, api.ReadHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 850609805, noPerlBypass},
