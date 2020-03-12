@@ -29,7 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-const API_PROFILES_NAME_NAME_PARAMETERS = "profiles/name/:name/parameters"
+const API_PROFILES_NAME_NAME_PARAMETERS = "profiles/name/{name}/parameters"
 
 func GetProfileNameDeprecated(w http.ResponseWriter, r *http.Request) {
 	getProfileName(w, r, true)
