@@ -146,10 +146,6 @@ func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode in
 //
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func HandleDeprecatedErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, alternative *string) {
-	if alternative == nil {
-		HandleErr(w, r, tx, statusCode, userErr, sysErr)
-		return
-	}
 	if respWritten(r) {
 		log.Errorf("HandleDeprecatedErr called after a write already occurred! Attempting to write the error anyway! Path %s", r.URL.Path)
 		// Don't return, attempt to rollback and write the error anyway
