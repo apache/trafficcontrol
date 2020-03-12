@@ -20,7 +20,7 @@
 *****************************************
 .. warning:: There are **very** few good reasons to use this endpoint - be sure not limit said use.
 
-.. deprecated::ATCv4
+.. deprecated:: ATCv4
 
 ``GET``
 =======
