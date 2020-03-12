@@ -19,6 +19,12 @@ import (
    limitations under the License.
 */
 
+// DeliveryServiceServerDetailResponse ...
+type DeliveryServiceServerDetailResponse struct {
+	Alerts
+	Response DeliveryServiceServerResponse `json:"response"`
+}
+
 // DeliveryServiceServerResponse ...
 type DeliveryServiceServerResponse struct {
 	Orderby  string                  `json:"orderby"`
@@ -34,12 +40,13 @@ type DSSMapResponse struct {
 }
 
 type DSSReplaceResponse struct {
-	Alerts   []Alert        `json:"alerts"`
+	Alerts
 	Response DSSMapResponse `json:"response"`
 }
 
 type DSServersResponse struct {
 	Response DeliveryServiceServers `json:"response"`
+	Alerts
 }
 
 type DeliveryServiceServers struct {

@@ -25,6 +25,16 @@ import "net"
 
 import "github.com/go-ozzo/ozzo-validation"
 
+type FederationResolverResponse struct {
+	Response FederationResolver `json:"response"`
+	Alerts
+}
+
+type FederationResolversResponse struct {
+	Response []FederationResolver `json:"response"`
+	Alerts
+}
+
 // FederationResolver represents a resolver record for a CDN Federation.
 type FederationResolver struct {
 	ID          *uint      `json:"id" db:"id"`

@@ -41,11 +41,13 @@ type GetDeliveryServiceResponse struct {
 // DeliveryServicesResponse ...
 type DeliveryServicesResponse struct {
 	Response []DeliveryService `json:"response"`
+	Alerts
 }
 
 // DeliveryServicesNullableResponse ...
 type DeliveryServicesNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
+	Alerts
 }
 
 // CreateDeliveryServiceResponse ...

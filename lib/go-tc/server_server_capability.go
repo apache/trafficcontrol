@@ -19,6 +19,18 @@ package tc
  * under the License.
  */
 
+// ServerServerCapabilitiesResponse contains the result data from a GET /server_server_capabilities request.
+type ServerServerCapabilitiesResponse struct {
+	Response []ServerServerCapability `json:"response"`
+	Alerts
+}
+
+// ServerServerCapabilityDetailResponse contains the result data from a POST /server_server_capabilities request.
+type ServerServerCapabilityDetailResponse struct {
+	Response ServerServerCapability `json:"response"`
+	Alerts
+}
+
 // ServerServerCapability represents an association between a server capability and a server
 type ServerServerCapability struct {
 	LastUpdated      *TimeNoMod `json:"lastUpdated" db:"last_updated"`

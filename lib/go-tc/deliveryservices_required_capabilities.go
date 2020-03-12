@@ -19,6 +19,18 @@ package tc
  * under the License.
  */
 
+//  DeliveryServiceRequiredCapabilitiesResponse contains information about a given DeliveryServiceRequiredCapability in Traffic Ops.
+type DeliveryServiceRequiredCapabilitiesResponse struct {
+	Alerts
+	Response DeliveryServicesRequiredCapability `json:"response,omitempty"`
+}
+
+// DeliveryServiceRequiredCapabilitiesDetailResponse contains the result data from a GET request.
+type DeliveryServiceRequiredCapabilitiesDetailResponse struct {
+	Alerts
+	Response []DeliveryServicesRequiredCapability `json:"response,omitempty"`
+}
+
 // DeliveryServicesRequiredCapability represents an association between a required capability and a delivery service.
 type DeliveryServicesRequiredCapability struct {
 	LastUpdated        *TimeNoMod `json:"lastUpdated" db:"last_updated"`

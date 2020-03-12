@@ -34,6 +34,7 @@ import (
 // Federations.
 type CDNFederationResponse struct {
 	Response []CDNFederation `json:"response"`
+	Alerts
 }
 
 // CreateCDNFederationResponse represents a Traffic Ops API response to a request to
@@ -55,6 +56,27 @@ type UpdateCDNFederationResponse struct {
 type DeleteCDNFederationResponse struct {
 	Alerts
 }
+
+type FederationNullableResponse struct {
+	Response []FederationNullable `json:"response"`
+	Alerts
+}
+
+type FederationUserResponse struct {
+	Response FederationUser `json:"response"`
+	Alerts
+}
+
+type FederationUserPostResponse struct {
+	Response FederationUserPost `json:"response"`
+	Alerts
+}
+
+type FederationDSPostResponse struct {
+	Response []FederationDSPost `json:"response"`
+	Alerts
+}
+
 
 type CDNFederation struct {
 	ID          *int       `json:"id" db:"id"`
