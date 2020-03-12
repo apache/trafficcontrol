@@ -23,7 +23,7 @@ import (
 
 const API_TO_EXTENSION = apiBase + "/servercheck/extensions"
 
-// CreateServerCheckExtension creates a servercheck extension
+// CreateServerCheckExtension creates a servercheck extension.
 func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerCheckExtensionNullable) (tc.Alerts, ReqInf, error) {
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(ServerCheckExtension)
@@ -41,7 +41,7 @@ func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerChec
 	return alerts, reqInf, err
 }
 
-// DeleteServerCheckExtension deletes a servercheck extension
+// DeleteServerCheckExtension deletes a servercheck extension.
 func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, ReqInf, error) {
 	URI := fmt.Sprintf("%s/%d", API_TO_EXTENSION, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
@@ -55,7 +55,7 @@ func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, ReqInf, error)
 	return alerts, reqInf, err
 }
 
-// GetServerCheckExtensions gets all servercheck extensions
+// GetServerCheckExtensions gets all servercheck extensions.
 func (to *Session) GetServerCheckExtensions() (tc.ServerCheckExtensionResponse, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_TO_EXTENSION, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}

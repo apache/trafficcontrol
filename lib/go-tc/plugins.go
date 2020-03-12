@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// Plugins represents a TO enabled plugin used by Traffic Ops.
+// Plugin represents a TO enabled plugin used by Traffic Ops.
 type Plugin struct {
 	Name        *string `json:"name"`
 	Version     *string `json:"version"`
