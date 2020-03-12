@@ -58,6 +58,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /deliveryservice_matches
   - /deliveryservice_user
   - /deliveryservice_user/:dsId/:userId
+  - /deliveryservices/hostname/:name/sslkeys
   - /deliveryservices/{dsid}/regexes/{regexid} (GET)
   - /deliveryservices/:id (GET)
   - /deliveryservices/:id/state
