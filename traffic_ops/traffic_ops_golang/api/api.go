@@ -138,6 +138,14 @@ func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode in
 	handleSimpleErr(w, r, statusCode, userErr, sysErr)
 }
 
+func HandleErrOptionalDeprecation(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, deprecated bool, alternative *string) {
+	if deprecated {
+		HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, alternative)
+	} else {
+		HandleErr(w, r, tx, statusCode, userErr, sysErr)
+	}
+}
+
 // HandleDeprecatedErr handles an API error, adding a deprecation alert, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
 //
 // The alternative may be nil if there is no alternative and the deprecation message will be selected appropriately.
