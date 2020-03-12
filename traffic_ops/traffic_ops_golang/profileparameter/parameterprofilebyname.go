@@ -55,7 +55,7 @@ func getProfileName(w http.ResponseWriter, r *http.Request, deprecated bool) {
 			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil, deprecated, deprecation)
 			return
 		}
-		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(nil), profiles)
+		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(deprecation), profiles)
 	} else {
 		api.RespWriter(w, r, inf.Tx.Tx)(getParametersByProfileName(inf.Tx.Tx, name))
 	}
