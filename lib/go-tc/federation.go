@@ -57,21 +57,29 @@ type DeleteCDNFederationResponse struct {
 	Alerts
 }
 
+// FederationNullableResponse represents a Traffic Ops API response to a request to
+// create a new Federation Mapping
 type FederationNullableResponse struct {
 	Response []FederationNullable `json:"response"`
 	Alerts
 }
 
+// FederationUserResponse represents a Traffic Ops API response to a request for
+// a Federation's Users
 type FederationUserResponse struct {
 	Response FederationUser `json:"response"`
 	Alerts
 }
 
+// FederationUserPostResponse represents a Traffic Ops API response to a request to
+// associate a User to a Federation
 type FederationUserPostResponse struct {
 	Response FederationUserPost `json:"response"`
 	Alerts
 }
 
+// FederationDSPostResponse represents a Traffic Ops API response to a request to
+// associate a Delivery Service to a Federation
 type FederationDSPostResponse struct {
 	Response []FederationDSPost `json:"response"`
 	Alerts
