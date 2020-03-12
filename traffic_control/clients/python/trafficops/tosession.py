@@ -285,7 +285,7 @@ class TOSession(RestApiSession):
 		"""
 
 	@api_request('put', 'asns', ('2.0',))
-	def update_asn(self, asn_id=None, query_params=None):
+	def update_asn(self, query_params=None):
 		"""
 		Update ASN
 		:ref:`to-api-asns-id`
@@ -296,7 +296,7 @@ class TOSession(RestApiSession):
 		"""
 
 	@api_request('delete', 'asns', ('2.0',))
-	def delete_asn(self, asn_id=None, query_params=None):
+	def delete_asn(self, query_params=None):
 		"""
 		Delete ASN
 		:to-api-asns-id:
