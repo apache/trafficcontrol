@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/letsencrypt/dnsrecords `GET`
   - /api/2.0/vault/ping `GET`
   - /api/2.0/vault/bucket/:bucket/key/:key/values `GET`
+  - /api/2.0/servercheck `GET`
   - /api/2.0/servercheck/extensions/:id `(DELETE)`
   - /api/2.0/servercheck/extensions `(GET, POST)`
   - /api/2.0/plugins `(GET)`
@@ -54,8 +55,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cdns/:id (GET)
   - /cdns/name/:name (GET)
   - /cdns/usage/overview
+  - /deliveryservice_matches
   - /deliveryservice_user
   - /deliveryservice_user/:dsId/:userId
+  - /deliveryservices/hostname/:name/sslkeys
   - /deliveryservices/{dsid}/regexes/{regexid} (GET)
   - /deliveryservices/:id (GET)
   - /deliveryservices/:id/state
@@ -64,10 +67,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /divisions/name/:name
   - /hwinfo/dtdata
   - /jobs/:id
+  - /keys/ping
   - /logs/:days/days
   - /parameters/:id/profiles
   - /parameters/:id/unassigned_profiles
   - /parameters/validate
+  - /profile/:id/unassigned_parameters
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
   - /riak/bucket/:bucket/key/:key/vault
@@ -81,6 +86,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /traffic_monitor/stats
   - /types/trimmed
   - /user/current/jobs
+  - /servers/checks
 
 ## [4.0.0] - 2019-12-16
 ### Added
