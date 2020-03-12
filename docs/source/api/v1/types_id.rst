@@ -96,11 +96,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------+
-	| Name | Description                                                 |
-	+======+=============================================================+
-	|  ID  | The integral, unique identifier of the type being inspected |
-	+------+-------------------------------------------------------------+
+	+------+-----------------------------------------------------------+
+	| Name | Description                                               |
+	+======+===========================================================+
+	|  ID  | The integral, unique identifier of the type being updated |
+	+------+-----------------------------------------------------------+
 
 :description: A short description of this type
 :name:        The name of this type
@@ -177,11 +177,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------+
-	| Name | Description                                                 |
-	+======+=============================================================+
-	|  ID  | The integral, unique identifier of the type being inspected |
-	+------+-------------------------------------------------------------+
+	+------+-----------------------------------------------------------+
+	| Name | Description                                               |
+	+======+===========================================================+
+	|  ID  | The integral, unique identifier of the type being deleted |
+	+------+-----------------------------------------------------------+
 
 .. note:: Only types with useInTable set to "server" are allowed to be deleted.
 
