@@ -37,6 +37,7 @@ func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
 		MaxOriginConnections: 42,
 		MidHeaderRewrite:     "midrewrite",
 		Type:                 tc.DSTypeHTTP,
+		ServiceCategoryName:  "servicecategory",
 	}
 	assignedMids := []HeaderRewriteServer{
 		HeaderRewriteServer{
@@ -80,6 +81,7 @@ func TestMakeHeaderRewriteMidDotConfigNoMaxConns(t *testing.T) {
 		MaxOriginConnections: 42,
 		MidHeaderRewrite:     "midrewrite",
 		Type:                 tc.DSTypeHTTPLive,
+		ServiceCategoryName:  "servicecategory",
 	}
 	assignedMids := []HeaderRewriteServer{
 		HeaderRewriteServer{

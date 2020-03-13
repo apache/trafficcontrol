@@ -21,9 +21,11 @@ package atscfg
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -33,6 +35,8 @@ const HeaderRewritePrefix = "hdr_rw_"
 const ContentTypeHeaderRewriteDotConfig = ContentTypeTextASCII
 const LineCommentHeaderRewriteDotConfig = LineCommentHash
 
+const ServiceCategoryHeader = "X-CDN-SVC"
+
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 
 type HeaderRewriteDS struct {
@@ -41,6 +45,7 @@ type HeaderRewriteDS struct {
 	MaxOriginConnections int
 	MidHeaderRewrite     string
 	Type                 tc.DSType
+	ServiceCategoryName	 string
 }
 
 type HeaderRewriteServer struct {
@@ -120,6 +125,9 @@ func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullable) (HeaderRewriteDS, err
 	if ds.MidHeaderRewrite == nil {
 		ds.MidHeaderRewrite = util.StrPtr("")
 	}
+	if ds.ServiceCategoryName == nil {
+		ds.ServiceCategoryName = util.StrPtr("")
+	}
 
 	return HeaderRewriteDS{
 		EdgeHeaderRewrite:    *ds.EdgeHeaderRewrite,
@@ -127,6 +135,7 @@ func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullable) (HeaderRewriteDS, err
 		MaxOriginConnections: *ds.MaxOriginConnections,
 		MidHeaderRewrite:     *ds.MidHeaderRewrite,
 		Type:                 *ds.Type,
+		ServiceCategoryName:  *ds.ServiceCategoryName,
 	}, nil
 }
 
@@ -136,6 +145,7 @@ func MakeHeaderRewriteDotConfig(
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	ds HeaderRewriteDS,
 	assignedEdges []HeaderRewriteServer, // the edges assigned to ds
+	dsXmlId string,
 ) string {
 	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
 
@@ -163,6 +173,10 @@ func MakeHeaderRewriteDotConfig(
 	if ds.EdgeHeaderRewrite != "" {
 		re := regexp.MustCompile(`\s*__RETURN__\s*`)
 		text += re.ReplaceAllString(ds.EdgeHeaderRewrite, "\n")
+	}
+
+	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategoryName != ""  {
+		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsXmlId, ds.ServiceCategoryName)
 	}
 
 	text += "\n"

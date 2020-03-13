@@ -30,6 +30,7 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 	cdnName := tc.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
+	xmlID := "xml-id"
 
 	ds := HeaderRewriteDS{
 		EdgeHeaderRewrite:    "edgerewrite",
@@ -37,6 +38,7 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 		MaxOriginConnections: 42,
 		MidHeaderRewrite:     "midrewrite",
 		Type:                 tc.DSTypeHTTPLive,
+		ServiceCategoryName:  "servicecategory",
 	}
 	assignedEdges := []HeaderRewriteServer{
 		HeaderRewriteServer{
@@ -50,7 +52,7 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 		},
 	}
 
-	txt := MakeHeaderRewriteDotConfig(cdnName, toToolName, toURL, ds, assignedEdges)
+	txt := MakeHeaderRewriteDotConfig(cdnName, toToolName, toURL, ds, assignedEdges, xmlID)
 
 	if !strings.Contains(txt, "edgerewrite") {
 		t.Errorf("expected 'edgerewrite' actual '%v'\n", txt)
@@ -67,12 +69,17 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 	if !strings.Contains(txt, "21") { // 21, because max is 42, and there are 2 not-offline mids, so 42/2=21
 		t.Errorf("expected origin_max_connections of 21, actual '%v'\n", txt)
 	}
+
+	if !strings.Contains(txt, "xml-id|servicecategory") {
+		t.Errorf("expected 'xml-id|servicecategory' actual '%v'\n", txt)
+	}
 }
 
 func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 	cdnName := tc.CDNName("mycdn")
 	toToolName := "my-to"
 	toURL := "my-to.example.net"
+	xmlID := "xml-id"
 
 	ds := HeaderRewriteDS{
 		EdgeHeaderRewrite:    "edgerewrite",
@@ -80,6 +87,7 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 		MaxOriginConnections: 42,
 		MidHeaderRewrite:     "midrewrite",
 		Type:                 tc.DSTypeHTTP,
+		ServiceCategoryName:  "servicecategory",
 	}
 	assignedEdges := []HeaderRewriteServer{
 		HeaderRewriteServer{
@@ -93,7 +101,7 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 		},
 	}
 
-	txt := MakeHeaderRewriteDotConfig(cdnName, toToolName, toURL, ds, assignedEdges)
+	txt := MakeHeaderRewriteDotConfig(cdnName, toToolName, toURL, ds, assignedEdges, xmlID)
 
 	if strings.Contains(txt, "origin_max_connections") {
 		t.Errorf("expected no origin_max_connections on DS that uses the mid, actual '%v'\n", txt)
