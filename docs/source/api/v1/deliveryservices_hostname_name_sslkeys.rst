@@ -18,6 +18,8 @@
 **********************************************
 ``deliveryservices/hostname/{{name}}/sslkeys``
 **********************************************
+.. deprecated:: ATCv4
+	This endpoint is deprecated. Please use :ref:`to-api-v1-deliveryservices-xmlid-xmlid-sslkeys` instead.
 
 ``GET``
 =======
@@ -102,7 +104,13 @@ Response Structure
 			"csr": "..."
 		},
 		"expiration": "2020-08-18T13:53:06Z"
-	}}
+	},
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use '/deliveryservices/xmlId/{{XMLID}}/sslkeys' instead",
+			"level": "warning"
+		}
+	]}
 
 .. note:: The response example uses abbreviated values for the ``crt``, ``key``, and ``csr``, as these will generally be very large, base64-encoded SSL keys and certificates. Note that in general the output of this request should **not** be made available, as the ``key`` field contains the *private* SSL key corresponding to the certificate.
 

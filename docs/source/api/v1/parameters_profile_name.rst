@@ -23,6 +23,9 @@
 =======
 Gets details about a specific :term:`Profile`'s :term:`Parameters`
 
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-profiles-name-name-parameters` instead.
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -69,9 +72,14 @@ Response Structure
 	Whole-Content-Sha512: NudgZXUNyKNpmSFf856KEjyy+Pin/bFhG9NoRBDAxYbRKt2T5fF5Ze7sUNZfFI5n/ZZsgbx6Tsgtfd7oM6j+eg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 05 Dec 2018 21:08:56 GMT
-	Content-Length: 542
+	Content-Length: 628
 
-	{ "response": [
+	{ "alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use /profiles/name/{name}/parameters instead"
+		}],
+			"response": [
 		{
 			"configFile": "global",
 			"id": 4,

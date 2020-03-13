@@ -1,4 +1,4 @@
-package apiriak
+package vault
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,13 +22,22 @@ package apiriak
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
-
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"net/http"
 )
 
+func GetBucketKeyDeprecated(w http.ResponseWriter, r *http.Request) {
+	getBucketKey(w, r, api.CreateDeprecationAlerts(util.StrPtr("/vault/bucket/:bucket/key/:key/values")))
+}
+
 func GetBucketKey(w http.ResponseWriter, r *http.Request) {
+	getBucketKey(w, r, tc.Alerts{})
+}
+
+func getBucketKey(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"bucket", "key"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -56,5 +65,11 @@ func GetBucketKey(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetBucketKey bucket '"+inf.Params["bucket"]+"' key '"+inf.Params["key"]+"' Riak returned invalid JSON: "+err.Error()))
 		return
 	}
-	api.WriteResp(w, r, valObj)
+
+	if len(a.Alerts) > 0 {
+		api.WriteAlertsObj(w, r, http.StatusOK, a, valObj)
+	} else {
+		api.WriteResp(w, r, valObj)
+	}
+
 }

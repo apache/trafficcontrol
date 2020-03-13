@@ -1345,17 +1345,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'profiles/{id:d}/unassigned_parameters', ('2.0',))
-	def get_unnassigned_parameters_by_profile_id(self, profile_id=None):
-		"""
-		Get all Parameters associated with a Profile by Id.
-		:ref:`to-api-profiles-id-unassigned_parameters`
-		:param profile_id: The profile Id
-		:type profile_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'profiles/name/{profile_name}/parameters', ('2.0',))
 	def get_parameters_by_profile_name(self, profile_name=None):
 		"""
