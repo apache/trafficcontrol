@@ -634,7 +634,7 @@ class TOSession(RestApiSession):
 	def delete_cdn_dns_sec_keys(self, cdn_name=None):
 		"""
 		Delete dnssec keys for a cdn and all associated delivery services
-		:ref:`to-api-cdns-name-name-dnsseckeys-delete`
+		:ref:`to-api-cdns-name-name-dnsseckeys`
 		:param cdn_name: The CDN name to delete dnsseckeys info for
 		:type cdn_name: String
 		:rtype: Tuple[Dict[str, Any], requests.Response]
