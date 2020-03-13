@@ -134,8 +134,9 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipAddress) && hasError(serverForm.ip6Address), 'has-feedback': hasError(serverForm.ipAddress) && hasError(serverForm.ip6Address)}">
-				<label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Network IP *<div class="helptooltip">
-						<div class="helptext">The IPv4 address of the Interface Name.  If the Is Service Address box is checked, then this address will be included in the CrConfig and traffic will be routed to this address. At least one Network IP or IPv6 Address must be provided.</div>
+				<label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Network IP *
+					<div class="helptooltip">
+						<div class="helptext">The IPv4 address of the Interface Name.  If the Is Service Address box is checked, then this address will be included in the Traffic Router config and traffic will be routed to this address. At least one Network IP or IPv6 Address must be provided.</div>
 					</div>
 				</label>
 				<div class="col-md-10 col-sm-10 col-xs-12">
@@ -150,7 +151,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipNetmask), 'has-feedback': hasError(serverForm.ipNetmask)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Network Subnet *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ipNetmask" type="text" class="form-control" ng-model="server.ipNetmask" ng-maxlength="45" ng-pattern="validations.ipRegex" ng-required="IpAddressesBothBlank() || isIPv4()" autofocus>
+                    <input name="ipNetmask" type="text" class="form-control" ng-model="server.ipNetmask" ng-maxlength="45" ng-pattern="validations.ipRegex" ng-required="IpAddressesBothBlank() || hasIPv4()" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipNetmask, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipNetmask, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipNetmask, 'pattern')">Invalid</small>
@@ -160,7 +161,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipGateway), 'has-feedback': hasError(serverForm.ipGateway)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Network Gateway *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ipGateway" id="ipGateway" type="text" class="form-control" ng-model="server.ipGateway" ng-maxlength="45" ng-pattern="ipRegex()" ng-change="toggleIpGatewayRequired('ipGateway')" ng-required="IpAddressesBothBlank() || isIPv4()" autofocus>
+                    <input name="ipGateway" id="ipGateway" type="text" class="form-control" ng-model="server.ipGateway" ng-maxlength="45" ng-pattern="ipRegex()" ng-change="toggleIpGatewayRequired('ipGateway')" ng-required="IpAddressesBothBlank() || hasIPv4()" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipGateway, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipGateway, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipGateway, 'pattern')">Invalid</small>
@@ -187,8 +188,9 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ip6Address) && hasError(serverForm.ipAddress), 'has-feedback': hasError(serverForm.ip6Address) && hasError(serverForm.ipAddress)}">
-				<label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">IPv6 Address *<div class="helptooltip">
-						<div class="helptext">An IPv6 address and subnet mask of Interface Name.  If the Is Service Address box is checked, then this address will be included in the CrConfig and traffic will be routed to this address. At least one Network IP or IPv6 Address must be provided.</div>
+				<label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">IPv6 Address *
+					<div class="helptooltip">
+						<div class="helptext">An IPv6 address and subnet mask of Interface Name.  If the Is Service Address box is checked, then this address will be included in the Traffic Router config and traffic will be routed to this address. At least one Network IP or IPv6 Address must be provided.</div>
 					</div>
 				</label>
 				<div class="col-md-10 col-sm-10 col-xs-12">

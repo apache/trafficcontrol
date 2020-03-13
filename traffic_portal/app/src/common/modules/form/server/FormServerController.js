@@ -185,10 +185,10 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         }
     };
 
-    $scope.isIPv4 = function() {
+    $scope.hasIPv4 = function() {
         return document.getElementById('ipAddress').value !== '';
     };
-    $scope.isIPv6 = function() {
+    $scope.hasIPv6 = function() {
         return document.getElementById('ip6Address').value !== '';
     };
     $scope.IpAddressesBothBlank = function() {
