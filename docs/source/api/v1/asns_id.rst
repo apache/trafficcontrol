@@ -25,6 +25,7 @@
 =======
 .. deprecated:: ATCv4
 		Use the ``GET`` method of :ref:`to-api-v1-asns` with query parameter ``id`` instead.
+
 Retrieve information about a specific :abbr:`ASN (Autonomous System Number)`-to-:term:`Cache Group` association.
 
 :Auth. Required: Yes
