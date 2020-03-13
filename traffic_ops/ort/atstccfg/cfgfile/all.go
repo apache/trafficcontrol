@@ -41,7 +41,7 @@ func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
 		if fi.FileNameOnDisk == atscfg.SSLMultiCertConfigFileName {
 			hasSSLMultiCertConfig = true
 		}
-		txt = PreprocessConfigFile(toData, meta, txt)
+		txt = PreprocessConfigFile(toData.Server, txt)
 		configs = append(configs, ATSConfigFile{ATSConfigMetaDataConfigFile: fi, Text: txt, ContentType: contentType})
 	}
 
@@ -101,15 +101,15 @@ var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
 // PreprocessConfigFile does global preprocessing on the given config file cfgFile.
 // This is mostly string replacements of __X__ directives. See the code for the full list of replacements.
 // These things were formerly done by ORT, but need to be processed by atstccfg now, because ORT no longer has the metadata necessary.
-func PreprocessConfigFile(toData *TOData, meta *tc.ATSConfigMetaData, cfgFile string) string {
-	if meta.Info.ServerPort != 80 && meta.Info.ServerPort != 0 {
-		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(meta.Info.ServerPort), -1)
+func PreprocessConfigFile(server tc.Server, cfgFile string) string {
+	if server.TCPPort != 80 && server.TCPPort != 0 {
+		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(server.TCPPort), -1)
 	} else {
 		cfgFile = strings.Replace(cfgFile, `:__SERVER_TCP_PORT__`, ``, -1)
 	}
-	cfgFile = strings.Replace(cfgFile, `__CACHE_IPV4__`, toData.Server.IPAddress, -1)
-	cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, toData.Server.HostName, -1)
-	cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, toData.Server.HostName+`.`+toData.Server.DomainName, -1)
+	cfgFile = strings.Replace(cfgFile, `__CACHE_IPV4__`, server.IPAddress, -1)
+	cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, server.HostName, -1)
+	cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, server.HostName+`.`+server.DomainName, -1)
 	cfgFile = returnRegex.ReplaceAllString(cfgFile, "\n")
 	return cfgFile
 }
