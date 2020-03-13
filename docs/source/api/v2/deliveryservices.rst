@@ -126,6 +126,7 @@ Response Structure
 :remapText:            :ref:`ds-raw-remap`
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
+:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
 :sslKeyVersion:        This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 :trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
@@ -228,7 +229,8 @@ Response Structure
 			"zyx"
 		],
 		"maxOriginConnections": 0,
-		"ecsEnabled": false
+		"ecsEnabled": false,
+		"rangeSliceBlockSize": null
 	}]}
 
 
@@ -295,6 +297,7 @@ Request Structure
 :remapText:                 :ref:`ds-raw-remap`
 :signed:                    ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:          Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
+:rangeSliceBlockSize:      An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3. It can only be between (inclusive) 262144 (256KB) - 33554432 (32MB).
 :sslKeyVersion:             This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:                  The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 :trRequestHeaders:          If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
@@ -355,40 +358,40 @@ Response Structure
 	.. deprecated:: ATCv3.0
 		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
-:ccrDnsTtl:           The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
-:cdnId:               The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
-:cdnName:             Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
-:checkPath:           A :ref:`ds-check-path`
-:consistentHashRegex: A :ref:`ds-consistent-hashing-regex`
+:ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
+:cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+:cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+:checkPath:                 A :ref:`ds-check-path`
+:consistentHashRegex:       A :ref:`ds-consistent-hashing-regex`
 :consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
-:deepCachingType:     The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
-:displayName:       The :ref:`ds-display-name`
-:dnsBypassCname:    A :ref:`ds-dns-bypass-cname`
-:dnsBypassIp:       A :ref:`ds-dns-bypass-ip`
-:dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
-:dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
-:dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
-:ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
-:edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
-:exampleURLs:       An array of :ref:`ds-example-urls`
-:fqPacingRate:      The :ref:`ds-fqpr`
-:geoLimit:            An integer that defines the :ref:`ds-geo-limit`
-:geoLimitCountries:   A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`
-:geoLimitRedirectUrl: A :ref:`ds-geo-limit-redirect-url`
-:geoProvider:         The :ref:`ds-geo-provider`
-:globalMaxMbps:       The :ref:`ds-global-max-mbps`
-:globalMaxTps:        The :ref:`ds-global-max-tps`
-:httpBypassFqdn:      A :ref:`ds-http-bypass-fqdn`
-:id:                  An integral, unique identifier for this :term:`Delivery Service`
-:infoUrl:             An :ref:`ds-info-url`
-:initialDispersion:   The :ref:`ds-initial-dispersion`
-:ipv6RoutingEnabled:  A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
-:lastUpdated:         The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
-:logsEnabled:         A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
-:longDesc:            The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:           The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:           The :ref:`ds-longdesc3` of this :term:`Delivery Service`
-:matchList:           The :term:`Delivery Service`'s :ref:`ds-matchlist`
+:deepCachingType:     		The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
+:displayName:       		The :ref:`ds-display-name`
+:dnsBypassCname:    		A :ref:`ds-dns-bypass-cname`
+:dnsBypassIp:       		A :ref:`ds-dns-bypass-ip`
+:dnsBypassIp6:      		A :ref:`ds-dns-bypass-ipv6`
+:dnsBypassTtl:      		The :ref:`ds-dns-bypass-ttl`
+:dscp:              		A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+:ecsEnabled:        		A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
+:edgeHeaderRewrite: 		A set of :ref:`ds-edge-header-rw-rules`
+:exampleURLs:       		An array of :ref:`ds-example-urls`
+:fqPacingRate:      		The :ref:`ds-fqpr`
+:geoLimit:            		An integer that defines the :ref:`ds-geo-limit`
+:geoLimitCountries:  		A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`
+:geoLimitRedirectUrl: 		A :ref:`ds-geo-limit-redirect-url`
+:geoProvider:         		The :ref:`ds-geo-provider`
+:globalMaxMbps:       		The :ref:`ds-global-max-mbps`
+:globalMaxTps:        		The :ref:`ds-global-max-tps`
+:httpBypassFqdn:      		A :ref:`ds-http-bypass-fqdn`
+:id:                  		An integral, unique identifier for this :term:`Delivery Service`
+:infoUrl:             		An :ref:`ds-info-url`
+:initialDispersion:   		The :ref:`ds-initial-dispersion`
+:ipv6RoutingEnabled:  		A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastUpdated:        		The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
+:logsEnabled:         		A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+:longDesc:            		The :ref:`ds-longdesc` of this :term:`Delivery Service`
+:longDesc1:           		The :ref:`ds-longdesc2` of this :term:`Delivery Service`
+:longDesc2:           		The :ref:`ds-longdesc3` of this :term:`Delivery Service`
+:matchList:          		The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
 	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
 	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
@@ -413,13 +416,14 @@ Response Structure
 :remapText:            :ref:`ds-raw-remap`
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
-:sslKeyVersion: This integer indicates the :ref:`ds-ssl-key-version`
-:tenantId:      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
-:trRequestHeaders: If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
-:trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
-:type:   The :ref:`ds-types` of this :term:`Delivery Service`
-:typeId: The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
-:xmlId:  This :term:`Delivery Service`'s :ref:`ds-xmlid`
+:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+:sslKeyVersion: 	   This integer indicates the :ref:`ds-ssl-key-version`
+:tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+:trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
+:trResponseHeaders:    If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
+:type:                 The :ref:`ds-types` of this :term:`Delivery Service`
+:typeId:               The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+:xmlId:                This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
 .. code-block:: http
 	:caption: Response Example
@@ -511,7 +515,8 @@ Response Structure
 			"deepCachingType": "NEVER",
 			"signingAlgorithm": null,
 			"tenant": "root",
-			"ecsEnabled": true
+			"ecsEnabled": true,
+			"rangeSliceBlockSize": null
 		}
 	]}
 
