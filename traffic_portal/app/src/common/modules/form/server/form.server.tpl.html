@@ -134,8 +134,11 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipAddress) && hasError(serverForm.ip6Address), 'has-feedback': hasError(serverForm.ipAddress) && hasError(serverForm.ip6Address)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Network IP *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
+				<label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Network IP *<div class="helptooltip">
+						<div class="helptext">The IPv4 address of the Interface Name.  If the Is Service Address box is checked, then this address will be included in the CrConfig and traffic will be routed to this address. At least one Network IP or IPv6 Address must be provided.</div>
+					</div>
+				</label>
+				<div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="ipAddress" id="ipAddress" type="text" class="form-control" ng-model="server.ipAddress" ng-maxlength="45" ng-pattern="ipRegex()" ng-change="toggleIpAddressRequired('ipAddress')" ng-required="IpAddressesBothBlank()" autofocus>
                     <small class="input-error" ng-show="oneInputHasPropertyError('required', serverForm.ip6Address, serverForm.ipAddress)">At Least One IP Address Is Required</small>
 					<small ng-if="server.ipAddress && server.ipAddress !== ''"><input id="ipIsService" ng-model="server.ipIsService" type="checkbox" name="ipIsService" title="This IP Address will be used for ATS to serve traffic">  Is Service Address</small>
@@ -184,8 +187,11 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ip6Address) && hasError(serverForm.ipAddress), 'has-feedback': hasError(serverForm.ip6Address) && hasError(serverForm.ipAddress)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Address</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
+				<label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">IPv6 Address *<div class="helptooltip">
+						<div class="helptext">An IPv6 address and subnet mask of Interface Name.  If the Is Service Address box is checked, then this address will be included in the CrConfig and traffic will be routed to this address. At least one Network IP or IPv6 Address must be provided.</div>
+					</div>
+				</label>
+				<div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="ip6Address" id="ip6Address" type="text" class="form-control" ng-model="server.ip6Address" ng-maxlength="50" ng-change="toggleIpAddressRequired('ip6Address');" ng-required="IpAddressesBothBlank()" autofocus>
 					<small class="input-error" ng-show="oneInputHasPropertyError('required', serverForm.ip6Address, serverForm.ipAddress)">At Least One IP Address Is Required</small>
 					<small ng-if="server.ip6Address && server.ip6Address !== ''"><input id="ip6IsService" type="checkbox" ng-model="server.ip6IsService" name="ip6IsService" title="This IP Address will be used for ATS to serve traffic" checked>  Is Service Address</small>

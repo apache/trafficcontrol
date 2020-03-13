@@ -17,9 +17,9 @@ ALTER TABLE server ADD COLUMN ip6_address_is_service boolean DEFAULT true;
 ALTER TABLE server ALTER COLUMN ip_address DROP NOT NULL;
 ALTER TABLE server ALTER COLUMN ip_netmask DROP NOT NULL;
 ALTER TABLE server ALTER COLUMN ip_gateway DROP NOT NULL;
-ALTER TABLE server ADD CONSTRAINT need_at_least_one_ip CHECK (ip_address IS NOT NULL OR ip6_address IS NOT NULL);
-ALTER TABLE server ADD CONSTRAINT need_gateway_if_ip CHECK (ip_address IS NULL OR ip_gateway IS NOT NULL);
-ALTER TABLE server ADD CONSTRAINT need_netmask_if_ip CHECK (ip_address IS NULL OR ip_netmask IS NOT NULL);
+ALTER TABLE server ADD CONSTRAINT need_at_least_one_ip CHECK (ip_address IS NOT NULL OR ip6_address IS NOT NULL OR ip_address = '' OR ip6_address = '');
+ALTER TABLE server ADD CONSTRAINT need_gateway_if_ip CHECK (ip_address IS NULL OR ip_address = '' OR ip_gateway IS NOT NULL);
+ALTER TABLE server ADD CONSTRAINT need_netmask_if_ip CHECK (ip_address IS NULL OR ip_address = '' OR ip_netmask IS NOT NULL);
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back

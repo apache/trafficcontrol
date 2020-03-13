@@ -40,7 +40,7 @@ const TenantUserNotAuthError = ErrorConstant("user not authorized for requested 
 // requested resource tenant for a delivery service.
 const TenantDSUserNotAuthError = ErrorConstant("user not authorized for requested delivery service tenant")
 const NeedsAtLeastOneIPError = ErrorConstant("both IP and IP6 addresses are empty")
-const NeedsAtLeastOneGatewayError = ErrorConstant("both IP gateway and IP6 gateway are empty")
+const EmptyAddressCannotBeAServiceAddressError = ErrorConstant("an empty IP or IPv6 address cannot be marked as a service address")
 
 // AlertLevel is used for specifying or comparing different levels of alerts.
 type AlertLevel int

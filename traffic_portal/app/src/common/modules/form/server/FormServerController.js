@@ -170,10 +170,8 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
         if (document.getElementById(elementId).value === '') {
             document.getElementById(elementToChange).required = true;
-            // document.getElementById(elementToChange).setAttribute('required', 'required');
         } else {
             document.getElementById(elementToChange).required = false;
-            // document.getElementById(elementToChange).setAttribute('required', '');
         }
     };
 
@@ -182,10 +180,8 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
         if (document.getElementById(elementId).value === '') {
             document.getElementById(elementToChange).required = true;
-            // document.getElementById(elementToChange).setAttribute('required', 'required');
         } else {
             document.getElementById(elementToChange).required = false;
-            // document.getElementById(elementToChange).setAttribute('required', '');
         }
     };
 
@@ -198,9 +194,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.IpAddressesBothBlank = function() {
         return document.getElementById('ipAddress').value === '' && document.getElementById('ip6Address').value === '';
     };
-    // $scope.IpGatewaysBothBlank = function() {
-    //     return document.getElementById('ipGateway').value === '' && document.getElementById('ip6Gateway').value === '';
-    // };
 
     var init = function () {
         getPhysLocations();

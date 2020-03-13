@@ -42,6 +42,12 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createServer = function(server) {
+        if (server.ip6Address === undefined || server.ip6Address === '') {
+            server.ip6IsService = false;
+        }
+        if (server.ipAddress === undefined || server.ipAddress === '') {
+            server.ipIsService = false;
+        }
         return $http.post(ENV.api['root'] + 'servers', server).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
@@ -57,6 +63,12 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.updateServer = function(server) {
+        if (server.ip6Address === undefined || server.ip6Address === '') {
+            server.ip6IsService = false;
+        }
+        if (server.ipAddress === undefined || server.ipAddress === '') {
+            server.ipIsService = false;
+        }
         return $http.put(ENV.api['root'] + 'servers/' + server.id, server).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Server updated' } ], false);

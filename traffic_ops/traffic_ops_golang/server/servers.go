@@ -96,13 +96,18 @@ func (s *TOServer) Validate() error {
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
 	errs := []error{}
-	if s.IPAddress == nil && s.IP6Address == nil {
+	if (s.IPAddress == nil || *s.IPAddress == "") && (s.IP6Address == nil || *s.IP6Address == "") {
 		errs = append(errs, tc.NeedsAtLeastOneIPError)
 	}
 
-	if s.IPGateway == nil && s.IP6Gateway == nil {
-		errs = append(errs, tc.NeedsAtLeastOneGatewayError)
+	if *s.IPIsService && (s.IPAddress == nil || *s.IPAddress == "") {
+		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
+
+	if *s.IP6IsService && (s.IP6Address == nil || *s.IP6Address == "") {
+		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
+	}
+
 	validateErrs := validation.Errors{
 		"cachegroupId":   validation.Validate(s.CachegroupID, validation.NotNil),
 		"cdnId":          validation.Validate(s.CDNID, validation.NotNil),
@@ -126,7 +131,7 @@ func (s *TOServer) Validate() error {
 	if s.IP6Address != nil && *s.IP6Address != "" {
 		validateErrs["ip6Address"] = validation.Validate(s.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress))
 	}
-	errs = tovalidate.ToErrors(validateErrs)
+	errs = append(errs, tovalidate.ToErrors(validateErrs)...)
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)
 	}
