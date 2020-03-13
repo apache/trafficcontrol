@@ -158,3 +158,8 @@ type LastUpdated struct {
 		SummaryTime string `json:"summaryTime"`
 	} `json:"response"`
 }
+
+type StatsSummaryLastUpdatedResponse struct {
+	Version  string                  `json:"version"`
+	Response StatsSummaryLastUpdated `json:"response"`
+}
