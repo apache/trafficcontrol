@@ -181,7 +181,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//CDN
 		{api.Version{2, 0}, http.MethodGet, `cdns/name/{name}/sslkeys/?$`, cdn.GetSSLKeys, auth.PrivLevelAdmin, Authenticated, nil, 2278581772, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `cdns/metric_types`, notImplementedHandler, 0, NoAuth, nil, 283165463, noPerlBypass}, // MUST NOT end in $, because the 1.x route is longer
 
 		{api.Version{2, 0}, http.MethodGet, `cdns/capacity$`, cdn.GetCapacity, auth.PrivLevelReadOnly, Authenticated, nil, 297185281, noPerlBypass},
 
