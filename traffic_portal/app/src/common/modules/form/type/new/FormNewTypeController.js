@@ -30,6 +30,7 @@ var FormNewTypeController = function(type, $scope, $controller, typeService) {
     };
 
     $scope.save = function(type) {
+        type.useInTable = "server";
         typeService.createType(type);
     };
 

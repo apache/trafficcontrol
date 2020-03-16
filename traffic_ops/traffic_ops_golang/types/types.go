@@ -107,16 +107,14 @@ func (tp *TOType) Update() (error, error, int) {
 }
 
 func (tp *TOType) Delete() (error, error, int) {
-	if tp.UseInTable == nil {
-		if tp.ID != nil {
-			query := `SELECT use_in_table from type where id=$1`
-			err := tp.ReqInfo.Tx.Tx.QueryRow(query, tp.ID).Scan(&tp.UseInTable)
-			if err != nil {
-				return api.ParseDBError(err)
-			}
-		} else {
-			return nil, errors.New("no type with that key found"), http.StatusNotFound
+	if tp.ID != nil {
+		query := `SELECT use_in_table from type where id=$1`
+		err := tp.ReqInfo.Tx.Tx.QueryRow(query, tp.ID).Scan(&tp.UseInTable)
+		if err != nil {
+			return api.ParseDBError(err)
 		}
+	} else {
+		return errors.New("no type with that key found"), nil, http.StatusNotFound
 	}
 	if !tp.AllowMutation() {
 		return nil, errors.New(fmt.Sprintf("can not delete type")), http.StatusBadRequest
