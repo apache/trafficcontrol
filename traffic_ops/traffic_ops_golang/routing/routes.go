@@ -174,7 +174,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodGet, `cachegroupparameters/?$`, cachegroupparameter.ReadAllCacheGroupParameters, auth.PrivLevelReadOnly, Authenticated, nil, 212449724, perlBypass},
 		{api.Version{2, 0}, http.MethodPost, `cachegroupparameters/?$`, cachegroupparameter.AddCacheGroupParameters, auth.PrivLevelOperations, Authenticated, nil, 212449725, perlBypass},
 		{api.Version{2, 0}, http.MethodGet, `cachegroups/{id}/parameters/?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 212449723, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `cachegroups/{id}/unassigned_parameters/?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupUnassignedParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 2457339250, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `cachegroupparameters/{cachegroupID}/{parameterId}$`, api.DeleteHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelOperations, Authenticated, nil, 212449733, noPerlBypass},
 
 		//Capabilities
@@ -558,7 +557,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `cachegroupparameters/?(\.json)?$`, cachegroupparameter.ReadAllCacheGroupParameters, auth.PrivLevelReadOnly, Authenticated, nil, 912449724, perlBypass},
 		{api.Version{1, 1}, http.MethodPost, `cachegroupparameters/?(\.json)?$`, cachegroupparameter.AddCacheGroupParameters, auth.PrivLevelOperations, Authenticated, nil, 912449725, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `cachegroups/{id}/parameters/?(\.json)?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 912449723, perlBypass},
-		{api.Version{1, 1}, http.MethodGet, `cachegroups/{id}/unassigned_parameters/?(\.json)?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupUnassignedParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 1457339250, perlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cachegroups/{id}/unassigned_parameters/?(\.json)?$`, api.DeprecatedReadHandler(&cachegroupparameter.TOCacheGroupUnassignedParameter{}, util.StrPtr("GET /cachegroupparameters & GET /parameters")), auth.PrivLevelReadOnly, Authenticated, nil, 1457339250, perlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `cachegroupparameters/{cachegroupID}/{parameterId}$`, api.DeleteHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelOperations, Authenticated, nil, 912449733, perlBypass},
 
 		//Capabilities

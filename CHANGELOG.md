@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cachegroups/:id (GET)
   - /cachegroup/:parameterID/parameter
   - /cachegroups/:parameterID/parameter/available
+  - /cachegroups/:id/unassigned_parameters
   - /cachegroups/trimmed
   - /cdns/:name/configs/routing
   - /cdns/:name/federations/:id (GET)
