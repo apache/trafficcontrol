@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -148,7 +149,7 @@ func TestGetServerParams(t *testing.T) {
 	}
 }
 
-func ExpectedGetAllServers(params map[string]ServerParams) map[string]ServerUnion {
+func ExpectedGetAllServers(params map[string]ServerParams, ipIsService bool, ip6IsService bool) map[string]ServerUnion {
 	expected := map[string]ServerUnion{}
 	for name, param := range params {
 		s := ServerUnion{
@@ -158,15 +159,21 @@ func ExpectedGetAllServers(params map[string]ServerParams) map[string]ServerUnio
 		}
 		i := int(*param.Weight * *param.WeightMultiplier)
 		s.HashCount = &i
+		if !ipIsService {
+			s.Ip = util.StrPtr("")
+		}
+		if !ip6IsService {
+			s.Ip6 = util.StrPtr("")
+		}
 		expected[name] = s
 	}
 	return expected
 }
 
-func MockGetAllServers(mock sqlmock.Sqlmock, expected map[string]ServerUnion, cdn string) {
-	rows := sqlmock.NewRows([]string{"host_name", "cachegroup", "fqdn", "hashid", "https_port", "interface_name", "ip_address", "ip6_address", "tcp_port", "profile_name", "routing_disabled", "status", "type"})
+func MockGetAllServers(mock sqlmock.Sqlmock, expected map[string]ServerUnion, cdn string, ipIsService bool, ip6IsService bool) {
+	rows := sqlmock.NewRows([]string{"host_name", "cachegroup", "fqdn", "hashid", "https_port", "interface_name", "ip_address_is_service", "ip6_address_is_service", "ip_address", "ip6_address", "tcp_port", "profile_name", "routing_disabled", "status", "type"})
 	for name, s := range expected {
-		rows = rows.AddRow(name, *s.CacheGroup, *s.Fqdn, *s.HashId, *s.HttpsPort, *s.InterfaceName, *s.Ip, *s.Ip6, *s.Port, *s.Profile, s.RoutingDisabled, *s.ServerStatus, *s.ServerType)
+		rows = rows.AddRow(name, *s.CacheGroup, *s.Fqdn, *s.HashId, *s.HttpsPort, *s.InterfaceName, ipIsService, ip6IsService, *s.Ip, *s.Ip6, *s.Port, *s.Profile, s.RoutingDisabled, *s.ServerStatus, *s.ServerType)
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
 }
@@ -184,8 +191,54 @@ func TestGetAllServers(t *testing.T) {
 	getServerParamsExpected := ExpectedGetServerParams()
 	MockGetServerParams(mock, getServerParamsExpected, cdn)
 
-	expected := ExpectedGetAllServers(getServerParamsExpected)
-	MockGetAllServers(mock, expected, cdn)
+	expected := ExpectedGetAllServers(getServerParamsExpected, true, true)
+	MockGetAllServers(mock, expected, cdn, true, true)
+	mock.ExpectCommit()
+
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := getAllServers(cdn, tx)
+
+	if err != nil {
+		t.Fatalf("getAllServers expected: nil error, actual: %v", err)
+	}
+
+	if len(actual) != len(expected) {
+		t.Errorf("getAllServers len expected: %v, actual: %v", len(expected), len(actual))
+	}
+
+	for name, server := range expected {
+		actualServer, ok := actual[name]
+		if !ok {
+			t.Errorf("getAllServers expected: %v, actual: missing", name)
+			continue
+		}
+		if !reflect.DeepEqual(server, actualServer) {
+			t.Errorf("getAllServers server %v expected: %v, actual: %v", name, server, actualServer)
+		}
+	}
+}
+
+func TestGetAllServersNonService(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	cdn := "mycdn"
+
+	mock.ExpectBegin()
+	getServerParamsExpected := ExpectedGetServerParams()
+	MockGetServerParams(mock, getServerParamsExpected, cdn)
+
+	expected := ExpectedGetAllServers(getServerParamsExpected, false, false)
+	MockGetAllServers(mock, expected, cdn, false, false)
 	mock.ExpectCommit()
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)

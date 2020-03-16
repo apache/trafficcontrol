@@ -48,7 +48,7 @@ func randAvailableStatuses() AvailableStatuses {
 	a := AvailableStatuses{}
 	num := 100
 	for i := 0; i < num; i++ {
-		a[tc.CacheName(randStr())] = AvailableStatus{Available: randBool(), Status: randStr()}
+		a[tc.CacheName(randStr())] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
 	}
 	return a
 }
@@ -64,7 +64,7 @@ func TestAvailableStatusesCopy(t *testing.T) {
 		}
 
 		// verify a and b don't point to the same map
-		a[tc.CacheName(randStr())] = AvailableStatus{Available: randBool(), Status: randStr()}
+		a[tc.CacheName(randStr())] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map: a: %+v", a)
 		}

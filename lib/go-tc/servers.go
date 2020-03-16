@@ -84,7 +84,7 @@ type Server struct {
 	XMPPPasswd       string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-type ServerNullable struct {
+type ServerNullableV11 struct {
 	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
@@ -131,6 +131,14 @@ type ServerNullable struct {
 	UpdPending       *bool                `json:"updPending" db:"upd_pending"`
 	XMPPID           *string              `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
+}
+
+type ServerNullableV20 ServerNullable
+
+type ServerNullable struct {
+	ServerNullableV11
+	IPIsService  *bool `json:"ipIsService" db:"ip_address_is_service"`
+	IP6IsService *bool `json:"ip6IsService" db:"ip6_address_is_service"`
 }
 
 type ServerUpdateStatus struct {

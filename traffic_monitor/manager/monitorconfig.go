@@ -269,7 +269,7 @@ func monitorConfigListen(
 				log.Infof("health.polling.type for '%v' is empty, using default '%v'", srv.HostName, pollType)
 			}
 
-			pollURLStr = createServerHealthPollURL(pollURLStr, srv)
+			pollURL4Str, pollURL6Str := createServerHealthPollURLs(pollURLStr, srv)
 
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
 			if connTimeout == 0 {
@@ -277,10 +277,11 @@ func monitorConfigListen(
 				log.Warnln("profile " + srv.Profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
 			}
 
-			healthURLs[srv.HostName] = poller.PollConfig{URL: pollURLStr, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
+			healthURLs[srv.HostName] = poller.PollConfig{URL: pollURL4Str, URLv6: pollURL6Str, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 
-			statURL := createServerStatPollURL(pollURLStr)
-			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
+			statURL4 := createServerStatPollURL(pollURL4Str)
+			statURL6 := createServerStatPollURL(pollURL6Str)
+			statURLs[srv.HostName] = poller.PollConfig{URL: statURL4, URLv6: statURL6, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 		}
 
 		peerSet := map[tc.TrafficMonitorName]struct{}{}
@@ -292,14 +293,15 @@ func monitorConfigListen(
 				continue
 			}
 			// TODO: the URL should be config driven. -jse
-			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-			peerURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN} // TODO determine timeout.
+			url4 := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
+			url6 := fmt.Sprintf("http://[%s]:%d/publish/CrStates?raw", ipv6CIDRStrToAddr(srv.IP6), srv.Port)
+			peerURLs[srv.HostName] = poller.PollConfig{URL: url4, URLv6: url6, Host: srv.FQDN} // TODO determine timeout.
 			peerSet[tc.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
-		statURLSubscriber <- poller.CachePollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
-		healthURLSubscriber <- poller.CachePollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
-		peerURLSubscriber <- poller.CachePollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
+		statURLSubscriber <- poller.CachePollerConfig{Urls: statURLs, PollingProtocol: cfg.CachePollingProtocol, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
+		healthURLSubscriber <- poller.CachePollerConfig{Urls: healthURLs, PollingProtocol: cfg.CachePollingProtocol, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
+		peerURLSubscriber <- poller.CachePollerConfig{Urls: peerURLs, PollingProtocol: cfg.PeerPollingProtocol, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
 		toIntervalSubscriber <- intervals.TO
 		peerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
 		peerStates.SetPeers(peerSet)
@@ -332,15 +334,37 @@ func monitorConfigListen(
 	}
 }
 
-// createServerHealthPollURL takes the template pollingURLStr, and replaces variables with data from srv, and returns the polling URL for srv.
-func createServerHealthPollURL(pollingURLStr string, srv tc.TrafficServer) string {
-	pollingURLStr = strings.NewReplacer(
-		"${hostname}", srv.IP,
-		"${interface_name}", srv.InterfaceName,
-		"application=plugin.remap", "application=system",
-		"application=", "application=system",
-	).Replace(pollingURLStr)
+// createServerHealthPollURLs takes the template pollingURLStr, and replaces variables with data from srv, and returns the polling URL for srv.
+func createServerHealthPollURLs(pollingURLStr string, srv tc.TrafficServer) (string, string) {
+	pollingURL4Str := ""
+	pollingURL6Str := ""
 
+	if srv.IP != "" {
+		pollingURL4Str = strings.NewReplacer(
+			"${hostname}", srv.IP,
+			"${interface_name}", srv.InterfaceName,
+			"application=plugin.remap", "application=system",
+			"application=", "application=system",
+		).Replace(pollingURLStr)
+
+		pollingURL4Str = insertPorts(pollingURL4Str, srv)
+	}
+
+	if srv.IP6 != "" {
+		r := strings.NewReplacer(
+			"${hostname}", "["+ipv6CIDRStrToAddr(srv.IP6)+"]",
+			"${interface_name}", srv.InterfaceName,
+			"application=plugin.remap", "application=system",
+			"application=", "application=system",
+		)
+
+		pollingURL6Str = insertPorts(r.Replace(pollingURLStr), srv)
+	}
+
+	return pollingURL4Str, pollingURL6Str
+}
+
+func insertPorts(pollingURLStr string, srv tc.TrafficServer) string {
 	if strings.HasPrefix(strings.ToLower(pollingURLStr), "https") {
 		if srv.HTTPSPort != 0 {
 			pollURL, err := url.Parse(pollingURLStr)
@@ -362,7 +386,6 @@ func createServerHealthPollURL(pollingURLStr string, srv tc.TrafficServer) strin
 			}
 		}
 	}
-
 	return pollingURLStr
 }
 

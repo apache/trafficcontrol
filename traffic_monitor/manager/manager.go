@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"strings"
 
 	"golang.org/x/sys/unix"
 
@@ -53,12 +54,12 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewCache(cfg.CacheHealthPollingInterval, true, cacheHealthHandler, cfg, appData)
+	cacheHealthPoller := poller.NewCache(cfg.CacheHealthPollingInterval, true, cacheHealthHandler, cfg, appData, cfg.CachePollingProtocol)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewCache(cfg.CacheStatPollingInterval, false, cacheStatHandler, cfg, appData)
+	cacheStatPoller := poller.NewCache(cfg.CacheStatPollingInterval, false, cacheStatHandler, cfg, appData, cfg.CachePollingProtocol)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewCache(cfg.PeerPollingInterval, false, peerHandler, cfg, appData)
+	peerPoller := poller.NewCache(cfg.PeerPollingInterval, false, peerHandler, cfg, appData, cfg.PeerPollingProtocol)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -199,4 +200,14 @@ func startSignalFileReloader(filename string, sig os.Signal, f func([]byte, erro
 			f(ioutil.ReadFile(filename))
 		}
 	}()
+}
+
+// ipv6CIDRStrToAddr takes an IPv6 CIDR string, e.g. `2001:DB8::1/32` returns `2001:DB8::1`.
+// It does not verify cidr is a valid CIDR or IPv6. It only removes the first slash and everything after it, for performance.
+func ipv6CIDRStrToAddr(cidr string) string {
+	i := strings.Index(cidr, `/`)
+	if i == -1 {
+		return cidr
+	}
+	return cidr[:i]
 }
