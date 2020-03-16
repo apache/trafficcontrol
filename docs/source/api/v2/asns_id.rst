@@ -21,68 +21,6 @@
 ***************
 .. seealso:: `The Autonomous System Wikipedia page <https://en.wikipedia.org/wiki/Autonomous_system_%28Internet%29>`_ for an explanation of what an :abbr:`ASN (Autonomous System Number)` actually is.
 
-``GET``
-=======
-Retrieve information about a specific :abbr:`ASN (Autonomous System Number)`-to-:term:`Cache Group` association.
-
-:Auth. Required: Yes
-:Roles Required: None
-:Response Type: Array
-
-Request Structure
------------------
-.. table:: Request Path Parameters
-
-	+------+----------+--------------------------------------------------------------------------------------------------------------------------+
-	| Name | Required | Description                                                                                                              |
-	+======+==========+==========================================================================================================================+
-	| id   | yes      | The integral, unique identifier of the desired :abbr:`ASN (Autonomous System Number)`-to-:term:`Cache Group` association |
-	+------+----------+--------------------------------------------------------------------------------------------------------------------------+
-
-.. code-block:: http
-	:caption: Request Structure
-
-	GET /api/2.0/asns/1 HTTP/1.1
-	User-Agent: python-requests/2.22.0
-	Accept-Encoding: gzip, deflate
-	Accept: */*
-	Connection: keep-alive
-	Cookie: mojolicious=...
-
-Response Structure
-------------------
-:asn:          An :abbr:`ASN (Autonomous System Number)` as specified by IANA for identifying a service provider
-:cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
-:cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
-:id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
-:lastUpdated:  The time and date this server entry was last updated in an ISO-like format
-
-.. code-block:: http
-	:caption: Response Example
-
-	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
-	Content-Encoding: gzip
-	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 02 Dec 2019 22:53:17 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: F2NmDbTpXqrIQDX7IBKH9+1drtTL4XedSfJv6klMgLEZwbLCkddIXuSLpmgVCID6kTVqy3fTKjZS3U+HJ3YUEQ==
-	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 02 Dec 2019 21:53:17 GMT
-	Content-Length: 128
-
-	{ "response": [
-		{
-			"asn": 1,
-			"cachegroup": "TRAFFIC_ANALYTICS",
-			"cachegroupId": 1,
-			"id": 1,
-			"lastUpdated": "2019-12-02 21:49:08+00"
-		}
-	]}
-
 ``PUT``
 =======
 Allows user to edit an existing :abbr:`ASN (Autonomous System Number)`-to-:term:`Cache Group` association.
