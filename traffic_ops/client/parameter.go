@@ -101,24 +101,6 @@ func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GetParametersByProfileName gets all of the Parameters assigned to the Profile named 'profileName'.
-func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Parameter, ReqInf, error) {
-	url := fmt.Sprintf(API_PARAMETERS+"/profile/%s", profileName)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.ParametersResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
 // GetParameterByID GETs a Parameter by the Parameter ID.
 func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_PARAMETERS, id)

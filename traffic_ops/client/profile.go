@@ -27,6 +27,7 @@ import (
 
 const (
 	API_PROFILES = apiBase + "/profiles"
+	API_PROFILES_NAME_PARAMETERS = API_PROFILES + "/name/%v/parameters"
 )
 
 // CreateProfile creates a Profile.
@@ -92,6 +93,24 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 
 	return alerts, reqInf, err
+}
+
+// GetParametersByProfileName gets all of the Parameters assigned to the Profile named 'profileName'.
+func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Parameter, ReqInf, error) {
+	url := fmt.Sprintf(API_PROFILES_NAME_PARAMETERS, profileName)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ParametersResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
 }
 
 // GetProfiles returns a list of Profiles.
