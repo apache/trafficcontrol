@@ -21,6 +21,9 @@
 
 .. danger:: This API endpoint *does* **not** *work*. It isn't implemented in Traffic Ops, and is not expected to be added at any point in the near future. See :issue:`2309` for more information.
 
+.. deprecated:: ATCv4
+	This endpoint is deprecated, and will not be added in future API versions.
+
 
 ``GET``
 =======
