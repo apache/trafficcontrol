@@ -79,16 +79,16 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "warning",
-			"text": "this endpoint is deprecated, please use get /asns instead"
+			"text": "This endpoint is deprecated, please use GET /asns instead"
 		}
-	]],
+	],
 	"response": [
 		{
 			"asn": 1,
-			"cachegroup": "traffic_analytics",
-			"cachegroupid": 1,
+			"cachegroup": "TRAFFIC_ANALYTICS",
+			"cachegroupId": 1,
 			"id": 1,
-			"lastupdated": "2019-12-02 21:49:08+00"
+			"lastUpdated": "2019-12-02 21:49:08+00"
 		}
 	]}
 
