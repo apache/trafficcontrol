@@ -111,3 +111,30 @@ Response Structure
 		}
 	}}
 
+``DELETE``
+==========
+Delete DNSSEC keys for a CDN and all associated :term:`Delivery Services`.
+
+:Auth. Required: Yes
+:Roles Required: "admin"
+:Response Type:  Object (string)
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+-----------------------------------------------------------+
+	| Name |                       Description                         |
+	+======+===========================================================+
+	| name | The name of the CDN for which DNSSEC keys will be deleted |
+	+------+-----------------------------------------------------------+
+
+Response Structure
+------------------
+.. code-block:: json
+	:caption: Response Example
+
+	{
+		"response": "Successfully deleted dnssec keys for test"
+	}
+

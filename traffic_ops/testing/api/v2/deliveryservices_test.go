@@ -36,6 +36,7 @@ func TestDeliveryServices(t *testing.T) {
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
 		UpdateDeliveryServiceWithInvalidRemapText(t)
+		UpdateDeliveryServiceWithInvalidSliceRangeRequest(t)
 		GetTestDeliveryServices(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
@@ -220,6 +221,79 @@ func UpdateDeliveryServiceWithInvalidRemapText(t *testing.T) {
 	if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS); err == nil {
 		t.Errorf("Delivery service updated with invalid remap text: %v", updatedRemapText)
 	}
+}
+
+// UpdateDeliveryServiceWithInvalidSliceRangeRequest ensures that a delivery service can't be updated with a invalid slice range request handler setting.
+func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
+	// GET a HTTP / DNS type DS
+	var dsXML *string
+	for _, ds := range testData.DeliveryServices {
+		if ds.Type.IsDNS() || ds.Type.IsHTTP() {
+			dsXML = &ds.XMLID
+			break
+		}
+	}
+	if dsXML == nil {
+		t.Fatal("no HTTP or DNS Delivery Services to test with")
+	}
+
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("cannot GET Delivery Services: %v", err)
+	}
+
+	remoteDS := tc.DeliveryServiceNullable{}
+	found := false
+	for _, ds := range dses {
+		if ds.XMLID == nil || ds.ID == nil {
+			continue
+		}
+		if *ds.XMLID == *dsXML {
+			found = true
+			remoteDS = ds
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("GET Delivery Services missing: %v", *dsXML)
+	}
+	testCases := []struct {
+		description         string
+		rangeRequestSetting *int
+		slicePluginSize     *int
+	}{
+		{
+			description:         "Missing slice plugin size",
+			rangeRequestSetting: util.IntPtr(tc.RangeRequestHandlingSlice),
+			slicePluginSize:     nil,
+		},
+		{
+			description:         "Slice plugin size set with incorrect range request setting",
+			rangeRequestSetting: util.IntPtr(tc.RangeRequestHandlingBackgroundFetch),
+			slicePluginSize:     util.IntPtr(262144),
+		},
+		{
+			description:         "Slice plugin size set to small",
+			rangeRequestSetting: util.IntPtr(tc.RangeRequestHandlingSlice),
+			slicePluginSize:     util.IntPtr(0),
+		},
+		{
+			description:         "Slice plugin size set to large",
+			rangeRequestSetting: util.IntPtr(tc.RangeRequestHandlingSlice),
+			slicePluginSize:     util.IntPtr(40000000),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			remoteDS.RangeSliceBlockSize = tc.slicePluginSize
+			remoteDS.RangeRequestHandling = tc.rangeRequestSetting
+			if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS); err == nil {
+				t.Error("Delivery service updated with invalid slice plugin configuration")
+			}
+		})
+	}
+
 }
 
 func DeleteTestDeliveryServices(t *testing.T) {

@@ -125,6 +125,7 @@ const QueryStringIgnoreDropAtEdge = 2
 const RangeRequestHandlingDontCache = 0
 const RangeRequestHandlingBackgroundFetch = 1
 const RangeRequestHandlingCacheRangeRequest = 2
+const RangeRequestHandlingSlice = 3
 
 // DSTypeCategory is the Delivery Service type category: HTTP or DNS
 type DSTypeCategory string

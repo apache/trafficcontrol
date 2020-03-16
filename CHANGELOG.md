@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Added support for use of ATS Slice plugin as an additonal option to range request handling on HTTP/DNS DSes.
 - Added a boolean to delivery service in Traffic Portal and Traffic Ops to enable EDNS0 client subnet at the delivery service level and include it in the cr-config.
 - Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
 - Traffic Router DNSSEC zone diffing: if enabled via the new "dnssec.zone.diffing.enabled" TR profile parameter, TR will diff existing zones against newly generated zones in order to determine if a zone needs to be re-signed. Zones are typically generated on every snapshot and whenever new DNSSEC keys are found, and since signing a zone is a relatively CPU-intensive operation, this optimization can drastically reduce the CPU time taken to process new snapshots and new DNSSEC keys.
