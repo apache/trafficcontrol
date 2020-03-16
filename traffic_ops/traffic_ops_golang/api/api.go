@@ -94,7 +94,7 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write(append(bts, '\n'))
 }
 
@@ -287,7 +287,7 @@ func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLev
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write(append(respBts, '\n'))
+	_, _ = w.Write(append(respBts, '\n'))
 }
 
 func WriteAlerts(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts) {
@@ -297,17 +297,24 @@ func WriteAlerts(w http.ResponseWriter, r *http.Request, code int, alerts tc.Ale
 	}
 	setRespWritten(r)
 
-	resp, err := json.Marshal(alerts)
-	if err != nil {
-		handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
-		return
-	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.WriteHeader(code)
-	w.Write(append(resp, '\n'))
+	if alerts.HasAlerts() {
+		resp, err := json.Marshal(alerts)
+		if err != nil {
+			handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
+			return
+		}
+		_, _ = w.Write(append(resp, '\n'))
+	}
 }
 
 func WriteAlertsObj(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts, obj interface{}) {
+	if !alerts.HasAlerts() {
+		WriteResp(w, r, obj)
+		w.WriteHeader(code)
+		return
+	}
 	if respWritten(r) {
 		log.Errorf("WriteAlertsObj called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
 		return
