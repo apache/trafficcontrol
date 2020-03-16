@@ -30,13 +30,17 @@ var TableCacheGroupParamsUnassignedController = function(cg, allParams, assigned
 	);
 
 	var addParam = function(paramId) {
-		if (selectedParams.indexOf(paramId) == -1) {
+		if (selectedParams.indexOf(paramId) === -1) {
 			selectedParams.push(paramId);
 		}
 	};
 
 	var removeParam = function(paramId) {
-		selectedParams = selectedParams.without(paramId);
+		selectedParams = selectedParams.filter(
+			function (param) {
+				return param !== paramId;
+			}
+		);
 	};
 
 	$scope.updateParams = function($event, paramId) {
