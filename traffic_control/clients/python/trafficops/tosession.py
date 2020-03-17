@@ -1713,12 +1713,13 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers/hostname/{name}/details', ('2.0',))
-	def get_server_details(self, name=None):
+	@api_request('get', 'servers//details', ('2.0',))
+	def get_server_details(self,  query_params=None):
 		"""
 		Get server details from trafficOps
-		:ref:`to-api-servers-hostname-name-details`
-		:param hostname: Server hostname
+		:ref:`to-api-servers-details`
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
