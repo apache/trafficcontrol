@@ -25,19 +25,7 @@ import "net"
 
 import "github.com/go-ozzo/ozzo-validation"
 
-// FederationResolverResponse represents a Traffic Ops API response to a request to create
-// a Federation Resolver
-type FederationResolverResponse struct {
-	Response FederationResolver `json:"response"`
-	Alerts
-}
 
-// FederationResolversResponse represents a Traffic Ops API response to a request for
-// Federation Resolvers
-type FederationResolversResponse struct {
-	Response []FederationResolver `json:"response"`
-	Alerts
-}
 
 // FederationResolver represents a resolver record for a CDN Federation.
 type FederationResolver struct {

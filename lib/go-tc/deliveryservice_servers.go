@@ -19,12 +19,6 @@ import (
    limitations under the License.
 */
 
-// DeliveryServiceServerDetailResponse ...
-type DeliveryServiceServerDetailResponse struct {
-	Alerts
-	Response DeliveryServiceServerResponse `json:"response"`
-}
-
 // DeliveryServiceServerResponse ...
 type DeliveryServiceServerResponse struct {
 	Orderby  string                  `json:"orderby"`

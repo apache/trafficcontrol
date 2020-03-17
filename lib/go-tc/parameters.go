@@ -39,12 +39,6 @@ type ParametersResponse struct {
 	Alerts
 }
 
-// ParameterResponse ...
-type ParameterResponse struct {
-	Response Parameter `json:"response"`
-	Alerts
-}
-
 // Parameter ...
 type Parameter struct {
 	ConfigFile  string          `json:"configFile" db:"config_file"`
