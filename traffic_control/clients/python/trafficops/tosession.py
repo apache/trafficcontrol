@@ -1856,21 +1856,10 @@ class TOSession(RestApiSession):
 	# Status
 	#
 	@api_request('get', 'statuses', ('2.0',))
-	def get_statuses(self):
+	def get_statuses(self, query_params=None):
 		"""
 		Retrieves a list of the server status codes available.
 		:ref:`to-api-statuses`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'statuses/{status_id:d}', ('2.0',))
-	def get_statuses_by_id(self, status_id=None):
-		"""
-		Retrieves a server status by ID.
-		:ref:`to-api-statuses-id`
-		:param status_id: The status id to retrieve
-		:type status_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

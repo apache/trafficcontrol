@@ -87,6 +87,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /servercheck/aadata
   - /servers/totals
   - /stats_summary/create
+  - /statuses/:id (GET)
   - /to_extensions/:id/delete
   - /traffic_monitor/stats
   - /types/trimmed
