@@ -30,6 +30,7 @@ import (
 )
 
 const HeaderRewritePrefix = "hdr_rw_"
+const ContentTypeHeaderRewriteDotConfig = ContentTypeTextASCII
 
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 

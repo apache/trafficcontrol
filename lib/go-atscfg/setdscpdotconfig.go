@@ -25,6 +25,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const ContentTypeSetDSCPDotConfig = ContentTypeTextASCII
+
 func MakeSetDSCPDotConfig(
 	cdnName tc.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)

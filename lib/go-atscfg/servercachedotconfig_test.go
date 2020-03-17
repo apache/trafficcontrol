@@ -37,11 +37,11 @@ func TestMakeServerCacheDotConfig(t *testing.T) {
 			Type:          tc.DSTypeHTTP,
 		},
 		"ds1": ServerCacheConfigDS{
-			OrgServerFQDN: "https://ds1.example.test:42/path",
+			OrgServerFQDN: "https://ds1.example.test:4321/path",
 			Type:          tc.DSTypeDNS,
 		},
 		"ds2": ServerCacheConfigDS{
-			OrgServerFQDN: "https://ds2.example.test:42",
+			OrgServerFQDN: "https://ds2.example.test:4321",
 			Type:          tc.DSTypeHTTP,
 		},
 		"ds3": ServerCacheConfigDS{
@@ -92,7 +92,7 @@ func TestMakeServerCacheDotConfig(t *testing.T) {
 		"ds6":      {},
 		"ds7":      {},
 		"ds8":      {},
-		"42":       {},
+		"4321":     {},
 		"1234":     {},
 	}
 

@@ -40,6 +40,8 @@ const DefaultMaxRevalDurationDays = 90
 const JobKeywordPurge = "PURGE"
 const RegexRevalidateMinTTL = time.Hour
 
+const ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
+
 type Job struct {
 	AssetURL string
 	PurgeEnd time.Time

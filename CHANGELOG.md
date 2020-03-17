@@ -74,12 +74,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /jobs/:id
   - /keys/ping
   - /logs/:days/days
+  - /parameters/:id (GET)
   - /parameters/:id/profiles
   - /parameters/:id/unassigned_profiles
   - /parameters/profile/:name
   - /parameters/validate
+  - /phys_locations/:id (GET)
   - /profile/:id (GET)
   - /profile/:id/unassigned_parameters
+  - /profile/trimmed
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
   - /riak/bucket/:bucket/key/:key/vault

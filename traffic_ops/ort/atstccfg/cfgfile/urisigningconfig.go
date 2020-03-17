@@ -24,23 +24,22 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetConfigFileProfileURISigningConfig(cfg config.TCCfg, profileNameOrID string, fileName string) (string, error) {
+func GetConfigFileProfileURISigningConfig(toData *TOData, fileName string) (string, string, error) {
 	dsName := GetDSFromURISigningConfigFileName(fileName)
 	if dsName == "" {
 		// extra safety, this should never happen, the routing shouldn't get here
-		return "", errors.New("getting ds name: malformed config file '" + fileName + "'")
+		return "", "", errors.New("getting ds name: malformed config file '" + fileName + "'")
 	}
 
-	uriSigningKeys, err := toreq.GetURISigningKeys(cfg, dsName)
-	if err != nil {
-		return "", errors.New("getting uri signing keys for ds '" + dsName + "': " + err.Error())
+	uriSigningKeys, ok := toData.URISigningKeys[tc.DeliveryServiceName(dsName)]
+	if !ok {
+		return "", "", errors.New("no keys fetched for ds '" + dsName + "!")
 	}
 
-	return atscfg.MakeURISigningConfig(uriSigningKeys), nil
+	return atscfg.MakeURISigningConfig(uriSigningKeys), atscfg.ContentTypeURISigningDotConfig, nil
 }
 
 // GetDSFromURISigningConfigFileName returns the DS of a URI Signing config file name.

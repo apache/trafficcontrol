@@ -298,3 +298,23 @@ func (to *Session) GetServerIDDeliveryServices(server int) ([]tc.DeliveryService
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, err
 }
+
+// GetServerUpdateStatus GETs the Server Update Status by the Server hostname.
+func (to *Session) GetServerUpdateStatus(hostName string) (tc.ServerUpdateStatus, ReqInf, error) {
+	path := API_v13_Servers + `/` + hostName + `/update_status`
+	resp, remoteAddr, err := to.request(http.MethodGet, path, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.ServerUpdateStatus{}, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	data := []tc.ServerUpdateStatus{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return tc.ServerUpdateStatus{}, reqInf, err
+	}
+	if len(data) == 0 {
+		return tc.ServerUpdateStatus{}, reqInf, errors.New("Traffic Ops returned no update statuses for that server")
+	}
+	return data[0], reqInf, nil
+}

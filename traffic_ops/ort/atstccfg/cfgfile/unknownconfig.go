@@ -20,41 +20,13 @@ package cfgfile
  */
 
 import (
-	"errors"
-
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileProfileUnknownConfig(cfg config.TCCfg, profileNameOrID string, fileName string) (string, error) {
-	profileName, err := toreq.GetProfileNameFromProfileNameOrID(cfg, profileNameOrID)
-	if err != nil {
-		return "", errors.New("getting profile name from '" + profileNameOrID + "': " + err.Error())
-	}
-
-	profileParameters, err := toreq.GetProfileParameters(cfg, profileName)
-	if err != nil {
-		return "", errors.New("getting profile '" + profileName + "' parameters: " + err.Error())
-	}
-	if len(profileParameters) == 0 {
-		// The TO endpoint behind toclient.GetParametersByProfileName returns an empty object with a 200, if the Profile doesn't exist.
-		// So we act as though we got a 404 if there are no params (and there should always be storage.config params), to make ORT behave correctly.
-		return "", config.ErrNotFound
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	scopeParams, err := toreq.GetParametersByName(cfg, "scope")
-	if err != nil {
-		return "", errors.New("getting scope parameters: " + err.Error())
-	}
-
+func GetConfigFileProfileUnknownConfig(toData *TOData, fileName string) (string, string, error) {
 	inScope := false
-	for _, scopeParam := range scopeParams {
+	for _, scopeParam := range toData.ScopeParams {
 		if scopeParam.ConfigFile != fileName {
 			continue
 		}
@@ -64,22 +36,9 @@ func GetConfigFileProfileUnknownConfig(cfg config.TCCfg, profileNameOrID string,
 		inScope = true
 		break
 	}
-
 	if !inScope {
-		return `{"alerts":[{"level":"error","text":"Error - incorrect file scope for route used.  Please use the servers route."}]}`, config.ErrBadRequest
+		return `{"alerts":[{"level":"error","text":"Error - incorrect file scope for route used.  Please use the servers route."}]}`, "", config.ErrBadRequest
 	}
-
-	paramData := map[string]string{}
-	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
-	for _, param := range profileParameters {
-		if param.ConfigFile != fileName {
-			continue
-		}
-		if param.Name == "location" {
-			continue
-		}
-		paramData[param.Name] = param.Value
-	}
-
-	return atscfg.MakeUnknownConfig(profileName, paramData, toToolName, toURL), nil
+	params := ParamsToMap(FilterParams(toData.ServerParams, fileName, "", "", "location"))
+	return atscfg.MakeUnknownConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeUnknownConfig, nil
 }

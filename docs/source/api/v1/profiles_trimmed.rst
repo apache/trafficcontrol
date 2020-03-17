@@ -18,6 +18,8 @@
 ********************
 ``profiles/trimmed``
 ********************
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-profiles` instead.
 
 ``GET``
 =======
@@ -63,4 +65,10 @@ Response Structure
 		{ "name": "CCR_CIAB" },
 		{ "name": "ENROLLER_ALL" },
 		{ "name": "RASCAL-Traffic_Monitor" }
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /profiles instead",
+			"level": "warning"
+		}
 	]}

@@ -63,7 +63,7 @@ func AddPlugin(priority uint64, funcs Funcs) {
 	}
 
 	pluginName := strings.TrimSuffix(path.Base(filename), ".go")
-	log.Debugln("AddPlugin adding " + pluginName)
+	log.Infoln("AddPlugin adding " + pluginName)
 	initPlugins = append(initPlugins, pluginObj{funcs: funcs, priority: priority, name: pluginName})
 }
 
@@ -122,13 +122,13 @@ func (ps plugins) OnStartup(d StartupData) {
 
 // OnRequest returns a boolean whether to immediately stop processing the request. If a plugin returns true, this is immediately returned with no further plugins processed.
 func (ps plugins) OnRequest(d OnRequestData) bool {
-	log.Debugf("DEBUG plugins.OnRequest calling %+v plugins\n", len(ps.slice))
+	log.Infof("plugins.OnRequest calling %+v plugins\n", len(ps.slice))
 	for _, p := range ps.slice {
 		if p.funcs.onRequest == nil {
-			log.Debugln("plugins.OnRequest plugging " + p.name + " - no onRequest func")
+			log.Infoln("plugins.OnRequest plugging " + p.name + " - no onRequest func")
 			continue
 		}
-		log.Debugln("plugins.OnRequest plugging " + p.name)
+		log.Infoln("plugins.OnRequest plugging " + p.name)
 		if stop := p.funcs.onRequest(d); stop {
 			return true
 		}

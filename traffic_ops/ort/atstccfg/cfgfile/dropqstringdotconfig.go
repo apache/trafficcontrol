@@ -20,37 +20,12 @@ package cfgfile
  */
 
 import (
-	"errors"
-
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileProfileDropQStringDotConfig(cfg config.TCCfg, profileNameOrID string) (string, error) {
-	profileName, err := toreq.GetProfileNameFromProfileNameOrID(cfg, profileNameOrID)
-	if err != nil {
-		return "", errors.New("getting profile name from '" + profileNameOrID + "': " + err.Error())
-	}
-
-	profileParameters, err := toreq.GetProfileParameters(cfg, profileName)
-	if err != nil {
-		return "", errors.New("getting profile '" + profileName + "' parameters: " + err.Error())
-	}
-	if len(profileParameters) == 0 {
-		// The TO endpoint behind toclient.GetParametersByProfileName returns an empty object with a 200, if the Profile doesn't exist.
-		// So we act as though we got a 404 if there are no params (and there should always be volume.config params), to make ORT behave correctly.
-		return "", config.ErrNotFound
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
+func GetConfigFileProfileDropQStringDotConfig(toData *TOData) (string, string, error) {
 	dropQStringVal := (*string)(nil)
-	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
-	for _, param := range profileParameters {
+	for _, param := range toData.ServerParams {
 		if param.ConfigFile != atscfg.DropQStringDotConfigFileName {
 			continue
 		}
@@ -61,5 +36,5 @@ func GetConfigFileProfileDropQStringDotConfig(cfg config.TCCfg, profileNameOrID 
 		break
 	}
 
-	return atscfg.MakeDropQStringDotConfig(profileName, toToolName, toURL, dropQStringVal), nil
+	return atscfg.MakeDropQStringDotConfig(toData.Server.Profile, toData.TOToolName, toData.TOURL, dropQStringVal), atscfg.ContentTypeDropQStringDotConfig, nil
 }

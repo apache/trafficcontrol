@@ -152,7 +152,14 @@ func (ss *StatsSummaryLastUpdated) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// StatsSummaryLastUpdatedResponse ...
+type LastUpdated struct {
+	Version  string `json:"version"`
+	Response struct {
+		SummaryTime string `json:"summaryTime"`
+	} `json:"response"`
+}
+
 type StatsSummaryLastUpdatedResponse struct {
+	Version  string                  `json:"version"`
 	Response StatsSummaryLastUpdated `json:"response"`
 }
