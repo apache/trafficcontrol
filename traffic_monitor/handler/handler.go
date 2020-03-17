@@ -43,5 +43,5 @@ type OpsConfig struct {
 }
 
 type Handler interface {
-	Handle(string, io.Reader, string, time.Duration, time.Time, error, uint64, chan<- uint64)
+	Handle(string, io.Reader, string, time.Duration, time.Time, error, uint64, bool, chan<- uint64)
 }

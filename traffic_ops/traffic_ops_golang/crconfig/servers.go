@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"strconv"
 	"strings"
 
@@ -111,7 +112,21 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 
 	// TODO select deliveryservices as array?
 	q := `
-select s.host_name, cg.name as cachegroup, concat(s.host_name, '.', s.domain_name) as fqdn, s.xmpp_id as hashid, s.https_port, s.interface_name, s.ip_address, s.ip6_address, s.tcp_port, p.name as profile_name, cast(p.routing_disabled as int), st.name as status, t.name as type
+select s.host_name, 
+       cg.name as cachegroup, 
+       concat(s.host_name, '.', s.domain_name) as fqdn, 
+       s.xmpp_id as hashid, 
+       s.https_port, 
+       s.interface_name, 
+       s.ip_address_is_service,
+       s.ip6_address_is_service,
+       s.ip_address,
+       s.ip6_address, 
+       s.tcp_port, 
+       p.name as profile_name, 
+       cast(p.routing_disabled as int), 
+       st.name as status, 
+       t.name as type
 from server as s
 inner join cachegroup as cg ON cg.id = s.cachegroup
 inner join type as t on t.id = s.type
@@ -132,12 +147,23 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		hashId := sql.NullString{}
 		httpsPort := sql.NullInt64{}
 
+		ipIsService := false
+		ip6IsService := false
+
 		s := ServerUnion{}
 
 		host := ""
 		status := ""
-		if err := rows.Scan(&host, &s.CacheGroup, &s.Fqdn, &hashId, &httpsPort, &s.InterfaceName, &s.Ip, &ip6, &port, &s.Profile, &s.RoutingDisabled, &status, &s.ServerType); err != nil {
+		if err := rows.Scan(&host, &s.CacheGroup, &s.Fqdn, &hashId, &httpsPort, &s.InterfaceName, &ipIsService, &ip6IsService, &s.Ip, &ip6, &port, &s.Profile, &s.RoutingDisabled, &status, &s.ServerType); err != nil {
 			return nil, errors.New("Error scanning server: " + err.Error())
+		}
+		if !ipIsService {
+			s.Ip = util.StrPtr("")
+		}
+		if !ip6IsService {
+			s.Ip6 = util.StrPtr("")
+		} else {
+			s.Ip6 = &ip6.String // Don't check valid, assign empty string if null
 		}
 
 		s.LocationId = s.CacheGroup
@@ -148,8 +174,6 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 			i := int(port.Int64)
 			s.Port = &i
 		}
-
-		s.Ip6 = &ip6.String // Don't check valid, assign empty string if null
 
 		if hashId.String != "" {
 			s.HashId = &hashId.String

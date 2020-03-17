@@ -18,6 +18,8 @@
 ********************************************
 ``cachegroups/{{id}}/unassigned_parameters``
 ********************************************
+.. deprecated:: ATCv4
+	This endpoint and all of its functionality is deprecated. All of the information it can return can be obtained using :ref:`to-api-v1-cachegroupparameters` & :ref:`to-api-v1-parameters`.
 
 ``GET``
 =======
@@ -103,5 +105,11 @@ Response Structure
 			"name": "location",
 			"id": 6843,
 			"configFile": "hdr_rw_mid_bamtech-nhl-live-t.config"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /cachegroupparameters & GET /parameters instead",
+			"level": "warning"
 		}
 	]}

@@ -19,6 +19,8 @@ package atscfg
  * under the License.
  */
 
+const ContentType12MFacts = ContentTypeTextASCII
+
 func Make12MFacts(
 	profileName string,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)

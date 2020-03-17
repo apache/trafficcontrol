@@ -186,7 +186,7 @@ func processHealthResult(
 
 	pollerName := "health"
 	statResultHistoryNil := (*threadsafe.ResultStatHistory)(nil) // health poller doesn't have stats
-	health.CalcAvailability(results, pollerName, statResultHistoryNil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
+	health.CalcAvailability(results, pollerName, statResultHistoryNil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events, cfg.CachePollingProtocol)
 
 	healthHistory.Set(healthHistoryCopy)
 	// TODO determine if we should combineCrStates() here

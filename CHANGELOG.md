@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Added support for use of ATS Slice plugin as an additonal option to range request handling on HTTP/DNS DSes.
 - Added a boolean to delivery service in Traffic Portal and Traffic Ops to enable EDNS0 client subnet at the delivery service level and include it in the cr-config.
 - Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
 - Traffic Router DNSSEC zone diffing: if enabled via the new "dnssec.zone.diffing.enabled" TR profile parameter, TR will diff existing zones against newly generated zones in order to determine if a zone needs to be re-signed. Zones are typically generated on every snapshot and whenever new DNSSEC keys are found, and since signing a zone is a relatively CPU-intensive operation, this optimization can drastically reduce the CPU time taken to process new snapshots and new DNSSEC keys.
@@ -39,14 +40,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated numerous, miscellaneous tools to use TO API version 2.0
 - Updated TP to use TO API v2
 - Updated TP application build dependencies
+- Modified Traffic Monitor to poll over IPv6 as well as IPv4 and separate the availability statuses.
+- Modified Traffic Router to separate availability statuses between IPv4 and IPv6.
+- Modified Traffic Portal and Traffic Ops to accept IPv6 only servers.
 
 ### Deprecated/Removed
 - Traffic Ops Python client no longer supports Python 2.
 - Traffic Ops API Endpoints
   - /api_capabilities/:id
+  - /asns/:id
   - /cachegroups/:id (GET)
   - /cachegroup/:parameterID/parameter
   - /cachegroups/:parameterID/parameter/available
+  - /cachegroups/:id/unassigned_parameters
   - /cachegroups/trimmed
   - /cdns/:name/configs/routing
   - /cdns/:name/federations/:id (GET)
@@ -68,10 +74,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /jobs/:id
   - /keys/ping
   - /logs/:days/days
+  - /parameters/:id (GET)
   - /parameters/:id/profiles
   - /parameters/:id/unassigned_profiles
+  - /parameters/profile/:name
   - /parameters/validate
+  - /phys_locations/:id (GET)
   - /profile/:id/unassigned_parameters
+  - /profile/trimmed
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
   - /riak/bucket/:bucket/key/:key/vault
@@ -83,6 +93,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /to_extensions/:id/delete
   - /traffic_monitor/stats
   - /types/trimmed
+  - /types/{{ID}} (GET)
   - /user/current/jobs
   - /servers/checks
 

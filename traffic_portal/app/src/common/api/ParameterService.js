@@ -94,17 +94,6 @@ var ParameterService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.getCacheGroupUnassignedParams = function(cgId) {
-        return $http.get(ENV.api['legacy'] + 'cachegroups/' + cgId + '/unassigned_parameters').then(
-            function (result) {
-                return result.data.response;
-            },
-            function (err) {
-                throw err;
-            }
-        );
-    };
-
 };
 
 ParameterService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];

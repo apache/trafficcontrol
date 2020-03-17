@@ -23,6 +23,8 @@ import (
 	"strings"
 )
 
+const ContentTypeATSDotRules = ContentTypeTextASCII
+
 func MakeATSDotRules(
 	profileName string,
 	paramData map[string]string, // GetProfileParamData(tx, profile.ID, StorageFileName)

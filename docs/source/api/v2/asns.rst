@@ -39,6 +39,9 @@ Request Structure
 	| cachegroup | no       | The :ref:`cache-group-id` of a :term:`Cache Group` - only :abbr:`ASNs (Autonomous System Numbers)`  |
 	|            |          | for this :term:`Cache Group` will be returned.                                                      |
 	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| id         | no       | The integral, unique identifier of the desired                                                      |
+	|            |          | :abbr:`ASN (Autonomous System Number)`-to-:term:`Cache Group` association                           |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
 	| orderby    | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the    |
 	|            |          | ``response`` array                                                                                  |
 	+------------+----------+-----------------------------------------------------------------------------------------------------+
