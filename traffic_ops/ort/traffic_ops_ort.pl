@@ -1629,7 +1629,10 @@ sub parse_multipart_config_files {
 
 		my %file_obj;
 		$file_obj{'headers'} = \%headers;
-		$file_obj{'body'} = $headers_body[1];
+		my $body = $headers_body[1];
+		$body =~ s/\s+$//; # trim trailing whitespace
+		$body = $body . "\n"; # add a single trailing newline, POSIX files require trailing newlines
+		$file_obj{'body'} = $body;
 		$all_files{$file_name} = \%file_obj;
 	}
 
