@@ -78,6 +78,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /parameters/:id/unassigned_profiles
   - /parameters/profile/:name
   - /parameters/validate
+  - /profile/:id (GET)
   - /profile/:id/unassigned_parameters
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name

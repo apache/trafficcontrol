@@ -1430,17 +1430,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'profiles/{profile_id:d}', ('2.0',))
-	def get_profile_by_id(self, profile_id=None):
-		"""
-		Get Profile by Id.
-		:ref:`to-api-profiles-id`
-		:param profile_id: The profile Id
-		:type profile_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('post', 'profiles', ('2.0',))
 	def create_profile(self, data=None):
 		"""
