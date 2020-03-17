@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	This method of this endpoint is deprecated, developers/administrators should use the ``GET`` method of :ref:`to-api-types` with the ``id`` query parameter instead.
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -38,7 +41,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/types/48 HTTP/1.1
+	GET /api/1.5/types/50 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -56,23 +59,26 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: EH8jo8OrCu79Tz9xpgT3YRyKJ/p2NcTmbS3huwtqRByHz9H6qZLQjA59RIPaVSq3ZxsU6QhTaox5nBkQ9LPSAA==
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 17 Mar 2020 17:29:33 GMT; Max-Age=3600; HttpOnly
 	X-Server-Name: traffic_ops_golang/
-	Date: Wed, 12 Dec 2018 23:50:13 GMT
-	Content-Length: 168
+	Date: Tue, 17 Mar 2020 16:29:33 GMT
+	Content-Length: 233
 
-	{ "response": [
+	{ "alerts": [
 		{
-			"id": 48,
-			"lastUpdated": "2018-12-12 16:26:41+00",
-			"name": "TC_LOC",
-			"description": "Location for Traffic Control Component Servers",
-			"useInTable": "cachegroup"
+			"text": "This endpoint is deprecated, please use GET /types with the 'id' query parameter instead",
+			"level": "warning"
+		}
+	],
+	"response": [
+		{
+			"id": 50,
+			"lastUpdated": "2020-03-17 16:26:38+00",
+			"name": "GRAFANA",
+			"description": "Grafana Service",
+			"useInTable": "server"
 		}
 	]}
+
