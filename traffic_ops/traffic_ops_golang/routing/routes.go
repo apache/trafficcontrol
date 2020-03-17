@@ -255,7 +255,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Phys_Location: CRUD
 		{api.Version{2, 0}, http.MethodGet, `phys_locations/?$`, api.ReadHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelReadOnly, Authenticated, nil, 220405182, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `phys_locations/trimmed/?$`, physlocation.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil, 2097221000, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `phys_locations/{id}$`, api.ReadHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelReadOnly, Authenticated, nil, 2554216025, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `phys_locations/{id}$`, api.UpdateHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 222795021, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `phys_locations/?$`, api.CreateHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 2246456648, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `phys_locations/{id}$`, api.DeleteHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 25614221, noPerlBypass},
@@ -656,7 +655,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Phys_Location: CRUD
 		{api.Version{1, 1}, http.MethodGet, `phys_locations/?(\.json)?$`, api.ReadHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelReadOnly, Authenticated, nil, 120405182, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `phys_locations/trimmed/?(\.json)?$`, physlocation.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil, 1097221000, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `phys_locations/{id}$`, api.ReadHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelReadOnly, Authenticated, nil, 1554216025, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `phys_locations/{id}$`, api.DeprecatedReadHandler(&physlocation.TOPhysLocation{}, util.StrPtr("GET /phys_locations with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 1554216025, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `phys_locations/{id}$`, api.UpdateHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 226795021, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `phys_locations/?$`, api.CreateHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 2146456648, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `phys_locations/{id}$`, api.DeleteHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 15614221, noPerlBypass},
