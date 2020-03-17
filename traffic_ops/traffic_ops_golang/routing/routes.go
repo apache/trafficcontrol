@@ -345,7 +345,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Type: CRUD
 		{api.Version{2, 0}, http.MethodGet, `types/?$`, api.ReadHandler(&types.TOType{}), auth.PrivLevelReadOnly, Authenticated, nil, 2226701823, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `types/{id}$`, api.ReadHandler(&types.TOType{}), auth.PrivLevelReadOnly, Authenticated, nil, 26037256, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `types/{id}$`, api.UpdateHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 28860115, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `types/?$`, api.CreateHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 2513308195, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `types/{id}$`, api.DeleteHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 23175773, noPerlBypass},
@@ -753,7 +752,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Type: CRUD
 		{api.Version{1, 1}, http.MethodGet, `types/trimmed/?(\.json)?$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 666, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `types/?(\.json)?$`, api.ReadHandler(&types.TOType{}), auth.PrivLevelReadOnly, Authenticated, nil, 2026701823, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `types/{id}$`, api.ReadHandler(&types.TOType{}), auth.PrivLevelReadOnly, Authenticated, nil, 86037256, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `types/{id}$`, api.DeprecatedReadHandler(&types.TOType{}, util.StrPtr("GET /types with the 'id' query parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 86037256, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `types/{id}$`, api.UpdateHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 68860115, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `types/?$`, api.CreateHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 1513308195, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `types/{id}$`, api.DeleteHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 93175773, noPerlBypass},
