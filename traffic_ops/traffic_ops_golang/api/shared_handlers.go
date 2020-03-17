@@ -368,6 +368,92 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 	}
 }
 
+// DeprecatedDeleteHandler creates a handler function from the pointer to a struct implementing the Deleter interface with a optional deprecation notice
+//   this generic handler encapsulates the logic for handling:
+//   *fetching the id from the path parameter
+//   *current user
+//   *change log entry
+//   *forming and writing the body over the wire
+func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alternative)
+			return
+		}
+		defer inf.Close()
+
+		interfacePtr := reflect.ValueOf(deleter)
+		if interfacePtr.Kind() != reflect.Ptr {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"), alternative)
+			return
+		}
+		objectType := reflect.Indirect(interfacePtr).Type()
+		obj := reflect.New(objectType).Interface().(Deleter)
+		obj.SetInfo(inf)
+
+		deleteKeyOptionExists, userErr, sysErr, errCode := hasDeleteKeyOption(obj, inf.Params)
+		if userErr != nil || sysErr != nil {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alternative)
+			return
+		}
+		if !deleteKeyOptionExists {
+			keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
+			keys := make(map[string]interface{})
+			for _, kf := range keyFields {
+				paramKey := inf.Params[kf.Field]
+				if paramKey == "" {
+					HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil, alternative)
+					return
+				}
+
+				paramValue, err := kf.Func(paramKey)
+				if err != nil {
+					HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil, alternative)
+					return
+				}
+				keys[kf.Field] = paramValue
+			}
+			obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
+		}
+
+		if t, ok := obj.(Tenantable); ok {
+			authorized, err := t.IsTenantAuthorized(inf.User)
+			if err != nil {
+				HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()), alternative)
+				return
+			}
+			if !authorized {
+				HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil, alternative)
+				return
+			}
+		}
+
+		if deleteKeyOptionExists {
+			obj := reflect.New(objectType).Interface().(OptionsDeleter)
+			obj.SetInfo(inf)
+			userErr, sysErr, errCode = obj.OptionsDelete()
+		} else {
+			userErr, sysErr, errCode = obj.Delete()
+		}
+
+		if userErr != nil || sysErr != nil {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alternative)
+			return
+		}
+
+		log.Debugf("changelog for delete on object")
+		if err := CreateChangeLog(ApiChange, Deleted, obj, inf.User, inf.Tx.Tx); err != nil {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()), alternative)
+			return
+		}
+		alerts := CreateDeprecationAlerts(alternative)
+		alerts.AddNewAlert(tc.SuccessLevel, obj.GetType()+" was deleted.")
+
+		WriteAlerts(w, r, http.StatusOK, alerts)
+	}
+}
+
 // CreateHandler creates a handler function from the pointer to a struct implementing the Creator interface
 //   this generic handler encapsulates the logic for handling:
 //   *current user

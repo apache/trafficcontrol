@@ -79,6 +79,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /parameters/profile/:name
   - /parameters/validate
   - /profile/:id/unassigned_parameters
+  - /regions/:id (GET, DELETE)
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
   - /riak/bucket/:bucket/key/:key/vault

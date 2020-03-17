@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-regions` with the query parameter ``id`` instead.
+
 Retrieves a specific :term:`Region`.
 
 
@@ -83,6 +86,12 @@ Response Structure
 			"id": 2,
 			"lastUpdated": "2018-12-05 17:50:58+00",
 			"name": "Montreal"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /regions with query parameter id instead",
+			"level": "warning"
 		}
 	]}
 
