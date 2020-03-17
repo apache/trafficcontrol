@@ -1365,17 +1365,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'phys_locations/{physical_location_id:d}', ('2.0',))
-	def get_physical_location_by_id(self, physical_location_id=None):
-		"""
-		Get Physical Location by id
-		:ref:`to-api-phys_locations-id`
-		:param physical_location_id: The id to retrieve
-		:type physical_location_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('put', 'phys_locations/{physical_location_id:d}', ('2.0',))
 	def update_physical_location(self, physical_location_id=None, query_params=None):
 		"""
