@@ -152,7 +152,7 @@ func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
 
 // GetServerByID GETs a Server by the Server ID.
 func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
+	route := fmt.Sprintf("%s?id=%d", API_SERVERS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
