@@ -20,22 +20,9 @@ package cfgfile
  */
 
 import (
-	"errors"
-
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileProfile12MFacts(cfg config.TCCfg, profileNameOrID string) (string, error) {
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	profileName, err := toreq.GetProfileNameFromProfileNameOrID(cfg, profileNameOrID)
-	if err != nil {
-		return "", errors.New("getting profile name from '" + profileNameOrID + "': " + err.Error())
-	}
-	return atscfg.Make12MFacts(profileName, toToolName, toURL), nil
+func GetConfigFileProfile12MFacts(toData *TOData) (string, string, error) {
+	return atscfg.Make12MFacts(toData.Server.Profile, toData.TOToolName, toData.TOURL), atscfg.ContentType12MFacts, nil
 }

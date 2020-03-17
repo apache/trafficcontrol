@@ -29,59 +29,13 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) (string, error) {
+func GetConfigFileServerRemapDotConfig(toData *TOData) (string, string, error) {
 	// TODO TOAPI add /servers?cdn=1 query param
-	servers, err := toreq.GetServers(cfg)
-	if err != nil {
-		return "", errors.New("getting servers: " + err.Error())
-	}
-
-	server := tc.Server{ID: atscfg.InvalidID}
-	if serverID, err := strconv.Atoi(serverNameOrID); err == nil {
-		for _, toServer := range servers {
-			if toServer.ID == serverID {
-				server = toServer
-				break
-			}
-		}
-	} else {
-		serverName := serverNameOrID
-		for _, toServer := range servers {
-			if toServer.HostName == serverName {
-				server = toServer
-				break
-			}
-		}
-	}
-	if server.ID == atscfg.InvalidID {
-		return "", errors.New("server '" + serverNameOrID + " not found in servers")
-	}
-
-	serverName := server.HostName
-
-	cdn, err := toreq.GetCDN(cfg, tc.CDNName(server.CDNName))
-	if err != nil {
-		return "", errors.New("getting cdn '" + string(server.CDNName) + "': " + err.Error())
-	}
-
-	serverCDNDomain := cdn.DomainName
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	serverProfileParameters, err := toreq.GetServerProfileParameters(cfg, server.Profile)
-	if err != nil {
-		return "", errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
-	}
 
 	atsVersionParam := ""
-	for _, param := range serverProfileParameters {
+	for _, param := range toData.ServerParams {
 		if param.ConfigFile != "package" || param.Name != "trafficserver" {
 			continue
 		}
@@ -94,35 +48,27 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 
 	atsMajorVer, err := atscfg.GetATSMajorVersionFromATSVersion(atsVersionParam)
 	if err != nil {
-		return "", errors.New("getting ATS major version from version parameter (profile '" + server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
+		return "", "", errors.New("getting ATS major version from version parameter (profile '" + toData.Server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
 	}
 
-	deliveryServices, err := toreq.GetCDNDeliveryServices(cfg, server.CDNID)
-	if err != nil {
-		return "", errors.New("getting delivery services: " + err.Error())
-	}
-
-	dsIDs := []int{}
-	for _, ds := range deliveryServices {
+	dsIDs := map[int]struct{}{}
+	for _, ds := range toData.DeliveryServices {
 		if ds.ID == nil {
 			// TODO log error?
 			continue
 		}
-		dsIDs = append(dsIDs, *ds.ID)
+		dsIDs[*ds.ID] = struct{}{}
 	}
 
-	isMid := strings.HasPrefix(server.Type, string(tc.CacheTypeMid))
+	isMid := strings.HasPrefix(toData.Server.Type, string(tc.CacheTypeMid))
 
-	serverIDs := ([]int)(nil)
+	serverIDs := map[int]struct{}{}
 	if !isMid {
-		// mids use all servers, so pass nil=all. Edges only use this current server
-		serverIDs = append(serverIDs, server.ID)
+		// mids use all servers, so pass empty=all. Edges only use this current server
+		serverIDs[toData.Server.ID] = struct{}{}
 	}
 
-	dsServers, err := toreq.GetDeliveryServiceServers(cfg, dsIDs, serverIDs)
-	if err != nil {
-		return "", errors.New("getting parent.config cachegroup parent server delivery service servers: " + err.Error())
-	}
+	dsServers := FilterDSS(toData.DeliveryServiceServers, dsIDs, serverIDs)
 
 	dssMap := map[int]map[int]struct{}{} // set of map[dsID][serverID]
 	for _, dss := range dsServers {
@@ -142,7 +88,7 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 	}
 
 	filteredDSes := []tc.DeliveryServiceNullable{}
-	for _, ds := range deliveryServices {
+	for _, ds := range toData.DeliveryServices {
 		if ds.ID == nil {
 			continue // TODO log?
 		}
@@ -158,13 +104,8 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		filteredDSes = append(filteredDSes, ds)
 	}
 
-	dsRegexes, err := toreq.GetDeliveryServiceRegexes(cfg)
-	if err != nil {
-		return "", errors.New("getting delivery service regexes: " + err.Error())
-	}
-
 	dsRegexMap := map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex{}
-	for _, dsRegex := range dsRegexes {
+	for _, dsRegex := range toData.DeliveryServiceRegexes {
 		sort.Sort(DeliveryServiceRegexesSortByTypeThenSetNum(dsRegex.Regexes))
 		dsRegexMap[tc.DeliveryServiceName(dsRegex.DSName)] = dsRegex.Regexes
 	}
@@ -195,7 +136,7 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 				RoutingName:              ds.RoutingName,
 				Pattern:                  util.StrPtr(dsRegex.Pattern),
 				RegexType:                util.StrPtr(dsRegex.Type),
-				Domain:                   util.StrPtr(serverCDNDomain), // note this is intentionally the CDN domain, not the DS or Server Domain. Must be the remap domain.
+				Domain:                   util.StrPtr(toData.CDN.DomainName), // note this is intentionally the CDN domain, not the DS or Server Domain. Must be the remap domain.
 				OriginShield:             ds.OriginShield,
 				ProfileID:                ds.ProfileID,
 				Protocol:                 ds.Protocol,
@@ -206,13 +147,8 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		}
 	}
 
-	serverProfileParams, err := toreq.GetProfileParameters(cfg, server.Profile)
-	if err != nil {
-		return "", errors.New("getting profile parameters from server (profile '" + server.Profile + ": " + err.Error())
-	}
-
 	serverPackageParamData := map[string]string{}
-	for _, param := range serverProfileParams {
+	for _, param := range toData.ServerParams {
 		if param.ConfigFile != "package" { // TODO put in const
 			continue
 		}
@@ -228,34 +164,29 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 		}
 		paramValue := param.Value
 		if paramValue == "STRING __HOSTNAME__" {
-			paramValue = server.HostName + "." + server.DomainName // TODO strings.Replace to replace all anywhere, instead of just an exact match?
+			paramValue = toData.Server.HostName + "." + toData.Server.DomainName // TODO strings.Replace to replace all anywhere, instead of just an exact match?
 		}
 		serverPackageParamData[paramName] = paramValue
 	}
 
 	cacheURLParams := map[string]string{}
-	for _, param := range serverProfileParams {
+	for _, param := range toData.ServerParams {
 		if param.ConfigFile != atscfg.CacheURLParameterConfigFile {
 			continue
 		}
 		if existingVal, ok := cacheURLParams[param.Name]; ok {
-			log.Warnln("generating remap.config: server profile '" + server.Profile + "' cacheurl.config has multiple parameters for '" + param.Name + "' - using '" + existingVal + "' and ignoring the rest!")
+			log.Warnln("generating remap.config: server profile '" + toData.Server.Profile + "' cacheurl.config has multiple parameters for '" + param.Name + "' - using '" + existingVal + "' and ignoring the rest!")
 			continue
 		}
 		cacheURLParams[param.Name] = param.Value
 	}
 
-	cacheKeyParams, err := toreq.GetConfigFileParameters(cfg, atscfg.CacheKeyParameterConfigFile)
+	cacheKeyParamsWithProfiles, err := TCParamsToParamsWithProfiles(toData.CacheKeyParams)
 	if err != nil {
-		return "", errors.New("getting cache key parameters: " + err.Error())
+		return "", "", errors.New("decoding cache key parameter profiles: " + err.Error())
 	}
 
-	cacheKeyParamsWithProfiles, err := toreq.TCParamsToParamsWithProfiles(cacheKeyParams)
-	if err != nil {
-		return "", errors.New("decoding cache key parameter profiles: " + err.Error())
-	}
-
-	cacheKeyParamsWithProfilesMap := toreq.ParameterWithProfilesToMap(cacheKeyParamsWithProfiles)
+	cacheKeyParamsWithProfilesMap := ParameterWithProfilesToMap(cacheKeyParamsWithProfiles)
 
 	dsProfileNamesToIDs := map[string]int{}
 	for _, ds := range filteredDSes {
@@ -285,22 +216,17 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 
 	// TODO put parentcg logic in func, to remove duplication with parent.config
 
-	cacheGroups, err := toreq.GetCacheGroups(cfg)
-	if err != nil {
-		return "", errors.New("getting cachegroups: " + err.Error())
-	}
-
 	cgMap := map[string]tc.CacheGroupNullable{}
-	for _, cg := range cacheGroups {
+	for _, cg := range toData.CacheGroups {
 		if cg.Name == nil {
-			return "", errors.New("got cachegroup with nil name!'")
+			return "", "", errors.New("got cachegroup with nil name!'")
 		}
 		cgMap[*cg.Name] = cg
 	}
 
-	serverCG, ok := cgMap[server.Cachegroup]
+	serverCG, ok := cgMap[toData.Server.Cachegroup]
 	if !ok {
-		return "", errors.New("server '" + serverNameOrID + "' cachegroup '" + server.Cachegroup + "' not found in CacheGroups")
+		return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' not found in CacheGroups")
 	}
 
 	parentCGID := -1
@@ -308,15 +234,15 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
 		parentCG, ok := cgMap[*serverCG.ParentName]
 		if !ok {
-			return "", errors.New("server '" + serverNameOrID + "' cachegroup '" + server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+			return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
 		}
 		if parentCG.ID == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		parentCGID = *parentCG.ID
 
 		if parentCG.Type == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 		parentCGType = *parentCG.Type
 	}
@@ -326,41 +252,39 @@ func GetConfigFileServerRemapDotConfig(cfg config.TCCfg, serverNameOrID string) 
 	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
 		parentCG, ok := cgMap[*serverCG.SecondaryParentName]
 		if !ok {
-			return "", errors.New("server '" + serverNameOrID + "' cachegroup '" + server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+			return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
 		}
 
 		if parentCG.ID == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		secondaryParentCGID = *parentCG.ID
 		if parentCG.Type == nil {
-			return "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 
 		secondaryParentCGType = *parentCG.Type
 	}
 
 	serverInfo := &atscfg.ServerInfo{
-		CacheGroupID:                  server.CachegroupID,
-		CDN:                           tc.CDNName(server.CDNName),
-		CDNID:                         server.CDNID,
-		DomainName:                    serverCDNDomain, // note this is intentionally the CDN domain, not the server domain. It's what's remapped to.
-		HostName:                      server.HostName,
-		ID:                            server.ID,
-		IP:                            server.IPAddress,
+		CacheGroupID:                  toData.Server.CachegroupID,
+		CDN:                           tc.CDNName(toData.Server.CDNName),
+		CDNID:                         toData.Server.CDNID,
+		DomainName:                    toData.CDN.DomainName, // note this is intentionally the CDN domain, not the server domain. It's what's remapped to.
+		HostName:                      toData.Server.HostName,
+		ID:                            toData.Server.ID,
+		IP:                            toData.Server.IPAddress,
 		ParentCacheGroupID:            parentCGID,
 		ParentCacheGroupType:          parentCGType,
-		ProfileID:                     atscfg.ProfileID(server.ProfileID),
-		ProfileName:                   server.Profile,
-		Port:                          server.TCPPort,
-		HTTPSPort:                     server.HTTPSPort,
+		ProfileID:                     atscfg.ProfileID(toData.Server.ProfileID),
+		ProfileName:                   toData.Server.Profile,
+		Port:                          toData.Server.TCPPort,
+		HTTPSPort:                     toData.Server.HTTPSPort,
 		SecondaryParentCacheGroupID:   secondaryParentCGID,
 		SecondaryParentCacheGroupType: secondaryParentCGType,
-		Type:                          server.Type,
+		Type:                          toData.Server.Type,
 	}
-
-	txt := atscfg.MakeRemapDotConfig(tc.CacheName(serverName), toToolName, toURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData)
-	return txt, nil
+	return atscfg.MakeRemapDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData), atscfg.ContentTypeRemapDotConfig, nil
 }
 
 type DeliveryServiceRegexesSortByTypeThenSetNum []tc.DeliveryServiceRegex

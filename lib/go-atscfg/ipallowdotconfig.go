@@ -30,6 +30,7 @@ import (
 )
 
 const IPAllowConfigFileName = `ip_allow.config`
+const ContentTypeIPAllowDotConfig = ContentTypeTextASCII
 
 type IPAllowData struct {
 	Src    string

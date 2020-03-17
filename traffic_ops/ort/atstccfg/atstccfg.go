@@ -49,13 +49,13 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/cfgfile"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/getdata"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
@@ -72,67 +72,46 @@ func main() {
 		os.Exit(0)
 	}
 
-	if cfg.PrintGeneratedFiles {
-		fmt.Println(strings.Join(GetGeneratedFilesList(), "\n"))
-		os.Exit(config.ExitCodeSuccess)
-	}
-
 	plugins := plugin.Get(cfg)
 	plugins.OnStartup(plugin.StartupData{Cfg: cfg})
 
-	log.Infoln("URL: '" + cfg.TOURL.String() + "' User: '" + cfg.TOUser + "' Pass len: '" + strconv.Itoa(len(cfg.TOPass)) + "'")
-	log.Infoln("TempDir: '" + cfg.TempDir + "'")
-
-	toFQDN := cfg.TOURL.Scheme + "://" + cfg.TOURL.Host
-	log.Infoln("TO FQDN: '" + toFQDN + "'")
-	log.Infoln("TO URL: '" + cfg.TOURL.String() + "'")
-
-	toClient, err := toreq.GetClient(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TempDir, cfg.CacheFileMaxAge, cfg.TOTimeout, cfg.TOInsecure)
+	tccfg, err := toreq.GetTCCfg(cfg)
 	if err != nil {
-		log.Errorln("Logging in to Traffic Ops: " + err.Error())
+		log.Errorln(err)
 		os.Exit(config.ExitCodeErrGeneric)
 	}
-
-	tccfg := config.TCCfg{Cfg: cfg, TOClient: &toClient}
 
 	onReqData := plugin.OnRequestData{Cfg: tccfg}
 	if handled := plugins.OnRequest(onReqData); handled {
 		return
 	}
 
-	cfgFile, code, err := GetConfigFile(tccfg)
-	log.Infof("GetConfigFile returned %v %v\n", code, err)
+	if tccfg.GetData != "" {
+		if err := getdata.WriteData(tccfg); err != nil {
+			log.Errorln("writing data: " + err.Error())
+			os.Exit(config.ExitCodeErrGeneric)
+		}
+		os.Exit(config.ExitCodeSuccess)
+	}
+
+	if tccfg.SetRevalStatus != "" || tccfg.SetQueueStatus != "" {
+		if err := getdata.SetQueueRevalStatuses(tccfg); err != nil {
+			log.Errorln("writing queue and reval statuses: " + err.Error())
+			os.Exit(config.ExitCodeErrGeneric)
+		}
+		os.Exit(config.ExitCodeSuccess)
+	}
+
+	configs, err := cfgfile.GetAllConfigs(tccfg)
 	if err != nil {
-		log.Errorln("Getting config file '" + cfg.TOURL.String() + "': " + err.Error())
-		if code == 0 {
-			code = config.ExitCodeErrGeneric
-		}
-		log.Infof("GetConfigFile exiting with code %v\n", code)
-		os.Exit(code)
+		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
+		os.Exit(config.ExitCodeErrGeneric)
 	}
-	fmt.Println(cfgFile)
+
+	if err := cfgfile.WriteConfigs(configs, os.Stdout); err != nil {
+		log.Errorln("Writing configs for '" + cfg.CacheHostName + "': " + err.Error())
+		os.Exit(config.ExitCodeErrGeneric)
+	}
+
 	os.Exit(config.ExitCodeSuccess)
-}
-
-func GetGeneratedFilesList() []string {
-	names := []string{}
-	for scope, fileFuncs := range ConfigFileFuncs() {
-		for cfgFile, _ := range fileFuncs {
-			names = append(names, scope+"/"+cfgFile)
-		}
-	}
-
-	names = append(names, "profiles/url_sig_*.config")     // url_sig configs are generated, but not in the funcs because they're not a literal match
-	names = append(names, "profiles/uri_signing_*.config") // uri_signing configs are generated, but not in the funcs because they're not a literal match
-	names = append(names, "profiles/*")                    // unknown profiles configs are generated, a.k.a. "take-and-bake"
-
-	return names
-}
-
-func HTTPCodeToExitCode(httpCode int) int {
-	switch httpCode {
-	case http.StatusNotFound:
-		return config.ExitCodeNotFound
-	}
-	return config.ExitCodeErrGeneric
 }

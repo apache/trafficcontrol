@@ -23,87 +23,34 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"net/http/cookiejar"
 	"net/http/httptrace"
-	"net/url"
 	"strconv"
 	"time"
 
-	"golang.org/x/net/publicsuffix"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-// GetClient returns a TO Client, using a cached cookie if it exists, or logging in otherwise
-func GetClient(toURL string, toUser string, toPass string, tempDir string, cacheFileMaxAge time.Duration, toTimeout time.Duration, toInsecure bool) (*toclient.Session, error) {
-	cookies, err := GetCookiesFromFile(tempDir, cacheFileMaxAge)
+// GetTCCfg takes the config.Cfg and logs into Traffic Ops, returning the TCCfg which contains the logged-in client.
+func GetTCCfg(cfg config.Cfg) (config.TCCfg, error) {
+	log.Infoln("URL: '" + cfg.TOURL.String() + "' User: '" + cfg.TOUser + "' Pass len: '" + strconv.Itoa(len(cfg.TOPass)) + "'")
+
+	toFQDN := cfg.TOURL.Scheme + "://" + cfg.TOURL.Host
+	log.Infoln("TO FQDN: '" + toFQDN + "'")
+	log.Infoln("TO URL: '" + cfg.TOURL.String() + "'")
+
+	toClient, toIP, err := toclient.LoginWithAgent(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, config.UserAgent, false, cfg.TOTimeout)
 	if err != nil {
-		log.Infoln("failed to get cookies from cache file (trying real TO): " + err.Error())
-		cookies = ""
+		return config.TCCfg{}, errors.New("Logging in to Traffic Ops '" + MaybeIPStr(toIP) + "': " + err.Error())
 	}
 
-	if cookies == "" {
-		err := error(nil)
-		cookies, err = GetCookiesFromTO(toURL, toUser, toPass, tempDir, toTimeout, toInsecure)
-		if err != nil {
-			return nil, errors.New("getting cookies from Traffic Ops: " + err.Error())
-		}
-		log.Infoln("using cookies from TO")
-	} else {
-		log.Infoln("using cookies from cache file")
-	}
-
-	useCache := false
-	toClient := toclient.NewNoAuthSession(toURL, toInsecure, config.UserAgent, useCache, toTimeout)
-	toClient.UserName = toUser
-	toClient.Password = toPass
-
-	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
-	if err != nil {
-		return nil, errors.New("making cookie jar: " + err.Error())
-	}
-	toClient.Client.Jar = jar
-
-	toURLParsed, err := url.Parse(toURL)
-	if err != nil {
-		return nil, errors.New("parsing Traffic Ops URL '" + toURL + "': " + err.Error())
-	}
-
-	toClient.Client.Jar.SetCookies(toURLParsed, StringToCookies(cookies))
-	return toClient, nil
-}
-
-// GetCookies gets the cookies from logging in to Traffic Ops.
-// If this succeeds, it also writes the cookies to TempSubdir/TempCookieFileName.
-func GetCookiesFromTO(toURL string, toUser string, toPass string, tempDir string, toTimeout time.Duration, toInsecure bool) (string, error) {
-	toURLParsed, err := url.Parse(toURL)
-	if err != nil {
-		return "", errors.New("parsing Traffic Ops URL '" + toURL + "': " + err.Error())
-	}
-
-	toUseCache := false
-	toClient, toIP, err := toclient.LoginWithAgent(toURL, toUser, toPass, toInsecure, config.UserAgent, toUseCache, toTimeout)
-	if err != nil {
-		toIPStr := ""
-		if toIP != nil {
-			toIPStr = toIP.String()
-		}
-		return "", errors.New("logging in to Traffic Ops IP '" + toIPStr + "': " + err.Error())
-	}
-
-	cookiesStr := CookiesToString(toClient.Client.Jar.Cookies(toURLParsed))
-	WriteCookiesToFile(cookiesStr, tempDir)
-
-	return cookiesStr, nil
+	return config.TCCfg{Cfg: cfg, TOClient: &toClient}, nil
 }
 
 // TrafficOpsRequest makes a request to Traffic Ops for the given method, url, and body.
@@ -255,48 +202,9 @@ func rawTrafficOpsRequest(toClient *toclient.Session, method string, url string,
 }
 
 // MaybeIPStr returns the Traffic Ops IP string if it isn't nil, or the empty string if it is.
-func MaybeIPStr(reqInf toclient.ReqInf) string {
-	if reqInf.RemoteAddr != nil {
-		return reqInf.RemoteAddr.String()
+func MaybeIPStr(addr net.Addr) string {
+	if addr != nil {
+		return addr.String()
 	}
 	return ""
-}
-
-// TCParamsToParamsWithProfiles unmarshals the Profiles that the tc struct doesn't.
-func TCParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]ParameterWithProfiles, error) {
-	params := make([]ParameterWithProfiles, 0, len(tcParams))
-	for _, tcParam := range tcParams {
-		param := ParameterWithProfiles{Parameter: tcParam}
-
-		profiles := []string{}
-		if err := json.Unmarshal(tcParam.Profiles, &profiles); err != nil {
-			return nil, errors.New("unmarshalling JSON from parameter '" + strconv.Itoa(param.ID) + "': " + err.Error())
-		}
-		param.ProfileNames = profiles
-		param.Profiles = nil
-		params = append(params, param)
-	}
-	return params, nil
-}
-
-type ParameterWithProfiles struct {
-	tc.Parameter
-	ProfileNames []string
-}
-
-type ParameterWithProfilesMap struct {
-	tc.Parameter
-	ProfileNames map[string]struct{}
-}
-
-func ParameterWithProfilesToMap(tcParams []ParameterWithProfiles) []ParameterWithProfilesMap {
-	params := []ParameterWithProfilesMap{}
-	for _, tcParam := range tcParams {
-		param := ParameterWithProfilesMap{Parameter: tcParam.Parameter, ProfileNames: map[string]struct{}{}}
-		for _, profile := range tcParam.ProfileNames {
-			param.ProfileNames[profile] = struct{}{}
-		}
-		params = append(params, param)
-	}
-	return params
 }

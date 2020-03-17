@@ -25,36 +25,13 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileCDNHeaderRewrite(cfg config.TCCfg, cdnNameOrID string, fileName string) (string, error) {
-
-	cdnName, err := toreq.GetCDNNameFromCDNNameOrID(cfg, cdnNameOrID)
-	if err != nil {
-		return "", errors.New("getting CDN name from '" + cdnNameOrID + "': " + err.Error())
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	cdn, err := toreq.GetCDN(cfg, cdnName)
-	if err != nil {
-		return "", errors.New("getting cdn '" + string(cdnName) + "': " + err.Error())
-	}
-
+func GetConfigFileCDNHeaderRewrite(toData *TOData, fileName string) (string, string, error) {
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, atscfg.HeaderRewritePrefix), atscfg.ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
-	// TODO determine if it's faster overall for ORT to get all DSes (which we already have for other configs), or to get the single DS we need
-	dses, err := toreq.GetCDNDeliveryServices(cfg, cdn.ID)
-	if err != nil {
-		return "", errors.New("getting delivery services: " + err.Error())
-	}
 	tcDS := tc.DeliveryServiceNullable{}
-	for _, ds := range dses {
+	for _, ds := range toData.DeliveryServices {
 		if ds.XMLID == nil || *ds.XMLID != dsName {
 			continue
 		}
@@ -62,22 +39,19 @@ func GetConfigFileCDNHeaderRewrite(cfg config.TCCfg, cdnNameOrID string, fileNam
 		break
 	}
 	if tcDS.ID == nil {
-		return "", errors.New("ds '" + dsName + "' not found")
+		return "", "", errors.New("ds '" + dsName + "' not found")
 	}
 
 	if tcDS.CDNName == nil {
-		return "", errors.New("ds '" + dsName + "' missing cdn")
+		return "", "", errors.New("ds '" + dsName + "' missing cdn")
 	}
 
 	cfgDS, err := atscfg.HeaderRewriteDSFromDS(&tcDS)
 	if err != nil {
-		return "", errors.New("converting ds to config ds: " + err.Error())
+		return "", "", errors.New("converting ds to config ds: " + err.Error())
 	}
 
-	dsServers, err := toreq.GetDeliveryServiceServers(cfg, []int{cfgDS.ID}, nil)
-	if err != nil {
-		return "", errors.New("getting delivery service servers: " + err.Error())
-	}
+	dsServers := FilterDSS(toData.DeliveryServiceServers, map[int]struct{}{cfgDS.ID: {}}, nil)
 
 	dsServerIDs := map[int]struct{}{}
 	for _, dss := range dsServers {
@@ -90,13 +64,8 @@ func GetConfigFileCDNHeaderRewrite(cfg config.TCCfg, cdnNameOrID string, fileNam
 		dsServerIDs[*dss.Server] = struct{}{}
 	}
 
-	servers, err := toreq.GetServers(cfg)
-	if err != nil {
-		return "", errors.New("getting servers: " + err.Error())
-	}
-
 	assignedEdges := []atscfg.HeaderRewriteServer{}
-	for _, server := range servers {
+	for _, server := range toData.Servers {
 		if server.CDNName != *tcDS.CDNName {
 			continue
 		}
@@ -110,5 +79,5 @@ func GetConfigFileCDNHeaderRewrite(cfg config.TCCfg, cdnNameOrID string, fileNam
 		assignedEdges = append(assignedEdges, cfgServer)
 	}
 
-	return atscfg.MakeHeaderRewriteDotConfig(cdnName, toToolName, toURL, cfgDS, assignedEdges), nil
+	return atscfg.MakeHeaderRewriteDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedEdges), atscfg.ContentTypeHeaderRewriteDotConfig, nil
 }

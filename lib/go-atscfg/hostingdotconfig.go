@@ -27,8 +27,8 @@ import (
 )
 
 const HostingConfigFileName = `hosting.config`
-
 const HostingConfigParamConfigFile = `storage.config`
+const ContentTypeHostingDotConfig = ContentTypeTextASCII
 
 const ParamDrivePrefix = "Drive_Prefix"
 const ParamRAMDrivePrefix = "RAM_Drive_Prefix"
