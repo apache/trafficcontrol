@@ -1421,15 +1421,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'profiles/trimmed', ('2.0',))
-	def get_trimmed_profiles(self):
-		"""
-		Get Profiles with names only
-		:ref:`to-api-profiles-trimmed`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'profiles/{profile_id:d}', ('2.0',))
 	def get_profile_by_id(self, profile_id=None):
 		"""
