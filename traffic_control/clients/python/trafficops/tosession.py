@@ -1949,17 +1949,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'types/{type_id:d}', ('2.0',))
-	def get_type_by_id(self, type_id=None):
-		"""
-		Get Data Type with the given type id
-		:ref:`to-api-types-id`
-		:param type_id: The ID of the type to retrieve
-		:type type_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	#
 	# Users
 	#
