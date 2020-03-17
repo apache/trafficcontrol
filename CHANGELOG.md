@@ -74,6 +74,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /jobs/:id
   - /keys/ping
   - /logs/:days/days
+  - /parameters/:id (GET)
   - /parameters/:id/profiles
   - /parameters/:id/unassigned_profiles
   - /parameters/profile/:name

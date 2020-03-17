@@ -1280,21 +1280,10 @@ class TOSession(RestApiSession):
 	# Parameter
 	#
 	@api_request('get', 'parameters', ('2.0',))
-	def get_parameters(self):
+	def get_parameters(self, query_params=None):
 		"""
 		Get all Parameters.
 		:ref:`to-api-parameters`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'parameters/{parameter_id:d}', ('2.0',))
-	def get_parameter_by_id(self, parameter_id=None):
-		"""
-		Get a Parameter by Id.
-		:ref:`to-api-parameters-id`
-		:param parameter_id: The parameter Id
-		:type parameter_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
