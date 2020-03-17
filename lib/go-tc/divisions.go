@@ -24,6 +24,7 @@ package tc
 type DivisionsResponse struct {
 	// in: body
 	Response []Division `json:"response"`
+	Alerts
 }
 
 // DivisionResponse is a single Division response for Update and Create to

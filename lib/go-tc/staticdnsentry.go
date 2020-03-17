@@ -22,6 +22,7 @@ package tc
 // StaticDNSEntriesResponse is a list of StaticDNSEntry as a response.
 type StaticDNSEntriesResponse struct {
 	Response []StaticDNSEntry `json:"response"`
+	Alerts
 }
 
 // StaticDNSEntry holds information about a static DNS entry.

@@ -312,6 +312,7 @@ type DeleteUserResponse struct {
 // or update the current user.
 type UserCurrentResponse struct {
 	Response UserCurrent `json:"response"`
+	Alerts
 }
 
 // UserDeliveryServiceDeleteResponse can hold a Traffic Ops API response to
