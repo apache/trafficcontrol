@@ -96,6 +96,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /types/{{ID}} (GET)
   - /user/current/jobs
   - /servers/checks
+  - /user/{{user ID}}/deliveryservices/available
 
 ## [4.0.0] - 2019-12-16
 ### Added
