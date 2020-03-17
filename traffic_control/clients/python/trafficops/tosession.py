@@ -1367,15 +1367,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'phys_locations/trimmed', ('2.0',))
-	def get_trimmed_physical_locations(self):
-		"""
-		Get Physical Locations with name only
-		:ref:`to-api-phys_locations-trimmed`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'phys_locations/{physical_location_id:d}', ('2.0',))
 	def get_physical_location_by_id(self, physical_location_id=None):
 		"""
