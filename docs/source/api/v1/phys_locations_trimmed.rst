@@ -59,6 +59,7 @@ Response Structure
 		{
 			"name": "Apachecon North America 2018"
 		}
+	],
 	"alerts": [
 		{
 			"text": "This endpoint is deprecated, please use GET /phys_locations instead",
