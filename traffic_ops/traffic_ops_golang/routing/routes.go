@@ -266,7 +266,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Profile: CRUD
 		{api.Version{2, 0}, http.MethodGet, `profiles/?$`, api.ReadHandler(&profile.TOProfile{}), auth.PrivLevelReadOnly, Authenticated, nil, 268758589, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `profiles/trimmed/?$`, profile.Trimmed, auth.PrivLevelReadOnly, Authenticated, nil, 244942941, noPerlBypass},
 
 		{api.Version{2, 0}, http.MethodGet, `profiles/{id}$`, api.ReadHandler(&profile.TOProfile{}), auth.PrivLevelReadOnly, Authenticated, nil, 2570260672, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `profiles/{id}$`, api.UpdateHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 28439172, noPerlBypass},
