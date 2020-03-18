@@ -187,10 +187,11 @@ Check constraints:
 Foreign-key constraints:
     "ip_address_interface_fkey" FOREIGN KEY (interface, server) REFERENCES interface(name, server)
     "ip_address_server_fkey" FOREIGN KEY (server) REFERENCES server(id)
-
 ```
 
-This should be sufficient to capture the model changes.
+This should be sufficient to capture the model changes. In addition to creating
+these tables, a migration will need to be written to convert currently stored
+server information to utilize these new tables.
 
 #### API
 The affected endpoints will be:
@@ -542,19 +543,6 @@ How will the CRConfig be changed?
 How will changes in Traffic Ops data be reflected in the CRConfig?
 Will Traffic Router remain backwards-compatible with old CRConfigs?
 Will old Traffic Routers remain forwards-compatible with new CRConfigs?
--->
-
-### Traffic Stats Impact
-<!--
-*How* will this impact Traffic Stats?
--->
-
-### Traffic Vault Impact
-<!--
-*How* will this impact Traffic Vault?
-
-Will there be any new data stored in or removed from Riak?
-Will there be any changes to the Riak requests and responses?
 -->
 
 ### Documentation Impact
