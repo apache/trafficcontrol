@@ -101,7 +101,7 @@ func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.Generic
 
 func (tp *TOType) Update() (error, error, int) {
 	if !tp.AllowMutation() {
-		return nil, errors.New("can not update type"), http.StatusBadRequest
+		return errors.New("can not update type"), nil, http.StatusBadRequest
 	}
 	return api.GenericUpdate(tp)
 }
@@ -117,14 +117,14 @@ func (tp *TOType) Delete() (error, error, int) {
 		return errors.New("no type with that key found"), nil, http.StatusNotFound
 	}
 	if !tp.AllowMutation() {
-		return nil, errors.New(fmt.Sprintf("can not delete type")), http.StatusBadRequest
+		return errors.New(fmt.Sprintf("can not delete type")), nil, http.StatusBadRequest
 	}
 	return api.GenericDelete(tp)
 }
 
 func (tp *TOType) Create() (error, error, int) {
 	if !tp.AllowMutation() {
-		return nil, errors.New("can not create type"), http.StatusBadRequest
+		return errors.New("can not create type"), nil, http.StatusBadRequest
 	}
 	return api.GenericCreate(tp)
 }
