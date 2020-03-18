@@ -123,33 +123,61 @@ func SnapshotOldGetHandler(w http.ResponseWriter, r *http.Request) {
 
 // SnapshotHandler creates the CRConfig JSON and writes it to the snapshot table in the database.
 func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	snapshotHandler(w, r, false)
+}
+
+// SnapshotHandlerDeprecated creates the CRConfig JSON and writes it to the snapshot table in the database for deprecated routes.
+func SnapshotHandlerDeprecated(w http.ResponseWriter, r *http.Request) {
+	snapshotHandler(w, r, true)
+}
+
+// SnapshotHandler creates the CRConfig JSON and writes it to the snapshot table in the database.
+func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
+	alt := "PUT /snapshots with either the query parameter cdn or cdnID"
+	writeErr := func(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, deprecated bool) {
+		if deprecated {
+			api.HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, &alt)
+		} else {
+			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		}
+	}
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id", "cdnID"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		writeErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated)
 		return
 	}
 	defer inf.Close()
 
 	db, err := api.GetDB(r.Context())
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("SnapshotHandler getting db from context: "+err.Error()))
+		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("SnapshotHandler getting db from context: "+err.Error()), deprecated)
 		return
 	}
 
 	cdn, ok := inf.Params["cdn"]
 	if !ok {
-		id, ok := inf.IntParams["id"]
-		if !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("params missing CDN"), nil)
-			return
+		var id int
+		if deprecated {
+			id, ok = inf.IntParams["id"]
+			if !ok {
+				writeErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("params missing CDN"), nil, deprecated)
+				return
+			}
+		} else {
+			id, ok = inf.IntParams["cdnID"]
+			if !ok {
+				writeErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("CDN must be identified via the query parameter cdn or cdnID"), nil, deprecated)
+				return
+			}
 		}
+
 		name, ok, err := getCDNNameFromID(id, inf.Tx.Tx)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Error getting CDN name from ID: "+err.Error()))
+			writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Error getting CDN name from ID: "+err.Error()), deprecated)
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("No CDN found with that ID"), nil)
+			writeErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("No CDN found with that ID"), nil, deprecated)
 			return
 		}
 		cdn = name
@@ -157,27 +185,31 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 
 	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, deprecated)
 		return
 	}
 
 	monitoringJSON, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, cdn)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()))
+		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()), deprecated)
 		return
 	}
 
 	if err := Snapshot(inf.Tx.Tx, crConfig, monitoringJSON); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snaphsotting CRConfig and Monitoring: "+err.Error()))
+		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snaphsotting CRConfig and Monitoring: "+err.Error()), deprecated)
 		return
 	}
 
 	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, tc.CDNName(cdn)); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snapshotting CRConfig and Monitoring: starting old certificate deletion job: "+err.Error()))
+		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snapshotting CRConfig and Monitoring: starting old certificate deletion job: "+err.Error()), deprecated)
 		return
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdn+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: Snapshot of CRConfig and Monitor", inf.User, inf.Tx.Tx)
+	if deprecated {
+		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(&alt), "SUCCESS")
+		return
+	}
 	api.WriteResp(w, r, "SUCCESS")
 }
 

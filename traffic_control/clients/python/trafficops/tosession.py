@@ -2055,13 +2055,13 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'snapshot/{cdn_name}', ('2.0',))
-	def snapshot_crconfig(self, cdn_name=None):
+	@api_request('put', 'snapshot', ('2.0',))
+	def snapshot_crconfig(self, query_params=None):
 		"""
-		Snapshot CRConfig by CDN Name.
-		:ref:`to-api-snapshot-name`
-		:param cdn_name: The CDN name
-		:type cdn_name: str
+		Snapshot CRConfig by CDN Name or ID.
+		:ref:`to-api-snapshot`
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

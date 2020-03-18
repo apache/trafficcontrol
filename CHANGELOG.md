@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/vault/ping `GET`
   - /api/2.0/vault/bucket/:bucket/key/:key/values `GET`
   - /api/2.0/servercheck `GET`
+  - /api/2.0/snapshot `PUT`
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
@@ -58,6 +59,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cdns/:name/federations/:id (GET)
   - /cdns/configs
   - /cdns/:id (GET)
+  - /cdns/:id/snapshot
   - /cdns/name/:name (GET)
   - /cdns/usage/overview
   - /deliveryservice_matches
@@ -89,6 +91,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /riak/stats
   - /servercheck/aadata
   - /servers/totals
+  - /snapshot/:cdn
   - /stats_summary/create
   - /to_extensions/:id/delete
   - /traffic_monitor/stats
