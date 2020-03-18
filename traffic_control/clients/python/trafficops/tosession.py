@@ -1640,17 +1640,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers/{server_id:d}', ('2.0',))
-	def get_server_by_id(self, server_id=None):
-		"""
-		Get Server by Server ID
-		:ref:`to-api-servers-id`
-		:param server_id: The server id to retrieve
-		:type server_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'servers/{server_id:d}/deliveryservices', ('2.0',))
 	def get_server_delivery_services(self, server_id=None):
 		"""
