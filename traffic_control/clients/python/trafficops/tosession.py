@@ -1673,15 +1673,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers/status', ('2.0',))
-	def get_server_status_count(self):
-		"""
-		Retrieves a count of CDN servers by status
-		:ref:`to-api-servers-status`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'servers/hostname/{name}/details', ('2.0',))
 	def get_server_details(self, name=None):
 		"""

@@ -28,19 +28,20 @@ import (
 )
 
 func GetServersStatusCountsHandler(w http.ResponseWriter, r *http.Request) {
+	alt := "GET /servers"
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, &alt)
 		return
 	}
 	defer inf.Close()
 
 	statusCounts, err := getServersStatusCounts(inf.Tx.Tx, inf.Params["type"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting servers status counts: "+err.Error()))
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting servers status counts: "+err.Error()), &alt)
 		return
 	}
-	api.WriteResp(w, r, statusCounts)
+	api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(&alt), statusCounts)
 }
 
 func getServersStatusCounts(tx *sql.Tx, typeName string) (map[string]int, error) {
