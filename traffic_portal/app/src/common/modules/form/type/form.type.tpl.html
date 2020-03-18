@@ -37,7 +37,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(typeForm[prop.name]), 'has-feedback': hasError(typeForm[prop.name])}" ng-repeat="prop in props">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="type[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" autofocus>
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-disabled="prop.disabled" ng-model="type[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" autofocus ng-value="type[prop.name] != null ? type[prop.name] : prop.defaultValue" />
                     <small class="input-error" ng-show="hasPropertyError(typeForm[prop.name], 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(typeForm[prop.name], 'maxlength')">Too Long</small>
                     <span ng-show="hasError(typeForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
