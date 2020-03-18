@@ -18,6 +18,8 @@
 ************************************************
 ``deliveryservice_server/{{DSID}}/{{serverID}}``
 ************************************************
+.. deprecated:: ATCv4
+	Use the ``DELETE`` method of :ref:`to-api-deliveryserviceserver-dsid-serverid` instead.
 
 ``DELETE``
 ==========
@@ -62,6 +64,10 @@ Response Structure
 		{
 			"text": "Server unlinked from delivery service.",
 			"level": "success"
+		},
+		{
+			"text": "This endpoint is deprecated, please use DELETE deliveryserviceserver/:dsid/:serverid instead",
+			"level": "warning"
 		}
 	]}
 

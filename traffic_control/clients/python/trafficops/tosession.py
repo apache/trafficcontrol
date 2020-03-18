@@ -767,11 +767,11 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'deliveryservice_server/{delivery_service_id:d}/{server_id:d}',('2.0',))
+	@api_request('delete', 'deliveryserviceserver/{delivery_service_id:d}/{server_id:d}',('2.0',))
 	def delete_deliveryservice_servers_by_id(self, delivery_service_id=None, server_id=None):
 		"""
 		Removes a server (cache) from a delivery service.
-		:ref:`to-api-deliveryservice_server-dsid-serverid`
+		:ref:`to-api-deliveryserviceserver-dsid-serverid`
 		:param delivery_service_id: The delivery service id
 		:type delivery_service_id: int
 		:param server_id: The server id to remove from delivery service
