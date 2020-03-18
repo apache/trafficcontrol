@@ -514,13 +514,17 @@ The structures output by various clients will change, but no client code changes
 should be necessary.
 
 ### Traffic Portal Impact
-<!--
-*How* will this impact Traffic Portal?
-What new UI changes will be required?
-Will entirely new pages/views be necessary?
-Will a new field be added to an existing form?
-How will the user interact with the new UI changes?
--->
+The server edit/display/creation page will need to be updated to remove all of
+the properties of servers which no longer exist because they've been moved into
+the "interfaces" section, and a new set of interface-related input fields with
+controls for dynamically adding to them should be added.
+
+A sample screenshot is shown below.
+
+![](img/multi-interface-ui-sample.png "Mockup of proposed interface controls")
+
+If desired, the markup used for that sample may be found in
+[Appendix A](#appendix-a)
 
 ### ORT Impact
 <!--
@@ -635,6 +639,45 @@ How were the dependencies assessed and chosen?
 How will the new dependencies be managed?
 Are the dependencies required at build-time, run-time, or both?
 -->
+
+## Appendix A: Sample Code
+<a name="appendix-a"></a>
+### Sample Traffic Portal Mock-Up
+```html
+<fieldset>
+	<legend>Interfaces</legend>
+	<fieldset>
+		<legend><input type="text" value="eth0" required=""></legend>
+		<fieldset>
+			<legend>IP Addresses</legend>
+			<ul>
+				<li style="display: grid;grid-template-columns: auto 1fr;grid-column-gap: 10px;">
+					<label>Address</label><input type="text" value="172.20.0.2/24">
+					<label>Gateway</label><input type="text" value="172.20.0.1">
+					<label>Is a Service Address</label><input type="checkbox" checked="">
+					<button type="button" title="delete this IP address" class="btn btn-danger" style="color: black;">🗑️</button>
+				</li>
+				<li style="display: grid;grid-template-columns: auto 1fr;grid-column-gap: 10px;">
+					<label>Address</label><input type="text" value="dead::babe/128">
+					<label>Gateway</label><input type="text" value="f1d0::f00d">
+					<label>Is a Service Address</label><input type="checkbox" checked="">
+					<button type="button" title="delete this IP address" class="btn btn-danger">🗑️</button>
+				</li>
+			</ul>
+		<button type="button" title="add new IP Address" class="btn btn-success" style="float: right;">+</button></fieldset>
+
+		<div style="display: grid;grid-template-columns: auto 1fr;grid-column-gap: 20px;">
+		<label>Monitor this interface</label><input type="checkbox" checked="">
+		<label><abbr title="Maximum Transmission Unit">MTU</abbr></label><select>
+			<option selected="">1500</option>
+			<option>9000</option>
+		</select>
+	</div>
+<button class="btn btn-danger" type="button" title="delete this interface" style="float: right;">🗑️</button>
+	</fieldset>
+	<button class="btn btn-success" type="button" title="add a new interface" style="float: right;">+</button>
+</fieldset>
+```
 
 ## References
 <!--
