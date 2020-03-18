@@ -24,9 +24,10 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetMeta(toData *TOData) (*tc.ATSConfigMetaData, error) {
+func GetMeta(toData *config.TOData) (*tc.ATSConfigMetaData, error) {
 	cgMap := map[string]tc.CacheGroupNullable{}
 	for _, cg := range toData.CacheGroups {
 		if cg.Name == nil {

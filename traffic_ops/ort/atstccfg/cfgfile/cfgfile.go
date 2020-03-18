@@ -34,85 +34,15 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-// TOData is the Traffic Ops data needed to generate configs.
-// See each field for details on the data required.
-// - If a field says 'must', the creation of TOData is guaranteed to do so, and users of the struct may rely on that.
-// - If it says 'may', the creation may or may not do so, and therefore users of the struct must filter if they
-//   require the potential fields to be omitted to generate correctly.
-type TOData struct {
-	// Servers must be all the servers from Traffic Ops. May include servers not on the current cdn.
-	Servers []tc.Server
-
-	// CacheGroups must be all cachegroups in Traffic Ops with Servers on the current server's cdn. May also include CacheGroups without servers on the current cdn.
-	CacheGroups []tc.CacheGroupNullable
-
-	// GlobalParams must be all Parameters in Traffic Ops on the tc.GlobalProfileName Profile. Must not include other parameters.
-	GlobalParams []tc.Parameter
-
-	// ScopeParams must be all Parameters in Traffic Ops with the name "scope". Must not include other Parameters.
-	ScopeParams []tc.Parameter
-
-	// ServerParams must be all Parameters on the Profile of the current server. Must not include other Parameters.
-	ServerParams []tc.Parameter
-
-	// CacheKeyParams must be all Parameters with the ConfigFile atscfg.CacheKeyParameterConfigFile.
-	CacheKeyParams []tc.Parameter
-
-	// ParentConfigParams must be all Parameters with the ConfigFile "parent.config.
-	ParentConfigParams []tc.Parameter
-
-	// DeliveryServices must include all Delivery Services on the current server's cdn, including those not assigned to the server. Must not include delivery services on other cdns.
-	DeliveryServices []tc.DeliveryServiceNullable
-
-	// DeliveryServiceServers must include all delivery service servers in Traffic Ops for all delivery services on the current cdn, including those not assigned to the current server.
-	DeliveryServiceServers []tc.DeliveryServiceServer
-
-	// Server must be the server we're fetching configs from
-	Server tc.Server
-
-	// TOToolName must be the Parameter named 'tm.toolname' on the tc.GlobalConfigFileName Profile.
-	TOToolName string
-
-	// TOToolName must be the Parameter named 'tm.url' on the tc.GlobalConfigFileName Profile.
-	TOURL string
-
-	// Jobs must be all Jobs on the server's CDN. May include jobs on other CDNs.
-	Jobs []tc.Job
-
-	// CDN must be the CDN of the server.
-	CDN tc.CDN
-
-	// DeliveryServiceRegexes must be all regexes on all delivery services on this server's cdn.
-	DeliveryServiceRegexes []tc.DeliveryServiceRegexes
-
-	// Profile must be the Profile of the server being requested.
-	Profile tc.Profile
-
-	// URISigningKeys must be a map of every delivery service which is URI Signed, to its keys.
-	URISigningKeys map[tc.DeliveryServiceName][]byte
-
-	// URLSigKeys must be a map of every delivery service which uses URL Sig, to its keys.
-	URLSigKeys map[tc.DeliveryServiceName]tc.URLSigKeys
-
-	// ServerCapabilities must be a map of all server IDs on this server's CDN, to a set of their capabilities. May also include servers from other cdns.
-	ServerCapabilities map[int]map[atscfg.ServerCapability]struct{}
-
-	// DSRequiredCapabilities must be a map of all delivery service IDs on this server's CDN, to a set of their required capabilities. Delivery Services with no required capabilities may not have an entry in the map.
-	DSRequiredCapabilities map[int]map[atscfg.ServerCapability]struct{}
-
-	// SSLKeys must be all the ssl keys for the server's cdn.
-	SSLKeys []tc.CDNSSLKeys
-}
-
 // TODO: validate all "profile scope" files are the server's profile.
 //       If they ever weren't, we'll send bad data, because we're only getting the server's profile data.
 //       Getting all data for all profiles in TOData isn't reasonable.
 // TODO info log profile name, cdn name (ORT was logging, and doesn't get that data anymore, so we need to log here)
-func GetTOData(cfg config.TCCfg) (*TOData, error) {
+func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	start := time.Now()
 	defer func() { log.Infof("GetTOData took %v\n", time.Since(start)) }()
 
-	toData := &TOData{}
+	toData := &config.TOData{}
 
 	serversF := func() error {
 		defer func(start time.Time) { log.Infof("serversF took %v\n", time.Since(start)) }(time.Now())
@@ -476,10 +406,4 @@ func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
 		mp[param.Name] = append(mp[param.Name], param.Value)
 	}
 	return mp
-}
-
-type ATSConfigFile struct {
-	tc.ATSConfigMetaDataConfigFile
-	Text        string
-	ContentType string
 }

@@ -25,11 +25,12 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
 func TestWriteConfigs(t *testing.T) {
 	buf := &bytes.Buffer{}
-	configs := []ATSConfigFile{
+	configs := []config.ATSConfigFile{
 		{
 			ATSConfigMetaDataConfigFile: tc.ATSConfigMetaDataConfigFile{
 				FileNameOnDisk: "config0.txt",
