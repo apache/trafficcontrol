@@ -305,3 +305,5 @@ Response Structure
 			"level": "success"
 		}
 	]}
+
+.. [1] For more information see the `Wikipedia page on Lights-Out management <https://en.wikipedia.org/wiki/Out-of-band_management>`_\ .
