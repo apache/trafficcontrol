@@ -18,6 +18,8 @@
 ***************************************************
 ``deliveryservices/xmlId/{{xmlid}}/sslkeys/delete``
 ***************************************************
+.. deprecated:: ATCv4
+	Use the ``DELETE`` method of :ref:`to-api-deliveryservices-xmlid-xmlid-sslkeys` instead.
 
 ``GET``
 =======
@@ -45,7 +47,28 @@ Request Structure
 
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
-	{ "response": "Successfully deleted ssl keys for <xml_id>" }
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Wed, 18 Mar 2020 17:36:10 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: Pj+zCoOXg19nGNxcSkjib2iDjG062Y3RcEEV+OYnwbGIsLcpa0BKZleY/qJOKT5DkSoX2qQkckUxUqdDxjVorQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 18 Mar 2020 16:36:10 GMT
+	Content-Length: 173
+
+	{
+		"alerts": [
+			{
+				"text": "This endpoint is deprecated, please use DELETE /deliveryservices/xmlId/:xmlid/sslkeys instead",
+				"level": "warning"
+			}
+		],
+		"response": "Successfully deleted ssl keys for demo1"
+	}
