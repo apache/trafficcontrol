@@ -24,9 +24,10 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNSetDSCP(toData *TOData, fileName string) (string, string, error) {
+func GetConfigFileCDNSetDSCP(toData *config.TOData, fileName string) (string, string, error) {
 	// TODO verify prefix, suffix, and that it's a number? Perl doesn't.
 	dscpNumStr := fileName
 	dscpNumStr = strings.TrimPrefix(dscpNumStr, "set_dscp_")

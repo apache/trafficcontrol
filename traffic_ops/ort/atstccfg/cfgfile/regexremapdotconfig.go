@@ -27,7 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNRegexRemap(toData *TOData, fileName string) (string, string, error) {
+func GetConfigFileCDNRegexRemap(toData *config.TOData, fileName string) (string, string, error) {
 	configSuffix := `.config`
 	if !strings.HasPrefix(fileName, atscfg.RegexRemapPrefix) || !strings.HasSuffix(fileName, configSuffix) {
 		return `{"alerts":[{"level":"error","text":"Error - regex remap file '` + fileName + `' not of the form 'regex_remap_*.config! Please file a bug with Traffic Control, this should never happen."}]}`, "", config.ErrBadRequest

@@ -21,9 +21,10 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileServerPackages(toData *TOData) (string, string, error) {
+func GetConfigFileServerPackages(toData *config.TOData) (string, string, error) {
 	params := ParamsToMultiMap(FilterParams(toData.ServerParams, atscfg.PackagesParamConfigFile, "", "", ""))
 	return atscfg.MakePackages(params), atscfg.ContentTypePackages, nil
 }

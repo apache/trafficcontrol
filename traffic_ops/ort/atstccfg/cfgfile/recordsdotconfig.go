@@ -21,9 +21,10 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileRecordsDotConfig(toData *TOData) (string, string, error) {
+func GetConfigFileProfileRecordsDotConfig(toData *config.TOData) (string, string, error) {
 	params := ParamsToMap(FilterParams(toData.ServerParams, atscfg.RecordsFileName, "", "", "location"))
 	return atscfg.MakeRecordsDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeRecordsDotConfig, nil
 }
