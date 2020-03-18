@@ -20,62 +20,23 @@ package cfgfile
  */
 
 import (
-	"errors"
-
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileCDNRegexRevalidateDotConfig(cfg config.TCCfg, cdnNameOrID string) (string, error) {
-	cdnName, err := toreq.GetCDNNameFromCDNNameOrID(cfg, cdnNameOrID)
-	if err != nil {
-		return "", errors.New("getting CDN name from '" + cdnNameOrID + "': " + err.Error())
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	fileParamsWithoutProfiles, err := toreq.GetConfigFileParameters(cfg, atscfg.RegexRevalidateFileName)
-	if err != nil {
-		return "", errors.New("getting regexreval parameters: " + err.Error())
-	}
-
-	fileParams, err := toreq.TCParamsToParamsWithProfiles(fileParamsWithoutProfiles)
-	if err != nil {
-		return "", errors.New("unmarshalling regexreval parameters profiles: " + err.Error())
-	}
-
+func GetConfigFileCDNRegexRevalidateDotConfig(toData *config.TOData) (string, string, error) {
 	params := map[string][]string{}
-	for _, param := range fileParams {
-		if !util.StrInArray(param.ProfileNames, tc.GlobalProfileName) {
-			continue // TODO add profile query params to TO endpoint
+	for _, param := range toData.GlobalParams {
+		if param.ConfigFile != atscfg.RegexRevalidateFileName {
+			continue
 		}
 		params[param.Name] = append(params[param.Name], param.Value)
 	}
 
-	allJobs, err := toreq.GetJobs(cfg) // TODO add cdn query param to jobs endpoint
-	if err != nil {
-		return "", errors.New("unmarshalling regexreval parameters profiles: " + err.Error())
-	}
-
-	cdn, err := toreq.GetCDN(cfg, cdnName)
-	if err != nil {
-		return "", errors.New("getting cdn '" + string(cdnName) + "': " + err.Error())
-	}
-
-	dses, err := toreq.GetCDNDeliveryServices(cfg, cdn.ID)
-	if err != nil {
-		return "", errors.New("getting delivery services: " + err.Error())
-	}
-
 	dsNames := map[string]struct{}{}
-	for _, ds := range dses {
+	for _, ds := range toData.DeliveryServices {
 		if ds.XMLID == nil {
 			log.Errorln("Regex Revalidate got Delivery Service from Traffic Ops with a nil xmlId! Skipping!")
 			continue
@@ -84,13 +45,12 @@ func GetConfigFileCDNRegexRevalidateDotConfig(cfg config.TCCfg, cdnNameOrID stri
 	}
 
 	jobs := []tc.Job{}
-	for _, job := range allJobs {
+	for _, job := range toData.Jobs {
 		if _, ok := dsNames[job.DeliveryService]; !ok {
 			continue
 		}
 		jobs = append(jobs, job)
 	}
 
-	txt := atscfg.MakeRegexRevalidateDotConfig(cdnName, params, toToolName, toURL, jobs)
-	return txt, nil // TODO implement
+	return atscfg.MakeRegexRevalidateDotConfig(tc.CDNName(toData.Server.CDNName), params, toData.TOToolName, toData.TOURL, jobs), atscfg.ContentTypeRegexRevalidateDotConfig, nil
 }

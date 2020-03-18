@@ -22,6 +22,8 @@ package atscfg
 const AstatsSeparator = "="
 const AstatsFileName = "astats.config"
 
+const ContentTypeAstatsDotConfig = ContentTypeTextASCII
+
 func MakeAStatsDotConfig(
 	profileName string,
 	paramData map[string]string, // GetProfileParamData(tx, profile.ID, AstatsFileName)

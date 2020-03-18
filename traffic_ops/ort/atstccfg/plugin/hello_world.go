@@ -15,24 +15,35 @@ package plugin
 */
 
 import (
-	"fmt"
-	"os"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
 func init() {
-	// AddPlugin(10000, Funcs{onRequest: hello})
+	// AddPlugin(10000, Funcs{modifyFiles: hello})
 }
 
 const HelloPath = "/_hello_world"
 
-func hello(d OnRequestData) IsRequestHandled {
-	if d.Cfg.TOURL.Path != HelloPath {
-		return RequestUnhandled
+// hello is an example "hello world" plugin. To test, create a Parameter assigned to the server you're running ORT/atstccfg on, named "enable_hello_world", with the Config File "hello_world" and the value "true"
+func hello(d ModifyFilesData) []config.ATSConfigFile {
+	hasHelloParam := false
+	for _, param := range d.TOData.ServerParams {
+		if param.Name == "enable_hello_world" && param.ConfigFile == "hello_world" && param.Value == "true" {
+			hasHelloParam = true
+			break
+		}
+	}
+	if !hasHelloParam {
+		return d.Files
 	}
 
-	cfgFile := "Hello World!\n"
+	fi := config.ATSConfigFile{}
 
-	fmt.Println(cfgFile)
-	os.Exit(42)
-	return RequestHandled
+	fi.Text = "Hello, World!\n"
+	fi.ContentType = "text/plain"
+	fi.FileNameOnDisk = "hello.txt"
+	fi.Location = "/opt/trafficserver/etc/trafficserver/"
+
+	d.Files = append(d.Files, fi)
+	return d.Files
 }

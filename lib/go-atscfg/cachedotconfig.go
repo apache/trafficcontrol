@@ -26,6 +26,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const ContentTypeCacheDotConfig = ContentTypeTextASCII
+
 type ProfileDS struct {
 	Type       tc.DSType
 	OriginFQDN *string

@@ -20,47 +20,13 @@ package cfgfile
  */
 
 import (
-	"errors"
-
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
 const VolumeFileName = StorageFileName
 
-func GetConfigFileProfileVolumeDotConfig(cfg config.TCCfg, profileNameOrID string) (string, error) {
-	profileName, err := toreq.GetProfileNameFromProfileNameOrID(cfg, profileNameOrID)
-	if err != nil {
-		return "", errors.New("getting profile name from '" + profileNameOrID + "': " + err.Error())
-	}
-
-	profileParameters, err := toreq.GetProfileParameters(cfg, profileName)
-	if err != nil {
-		return "", errors.New("getting profile '" + profileName + "' parameters: " + err.Error())
-	}
-	if len(profileParameters) == 0 {
-		// The TO endpoint behind toclient.GetParametersByProfileName returns an empty object with a 200, if the Profile doesn't exist.
-		// So we act as though we got a 404 if there are no params (and there should always be volume.config params), to make ORT behave correctly.
-		return "", config.ErrNotFound
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	paramData := map[string]string{}
-	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
-	for _, param := range profileParameters {
-		if param.ConfigFile != VolumeFileName {
-			continue
-		}
-		if param.Name == "location" {
-			continue
-		}
-		paramData[param.Name] = param.Value
-	}
-
-	return atscfg.MakeVolumeDotConfig(profileName, paramData, toToolName, toURL), nil
+func GetConfigFileProfileVolumeDotConfig(toData *config.TOData) (string, string, error) {
+	params := ParamsToMap(FilterParams(toData.ServerParams, VolumeFileName, "", "", ""))
+	return atscfg.MakeVolumeDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeVolumeDotConfig, nil
 }

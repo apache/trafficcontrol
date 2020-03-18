@@ -19,6 +19,9 @@
 ``user/{{ID}}/deliveryservices/available``
 ******************************************
 
+.. deprecated:: ATCv4
+	This endpoint is deprecated, and will be removed in the future.
+
 ``GET``
 =======
 Lists identifying information for all of the :term:`Delivery Services` assigned to a user - **not**, as the name implies, the :term:`Delivery Services` *available* to be assigned to that user.
@@ -67,7 +70,11 @@ Response Structure
 	Date: Thu, 13 Dec 2018 22:31:44 GMT
 	Content-Length: 62
 
-	{ "response": [
+	{ "alerts": [{
+		"level": "warning",
+		"text": "This endpoint is deprecated, and will be removed in the future"
+	}],
+	"response": [
 		{
 			"id": 1,
 			"displayName": "Demo 1",
