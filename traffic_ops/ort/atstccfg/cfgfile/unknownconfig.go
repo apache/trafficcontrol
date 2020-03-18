@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileUnknownConfig(toData *TOData, fileName string) (string, string, error) {
+func GetConfigFileProfileUnknownConfig(toData *config.TOData, fileName string) (string, string, error) {
 	inScope := false
 	for _, scopeParam := range toData.ScopeParams {
 		if scopeParam.ConfigFile != fileName {
