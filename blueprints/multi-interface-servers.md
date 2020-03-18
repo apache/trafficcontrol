@@ -194,6 +194,7 @@ these tables, a migration will need to be written to convert currently stored
 server information to utilize these new tables.
 
 #### API
+<a name="sec:api"></a>
 The affected endpoints will be:
 
 ##### `/cdns/{{name}}/configs/monitoring`
@@ -526,119 +527,100 @@ A sample screenshot is shown below.
 If desired, the markup used for that sample may be found in
 [Appendix A](#appendix-a)
 
-### ORT Impact
-<!--
-*How* will this impact ORT?
--->
+Additionally, the properties of servers no longer present on a server object
+will need to be removed from table columns (and `interfaces` should not be
+added).
 
 ### Traffic Monitor Impact
-<!--
-*How* will this impact Traffic Monitor?
+Traffic Monitor will need to update its parsing of `/monitoring` payloads to
+account for the new structure, and will need to poll all listed interfaces for
+health (instead of just one per cache server as was done previously).
 
-Will new profile parameters be required?
--->
+The cache
+server should be marked unavailable - or "down" - if and only if the interface
+proving the service addresses is considered unhealthy.
 
-### Traffic Router Impact
-<!--
-*How* will this impact Traffic Router?
+## Documentation Impact
+Documentation for the affected endpoints will need to be updated. Beyond that,
+the "Health Protocol" section and perhaps the "Traffic Monitor - Using" section
+should be updated to describe the behavior of multiple monitored interfaces.
 
-Will new profile parameters be required?
-How will the CRConfig be changed?
-How will changes in Traffic Ops data be reflected in the CRConfig?
-Will Traffic Router remain backwards-compatible with old CRConfigs?
-Will old Traffic Routers remain forwards-compatible with new CRConfigs?
--->
+## Testing Impact
+A bunch of client/API integration tests should be written to verify the
+constraints outlined in [API](#sec:api).
 
-### Documentation Impact
-<!--
-*How* will this impact the documentation?
+## Performance Impact
+The proposed method of updating servers to change their interfaces is by
+submitting a PUT request to `/servers/{{ID}}` like normal. Traffic Ops will then
+delete **all** associated interfaces before inserting the ones supplied in the
+PUT payload. This will occur even if the interfaces are not actually changing in
+values. So a single server update now requires a minimum of two extra database
+calls.
 
-What new documentation will be required?
-What existing documentation will need to be updated?
--->
+This probably isn't a significant performance concern, but at the time of this
+writing no profiling has been done.
 
-### Testing Impact
-<!--
-*How* will this impact testing?
+## Security Impact
+Setting an improper interface can allow users with read-only permissions to read
+arbitrary files named 'speed' or 'operstate' that the 'ats' user has permission
+to read on the cache server's file system. Of course, this was already possible,
+and improper values can only be entered by users with at least "operator"
+permissions. Now, though, an arbitrary number of these files could be exposed
+per Snapshot, whereas previously it was limited to one file per cache server per
+Snapshot.
 
-What is the high-level test plan?
-How should this be tested?
-Can this be tested within the existing test frameworks?
-How should the existing frameworks be enhanced in order to test this properly?
--->
+Improper configuration has the same result as improper configuration of
+`interfaceName` currently, which is to say it can cause a cache server to be
+marked unavailable.
 
-### Performance Impact
-<!--
-*How* will this impact performance?
+Multiple new inputs will need to be sanitized, as always.
 
-Are the changes expected to improve performance in any way?
-Is there anything particularly CPU, network, or storage-intensive to be aware of?
-What are the known bottlenecks to be aware of that may need to be addressed?
--->
+> _"Will new SQL queries properly use parameter binding?"_
 
-### Security Impact
-<!--
-*How* will this impact overall security?
+The answer to this question should absolutely never be "no," can't imagine a
+world wherein that would need to change for this - or any other - particular
+feature.
 
-Are there any security risks to be aware of?
-What privilege level is required for these changes?
-Do these changes increase the attack surface (e.g. new untrusted input)?
-How will untrusted input be validated?
-If these changes are used maliciously or improperly, what could go wrong?
-Will these changes adhere to multi-tenancy?
-Will data be protected in transit (e.g. via HTTPS or TLS)?
-Will these changes require sensitive data that should be encrypted at rest?
-Will these changes require handling of any secrets?
-Will new SQL queries properly use parameter binding?
--->
+## Upgrade Impact
+There will be at least one, but possibly two, database migrations. The changes
+to Traffic Monitor ought to be made in such a way that it can parse either the
+old `/monitoring` payloads or the new ones. Then Traffic Monitor should be
+upgraded before Traffic Ops, and no additional, special steps need be taken to
+upgrade.
 
-### Upgrade Impact
-<!--
-*How* will this impact the upgrade of an existing system?
+## Operations Impact
+Operators will need to learn the new method for creating, viewing, and updating
+servers' network information, as well as what the meaning of additional
+interfaces and how/when/why they would need to be added/changed.
 
-Will a database migration be required?
-Do the various components need to be upgraded in a specific order?
-Will this affect the ability to rollback an upgrade?
-Are there any special steps to be followed before an upgrade can be done?
-Are there any special steps to be followed during the upgrade?
-Are there any special steps to be followed after the upgrade is complete?
--->
+The changes will be automated to a degree by the migration to convert old data.
 
-### Operations Impact
-<!--
-*How* will this impact overall operation of the system?
-
-Will the changes make it harder to operate the system?
-Will the changes introduce new configuration that will need to be managed?
-Can the changes be easily automated?
-Do the changes have known limitations or risks that operators should be made aware of?
-Will the changes introduce new steps to be followed for existing operations?
--->
-
-### Developer Impact
-<!--
-*How* will this impact other developers?
-
-Will it make it easier to set up a development environment?
-Will it make the code easier to maintain?
-What do other developers need to know about these changes?
-Are the changes straightforward, or will new developer instructions be necessary?
--->
+Overall, setting up a simple cache server will become slightly more complicated.
 
 ## Alternatives
-<!--
-What are some of the alternative solutions for this problem?
-What are the pros and cons of each approach?
-What design trade-offs were made and why?
--->
+One potential alternative is to add an `additionalInterfaces` property, and
+instead of moving existing network information into the interfaces array, simply
+use it to hold any interfaces besides the "service" interface that should be
+monitored.
 
-## Dependencies
-<!--
-Are there any significant new dependencies that will be required?
-How were the dependencies assessed and chosen?
-How will the new dependencies be managed?
-Are the dependencies required at build-time, run-time, or both?
--->
+### Pros
+- Interface objects become simpler as any given IP Address doesn't need to
+include a `serviceAddress` flag.
+- Checking for valid data becomes much simpler, because service addresses are
+configured as they always have been and so Traffic Ops need only check if the
+provided structure is syntactically valid.
+- User interfaces are much simpler to make simple; a simple cache server has an
+IP address etc. and one need not worry about multiple interfaces unless that's
+actually necessary.
+- API changes get smaller because fewer old fields need to be removed.
+- Because `/monitoring` payloads will change less, Traffic Monitor changes
+become much smaller and less intrusive, as the default parsing case will remain
+unchanged, only adding special handling in case a new property is found.
+
+### Cons
+- Interfaces will be configured in two places to a greater degree (given that
+ILO-related interface data isn't moving) than if this alternative were not
+taken.
 
 ## Appendix A: Sample Code
 <a name="appendix-a"></a>
@@ -664,25 +646,21 @@ Are the dependencies required at build-time, run-time, or both?
 					<button type="button" title="delete this IP address" class="btn btn-danger">🗑️</button>
 				</li>
 			</ul>
-		<button type="button" title="add new IP Address" class="btn btn-success" style="float: right;">+</button></fieldset>
+			<button type="button" title="add new IP Address" class="btn btn-success" style="float: right;">+</button>
+		</fieldset>
 
 		<div style="display: grid;grid-template-columns: auto 1fr;grid-column-gap: 20px;">
-		<label>Monitor this interface</label><input type="checkbox" checked="">
-		<label><abbr title="Maximum Transmission Unit">MTU</abbr></label><select>
-			<option selected="">1500</option>
-			<option>9000</option>
-		</select>
-	</div>
-<button class="btn btn-danger" type="button" title="delete this interface" style="float: right;">🗑️</button>
+			<label>Monitor this interface</label><input type="checkbox" checked="">
+			<label><abbr title="Maximum Transmission Unit">MTU</abbr></label><select>
+				<option selected="">1500</option>
+				<option>9000</option>
+			</select>
+		</div>
+		<button class="btn btn-danger" type="button" title="delete this interface" style="float: right;">🗑️</button>
 	</fieldset>
 	<button class="btn btn-success" type="button" title="add a new interface" style="float: right;">+</button>
 </fieldset>
 ```
-
-## References
-<!--
-Include any references to external links here.
--->
 
 <a name="typescript">1:</a> The syntax should be mostly self-explanatory, but
 see their [official documentation for a five-minute introduction](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html)
