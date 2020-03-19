@@ -165,7 +165,7 @@ func TestCreateInvalidType(t *testing.T) {
 		t.Fatalf("expected create type to have an error")
 	}
 	if statusCode != http.StatusBadRequest {
-		t.Fatalf("expected create type to return a 400 error")
+		t.Fatalf("expected create type to return a %v error", http.StatusBadRequest)
 	}
 }
 
@@ -177,7 +177,7 @@ func TestDeleteInvalidType(t *testing.T) {
 		t.Fatalf("expected delete type to have an error")
 	}
 	if statusCode != http.StatusNotFound {
-		t.Fatalf("expected delete type to return a 400 error")
+		t.Fatalf("expected delete type to return a %v error", http.StatusNotFound)
 	}
 }
 
