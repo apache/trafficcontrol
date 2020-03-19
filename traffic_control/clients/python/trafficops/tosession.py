@@ -1828,21 +1828,10 @@ class TOSession(RestApiSession):
 	# Tenants
 	#
 	@api_request('get', 'tenants', ('2.0',))
-	def get_tenants(self):
+	def get_tenants(self, query_params=None):
 		"""
 		Get all tenants.
 		:ref:`to-api-tenants`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'tenants/{tenant_id:d}', ('2.0',))
-	def get_tenant_by_id(self, tenant_id=None):
-		"""
-		Get a tenant by ID.
-		:ref:`to-api-tenants-id`
-		:param tenant_id: The tenant to retrieve
-		:type tenant_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

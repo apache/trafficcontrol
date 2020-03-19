@@ -434,7 +434,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Tenants
 		{api.Version{2, 0}, http.MethodGet, `tenants/?$`, api.ReadHandler(&apitenant.TOTenant{}), auth.PrivLevelReadOnly, Authenticated, nil, 2677967814, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `tenants/{id}$`, api.ReadHandler(&apitenant.TOTenant{}), auth.PrivLevelReadOnly, Authenticated, nil, 271544338, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `tenants/{id}$`, api.UpdateHandler(&apitenant.TOTenant{}), auth.PrivLevelOperations, Authenticated, nil, 2094131478, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `tenants/?$`, api.CreateHandler(&apitenant.TOTenant{}), auth.PrivLevelOperations, Authenticated, nil, 217248013, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(&apitenant.TOTenant{}), auth.PrivLevelOperations, Authenticated, nil, 216365558, noPerlBypass},
@@ -850,7 +849,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Tenants
 		{api.Version{1, 1}, http.MethodGet, `tenants/?(\.json)?$`, api.ReadHandler(&apitenant.TOTenant{}), auth.PrivLevelReadOnly, Authenticated, nil, 1677967814, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `tenants/{id}$`, api.ReadHandler(&apitenant.TOTenant{}), auth.PrivLevelReadOnly, Authenticated, nil, 171544338, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `tenants/{id}$`, api.DeprecatedReadHandler(&apitenant.TOTenant{}, util.StrPtr("GET /tenants with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 171544338, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `tenants/{id}$`, api.UpdateHandler(&apitenant.TOTenant{}), auth.PrivLevelOperations, Authenticated, nil, 1094131478, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `tenants/?$`, api.CreateHandler(&apitenant.TOTenant{}), auth.PrivLevelOperations, Authenticated, nil, 917248013, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(&apitenant.TOTenant{}), auth.PrivLevelOperations, Authenticated, nil, 516365558, noPerlBypass},
