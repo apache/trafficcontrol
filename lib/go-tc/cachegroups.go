@@ -26,6 +26,7 @@ import (
 // CacheGroupsResponse is a list of CacheGroups as a response.
 type CacheGroupsResponse struct {
 	Response []CacheGroup `json:"response"`
+	Alerts
 }
 
 // CacheGroupsNullableResponse is a response with a list of CacheGroupNullables.
@@ -33,6 +34,7 @@ type CacheGroupsResponse struct {
 // TOCacheGroups.
 type CacheGroupsNullableResponse struct {
 	Response []CacheGroupNullable `json:"response"`
+	Alerts
 }
 
 // CacheGroupDetailResponse is the JSON object returned for a single CacheGroup

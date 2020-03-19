@@ -33,6 +33,7 @@ import (
 type ServerchecksResponse struct {
 	// in: body
 	Response []Servercheck `json:"response"`
+	Alerts
 }
 
 // CommonCheckFields is a structure containing all of the fields common to both
