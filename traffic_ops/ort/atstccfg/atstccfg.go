@@ -81,11 +81,6 @@ func main() {
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	onReqData := plugin.OnRequestData{Cfg: tccfg}
-	if handled := plugins.OnRequest(onReqData); handled {
-		return
-	}
-
 	if tccfg.GetData != "" {
 		if err := getdata.WriteData(tccfg); err != nil {
 			log.Errorln("writing data: " + err.Error())
@@ -102,11 +97,20 @@ func main() {
 		os.Exit(config.ExitCodeSuccess)
 	}
 
-	configs, err := cfgfile.GetAllConfigs(tccfg)
+	toData, err := cfgfile.GetTOData(tccfg)
+	if err != nil {
+		log.Errorln("getting data from traffic ops: " + err.Error())
+		os.Exit(config.ExitCodeErrGeneric)
+	}
+
+	configs, err := cfgfile.GetAllConfigs(tccfg, toData)
 	if err != nil {
 		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
+
+	modifyFilesData := plugin.ModifyFilesData{Cfg: tccfg, TOData: toData, Files: configs}
+	configs = plugins.ModifyFiles(modifyFilesData)
 
 	if err := cfgfile.WriteConfigs(configs, os.Stdout); err != nil {
 		log.Errorln("Writing configs for '" + cfg.CacheHostName + "': " + err.Error())

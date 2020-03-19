@@ -39,6 +39,7 @@ const (
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
 	Response DeliveryServiceSSLKeys `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceSSLKeys ...

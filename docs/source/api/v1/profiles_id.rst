@@ -21,6 +21,8 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-profiles` with the query parameter ``id`` instead.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -111,7 +113,13 @@ Response Structure
 				"value": "STRING ats"
 			}
 		]
-	}]}
+	}],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /profiles with query parameter id instead",
+			"level": "warning"
+		}
+	]}
 
 .. note:: The response example for this endpoint has been truncated to only the first two elements of the resulting ``params`` array, as the output was hundreds of lines long.
 

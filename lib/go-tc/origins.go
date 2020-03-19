@@ -22,6 +22,7 @@ package tc
 // OriginsResponse is a list of Origins as a response.
 type OriginsResponse struct {
 	Response []Origin `json:"response"`
+	Alerts
 }
 
 // OriginDetailResponse is the JSON object returned for a single origin

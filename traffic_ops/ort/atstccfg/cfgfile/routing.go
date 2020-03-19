@@ -29,14 +29,14 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-var scopeConfigFileFuncs = map[string]func(toData *TOData, fileName string) (string, string, error){
+var scopeConfigFileFuncs = map[string]func(toData *config.TOData, fileName string) (string, string, error){
 	"cdns":     GetConfigFileCDN,
 	"servers":  GetConfigFileServer,
 	"profiles": GetConfigFileProfile,
 }
 
 // GetConfigFile returns the text of the generated config file, the MIME Content Type of the config file, and any error.
-func GetConfigFile(toData *TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (string, string, error) {
+func GetConfigFile(toData *config.TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (string, string, error) {
 	path := fileInfo.APIURI
 	// TODO remove the URL path parsing. It's a legacy from when config files were endpoints in the meta config.
 	// We should replace it with actually calling the right file and name directly.
@@ -65,10 +65,10 @@ func GetConfigFile(toData *TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (str
 type ConfigFilePrefixSuffixFunc struct {
 	Prefix string
 	Suffix string
-	Func   func(toData *TOData, fileName string) (string, string, error)
+	Func   func(toData *config.TOData, fileName string) (string, string, error)
 }
 
-func GetConfigFileCDN(toData *TOData, fileName string) (string, string, error) {
+func GetConfigFileCDN(toData *config.TOData, fileName string) (string, string, error) {
 	log.Infoln("GetConfigFileCDN cdn '" + toData.Server.CDNName + "' fileName '" + fileName + "'")
 
 	txt := ""
@@ -95,7 +95,7 @@ func GetConfigFileCDN(toData *TOData, fileName string) (string, string, error) {
 	return txt, contentType, nil
 }
 
-func GetConfigFileProfile(toData *TOData, fileName string) (string, string, error) {
+func GetConfigFileProfile(toData *config.TOData, fileName string) (string, string, error) {
 	log.Infoln("GetConfigFileProfile profile '" + toData.Server.Profile + "' fileName '" + fileName + "'")
 
 	txt := ""
@@ -118,16 +118,16 @@ func GetConfigFileProfile(toData *TOData, fileName string) (string, string, erro
 }
 
 // ConfigFileFuncs returns a map[scope][configFile]configFileFunc.
-func ConfigFileFuncs() map[string]map[string]func(toData *TOData) (string, string, error) {
-	return map[string]map[string]func(toData *TOData) (string, string, error){
+func ConfigFileFuncs() map[string]map[string]func(toData *config.TOData) (string, string, error) {
+	return map[string]map[string]func(toData *config.TOData) (string, string, error){
 		"cdns":     CDNConfigFileFuncs(),
 		"servers":  ServerConfigFileFuncs(),
 		"profiles": ProfileConfigFileFuncs(),
 	}
 }
 
-func CDNConfigFileFuncs() map[string]func(toData *TOData) (string, string, error) {
-	return map[string]func(toData *TOData) (string, string, error){
+func CDNConfigFileFuncs() map[string]func(toData *config.TOData) (string, string, error) {
+	return map[string]func(toData *config.TOData) (string, string, error){
 		"regex_revalidate.config": GetConfigFileCDNRegexRevalidateDotConfig,
 		"bg_fetch.config":         GetConfigFileCDNBGFetchDotConfig,
 		"ssl_multicert.config":    GetConfigFileCDNSSLMultiCertDotConfig,
@@ -143,8 +143,8 @@ var ConfigFileCDNPrefixSuffixFuncs = []ConfigFilePrefixSuffixFunc{
 	{"set_dscp_", ".config", GetConfigFileCDNSetDSCP},
 }
 
-func ProfileConfigFileFuncs() map[string]func(toData *TOData) (string, string, error) {
-	return map[string]func(toData *TOData) (string, string, error){
+func ProfileConfigFileFuncs() map[string]func(toData *config.TOData) (string, string, error) {
+	return map[string]func(toData *config.TOData) (string, string, error){
 		"12M_facts":           GetConfigFileProfile12MFacts,
 		"50-ats.rules":        GetConfigFileProfileATSDotRules,
 		"astats.config":       GetConfigFileProfileAstatsDotConfig,
@@ -161,8 +161,8 @@ func ProfileConfigFileFuncs() map[string]func(toData *TOData) (string, string, e
 	}
 }
 
-func ServerConfigFileFuncs() map[string]func(toData *TOData) (string, string, error) {
-	return map[string]func(toData *TOData) (string, string, error){
+func ServerConfigFileFuncs() map[string]func(toData *config.TOData) (string, string, error) {
+	return map[string]func(toData *config.TOData) (string, string, error){
 		"parent.config":   GetConfigFileServerParentDotConfig,
 		"remap.config":    GetConfigFileServerRemapDotConfig,
 		"cache.config":    GetConfigFileServerCacheDotConfig,
@@ -173,7 +173,7 @@ func ServerConfigFileFuncs() map[string]func(toData *TOData) (string, string, er
 	}
 }
 
-func GetConfigFileServer(toData *TOData, fileName string) (string, string, error) {
+func GetConfigFileServer(toData *config.TOData, fileName string) (string, string, error) {
 	log.Infoln("GetConfigFileServer server '" + toData.Server.HostName + "' fileName '" + fileName + "'")
 	txt := ""
 	contentType := ""

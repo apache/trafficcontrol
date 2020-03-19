@@ -22,11 +22,13 @@ package tc
 // PhysLocationsResponse is a list of PhysLocations as a response.
 type PhysLocationsResponse struct {
 	Response []PhysLocation `json:"response"`
+	Alerts
 }
 
 // PhysLocationResponse is a single PhysLocationNullable as a response.
 type PhysLocationResponse struct {
 	Response PhysLocationNullable `json:"response"`
+	Alerts
 }
 
 // PhysLocation contains the physical location of a cache group.

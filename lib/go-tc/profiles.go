@@ -35,6 +35,7 @@ import (
 // ProfilesResponse is a list of profiles returned by GET requests.
 type ProfilesResponse struct {
 	Response []Profile `json:"response"`
+	Alerts
 }
 
 // ProfileResponse is a single Profile Response for Update and Create to depict what changed
@@ -43,6 +44,7 @@ type ProfilesResponse struct {
 type ProfileResponse struct {
 	// in: body
 	Response Profile `json:"response"`
+	Alerts
 }
 
 // Profile ...

@@ -21,9 +21,10 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileAstatsDotConfig(toData *TOData) (string, string, error) {
+func GetConfigFileProfileAstatsDotConfig(toData *config.TOData) (string, string, error) {
 	paramData := map[string]string{}
 	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
 	for _, param := range toData.ServerParams {

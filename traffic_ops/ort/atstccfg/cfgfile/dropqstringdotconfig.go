@@ -21,9 +21,10 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileDropQStringDotConfig(toData *TOData) (string, string, error) {
+func GetConfigFileProfileDropQStringDotConfig(toData *config.TOData) (string, string, error) {
 	dropQStringVal := (*string)(nil)
 	for _, param := range toData.ServerParams {
 		if param.ConfigFile != atscfg.DropQStringDotConfigFileName {

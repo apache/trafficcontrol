@@ -22,9 +22,10 @@ package cfgfile
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNCacheURL(toData *TOData, fileName string) (string, string, error) {
+func GetConfigFileCDNCacheURL(toData *config.TOData, fileName string) (string, string, error) {
 	dsIDs := map[int]struct{}{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.ID != nil {
@@ -62,6 +63,6 @@ func GetConfigFileCDNCacheURL(toData *TOData, fileName string) (string, string, 
 	return atscfg.MakeCacheURLDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes), atscfg.ContentTypeCacheURLDotConfig, nil
 }
 
-func GetConfigFileCDNCacheURLPlain(toData *TOData) (string, string, error) {
+func GetConfigFileCDNCacheURLPlain(toData *config.TOData) (string, string, error) {
 	return GetConfigFileCDNCacheURL(toData, "cacheurl.config")
 }

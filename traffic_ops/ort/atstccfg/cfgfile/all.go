@@ -36,19 +36,14 @@ import (
 )
 
 // GetAllConfigs gets all config files for cfg.CacheHostName.
-func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
-	toData, err := GetTOData(cfg)
-	if err != nil {
-		return nil, errors.New("getting data from traffic ops: " + err.Error())
-	}
-
+func GetAllConfigs(cfg config.TCCfg, toData *config.TOData) ([]config.ATSConfigFile, error) {
 	meta, err := GetMeta(toData)
 	if err != nil {
 		return nil, errors.New("creating meta: " + err.Error())
 	}
 
 	hasSSLMultiCertConfig := false
-	configs := []ATSConfigFile{}
+	configs := []config.ATSConfigFile{}
 	for _, fi := range meta.ConfigFiles {
 		if cfg.RevalOnly && fi.FileNameOnDisk != atscfg.RegexRevalidateFileName {
 			continue
@@ -61,7 +56,7 @@ func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
 			hasSSLMultiCertConfig = true
 		}
 		txt = PreprocessConfigFile(toData.Server, txt)
-		configs = append(configs, ATSConfigFile{ATSConfigMetaDataConfigFile: fi, Text: txt, ContentType: contentType})
+		configs = append(configs, config.ATSConfigFile{ATSConfigMetaDataConfigFile: fi, Text: txt, ContentType: contentType})
 	}
 
 	if hasSSLMultiCertConfig {
@@ -78,7 +73,7 @@ func GetAllConfigs(cfg config.TCCfg) ([]ATSConfigFile, error) {
 const HdrConfigFilePath = "Path"
 
 // WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
-func WriteConfigs(configs []ATSConfigFile, output io.Writer) error {
+func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
 	w := multipart.NewWriter(output)
 
 	// Create a unique boundary. Because we're using a text encoding, we need to make sure the boundary text doesn't occur in any body.
