@@ -18,6 +18,8 @@
 ******************
 ``servers/status``
 ******************
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-servers` and filter client side instead.
 
 ``GET``
 =======
@@ -63,4 +65,10 @@ Response Structure
 	{ "response": {
 		"REPORTED": 2,
 		"ONLINE": 9
-	}}
+	},
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /servers instead",
+			"level": "warning"
+		}
+	]}
