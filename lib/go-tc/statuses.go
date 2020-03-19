@@ -25,6 +25,7 @@ package tc
 type StatusesResponse struct {
 	// in: body
 	Response []Status `json:"response"`
+	Alerts
 }
 
 // StatusResponse is a single Status response for Update and Create to depict
@@ -34,6 +35,7 @@ type StatusesResponse struct {
 type StatusResponse struct {
 	// in: body
 	Response Status `json:"response"`
+	Alerts
 }
 
 // Status is a single Status response for Update and Create to depict what

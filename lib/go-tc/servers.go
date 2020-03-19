@@ -28,11 +28,13 @@ import (
 // ServersResponse is a list of Servers as a response.
 type ServersResponse struct {
 	Response []Server `json:"response"`
+	Alerts
 }
 
 // ServersDetailResponse is the JSON object returned for a single server.
 type ServersDetailResponse struct {
 	Response Server `json:"response"`
+	Alerts
 }
 
 type Server struct {

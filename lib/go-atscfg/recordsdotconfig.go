@@ -25,6 +25,7 @@ import (
 
 const RecordsSeparator = " "
 const RecordsFileName = "records.config"
+const ContentTypeRecordsDotConfig = ContentTypeTextASCII
 
 func MakeRecordsDotConfig(
 	profileName string,

@@ -50,6 +50,29 @@ func MakeMetaConfig(
 	scopeParams map[string]string, // map[configFileName]scopeParam
 	dsNames map[tc.DeliveryServiceName]struct{},
 ) string {
+	return MetaObjToMetaConfig(MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames))
+}
+
+func MetaObjToMetaConfig(atsData tc.ATSConfigMetaData) string {
+	bts, err := json.Marshal(atsData)
+	if err != nil {
+		// should never happen
+		log.Errorln("marshalling meta config: " + err.Error())
+		bts = []byte("error encoding to json, see log for details")
+	}
+	return string(bts)
+}
+
+func MakeMetaObj(
+	serverHostName tc.CacheName,
+	server *ServerInfo,
+	tmURL string, // global tm.url Parameter
+	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
+	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
+	uriSignedDSes []tc.DeliveryServiceName,
+	scopeParams map[string]string, // map[configFileName]scopeParam
+	dsNames map[tc.DeliveryServiceName]struct{},
+) tc.ATSConfigMetaData {
 	if tmURL == "" {
 		log.Errorln("ats.GetConfigMetadata: global tm.url parameter missing or empty! Setting empty in meta config!")
 	}
@@ -133,14 +156,7 @@ locationParamsFor:
 
 		atsData.ConfigFiles = append(atsData.ConfigFiles, atsCfg)
 	}
-
-	bts, err := json.Marshal(atsData)
-	if err != nil {
-		// should never happen
-		log.Errorln("marshalling chkconfig NameVersions: " + err.Error())
-		bts = []byte("error encoding to json, see log for details")
-	}
-	return string(bts)
+	return atsData
 }
 
 func getServerScope(cfgFile string, serverType string, scopeParams map[string]string) tc.ATSConfigMetaDataConfigFileScope {
@@ -182,7 +198,7 @@ func getScope(cfgFile string, scopeParams map[string]string) tc.ATSConfigMetaDat
 		return tc.ATSConfigMetaDataConfigFileScopeProfiles
 	case cfgFile == "bg_fetch.config",
 		cfgFile == "regex_revalidate.config",
-		cfgFile == "ssl_multicert.config",
+		cfgFile == SSLMultiCertConfigFileName,
 		strings.HasPrefix(cfgFile, "cacheurl") && strings.HasSuffix(cfgFile, ".config"),
 		strings.HasPrefix(cfgFile, "hdr_rw_") && strings.HasSuffix(cfgFile, ".config"),
 		strings.HasPrefix(cfgFile, "regex_remap_") && strings.HasSuffix(cfgFile, ".config"),

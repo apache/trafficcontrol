@@ -25,6 +25,7 @@ package tc
 type RolesResponse struct {
 	// in: body
 	Response []Role `json:"response"`
+	Alerts
 }
 
 // RoleResponse is a single Role response for Update and Create to depict what
@@ -34,6 +35,7 @@ type RolesResponse struct {
 type RoleResponse struct {
 	// in: body
 	Response Role `json:"response"`
+	Alerts
 }
 
 // Role ...

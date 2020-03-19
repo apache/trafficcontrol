@@ -20,30 +20,18 @@ package cfgfile
  */
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileCDNSetDSCP(cfg config.TCCfg, cdnNameOrID string, fileName string) (string, error) {
-	cdnName, err := toreq.GetCDNNameFromCDNNameOrID(cfg, cdnNameOrID)
-	if err != nil {
-		return "", errors.New("getting CDN name from '" + cdnNameOrID + "': " + err.Error())
-	}
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
+func GetConfigFileCDNSetDSCP(toData *config.TOData, fileName string) (string, string, error) {
 	// TODO verify prefix, suffix, and that it's a number? Perl doesn't.
 	dscpNumStr := fileName
 	dscpNumStr = strings.TrimPrefix(dscpNumStr, "set_dscp_")
 	dscpNumStr = strings.TrimSuffix(dscpNumStr, ".config")
 
-	txt := atscfg.MakeSetDSCPDotConfig(cdnName, toToolName, toURL, dscpNumStr)
-	return txt, nil
+	return atscfg.MakeSetDSCPDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, dscpNumStr), atscfg.ContentTypeSetDSCPDotConfig, nil
 }

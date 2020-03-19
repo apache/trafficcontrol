@@ -26,6 +26,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const ContentTypeServerUnknownConfig = ContentTypeTextASCII
+
 func MakeServerUnknown(
 	serverName tc.CacheName,
 	serverDomain string,
