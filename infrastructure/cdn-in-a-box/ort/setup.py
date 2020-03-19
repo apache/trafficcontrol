@@ -61,6 +61,7 @@ setup(
 	keywords='network connection configuration TrafficControl',
 	packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 	install_requires=['setuptools', 'typing', 'requests', 'urllib3', 'distro', 'psutil', 'Apache-TrafficControl==1.1.3'],
+	extras_require={'dev': ['unittest']},
 	# data_files=[('etc/crontab', ['traffic_ops_ort.crontab'])],
 	entry_points={
 		'console_scripts': [
