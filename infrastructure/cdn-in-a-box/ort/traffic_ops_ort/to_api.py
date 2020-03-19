@@ -137,7 +137,7 @@ class API(TOSession):
 		except ValueError:
 			raise ConnectionError
 
-	def setConfigFileAPIVersion(self, files:Munch) -> None:
+	def setConfigFileAPIVersion(self, files: Munch) -> None:
 		match_api_base = re.compile(r'^(/api/)\d+\.\d+(/)')
 		api_base_replacement = r'\g<1>%s\2' % API.VERSION
 		for configFile in files.configFiles:

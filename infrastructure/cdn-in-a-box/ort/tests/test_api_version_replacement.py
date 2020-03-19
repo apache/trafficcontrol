@@ -23,8 +23,8 @@ from munch import Munch
 class ApiVersionTest(TestCase):
 	def test_api_version_changed(self) -> None:
 		changed = Munch({'configFiles': [Munch({'key': 'value',
-												'apiUri': '/api/3.85/endpoint'})]})
+							'apiUri': '/api/3.85/endpoint'})]})
 		expected = Munch({'configFiles': [Munch({'key': 'value',
-												 'apiUri': '/api/%s/endpoint' % API.VERSION})]})
+							 'apiUri': '/api/%s/endpoint' % API.VERSION})]})
 		API.setConfigFileAPIVersion(None, changed)
 		self.assertEqual(expected, changed)
