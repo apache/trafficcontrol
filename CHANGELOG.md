@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
 - Fixed Traffic Portal regenerating CDN DNSSEC keys with the wrong effective date
+- Type mutation through the api is now restricted to only those types that apply to the "server" table
 - Updated The Traffic Ops Python, Go and Java clients to use API version 2.0 (when possible)
 - Updated CDN-in-a-Box scripts and enroller to use TO API version 2.0
 - Updated numerous, miscellaneous tools to use TO API version 2.0
@@ -82,6 +83,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /parameters/profile/:name
   - /parameters/validate
   - /phys_locations/:id (GET)
+  - /profile/:id (GET)
   - /profile/:id/unassigned_parameters
   - /profile/trimmed
   - /regions/:region_name/phys_locations
@@ -90,9 +92,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /riak/ping
   - /riak/stats
   - /servercheck/aadata
+  - /servers/:id (GET)
   - /servers/totals
   - /snapshot/:cdn
   - /stats_summary/create
+  - /statuses/:id (GET)
   - /to_extensions/:id/delete
   - /traffic_monitor/stats
   - /types/trimmed

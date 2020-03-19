@@ -22,8 +22,8 @@ var FormTypeController = function(type, $scope, $location, formUtils, stringUtil
     $scope.type = type;
 
     $scope.props = [
-        { name: 'name', type: 'text', required: true, maxLength: 45 },
-        { name: 'useInTable', type: 'text', required: true, maxLength: 45 }
+        { name: 'name', type: 'text', required: true, maxLength: 45},
+        { name: 'useInTable', type: 'text', required: false, maxLength: 45, disabled: true, defaultValue: "server" }
     ];
 
     $scope.labelize = stringUtils.labelize;

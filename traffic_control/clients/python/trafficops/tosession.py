@@ -1399,17 +1399,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'profiles/{profile_id:d}', ('2.0',))
-	def get_profile_by_id(self, profile_id=None):
-		"""
-		Get Profile by Id.
-		:ref:`to-api-profiles-id`
-		:param profile_id: The profile Id
-		:type profile_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('post', 'profiles', ('2.0',))
 	def create_profile(self, data=None):
 		"""
@@ -1651,17 +1640,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers/{server_id:d}', ('2.0',))
-	def get_server_by_id(self, server_id=None):
-		"""
-		Get Server by Server ID
-		:ref:`to-api-servers-id`
-		:param server_id: The server id to retrieve
-		:type server_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'servers/{server_id:d}/deliveryservices', ('2.0',))
 	def get_server_delivery_services(self, server_id=None):
 		"""
@@ -1825,21 +1803,10 @@ class TOSession(RestApiSession):
 	# Status
 	#
 	@api_request('get', 'statuses', ('2.0',))
-	def get_statuses(self):
+	def get_statuses(self, query_params=None):
 		"""
 		Retrieves a list of the server status codes available.
 		:ref:`to-api-statuses`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'statuses/{status_id:d}', ('2.0',))
-	def get_statuses_by_id(self, status_id=None):
-		"""
-		Retrieves a server status by ID.
-		:ref:`to-api-statuses-id`
-		:param status_id: The status id to retrieve
-		:type status_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

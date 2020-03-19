@@ -25,11 +25,12 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
 const ServerCacheDotConfigIncludeInactiveDSes = false // TODO move to lib/go-atscfg
 
-func GetConfigFileServerCacheDotConfig(toData *TOData) (string, string, error) {
+func GetConfigFileServerCacheDotConfig(toData *config.TOData) (string, string, error) {
 	// TODO TOAPI add /servers?cdn=1 query param
 
 	// TODO remove this, we generated the scope, we know it's right? Or should we have an extra safety check?
