@@ -50,6 +50,14 @@ type ServiceCategory struct {
 	//
 	// required: true
 	Name string `json:"name" db:"name"`
+
+	// ServiceCategory Tenant Id
+	//
+	TenantID int `json:"tenantId" db:"tenant_id"`
+
+	// ServiceCategory Tenant Name
+	//
+	TenantName string `json:"tenant"`
 }
 
 // ServiceCategoryNullable is a nullable struct that holds info about a service category
@@ -57,4 +65,6 @@ type ServiceCategoryNullable struct {
 	ID          *int       `json:"id" db:"id"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        *string    `json:"name" db:"name"`
+	TenantID    *int       `json:"tenantId" db:"tenant_id"`
+	TenantName	*string	   `json:"tenant"`
 }

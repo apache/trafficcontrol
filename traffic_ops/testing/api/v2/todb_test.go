@@ -336,6 +336,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM cachegroup;
 	DELETE FROM coordinate;
 	DELETE FROM type;
+	DELETE FROM service_category; 
 	DELETE FROM status;
 	DELETE FROM snapshot;
 	DELETE FROM cdn;

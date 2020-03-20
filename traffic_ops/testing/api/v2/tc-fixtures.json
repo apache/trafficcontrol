@@ -2145,6 +2145,16 @@
             "serverCapability": "bar"
         }
     ],
+    "serviceCategories": [
+        {
+            "name": "serviceCategory1",
+            "tenantId": 3
+        },
+        {
+            "name": "serviceCategory2",
+            "tenantId": 4
+        }
+    ],
     "staticdnsentries": [
         {
             "address": "192.168.0.1",

@@ -12,10 +12,11 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE deliveryservice ADD COLUMN service_category int;
+ALTER TABLE deliveryservice ADD COLUMN service_category INT REFERENCES service_category(id);
 CREATE TABLE IF NOT EXISTS service_category (
     id SERIAL PRIMARY KEY,
-    name TEXT,
+    name TEXT NOT NULL,
+    tenant_id INT NOT NULL,
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
                                             );
 

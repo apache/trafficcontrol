@@ -17,7 +17,22 @@
  * under the License.
  */
 
-var FormServiceCategoryController = function(serviceCategory, $scope, $location, formUtils, stringUtils, locationUtils) {
+var FormServiceCategoryController = function(serviceCategory, $scope, $location, formUtils, stringUtils, locationUtils, tenantService, tenantUtils) {
+
+    var getTenants = function() {
+        tenantService.getTenant()
+            .then(function(tenant) {
+                tenantService.getTenants()
+                    .then(function(tenants) {
+                        $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant.parentId, []);
+                        tenantUtils.addLevels($scope.tenants);
+                    });
+            });
+    };
+
+    $scope.tenantLabel = function(tenant) {
+        return '-'.repeat(tenant.level) + ' ' + tenant.name;
+    };
 
     $scope.serviceCategory = serviceCategory;
 
@@ -33,7 +48,12 @@ var FormServiceCategoryController = function(serviceCategory, $scope, $location,
         $location.path($location.path() + '/delivery-services');
     };
 
+    var init = function () {
+        getTenants();
+    };
+    init();
+
 };
 
-FormServiceCategoryController.$inject = ['serviceCategory', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
+FormServiceCategoryController.$inject = ['serviceCategory', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'tenantService', 'tenantUtils'];
 module.exports = FormServiceCategoryController;

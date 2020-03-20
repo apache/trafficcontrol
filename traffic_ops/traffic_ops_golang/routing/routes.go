@@ -697,9 +697,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodDelete, `server_server_capabilities/?$`, api.DeleteHandler(&server.TOServerServerCapability{}), auth.PrivLevelOperations, Authenticated, nil, 2058714058, noPerlBypass},
 
 		//Service Categories: CRUD
-		{api.Version{2, 0}, http.MethodGet, `servicecategories/?(\.json)?$`, api.ReadHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelReadOnly, Authenticated, nil, 1085181543, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `servicecategories/{id}$`, api.DeprecatedReadHandler(&servicecategory.TOServiceCategory{}, util.StrPtr("GET /servicecategories with the 'id' parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 1241497903, noPerlBypass},
-		{api.Version{2, 0}, http.MethodPut, `servicecategories/{id}$`, api.UpdateHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, Authenticated, nil, 306369141, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `servicecategories/?$`, api.ReadHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelReadOnly, Authenticated, nil, 1085181543, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPut, `servicecategories/{id}/?$`, api.UpdateHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, Authenticated, nil, 306369141, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `servicecategories/?$`, api.CreateHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, Authenticated, nil, 553713801, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `servicecategories/{id}$`, api.DeleteHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, Authenticated, nil, 1325382238, noPerlBypass},
 
@@ -840,8 +839,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		////DeliveryServices
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 2238317294, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 244348195, noPerlBypass},
-		{api.Version{2, 0}, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV16, auth.PrivLevelOperations, Authenticated, nil, 506431433, noPerlBypass},
-		{api.Version{2, 0}, http.MethodPut, `deliveryservices/{id}/?(\.json)?$`, deliveryservice.UpdateV16, auth.PrivLevelOperations, Authenticated, nil, 1766567528, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPost, `deliveryservices/?$`, deliveryservice.CreateV20, auth.PrivLevelOperations, Authenticated, nil, 506431433, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPut, `deliveryservices/{id}/?$`, deliveryservice.UpdateV20, auth.PrivLevelOperations, Authenticated, nil, 1766567528, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `deliveryservices/{id}/safe/?$`, deliveryservice.UpdateSafe, auth.PrivLevelOperations, Authenticated, nil, 247210931, perlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `deliveryservices/{id}/?$`, api.DeleteHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelOperations, Authenticated, nil, 222642074, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/servers/eligible/?$`, deliveryservice.GetServersEligible, auth.PrivLevelReadOnly, Authenticated, nil, 274761584, noPerlBypass},

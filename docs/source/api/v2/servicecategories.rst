@@ -15,9 +15,9 @@
 
 .. _to-api-service-categories:
 
-************
+**********************
 ``service categories``
-************
+**********************
 
 
 ``GET``
@@ -38,6 +38,8 @@ Request Structure
 	| id        | Filter for :term:`Service Categories` having this integral, unique identifier                                 |
 	+-----------+---------------------------------------------------------------------------------------------------------------+
 	| name      | Filter for :term:`Service Categories` with this name                                                          |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| tenant    | Return only :term:`Service Categories` belonging to the tenant identified by this integral, unique identifier |                                                   |
 	+-----------+---------------------------------------------------------------------------------------------------------------+
 	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|           | array                                                                                                         |
@@ -67,6 +69,8 @@ Response Structure
 :id:          The integral, unique identifier of this :term:`Service Category`
 :name:        This :term:`Service Category`'s name
 :lastUpdated: The date and time at which this :term:`Service Category` was last modified, in ISO format
+:tenantId:    An integral, unique identifier for the :term:`Tenant` that owns this :term:`Service Category`
+:tenant:      The name of the :term:`Tenant` that owns this :term:`Service Category`
 
 .. code-block:: http
 	:caption: Response Example
@@ -84,15 +88,17 @@ Response Structure
 	Date: Wed, 11 Mar 2020 20:02:47 GMT
 	Content-Length: 102
 
-{
-    "response": [
-        {
-            "id": 5,
-            "lastUpdated": "2020-03-04 15:46:20-07",
-            "name": "SERVICE_CATEGORY_NAME"
-        }
-    ]
-}
+    {
+        "response": [
+            {
+                "id": 5,
+                "lastUpdated": "2020-03-04 15:46:20-07",
+                "name": "SERVICE_CATEGORY_NAME",
+                "tenantId": 1,
+                "tenant": "TENANT_NAME"
+            }
+        ]
+    }
 
 ``POST``
 ========
@@ -104,7 +110,8 @@ Create a new service category.
 
 Request Structure
 -----------------
-:name:  The name of the new service category
+:name:        This :term:`Service Category`'s name
+:tenantId:    An integral, unique identifier for the :term:`Tenant` that owns this :term:`Service Category`
 
 .. code-block:: http
 	:caption: Request Example
@@ -118,14 +125,17 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"name": "test",
+		"name": "SERVICE_CATEGORY_NAME",
+            "tenantId": 1,
 	}
 
 Response Structure
 ------------------
-:id:          An integral, unique identifier for this Service Category
-:lastUpdated: The date and time at which this Service Category was last modified, in ISO format
-:name:        The :term:`Service Category` name
+:id:          The integral, unique identifier of this :term:`Service Category`
+:name:        This :term:`Service Category`'s name
+:lastUpdated: The date and time at which this :term:`Service Category` was last modified, in ISO format
+:tenantId:    An integral, unique identifier for the :term:`Tenant` that owns this :term:`Service Category`
+:tenant:      The name of the :term:`Tenant` that owns this :term:`Service Category`
 
 .. code-block:: http
 	:caption: Response Example
@@ -153,6 +163,8 @@ Response Structure
     "response": {
         "id": 1,
         "lastUpdated": "2020-03-11 14:12:20-06",
-        "name": "test"
+        "name": "SERVICE_CATEGORY_NAME",
+        "tenantId": 1,
+        "tenant": null
     }
 }

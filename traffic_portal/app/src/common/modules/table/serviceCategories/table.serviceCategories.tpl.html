@@ -34,11 +34,13 @@ under the License.
             <thead>
             <tr class="headings">
                 <th>Name</th>
+                <th>Tenant</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editServiceCategory(sc.id)" ng-repeat="sc in ::serviceCategories">
                 <td name="name" data-search="^{{::sc.name}}$">{{::sc.name}}</td>
+                <td name="tenant" data-search="^{{::sc.tenant}}$">{{::sc.tenant}}</td>
             </tr>
             </tbody>
         </table>

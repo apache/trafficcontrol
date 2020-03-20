@@ -721,7 +721,7 @@ WHERE
 		&dsV30.FirstHeaderRewrite,
 		&dsV30.InnerHeaderRewrite,
 		&dsV30.LastHeaderRewrite,
-		&dsV30.ServiceCategoryName,
+		&dsV30.ServiceCategoryId,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV30.ID), nil
