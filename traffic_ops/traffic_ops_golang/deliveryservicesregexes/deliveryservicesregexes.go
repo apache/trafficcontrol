@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/lib/pq"
 )
 
 func Get(w http.ResponseWriter, r *http.Request) {
@@ -42,32 +43,33 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
 	q := `
-SELECT ds.xml_id, ds.tenant_id, dsr.set_number, r.pattern, rt.name as type
+SELECT ds.xml_id, dsr.set_number, r.pattern, rt.name as type
 FROM deliveryservice_regex as dsr
 JOIN deliveryservice as ds ON dsr.deliveryservice = ds.id
 JOIN regex as r ON dsr.regex = r.id
 JOIN type as rt ON r.type = rt.id
+WHERE ds.tenant_id = ANY($1)
 `
-	rows, err := inf.Tx.Tx.Query(q)
+
+	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
+	// accessibleTenants = append(accessibleTenants, job.APIInfo().User.TenantID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
+	}
+	rows, err := inf.Tx.Tx.Query(q, pq.Array(accessibleTenants))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("querying deliveryserviceregexes: "+err.Error()))
 		return
 	}
 	defer rows.Close()
 	dsRegexes := map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex{}
-	dsTenants := map[tc.DeliveryServiceName]*int{}
 	for rows.Next() {
-		// if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-		// 	next;
-		// }
 		dsName := ""
-		dsTenantID := util.IntPtr(0)
 		setNumber := 0
 		pattern := ""
 		typeName := ""
-		if err = rows.Scan(&dsName, &dsTenantID, &setNumber, &pattern, &typeName); err != nil {
+		if err = rows.Scan(&dsName, &setNumber, &pattern, &typeName); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("scanning deliveryserviceregexes: "+err.Error()))
 			return
 		}
@@ -76,12 +78,6 @@ JOIN type as rt ON r.type = rt.id
 			SetNumber: setNumber,
 			Pattern:   pattern,
 		})
-		dsTenants[tc.DeliveryServiceName(dsName)] = dsTenantID
-	}
-
-	if dsRegexes, err = filterAuthorizedDSRegexes(inf.Tx.Tx, inf.User, dsRegexes, dsTenants); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking deliveryserviceregexes tenancy: "+err.Error()))
-		return
 	}
 
 	respRegexes := []tc.DeliveryServiceRegexes{}
@@ -114,6 +110,18 @@ JOIN type as rt ON r.type = rt.id
 		return
 	}
 
+	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
+	// accessibleTenants = append(accessibleTenants, job.APIInfo().User.TenantID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
+	}
+	if len(where) == 0 {
+		where += " AND ds.tenant_id = ANY(:tenants) "
+	} else {
+		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) "
+	}
+	queryValues["tenants"] = pq.Array(accessibleTenants)
+
 	query := q + where + " ORDER BY dsr.set_number ASC" + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
@@ -133,10 +141,6 @@ JOIN type as rt ON r.type = rt.id
 		regexes = append(regexes, rx)
 		dsTenants[rx.ID] = dsTenantID
 	}
-	if regexes, err = filterAuthorizedDSIDRegexes(inf.Tx.Tx, inf.User, regexes, dsTenants); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking deliveryserviceregexes tenancy: "+err.Error()))
-		return
-	}
 	api.WriteResp(w, r, regexes)
 }
 
@@ -153,16 +157,21 @@ func DSGetID(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	q := `
-SELECT ds.tenant_id, dsr.set_number, r.id, r.pattern, rt.id as type, rt.name as type_name
+SELECT dsr.set_number, r.id, r.pattern, rt.id as type, rt.name as type_name
 FROM deliveryservice_regex as dsr
 JOIN deliveryservice as ds ON dsr.deliveryservice = ds.id
 JOIN regex as r ON dsr.regex = r.id
 JOIN type as rt ON r.type = rt.id
-WHERE ds.ID = $1
-AND r.ID = $2
+WHERE ds.ID = $1 AND ds.tenant_id = ANY($2)
+AND r.ID = $3
 ORDER BY dsr.set_number ASC
 `
-	rows, err := inf.Tx.Tx.Query(q, inf.IntParams["dsid"], inf.IntParams["regexid"])
+	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
+	// accessibleTenants = append(accessibleTenants, job.APIInfo().User.TenantID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
+	}
+	rows, err := inf.Tx.Tx.Query(q, inf.IntParams["dsid"], pq.Array(accessibleTenants), inf.IntParams["regexid"])
 	if err != nil {
 		userErr = api.LogErr(r, errCode, userErr, errors.New("querying deliveryserviceregexes getid: "+err.Error()))
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
@@ -171,24 +180,15 @@ ORDER BY dsr.set_number ASC
 	}
 	defer rows.Close()
 	regexes := []tc.DeliveryServiceIDRegex{}
-	dsTenants := map[int]*int{}
 	for rows.Next() {
-		dsTenantID := util.IntPtr(0)
 		rx := tc.DeliveryServiceIDRegex{}
-		if err = rows.Scan(&dsTenantID, &rx.SetNumber, &rx.ID, &rx.Pattern, &rx.Type, &rx.TypeName); err != nil {
+		if err = rows.Scan(&rx.SetNumber, &rx.ID, &rx.Pattern, &rx.Type, &rx.TypeName); err != nil {
 			userErr = api.LogErr(r, errCode, userErr, errors.New("scanning deliveryserviceregexes getid: "+err.Error()))
 			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
 			api.WriteAlerts(w, r, errCode, alerts)
 			return
 		}
 		regexes = append(regexes, rx)
-		dsTenants[rx.ID] = dsTenantID
-	}
-	if regexes, err = filterAuthorizedDSIDRegexes(inf.Tx.Tx, inf.User, regexes, dsTenants); err != nil {
-		userErr = api.LogErr(r, errCode, userErr, errors.New("checking deliveryserviceregexes tenancy: "+err.Error()))
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, errCode, alerts)
-		return
 	}
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, regexes)
 }
