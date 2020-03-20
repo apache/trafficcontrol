@@ -53,7 +53,6 @@ WHERE ds.tenant_id = ANY($1)
 `
 
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
-	// accessibleTenants = append(accessibleTenants, job.APIInfo().User.TenantID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
 	}
@@ -111,7 +110,6 @@ JOIN type as rt ON r.type = rt.id
 	}
 
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
-	// accessibleTenants = append(accessibleTenants, job.APIInfo().User.TenantID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
 	}
@@ -167,7 +165,6 @@ AND r.ID = $3
 ORDER BY dsr.set_number ASC
 `
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
-	// accessibleTenants = append(accessibleTenants, job.APIInfo().User.TenantID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
 	}

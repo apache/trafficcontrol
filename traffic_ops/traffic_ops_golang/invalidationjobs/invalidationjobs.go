@@ -217,7 +217,6 @@ func (job *InvalidationJob) Read() ([]interface{}, error, error, int) {
 	}
 
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(job.APIInfo().Tx.Tx, job.APIInfo().User.TenantID)
-	// accessibleTenants = append(accessibleTenants, job.APIInfo().User.TenantID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting accessible tenants for user - %v", err), http.StatusInternalServerError
 	}
