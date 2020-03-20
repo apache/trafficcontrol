@@ -25,7 +25,6 @@ func TestRegions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
 		UpdateTestRegions(t)
 		GetTestRegions(t)
-		GetTestRegionsByNamePath(t)
 	})
 }
 
@@ -81,15 +80,6 @@ func GetTestRegions(t *testing.T) {
 		resp, _, err := TOSession.GetRegionByName(region.Name)
 		if err != nil {
 			t.Errorf("cannot GET Region by region: %v - %v", err, resp)
-		}
-	}
-}
-
-func GetTestRegionsByNamePath(t *testing.T) {
-	for _, region := range testData.Regions {
-		_, _, err := TOSession.GetRegionByNamePath(region.Name)
-		if err != nil {
-			t.Errorf("cannot GET Region by name: %v - %v", region.Name, err)
 		}
 	}
 }

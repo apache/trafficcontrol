@@ -18,6 +18,7 @@ package tc
 // DeliveryServiceRegexResponse ...
 type DeliveryServiceRegexResponse struct {
 	Response []DeliveryServiceRegexes `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceRegexes ...

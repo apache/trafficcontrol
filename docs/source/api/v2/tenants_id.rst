@@ -19,65 +19,6 @@
 ``tenants/{{ID}}``
 ******************
 
-``GET``
-=======
-Get a specific :term:`Tenant`.
-
-:Auth. Required: Yes
-:Roles Required: None
-:Response Type:  Array
-
-Request Structure
------------------
-.. table:: Request Path Parameters
-
-	+------+----------------------------------------------------------------+
-	| Name |                 Description                                    |
-	+======+================================================================+
-	|  ID  | The integral, unique identifier for the tenant being inspected |
-	+------+----------------------------------------------------------------+
-
-.. code-block:: http
-	:caption: Request Structure
-
-	GET /api/2.0/tenants/1 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
-	Accept: */*
-	Cookie: mojolicious=...
-
-Response Structure
-------------------
-:active:      A boolean which indicates whether or not the :term:`Tenant` is active
-:id:          The integral, unique identifier of this :term:`Tenant`
-:name:        This :term:`Tenant`'s name
-:parentId:    The integral, unique identifier of this :term:`Tenant`'s parent
-
-.. code-block:: http
-	:caption: Response Example
-
-	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
-	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: Yzr6TfhxgpZ3pbbrr4TRG4wC3PlnHDDzgs2igtz/1ppLSy2MzugqaGW4y5yzwzl5T3+7q6HWej7GQZt1XIVeZQ==
-	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 11 Dec 2018 20:00:28 GMT
-	Content-Length: 106
-
-	{ "response": [
-		{
-			"id": 1,
-			"name": "root",
-			"active": true,
-			"lastUpdated": "2018-12-10 19:11:17+00",
-			"parentId": null
-		}
-	]}
-
 ``PUT``
 =======
 Updates a specific tenant.

@@ -92,10 +92,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /riak/ping
   - /riak/stats
   - /servercheck/aadata
+  - /servers/status
   - /servers/:id (GET)
   - /servers/totals
   - /snapshot/:cdn
   - /stats_summary/create
+  - /tenants/:id (GET)
   - /statuses/:id (GET)
   - /to_extensions/:id/delete
   - /traffic_monitor/stats

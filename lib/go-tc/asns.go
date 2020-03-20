@@ -25,6 +25,7 @@ package tc
 type ASNsResponse struct {
 	// in: body
 	Response []ASN `json:"response"`
+	Alerts
 }
 
 // ASNResponse is a single ASN response for Update and Create to depict what
@@ -34,6 +35,7 @@ type ASNsResponse struct {
 type ASNResponse struct {
 	// in: body
 	Response ASN `json:"response"`
+	Alerts
 }
 
 // ASN contains info relating to a single Autonomous System Number (see RFC
