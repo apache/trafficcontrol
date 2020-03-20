@@ -23,9 +23,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNRegexRevalidateDotConfig(toData *TOData) (string, string, error) {
+func GetConfigFileCDNRegexRevalidateDotConfig(toData *config.TOData) (string, string, error) {
 	params := map[string][]string{}
 	for _, param := range toData.GlobalParams {
 		if param.ConfigFile != atscfg.RegexRevalidateFileName {

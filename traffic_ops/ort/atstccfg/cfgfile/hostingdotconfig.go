@@ -25,12 +25,13 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
 const ServerHostingDotConfigMidIncludeInactive = false
 const ServerHostingDotConfigEdgeIncludeInactive = true
 
-func GetConfigFileServerHostingDotConfig(toData *TOData) (string, string, error) {
+func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string, error) {
 	fileParams := ParamsToMap(FilterParams(toData.ServerParams, atscfg.HostingConfigParamConfigFile, "", "", ""))
 
 	cdnServers := map[tc.CacheName]tc.Server{}

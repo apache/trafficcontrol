@@ -100,11 +100,11 @@ func (s *TOServer) Validate() error {
 		errs = append(errs, tc.NeedsAtLeastOneIPError)
 	}
 
-	if *s.IPIsService && (s.IPAddress == nil || *s.IPAddress == "") {
+	if s.IPIsService != nil && *s.IPIsService && (s.IPAddress == nil || *s.IPAddress == "") {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 
-	if *s.IP6IsService && (s.IP6Address == nil || *s.IP6Address == "") {
+	if s.IP6IsService != nil && *s.IP6IsService && (s.IP6Address == nil || *s.IP6Address == "") {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 

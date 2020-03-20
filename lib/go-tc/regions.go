@@ -22,6 +22,7 @@ package tc
 // RegionsResponse ...
 type RegionsResponse struct {
 	Response []Region `json:"response"`
+	Alerts
 }
 
 // Region ...

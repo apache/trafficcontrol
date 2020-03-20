@@ -132,7 +132,7 @@ func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 
 // GetProfileByID GETs a Profile by the Profile ID.
 func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_PROFILES, id)
+	route := fmt.Sprintf("%s?id=%d", API_PROFILES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

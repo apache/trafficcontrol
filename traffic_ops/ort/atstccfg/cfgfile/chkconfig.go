@@ -21,9 +21,10 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileServerChkconfig(toData *TOData) (string, string, error) {
+func GetConfigFileServerChkconfig(toData *config.TOData) (string, string, error) {
 	fileParams := map[string][]string{}
 	for _, param := range toData.ServerParams {
 		if param.ConfigFile != atscfg.ChkconfigParamConfigFile {
