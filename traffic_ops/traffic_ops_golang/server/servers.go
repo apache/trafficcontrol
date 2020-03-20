@@ -108,6 +108,10 @@ func (s *TOServer) Validate() error {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 
+	if !*s.IPIsService && !*s.IP6IsService {
+		errs = append(errs, tc.NeedsAtLeastOneServiceAddressError)
+	}
+
 	validateErrs := validation.Errors{
 		"cachegroupId":   validation.Validate(s.CachegroupID, validation.NotNil),
 		"cdnId":          validation.Validate(s.CDNID, validation.NotNil),
