@@ -127,7 +127,7 @@ cd /opt/traffic_monitor
 
 traffic_monitor_command=(/opt/traffic_monitor/bin/traffic_monitor -opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg -config /opt/traffic_monitor/conf/traffic_monitor.cfg);
 if [[ "$TM_DEBUG_ENABLE" == true ]]; then
-  traffic_monitor_command=(dlv '--continue' '--listen=:2344' '--accept-multiclient=true' '--headless=true' '--api-version=2' exec
+  traffic_monitor_command=(dlv '--check-go-version=false' '--accept-multiclient=true' '--continue' '--listen=:2344' '--headless=true' '--api-version=2' exec
     "${traffic_monitor_command[0]}" -- "${traffic_monitor_command[@]:1}");
 fi;
 "${traffic_monitor_command[@]}"
