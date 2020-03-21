@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.11 AS enroller-builder
+FROM golang:1.14.1 AS enroller-builder
 
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/

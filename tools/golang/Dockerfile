@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.11-alpine3.10 AS base
+FROM golang:1.14.1-alpine3.11 AS base
 
 RUN apk --no-cache add gcc musl-dev git
 

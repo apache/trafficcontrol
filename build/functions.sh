@@ -193,7 +193,7 @@ function createDocsTarball() {
 }
 
 # ----------------------------------------
-# verify if the go compiler is version 1.11 or higher, returns 0 if if not. returns 1 if it is.
+# verify if the go compiler is version 1.14 or higher, returns 0 if if not. returns 1 if it is.
 # 
 function verify_and_set_go_version () {
   GO_VERSION="none"
@@ -206,7 +206,7 @@ function verify_and_set_go_version () {
     
     go_version=`$g version | awk '{print $3}'`
 
-    if [[ $go_version =~ go([1-9])\.([1-9]+) ]] && [[ ${BASH_REMATCH[1]} -ge 1 ]] && [[ ${BASH_REMATCH[2]} -ge 11 ]]; then
+    if [[ $go_version =~ go([1-9])\.([1-9]+) ]] && [[ ${BASH_REMATCH[1]} -ge 1 ]] && [[ ${BASH_REMATCH[2]} -ge 13 ]]; then
       GO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; export GO_VERSION
       GO=$g; export GO
       PATH=`dirname $g`:$PATH; export PATH
@@ -223,7 +223,7 @@ function verify_and_set_go_version () {
   done
 
   if [[ $GO == none ]]; then
-    echo "ERROR: this build needs go 1.11 or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
+    echo "ERROR: this build needs go 1.14 or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
     return 0
   fi
 }

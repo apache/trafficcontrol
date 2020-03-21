@@ -23,7 +23,7 @@
 
 To run `traffic_ops_golang` proxy locally the following prerequisites are needed:
 
-* Golang 1.11 or greater See: [https://golang.org/doc/install](https://golang.org/doc/install)
+* Golang 1.14 or greater See: [https://golang.org/doc/install](https://golang.org/doc/install)
 * Postgres 9.6 or greater
 * Because the Golang proxy is fronting Mojolicious Perl you need to have that service setup and running as well [TO Perl Setup Here](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/INSTALL.md)
 
