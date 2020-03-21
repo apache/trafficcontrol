@@ -42,16 +42,18 @@ update-ca-certificates
 cp -af /etc/riak/riak.conf /etc/riak/riak.conf.orig
 grep -v -E '^(listener|#)' /etc/riak/riak.conf.orig  | uniq | sort > /etc/riak/riak.conf
 
+<<RIAK_CONFIG cat >> /etc/riak/riak.conf;
 # Update the riak listener config
-echo "nodename = riak@0.0.0.0" >> /etc/riak.conf
-echo "listener.protobuf.internal = 0.0.0.0:$TV_INT_PORT" >> /etc/riak/riak.conf
-echo "listener.http.internal = 0.0.0.0:$TV_HTTP_PORT" >> /etc/riak/riak.conf
-echo "listener.https.internal = 0.0.0.0:$TV_HTTPS_PORT" >> /etc/riak/riak.conf
+nodename = riak@0.0.0.0
+listener.protobuf.internal = 0.0.0.0:$TV_INT_PORT
+listener.http.internal = 0.0.0.0:$TV_HTTP_PORT
+listener.https.internal = 0.0.0.0:$TV_HTTPS_PORT
 
 # Update SSL/TLS Certificate Config
-echo "ssl.certfile = $X509_INFRA_CERT_FILE" >> /etc/riak/riak.conf
-echo "ssl.keyfile = $X509_INFRA_KEY_FILE" >> /etc/riak/riak.conf
-echo "ssl.cacertfile = /etc/pki/tls/certs/ca-bundle.crt" >> /etc/riak/riak.conf
+ssl.certfile = $X509_INFRA_CERT_FILE
+ssl.keyfile = $X509_INFRA_KEY_FILE
+ssl.cacertfile = /etc/pki/tls/certs/ca-bundle.crt
 
 # Enable search with Apache Solr
-echo "search = on" >>  /etc/riak/riak.conf
+search = on
+RIAK_CONFIG
