@@ -64,7 +64,9 @@ The following steps need to be performed on each Riak server in the cluster:
 	- ``ssl.keyfile = /etc/riak/certs/server.key``
 	- ``ssl.cacertfile = /etc/pki/tls/certs/ca-bundle.crt``
 
-#. Add a line at the bottom of the :file:`riak.conf` for TLSv1 by setting ``tls_protocols.tlsv1 = on``
+.. _tv-admin-enable-tlsv1.1:
+
+#. Add a line at the bottom of the :file:`riak.conf` for TLSv1.1 by setting ``tls_protocols.tlsv1.1 = on``
 #. Once the configuration file has been updated restart Riak
 #. Consult the `Riak documentation <https://docs.riak.com/riak/kv/latest/setup/installing/verify/>`_ for instructions on how to verify the installed service
 
@@ -177,7 +179,7 @@ After Riak has been configured to use Riak Search, permissions still need need t
 		# Upload the schema to the Riak server using its API
 		# Note that the assumptions made here are that the "admin" user's password is "pass"
 		# and the server is accessible at port 8088 on the hostname "trafficvault.infra.ciab.test"
-		curl -kvsX PUT "https://admin:pass@trafficvault.infra.ciab.test:8088/search/schema/sslkeys" -H "Content-Type: application/xml" -d @sslkeys.xml
+		curl --tlsv1.1 --tls-max 1.1 -kvsX PUT "https://admin:pass@trafficvault.infra.ciab.test:8088/search/schema/sslkeys" -H "Content-Type: application/xml" -d @sslkeys.xml
 
 #. Add the search index to Riak.
 
@@ -186,7 +188,7 @@ After Riak has been configured to use Riak Search, permissions still need need t
 
 		# Note that the assumptions made here are that the "admin" user's password is "pass"
 		# and the server is accessible at port 8088 on the hostname "trafficvault.infra.ciab.test"
-		curl -kvsX PUT "https://admin:pass@trafficvault.infra.ciab.test:8088/search/index/sslkeys" -H 'Content-Type: application/json' -d '{"schema":"sslkeys"}'
+		curl --tlsv1.1 --tls-max 1.1 -kvsX PUT "https://admin:pass@trafficvault.infra.ciab.test:8088/search/index/sslkeys" -H 'Content-Type: application/json' -d '{"schema":"sslkeys"}'
 
 4. Associate the ``sslkeys`` index to the ``ssl`` bucket in Riak
 
@@ -195,7 +197,7 @@ After Riak has been configured to use Riak Search, permissions still need need t
 
 		# Note that the assumptions made here are that the "admin" user's password is "pass"
 		# and the server is accessible at port 8088 on the hostname "trafficvault.infra.ciab.test"
-		curl -kvs -XPUT "https://admin:pass@trafficvault.infra.ciab.test:8088/buckets/ssl/props" -H'content-type:application/json' -d'{"props":{"search_index":"sslkeys"}}'
+		curl --tlsv1.1 --tls-max 1.1 -kvs -XPUT "https://admin:pass@trafficvault.infra.ciab.test:8088/buckets/ssl/props" -H'content-type:application/json' -d'{"props":{"search_index":"sslkeys"}}'
 
 Adding Newly Indexed Fields to Existing Records
 """""""""""""""""""""""""""""""""""""""""""""""
@@ -226,7 +228,7 @@ To validate the search is working run a query against the Riak database server, 
 	# Traffic Ops server is available at the hostname "trafficops.infra.ciab.test"
 
 	# Verify by querying Riak directly
-	curl -kvs "https://admin:password@trafficvault.infra.ciab.test:8088/search/query/sslkeys?wt=json&q=cdn:CDN-in-a-Box"
+	curl --tlsv1.1 --tls-max 1.1 -kvs "https://admin:password@trafficvault.infra.ciab.test:8088/search/query/sslkeys?wt=json&q=cdn:CDN-in-a-Box"
 
 	# Verify using the Traffic Ops API
 	curl -Lvs -H "Cookie: $COOKIE" https://trafficops.infra.ciab.test/api/2.0/cdns/name/mycdn/sslkeys

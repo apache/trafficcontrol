@@ -163,7 +163,8 @@ const (
 	       "user": "riakuser",
 	       "password": "password",
 	       "tlsConfig": {
-	           "insecureSkipVerify": true
+	           "insecureSkipVerify": true,
+	           "maxVersion": 770
 	       }
 	   }
 	   	`

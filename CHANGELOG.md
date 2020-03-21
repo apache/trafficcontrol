@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Modified Traffic Router to separate availability statuses between IPv4 and IPv6.
 - Modified Traffic Portal and Traffic Ops to accept IPv6 only servers.
 - Updated Traffic Monitor to default to polling both IPv4 and IPv6.
+- Traffic Vault - Enable TLSv1.1
 
 ### Deprecated/Removed
 - The Traffic Ops `db/admin.pl` script has now been removed. Please use the `db/admin` binary instead.

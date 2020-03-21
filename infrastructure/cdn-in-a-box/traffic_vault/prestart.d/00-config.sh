@@ -54,6 +54,9 @@ ssl.certfile = $X509_INFRA_CERT_FILE
 ssl.keyfile = $X509_INFRA_KEY_FILE
 ssl.cacertfile = /etc/pki/tls/certs/ca-bundle.crt
 
+# Enable TLS 1.1 to work around erlang/otp#767
+tls_protocols.tlsv1.1 = on
+
 # Enable search with Apache Solr
 search = on
 RIAK_CONFIG

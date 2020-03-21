@@ -512,8 +512,10 @@ This file sets authentication options for connections to Traffic Vault. `traffic
 
 .. impl-detail:: The name of this file is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
-:password: The password to use when authenticating with Traffic Vault
-:user:     The username to use when authenticating with Traffic Vault
+:password:	The password to use when authenticating with Traffic Vault
+:user:		The username to use when authenticating with Traffic Vault
+:tlsConfig:	Options specifying how Traffic Ops uses TLS to connect to Traffic Vault go here. For a complete list of options, see `the crypto/tls GoDoc <https://godoc.org/crypto/tls#Config>`_.
+	:maxVersion:	This is the highest TLS version that Traffic Ops is allowed to use to connect to Traffic Vault. TLS 1.0 is 769, TLS 1.1 is 770, etc.
 
 Example riak.conf
 '''''''''''''''''
