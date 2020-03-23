@@ -103,7 +103,7 @@ func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
 
 // GetStatusByID GETs a Status by the Status ID.
 func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_STATUSES, id)
+	route := fmt.Sprintf("%s?id=%d", API_STATUSES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

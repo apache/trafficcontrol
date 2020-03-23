@@ -42,7 +42,7 @@ func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 // must be passed as a string.
 func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := get(to, fmt.Sprintf(API_TENANT_ID, id), &data)
+	reqInf, err := get(to, fmt.Sprintf("%s?id=%v", API_TENANTS, id), &data)
 	if err != nil {
 		return nil, reqInf, err
 	}

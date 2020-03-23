@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-parameters` with the query parameter ``id`` instead.
+
 Gets details about a specific :term:`Parameter`
 
 :Auth. Required: Yes
@@ -100,6 +103,12 @@ Response Structure
 			],
 			"secure": false,
 			"value": "/etc/trafficserver/"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /parameters with query parameter id instead",
+			"level": "warning"
 		}
 	]}
 

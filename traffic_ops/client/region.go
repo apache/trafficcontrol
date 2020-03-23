@@ -144,24 +144,6 @@ func (to *Session) DeleteRegionByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// GetRegionByNamePath gets a region by name, using the /api/version/region/name path.
-// This gets the same data as GetRegionByName, but uses a different API path to get the same data, and returns a slightly different format.
-func (to *Session) GetRegionByNamePath(name string) ([]tc.RegionName, ReqInf, error) {
-	url := apiBase + `/regions/name/` + url.QueryEscape(name)
-	reqResp, remoteAddr, err := to.request(http.MethodGet, url, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer reqResp.Body.Close()
-
-	resp := tc.RegionNameResponse{}
-	if err := json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
-		return nil, reqInf, err
-	}
-	return resp.Response, reqInf, nil
-}
-
 // DeleteRegion lets you DELETE a Region. Only 1 parameter is required, not both.
 func (to *Session) DeleteRegion(id *int, name *string) (tc.Alerts, ReqInf, error) {
 	v := url.Values{}

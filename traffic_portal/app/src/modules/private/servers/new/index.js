@@ -31,7 +31,9 @@ module.exports = angular.module('trafficPortal.private.servers.new', [])
                                 return {
                                     updPending: false,
                                     tcpPort: 80,
-                                    httpsPort: 443
+                                    httpsPort: 443,
+                                    ipIsService: false,
+                                    ip6IsService: false
                                 };
                             }
                         }

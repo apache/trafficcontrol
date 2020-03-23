@@ -104,7 +104,7 @@ func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 
 // GetTypeByID GETs a Type by the Type ID.
 func (to *Session) GetTypeByID(id int) ([]tc.Type, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_TYPES, id)
+	route := fmt.Sprintf("%s?id=%d", API_TYPES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

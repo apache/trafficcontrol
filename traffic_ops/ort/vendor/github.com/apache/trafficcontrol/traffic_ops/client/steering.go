@@ -16,29 +16,23 @@
 package client
 
 import (
-	"fmt"
-	"net"
-	"net/url"
+	"encoding/json"
+	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const API_SERVERS_STATUS = apiBase + "/servers/status"
-
-// GetServerStatusCounts gets the counts of each server status in Traffic Ops.
-// If typeName is non-nil, only statuses of the given server type name will be counted.
-func (to *Session) GetServerStatusCounts(typeName *string) (map[string]int, ReqInf, error) {
-	var remoteAddr net.Addr
+func (to *Session) Steering() ([]tc.Steering, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering`, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	reqUrl := API_SERVERS_STATUS
-	if typeName != nil {
-		reqUrl += fmt.Sprintf("?type=%s", url.QueryEscape(*typeName))
-	}
-	resp := struct {
-		Response map[string]int `json:"response"`
-	}{make(map[string]int)}
-
-	reqInf, err := get(to, reqUrl, &resp)
 	if err != nil {
 		return nil, reqInf, err
 	}
-	return resp.Response, reqInf, nil
+	defer resp.Body.Close()
+
+	data := struct {
+		Response []tc.Steering `json:"response"`
+	}{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data.Response, reqInf, err
 }

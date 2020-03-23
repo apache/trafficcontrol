@@ -25,6 +25,7 @@ import (
 )
 
 const LogsXMLFileName = "logs_xml.config"
+const ContentTypeLogsDotXML = `text/xml`
 
 func MakeLogsXMLDotConfig(
 	profileName string,

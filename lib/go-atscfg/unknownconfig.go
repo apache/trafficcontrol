@@ -23,6 +23,8 @@ import (
 	"strings"
 )
 
+const ContentTypeUnknownConfig = ContentTypeTextASCII
+
 func MakeUnknownConfig(
 	profileName string,
 	paramData map[string]string, // GetProfileParamData(tx, profile.ID, AstatsFileName)

@@ -94,7 +94,7 @@ func (to *Session) GetPhysLocations() ([]tc.PhysLocation, ReqInf, error) {
 
 // GET a PhysLocation by the PhysLocation ID
 func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_PHYS_LOCATIONS, id)
+	route := fmt.Sprintf("%s?id=%d", API_PHYS_LOCATIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

@@ -103,7 +103,7 @@ func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
 
 // GetParameterByID GETs a Parameter by the Parameter ID.
 func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_PARAMETERS, id)
+	route := fmt.Sprintf("%s?id=%d", API_PARAMETERS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

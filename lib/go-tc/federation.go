@@ -34,6 +34,7 @@ import (
 // Federations.
 type CDNFederationResponse struct {
 	Response []CDNFederation `json:"response"`
+	Alerts
 }
 
 // CreateCDNFederationResponse represents a Traffic Ops API response to a request to

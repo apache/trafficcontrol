@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-tenants` with the query parameter ``id`` instead.
+
 Get a specific :term:`Tenant`.
 
 :Auth. Required: Yes
@@ -75,6 +78,12 @@ Response Structure
 			"active": true,
 			"lastUpdated": "2018-12-10 19:11:17+00",
 			"parentId": null
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /tenants with query parameter id instead",
+			"level": "warning"
 		}
 	]}
 

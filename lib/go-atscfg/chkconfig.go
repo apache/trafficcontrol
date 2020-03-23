@@ -26,8 +26,8 @@ import (
 )
 
 const ChkconfigFileName = `chkconfig`
-
 const ChkconfigParamConfigFile = `chkconfig`
+const ContentTypeChkconfig = ContentTypeTextASCII
 
 type ChkConfigEntry struct {
 	Name string `json:"name"`
