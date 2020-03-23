@@ -319,9 +319,9 @@ in the payloads of this endpoint.
 ##### `/cdns/{{name}}/snapshot`
 This is a semantic change only - payloads remain structurally unchanged. The
 reported `ip`, `ip6` and `interfaceName` fields for elements of the
-`contentServers` array property should be an arbitrarily chosen IPv4 service
-address, an arbitrarily chosen IPv6 service address, and the interface name of
-that/those chosen address(es).
+`contentServers` array property should be the IPv4 service address (if one
+exists), the IPv6 service address (if one exists), and the name of the
+interface to which the chosen address(es) belong.
 
 ##### `/cdns/{{name}}/snapshot/new`
 This is a semantic change only - payloads remain structurally unchanged. The
