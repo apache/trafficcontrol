@@ -684,9 +684,10 @@ Traffic Monitor will need to update its parsing of `/monitoring` payloads to
 account for the new structure, and will need to poll all listed interfaces for
 health (instead of just one per cache server as was done previously).
 
-The cache
-server should be marked unavailable - or "down" - if and only if the interface
-proving the service addresses is considered unhealthy.
+The cache server should be marked unavailable - or "down" - if the total
+used bandwidth of all monitored interfaces exceeds the limits set by Parameters
+on the cache server's Profile, _or_ if the bandwidth of any single interface
+exceeds its `maxBandwidth` property.
 
 ## Documentation Impact
 Documentation for the affected endpoints will need to be updated. Beyond that,
