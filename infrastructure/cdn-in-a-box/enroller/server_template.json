@@ -7,6 +7,7 @@
   "ipNetmask": "$MY_NETMASK",
   "ipGateway": "$MY_GATEWAY",
   "ip6Address": "$MY_IP6_ADDRESS",
+  "ipIsService": true,
   "ip6Gateway": "$MY_IP6_GATEWAY",
   "interfaceMtu": 1500,
   "type": "$MY_TYPE",
