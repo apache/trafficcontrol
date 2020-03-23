@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/servercheck `GET`
 
 ### Changed
+- Add null check in astats plugin before calling strtok to find ip mask values in the config file
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
 - Fixed Traffic Portal regenerating CDN DNSSEC keys with the wrong effective date
 - Type mutation through the api is now restricted to only those types that apply to the "server" table
