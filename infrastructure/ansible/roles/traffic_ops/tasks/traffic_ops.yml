@@ -60,6 +60,8 @@
       notify: Restart Traffic Ops
       environment:
         GOPATH: /opt/traffic_ops/go
+        GOBIN: /opt/traffic_ops/go/bin
+        PATH: "{{ lookup('env','PATH') }}:/opt/traffic_ops/go/bin:/usr/local/go/bin"
       register: Postinstall_output
       failed_when:
         (Postinstall_output.stdout.find("Success! Postinstall complete.") == -1) or
@@ -116,10 +118,15 @@
   args:
     chdir: "{{ to_app_installdir }}"
   environment:
-    PATH: "{{ lookup('env', 'PATH') }}:{{ to_base_installdir }}/go/bin"
+    PATH: "{{ lookup('env', 'PATH') }}:{{ to_base_installdir }}/go/bin:/usr/local/go/bin"
     PERL5LIB: ./lib:./local/lib/perl5
     GOPATH: /opt/traffic_ops/go
+    GOBIN: /opt/traffic_ops/go/bin
+  failed_when:
+    (db_migrations_output.stdout.find("Can't run goose") != -1) or
+    (db_migrations_output.rc != 0)
   run_once: true
+  register: db_migrations_output
 
 - name: Initialize Riak SOLR
   block:
