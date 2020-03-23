@@ -190,8 +190,12 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 
 	if cfg.SMTP.Enabled && cfg.ConfigLetsEncrypt.SendExpEmail {
 		errCode, userErr, sysErr := AlertExpiringCerts(keysFound, *cfg)
-		if userErr != nil || sysErr != nil {
-			log.Errorf("cert autorenewal: sending email: errCode: %d userErr: %s sysErr: %s", errCode, userErr.Error(), sysErr.Error())
+		if userErr != nil {
+			log.Errorf("cert autorenewal: sending email: errCode: %d userErr: %s", errCode, userErr.Error())
+			return
+		}
+		if sysErr != nil {
+			log.Errorf("cert autorenewal: sending email: errCode: %d sysErr: %s", errCode, sysErr.Error())
 			return
 		}
 
