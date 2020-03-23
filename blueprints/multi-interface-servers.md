@@ -672,7 +672,12 @@ If desired, the markup used for that sample may be found in
 
 Additionally, the properties of servers no longer present on a server object
 will need to be removed from table columns (and `interfaces` should not be
-added).
+added). However, if possible, it may make sense to include the IP addresses of
+the one interface that has service addresses in the servers table.
+
+Also, Traffic Portal's ISO-generation form will need modification when using the
+"Copy Server Attributes From" drop-down to copy the properties of the one interface
+that has service addresses.
 
 ### Traffic Monitor Impact
 Traffic Monitor will need to update its parsing of `/monitoring` payloads to
