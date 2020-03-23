@@ -685,13 +685,17 @@ that has service addresses.
 ### Traffic Monitor Impact
 <a name="sec:TM-impact"></a>
 Traffic Monitor will need to update its parsing of `/monitoring` payloads to
-account for the new structure, and will need to poll all listed interfaces for
-health (instead of just one per cache server as was done previously).
+account for the new structure, but will still need to be able to parse the old structure for backwards compatibility.
+It will need to poll all listed interfaces (instead of just one per cache server as was done previously)
+for health, connections, and bandwidth.
 
 The cache server should be marked unavailable - or "down" - if the total
 used bandwidth of all monitored interfaces exceeds the limits set by Parameters
 on the cache server's Profile, _or_ if the bandwidth of any single interface
 exceeds its `maxBandwidth` property.
+
+The Traffic Monitor API and user interface will be updated to include statistics about each individual interface
+as well as the aggregate status.
 
 ## Documentation Impact
 Documentation for the affected endpoints will need to be updated. Beyond that,
