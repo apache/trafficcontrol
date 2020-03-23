@@ -223,7 +223,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodPost, `jobs/?`, invalidationjobs.Create, auth.PrivLevelPortal, Authenticated, nil, 20450955, noPerlBypass},
 
 		//Login
-		{api.Version{2, 0}, http.MethodGet, `users/{id}/deliveryservices/?$`, user.GetDSes, auth.PrivLevelReadOnly, Authenticated, nil, 288787789, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `user/login/?$`, login.LoginHandler(d.DB, d.Config), 0, NoAuth, nil, 2392670821, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `user/logout/?$`, login.LogoutHandler(d.Config.Secrets[0]), 0, Authenticated, nil, 243434825, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `user/login/oauth/?$`, login.OauthLoginHandler(d.DB, d.Config), 0, NoAuth, nil, 2415886009, noPerlBypass},

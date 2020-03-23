@@ -22,17 +22,6 @@ import (
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// GetUserDeliveryServices gets the delivery services associated with the given user.
-func (to *Session) GetUserDeliveryServices(userID int) (*tc.UserDeliveryServicesNullableResponse, ReqInf, error) {
-	uri := apiBase + `/users/` + strconv.Itoa(userID) + `/deliveryservices`
-	resp := tc.UserDeliveryServicesNullableResponse{}
-	reqInf, err := get(to, uri, &resp)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return &resp, reqInf, nil
-}
-
 // SetUserDeliveryService associates the given delivery services with the given user.
 func (to *Session) SetDeliveryServiceUser(userID int, dses []int, replace bool) (*tc.UserDeliveryServicePostResponse, error) {
 	uri := apiBase + `/deliveryservice_user`

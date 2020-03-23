@@ -17,6 +17,7 @@ package v2
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -33,6 +34,7 @@ import (
 
 func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+		GetAccessibleToTest(t)
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
 		UpdateDeliveryServiceWithInvalidRemapText(t)
@@ -294,6 +296,47 @@ func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
 		})
 	}
 
+}
+
+func GetAccessibleToTest(t *testing.T) {
+	//Every delivery service is associated with the root tenant
+	err := getByTenants(1, len(testData.DeliveryServices))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	tenant := &tc.Tenant{
+		Active:     true,
+		Name:       "the strongest",
+		ParentID:   1,
+		ParentName: "root",
+	}
+
+	resp, err := TOSession.CreateTenant(tenant)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if resp == nil {
+		t.Fatal("unexpected null response when creating tenant")
+	}
+	tenant = &resp.Response
+
+	//No delivery services are associated with this new tenant
+	err = getByTenants(tenant.ID, 0)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+}
+
+func getByTenants(tenantID int, expectedCount int) error {
+	deliveryServices, _, err := TOSession.GetAccessibleDeliveryServicesByTenant(tenantID)
+	if err != nil {
+		return err
+	}
+	if len(deliveryServices) != expectedCount {
+		return errors.New(fmt.Sprintf("expected %v delivery service, got %v", expectedCount, len(deliveryServices)))
+	}
+	return nil
 }
 
 func DeleteTestDeliveryServices(t *testing.T) {

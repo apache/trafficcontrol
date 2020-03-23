@@ -920,6 +920,21 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 
+	if accessibleTo, ok := params["accessibleTo"]; ok {
+		if err := api.IsInt(accessibleTo); err != nil {
+			log.Errorln("unknown parameter value: " + err.Error())
+			return nil, nil, tc.DBError, http.StatusInternalServerError
+		}
+		accessibleTo, _ := strconv.Atoi(accessibleTo)
+		accessibleTenants, err := tenant.GetUserTenantIDListTx(tx.Tx, accessibleTo)
+		if err != nil {
+			log.Errorln("unable to get teanants: " + err.Error())
+			return nil, nil, tc.DBError, http.StatusInternalServerError
+		}
+		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
+		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
+	}
+
 	query := selectQuery() + where + orderBy + pagination
 
 	log.Debugln("generated deliveryServices query: " + query)

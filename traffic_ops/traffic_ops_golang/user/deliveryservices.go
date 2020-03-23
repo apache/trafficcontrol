@@ -26,15 +26,17 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
 func GetDSes(w http.ResponseWriter, r *http.Request) {
+	alt := util.StrPtr("GET deliveryservices?accessibleTo={{tenantId}")
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alt)
 		return
 	}
 	defer inf.Close()
@@ -42,16 +44,16 @@ func GetDSes(w http.ResponseWriter, r *http.Request) {
 	dsUserID := inf.IntParams["id"]
 	dses, err := getUserDSes(inf.Tx.Tx, dsUserID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()), alt)
 		return
 	}
 
 	dses, err = filterAuthorized(inf.Tx.Tx, dses, inf.User)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()))
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()), alt)
 		return
 	}
-	api.WriteResp(w, r, dses)
+	api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(alt), dses)
 }
 
 func GetAvailableDSes(w http.ResponseWriter, r *http.Request) {

@@ -135,7 +135,7 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, Re
 // Deprecated: Use GetDeliveryServiceNullable instead.
 func (to *Session) GetDeliveryService(id string) (*tc.DeliveryService, ReqInf, error) {
 	var data tc.DeliveryServicesResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICES + "?id=" + id, &data)
+	reqInf, err := get(to, API_DELIVERY_SERVICES+"?id="+id, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -473,4 +473,12 @@ func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUp
 		err = errors.New("Traffic Ops returned success, but response was missing the Delivery Service")
 	}
 	return resp.Response, reqInf, err
+}
+
+// GetAccessibleDeliveryServicesByTenant gets all delivery services associated with the given tenant, and all of
+// it's children.
+func (to *Session) GetAccessibleDeliveryServicesByTenant(tenantId int) ([]tc.DeliveryService, ReqInf, error) {
+	data := tc.DeliveryServicesResponse{}
+	reqInf, err := get(to, fmt.Sprintf("%v?accessibleTo=%v", API_DELIVERY_SERVICES, tenantId), &data)
+	return data.Response, reqInf, err
 }
