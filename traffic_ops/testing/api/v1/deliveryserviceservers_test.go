@@ -223,7 +223,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 }
 
-func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.Server) {
+func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.ServerV1) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)

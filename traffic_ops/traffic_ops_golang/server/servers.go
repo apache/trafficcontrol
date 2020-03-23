@@ -93,6 +93,7 @@ func (s *TOServer) Sanitize() {
 
 func (s *TOServer) Validate() error {
 	s.Sanitize()
+	version := s.APIInfo().Version
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
 	errs := []error{}
@@ -108,8 +109,10 @@ func (s *TOServer) Validate() error {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 
-	if !*s.IPIsService && !*s.IP6IsService {
-		errs = append(errs, tc.NeedsAtLeastOneServiceAddressError)
+	if version.Major >= 2 {
+		if (s.IPIsService == nil || !*s.IPIsService) && (s.IP6IsService == nil || !*s.IP6IsService) {
+			errs = append(errs, tc.NeedsAtLeastOneServiceAddressError)
+		}
 	}
 
 	validateErrs := validation.Errors{

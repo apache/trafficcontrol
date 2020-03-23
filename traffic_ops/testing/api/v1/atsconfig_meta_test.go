@@ -85,7 +85,7 @@ func GetTestATSConfigMeta(t *testing.T) {
 }
 
 func GetTestATSConfigMetaMidHdrRw(t *testing.T) {
-	testServer := tc.Server{}
+	testServer := tc.ServerV1{}
 	for _, sv := range testData.Servers {
 		if tc.CacheTypeFromString(sv.Type) == tc.CacheTypeMid {
 
