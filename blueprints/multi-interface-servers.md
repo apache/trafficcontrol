@@ -44,9 +44,12 @@ TypeScript<sup>[1](#typescript)</sup> interfaces:
 interface IPAddress {
 	/**
 	 * The actual IP (v4 or v6) address which is used by an interface.
-	 * Any "mask" should be present here as a CIDR-notation suffix.
+	 * If it is an IPv6 address
 	 */
 	address: string;
+
+	/**
+	 * The netmask used by the address.
 
 	/**
 	 * The IP (v4 or v6) address of the gateway used by this IP address.
@@ -64,16 +67,21 @@ interface IPAddress {
 
 interface Interface {
 	/**
-	 * The name of the interface device on the server e.g. eth0.
-	 */
-	name: string;
-	/**
 	 * These will be all of the IPv4/IPv6 addresses assigned to the interface,
 	 * including gateways and "masks".
 	 * It is illegal for an interface to not have at least one associated IP
 	 * address.
 	 */
 	ipAddresses: Array<IPAddress> & {0: IPAddress};
+	/**
+	 * The maximum allowed bandwidth for this interface to be considered "healthy"
+	 * by Traffic Monitor.
+	 *
+	 * This has no effect if `monitor` is not true.
+	 * Values are in kb/s.
+	 * The value `0` means "no limit".
+	 */
+	maxBandwidth: bigint;
 	/**
 	 * Whether or not Traffic Monitor should monitor this particular interface.
 	 */
@@ -84,6 +92,10 @@ interface Interface {
 	 * irrelevant.
 	 */
 	mtu: 1500 | 9000 | null;
+	/**
+	 * The name of the interface device on the server e.g. eth0.
+	 */
+	name: string;
 }
 ```
 We don't have a real data model for ATC, so what follows is an approximately
@@ -157,13 +169,14 @@ are Traffic Ops, Traffic Portal, and Traffic Monitor.
 A new table will need to be introduced to contain interface information:
 `interface`, which is described below.
 ```text
-              Table "public.interface"
- Column  |  Type   | Collation | Nullable | Default
----------+---------+-----------+----------+---------
- name    | text    |           | not null |
- server  | bigint  |           | not null |
- monitor | boolean |           | not null |
- mtu     | integer |           |          | 1500
+            Table "traffic_ops.interface"
+     Column    |  Type   | Collation | Nullable | Default
+---------------+---------+-----------+----------+---------
+ name          | text    |           | not null |
+ server        | bigint  |           | not null |
+ monitor       | boolean |           | not null |
+ mtu           | integer |           |          | 1500
+ max_bandwidth | integer |           | not null | 0
 Indexes:
     "interface_pkey" PRIMARY KEY, btree (name, server)
 Foreign-key constraints:
@@ -172,7 +185,7 @@ Foreign-key constraints:
 Another new table will need to be created to contain address information, which
 is described below.
 ```text
-                 Table "public.ip_address"
+               Table "traffic_ops.ip_address"
      Column     |  Type   | Collation | Nullable | Default
 ----------------+---------+-----------+----------+---------
  address        | inet    |           | not null |
@@ -192,6 +205,56 @@ Foreign-key constraints:
 This should be sufficient to capture the model changes. In addition to creating
 these tables, a migration will need to be written to convert currently stored
 server information to utilize these new tables.
+
+The resulting server table after migration should look like:
+
+```text
+                        Table "traffic_ops.server"
+      Column      |           Type           | Collation | Nullable | Default
+------------------+--------------------------+-----------+----------+---------
+ id               | bigserial                |           | not null |
+ host_name        | text                     |           | not null |
+ domain_name      | text                     |           | not null |
+ tcp_port         | bigint                   |           |          |
+ xmpp_id          | text                     |           |          |
+ xmpp_passwd      | text                     |           |          |
+ phys_location    | bigint                   |           | not null |
+ rack             | text                     |           |          |
+ cachegroup       | bigint                   |           | not null | 0
+ type             | bigint                   |           | not null |
+ status           | bigint                   |           | not null |
+ offline_reason   | text                     |           |          |
+ upd_pending      | boolean                  |           | not null | false
+ profile          | bigint                   |           | not null |
+ cdn_id           | bigint                   |           | not null |
+ ilo_ip_address   | text                     |           |          |
+ ilo_ip_netmask   | text                     |           |          |
+ ilo_ip_gateway   | text                     |           |          |
+ ilo_username     | text                     |           |          |
+ ilo_password     | text                     |           |          |
+ router_host_name | text                     |           |          |
+ router_port_name | text                     |           |          |
+ guid             | text                     |           |          |
+ last_updated     | timestamp with time zone |           | not null | now()
+ https_port       | bigint                   |           |          |
+ reval_pending    | boolean                  |           | not null | false
+Indexes:
+	"idx_89709_primary" PRIMARY KEY, btree (id, cachegroup, type, status, profile)
+	"idx_89709_fk_cdn2" INDEX, btree (cdn_id)
+	"idx_89709_fk_contentserver_atsprofile1" INDEX, btree (profile)
+	"idx_89709_fk_contentserver_contentserverstatus1" INDEX, btree (status)
+	"idx_89709_fk_contentserver_contentservertype1" INDEX, btree (type)
+	"idx_89709_fk_contentserver_phys_location1" INDEX, btree (phys_location)
+	"idx_89709_fk_server_cachegroup1" INDEX, btree (cachegroup)
+	"idx_89709_se_id_unique" UNIQUE INDEX, btree (id)
+Foreign-key constraints:
+	"fk_server_cachegroup1" FOREIGN KEY (cachegroup) REFERENCES cachegroup(id)
+	"fk_cdn2" FOREIGN KEY (cdn_id) REFERENCES cdn(id)
+	"fk_contentserver_atsprofile1" FOREIGN KEY (profile) REFERENCES profile(id)
+	"fk_contentserver_contentserverstatus1" FOREIGN KEY (status) REFERENCES status(id)
+	"fk_contentserver_contentservertype1" FOREIGN KEY (type) REFERENCES type(id)
+	"fk_contentserver_phys_location1" FOREIGN KEY (phys_location) REFERENCES phys_location(id)
+```
 
 #### API
 <a name="sec:api"></a>
@@ -227,13 +290,18 @@ above example with no additional interfaces would look like:
 	"interfaces": [
 		{
 			"name": "eth0",
+			"maxBandwidth": 0,
+			"mtu": 1500,
+			"monitor": true,
 			"ipAddresses": [
 				{
 					"address": "192.168.0.0/32",
+					"gateway": "10.0.0.1",
 					"serviceAddress": true
 				},
 				{
 					"address": "dead::babe/128",
+					"gateway": "f1d0::f00d",
 					"serviceAddress": true
 				}
 			]
@@ -246,8 +314,7 @@ above example with no additional interfaces would look like:
 }
 ```
 Note that only interfaces that have "monitor" set to `true` should appear at all
-in the payloads of this endpoint. Further note that neither gateways nor
-<abbr title="Maximum Transmission Unit">MTU</abbr> are reported.
+in the payloads of this endpoint.
 
 ##### `/cdns/{{name}}/snapshot`
 This is a semantic change only - payloads remain structurally unchanged. The
@@ -344,6 +411,7 @@ After this feature's inclusion, the same element would look like this:
 					"serviceAddress": true
 				}
 			],
+			"maxBandwidth": 0,
 			"monitor": true,
 			"mtu": 1500,
 			"name": "eth0"
@@ -393,12 +461,73 @@ Missing property
 ```json
 {}
 ```
+Invalid `maxBandwidth` - cannot be floating point number
+```json
+{
+	"interfaces": [
+		{
+			"ipAddresses": [
+				{
+					"address": "0.0.0.1/32",
+					"gateway": "10.0.0.1",
+					"serviceAddress": true
+				}
+			],
+			"maxBandwidth": 1.5,
+			"monitor": true,
+			"mtu": 1500,
+			"name": "eth0"
+		}
+	]
+}
+```
+Invalid `maxBandwidth` - cannot be negative
+```json
+{
+	"interfaces": [
+		{
+			"ipAddresses": [
+				{
+					"address": "0.0.0.1/32",
+					"gateway": "10.0.0.1",
+					"serviceAddress": true
+				}
+			],
+			"maxBandwidth": -1,
+			"monitor": true,
+			"mtu": 1500,
+			"name": "eth0"
+		}
+	]
+}
+```
+Invalid <abbr title="Maximum Transmission Unit">MTU</abbr>, must be 1500, 9000, or `null`
+```json
+{
+	"interfaces": [
+		{
+			"ipAddresses": [
+				{
+					"address": "0.0.0.1/32",
+					"gateway": "10.0.0.1",
+					"serviceAddress": true
+				}
+			],
+			"maxBandwidth": 0,
+			"monitor": true,
+			"mtu": 420,
+			"name": "eth0"
+		}
+	]
+}
+```
 Empty `ipAddresses` sub-property
 ```json
 {
 	"interfaces": [
 		{
 			"ipAddresses": [],
+			"maxBandwidth": 0,
 			"monitor": true,
 			"mtu": 1500,
 			"name": "eth0"
@@ -412,6 +541,7 @@ Null `ipAddresses` sub-property
 	"interfaces": [
 		{
 			"ipAddresses": null,
+			"maxBandwidth": 0,
 			"monitor": true,
 			"mtu": 1500,
 			"name": "eth0"
@@ -424,6 +554,7 @@ Missing `ipAddresses` sub-property
 {
 	"interfaces": [
 		{
+			"maxBandwidth": 0,
 			"monitor": true,
 			"mtu": 1500,
 			"name": "eth0"
@@ -443,6 +574,7 @@ No service addresses
 					"serviceAddress": false
 				}
 			],
+			"maxBandwidth": 0,
 			"monitor": true,
 			"mtu": 1500,
 			"name": "eth0"
@@ -462,6 +594,7 @@ Too many interfaces with service addresses
 					"serviceAddress": true
 				}
 			],
+			"maxBandwidth": 0,
 			"monitor": true,
 			"mtu": 1500,
 			"name": "eth0"
@@ -474,6 +607,7 @@ Too many interfaces with service addresses
 					"serviceAddress": true
 				}
 			],
+			"maxBandwidth": 0,
 			"monitor": true,
 			"mtu": 1500,
 			"name": "wnlp0"
@@ -498,6 +632,7 @@ Too many service addresses of the same family/version
 					"serviceAddress": true
 				}
 			],
+			"maxBandwidth": 0,
 			"monitor": true,
 			"mtu": 1500,
 			"name": "eth0"
@@ -509,6 +644,14 @@ Too many service addresses of the same family/version
 This endpoint is subject to the same changes described above for
 `/servers`/`/servers/{{ID}}` - though obviously the full output objects will
 differ.
+
+##### `/deliveryservices/{{ID}}/servers`
+This endpoint is subject to the same changes described above for
+`/servers`/`/servers/{{ID}}`.
+
+##### `/deliveryservices/{{ID}}/servers/eligible`
+This endpoint is subject to the same changes described above for
+`/servers`/`/servers/{{ID}}`.
 
 #### Client Impact
 The structures output by various clients will change, but no client code changes
