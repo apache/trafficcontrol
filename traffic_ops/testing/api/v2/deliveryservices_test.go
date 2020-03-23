@@ -326,6 +326,12 @@ func GetAccessibleToTest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
+
+	//First and only child tenant, no access to root
+	err = getByTenants(3, len(testData.DeliveryServices) - 1)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 }
 
 func getByTenants(tenantID int, expectedCount int) error {
