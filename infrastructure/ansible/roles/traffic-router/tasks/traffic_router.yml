@@ -50,6 +50,7 @@
     state: present
     lock_timeout: 300
     update_cache: yes
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
   notify: Restart Traffic Router
   become: yes
   retries: 5
