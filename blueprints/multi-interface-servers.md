@@ -658,6 +658,7 @@ The structures output by various clients will change, but no client code changes
 should be necessary.
 
 ### Traffic Portal Impact
+<a name="sec:TP-impact"></a>
 The server edit/display/creation page will need to be updated to remove all of
 the properties of servers which no longer exist because they've been moved into
 the "interfaces" section, and a new set of interface-related input fields with
@@ -680,6 +681,7 @@ Also, Traffic Portal's ISO-generation form will need modification when using the
 that has service addresses.
 
 ### Traffic Monitor Impact
+<a name="sec:TM-impact"></a>
 Traffic Monitor will need to update its parsing of `/monitoring` payloads to
 account for the new structure, and will need to poll all listed interfaces for
 health (instead of just one per cache server as was done previously).
@@ -695,8 +697,14 @@ the "Health Protocol" section and perhaps the "Traffic Monitor - Using" section
 should be updated to describe the behavior of multiple monitored interfaces.
 
 ## Testing Impact
-A bunch of client/API integration tests should be written to verify the
+A swathe of client/API integration tests should be written to verify the
 constraints outlined in [API](#sec:api).
+
+There should also be UI tests to accompany the new UI design as outlined in
+[Traffic Portal Impact](#sec:TP-impact).
+
+Finally, Traffic Monitor will need additional unit and integration tests to
+test the new behavior as outlined in [Traffic Monitor Impact](#sec:TM-impact).
 
 ## Performance Impact
 The proposed method of updating servers to change their interfaces is by
