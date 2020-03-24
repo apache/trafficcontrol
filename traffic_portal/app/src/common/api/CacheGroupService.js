@@ -73,8 +73,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
     this.deleteCacheGroup = function(id) {
         return $http.delete(ENV.api['root'] + "cachegroups/" + id).then(
             function(result) {
-                messageModel.setMessages(result.data.alerts, false);
-                return result;
+                return result.data;
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
