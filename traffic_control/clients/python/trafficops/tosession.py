@@ -1551,17 +1551,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'regions/{region_id:d}', ('2.0',))
-	def get_region_by_id(self, region_id=None):
-		"""
-		Get Region by ID
-		:ref:`to-api-regions-id`
-		:param region_id: The region id of the region to retrieve
-		:type region_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('put', 'regions/{region_id:d}', ('2.0',))
 	def update_region(self, region_id=None):
 		"""

@@ -275,11 +275,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Region: CRUDs
 		{api.Version{2, 0}, http.MethodGet, `regions/?$`, api.ReadHandler(&region.TORegion{}), auth.PrivLevelReadOnly, Authenticated, nil, 210037085, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `regions/{id}$`, api.ReadHandler(&region.TORegion{}), auth.PrivLevelReadOnly, Authenticated, nil, 2224440051, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `regions/{id}$`, api.UpdateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 222308224, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `regions/?$`, api.CreateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 2288334488, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `regions/?$`, api.DeleteHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 2232626758, noPerlBypass},
-		{api.Version{2, 0}, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 2181575271, noPerlBypass},
 
 		{api.Version{2, 0}, http.MethodDelete, `deliveryservice_server/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 2532184523, noPerlBypass},
 
@@ -668,13 +666,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Region: CRUDs
 		{api.Version{1, 1}, http.MethodGet, `regions/?(\.json)?$`, api.ReadHandler(&region.TORegion{}), auth.PrivLevelReadOnly, Authenticated, nil, 410037085, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `regions/{id}$`, api.ReadHandler(&region.TORegion{}), auth.PrivLevelReadOnly, Authenticated, nil, 2024440051, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `regions/{id}$`, api.DeprecatedReadHandler(&region.TORegion{}, util.StrPtr("GET /regions with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 2024440051, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `regions/name/{name}/?(\.json)?$`, region.GetName, auth.PrivLevelReadOnly, Authenticated, nil, 503583197, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `regions/{id}$`, api.UpdateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 226308224, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `regions/?$`, api.CreateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 1288334488, noPerlBypass},
 		{api.Version{1, 5}, http.MethodDelete, `regions/?$`, api.DeleteHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 2032626758, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `regions/name/{name}$`, handlerToFunc(proxyHandler), 0, NoAuth, nil, 1925881096, noPerlBypass},
-		{api.Version{1, 1}, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 1181575271, noPerlBypass},
+		{api.Version{1, 1}, http.MethodDelete, `regions/{id}$`, api.DeprecatedDeleteHandler(&region.TORegion{}, util.StrPtr("DELETE /regions with query parameter id")), auth.PrivLevelOperations, Authenticated, nil, 1181575271, noPerlBypass},
 
 		{api.Version{1, 1}, http.MethodDelete, `deliveryservice_server/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 1532184523, noPerlBypass},
 
