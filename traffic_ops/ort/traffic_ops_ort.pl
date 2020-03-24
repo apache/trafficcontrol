@@ -1599,6 +1599,9 @@ sub parse_multipart_config_files {
 		exit 1;
 	}
 
+	my $last_boundary = "--" . $boundary . "--"; # multipart ends in --boundary--
+	$multipart_txt =~ s/$last_boundary//;       # remove it
+
 	my @files = split("--" . $boundary . "\r\n", $multipart_txt);
 
 	my %all_files;

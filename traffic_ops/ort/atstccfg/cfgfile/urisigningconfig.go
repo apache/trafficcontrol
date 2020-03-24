@@ -25,9 +25,10 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileURISigningConfig(toData *TOData, fileName string) (string, string, error) {
+func GetConfigFileProfileURISigningConfig(toData *config.TOData, fileName string) (string, string, error) {
 	dsName := GetDSFromURISigningConfigFileName(fileName)
 	if dsName == "" {
 		// extra safety, this should never happen, the routing shouldn't get here

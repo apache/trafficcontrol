@@ -1356,15 +1356,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'phys_locations/trimmed', ('2.0',))
-	def get_trimmed_physical_locations(self):
-		"""
-		Get Physical Locations with name only
-		:ref:`to-api-phys_locations-trimmed`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('put', 'phys_locations/{physical_location_id:d}', ('2.0',))
 	def update_physical_location(self, physical_location_id=None, query_params=None):
 		"""
@@ -1396,17 +1387,6 @@ class TOSession(RestApiSession):
 		Get Profiles.
 		:ref:`to-api-profiles`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'profiles/{profile_id:d}', ('2.0',))
-	def get_profile_by_id(self, profile_id=None):
-		"""
-		Get Profile by Id.
-		:ref:`to-api-profiles-id`
-		:param profile_id: The profile Id
-		:type profile_id: int
-		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
@@ -1651,17 +1631,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers/{server_id:d}', ('2.0',))
-	def get_server_by_id(self, server_id=None):
-		"""
-		Get Server by Server ID
-		:ref:`to-api-servers-id`
-		:param server_id: The server id to retrieve
-		:type server_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('get', 'servers/{server_id:d}/deliveryservices', ('2.0',))
 	def get_server_delivery_services(self, server_id=None):
 		"""
@@ -1669,15 +1638,6 @@ class TOSession(RestApiSession):
 		:ref:`to-api-servers-id-deliveryservices`
 		:param server_id: The server id to retrieve
 		:type server_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'servers/status', ('2.0',))
-	def get_server_status_count(self):
-		"""
-		Retrieves a count of CDN servers by status
-		:ref:`to-api-servers-status`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1825,21 +1785,10 @@ class TOSession(RestApiSession):
 	# Status
 	#
 	@api_request('get', 'statuses', ('2.0',))
-	def get_statuses(self):
+	def get_statuses(self, query_params=None):
 		"""
 		Retrieves a list of the server status codes available.
 		:ref:`to-api-statuses`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'statuses/{status_id:d}', ('2.0',))
-	def get_statuses_by_id(self, status_id=None):
-		"""
-		Retrieves a server status by ID.
-		:ref:`to-api-statuses-id`
-		:param status_id: The status id to retrieve
-		:type status_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1861,21 +1810,10 @@ class TOSession(RestApiSession):
 	# Tenants
 	#
 	@api_request('get', 'tenants', ('2.0',))
-	def get_tenants(self):
+	def get_tenants(self, query_params=None):
 		"""
 		Get all tenants.
 		:ref:`to-api-tenants`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-	@api_request('get', 'tenants/{tenant_id:d}', ('2.0',))
-	def get_tenant_by_id(self, tenant_id=None):
-		"""
-		Get a tenant by ID.
-		:ref:`to-api-tenants-id`
-		:param tenant_id: The tenant to retrieve
-		:type tenant_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

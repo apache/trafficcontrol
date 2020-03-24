@@ -46,8 +46,7 @@ RUN apk add --no-cache --update \
   bash \
   nmap \
   bind-tools \
-  net-tools \
-  postgresql-client
+  net-tools
 
 # MANIFEST
 # run.sh                        (wait on TO, then run bin)
@@ -58,7 +57,8 @@ RUN apk add --no-cache --update \
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/run.sh    /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/integration/app/
-COPY ./traffic_ops/testing/api/v1/tc-fixtures.json         /opt/integration/app/
+COPY ./traffic_ops/testing/api/v1/tc-fixtures.json /opt/integration/app/tc-fixtures-v1.json
+COPY ./traffic_ops/testing/api/v2/tc-fixtures.json /opt/integration/app/tc-fixtures-v2.json
 COPY --from=integration-builder \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v1_integration_test \
     /opt/integration/app/

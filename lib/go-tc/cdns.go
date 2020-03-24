@@ -29,6 +29,7 @@ import (
 type CDNsResponse struct {
 	// in: body
 	Response []CDN `json:"response"`
+	Alerts
 }
 
 // CDNResponse is a single CDN response for Update and Create to depict what
@@ -38,6 +39,7 @@ type CDNsResponse struct {
 type CDNResponse struct {
 	// in: body
 	Response CDN `json:"response"`
+	Alerts
 }
 
 // CDN ...

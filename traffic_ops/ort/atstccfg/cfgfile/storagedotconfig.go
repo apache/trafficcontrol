@@ -21,11 +21,12 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
 const StorageFileName = "storage.config"
 
-func GetConfigFileProfileStorageDotConfig(toData *TOData) (string, string, error) {
+func GetConfigFileProfileStorageDotConfig(toData *config.TOData) (string, string, error) {
 	params := ParamsToMap(FilterParams(toData.ServerParams, StorageFileName, "", "", "location"))
 	return atscfg.MakeStorageDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeStorageDotConfig, nil
 }

@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-statuses` with the query parameter ``id`` instead.
+
 Retrieves information about a particular :term:`Status`
 
 :Auth. Required: Yes
@@ -93,5 +96,11 @@ Response Structure
 			"id": 3,
 			"lastUpdated": "2018-12-10 19:11:17+00",
 			"name": "REPORTED"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /statuses with query parameter id instead",
+			"level": "warning"
 		}
 	]}

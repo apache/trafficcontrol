@@ -20,21 +20,24 @@ package plugin
  */
 
 import (
-	"net/url"
 	"testing"
 
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
 func TestPlugin(t *testing.T) {
-	handledPath := "/__test"
 	AddPlugin(10000, Funcs{
-		onRequest: func(d OnRequestData) IsRequestHandled {
-			if d.Cfg.TOURL.Path != handledPath {
-				return RequestUnhandled
+		modifyFiles: func(d ModifyFilesData) []config.ATSConfigFile {
+			if d.TOData.Server.HostName != "testplugin" {
+				return d.Files
 			}
-			// a real plugin would print and exit here
-			return RequestHandled
+			fi := config.ATSConfigFile{}
+			fi.Text = "testfile\n"
+			fi.ContentType = "text/plain"
+			fi.FileNameOnDisk = "testfile.txt"
+			fi.Location = "/opt/trafficserver/etc/trafficserver/"
+			d.Files = append(d.Files, fi)
+			return d.Files
 		},
 	})
 
@@ -56,26 +59,24 @@ func TestPlugin(t *testing.T) {
 	cfg := config.Cfg{}
 	plugins := Get(cfg)
 
-	tcCfg := config.TCCfg{Cfg: cfg}
-	onReqData := OnRequestData{Cfg: tcCfg}
-
-	nonPluginURL, err := url.Parse("https://example.net/should-not-be-a-known-config")
-	if err != nil {
-		t.Fatal(err)
-	}
-	onReqData.Cfg.TOURL = nonPluginURL
-	handled := plugins.OnRequest(onReqData)
-	if handled {
-		t.Errorf("Expected url %s to be unhandled by a plugin, actual: handled", nonPluginURL)
+	modifyFilesData := ModifyFilesData{
+		Cfg:    config.TCCfg{Cfg: cfg},
+		Files:  []config.ATSConfigFile{},
+		TOData: &config.TOData{},
 	}
 
-	pluginURL, err := url.Parse("https://example.net" + handledPath)
-	if err != nil {
-		t.Fatal(err)
+	newFiles := plugins.ModifyFiles(modifyFilesData)
+	if len(newFiles) > 0 {
+		t.Error("Expected server '' to be unhandled by a plugin, actual: handled")
 	}
-	onReqData.Cfg.TOURL = pluginURL
-	handled = plugins.OnRequest(onReqData)
-	if !handled {
-		t.Errorf("Expected url %s to be handled by plugin, actual: handled", pluginURL)
+
+	modifyFilesData.TOData.Server.HostName = "testplugin"
+	newFiles = plugins.ModifyFiles(modifyFilesData)
+	if len(newFiles) == 0 {
+		t.Error("Expected server 'testplugin' to be handled by plugin, actual: unhandled")
+	}
+	fi := newFiles[0]
+	if fi.Text != "testfile\n" {
+		t.Errorf(`Expected plugin text 'testfile\n', actual %v`, fi.Text)
 	}
 }

@@ -16,6 +16,7 @@ package v2
 */
 
 import (
+	"fmt"
 	"testing"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
@@ -31,12 +32,34 @@ func TestTypes(t *testing.T) {
 func CreateTestTypes(t *testing.T) {
 	t.Log("---- CreateTestTypes ----")
 
+	db, err := OpenConnection()
+	if err != nil {
+		t.Fatal("cannot open db")
+	}
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			t.Errorf("unable to close connection to db, error: %v", err.Error())
+		}
+	}()
+	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%v', '%v', '%v');"
+
 	for _, typ := range testData.Types {
-		resp, _, err := TOSession.CreateType(typ)
+		foundTypes, _, err := TOSession.GetTypeByName(typ.Name)
+		if err == nil && len(foundTypes) > 0 {
+			t.Logf("Type %v already exists (%v match(es))", typ.Name, len(foundTypes))
+			continue
+		}
+
+		if typ.UseInTable != "server" {
+			err = execSQL(db, fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable), "type")
+		} else {
+			_, _, err = TOSession.CreateType(typ)
+		}
+
 		if err != nil {
 			t.Errorf("could not CREATE types: %v", err)
 		}
-		t.Log("Response: ", resp)
 	}
 
 }
@@ -44,37 +67,42 @@ func CreateTestTypes(t *testing.T) {
 func UpdateTestTypes(t *testing.T) {
 	t.Log("---- UpdateTestTypes ----")
 
-	firstType := testData.Types[0]
-	// Retrieve the Type by name so we can get the id for the Update
-	resp, _, err := TOSession.GetTypeByName(firstType.Name)
-	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v", firstType.Name, err)
-	}
-	remoteType := resp[0]
-	expectedTypeName := "testType1"
-	remoteType.Name = expectedTypeName
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
-	if err != nil {
-		t.Errorf("cannot UPDATE Type by id: %v - %v", err, alert)
-	}
+	for i, typ := range testData.Types {
+		expectedTypeName := fmt.Sprintf("testType%v", i)
+		originalType := typ
+		resp, _, err := TOSession.GetTypeByName(originalType.Name)
+		if err != nil {
+			t.Fatalf("cannot GET Type by name: %v - %v", originalType.Name, err)
+		}
+		remoteType := resp[0]
+		remoteType.Name = expectedTypeName
+		var alert tc.Alerts
+		alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
+		if remoteType.UseInTable != "server" {
+			if err == nil {
+				t.Fatalf("expected UPDATE on type %v to fail", remoteType.ID)
+			}
+			continue
+		} else if err != nil {
+			t.Fatalf("cannot UPDATE Type by id: %v - %v", err, alert)
+		}
 
-	// Retrieve the Type to check Type name got updated
-	resp, _, err = TOSession.GetTypeByID(remoteType.ID)
-	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v", firstType.Name, err)
-	}
-	respType := resp[0]
-	if respType.Name != expectedTypeName {
-		t.Errorf("results do not match actual: %s, expected: %s", respType.Name, expectedTypeName)
-	}
+		// Retrieve the Type to check Type name got updated
+		resp, _, err = TOSession.GetTypeByID(remoteType.ID)
+		if err != nil {
+			t.Fatalf("cannot GET Type by ID: %v - %v", originalType.ID, err)
+		}
+		respType := resp[0]
+		if respType.Name != expectedTypeName {
+			t.Fatalf("results do not match actual: %s, expected: %s", respType.Name, expectedTypeName)
+		}
 
-	t.Log("Response Type: ", respType)
-
-	respType.Name = firstType.Name
-	alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType)
-	if err != nil {
-		t.Errorf("cannot restore UPDATE Type by id: %v - %v", err, alert)
+		// Revert name change
+		respType.Name = originalType.Name
+		alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType)
+		if err != nil {
+			t.Fatalf("cannot restore UPDATE Type by id: %v - %v", err, alert)
+		}
 	}
 }
 
@@ -95,17 +123,36 @@ func GetTestTypes(t *testing.T) {
 func DeleteTestTypes(t *testing.T) {
 	t.Log("---- DeleteTestTypes ----")
 
+	db, err := OpenConnection()
+	if err != nil {
+		t.Fatal("cannot open db")
+	}
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			t.Errorf("unable to close connection to db, error: %v", err.Error())
+		}
+	}()
+	dbDeleteTemplate := "DELETE FROM type WHERE name='%v';"
+
 	for _, typ := range testData.Types {
 		// Retrieve the Type by name so we can get the id for the Update
 		resp, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil || len(resp) == 0 {
-			t.Errorf("cannot GET Type by name: %v - %v", typ.Name, err)
+			t.Fatalf("cannot GET Type by name: %v - %v", typ.Name, err.Error())
 		}
 		respType := resp[0]
 
-		delResp, _, err := TOSession.DeleteTypeByID(respType.ID)
-		if err != nil {
-			t.Errorf("cannot DELETE Type by name: %v - %v", err, delResp)
+		if respType.UseInTable != "server" {
+			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, respType.Name), "type")
+			if err != nil {
+				t.Fatalf("cannot DELETE Type by name: %v", err.Error())
+			}
+		} else {
+			delResp, _, err := TOSession.DeleteTypeByID(respType.ID)
+			if err != nil {
+				t.Fatalf("cannot DELETE Type by name: %v - %v", err, delResp)
+			}
 		}
 
 		// Retrieve the Type to see if it got deleted

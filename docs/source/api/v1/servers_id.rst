@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-servers` with the query parameter ``id`` instead.
+
 Retrieves properties of a specific server.
 
 :Auth. Required: Yes
@@ -183,6 +186,12 @@ Response Structure
 			"updPending": false,
 			"xmppId": "mid",
 			"xmppPasswd": ""
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /servers with query parameter id instead",
+			"level": "warning"
 		}
 	]}
 

@@ -52,7 +52,7 @@ func getAll() pluginsSlice {
 
 type Plugins interface {
 	OnStartup(d StartupData)
-	OnRequest(d OnRequestData) bool
+	ModifyFiles(d ModifyFilesData) []config.ATSConfigFile
 }
 
 func AddPlugin(priority uint64, funcs Funcs) {
@@ -68,16 +68,18 @@ func AddPlugin(priority uint64, funcs Funcs) {
 }
 
 type Funcs struct {
-	onStartup StartupFunc
-	onRequest OnRequestFunc
+	onStartup   StartupFunc
+	modifyFiles ModifyFilesFunc
 }
 
 type StartupData struct {
 	Cfg config.Cfg
 }
 
-type OnRequestData struct {
-	Cfg config.TCCfg
+type ModifyFilesData struct {
+	Cfg    config.TCCfg
+	TOData *config.TOData
+	Files  []config.ATSConfigFile
 }
 
 type IsRequestHandled bool
@@ -88,7 +90,7 @@ const (
 )
 
 type StartupFunc func(d StartupData)
-type OnRequestFunc func(d OnRequestData) IsRequestHandled
+type ModifyFilesFunc func(d ModifyFilesData) []config.ATSConfigFile
 
 type pluginObj struct {
 	funcs    Funcs
@@ -120,18 +122,16 @@ func (ps plugins) OnStartup(d StartupData) {
 	}
 }
 
-// OnRequest returns a boolean whether to immediately stop processing the request. If a plugin returns true, this is immediately returned with no further plugins processed.
-func (ps plugins) OnRequest(d OnRequestData) bool {
-	log.Infof("plugins.OnRequest calling %+v plugins\n", len(ps.slice))
+// ModifyFiles returns a slice of config files to use. May return d.Files unmodified, or may add, remove, or modify files in d.Files.
+func (ps plugins) ModifyFiles(d ModifyFilesData) []config.ATSConfigFile {
+	log.Infof("plugins.ModifyFiles calling %+v plugins\n", len(ps.slice))
 	for _, p := range ps.slice {
-		if p.funcs.onRequest == nil {
-			log.Infoln("plugins.OnRequest plugging " + p.name + " - no onRequest func")
+		if p.funcs.modifyFiles == nil {
+			log.Infoln("plugins.ModifyFiles plugging " + p.name + " - no modifyFiles func")
 			continue
 		}
-		log.Infoln("plugins.OnRequest plugging " + p.name)
-		if stop := p.funcs.onRequest(d); stop {
-			return true
-		}
+		log.Infoln("plugins.ModifyFiles plugging " + p.name)
+		d.Files = p.funcs.modifyFiles(d)
 	}
-	return false
+	return d.Files
 }
