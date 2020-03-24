@@ -27,6 +27,8 @@ Retrieves details of :ref:`tp-configure-servers`.
 :Roles Required: None
 :Response Type:  Array
 
+.. note:: On top of the response including the response key that is of type array it will also include the keys ``limit``, ``orderby``, and ``size``.
+
 Request Structure
 -----------------
 .. table:: Request Query Parameters

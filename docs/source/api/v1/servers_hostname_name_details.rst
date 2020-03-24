@@ -138,12 +138,12 @@ Response Structure
 		"iloIpAddress": "",
 		"profileDesc": "Edge Cache - Apache Traffic Server",
 		"routerHostName": ""
-	],
+	},
 	"alerts": [
 		{
 			"text": "This endpoint is deprecated, please use GET /servers/details with query parameter hostName instead",
 			"level": "warning"
 		}
-	}}
+	]}
 
 .. [1] For more information see the `Wikipedia page on Lights-Out management <https://en.wikipedia.org/wiki/Out-of-band_management>`_\ .
