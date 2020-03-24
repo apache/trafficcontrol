@@ -47,7 +47,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	serversF := func() error {
 		defer func(start time.Time) { log.Infof("serversF took %v\n", time.Since(start)) }(time.Now())
 		// TODO TOAPI add /servers?cdn=1 query param
-		servers, err := toreq.GetServers(cfg)
+		servers, err := cfg.TOClient.GetServers()
 		if err != nil {
 			return errors.New("getting servers: " + err.Error())
 		}
@@ -69,7 +69,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 
 		sslF := func() error {
 			defer func(start time.Time) { log.Infof("sslF took %v\n", time.Since(start)) }(time.Now())
-			keys, err := toreq.GetCDNSSLKeys(cfg, tc.CDNName(server.CDNName))
+			keys, err := cfg.TOClient.GetCDNSSLKeys(tc.CDNName(server.CDNName))
 			if err != nil {
 				return errors.New("getting cdn '" + server.CDNName + "': " + err.Error())
 			}
@@ -78,7 +78,12 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		}
 		dsF := func() error {
 			defer func(start time.Time) { log.Infof("dsF took %v\n", time.Since(start)) }(time.Now())
-			dses, err := toreq.GetCDNDeliveryServices(cfg, server.CDNID)
+
+			dses, unsupported, err := cfg.TOClientNew.GetCDNDeliveryServices(server.CDNID)
+			if err == nil && unsupported {
+				log.Warnln("Traffic Ops newer than ORT, falling back to previous API Delivery Services!")
+				dses, err = cfg.TOClient.GetCDNDeliveryServices(server.CDNID)
+			}
 			if err != nil {
 				return errors.New("getting delivery services: " + err.Error())
 			}
@@ -95,7 +100,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 					if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
 						continue
 					}
-					keys, err := toreq.GetURISigningKeys(cfg, *ds.XMLID)
+					keys, err := cfg.TOClient.GetURISigningKeys(*ds.XMLID)
 					if err != nil {
 						if strings.Contains(strings.ToLower(err.Error()), "not found") {
 							log.Errorln("Delivery service '" + *ds.XMLID + "' is uri_signing, but keys were not found! Skipping!")
@@ -121,7 +126,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 					if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURLSig {
 						continue
 					}
-					keys, err := toreq.GetURLSigKeys(cfg, *ds.XMLID)
+					keys, err := cfg.TOClient.GetURLSigKeys(*ds.XMLID)
 					if err != nil {
 						if strings.Contains(strings.ToLower(err.Error()), "not found") {
 							log.Errorln("Delivery service '" + *ds.XMLID + "' is url_sig, but keys were not found! Skipping!: " + err.Error())
@@ -144,7 +149,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		}
 		serverParamsF := func() error {
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
-			params, err := toreq.GetServerProfileParameters(cfg, server.Profile)
+			params, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
 			if err != nil {
 				return errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
 			} else if len(params) == 0 {
@@ -155,7 +160,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		}
 		cdnF := func() error {
 			defer func(start time.Time) { log.Infof("cdnF took %v\n", time.Since(start)) }(time.Now())
-			cdn, err := toreq.GetCDN(cfg, tc.CDNName(server.CDNName))
+			cdn, err := cfg.TOClient.GetCDN(tc.CDNName(server.CDNName))
 			if err != nil {
 				return errors.New("getting cdn '" + server.CDNName + "': " + err.Error())
 			}
@@ -164,7 +169,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		}
 		profileF := func() error {
 			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
-			profile, err := toreq.GetProfileByName(cfg, server.Profile)
+			profile, err := cfg.TOClient.GetProfileByName(server.Profile)
 			if err != nil {
 				return errors.New("getting profile '" + server.Profile + "': " + err.Error())
 			}
@@ -180,7 +185,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 
 	cgF := func() error {
 		defer func(start time.Time) { log.Infof("cfF took %v\n", time.Since(start)) }(time.Now())
-		cacheGroups, err := toreq.GetCacheGroups(cfg)
+		cacheGroups, err := cfg.TOClient.GetCacheGroups()
 		if err != nil {
 			return errors.New("getting cachegroups: " + err.Error())
 		}
@@ -189,7 +194,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	globalParamsF := func() error {
 		defer func(start time.Time) { log.Infof("globalParamsF took %v\n", time.Since(start)) }(time.Now())
-		globalParams, err := toreq.GetGlobalParameters(cfg)
+		globalParams, err := cfg.TOClient.GetGlobalParameters()
 		if err != nil {
 			return errors.New("getting global parameters: " + err.Error())
 		}
@@ -199,7 +204,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	scopeParamsF := func() error {
 		defer func(start time.Time) { log.Infof("scopeParamsF took %v\n", time.Since(start)) }(time.Now())
-		scopeParams, err := toreq.GetParametersByName(cfg, "scope")
+		scopeParams, err := cfg.TOClient.GetParametersByName("scope")
 		if err != nil {
 			return errors.New("getting scope parameters: " + err.Error())
 		}
@@ -208,7 +213,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	dssF := func() error {
 		defer func(start time.Time) { log.Infof("dssF took %v\n", time.Since(start)) }(time.Now())
-		dss, err := toreq.GetDeliveryServiceServers(cfg, nil, nil)
+		dss, err := cfg.TOClient.GetDeliveryServiceServers(nil, nil)
 		if err != nil {
 			return errors.New("getting delivery service servers: " + err.Error())
 		}
@@ -217,7 +222,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	jobsF := func() error {
 		defer func(start time.Time) { log.Infof("jobsF took %v\n", time.Since(start)) }(time.Now())
-		jobs, err := toreq.GetJobs(cfg) // TODO add cdn query param to jobs endpoint
+		jobs, err := cfg.TOClient.GetJobs() // TODO add cdn query param to jobs endpoint
 		if err != nil {
 			return errors.New("getting jobs: " + err.Error())
 		}
@@ -226,7 +231,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	capsF := func() error {
 		defer func(start time.Time) { log.Infof("capsF took %v\n", time.Since(start)) }(time.Now())
-		caps, err := toreq.GetServerCapabilitiesByID(cfg, nil) // TODO change to not take a param; it doesn't use it to request TO anyway.
+		caps, err := cfg.TOClient.GetServerCapabilitiesByID(nil) // TODO change to not take a param; it doesn't use it to request TO anyway.
 		if err != nil {
 			log.Errorln("Server Capabilities error, skipping!")
 			// return errors.New("getting server caps from Traffic Ops: " + err.Error())
@@ -237,7 +242,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	dsCapsF := func() error {
 		defer func(start time.Time) { log.Infof("dscapsF took %v\n", time.Since(start)) }(time.Now())
-		caps, err := toreq.GetDeliveryServiceRequiredCapabilitiesByID(cfg, nil)
+		caps, err := cfg.TOClient.GetDeliveryServiceRequiredCapabilitiesByID(nil)
 		if err != nil {
 			log.Errorln("DS Required Capabilities error, skipping!")
 			// return errors.New("getting DS required capabilities: " + err.Error())
@@ -248,7 +253,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	dsrF := func() error {
 		defer func(start time.Time) { log.Infof("dsrF took %v\n", time.Since(start)) }(time.Now())
-		dsr, err := toreq.GetDeliveryServiceRegexes(cfg)
+		dsr, err := cfg.TOClient.GetDeliveryServiceRegexes()
 		if err != nil {
 			return errors.New("getting delivery service regexes: " + err.Error())
 		}
@@ -257,7 +262,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	cacheKeyParamsF := func() error {
 		defer func(start time.Time) { log.Infof("cacheKeyParamsF took %v\n", time.Since(start)) }(time.Now())
-		params, err := toreq.GetConfigFileParameters(cfg, atscfg.CacheKeyParameterConfigFile)
+		params, err := cfg.TOClient.GetConfigFileParameters(atscfg.CacheKeyParameterConfigFile)
 		if err != nil {
 			return errors.New("getting cache key parameters: " + err.Error())
 		}
@@ -266,7 +271,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	}
 	parentConfigParamsF := func() error {
 		defer func(start time.Time) { log.Infof("parentConfigParamsF took %v\n", time.Since(start)) }(time.Now())
-		parentConfigParams, err := toreq.GetConfigFileParameters(cfg, "parent.config") // TODO make const in lib/go-atscfg
+		parentConfigParams, err := cfg.TOClient.GetConfigFileParameters("parent.config") // TODO make const in lib/go-atscfg
 		if err != nil {
 			return errors.New("getting parent.config parameters: " + err.Error())
 		}

@@ -58,6 +58,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/getdata"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreqnew"
 )
 
 func main() {
@@ -75,11 +76,15 @@ func main() {
 	plugins := plugin.Get(cfg)
 	plugins.OnStartup(plugin.StartupData{Cfg: cfg})
 
-	tccfg, err := toreq.GetTCCfg(cfg)
+	toClient, err := toreq.New(cfg.TOURL, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, cfg.TOTimeout, config.UserAgent)
 	if err != nil {
 		log.Errorln(err)
 		os.Exit(config.ExitCodeErrGeneric)
 	}
+
+	toClientNew, err := toreqnew.New(toClient.Cookies(cfg.TOURL), cfg.TOURL, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, cfg.TOTimeout, config.UserAgent)
+
+	tccfg := config.TCCfg{Cfg: cfg, TOClient: toClient, TOClientNew: toClientNew}
 
 	if tccfg.GetData != "" {
 		if err := getdata.WriteData(tccfg); err != nil {
