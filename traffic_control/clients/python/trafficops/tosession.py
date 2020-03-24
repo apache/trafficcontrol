@@ -1713,7 +1713,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers//details', ('2.0',))
+	@api_request('get', 'servers/details', ('2.0',))
 	def get_server_details(self,  query_params=None):
 		"""
 		Get server details from trafficOps
