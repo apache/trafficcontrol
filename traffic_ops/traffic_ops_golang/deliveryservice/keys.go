@@ -383,38 +383,31 @@ func DeleteSSLKeysDeprecated(w http.ResponseWriter, r *http.Request) {
 
 func deleteSSLKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	alt := "DELETE /deliveryservices/xmlId/:xmlid/sslkeys"
-	writeErr := func(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, deprecated bool) {
-		if deprecated {
-			api.HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, &alt)
-		} else {
-			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
-		}
-	}
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
-		writeErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
 		return
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured"), deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured"), deprecated, &alt)
 		return
 	}
 	xmlID := inf.Params["xmlid"]
 	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
-		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID from name "+err.Error()), deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID from name "+err.Error()), deprecated, &alt)
 		return
 	} else if !ok {
-		writeErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+xmlID), nil, deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+xmlID), nil, deprecated, &alt)
 		return
 	}
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
-		writeErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
 		return
 	}
 	if err := riaksvc.DeleteDSSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, xmlID, inf.Params["version"]); err != nil {
-		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()), deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()), deprecated, &alt)
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+xmlID+", ID: "+strconv.Itoa(dsID)+", ACTION: Deleted SSL keys", inf.User, inf.Tx.Tx)
