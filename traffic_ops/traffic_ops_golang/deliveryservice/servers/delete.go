@@ -43,16 +43,9 @@ func DeleteDeprecated(w http.ResponseWriter, r *http.Request) {
 
 func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	alt := "DELETE deliveryserviceserver/:dsid/:serverid"
-	writeErr := func(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, deprecated bool) {
-		if deprecated {
-			api.HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, &alt)
-		} else {
-			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
-		}
-	}
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"serverid", "dsid"}, []string{"serverid", "dsid"})
 	if userErr != nil || sysErr != nil {
-		writeErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
 		return
 	}
 	defer inf.Close()
@@ -62,32 +55,32 @@ func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 
 	userErr, sysErr, errCode = tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
-		writeErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
 		return
 	}
 
 	dsName, _, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
 	if err != nil {
-		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()), deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()), deprecated, &alt)
 		return
 	}
 
 	serverName, exists, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, serverID)
 	if err != nil {
-		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from id: "+err.Error()), deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from id: "+err.Error()), deprecated, &alt)
 		return
 	} else if !exists {
-		writeErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server not found"), nil, deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server not found"), nil, deprecated, &alt)
 		return
 	}
 
 	ok, err := deleteDSServer(inf.Tx.Tx, dsID, serverID)
 	if err != nil {
-		writeErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting delivery service server: "+err.Error()), deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting delivery service server: "+err.Error()), deprecated, &alt)
 		return
 	}
 	if !ok {
-		writeErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, deprecated)
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, deprecated, &alt)
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Remove server "+string(serverName)+" from delivery service", inf.User, inf.Tx.Tx)
