@@ -27,15 +27,15 @@ import (
 
 func TestServerUpdateStatus(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
-		edge1cdn1 := tc.Server{}
-		edge2cdn1 := tc.Server{}
-		mid1cdn1 := tc.Server{}
-		edge1cdn2 := tc.Server{}
+		edge1cdn1 := tc.ServerV1{}
+		edge2cdn1 := tc.ServerV1{}
+		mid1cdn1 := tc.ServerV1{}
+		edge1cdn2 := tc.ServerV1{}
 
 		getServers := func() {
 			for _, s := range []struct {
 				name   string
-				server *tc.Server
+				server *tc.ServerV1
 			}{
 				{
 					"atlanta-edge-01",
@@ -64,7 +64,7 @@ func TestServerUpdateStatus(t *testing.T) {
 		getServers()
 
 		// assert that servers don't have updates pending
-		for _, s := range []tc.Server{
+		for _, s := range []tc.ServerV1{
 			edge1cdn1,
 			edge2cdn1,
 			mid1cdn1,
@@ -174,7 +174,7 @@ func TestServerQueueUpdate(t *testing.T) {
 			true:  "queue",
 		}
 
-		var s tc.Server
+		var s tc.ServerV1
 		resp, _, err := TOSession.GetServerByHostName(serverName)
 		if err != nil {
 			t.Fatalf("failed to GET Server by hostname: %v - %v", serverName, err)
