@@ -25,9 +25,10 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileServerIPAllowDotConfig(toData *TOData) (string, string, error) {
+func GetConfigFileServerIPAllowDotConfig(toData *config.TOData) (string, string, error) {
 	fileParams := ParamsToMultiMap(FilterParams(toData.ServerParams, atscfg.IPAllowConfigFileName, "", "", ""))
 
 	cgMap := map[string]tc.CacheGroupNullable{}

@@ -25,13 +25,14 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetSSLCertsAndKeyFiles(toData *TOData) ([]ATSConfigFile, error) {
+func GetSSLCertsAndKeyFiles(toData *config.TOData) ([]config.ATSConfigFile, error) {
 	dses := atscfg.DeliveryServicesToSSLMultiCertDSes(toData.DeliveryServices)
 	dses = atscfg.GetSSLMultiCertDotConfigDeliveryServices(dses)
 
-	configs := []ATSConfigFile{}
+	configs := []config.ATSConfigFile{}
 	for _, keys := range toData.SSLKeys {
 		dsName := tc.DeliveryServiceName(keys.DeliveryService)
 		ds, ok := dses[dsName]
@@ -59,13 +60,13 @@ func GetSSLCertsAndKeyFiles(toData *TOData) ([]ATSConfigFile, error) {
 
 		certName, keyName := atscfg.GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
 
-		keyFile := ATSConfigFile{}
+		keyFile := config.ATSConfigFile{}
 		keyFile.FileNameOnDisk = keyName
 		keyFile.Location = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		keyFile.Text = string(key)
 		configs = append(configs, keyFile)
 
-		certFile := ATSConfigFile{}
+		certFile := config.ATSConfigFile{}
 		certFile.FileNameOnDisk = certName
 		certFile.Location = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		certFile.Text = string(cert)

@@ -21,9 +21,10 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileLoggingDotYAML(toData *TOData) (string, string, error) {
+func GetConfigFileProfileLoggingDotYAML(toData *config.TOData) (string, string, error) {
 	params := ParamsToMap(FilterParams(toData.ServerParams, atscfg.LoggingYAMLFileName, "", "", "location"))
 	return atscfg.MakeLoggingDotYAML(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeLoggingDotYAML, nil
 }

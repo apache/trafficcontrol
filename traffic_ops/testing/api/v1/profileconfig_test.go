@@ -63,7 +63,7 @@ func GetTestProfileDotConfig(t *testing.T) {
 		t.Errorf("cannot GET Servers: %v", err)
 	}
 
-	server := tc.Server{ID: -1}
+	server := tc.ServerV1{ID: -1}
 	for _, potentialServer := range servers {
 		if potentialServer.Type != string(tc.CacheTypeEdge) {
 			continue

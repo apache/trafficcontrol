@@ -23,6 +23,7 @@ package tc
 // DeliveryServiceRequestComments as a response.
 type DeliveryServiceRequestCommentsResponse struct {
 	Response []DeliveryServiceRequestComment `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceRequestComment is a struct containing the fields for a delivery

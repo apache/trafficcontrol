@@ -35,6 +35,7 @@ const dateFormat = "2006-01-02"
 // StatsSummaryResponse ...
 type StatsSummaryResponse struct {
 	Response []StatsSummary `json:"response"`
+	Alerts
 }
 
 // StatsSummary ...

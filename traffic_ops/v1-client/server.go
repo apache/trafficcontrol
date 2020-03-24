@@ -34,7 +34,7 @@ const (
 )
 
 // Create a Server
-func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateServer(server tc.ServerV1) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -118,7 +118,7 @@ func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
 }
 
 // Update a Server by ID
-func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateServerByID(id int, server tc.ServerV1) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(server)
@@ -138,7 +138,7 @@ func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf
 }
 
 // Returns a list of Servers
-func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
+func (to *Session) GetServers() ([]tc.ServerV1, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Servers, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -146,13 +146,13 @@ func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
+	var data tc.ServersV1Response
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
 // GET a Server by the Server ID
-func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
+func (to *Session) GetServerByID(id int) ([]tc.ServerV1, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_v13_Servers, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -161,7 +161,7 @@ func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
+	var data tc.ServersV1Response
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -170,7 +170,7 @@ func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
 }
 
 // GET a Server by the Server hostname
-func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, error) {
+func (to *Session) GetServerByHostName(hostName string) ([]tc.ServerV1, ReqInf, error) {
 	url := fmt.Sprintf("%s?hostName=%s", API_v13_Servers, hostName)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -179,7 +179,7 @@ func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, er
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
+	var data tc.ServersV1Response
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -201,7 +201,7 @@ func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, error) {
+func (to *Session) GetServersByType(qparams url.Values) ([]tc.ServerV1, ReqInf, error) {
 	url := fmt.Sprintf("%s.json?%s", API_v13_Servers, qparams.Encode())
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -210,7 +210,7 @@ func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, er
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
+	var data tc.ServersV1Response
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}

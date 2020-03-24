@@ -20,6 +20,9 @@ package types
  */
 
 import (
+	"errors"
+	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -95,9 +98,46 @@ func (typ *TOType) Validate() error {
 }
 
 func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
-func (tp *TOType) Update() (error, error, int)              { return api.GenericUpdate(tp) }
-func (tp *TOType) Create() (error, error, int)              { return api.GenericCreate(tp) }
-func (tp *TOType) Delete() (error, error, int)              { return api.GenericDelete(tp) }
+
+func (tp *TOType) Update() (error, error, int) {
+	if !tp.AllowMutation() {
+		return errors.New("can not update type"), nil, http.StatusBadRequest
+	}
+	return api.GenericUpdate(tp)
+}
+
+func (tp *TOType) Delete() (error, error, int) {
+	if tp.ID != nil {
+		query := `SELECT use_in_table from type where id=$1`
+		err := tp.ReqInfo.Tx.Tx.QueryRow(query, tp.ID).Scan(&tp.UseInTable)
+		if err != nil {
+			return api.ParseDBError(err)
+		}
+	} else {
+		return errors.New("no type with that key found"), nil, http.StatusNotFound
+	}
+	if !tp.AllowMutation() {
+		return errors.New(fmt.Sprintf("can not delete type")), nil, http.StatusBadRequest
+	}
+	return api.GenericDelete(tp)
+}
+
+func (tp *TOType) Create() (error, error, int) {
+	if !tp.AllowMutation() {
+		return errors.New("can not create type"), nil, http.StatusBadRequest
+	}
+	return api.GenericCreate(tp)
+}
+
+func (tp *TOType) AllowMutation() bool {
+	apiInfo := tp.APIInfo()
+	if apiInfo.Version.Major < 2 {
+		return true
+	} else if tp.UseInTable == nil || *tp.UseInTable != "server" {
+		return false
+	}
+	return true
+}
 
 func selectQuery() string {
 	return `SELECT

@@ -25,9 +25,10 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNHeaderRewrite(toData *TOData, fileName string) (string, string, error) {
+func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (string, string, error) {
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, atscfg.HeaderRewritePrefix), atscfg.ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
 	tcDS := tc.DeliveryServiceNullable{}
