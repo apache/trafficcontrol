@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -33,7 +34,7 @@ func MakeUnknownConfig(
 ) string {
 	hdr := GenericHeaderComment(profileName, toToolName, toURL)
 
-	text := ""
+	lines := []string{}
 	for paramName, paramVal := range paramData {
 		if paramName == "header" {
 			if paramVal == "none" {
@@ -42,9 +43,11 @@ func MakeUnknownConfig(
 				hdr = paramVal + "\n"
 			}
 		} else {
-			text += paramVal + "\n"
+			lines = append(lines, paramVal+"\n")
 		}
 	}
+	sort.Strings(lines)
+	text := strings.Join(lines, "")
 	text = strings.Replace(text, "__RETURN__", "\n", -1)
 	return hdr + text
 }

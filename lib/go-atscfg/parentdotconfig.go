@@ -170,8 +170,7 @@ func MakeParentDotConfig(
 	serverParams map[string]string, // getParentConfigServerProfileParams(serverID)
 	parentInfos map[OriginHost][]ParentInfo, // getParentInfo(profileID, parentCachegroupID, secondaryParentCachegroupID)
 ) string {
-
-	// parentInfos := makeParentInfo(serverInfo)
+	sort.Sort(ParentConfigDSTopLevelSortByName(parentConfigDSes))
 
 	nameVersionStr := GetNameVersionStringFromToolNameAndURL(toToolName, toURL)
 	hdr := HeaderCommentWithTOVersionStr(serverInfo.HostName, nameVersionStr)
@@ -256,8 +255,6 @@ func MakeParentDotConfig(
 
 		roundRobin := `round_robin=consistent_hash`
 		goDirect := `go_direct=false`
-
-		sort.Sort(ParentConfigDSTopLevelSortByName(parentConfigDSes))
 
 		for _, ds := range parentConfigDSes {
 			parents, secondaryParents := getParentStrs(ds, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)

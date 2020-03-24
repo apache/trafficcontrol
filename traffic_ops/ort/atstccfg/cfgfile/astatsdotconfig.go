@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
@@ -33,6 +34,14 @@ func GetConfigFileProfileAstatsDotConfig(toData *config.TOData) (string, string,
 		}
 		if param.Name == "location" {
 			continue
+		}
+		if val, ok := paramData[param.Name]; ok {
+			if val < param.Value {
+				log.Errorln("data error: making astats.config: parameter '" + param.Name + "' had multiple values, ignoring '" + param.Value + "'")
+				continue
+			} else {
+				log.Errorln("data error: making astats.config: parameter '" + param.Name + "' had multiple values, ignoring '" + val + "'")
+			}
 		}
 		paramData[param.Name] = param.Value
 	}

@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"encoding/json"
+	"sort"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
@@ -35,6 +36,17 @@ type Package struct {
 	Version string `json:"version"`
 }
 
+type Packages []Package
+
+func (ps Packages) Len() int { return len(ps) }
+func (ps Packages) Less(i, j int) bool {
+	if ps[i].Name != ps[j].Name {
+		return ps[i].Name < ps[j].Name
+	}
+	return ps[i].Version < ps[j].Version
+}
+func (ps Packages) Swap(i, j int) { ps[i], ps[j] = ps[j], ps[i] }
+
 // MakePackages returns the 'packages' ATS config file endpoint.
 // This is a JSON object, and should be served with an 'application/json' Content-Type.
 func MakePackages(
@@ -46,6 +58,7 @@ func MakePackages(
 			packages = append(packages, Package{Name: name, Version: version})
 		}
 	}
+	sort.Sort(Packages(packages))
 	bts, err := json.Marshal(&packages)
 	if err != nil {
 		// should never happen

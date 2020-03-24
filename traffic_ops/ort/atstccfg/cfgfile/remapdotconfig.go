@@ -167,20 +167,19 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 		if paramValue == "STRING __HOSTNAME__" {
 			paramValue = toData.Server.HostName + "." + toData.Server.DomainName // TODO strings.Replace to replace all anywhere, instead of just an exact match?
 		}
+
+		if val, ok := serverPackageParamData[paramName]; ok {
+			if val < paramValue {
+				log.Errorln("remap config generation got multiple parameters for server package name '" + paramName + "' - ignoring '" + paramValue + "'")
+				continue
+			} else {
+				log.Errorln("config generation got multiple parameters for server package name '" + paramName + "' - ignoring '" + val + "'")
+			}
+		}
 		serverPackageParamData[paramName] = paramValue
 	}
 
-	cacheURLParams := map[string]string{}
-	for _, param := range toData.ServerParams {
-		if param.ConfigFile != atscfg.CacheURLParameterConfigFile {
-			continue
-		}
-		if existingVal, ok := cacheURLParams[param.Name]; ok {
-			log.Warnln("generating remap.config: server profile '" + toData.Server.Profile + "' cacheurl.config has multiple parameters for '" + param.Name + "' - using '" + existingVal + "' and ignoring the rest!")
-			continue
-		}
-		cacheURLParams[param.Name] = param.Value
-	}
+	cacheURLParams := ParamsToMap(FilterParams(toData.ServerParams, atscfg.CacheURLParameterConfigFile, "", "", ""))
 
 	cacheKeyParamsWithProfiles, err := TCParamsToParamsWithProfiles(toData.CacheKeyParams)
 	if err != nil {
@@ -204,9 +203,13 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 				if _, ok := dsProfilesCacheKeyConfigParams[dsProfileID]; !ok {
 					dsProfilesCacheKeyConfigParams[dsProfileID] = map[string]string{}
 				}
-				if _, ok := dsProfilesCacheKeyConfigParams[dsProfileID][param.Name]; ok {
-					// TODO warn
-					continue
+				if val, ok := dsProfilesCacheKeyConfigParams[dsProfileID][param.Name]; ok {
+					if val < param.Value {
+						log.Errorln("remap config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + param.Value + "'")
+						continue
+					} else {
+						log.Errorln("remap config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + val + "'")
+					}
 				}
 				dsProfilesCacheKeyConfigParams[dsProfileID][param.Name] = param.Value
 			}

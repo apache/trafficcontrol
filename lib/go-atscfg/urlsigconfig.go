@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -37,14 +38,22 @@ func MakeURLSigConfig(
 	sep := " = "
 
 	text := hdr
+
+	paramLines := []string{}
 	for paramName, paramVal := range paramData {
 		if len(urlSigKeys) == 0 || !strings.HasPrefix(paramName, "key") {
-			text += paramName + sep + paramVal + "\n"
+			paramLines = append(paramLines, paramName+sep+paramVal+"\n")
 		}
 	}
+	sort.Strings(paramLines)
+	text += strings.Join(paramLines, "")
 
+	keyLines := []string{}
 	for key, val := range urlSigKeys {
-		text += key + sep + val + "\n"
+		keyLines = append(keyLines, key+sep+val+"\n")
 	}
+	sort.Strings(keyLines)
+	text += strings.Join(keyLines, "")
+
 	return text
 }

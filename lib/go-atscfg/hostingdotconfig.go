@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
@@ -42,6 +43,7 @@ func MakeHostingDotConfig(
 ) string {
 	text := GenericHeaderComment(string(serverName), toToolName, toURL)
 
+	lines := []string{}
 	if _, ok := params[ParamRAMDrivePrefix]; ok {
 		nextVolume := 1
 		if _, ok := params[ParamDrivePrefix]; ok {
@@ -60,10 +62,14 @@ func MakeHostingDotConfig(
 			seenOrigins[origin] = struct{}{}
 			origin = strings.TrimPrefix(origin, `http://`)
 			origin = strings.TrimPrefix(origin, `https://`)
-			text += `hostname=` + origin + ` volume=` + strconv.Itoa(ramVolume) + "\n"
+			lines = append(lines, `hostname=`+origin+` volume=`+strconv.Itoa(ramVolume)+"\n")
 		}
 	}
 	diskVolume := 1 // note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
-	text += `hostname=*   volume=` + strconv.Itoa(diskVolume) + "\n"
+
+	lines = append(lines, `hostname=*   volume=`+strconv.Itoa(diskVolume)+"\n")
+
+	sort.Strings(lines)
+	text += strings.Join(lines, "")
 	return text
 }

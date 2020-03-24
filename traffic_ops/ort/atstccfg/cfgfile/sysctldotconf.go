@@ -25,17 +25,6 @@ import (
 )
 
 func GetConfigFileProfileSysCtlDotConf(toData *config.TOData) (string, string, error) {
-	paramData := map[string]string{}
-	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
-	for _, param := range toData.ServerParams {
-		if param.ConfigFile != atscfg.SysctlFileName {
-			continue
-		}
-		if param.Name == "location" {
-			continue
-		}
-		paramData[param.Name] = param.Value
-	}
-
+	paramData := ParamsToMap(FilterParams(toData.ServerParams, atscfg.SysctlFileName, "", "", "location"))
 	return atscfg.MakeSysCtlDotConf(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeSysctlDotConf, nil
 }

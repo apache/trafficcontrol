@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"encoding/json"
+	"sort"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
@@ -34,6 +35,17 @@ type ChkConfigEntry struct {
 	Val  string `json:"value"`
 }
 
+type ChkConfigEntries []ChkConfigEntry
+
+func (e ChkConfigEntries) Len() int { return len(e) }
+func (e ChkConfigEntries) Less(i, j int) bool {
+	if e[i].Name != e[j].Name {
+		return e[i].Name < e[j].Name
+	}
+	return e[i].Val < e[j].Val
+}
+func (e ChkConfigEntries) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
+
 // MakeChkconfig returns the 'chkconfig' ATS config file endpoint.
 // This is a JSON object, and should be served with an 'application/json' Content-Type.
 func MakeChkconfig(
@@ -46,6 +58,9 @@ func MakeChkconfig(
 			chkconfig = append(chkconfig, ChkConfigEntry{Name: name, Val: val})
 		}
 	}
+
+	sort.Sort(ChkConfigEntries(chkconfig))
+
 	bts, err := json.Marshal(&chkconfig)
 	if err != nil {
 		// should never happen

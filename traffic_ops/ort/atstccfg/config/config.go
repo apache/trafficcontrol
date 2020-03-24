@@ -201,6 +201,18 @@ type ATSConfigFile struct {
 	ContentType string
 }
 
+// ATSConfigFiles implements sort.Interface and sorts by the Location and then FileNameOnDisk, i.e. the full file path.
+type ATSConfigFiles []ATSConfigFile
+
+func (fs ATSConfigFiles) Len() int { return len(fs) }
+func (fs ATSConfigFiles) Less(i, j int) bool {
+	if fs[i].Location != fs[j].Location {
+		return fs[i].Location < fs[j].Location
+	}
+	return fs[i].FileNameOnDisk < fs[j].FileNameOnDisk
+}
+func (fs ATSConfigFiles) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
+
 // TOData is the Traffic Ops data needed to generate configs.
 // See each field for details on the data required.
 // - If a field says 'must', the creation of TOData is guaranteed to do so, and users of the struct may rely on that.

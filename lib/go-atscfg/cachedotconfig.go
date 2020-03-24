@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -60,10 +61,12 @@ func MakeCacheDotConfig(
 		}
 	}
 
-	text := ""
+	linesArr := []string{}
 	for line, _ := range lines {
-		text += line
+		linesArr = append(linesArr, line)
 	}
+	sort.Strings(linesArr)
+	text := strings.Join(linesArr, "")
 	if text == "" {
 		text = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
 	}

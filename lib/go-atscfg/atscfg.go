@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"errors"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -103,10 +104,14 @@ func GenericProfileConfig(
 	separator string,
 ) string {
 	text := ""
+
+	lines := []string{}
 	for name, val := range paramData {
 		name = trimParamUnderscoreNumSuffix(name)
-		text += name + separator + val + "\n"
+		lines = append(lines, name+separator+val+"\n")
 	}
+	sort.Strings(lines)
+	text = strings.Join(lines, "")
 	return text
 }
 
