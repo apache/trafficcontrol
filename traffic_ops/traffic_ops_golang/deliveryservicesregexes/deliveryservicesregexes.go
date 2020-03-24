@@ -30,7 +30,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/lib/pq"
@@ -418,38 +417,4 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Deleted a regular expression ("+dsrPattern+") in position "+strconv.Itoa(dsrSetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "deliveryservice_regex was deleted.")
-}
-
-func filterAuthorizedDSRegexes(tx *sql.Tx, user *auth.CurrentUser, dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex, dsTenants map[tc.DeliveryServiceName]*int) (map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex, error) {
-	for ds, tenantID := range dsTenants {
-		if tenantID == nil {
-			continue
-		}
-		authorized, err := tenant.IsResourceAuthorizedToUserTx(*tenantID, user, tx)
-		if err != nil {
-			return nil, errors.New("checking delivery service tenancy authorization: " + err.Error())
-		}
-		if !authorized {
-			delete(dsRegexes, ds)
-		}
-	}
-	return dsRegexes, nil
-}
-
-func filterAuthorizedDSIDRegexes(tx *sql.Tx, user *auth.CurrentUser, regexes []tc.DeliveryServiceIDRegex, dsTenants map[int]*int) ([]tc.DeliveryServiceIDRegex, error) {
-	filtered := []tc.DeliveryServiceIDRegex{}
-	for _, regex := range regexes {
-		tenantID := dsTenants[regex.ID]
-		if tenantID == nil {
-			continue
-		}
-		authorized, err := tenant.IsResourceAuthorizedToUserTx(*tenantID, user, tx)
-		if err != nil {
-			return nil, errors.New("checking delivery service tenancy authorization: " + err.Error())
-		}
-		if authorized {
-			filtered = append(filtered, regex)
-		}
-	}
-	return regexes, nil
 }
