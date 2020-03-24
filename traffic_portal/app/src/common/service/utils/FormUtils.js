@@ -23,28 +23,8 @@ var FormUtils = function() {
         return input && !input.$focused && input.$invalid;
     };
 
-    this.oneInputHasError = function(input1, input2) {
-        var input = [input1, input2];
-        for(var i = 0; i < input.length; i++) {
-            if (!this.hasError(input[i])) {
-                return false;
-            }
-        }
-        return true;
-    };
-
     this.hasPropertyError = function(input, property) {
         return input && !input.$focused && input.$error[property];
-    };
-
-    this.oneInputHasPropertyError = function(property, input1, input2) {
-        var input = [input1, input2];
-        for(var i = 0; i < input.length; i++) {
-            if (!this.hasPropertyError(input[i], property)) {
-                return false;
-            }
-        }
-        return true;
     };
 
 };

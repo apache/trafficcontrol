@@ -13,76 +13,11 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v1-types-id:
+.. _to-api-types-id:
 
 ****************
 ``types/{{ID}}``
 ****************
-
-``GET``
-=======
-.. deprecated:: ATCv4
-	This method of this endpoint is deprecated, developers/administrators should use the ``GET`` method of :ref:`to-api-types` with the ``id`` query parameter instead.
-
-:Auth. Required: Yes
-:Roles Required: None
-:Response Type: Array
-
-Request Structure
------------------
-.. table:: Request Path Parameters
-
-	+------+-------------------------------------------------------------+
-	| Name | Description                                                 |
-	+======+=============================================================+
-	|  ID  | The integral, unique identifier of the type being inspected |
-	+------+-------------------------------------------------------------+
-
-.. code-block:: http
-	:caption: Request Example
-
-	GET /api/1.5/types/50 HTTP/1.1
-	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
-	Accept: */*
-	Cookie: mojolicious=...
-
-Response Structure
-------------------
-:description: A short description of this type
-:id:          An integral, unique identifier for this type
-:lastUpdated: The date and time at which this type was last updated, in ISO format
-:name:        The name of this type
-:useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
-
-.. code-block:: http
-	:caption: Response Example
-
-	HTTP/1.1 200 OK
-	Content-Encoding: gzip
-	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 17 Mar 2020 17:29:33 GMT; Max-Age=3600; HttpOnly
-	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 17 Mar 2020 16:29:33 GMT
-	Content-Length: 233
-
-	{ "alerts": [
-		{
-			"text": "This endpoint is deprecated, please use GET /types with the 'id' query parameter instead",
-			"level": "warning"
-		}
-	],
-	"response": [
-		{
-			"id": 50,
-			"lastUpdated": "2020-03-17 16:26:38+00",
-			"name": "GRAFANA",
-			"description": "Grafana Service",
-			"useInTable": "server"
-		}
-	]}
-
-=======
 
 ``PUT``
 =======

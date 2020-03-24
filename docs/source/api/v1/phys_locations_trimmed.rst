@@ -18,6 +18,8 @@
 **************************
 ``phys_locations/trimmed``
 **************************
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-phys_locations` instead.
 
 ``GET``
 =======
@@ -56,5 +58,11 @@ Response Structure
 		},
 		{
 			"name": "Apachecon North America 2018"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /phys_locations instead",
+			"level": "warning"
 		}
 	]}

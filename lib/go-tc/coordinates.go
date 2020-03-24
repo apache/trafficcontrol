@@ -25,6 +25,7 @@ package tc
 type CoordinatesResponse struct {
 	// in: body
 	Response []Coordinate `json:"response"`
+	Alerts
 }
 
 // CoordinateResponse is a single Coordinate response for Update and Create to
@@ -34,6 +35,7 @@ type CoordinatesResponse struct {
 type CoordinateResponse struct {
 	// in: body
 	Response Coordinate `json:"response"`
+	Alerts
 }
 
 // Coordinate ...

@@ -73,7 +73,7 @@ func AssignTestDeliveryService(t *testing.T) {
 }
 
 func AssignIncorrectTestDeliveryService(t *testing.T) {
-	var server *tc.Server
+	var server *tc.ServerV1
 	for _, s := range testData.Servers {
 		if s.CDNName == "cdn2" {
 			server = &s
