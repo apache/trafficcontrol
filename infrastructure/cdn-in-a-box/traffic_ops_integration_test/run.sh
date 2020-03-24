@@ -39,14 +39,9 @@ done
 # if [[ -x ]]; then;./config.sh; done          traffic_ops/run-go.sh
 source config.sh
 
-PGPASSWORD="$DB_USER_PASS" pg_dump --blobs --no-owner --format=c "--host=$DB_SERVER" "--port=$DB_PORT" "--username=$DB_USER" traffic_ops > dbdump.manual
-to-get api/2.0/dbdump > dbdump.api
-
-diff dbdump.api dbdump.manual && rm -f dbdump.api dbdump.manual
-
-./traffic_ops_v1_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v1 --set-exit-code > /junit/golang.test.toapi.v1.xml && find /junit -type 'f' | xargs chmod 664
+./traffic_ops_v1_integration_test -test.v -cfg=traffic-ops-test.conf -fixtures=tc-fixtures-v1.json 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v1 --set-exit-code > /junit/golang.test.toapi.v1.xml && find /junit -type 'f' | xargs chmod 664
 export v1=$?
-./traffic_ops_v2_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v2 --set-exit-code > /junit/golang.test.toapi.v2.xml && find /junit -type 'f' | xargs chmod 664
+./traffic_ops_v2_integration_test -test.v -cfg=traffic-ops-test.conf -fixtures=tc-fixtures-v2.json 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v2 --set-exit-code > /junit/golang.test.toapi.v2.xml && find /junit -type 'f' | xargs chmod 664
 export v2=$?
 
 cat /junit/golang.test.toapi.v1.xml /junit/golang.test.toapi.v2.xml
