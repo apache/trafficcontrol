@@ -23,6 +23,8 @@
 =======
 Get a single target for a specific STEERING-:ref:`ds-types` :term:`Delivery Service`.
 
+.. deprecated:: ATCv4
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -84,7 +86,11 @@ Response Structure
 	Date: Tue, 11 Dec 2018 14:16:53 GMT
 	Content-Length: 130
 
-	{ "response": [
+	{ "alerts": [
+		{
+			"text": "This endpoint is deprecated, and will be removed in the future",
+			"level": "warning"
+		}], "response": [
 		{
 			"deliveryService": "test",
 			"deliveryServiceId": 2,
