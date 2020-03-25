@@ -1,0 +1,113 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/topologies')">Topologies</a></li>
+            <li class="active">{{topologyName}}</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="topologyForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(topologyForm.name), 'has-feedback': hasError(topologyForm.name)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="name" type="text" class="form-control" ng-model="topology.name" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'pattern')">No spaces</small>
+                    <span ng-show="hasError(topologyForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(topologyForm.desc), 'has-feedback': hasError(topologyForm.desc)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Description *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <textarea id="desc" name="desc" rows="3" cols="17" class="form-control" ng-model="topology.desc" maxlength="256" required></textarea>
+                    <small class="input-error" ng-show="hasPropertyError(topologyForm.desc, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache groups *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <div ui-tree="treeOptions" id="tree-root">
+                        <ol ui-tree-nodes ng-model="massaged">
+                            <li ng-repeat="node in massaged" ui-tree-node ng-include="'nodes_renderer.html'"></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(topology)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="topologyForm.$pristine || topologyForm.$invalid" ng-click="save(topology)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+
+        <div class="row">
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="info">
+                    {{info}}
+                </div>
+                <pre class="code">{{ topology.nodes | json }}</pre>
+            </div>
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="info">
+                    {{info}}
+                </div>
+                <pre class="code">{{ massaged | json }}</pre>
+            </div>
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="info">
+                    {{info}}
+                </div>
+                <pre class="code">{{ target | json }}</pre>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+
+        <script type="text/ng-template" id="nodes_renderer.html">
+            <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content">
+                <a class="btn btn-success btn-xs" ng-if="node.children && node.children.length > 0" data-nodrag ng-click="toggle(this)">
+                    <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
+                </a> {{node.cachegroup}}
+                <a class="pull-right btn btn-danger btn-xs" data-nodrag ng-click="remove(this)">
+                    <i class="fa fa-times"></i>
+                </a>
+                <a class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="newSubItem(this)" style="margin-right: 8px;">
+                    <i class="fa fa-plus"></i>
+                </a>
+                <a class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="viewServers(this)" style="margin-right: 8px;">
+                    <i class="fa fa-server"></i>
+                </a>
+                <a class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="second()" style="margin-right: 8px;">
+                    {{(node.secParent) ? node.secParent : 'None'}}
+                </a>
+            </div>
+            <ol ui-tree-nodes="" ng-model="node.children" ng-class="{hidden: collapsed}">
+                <li ng-repeat="node in node.children" ui-tree-node ng-include="'nodes_renderer.html'"></li>
+            </ol>
+        </script>
+
+    </div>
+</div>
