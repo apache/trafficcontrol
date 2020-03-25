@@ -56,3 +56,16 @@ func makeReq(to *Session, method, endpoint string, body []byte, respStruct inter
 
 	return reqInf, nil
 }
+
+func mapToQueryParameters(params map[string]string) string {
+	path := ""
+	for key, value := range params {
+		if path == "" {
+			path += "?"
+		} else {
+			path += "&"
+		}
+		path += key + "=" + value
+	}
+	return path
+}

@@ -16,6 +16,7 @@ package v2
 */
 
 import (
+	"sort"
 	"testing"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
@@ -23,6 +24,8 @@ import (
 
 func TestPhysLocations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters, Divisions, Regions, PhysLocations}, func() {
+		GetDefaultSortPhysLocationsTest(t)
+		GetSortPhysLocationsTest(t)
 		UpdateTestPhysLocations(t)
 		GetTestPhysLocations(t)
 	})
@@ -75,6 +78,33 @@ func GetTestPhysLocations(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET PhysLocation by name: %v - %v", err, resp)
 		}
+	}
+
+}
+
+func GetSortPhysLocationsTest(t *testing.T) {
+	resp, _, err := TOSession.GetPhysLocations(map[string]string{"orderby": "id"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+	sorted := sort.SliceIsSorted(resp, func(i, j int) bool {
+		return resp[i].ID < resp[j].ID
+	})
+	if !sorted {
+		t.Error("expected response to be sorted by id")
+	}
+}
+
+func GetDefaultSortPhysLocationsTest(t *testing.T) {
+	resp, _, err := TOSession.GetPhysLocations(nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	sorted := sort.SliceIsSorted(resp, func(i, j int) bool {
+		return resp[i].Name < resp[j].Name
+	})
+	if !sorted {
+		t.Error("expected response to be sorted by name")
 	}
 }
 
