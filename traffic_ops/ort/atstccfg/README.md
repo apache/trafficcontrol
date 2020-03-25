@@ -45,3 +45,11 @@ The available options are:
 -w WARNING_LOCATION, --log-location-warning WARNING_LOCATION    The file location to which to log warnings. Respects the special string constants of github.com/apache/trafficcontrol/lib/go-log. Default: 'stderr'
 ```
 atstccfg caches generated files in /tmp/atstccfg_cache/ for re-use.
+
+# Development
+
+## Updating for new Traffic Control Versions
+
+After a new Traffic Control release, the Traffic Ops client from the new release branch should be vendored at `toreq/vendor`, and all usages of `config.TOClientNew` should be changed to `config.TOClient`.
+
+There's a script to do this at `ort/atstccfg/update-to-client/update-to-client.go`. Run the script with no arguments for usage information.
