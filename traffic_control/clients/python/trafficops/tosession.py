@@ -1865,7 +1865,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'servercheck/{extension_id:d}', ('2.0',))
+	@api_request('delete', 'servercheck/extensions/{extension_id:d}', ('2.0',))
 	def delete_to_extension(self, extension_id=None):
 		"""
 		Deletes a Traffic Ops extension.
