@@ -296,7 +296,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Server Details
 		{api.Version{2, 0}, http.MethodGet, `servers/details/?$`, server.GetDetailParamHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2261264714, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `servers/hostname/{hostName}/details/?$`, server.GetDetailHandler, auth.PrivLevelReadOnly, Authenticated, nil, 272366128, noPerlBypass},
 
 		//Server status
 		{api.Version{2, 0}, http.MethodPut, `servers/{id}/status$`, server.UpdateStatusHandler, auth.PrivLevelOperations, Authenticated, nil, 276663851, noPerlBypass},

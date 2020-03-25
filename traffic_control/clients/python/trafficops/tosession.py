@@ -1631,16 +1631,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'servers/hostname/{name}/details', ('2.0',))
-	def get_server_details(self, name=None):
-		"""
-		Get server details from trafficOps
-		:ref:`to-api-servers-hostname-name-details`
-		:param hostname: Server hostname
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('post', 'servercheck', ('2.0',))
 	def create_servercheck(self, data=None):
 		"""

@@ -98,6 +98,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /riak/ping
   - /riak/stats
   - /servercheck/aadata
+  - /servers/hostname/:hostName/details
   - /servers/status
   - /servers/:id (GET)
   - /servers/totals
