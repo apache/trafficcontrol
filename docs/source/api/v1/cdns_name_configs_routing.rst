@@ -261,7 +261,7 @@ Response Structure
 				"tld.ttls.DNSKEY": 30,
 				"geolocation.polling.interval": 86400000,
 				"tld.soa.expire": 604800,
-				"federationmapping.polling.url": "https://${toHostname}/internal/api/1.3/federations.json",
+				"federationmapping.polling.url": "https://${toHostname}/api/1.5/federations/all",
 				"coveragezone.polling.url": "https://trafficops.infra.ciab.test:443/coverage-zone.json",
 				"tld.soa.minimum": 30,
 				"geolocation.polling.url": "https://trafficops.infra.ciab.test:443/GeoLite2-City.mmdb.gz",

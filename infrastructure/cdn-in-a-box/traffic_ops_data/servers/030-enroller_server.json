@@ -4,6 +4,7 @@
   "cachegroup": "CDN_in_a_Box_Edge",
   "interfaceName": "eth0",
   "interfaceMtu": 1500,
+  "ipIsService": true,
   "type": "ENROLLER",
   "physLocation": "Apachecon North America 2018",
   "profile": "ENROLLER_ALL",

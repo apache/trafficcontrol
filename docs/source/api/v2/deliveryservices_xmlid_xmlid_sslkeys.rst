@@ -95,4 +95,50 @@ Response Structure
 		"expiration": "2020-08-18T13:53:06Z"
 	}}
 
+``DELETE``
+==========
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object (string)
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+-------+----------+-------------------------------------------------------------+
+	| Name  | Required | Description                                                 |
+	+=======+==========+=============================================================+
+	| xmlId | yes      | The :ref:`ds-xmlid` of the desired :term:`Delivery Service` |
+	+-------+----------+-------------------------------------------------------------+
+
+.. table:: Request Query Parameters
+
+	+---------+----------+------------------------------------------------------------+
+	|   Name  | Required |          Description                                       |
+	+=========+==========+============================================================+
+	| version | no       | The version number of the SSL keys that shall be retrieved |
+	+---------+----------+------------------------------------------------------------+
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Wed, 18 Mar 2020 17:36:10 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: Pj+zCoOXg19nGNxcSkjib2iDjG062Y3RcEEV+OYnwbGIsLcpa0BKZleY/qJOKT5DkSoX2qQkckUxUqdDxjVorQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 18 Mar 2020 16:36:10 GMT
+	Content-Length: 79
+
+	{
+		"response": "Successfully deleted ssl keys for demo1"
+	}
+
 .. [1] These optional fields will be present in the response if and only if they were specified during key generation; they are optional during key generation and thus cannot be guaranteed to exist or not exist.

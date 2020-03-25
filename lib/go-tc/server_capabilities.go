@@ -22,6 +22,7 @@ package tc
 // ServerCapabilitiesResponse contains the result data from a GET /server_capabilities request.
 type ServerCapabilitiesResponse struct {
 	Response []ServerCapability `json:"response"`
+	Alerts
 }
 
 // ServerCapability contains information about a given ServerCapability in Traffic Ops.

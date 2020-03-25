@@ -147,6 +147,10 @@ Response Structure
 
 	.. versionadded:: 1.3
 
+:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+
+	.. versionadded:: 1.5
+
 :sslKeyVersion: This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 
@@ -261,7 +265,8 @@ Response Structure
 				"zyx"
 			],
 			"maxOriginConnections": 0,
-			"ecsEnabled": false
+			"ecsEnabled": false,
+			"rangeSliceBlockSize": null
 		}
 	]}
 

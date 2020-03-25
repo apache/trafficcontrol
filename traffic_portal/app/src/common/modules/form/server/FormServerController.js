@@ -91,7 +91,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
     $scope.isOrigin = serverUtils.isOrigin;
 
-
     $scope.openCharts = serverUtils.openCharts;
 
     $scope.showChartsButton = propertiesModel.properties.servers.charts.show;

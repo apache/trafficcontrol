@@ -23,6 +23,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+		Use the ``GET`` method of :ref:`to-api-v1-asns` with query parameter ``id`` instead.
+
 Retrieve information about a specific :abbr:`ASN (Autonomous System Number)`-to-:term:`Cache Group` association.
 
 :Auth. Required: Yes
@@ -71,9 +74,15 @@ Response Structure
 	Whole-Content-Sha512: F2NmDbTpXqrIQDX7IBKH9+1drtTL4XedSfJv6klMgLEZwbLCkddIXuSLpmgVCID6kTVqy3fTKjZS3U+HJ3YUEQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 02 Dec 2019 21:53:17 GMT
-	Content-Length: 128
+	Content-Length: 210
 
-	{ "response": [
+	{ "alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use GET /asns instead"
+		}
+	],
+	"response": [
 		{
 			"asn": 1,
 			"cachegroup": "TRAFFIC_ANALYTICS",

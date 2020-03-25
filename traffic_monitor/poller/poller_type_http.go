@@ -75,6 +75,7 @@ func httpInit(cfg PollerConfig, globalCtxI interface{}) interface{} {
 		UserAgent:   gctx.UserAgent,
 		NoKeepAlive: cfg.NoKeepAlive,
 		URL:         cfg.URL,
+		URLv6:       cfg.URLv6,
 		Host:        cfg.Host,
 		PollerID:    cfg.PollerID,
 	}
@@ -90,6 +91,7 @@ type HTTPPollCtx struct {
 	UserAgent   string
 	NoKeepAlive bool
 	URL         string
+	URLv6       string
 	Host        string
 	PollerID    string
 }

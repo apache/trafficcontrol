@@ -50,7 +50,15 @@ Configuring Traffic Monitor
 
 Configuration Overview
 ----------------------
-Traffic Monitor is configured via two JSON configuration files, :file:`traffic_ops.cfg` and :file:`traffic_monitor.cfg`, by default located in the ``conf`` directory in the install location. :file:`traffic_ops.cfg` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. :file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times and initial poll intervals. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
+Traffic Monitor is configured via two JSON configuration files, :file:`traffic_ops.cfg` and :file:`traffic_monitor.cfg`, by default located in the ``conf`` directory in the install location. :file:`traffic_ops.cfg` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. :file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times, initial poll intervals, and the polling protocols. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
+
+Polling protocol can be set for peers and caches and has 3 options:
+
+:ipv4only (the default): Traffic Monitor will communicate with the peers or caches only over IPv4
+:ipv6only: Traffic Monitor will communicate with the peers or caches only over IPv6 (use case for peers is if the other Traffic Monitor are only available over IPv6)
+:both: Traffic Monitor will alternate its communication between IPv4 and IPv6 (note: this does not affect the polling frequency so if polling frequency is 1 second IPv4 will be polled every 2 seconds)
+
+.. Note:: ``both`` will poll IPv4 and IPv6 and report on availability based on if the respective IP addresses are defined on the server.  So if only an IPv4 address is defined and the protocol is set to ``both`` then it will only show the availability over IPv4, but if both addresses are defined then it will show availability based on IPv4 and IPv6.
 
 Peering and Optimistic Quorum
 -----------------------------
@@ -66,7 +74,8 @@ The :term:`cache servers` are polled at the URL specified in the ``health.pollin
 
 This :term:`parameter` must have the config file ``rascal.properties``.
 
-The value is a template with the text ``${hostname}`` being replaced with the :term:`cache server`'s Network IP (IPv4), and ``${interface_name}`` being replaced with the :term:`cache server`'s network Interface Name. For example, ``http://${hostname}/_astats?application=&inf.name=${interface_name}``.
+The value is a template with the text ``${hostname}`` being replaced with the :term:`cache server`'s Network IP (IPv4, IPv6, or alternating between IPv4 and IPv6 depending on the cache polling protocol described in `Configuration Overview`_), and ``${interface_name}`` being replaced with the :term:`cache server`'s network Interface Name. For example, ``http://${hostname}/_astats?application=&inf.name=${interface_name}``.
+.. Note:: When an IPv6 address is used, it must be surrounded by square brackets ``[`` and ``]``.  This is done when the text ``${hostname}`` is replaced and should not be done in the server configuration itself.
 
 If the template contains a port, that port will be used, and the :term:`cache server`'s HTTPS and TCP Ports will not be added.
 
@@ -75,6 +84,7 @@ If the template does not contain a port, then if the template starts with ``http
 Examples:
 
 Template ``http://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://192.0.2.42:8080/_astats?application=&inf.name=${interface_name}``.
+Template ``http://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``2001:DB8:0:0:1::1`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://[2001:DB8:0:0:1::1]/_astats?application=&inf.name=${interface_name}``.
 Template ``https://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``https://192.0.2.42:8443/_astats?application=&inf.name=${interface_name}``.
 Template ``http://${hostname}:1234/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://192.0.2.42:1234/_astats?application=&inf.name=${interface_name}``.
 Template ``https://${hostname}:1234/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``https://192.0.2.42:1234/_astats?application=&inf.name=${interface_name}``.

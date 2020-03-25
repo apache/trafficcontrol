@@ -35,4 +35,5 @@ type Capability struct {
 // Traffic Ops.
 type CapabilitiesResponse struct {
 	Response []Capability `json:"response"`
+	Alerts
 }

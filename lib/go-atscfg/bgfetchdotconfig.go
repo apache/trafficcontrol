@@ -23,6 +23,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const ContentTypeBGFetchDotConfig = ContentTypeTextASCII
+
 func MakeBGFetchDotConfig(
 	cdnName tc.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)

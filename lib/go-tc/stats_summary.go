@@ -35,6 +35,7 @@ const dateFormat = "2006-01-02"
 // StatsSummaryResponse ...
 type StatsSummaryResponse struct {
 	Response []StatsSummary `json:"response"`
+	Alerts
 }
 
 // StatsSummary ...
@@ -152,7 +153,14 @@ func (ss *StatsSummaryLastUpdated) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// StatsSummaryLastUpdatedResponse ...
+type LastUpdated struct {
+	Version  string `json:"version"`
+	Response struct {
+		SummaryTime string `json:"summaryTime"`
+	} `json:"response"`
+}
+
 type StatsSummaryLastUpdatedResponse struct {
+	Version  string                  `json:"version"`
 	Response StatsSummaryLastUpdated `json:"response"`
 }

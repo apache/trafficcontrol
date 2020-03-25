@@ -21,6 +21,9 @@
 
 ``GET``
 =======
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-v1-phys_locations` with the query parameter ``id`` instead.
+
 Retrieves information about a specific :term:`Physical Location`
 
 :Auth. Required: Yes
@@ -113,6 +116,12 @@ Response Structure
 			"shortName": "ciab",
 			"state": "DC",
 			"zip": "20500"
+		}
+	],
+	"alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET /phys_locations with query parameter id instead",
+			"level": "warning"
 		}
 	]}
 

@@ -41,7 +41,9 @@ type APIPeerStates struct {
 
 // CacheState represents the available state of a cache.
 type CacheState struct {
-	Value bool `json:"value"`
+	Value         bool `json:"value"`
+	Ipv4Available bool `json:"ipv4Available"`
+	Ipv6Available bool `json:"ipv6Available"`
 }
 
 func srvPeerStates(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, int) {
@@ -76,7 +78,7 @@ func createAPIPeerStates(peerStates map[tc.TrafficMonitorName]tc.CRStates, peers
 			if !filter.UseCache(cache) {
 				continue
 			}
-			peerState[cache] = []CacheState{CacheState{Value: available.IsAvailable}}
+			peerState[cache] = []CacheState{CacheState{Value: available.IsAvailable, Ipv4Available: available.Ipv4Available, Ipv6Available: available.Ipv6Available}}
 		}
 		apiPeerStates.Peers[peer] = peerState
 	}

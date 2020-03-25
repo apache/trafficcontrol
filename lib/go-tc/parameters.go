@@ -36,6 +36,7 @@ import (
 // ParametersResponse ...
 type ParametersResponse struct {
 	Response []Parameter `json:"response"`
+	Alerts
 }
 
 // Parameter ...

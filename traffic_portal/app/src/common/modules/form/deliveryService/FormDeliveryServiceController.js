@@ -293,6 +293,12 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    $scope.rangeRequestSelected = function() {
+        if ($scope.deliveryService.rangeRequestHandling != 3) {
+            $scope.deliveryService.rangeSliceBlockSize = null;
+        }
+    };
+
     var init = function () {
         getCDNs();
         getProfiles();

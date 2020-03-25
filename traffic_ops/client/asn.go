@@ -83,7 +83,7 @@ func (to *Session) GetASNs() ([]tc.ASN, ReqInf, error) {
 
 // GET a ASN by the id
 func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_ASNS, id)
+	route := fmt.Sprintf("%s?id=%d", API_ASNS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

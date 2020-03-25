@@ -22,6 +22,7 @@ package tc
 // DomainsResponse is a list of Domains as a response.
 type DomainsResponse struct {
 	Response []Domain `json:"response"`
+	Alerts
 }
 
 // Domain contains information about a single domain and its profile.

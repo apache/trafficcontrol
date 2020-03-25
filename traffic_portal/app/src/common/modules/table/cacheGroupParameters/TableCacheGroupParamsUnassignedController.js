@@ -17,22 +17,30 @@
  * under the License.
  */
 
-var TableCacheGroupParamsUnassignedController = function(cg, parameters, $scope, $uibModalInstance) {
+var TableCacheGroupParamsUnassignedController = function(cg, allParams, assignedParams, $scope, $uibModalInstance) {
 
 	var selectedParams = [];
 
 	$scope.cg = cg;
 
-	$scope.unassignedParams = parameters;
+	$scope.unassignedParams = allParams.filter(
+		function(p) {
+			return !assignedParams.has(p.id);
+		}
+	);
 
 	var addParam = function(paramId) {
-		if (_.indexOf(selectedParams, paramId) == -1) {
+		if (selectedParams.indexOf(paramId) === -1) {
 			selectedParams.push(paramId);
 		}
 	};
 
 	var removeParam = function(paramId) {
-		selectedParams = _.without(selectedParams, paramId);
+		selectedParams = selectedParams.filter(
+			function (param) {
+				return param !== paramId;
+			}
+		);
 	};
 
 	$scope.updateParams = function($event, paramId) {
@@ -70,5 +78,5 @@ var TableCacheGroupParamsUnassignedController = function(cg, parameters, $scope,
 
 };
 
-TableCacheGroupParamsUnassignedController.$inject = ['cg', 'parameters', '$scope', '$uibModalInstance'];
+TableCacheGroupParamsUnassignedController.$inject = ['cg', 'allParams', 'assignedParams', '$scope', '$uibModalInstance'];
 module.exports = TableCacheGroupParamsUnassignedController;

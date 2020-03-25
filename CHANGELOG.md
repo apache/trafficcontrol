@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Added support for use of ATS Slice plugin as an additonal option to range request handling on HTTP/DNS DSes.
 - Added a boolean to delivery service in Traffic Portal and Traffic Ops to enable EDNS0 client subnet at the delivery service level and include it in the cr-config.
 - Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
 - Traffic Router DNSSEC zone diffing: if enabled via the new "dnssec.zone.diffing.enabled" TR profile parameter, TR will diff existing zones against newly generated zones in order to determine if a zone needs to be re-signed. Zones are typically generated on every snapshot and whenever new DNSSEC keys are found, and since signing a zone is a relatively CPU-intensive operation, this optimization can drastically reduce the CPU time taken to process new snapshots and new DNSSEC keys.
@@ -23,6 +24,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/isos
   - /api/1.5/deliveryservice/:id/routing
   - /api/1.5/deliveryservices/sslkeys/generate/letsencrypt `POST`
+  - /api/2.0/deliveryservices/xmlId/:XMLID/sslkeys `DELETE`
+  - /deliveryserviceserver/:dsid/:serverid
   - /api/1.5/letsencrypt/autorenew `POST`
   - /api/1.5/letsencrypt/dnsrecords `GET`
   - /api/2.0/vault/ping `GET`
@@ -31,37 +34,47 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/servercheck/extensions/:id `(DELETE)`
   - /api/2.0/servercheck/extensions `(GET, POST)`
   - /api/2.0/plugins `(GET)`
+  - /api/2.0/snapshot `PUT`
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
 - Fixed Traffic Portal regenerating CDN DNSSEC keys with the wrong effective date
+- Type mutation through the api is now restricted to only those types that apply to the "server" table
 - Updated The Traffic Ops Python, Go and Java clients to use API version 2.0 (when possible)
 - Updated CDN-in-a-Box scripts and enroller to use TO API version 2.0
 - Updated numerous, miscellaneous tools to use TO API version 2.0
 - Updated TP to use TO API v2
 - Updated TP application build dependencies
+- Modified Traffic Monitor to poll over IPv6 as well as IPv4 and separate the availability statuses.
+- Modified Traffic Router to separate availability statuses between IPv4 and IPv6.
+- Modified Traffic Portal and Traffic Ops to accept IPv6 only servers.
 
 ### Deprecated/Removed
 - Traffic Ops Python client no longer supports Python 2.
 - Traffic Ops API Endpoints
   - /api_capabilities/:id
+  - /asns/:id
   - /cachegroups/:id (GET)
   - /cachegroup/:parameterID/parameter
   - /cachegroups/:parameterID/parameter/available
+  - /cachegroups/:id/unassigned_parameters
   - /cachegroups/trimmed
   - /cdns/:name/configs/routing
   - /cdns/:name/federations/:id (GET)
   - /cdns/configs
   - /cdns/:id (GET)
+  - /cdns/:id/snapshot
   - /cdns/name/:name (GET)
   - /cdns/usage/overview
   - /deliveryservice_matches
+  - /deliveryservice_server/:dsid/:serverid
   - /deliveryservice_user
   - /deliveryservice_user/:dsId/:userId
   - /deliveryservices/hostname/:name/sslkeys
   - /deliveryservices/{dsid}/regexes/{regexid} (GET)
   - /deliveryservices/:id (GET)
   - /deliveryservices/:id/state
+  - /deliveryservices/xmlId/:XMLID/sslkeys/delete
   - /divisions/:division_name/regions
   - /divisions/:id
   - /divisions/name/:name
@@ -69,24 +82,38 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /jobs/:id
   - /keys/ping
   - /logs/:days/days
+  - /parameters/:id (GET)
   - /parameters/:id/profiles
   - /parameters/:id/unassigned_profiles
+  - /parameters/profile/:name
   - /parameters/validate
+  - /phys_locations/trimmed
+  - /phys_locations/:id (GET)
+  - /profile/:id (GET)
   - /profile/:id/unassigned_parameters
+  - /profile/trimmed
+  - /regions/:id (GET, DELETE)
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
   - /riak/bucket/:bucket/key/:key/vault
   - /riak/ping
   - /riak/stats
   - /servercheck/aadata
+  - /servers/status
+  - /servers/:id (GET)
   - /servers/totals
+  - /snapshot/:cdn
   - /stats_summary/create
+  - /tenants/:id (GET)
+  - /statuses/:id (GET)
   - /to_extensions/:id/delete
   - /to_extensions
   - /traffic_monitor/stats
   - /types/trimmed
+  - /types/{{ID}} (GET)
   - /user/current/jobs
   - /servers/checks
+  - /user/{{user ID}}/deliveryservices/available
 
 ## [4.0.0] - 2019-12-16
 ### Added

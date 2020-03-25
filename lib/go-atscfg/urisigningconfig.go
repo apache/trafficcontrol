@@ -19,6 +19,8 @@ package atscfg
  * under the License.
  */
 
+const ContentTypeURISigningDotConfig = `application/json; charset=us-ascii`
+
 func MakeURISigningConfig(
 	uriSigningKeysBts []byte,
 ) string {

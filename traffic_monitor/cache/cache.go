@@ -74,6 +74,7 @@ type Result struct {
 	RequestTime     time.Duration
 	Vitals          Vitals
 	PollID          uint64
+	UsingIPv4       bool
 	PollFinished    chan<- uint64
 	PrecomputedData PrecomputedData
 	Available       bool
@@ -143,7 +144,7 @@ func ComputedStats() map[string]StatComputeFunc {
 			return "false"
 		},
 		"isAvailable": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return combinedState.IsAvailable // if the cache is missing, default to false
+			return combinedState // if the cache is missing, default to false
 		},
 		"isHealthy": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			if tc.CacheStatusFromString(serverInfo.ServerStatus) == tc.CacheStatusAdminDown {
@@ -206,13 +207,14 @@ func ComputedStats() map[string]StatComputeFunc {
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, usingIPv4 bool, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v (format '%v') handle start\n", pollID, time.Now(), format)
 	result := Result{
 		ID:           tc.CacheName(id),
 		Time:         reqEnd,
 		RequestTime:  reqTime,
 		PollID:       pollID,
+		UsingIPv4:    usingIPv4,
 		PollFinished: pollFinished,
 	}
 

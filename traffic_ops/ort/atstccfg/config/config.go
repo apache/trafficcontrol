@@ -25,26 +25,20 @@ import (
 	"math"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 
 	flag "github.com/ogier/pflag"
 )
 
 const AppName = "atstccfg"
-const Version = "0.1"
+const Version = "0.2"
 const UserAgent = AppName + "/" + Version
-
-const APIVersion = "1.2"
-const TempSubdir = AppName + "_cache"
-const TempCookieFileName = "cookies"
-const TOCookieName = "mojolicious"
-
-const GlobalProfileName = "GLOBAL"
 
 const ExitCodeSuccess = 0
 const ExitCodeErrGeneric = 1
@@ -55,19 +49,21 @@ var ErrNotFound = errors.New("not found")
 var ErrBadRequest = errors.New("bad request")
 
 type Cfg struct {
-	CacheFileMaxAge     time.Duration
-	LogLocationErr      string
-	LogLocationInfo     string
-	LogLocationWarn     string
-	NumRetries          int
-	TempDir             string
-	TOInsecure          bool
-	TOPass              string
-	TOTimeout           time.Duration
-	TOURL               *url.URL
-	TOUser              string
-	ListPlugins         bool
-	PrintGeneratedFiles bool
+	CacheHostName   string
+	GetData         string
+	ListPlugins     bool
+	LogLocationErr  string
+	LogLocationInfo string
+	LogLocationWarn string
+	NumRetries      int
+	RevalOnly       bool
+	SetQueueStatus  string
+	SetRevalStatus  string
+	TOInsecure      bool
+	TOPass          string
+	TOTimeout       time.Duration
+	TOURL           *url.URL
+	TOUser          string
 }
 
 type TCCfg struct {
@@ -82,23 +78,24 @@ func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(log.LogLoca
 func (cfg Cfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // atstccfg doesn't use the event logger.
 
 // GetCfg gets the application configuration, from arguments and environment variables.
-// Note if PrintGeneratedFiles is configured, the config will be returned with PrintGeneratedFiles true and all other values set to their defaults. This is because other values may have requirements and return errors, where if PrintGeneratedFiles is set by the user, no other setting should be considered.
 func GetCfg() (Cfg, error) {
 	toURLPtr := flag.StringP("traffic-ops-url", "u", "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL.")
 	toUserPtr := flag.StringP("traffic-ops-user", "U", "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER.")
 	toPassPtr := flag.StringP("traffic-ops-password", "P", "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS.")
-	noCachePtr := flag.BoolP("no-cache", "n", false, "Whether not to use existing cache files. Optional. Cache files will still be created, existing ones just won't be used.")
 	numRetriesPtr := flag.IntP("num-retries", "r", 5, "The number of times to retry getting a file if it fails.")
 	logLocationErrPtr := flag.StringP("log-location-error", "e", "stderr", "Where to log errors. May be a file path, stdout, stderr, or null.")
 	logLocationWarnPtr := flag.StringP("log-location-warning", "w", "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null.")
 	logLocationInfoPtr := flag.StringP("log-location-info", "i", "stderr", "Where to log information messages. May be a file path, stdout, stderr, or null.")
-	printGeneratedFilesPtr := flag.BoolP("print-generated-files", "g", false, "Whether to print a list of files which are generated (and not proxied to Traffic Ops).")
 	toInsecurePtr := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
-	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 10000, "Timeout in seconds for Traffic Ops requests.")
-	cacheFileMaxAgeSecondsPtr := flag.IntP("cache-file-max-age-seconds", "a", 900, "Maximum age to use cached files.")
+	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 60000, "Timeout in seconds for Traffic Ops requests.")
 	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
 	listPluginsPtr := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
 	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")
+	cacheHostNamePtr := flag.StringP("cache-host-name", "n", "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
+	getDataPtr := flag.StringP("get-data", "d", "", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
+	setQueueStatusPtr := flag.StringP("set-queue-status", "q", "", "POSTs to Traffic Ops setting the queue status of the server. Must be 'true' or 'false'. Requires --set-reval-status also be set")
+	setRevalStatusPtr := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revaliate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
+	revalOnlyPtr := flag.BoolP("revalidate-only", "y", false, "Whether to exclude files not named 'regex_revalidate.config'")
 
 	flag.Parse()
 
@@ -108,8 +105,6 @@ func GetCfg() (Cfg, error) {
 	} else if *helpPtr {
 		flag.PrintDefaults()
 		os.Exit(0)
-	} else if *printGeneratedFilesPtr {
-		return Cfg{PrintGeneratedFiles: true}, nil
 	} else if *listPluginsPtr {
 		return Cfg{ListPlugins: true}, nil
 	}
@@ -117,15 +112,18 @@ func GetCfg() (Cfg, error) {
 	toURL := *toURLPtr
 	toUser := *toUserPtr
 	toPass := *toPassPtr
-	noCache := *noCachePtr
 	numRetries := *numRetriesPtr
 	logLocationErr := *logLocationErrPtr
 	logLocationWarn := *logLocationWarnPtr
 	logLocationInfo := *logLocationInfoPtr
 	toInsecure := *toInsecurePtr
 	toTimeout := time.Millisecond * time.Duration(*toTimeoutMSPtr)
-	cacheFileMaxAge := time.Second * time.Duration(*cacheFileMaxAgeSecondsPtr)
 	listPlugins := *listPluginsPtr
+	cacheHostName := *cacheHostNamePtr
+	getData := *getDataPtr
+	setQueueStatus := *setQueueStatusPtr
+	setRevalStatus := *setRevalStatusPtr
+	revalOnly := *revalOnlyPtr
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -139,14 +137,18 @@ func GetCfg() (Cfg, error) {
 		toPass = os.Getenv("TO_PASS")
 	}
 
+	usageStr := "Usage: ./" + AppName + " --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
 	if strings.TrimSpace(toURL) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. Usage: ./" + AppName + " --traffic-ops-url myurl --traffic-ops-user myuser --traffic-ops-password mypass")
+		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. " + usageStr)
 	}
 	if strings.TrimSpace(toUser) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-user or TO_USER environment variable. Usage: ./" + AppName + " --traffic-ops-url myurl --traffic-ops-user myuser --traffic-ops-password mypass")
+		return Cfg{}, errors.New("Missing required argument --traffic-ops-user or TO_USER environment variable. " + usageStr)
 	}
 	if strings.TrimSpace(toPass) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-password or TO_PASS environment variable. Usage: ./" + AppName + " --traffic-ops-url myurl --traffic-ops-user myuser --traffic-ops-password mypass")
+		return Cfg{}, errors.New("Missing required argument --traffic-ops-password or TO_PASS environment variable. " + usageStr)
+	}
+	if strings.TrimSpace(cacheHostName) == "" {
+		return Cfg{}, errors.New("Missing required argument --cache-host-name. " + usageStr)
 	}
 
 	toURLParsed, err := url.Parse(toURL)
@@ -156,41 +158,26 @@ func GetCfg() (Cfg, error) {
 		return Cfg{}, errors.New("invalid Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
 	}
 
-	tmpDir := os.TempDir()
-	tmpDir = filepath.Join(tmpDir, TempSubdir)
-
 	cfg := Cfg{
-		CacheFileMaxAge: cacheFileMaxAge,
 		LogLocationErr:  logLocationErr,
 		LogLocationWarn: logLocationWarn,
 		LogLocationInfo: logLocationInfo,
 		NumRetries:      numRetries,
-		TempDir:         tmpDir,
 		TOInsecure:      toInsecure,
 		TOPass:          toPass,
 		TOTimeout:       toTimeout,
 		TOURL:           toURLParsed,
 		TOUser:          toUser,
 		ListPlugins:     listPlugins,
+		CacheHostName:   cacheHostName,
+		GetData:         getData,
+		SetRevalStatus:  setRevalStatus,
+		SetQueueStatus:  setQueueStatus,
+		RevalOnly:       revalOnly,
 	}
-
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
 	}
-
-	if noCache {
-		if err := os.RemoveAll(tmpDir); err != nil {
-			log.Errorln("deleting cache directory '" + tmpDir + "': " + err.Error())
-		}
-	}
-
-	if err := os.MkdirAll(tmpDir, 0700); err != nil {
-		return Cfg{}, errors.New("creating temp directory '" + tmpDir + "': " + err.Error())
-	}
-	if err := ValidateDirWriteable(tmpDir); err != nil {
-		return Cfg{}, errors.New("validating temp directory is writeable '" + tmpDir + "': " + err.Error())
-	}
-
 	return cfg, nil
 }
 
@@ -207,28 +194,83 @@ func ValidateURL(u *url.URL) error {
 	return nil
 }
 
-func ValidateDirWriteable(dir string) error {
-	testFileName := "testwrite.txt"
-	testFilePath := filepath.Join(dir, testFileName)
-	if err := os.RemoveAll(testFilePath); err != nil {
-		// TODO don't log? This can be normal
-		log.Infoln("error removing temp test file '" + testFilePath + "' (ok if it didn't exist): " + err.Error())
-	}
-
-	fl, err := os.Create(testFilePath)
-	if err != nil {
-		return errors.New("creating temp test file '" + testFilePath + "': " + err.Error())
-	}
-	defer fl.Close()
-
-	if _, err := fl.WriteString("test"); err != nil {
-		return errors.New("writing to temp test file '" + testFilePath + "': " + err.Error())
-	}
-
-	return nil
-}
-
 func RetryBackoffSeconds(currentRetry int) int {
 	// TODO make configurable?
 	return int(math.Pow(2.0, float64(currentRetry)))
+}
+
+type ATSConfigFile struct {
+	tc.ATSConfigMetaDataConfigFile
+	Text        string
+	ContentType string
+}
+
+// TOData is the Traffic Ops data needed to generate configs.
+// See each field for details on the data required.
+// - If a field says 'must', the creation of TOData is guaranteed to do so, and users of the struct may rely on that.
+// - If it says 'may', the creation may or may not do so, and therefore users of the struct must filter if they
+//   require the potential fields to be omitted to generate correctly.
+type TOData struct {
+	// Servers must be all the servers from Traffic Ops. May include servers not on the current cdn.
+	Servers []tc.Server
+
+	// CacheGroups must be all cachegroups in Traffic Ops with Servers on the current server's cdn. May also include CacheGroups without servers on the current cdn.
+	CacheGroups []tc.CacheGroupNullable
+
+	// GlobalParams must be all Parameters in Traffic Ops on the tc.GlobalProfileName Profile. Must not include other parameters.
+	GlobalParams []tc.Parameter
+
+	// ScopeParams must be all Parameters in Traffic Ops with the name "scope". Must not include other Parameters.
+	ScopeParams []tc.Parameter
+
+	// ServerParams must be all Parameters on the Profile of the current server. Must not include other Parameters.
+	ServerParams []tc.Parameter
+
+	// CacheKeyParams must be all Parameters with the ConfigFile atscfg.CacheKeyParameterConfigFile.
+	CacheKeyParams []tc.Parameter
+
+	// ParentConfigParams must be all Parameters with the ConfigFile "parent.config.
+	ParentConfigParams []tc.Parameter
+
+	// DeliveryServices must include all Delivery Services on the current server's cdn, including those not assigned to the server. Must not include delivery services on other cdns.
+	DeliveryServices []tc.DeliveryServiceNullable
+
+	// DeliveryServiceServers must include all delivery service servers in Traffic Ops for all delivery services on the current cdn, including those not assigned to the current server.
+	DeliveryServiceServers []tc.DeliveryServiceServer
+
+	// Server must be the server we're fetching configs from
+	Server tc.Server
+
+	// TOToolName must be the Parameter named 'tm.toolname' on the tc.GlobalConfigFileName Profile.
+	TOToolName string
+
+	// TOToolName must be the Parameter named 'tm.url' on the tc.GlobalConfigFileName Profile.
+	TOURL string
+
+	// Jobs must be all Jobs on the server's CDN. May include jobs on other CDNs.
+	Jobs []tc.Job
+
+	// CDN must be the CDN of the server.
+	CDN tc.CDN
+
+	// DeliveryServiceRegexes must be all regexes on all delivery services on this server's cdn.
+	DeliveryServiceRegexes []tc.DeliveryServiceRegexes
+
+	// Profile must be the Profile of the server being requested.
+	Profile tc.Profile
+
+	// URISigningKeys must be a map of every delivery service which is URI Signed, to its keys.
+	URISigningKeys map[tc.DeliveryServiceName][]byte
+
+	// URLSigKeys must be a map of every delivery service which uses URL Sig, to its keys.
+	URLSigKeys map[tc.DeliveryServiceName]tc.URLSigKeys
+
+	// ServerCapabilities must be a map of all server IDs on this server's CDN, to a set of their capabilities. May also include servers from other cdns.
+	ServerCapabilities map[int]map[atscfg.ServerCapability]struct{}
+
+	// DSRequiredCapabilities must be a map of all delivery service IDs on this server's CDN, to a set of their required capabilities. Delivery Services with no required capabilities may not have an entry in the map.
+	DSRequiredCapabilities map[int]map[atscfg.ServerCapability]struct{}
+
+	// SSLKeys must be all the ssl keys for the server's cdn.
+	SSLKeys []tc.CDNSSLKeys
 }

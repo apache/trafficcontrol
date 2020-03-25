@@ -28,49 +28,69 @@ import (
 
 func TestCreateServerHealthPollURL(t *testing.T) {
 	tmpl := `http://${hostname}/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", InterfaceName: "george"}
+	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", InterfaceName: "george"}
 
-	expected := `http://` + srv.IP + `/_astats?application=system&inf.name=` + srv.InterfaceName
-	actual := createServerHealthPollURL(tmpl, srv)
+	expectedV4 := `http://` + srv.IP + `/_astats?application=system&inf.name=` + srv.InterfaceName
+	expectedV6 := `http://[` + srv.IP6 + `]/_astats?application=system&inf.name=` + srv.InterfaceName
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
-	if expected != actual {
-		t.Errorf("expected createServerHealthPollURL '" + expected + "' actual: '" + actual + "'")
+	if expectedV4 != actualV4 {
+		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
+	}
+
+	if expectedV6 != actualV6 {
+		t.Errorf("for IPv6 expected createServerHealthPollURL '" + expectedV6 + "' actual: '" + actualV6 + "'")
 	}
 }
 
 func TestCreateServerHealthPollURLTemplatePort(t *testing.T) {
 	tmpl := `http://${hostname}:1234/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", InterfaceName: "george"}
+	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", InterfaceName: "george"}
 
-	expected := `http://` + srv.IP + `:1234/_astats?application=system&inf.name=` + srv.InterfaceName
-	actual := createServerHealthPollURL(tmpl, srv)
+	expectedV4 := `http://` + srv.IP + `:1234/_astats?application=system&inf.name=` + srv.InterfaceName
+	expectedV6 := `http://[` + srv.IP6 + `]:1234/_astats?application=system&inf.name=` + srv.InterfaceName
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
-	if expected != actual {
-		t.Errorf("expected createServerHealthPollURL '" + expected + "' actual: '" + actual + "'")
+	if expectedV4 != actualV4 {
+		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
+	}
+
+	if expectedV6 != actualV6 {
+		t.Errorf("for IPv6 expected createServerHealthPollURL '" + expectedV6 + "' actual: '" + actualV6 + "'")
 	}
 }
 
 func TestCreateServerHealthPollURLServerPort(t *testing.T) {
 	tmpl := `http://${hostname}/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
+	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
 
-	expected := `http://` + srv.IP + ":" + strconv.Itoa(srv.Port) + `/_astats?application=system&inf.name=` + srv.InterfaceName
-	actual := createServerHealthPollURL(tmpl, srv)
+	expectedV4 := `http://` + srv.IP + ":" + strconv.Itoa(srv.Port) + `/_astats?application=system&inf.name=` + srv.InterfaceName
+	expectedV6 := `http://[` + srv.IP6 + "]:" + strconv.Itoa(srv.Port) + `/_astats?application=system&inf.name=` + srv.InterfaceName
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
-	if expected != actual {
-		t.Errorf("expected createServerHealthPollURL '" + expected + "' actual: '" + actual + "'")
+	if expectedV4 != actualV4 {
+		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
 	}
+	if expectedV6 != actualV6 {
+		t.Errorf("for IPv6 expected createServerHealthPollURL '" + expectedV6 + "' actual: '" + actualV6 + "'")
+	}
+
 }
 
 func TestCreateServerHealthPollURLServerPortHTTPS(t *testing.T) {
 	tmpl := `hTTps://${hostname}/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
+	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
 
-	expected := `https://` + srv.IP + ":" + strconv.Itoa(srv.HTTPSPort) + `/_astats?application=system&inf.name=` + srv.InterfaceName
-	actual := createServerHealthPollURL(tmpl, srv)
+	expectedV4 := `https://` + srv.IP + ":" + strconv.Itoa(srv.HTTPSPort) + `/_astats?application=system&inf.name=` + srv.InterfaceName
+	expectedV6 := `https://[` + srv.IP6 + "]:" + strconv.Itoa(srv.HTTPSPort) + `/_astats?application=system&inf.name=` + srv.InterfaceName
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
-	if expected != actual {
-		t.Errorf("expected createServerHealthPollURL '" + expected + "' actual: '" + actual + "'")
+	if expectedV4 != actualV4 {
+		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
+	}
+
+	if expectedV6 != actualV6 {
+		t.Errorf("for IPv6 expected createServerHealthPollURL '" + expectedV6 + "' actual: '" + actualV6 + "'")
 	}
 }
 
@@ -79,24 +99,37 @@ func TestCreateServerHealthPollURLTemplateAndServerPort(t *testing.T) {
 	// if both template and server ports exist, template takes precedence
 
 	tmpl := `http://${hostname}:1234/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
+	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
 
-	expected := `http://` + srv.IP + `:1234/_astats?application=system&inf.name=` + srv.InterfaceName
-	actual := createServerHealthPollURL(tmpl, srv)
+	expectedV4 := `http://` + srv.IP + `:1234/_astats?application=system&inf.name=` + srv.InterfaceName
+	expectedV6 := `http://[` + srv.IP6 + `]:1234/_astats?application=system&inf.name=` + srv.InterfaceName
+	actualV4, actualV6 := createServerHealthPollURLs(tmpl, srv)
 
-	if expected != actual {
-		t.Errorf("expected createServerHealthPollURL '" + expected + "' actual: '" + actual + "'")
+	if expectedV4 != actualV4 {
+		t.Errorf("for IPv4 expected createServerHealthPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
+	}
+
+	if expectedV6 != actualV6 {
+		t.Errorf("for IPv6 expected createServerHealthPollURL '" + expectedV6 + "' actual: '" + actualV6 + "'")
 	}
 }
 
 func TestCreateServerStatPollURL(t *testing.T) {
 	tmpl := `http://${hostname}/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", InterfaceName: "george"}
+	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", InterfaceName: "george"}
 
-	expected := `http://` + srv.IP + `/_astats?application=&inf.name=` + srv.InterfaceName
-	actual := createServerStatPollURL(createServerHealthPollURL(tmpl, srv))
+	expectedV4 := `http://` + srv.IP + `/_astats?application=&inf.name=` + srv.InterfaceName
+	expectedV6 := `http://[` + srv.IP6 + `]/_astats?application=&inf.name=` + srv.InterfaceName
 
-	if expected != actual {
-		t.Errorf("expected createServerStatPollURL '" + expected + "' actual: '" + actual + "'")
+	healthV4, healthV6 := createServerHealthPollURLs(tmpl, srv)
+	actualV4 := createServerStatPollURL(healthV4)
+	actualV6 := createServerStatPollURL(healthV6)
+
+	if expectedV4 != actualV4 {
+		t.Errorf("for IPv4 expected createServerStatPollURL '" + expectedV4 + "' actual: '" + actualV4 + "'")
+	}
+
+	if expectedV6 != actualV6 {
+		t.Errorf("for IPv6 expected createServerStatPollURL '" + expectedV6 + "' actual: '" + actualV6 + "'")
 	}
 }
