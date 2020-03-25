@@ -18,6 +18,7 @@ use warnings;
 use feature qw(switch);
 use JSON;
 use File::Basename;
+use File::Path;
 use Fcntl qw(:flock);
 use MIME::Base64;
 use Getopt::Long;
