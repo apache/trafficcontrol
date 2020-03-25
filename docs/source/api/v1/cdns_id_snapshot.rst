@@ -18,6 +18,8 @@
 ************************
 ``cdns/{{ID}}/snapshot``
 ************************
+.. deprecated:: ATCv4
+	Use the ``PUT`` method of :ref:`to-api-snapshot` with the query parameter ``cdnID`` instead.
 
 ``PUT``
 =======
@@ -58,9 +60,20 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==
+	Whole-Content-Sha512: gmaWI0tKgNFPYO0zMrLCGDosBJkPbeIvW4BH9tEh96VjBqyWqzjgPySoMa3ViM1BQXA6VAUOGmc76VyhBsaTzA==
 	X-Server-Name: traffic_ops_golang/
-	Date: Wed, 12 Dec 2018 22:04:46 GMT
-	Content-Length: 0
-	Content-Type: text/plain; charset=utf-8
+	Date: Wed, 18 Mar 2020 15:51:48 GMT
+	Content-Length: 160
+
+	{
+		"alerts": [
+			{
+				"text": "This endpoint is deprecated, please use PUT /snapshots with either the query parameter cdn or cdnID instead",
+				"level": "warning"
+			}
+		],
+		"response": "SUCCESS"
+	}

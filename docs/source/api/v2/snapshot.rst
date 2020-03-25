@@ -13,11 +13,11 @@
 .. limitations under the License.
 ..
 
-.. _to-api-snapshot-name:
+.. _to-api-snapshot:
 
-*********************
-``snapshot/{{name}}``
-*********************
+************
+``snapshot``
+************
 
 ``PUT``
 =======
@@ -31,18 +31,22 @@ Performs a CDN :term:`Snapshot`. Effectively, this propagates the new *configura
 
 Request Structure
 -----------------
-.. table:: Request Path Parameters
+.. table:: Request Query Parameters
 
-	+------+-----------------------------------------------------------------+
-	| Name | Description                                                     |
-	+======+=================================================================+
-	| name | The name of the CDN for which a :term:`Snapshot` shall be taken |
-	+------+-----------------------------------------------------------------+
+	+-------+-----------------------------------------------------------------+
+	| Name  | Description                                                     |
+	+=======+=================================================================+
+	| cdn   | The name of the CDN for which a :term:`Snapshot` shall be taken |
+	+-------+-----------------------------------------------------------------+
+	| cdnID | The id of the CDN for which a :term:`Snapshot` shall be taken   |
+	+-------+-----------------------------------------------------------------+
+
+.. Note:: At least one query parameter must be given.
 
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/2.0/snapshot/CDN-in-a-Box HTTP/1.1
+	PUT /api/2.0/snapshot?cdn=CDN-in-a-Box HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -58,9 +62,14 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==
+	Whole-Content-Sha512: gmaWI0tKgNFPYO0zMrLCGDosBJkPbeIvW4BH9tEh96VjBqyWqzjgPySoMa3ViM1BQXA6VAUOGmc76VyhBsaTzA==
 	X-Server-Name: traffic_ops_golang/
-	Date: Wed, 12 Dec 2018 22:00:18 GMT
-	Content-Length: 0
-	Content-Type: text/plain; charset=utf-8
+	Date: Wed, 18 Mar 2020 15:51:48 GMT
+	Content-Length: 47
+
+	{
+		"response": "SUCCESS"
+	}
