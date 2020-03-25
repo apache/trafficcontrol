@@ -23,6 +23,9 @@
 =======
 Get a single target for a specific STEERING-:ref:`ds-types` :term:`Delivery Service`.
 
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-steering-id-targets` instead
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -84,7 +87,11 @@ Response Structure
 	Date: Tue, 11 Dec 2018 14:16:53 GMT
 	Content-Length: 130
 
-	{ "response": [
+	{ "alerts": [
+		{
+			"text": "This endpoint is deprecated, please use GET steering/{deliveryservice]/targets with the query parameter target instead.",
+			"level": "warning"
+		}], "response": [
 		{
 			"deliveryService": "test",
 			"deliveryServiceId": 2,

@@ -104,6 +104,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /servers/totals
   - /snapshot/:cdn
   - /stats_summary/create
+  - /steering/:deliveryservice/targets/:target (GET)
   - /tenants/:id (GET)
   - /statuses/:id (GET)
   - /to_extensions/:id/delete
