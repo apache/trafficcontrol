@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/isos
   - /api/1.5/deliveryservice/:id/routing
   - /api/1.5/deliveryservices/sslkeys/generate/letsencrypt `POST`
+  - /deliveryserviceserver/:dsid/:serverid
   - /api/1.5/letsencrypt/autorenew `POST`
   - /api/1.5/letsencrypt/dnsrecords `GET`
   - /api/2.0/vault/ping `GET`
@@ -62,6 +63,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cdns/name/:name (GET)
   - /cdns/usage/overview
   - /deliveryservice_matches
+  - /deliveryservice_server/:dsid/:serverid
   - /deliveryservice_user
   - /deliveryservice_user/:dsId/:userId
   - /deliveryservices/hostname/:name/sslkeys
