@@ -27,11 +27,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/deliveryservice/:id/routing
   - /api/1.5/deliveryservices/sslkeys/generate/letsencrypt `POST`
   - /api/2.0/deliveryservices/xmlId/:XMLID/sslkeys `DELETE`
+  - /deliveryserviceserver/:dsid/:serverid
   - /api/1.5/letsencrypt/autorenew `POST`
   - /api/1.5/letsencrypt/dnsrecords `GET`
   - /api/2.0/vault/ping `GET`
   - /api/2.0/vault/bucket/:bucket/key/:key/values `GET`
   - /api/2.0/servercheck `GET`
+  - /api/2.0/snapshot `PUT`
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
@@ -60,9 +62,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /cdns/:name/federations/:id (GET)
   - /cdns/configs
   - /cdns/:id (GET)
+  - /cdns/:id/snapshot
   - /cdns/name/:name (GET)
   - /cdns/usage/overview
   - /deliveryservice_matches
+  - /deliveryservice_server/:dsid/:serverid
   - /deliveryservice_user
   - /deliveryservice_user/:dsId/:userId
   - /deliveryservices/hostname/:name/sslkeys
@@ -87,6 +91,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /profile/:id (GET)
   - /profile/:id/unassigned_parameters
   - /profile/trimmed
+  - /regions/:id (GET, DELETE)
   - /regions/:region_name/phys_locations
   - /regions/name/:region_name
   - /riak/bucket/:bucket/key/:key/vault
@@ -96,6 +101,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /servers/status
   - /servers/:id (GET)
   - /servers/totals
+  - /snapshot/:cdn
   - /stats_summary/create
   - /tenants/:id (GET)
   - /statuses/:id (GET)

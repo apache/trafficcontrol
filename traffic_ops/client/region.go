@@ -96,7 +96,7 @@ func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
 
 // GetRegionByID GETs a Region by the Region ID.
 func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
+	route := fmt.Sprintf("%s?id=%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -132,7 +132,7 @@ func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
 
 // DeleteRegionByID DELETEs a Region by ID.
 func (to *Session) DeleteRegionByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
+	route := fmt.Sprintf("%s?id=%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

@@ -13,11 +13,11 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice_server-dsid-serverid:
+.. _to-api-deliveryserviceserver-dsid-serverid:
 
-************************************************
-``deliveryservice_server/{{DSID}}/{{serverID}}``
-************************************************
+***********************************************
+``deliveryserviceserver/{{DSID}}/{{serverID}}``
+***********************************************
 
 ``DELETE``
 ==========

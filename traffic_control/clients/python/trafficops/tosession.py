@@ -767,11 +767,11 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'deliveryservice_server/{delivery_service_id:d}/{server_id:d}',('2.0',))
+	@api_request('delete', 'deliveryserviceserver/{delivery_service_id:d}/{server_id:d}',('2.0',))
 	def delete_deliveryservice_servers_by_id(self, delivery_service_id=None, server_id=None):
 		"""
 		Removes a server (cache) from a delivery service.
-		:ref:`to-api-deliveryservice_server-dsid-serverid`
+		:ref:`to-api-deliveryserviceserver-dsid-serverid`
 		:param delivery_service_id: The delivery service id
 		:type delivery_service_id: int
 		:param server_id: The server id to remove from delivery service
@@ -1551,17 +1551,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'regions/{region_id:d}', ('2.0',))
-	def get_region_by_id(self, region_id=None):
-		"""
-		Get Region by ID
-		:ref:`to-api-regions-id`
-		:param region_id: The region id of the region to retrieve
-		:type region_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	@api_request('put', 'regions/{region_id:d}', ('2.0',))
 	def update_region(self, region_id=None):
 		"""
@@ -1993,13 +1982,13 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'snapshot/{cdn_name}', ('2.0',))
-	def snapshot_crconfig(self, cdn_name=None):
+	@api_request('put', 'snapshot', ('2.0',))
+	def snapshot_crconfig(self, query_params=None):
 		"""
-		Snapshot CRConfig by CDN Name.
-		:ref:`to-api-snapshot-name`
-		:param cdn_name: The CDN name
-		:type cdn_name: str
+		Snapshot CRConfig by CDN Name or ID.
+		:ref:`to-api-snapshot`
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

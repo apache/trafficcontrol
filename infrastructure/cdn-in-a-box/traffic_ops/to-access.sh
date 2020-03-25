@@ -349,7 +349,7 @@ to-auto-snapqueue() {
 			sleep $AUTO_SNAPQUEUE_ACTION_WAIT
 			echo "AUTO-SNAPQUEUE - Do automatic snapshot..."
 			cdn_id=$(to-get "api/$TO_API_VERSION/cdns?name=$2" |jq '.response[0].id')
-			to-put "api/$TO_API_VERSION/cdns/$cdn_id/snapshot"
+			to-put "api/$TO_API_VERSION/snapshot?cdnID=$cdn_id"
 			sleep $AUTO_SNAPQUEUE_ACTION_WAIT
 			echo "AUTO-SNAPQUEUE - Do queue updates..."
 			to-post "api/$TO_API_VERSION/cdns/$cdn_id/queue_update" '{"action":"queue"}'

@@ -158,7 +158,6 @@ func HandleDeprecatedErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, sta
 		log.Errorf("HandleDeprecatedErr called after a write already occurred! Attempting to write the error anyway! Path %s", r.URL.Path)
 		// Don't return, attempt to rollback and write the error anyway
 	}
-	setRespWritten(r)
 
 	if tx != nil {
 		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
