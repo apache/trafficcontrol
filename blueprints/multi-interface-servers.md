@@ -91,7 +91,7 @@ interface Interface {
 	 * If this is 'null' it is assumed that the interface's MTU is not known/is
 	 * irrelevant.
 	 */
-	mtu: 1500 | 9000 | null;
+	mtu: number | null;
 	/**
 	 * The name of the interface device on the server e.g. eth0.
 	 */
@@ -114,7 +114,7 @@ interface Server {
 	guid?:        string | null;
 	hostName:     string;
 	httpsPort?:   number | null;
-	id?:          number;
+	id?:          bigint;
 
 	// ILO things aren't being moved in because they also require a
 	// username/password that aren't used by any other interface type.
@@ -179,6 +179,8 @@ A new table will need to be introduced to contain interface information:
  max_bandwidth | integer |           | not null | 0
 Indexes:
     "interface_pkey" PRIMARY KEY, btree (name, server)
+Check constraints:
+	"interface_mtu_check" CHECK (mtu > 1280)
 Foreign-key constraints:
     "interface_server_fkey" FOREIGN KEY (server) REFERENCES server(id)
 ```
@@ -501,7 +503,7 @@ Invalid `maxBandwidth` - cannot be negative
 	]
 }
 ```
-Invalid <abbr title="Maximum Transmission Unit">MTU</abbr>, must be 1500, 9000, or `null`
+Invalid <abbr title="Maximum Transmission Unit">MTU</abbr>, must be greater than 1280 or `null`
 ```json
 {
 	"interfaces": [
