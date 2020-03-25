@@ -324,6 +324,24 @@ WHERE ds.id = $1
 	return name, cdn, true, nil
 }
 
+// returns returns the delivery service name and cdn, whether it existed, and any error.
+func GetDSIDAndCDNFromName(tx *sql.Tx, xmlID string) (int, tc.CDNName, bool, error) {
+	dsId := 0
+	cdn := tc.CDNName("")
+	if err := tx.QueryRow(`
+SELECT ds.id, cdn.name
+FROM deliveryservice as ds
+JOIN cdn on cdn.id = ds.cdn_id
+WHERE ds.xml_id = $1
+`, xmlID).Scan(&dsId, &cdn); err != nil {
+		if err == sql.ErrNoRows {
+			return dsId, tc.CDNName(""), false, nil
+		}
+		return dsId, tc.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
+	}
+	return dsId, cdn, true, nil
+}
+
 // GetFederationResolversByFederationID fetches all of the federation resolvers currently assigned to a federation.
 // In the event of an error, it will return an empty slice and the error.
 func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.FederationResolver, error) {
@@ -461,6 +479,18 @@ func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 		return "", false, errors.New("querying CDN ID: " + err.Error())
 	}
 	return tc.CDNName(name), true, nil
+}
+
+// GetCDNIDFromName returns the ID of the CDN if a CDN with the name exists
+func GetCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying CDN ID: " + err.Error())
+	}
+	return id, true, nil
 }
 
 // GetCDNDomainFromName returns the domain, whether the cdn exists, and any error.
