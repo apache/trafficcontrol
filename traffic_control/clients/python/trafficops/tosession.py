@@ -819,11 +819,11 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'deliveryservices/xmlId/{xml_id}/sslkeys/delete', ('2.0',))
+	@api_request('delete', 'deliveryservices/xmlId/{xml_id}/sslkeys', ('2.0',))
 	def delete_deliveryservice_ssl_keys_by_xml_id(self, xml_id=None, query_params=None):
 		"""
 		Delete SSL keys for a Delivery Service by xmlId.
-		:ref:`to-api-deliveryservices-xmlid-xmlid-sslkeys-delete`
+		:ref:`to-api-deliveryservices-xmlid-xmlid-sslkeys`
 		:param xml_id: The Delivery Service xmlId
 		:type xml_id: str
 		:param query_params: The url query parameters for the call

@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/isos
   - /api/1.5/deliveryservice/:id/routing
   - /api/1.5/deliveryservices/sslkeys/generate/letsencrypt `POST`
+  - /api/2.0/deliveryservices/xmlId/:XMLID/sslkeys `DELETE`
   - /deliveryserviceserver/:dsid/:serverid
   - /api/1.5/letsencrypt/autorenew `POST`
   - /api/1.5/letsencrypt/dnsrecords `GET`
@@ -72,6 +73,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /deliveryservices/{dsid}/regexes/{regexid} (GET)
   - /deliveryservices/:id (GET)
   - /deliveryservices/:id/state
+  - /deliveryservices/xmlId/:XMLID/sslkeys/delete
   - /divisions/:division_name/regions
   - /divisions/:id
   - /divisions/name/:name
