@@ -956,7 +956,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/{id}/health/?(\.json)?$`, deliveryservice.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 2034590101, perlBypass},
 
 		{api.Version{1, 1}, http.MethodGet, `steering/{deliveryservice}/targets/?(\.json)?$`, api.ReadHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelReadOnly, Authenticated, nil, 1569607824, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `steering/{deliveryservice}/targets/{target}$`, api.DeprecatedReadHandler(&steeringtargets.TOSteeringTargetV11{}, nil), auth.PrivLevelReadOnly, Authenticated, nil, 105995848, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `steering/{deliveryservice}/targets/{target}$`, api.DeprecatedReadHandler(&steeringtargets.TOSteeringTargetV11{}, util.StrPtr("GET steering/{deliveryservice}/targets with the query parameter target")), auth.PrivLevelReadOnly, Authenticated, nil, 105995849, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `steering/{deliveryservice}/targets/?(\.json)?$`, api.CreateHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil, 1338216397, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `steering/{deliveryservice}/targets/{target}/?(\.json)?$`, api.UpdateHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil, 1438608295, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `steering/{deliveryservice}/targets/{target}/?(\.json)?$`, api.DeleteHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil, 2088021515, noPerlBypass},
