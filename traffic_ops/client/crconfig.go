@@ -18,6 +18,7 @@ package client
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 )
 
 type OuterResponse struct {
@@ -40,7 +41,7 @@ func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 }
 
 func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
-	uri := apiBase + `/snapshot/` + cdn
+	uri := apiBase + `/snapshot?cdn=` + url.QueryEscape(cdn)
 	_, remoteAddr, err := to.request(http.MethodPut, uri, nil)
 	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
 	return reqInf, err

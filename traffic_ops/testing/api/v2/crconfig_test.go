@@ -109,9 +109,9 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 
 	if crc.Stats.TMPath == nil {
-		t.Errorf("GetCRConfig crc.Stats.Path expected: 'snapshot/"+cdn+"', actual: %+v", crc.Stats.TMPath)
-	} else if !strings.HasSuffix(*crc.Stats.TMPath, "snapshot/"+cdn) {
-		t.Errorf("GetCRConfig crc.Stats.Path expected: '/snapshot"+cdn+"', actual: %+v", *crc.Stats.TMPath)
+		t.Errorf("GetCRConfig crc.Stats.Path expected: '/snapshot', actual: %+v", crc.Stats.TMPath)
+	} else if !strings.HasSuffix(*crc.Stats.TMPath, "snapshot") {
+		t.Errorf("GetCRConfig crc.Stats.Path expected: '/snapshot', actual: %+v", *crc.Stats.TMPath)
 	}
 
 	if crc.Stats.TMHost == nil {
