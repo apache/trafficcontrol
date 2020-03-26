@@ -324,7 +324,7 @@ WHERE ds.id = $1
 	return name, cdn, true, nil
 }
 
-// returns returns the delivery service name and cdn, whether it existed, and any error.
+// GetDSIDAndCDNFromName returns returns the delivery service name and cdn, whether it existed, and any error.
 func GetDSIDAndCDNFromName(tx *sql.Tx, xmlID string) (int, tc.CDNName, bool, error) {
 	dsId := 0
 	cdn := tc.CDNName("")
