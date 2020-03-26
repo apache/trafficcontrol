@@ -328,9 +328,18 @@ func GetAccessibleToTest(t *testing.T) {
 	}
 
 	//First and only child tenant, no access to root
-	err = getByTenants(3, len(testData.DeliveryServices) - 1)
+	childTenant, _, err := TOSession.TenantByName("tenant1")
+	if err != nil {
+		t.Fatal("unable to get tenant " + err.Error())
+	}
+	err = getByTenants(childTenant.ID, len(testData.DeliveryServices) - 1)
 	if err != nil {
 		t.Fatal(err.Error())
+	}
+
+	_, err = TOSession.DeleteTenant(strconv.Itoa(tenant.ID))
+	if err != nil {
+		t.Fatalf("unable to clean up tenant %v", err.Error())
 	}
 }
 

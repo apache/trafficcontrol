@@ -209,7 +209,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/types/deliveryServices').name,
         require('./modules/private/types/staticDnsEntries').name,
         require('./modules/private/users').name,
-        require('./modules/private/users/deliveryServices').name,
         require('./modules/private/users/edit').name,
         require('./modules/private/users/list').name,
         require('./modules/private/users/new').name,
