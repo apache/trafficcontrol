@@ -130,13 +130,13 @@ func createDummyType(field string) *TOType {
 		Minor: 0,
 	}
 	apiInfo := api.APIInfo{
-		Version:  &version,
+		Version: &version,
 	}
 	return &TOType{
 		TypeNullable: tc.TypeNullable{
-			Name: &field,
+			Name:        &field,
 			Description: &field,
-			UseInTable: &field,
+			UseInTable:  &field,
 		},
 		APIInfoImpl: api.APIInfoImpl{
 			ReqInfo: &apiInfo,
@@ -155,7 +155,6 @@ func TestUpdateInvalidType(t *testing.T) {
 		t.Fatalf("expected update to return a 400 error")
 	}
 }
-
 
 func TestCreateInvalidType(t *testing.T) {
 	invalidCreateType := createDummyType("test")

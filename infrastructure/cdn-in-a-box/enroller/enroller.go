@@ -238,7 +238,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		return errors.New("no deliveryservice with name " + dss.XmlId)
 	}
 	if dses[0].ID == nil {
-		return errors.New("Deliveryservice with name " + dss.XmlId  + " has a nil ID")
+		return errors.New("Deliveryservice with name " + dss.XmlId + " has a nil ID")
 	}
 	dsID := *dses[0].ID
 

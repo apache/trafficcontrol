@@ -346,7 +346,7 @@ func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
-	successMsg := "Successfully deleted "+CDNDNSSECKeyType+" for "+key
+	successMsg := "Successfully deleted " + CDNDNSSECKeyType + " for " + key
 	if deprecated {
 		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(util.StrPtr(API_DNSSECKEYS)), successMsg)
 	} else {

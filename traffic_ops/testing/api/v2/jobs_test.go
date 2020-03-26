@@ -40,7 +40,7 @@ func CreateTestJobs(t *testing.T) {
 
 	for i, job := range testData.InvalidationJobs {
 		job.StartTime = &tc.Time{
-			Time: time.Now().Add(time.Minute).UTC(),
+			Time:  time.Now().Add(time.Minute).UTC(),
 			Valid: true,
 		}
 		testData.InvalidationJobs[i] = job
@@ -49,7 +49,7 @@ func CreateTestJobs(t *testing.T) {
 	for _, job := range testData.InvalidationJobs {
 		request := tc.InvalidationJobInput{
 			DeliveryService: job.DeliveryService,
-			Regex:           job.Regex	,
+			Regex:           job.Regex,
 			StartTime:       job.StartTime,
 			TTL:             job.TTL,
 		}

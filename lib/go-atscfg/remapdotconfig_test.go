@@ -1274,7 +1274,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 			Protocol:                 util.IntPtr(0),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
-			RangeSliceBlockSize:     util.IntPtr(262144),
+			RangeSliceBlockSize:      util.IntPtr(262144),
 		},
 	}
 
@@ -4838,7 +4838,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
-			RangeSliceBlockSize:     util.IntPtr(262144),
+			RangeSliceBlockSize:      util.IntPtr(262144),
 		},
 	}
 
