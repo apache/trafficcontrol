@@ -43,4 +43,5 @@ module.exports = function(){
 	this.searchFilter=element(by.id('serversTable_filter')).element(by.css('label input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+	this.ipIsService=element(by.name('ipIsService'));
 };
