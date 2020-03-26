@@ -140,3 +140,124 @@ func TestGetCacheGroupByName(t *testing.T) {
 	}
 
 }
+
+func TestGetDSIDAndCDNFromName(t *testing.T) {
+	var testCases = []struct {
+		description  string
+		storageError error
+		found        bool
+	}{
+		{
+			description:  "Success: DS ID and CDN Name found",
+			storageError: nil,
+			found:        true,
+		},
+		{
+			description:  "Failure: DS ID or CDN Name not found",
+			storageError: nil,
+			found:        false,
+		},
+		{
+			description:  "Failure: Storage error getting DS ID or CDN Name",
+			storageError: errors.New("error getting the delivery service ID or the CDN name"),
+			found:        false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.description, func(t *testing.T) {
+			t.Log("Starting test scenario: ", testCase.description)
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer mockDB.Close()
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
+			rows := sqlmock.NewRows([]string{
+				"id",
+				"name",
+			})
+			mock.ExpectBegin()
+			if testCase.storageError != nil {
+				mock.ExpectQuery("SELECT").WillReturnError(testCase.storageError)
+			} else {
+				if testCase.found {
+					rows = rows.AddRow(1, "testCdn")
+				}
+				mock.ExpectQuery("SELECT").WillReturnRows(rows)
+			}
+			mock.ExpectCommit()
+			_, _, exists, err := GetDSIDAndCDNFromName(db.MustBegin().Tx, "testDs")
+			if testCase.storageError != nil && err == nil {
+				t.Errorf("Storage error expected: received no storage error")
+			}
+			if testCase.storageError == nil && err != nil {
+				t.Errorf("Storage error not expected: received storage error")
+			}
+			if testCase.found != exists {
+				t.Errorf("Expected return exists: %t, actual %t", testCase.found, exists)
+			}
+		})
+	}
+
+}
+
+func TestGetCDNIDFromName(t *testing.T) {
+	var testCases = []struct {
+		description  string
+		storageError error
+		found        bool
+	}{
+		{
+			description:  "Success: CDN ID found",
+			storageError: nil,
+			found:        true,
+		},
+		{
+			description:  "Failure: CDN ID not found",
+			storageError: nil,
+			found:        false,
+		},
+		{
+			description:  "Failure: Storage error getting CDN ID",
+			storageError: errors.New("error getting the CDN ID"),
+			found:        false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.description, func(t *testing.T) {
+			t.Log("Starting test scenario: ", testCase.description)
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer mockDB.Close()
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
+			rows := sqlmock.NewRows([]string{
+				"id",
+			})
+			mock.ExpectBegin()
+			if testCase.storageError != nil {
+				mock.ExpectQuery("SELECT").WillReturnError(testCase.storageError)
+			} else {
+				if testCase.found {
+					rows = rows.AddRow(1)
+				}
+				mock.ExpectQuery("SELECT").WillReturnRows(rows)
+			}
+			mock.ExpectCommit()
+			_, exists, err := GetCDNIDFromName(db.MustBegin().Tx, "testCdn")
+			if testCase.storageError != nil && err == nil {
+				t.Errorf("Storage error expected: received no storage error")
+			}
+			if testCase.storageError == nil && err != nil {
+				t.Errorf("Storage error not expected: received storage error")
+			}
+			if testCase.found != exists {
+				t.Errorf("Expected return exists: %t, actual %t", testCase.found, exists)
+			}
+		})
+	}
+
+}
