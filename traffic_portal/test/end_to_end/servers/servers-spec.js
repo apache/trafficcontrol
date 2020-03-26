@@ -33,7 +33,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		ipNetmask: "255.255.255.252",
 		ipGateway: "10.42.80.117",
 		interfaceMtu: "9000",
-        isServiceAddress: true,
+		isServiceAddress: true,
 	};
 
 	it('should go to the Servers page', function() {
