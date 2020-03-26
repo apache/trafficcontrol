@@ -27,17 +27,17 @@ var (
 	toReqTimeout = time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
 )
 
-func TestTOExtensions(t *testing.T) {
-	WithObjs(t, []TCObj{TOExtensions}, func() {
-		CreateTestInvalidTOExtensions(t)
+func TestServerCheckExtensions(t *testing.T) {
+	WithObjs(t, []TCObj{ServerCheckExtensions}, func() {
+		CreateTestInvalidServerCheckExtensions(t)
 	})
 }
 
-func CreateTestTOExtensions(t *testing.T) {
+func CreateTestServerCheckExtensions(t *testing.T) {
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 
-	for _, ext := range testData.TOExtensions {
-		resp, _, err := TOSession.CreateTOExtension(ext)
+	for _, ext := range testData.ServerCheckExtensions {
+		resp, _, err := TOSession.CreateServerCheckExtension(ext)
 		t.Logf("Response: %v %v", *ext.Name, resp)
 		if err != nil {
 			t.Errorf("could not create to_extension %v: %v", ext.Name, err)
@@ -47,17 +47,17 @@ func CreateTestTOExtensions(t *testing.T) {
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
 
-func CreateTestInvalidTOExtensions(t *testing.T) {
-	// Fail Attempt to Create ToExtension as non extension user
-	_, _, err := TOSession.CreateTOExtension(testData.TOExtensions[0])
+func CreateTestInvalidServerCheckExtensions(t *testing.T) {
+	// Fail Attempt to Create ServerCheckExtension as non extension user
+	_, _, err := TOSession.CreateServerCheckExtension(testData.ServerCheckExtensions[0])
 	if err == nil {
 		t.Error("expected to receive error with non extension user")
 	}
 
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 
-	// Attempt to create another valid TOExtension and it should fail as there is no open slots
-	toExt := tc.TOExtensionNullable{
+	// Attempt to create another valid ServerCheckExtension and it should fail as there is no open slots
+	toExt := tc.ServerCheckExtensionNullable{
 		Name:                 util.StrPtr("MEM_CHECKER"),
 		Version:              util.StrPtr("3.0.3"),
 		InfoURL:              util.StrPtr("-"),
@@ -65,14 +65,14 @@ func CreateTestInvalidTOExtensions(t *testing.T) {
 		ServercheckShortName: util.StrPtr("MC"),
 		Type:                 util.StrPtr("CHECK_EXTENSION_MEM"),
 	}
-	_, _, err = TOSession.CreateTOExtension(toExt)
+	_, _, err = TOSession.CreateServerCheckExtension(toExt)
 	if err == nil {
 		t.Error("expected to receive error with no open slots left")
 	}
 
 	// Attempt to create a TO Extension with an invalid type
 	toExt.Type = util.StrPtr("INVALID_TYPE")
-	_, _, err = TOSession.CreateTOExtension(toExt)
+	_, _, err = TOSession.CreateServerCheckExtension(toExt)
 	if err == nil {
 		t.Error("expected to receive error with invalid TO extension type")
 	}
@@ -80,16 +80,16 @@ func CreateTestInvalidTOExtensions(t *testing.T) {
 
 }
 
-func DeleteTestTOExtensions(t *testing.T) {
+func DeleteTestServerCheckExtensions(t *testing.T) {
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 
-	extensions, _, err := TOSession.GetTOExtensions()
+	extensions, _, err := TOSession.GetServerCheckExtensions()
 	if err != nil {
 		t.Fatalf("could not get to_extensions: %v", err)
 	}
 
 	ids := []int{}
-	for _, ext := range testData.TOExtensions {
+	for _, ext := range testData.ServerCheckExtensions {
 		found := false
 		for _, respTOExt := range extensions.Response {
 			if *ext.Name == *respTOExt.Name {
@@ -104,18 +104,18 @@ func DeleteTestTOExtensions(t *testing.T) {
 	}
 
 	for _, id := range ids {
-		resp, _, err := TOSession.DeleteTOExtension(id)
+		resp, _, err := TOSession.DeleteServerCheckExtension(id)
 		t.Logf("Response: %v %v", id, resp)
 		if err != nil {
 			t.Errorf("cannot delete to_extension: %v - %v", id, err)
 		}
 	}
-	extensions, _, err = TOSession.GetTOExtensions()
+	extensions, _, err = TOSession.GetServerCheckExtensions()
 	if err != nil {
 		t.Fatalf("could not get to_extensions: %v", err)
 	}
 
-	for _, ext := range testData.TOExtensions {
+	for _, ext := range testData.ServerCheckExtensions {
 		found := false
 		for _, respTOExt := range extensions.Response {
 			if *ext.Name == *respTOExt.Name {

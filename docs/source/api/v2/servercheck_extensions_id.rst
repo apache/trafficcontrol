@@ -13,16 +13,15 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v1-to_extensions-id:
+.. _to-api-servercheck_extensions-id:
 
-************************
-``to_extensions/{{ID}}``
-************************
-.. versionadded:: 1.5
-
+*********************************
+``servercheck/extensions/{{ID}}``
+*********************************
+ 
 ``DELETE``
 ==========
-Deletes a Traffic Ops extension definition. This does **not** delete the actual extension file.
+Deletes a Traffic Ops server check extension definition. This does **not** delete the actual extension file.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
@@ -41,7 +40,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/1.5/to_extensions/16 HTTP/1.1
+	DELETE /api/2.0/servercheck/extensions/16 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -60,7 +59,7 @@ Response Structure
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
 	Date: Wed, 12 Dec 2018 16:33:52 GMT
-	Server: Mojolicious (Perl)
+	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: EB0Nu85azbGzaehDTAODP3NPqWbByIza1XQhgwtsW2WTXyK/dxQtncp0YiJXyO0tH9H+n+6BBfojBOb5h0dFPA==

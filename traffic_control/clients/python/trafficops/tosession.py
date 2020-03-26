@@ -1379,6 +1379,18 @@ class TOSession(RestApiSession):
 		"""
 
 	#
+	# Plugins
+	#
+	@api_request('get', 'plugins', ('2.0',))
+	def get_plugins(self):
+		"""
+		Retrieves the list of plugins.
+		:ref:`to-api-plugins`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	#
 	# Profiles
 	#
 	@api_request('get', 'profiles', ('2.0',))
@@ -1823,31 +1835,31 @@ class TOSession(RestApiSession):
 	#
 	# TO Extensions
 	#
-	@api_request('get', 'to_extensions', ('2.0',))
-	def get_to_extensions(self):
+	@api_request('get', 'servercheck/extensions', ('2.0',))
+	def get_servercheck_extensions(self):
 		"""
 		Retrieves the list of extensions.
-		:ref:`to-api-to_extensions`
+		:ref:`to-api-servercheck_extensions`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'to_extensions', ('2.0',))
+	@api_request('post', 'servercheck/extensions', ('2.0',))
 	def create_to_extension(self, data=None):
 		"""
 		Creates a Traffic Ops extension.
-		:ref:`to-api-to_extensions`
+		:ref:`to-api-servercheck_extensions`
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'to_extensions/{extension_id:d}', ('2.0',))
+	@api_request('delete', 'servercheck/extensions/{extension_id:d}', ('2.0',))
 	def delete_to_extension(self, extension_id=None):
 		"""
 		Deletes a Traffic Ops extension.
-		:ref:`to-api-to_extensions-id`
+		:ref:`to-api-servercheck_extensions-id`
 		:param extension_id: The extension id to delete
 		:type extension_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]

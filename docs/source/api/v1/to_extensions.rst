@@ -19,12 +19,11 @@
 ``to_extensions``
 *****************
 .. seealso:: :ref:`admin-to-ext-script`
+.. deprecated:: ATCv4
+	Use :ref:`to-api-servercheck_extensions` instead.
 
 ``GET``
 =======
-.. versionchanged:: 1.5
-	Starting in version 1.5 ``to_extensions`` returns stored extensions as well as configured TO Plugins. Prior ``to_extensions`` would return stored extensions as well as perl extensions, whose info would be loaded dynamically.
-
 Retrieves the list of Traffic Ops extensions.
 
 :Auth. Required: Yes
@@ -90,10 +89,6 @@ Response Structure
 	.. note:: This field has meaning only for "Check Extensions"
 
 :type:    The Check :term:`Type` of the extension.
-
-	.. versionchanged:: 1.5
-		Since ``to_extensions`` returns configured TO Plugins in 1.5, this type will either be the stored extension type or ``TO_PLUGIN`` for TO Plugins.
-
 :version: A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http
@@ -137,6 +132,12 @@ Response Structure
 			"type": "CHECK_EXTENSION_BOOL",
 			"id": 2,
 			"servercheck_short_name": "10G"
+		}
+	],
+	"alerts": [
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use GET /servercheck/extensions instead"
 		}
 	]}
 
@@ -231,6 +232,10 @@ Response Structure
 	"alerts": [{
 		"level": "success",
 		"text": "Check Extension Loaded."
+	},
+	{
+		"level": "warning",
+		"text": "This endpoint is deprecated, please use POST /servercheck/extensions instead"
 	}]}
 
 .. [1] No roles are required to use this endpoint, however access is controlled by username. Only the reserved user ``extension`` is permitted the use of this endpoint.

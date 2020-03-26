@@ -196,7 +196,7 @@ sub delete {
 
 	my $new_id = 1;
 	my $id     = $self->param('id');
-	my $alt = "DELETE /to_extensions/:id";
+	my $alt = "DELETE /servercheck/extensions/:id";
 
 	# print Dumper($self->req);
 	if ( $self->current_user()->{username} ne "extension" ) {

@@ -24,7 +24,7 @@ import (
 )
 
 func TestServerChecks(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, TOExtensions, ServerChecks}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCheckExtensions, ServerChecks}, func() {
 		CreateTestInvalidServerChecks(t)
 		UpdateTestServerChecks(t)
 		GetTestServerChecks(t)

@@ -18,8 +18,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops Golang Endpoints
   - /api/2.0 for all of the most recent route versions
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
-  - /api/1.5/to_extensions/:id `(DELETE)`
-  - /api/1.5/to_extensions `(GET, POST)`
   - /api/1.5/stats_summary `(POST)`
   - /api/1.1/cdns/routing
   - /api/1.1/cachegroupparameters/ `(GET, POST)`
@@ -33,6 +31,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/vault/ping `GET`
   - /api/2.0/vault/bucket/:bucket/key/:key/values `GET`
   - /api/2.0/servercheck `GET`
+  - /api/2.0/servercheck/extensions/:id `(DELETE)`
+  - /api/2.0/servercheck/extensions `(GET, POST)`
+  - /api/2.0/plugins `(GET)`
   - /api/2.0/snapshot `PUT`
 
 ### Changed
@@ -108,6 +109,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /tenants/:id (GET)
   - /statuses/:id (GET)
   - /to_extensions/:id/delete
+  - /to_extensions
   - /traffic_monitor/stats
   - /types/trimmed
   - /types/{{ID}} (GET)

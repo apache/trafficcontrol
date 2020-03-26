@@ -581,6 +581,8 @@ What's typically meant by "extension" in the context of Traffic Ops is a :ref:`t
 
 Both Perl and Go also support overrides or new definitions for non-standard :ref:`to-api` routes. It is strongly recommended that no Perl-based extensions of this type be written, but for posterity they are described in `Legacy Perl Extensions`_. The Go implementation refers to this type of "extension" as a "plugin," and they are described in `Go Plugins`_.
 
+.. _to_go_plugins:
+
 Go Plugins
 ----------
 A plugin is defined by a Go source file in the :atc-file:`traffic_ops/traffic_ops_golang/plugin` directory, which is expected to be named :file:`{plugin name}.go`. A plugin is registered to Traffic Ops by a call to :to-godoc:`plugin.AddPlugin` in the source file's special ``init`` function.

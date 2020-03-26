@@ -13,16 +13,16 @@
 .. limitations under the License.
 ..
 
-.. _to-api-to_extensions:
+.. _to-api-servercheck_extensions:
 
-*****************
-``to_extensions``
-*****************
+**************************
+``servercheck/extensions``
+**************************
 .. seealso:: :ref:`admin-to-ext-script`
 
 ``GET``
 =======
-Retrieves the list of Traffic Ops extensions and configured Traffic Ops plugins.
+Retrieves the list of Traffic Ops extensions.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -58,7 +58,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/2.0/to_extensions HTTP/1.1
+	GET /api/2.0/servercheck/extensions HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -69,11 +69,11 @@ Response Structure
 :additional_config_json: A string containing a JSON-encoded object with extra configuration options... inside a JSON object...
 :description:            A short description of the extension
 
-	.. note:: This is, unfortunately, ``null`` for all default plugins
+	.. note:: This is, unfortunately, ``null`` for all default extensions
 
 :id:       An integral, unique identifier for this extension definition
 :info_url: A URL where info about this extension may be found
-:isactive: An integer describing the boolean notion of whether or not the plugin is active; one of:
+:isactive: An integer describing the boolean notion of whether or not the extension is active; one of:
 
 	0
 		disabled
@@ -83,11 +83,8 @@ Response Structure
 :name:                  The name of the extension
 :script_file:           The base filename of the script that runs for the extension
 :servercheck_shortname: The name of the column in the table at 'Monitor' -> 'Cache Checks' in Traffic Portal, where "Check Extension" output is displayed
-
-	.. note:: This field has meaning only for "Check Extensions"
-
-:type:    The Check :term:`Type` of the extension. This type will either be the stored extension type or ``TO_PLUGIN`` for TO Plugins.
-:version: A (hopefully) semantic version number describing the version of the plugin
+:type:                  The Check :term:`Type` of the extension. This will always be a CHECK_EXTENSION type with the naming convention of ``CHECK_EXTENSION_*``.
+:version:               A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http
 	:caption: Response Example
@@ -146,7 +143,7 @@ Request Structure
 :additional_config_json: An optional string containing a JSON-encoded object with extra configuration options... inside a JSON object...
 :description:            A short description of the extension
 :info_url:               A URL where info about this extension may be found
-:isactive:               An integer describing the boolean notion of whether or not the plugin is active; one of:
+:isactive:               An integer describing the boolean notion of whether or not the extension is active; one of:
 
 	0
 		disabled
@@ -159,17 +156,13 @@ Request Structure
 	.. seealso:: :ref:`admin-to-ext-script` for details on where the script should be located on the Traffic Ops server
 
 :servercheck_shortname: The name of the column in the table at 'Monitor' -> 'Cache Checks' in Traffic Portal, where "Check Extension" output is displayed
-
-	.. note:: This field has meaning only for "Check Extensions"
-
-:type:    The :term:`Type` of extension. Must be CHECK_EXTENSION type with the naming convention of ``CHECK_EXTENSION_*``.
-
-:version: A (hopefully) semantic version number describing the version of the plugin
+:type:                  The :term:`Type` of extension. Must be CHECK_EXTENSION type with the naming convention of ``CHECK_EXTENSION_*``.
+:version:               A (hopefully) semantic version number describing the version of the plugin
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/2.0/to_extensions HTTP/1.1
+	POST /api/2.0/servercheck/extensions HTTP/1.1
 	Host: ipcdn-cache-51.cdnlab.comcast.net:6443
 	User-Agent: curl/7.47.0
 	Accept: */*
