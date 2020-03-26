@@ -49,9 +49,6 @@ interface IPAddress {
 	address: string;
 
 	/**
-	 * The netmask used by the address.
-
-	/**
 	 * The IP (v4 or v6) address of the gateway used by this IP address.
 	 */
 	gateway: string;
