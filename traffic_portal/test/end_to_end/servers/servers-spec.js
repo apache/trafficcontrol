@@ -33,7 +33,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		ipNetmask: "255.255.255.252",
 		ipGateway: "10.42.80.117",
 		interfaceMtu: "9000",
-		isServiceAddress: true,
+		ipIsService: true,
 	};
 
 	it('should go to the Servers page', function() {
@@ -68,7 +68,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.ipAddress.sendKeys(mockVals.ipAddress);
 		pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
 		pageData.ipGateway.sendKeys(mockVals.ipGateway);
-		pageData.isServiceAddress.sendKeys(mockVals.isServiceAddress);
+		pageData.ipIsService.sendKeys(mockVals.ipIsService);
 		pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
 		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
