@@ -19,21 +19,25 @@ package invalidationjobs
  * under the License.
  */
 
-import "database/sql"
-import "encoding/json"
-import "errors"
-import "fmt"
-import "net/http"
-import "strconv"
-import "strings"
-import "time"
+import (
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/lib/go-rfc"
-import "github.com/apache/trafficcontrol/lib/go-log"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/lib/pq"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+)
 
 type InvalidationJob struct {
 	api.APIInfoImpl `json:"-"`
@@ -212,13 +216,22 @@ func (job *InvalidationJob) Read() ([]interface{}, error, error, int) {
 		return nil, nil, errors.New(b.String()), http.StatusInternalServerError
 	}
 
-	// TODO: check tenancy here
-	query := readQuery + where + orderBy + pagination
+	accessibleTenants, err := tenant.GetUserTenantIDListTx(job.APIInfo().Tx.Tx, job.APIInfo().User.TenantID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting accessible tenants for user - %v", err), http.StatusInternalServerError
+	}
+	if len(where) == 0 {
+		where += " AND ds.tenant_id = ANY(:tenants) "
+	} else {
+		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) "
+	}
+	queryValues["tenants"] = pq.Array(accessibleTenants)
 
+	query := readQuery + where + orderBy + pagination
 	log.Debugln("generated job query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
-	returnable := []tc.InvalidationJob{}
+	returnable := []interface{}{}
 	rows, err := job.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
@@ -245,19 +258,7 @@ func (job *InvalidationJob) Read() ([]interface{}, error, error, int) {
 		return nil, nil, fmt.Errorf("Parsing db responses: %v", err), http.StatusInternalServerError
 	}
 
-	// This cannot be done in the scanning loop, because pq will throw an error if you try to make
-	// another query before exhausting the rows returned by an earlier query
-	filtered := []interface{}{}
-	for _, r := range returnable {
-		ok, err := IsUserAuthorizedToModifyDSXMLID(job.APIInfo(), *r.DeliveryService)
-		if err != nil {
-			return nil, nil, err, http.StatusInternalServerError
-		} else if ok {
-			filtered = append(filtered, r)
-		}
-	}
-
-	return filtered, nil, nil, http.StatusOK
+	return returnable, nil, nil, http.StatusOK
 }
 
 // Used by POST requests to `/jobs`, creates a new content invalidation job
