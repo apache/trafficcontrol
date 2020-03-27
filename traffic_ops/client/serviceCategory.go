@@ -20,15 +20,16 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const (
-	API_serviceCategories = apiBase + "/servicecategories"
+	API_SERVICE_CATEGORIES = apiBase + "/servicecategories"
 )
 
-// Create a service category
+// CreateServiceCategory creates a service category
 func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -37,7 +38,7 @@ func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory) (tc
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_serviceCategories, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVICE_CATEGORIES, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -47,7 +48,7 @@ func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory) (tc
 	return alerts, reqInf, nil
 }
 
-// Update a service category by ID
+// UpdateServiceCategoryByID updates a service category by ID
 func (to *Session) UpdateServiceCategoryByID(id int, serviceCategory tc.ServiceCategory) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -56,7 +57,7 @@ func (to *Session) UpdateServiceCategoryByID(id int, serviceCategory tc.ServiceC
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_serviceCategories, id)
+	route := fmt.Sprintf("%s/%d", API_SERVICE_CATEGORIES, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,9 +68,9 @@ func (to *Session) UpdateServiceCategoryByID(id int, serviceCategory tc.ServiceC
 	return alerts, reqInf, nil
 }
 
-// Returns a list of service categories
+// GetServiceCategories returns a list of service categories
 func (to *Session) GetServiceCategories() ([]tc.ServiceCategory, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_serviceCategories, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_SERVICE_CATEGORIES, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -81,9 +82,9 @@ func (to *Session) GetServiceCategories() ([]tc.ServiceCategory, ReqInf, error) 
 	return data.Response, reqInf, nil
 }
 
-// GET a service category by the service category id
+// GetServiceCategoryByID gets a service category by the service category id
 func (to *Session) GetServiceCategoryByID(id int) ([]tc.ServiceCategory, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_serviceCategories, id)
+	route := fmt.Sprintf("%s?id=%d", API_SERVICE_CATEGORIES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -99,9 +100,9 @@ func (to *Session) GetServiceCategoryByID(id int) ([]tc.ServiceCategory, ReqInf,
 	return data.Response, reqInf, nil
 }
 
-// GET a service category by the service category name
-func (to *Session) GetserviceCategoryByName(name string) ([]tc.ServiceCategory, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_serviceCategories, name)
+// GetServiceCategoryByName gets a service category by the service category name
+func (to *Session) GetServiceCategoryByName(name string) ([]tc.ServiceCategory, ReqInf, error) {
+	url := fmt.Sprintf("%s?name=%s", API_SERVICE_CATEGORIES, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -117,9 +118,9 @@ func (to *Session) GetserviceCategoryByName(name string) ([]tc.ServiceCategory, 
 	return data.Response, reqInf, nil
 }
 
-// DELETE a service category by service category id
+// DeleteServiceCategoryByID deletes a service category by service category id
 func (to *Session) DeleteServiceCategoryByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_serviceCategories, id)
+	route := fmt.Sprintf("%s/%d", API_SERVICE_CATEGORIES, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

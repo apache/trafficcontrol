@@ -1,4 +1,5 @@
 package servicecategory
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -46,8 +47,8 @@ func (v *TOServiceCategory) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t 
 func (v *TOServiceCategory) InsertQuery() string           { return insertQuery() }
 func (v *TOServiceCategory) NewReadObj() interface{}       { return &tc.ServiceCategory{} }
 func (v *TOServiceCategory) SelectQuery() string           { return selectQuery() }
-func (v *TOServiceCategory) UpdateQuery() string { return updateQuery() }
-func (v *TOServiceCategory) DeleteQuery() string { return deleteQuery() }
+func (v *TOServiceCategory) UpdateQuery() string           { return updateQuery() }
+func (v *TOServiceCategory) DeleteQuery() string           { return deleteQuery() }
 
 func (serviceCategory TOServiceCategory) GetAuditName() string {
 	if serviceCategory.Name != nil {
@@ -85,13 +86,15 @@ func (serviceCategory TOServiceCategory) GetType() string {
 
 func (serviceCategory TOServiceCategory) Validate() error {
 	errs := validation.Errors{
-		"name": 		validation.Validate(serviceCategory.Name, validation.NotNil, validation.Required),
-		"tenantId":		validation.Validate(serviceCategory.TenantID, validation.Min(1)),
+		"name":     validation.Validate(serviceCategory.Name, validation.NotNil, validation.Required),
+		"tenantId": validation.Validate(serviceCategory.TenantID, validation.Min(1)),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (serviceCategory *TOServiceCategory) Create() (error, error, int) { return api.GenericCreate(serviceCategory) }
+func (serviceCategory *TOServiceCategory) Create() (error, error, int) {
+	return api.GenericCreate(serviceCategory)
+}
 
 func (serviceCategory *TOServiceCategory) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
@@ -107,16 +110,20 @@ func (serviceCategory *TOServiceCategory) Read() ([]interface{}, error, error, i
 
 	return returnable, nil, nil, http.StatusOK
 }
-func (serviceCategory *TOServiceCategory) Update() (error, error, int) { return api.GenericUpdate(serviceCategory) }
-func (serviceCategory *TOServiceCategory) Delete() (error, error, int) { return api.GenericDelete(serviceCategory) }
+func (serviceCategory *TOServiceCategory) Update() (error, error, int) {
+	return api.GenericUpdate(serviceCategory)
+}
+func (serviceCategory *TOServiceCategory) Delete() (error, error, int) {
+	return api.GenericDelete(serviceCategory)
+}
 
 func getServiceCategories(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServiceCategory, error, error, int) {
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"sc.id", api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{"sc.name", nil},
+		"id":       dbhelpers.WhereColumnInfo{"sc.id", api.IsInt},
+		"name":     dbhelpers.WhereColumnInfo{"sc.name", nil},
 		"tenantId": dbhelpers.WhereColumnInfo{"sc.tenant_id", api.IsInt},
 	}
 

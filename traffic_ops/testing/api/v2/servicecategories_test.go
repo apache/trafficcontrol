@@ -109,7 +109,6 @@ func ServiceCategoryTenancyTest(t *testing.T) {
 	}
 }
 
-
 func DeleteTestServiceCategories(t *testing.T) {
 	for _, sc := range testData.ServiceCategories {
 		// Retrieve the Service Category by name so we can get the id
@@ -136,4 +135,3 @@ func DeleteTestServiceCategories(t *testing.T) {
 		}
 	}
 }
-

@@ -239,8 +239,8 @@ Response Structure
 		"maxOriginConnections": 0,
 		"ecsEnabled": false,
 		"rangeSliceBlockSize": null,
-            "serviceCategory": null,
-            "serviceCategoryName": null
+                "serviceCategory": null,
+                "serviceCategoryName": null
 	}]}
 
 

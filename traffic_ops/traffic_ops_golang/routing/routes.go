@@ -838,7 +838,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		////DeliveryServices
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 2238317294, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 244348195, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `deliveryservices/?$`, deliveryservice.CreateV20, auth.PrivLevelOperations, Authenticated, nil, 506431433, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `deliveryservices/{id}/?$`, deliveryservice.UpdateV20, auth.PrivLevelOperations, Authenticated, nil, 1766567528, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `deliveryservices/{id}/safe/?$`, deliveryservice.UpdateSafe, auth.PrivLevelOperations, Authenticated, nil, 247210931, perlBypass},

@@ -87,17 +87,17 @@ Response Structure
 	Date: Wed, 11 Mar 2020 20:02:47 GMT
 	Content-Length: 102
 
-    {
-        "response": [
-            {
-                "id": 5,
-                "lastUpdated": "2020-03-04 15:46:20-07",
-                "name": "SERVICE_CATEGORY_NAME",
-                "tenantId": 1,
-                "tenant": "TENANT_NAME"
-            }
-        ]
-    }
+        {
+            "response": [
+                {
+                    "id": 5,
+                    "lastUpdated": "2020-03-04 15:46:20-07",
+                    "name": "SERVICE_CATEGORY_NAME",
+                    "tenantId": 1,
+                    "tenant": "TENANT_NAME"
+                }
+            ]
+        }
 
 ``POST``
 ========
@@ -125,7 +125,7 @@ Request Structure
 
 	{
 		"name": "SERVICE_CATEGORY_NAME",
-            "tenantId": 1,
+                "tenantId": 1,
 	}
 
 Response Structure
@@ -151,18 +151,18 @@ Response Structure
 	Date: Wed, 11 Mar 2020 20:12:20 GMT
 	Content-Length: 154
 
-{
-    "alerts": [
         {
-            "text": "serviceCategory was created.",
-            "level": "success"
+            "alerts": [
+                {
+                    "text": "serviceCategory was created.",
+                    "level": "success"
+                }
+            ],
+            "response": {
+                "id": 1,
+                "lastUpdated": "2020-03-11 14:12:20-06",
+                "name": "SERVICE_CATEGORY_NAME",
+                "tenantId": 1,
+                "tenant": null
+            }
         }
-    ],
-    "response": {
-        "id": 1,
-        "lastUpdated": "2020-03-11 14:12:20-06",
-        "name": "SERVICE_CATEGORY_NAME",
-        "tenantId": 1,
-        "tenant": null
-    }
-}

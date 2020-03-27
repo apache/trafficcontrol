@@ -47,7 +47,7 @@ type HeaderRewriteDS struct {
 	MaxOriginConnections int
 	MidHeaderRewrite     string
 	Type                 tc.DSType
-	ServiceCategoryName	 string
+	ServiceCategoryName  string
 }
 
 type HeaderRewriteServer struct {
@@ -177,7 +177,7 @@ func MakeHeaderRewriteDotConfig(
 		text += re.ReplaceAllString(ds.EdgeHeaderRewrite, "\n")
 	}
 
-	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategoryName != ""  {
+	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategoryName != "" {
 		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsXmlId, ds.ServiceCategoryName)
 	}
 
