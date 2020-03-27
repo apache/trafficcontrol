@@ -109,7 +109,7 @@ func main() {
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	configs, err := cfgfile.GetAllConfigs(tccfg, toData)
+	configs, err := cfgfile.GetAllConfigs(toData, tccfg.RevalOnly)
 	if err != nil {
 		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)

@@ -36,7 +36,7 @@ import (
 )
 
 // GetAllConfigs gets all config files for cfg.CacheHostName.
-func GetAllConfigs(cfg config.TCCfg, toData *config.TOData) ([]config.ATSConfigFile, error) {
+func GetAllConfigs(toData *config.TOData, revalOnly bool) ([]config.ATSConfigFile, error) {
 	meta, err := GetMeta(toData)
 	if err != nil {
 		return nil, errors.New("creating meta: " + err.Error())
@@ -45,7 +45,7 @@ func GetAllConfigs(cfg config.TCCfg, toData *config.TOData) ([]config.ATSConfigF
 	hasSSLMultiCertConfig := false
 	configs := []config.ATSConfigFile{}
 	for _, fi := range meta.ConfigFiles {
-		if cfg.RevalOnly && fi.FileNameOnDisk != atscfg.RegexRevalidateFileName {
+		if revalOnly && fi.FileNameOnDisk != atscfg.RegexRevalidateFileName {
 			continue
 		}
 		txt, contentType, lineComment, err := GetConfigFile(toData, fi)
