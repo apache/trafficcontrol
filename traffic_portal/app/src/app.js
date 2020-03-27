@@ -393,7 +393,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/typeServers').name,
         require('./common/modules/table/typeStaticDnsEntries').name,
         require('./common/modules/table/users').name,
-        require('./common/modules/table/userDeliveryServices').name,
 
         // widgets
         require('./common/modules/widget/cacheGroups').name,
