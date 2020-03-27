@@ -174,6 +174,12 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 			return
 		}
 		cdn = name
+	} else {
+		_, _, err := getCDNInfo(cdn, inf.Tx.Tx)
+		if err != nil {
+			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("No CDN found with that name"), nil, deprecated, &alt)
+			return
+		}
 	}
 
 	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)

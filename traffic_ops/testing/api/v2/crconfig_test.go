@@ -26,6 +26,10 @@ import (
 func TestCRConfig(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		UpdateTestCRConfigSnapshot(t)
+		SnapshotTestCDNbyName(t)
+		SnapshotTestCDNbyInvalidName(t)
+		SnapshotTestCDNbyID(t)
+		SnapshotTestCDNbyInvalidID(t)
 	})
 }
 
@@ -132,5 +136,47 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	delResp, _, err := TOSession.DeleteParameterByID(tmURLParam.ID)
 	if err != nil {
 		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
+	}
+}
+
+func SnapshotTestCDNbyName(t *testing.T) {
+
+	firstCDN := testData.CDNs[0]
+	_, err := TOSession.SnapshotCRConfig(firstCDN.Name)
+	if err != nil {
+		t.Errorf("failed to snapshot CDN by name: %v", err)
+	}
+}
+
+func SnapshotTestCDNbyInvalidName(t *testing.T) {
+
+	invalidCDNName := "cdn-invalid"
+	_, err := TOSession.SnapshotCRConfig(invalidCDNName)
+	if err == nil {
+		t.Errorf("snapshot occurred on invalid cdn name: %v - %v", invalidCDNName, err)
+	}
+}
+
+func SnapshotTestCDNbyID(t *testing.T) {
+
+	firstCDN := testData.CDNs[0]
+	// Retrieve the CDN by name so we can get the id for the snapshot
+	resp, _, err := TOSession.GetCDNByName(firstCDN.Name)
+	if err != nil {
+		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
+	}
+	remoteCDN := resp[0]
+	alert, _, err := TOSession.SnapshotCRConfigByID(remoteCDN.ID)
+	if err != nil {
+		t.Errorf("failed to snapshot CDN by id: %v - %v", err, alert)
+	}
+}
+
+func SnapshotTestCDNbyInvalidID(t *testing.T) {
+
+	invalidCDNID := 999999
+	alert, _, err := TOSession.SnapshotCRConfigByID(invalidCDNID)
+	if err == nil {
+		t.Errorf("snapshot occurred on invalid cdn id: %v - %v - %v", invalidCDNID, err, alert)
 	}
 }
