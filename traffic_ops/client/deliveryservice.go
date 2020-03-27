@@ -135,7 +135,7 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, Re
 // Deprecated: Use GetDeliveryServiceNullable instead.
 func (to *Session) GetDeliveryService(id string) (*tc.DeliveryService, ReqInf, error) {
 	var data tc.DeliveryServicesResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICES + "?id=" + id, &data)
+	reqInf, err := get(to, API_DELIVERY_SERVICES+"?id="+id, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}

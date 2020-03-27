@@ -53,7 +53,9 @@ type simpleHTTPRequestRemapper struct {
 
 func (hr simpleHTTPRequestRemapper) Rules() []remapdata.RemapRule         { return hr.remapper.Rules() }
 func (hr simpleHTTPRequestRemapper) StatRules() remapdata.RemapRulesStats { return *hr.stats }
-func (hr simpleHTTPRequestRemapper) PluginCfg() map[string]interface{}    { return hr.remapper.PluginCfg() }
+func (hr simpleHTTPRequestRemapper) PluginCfg() map[string]interface{} {
+	return hr.remapper.PluginCfg()
+}
 func (hr simpleHTTPRequestRemapper) PluginSharedCfg() map[string]map[string]json.RawMessage {
 	return hr.remapper.PluginSharedCfg()
 }

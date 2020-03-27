@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	API_PROFILES = apiBase + "/profiles"
+	API_PROFILES                 = apiBase + "/profiles"
 	API_PROFILES_NAME_PARAMETERS = API_PROFILES + "/name/%v/parameters"
 )
 

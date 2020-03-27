@@ -106,7 +106,7 @@ func TestWriteAlertsObj(t *testing.T) {
 	resp := struct {
 		tc.Alerts
 		Response interface{} `json:"response"`
-	}{ a, code}
+	}{a, code}
 	serialized, _ := json.Marshal(resp)
 	if !bytes.Equal(append(serialized[:], '\n'), w.Body[:]) {
 		t.Error("expected response to include alert")

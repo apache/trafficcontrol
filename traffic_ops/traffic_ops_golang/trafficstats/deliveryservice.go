@@ -185,7 +185,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp :=tc.TrafficDSStatsResponseV1{
+	resp := tc.TrafficDSStatsResponseV1{
 		Source:  tc.TRAFFIC_STATS_SOURCE,
 		Version: tc.TRAFFIC_STATS_VERSION,
 	}

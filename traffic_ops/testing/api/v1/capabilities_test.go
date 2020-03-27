@@ -25,29 +25,29 @@ import "github.com/apache/trafficcontrol/lib/go-tc"
 
 // These capabilities are defined during the setup process in todb.go.
 // ANY TIME THOSE ARE CHANGED THIS MUST BE UPDATED.
-var staticCapabilities = []tc.Capability {
+var staticCapabilities = []tc.Capability{
 	tc.Capability{
-		Name: "all-read",
+		Name:        "all-read",
 		Description: "Full read access",
 	},
-	tc.Capability {
-		Name: "all-write",
+	tc.Capability{
+		Name:        "all-write",
 		Description: "Full write access",
 	},
-	tc.Capability {
-		Name: "cdn-read",
+	tc.Capability{
+		Name:        "cdn-read",
 		Description: "View CDN configuration",
 	},
-	tc.Capability {
-		Name: "asns-read",
+	tc.Capability{
+		Name:        "asns-read",
 		Description: "Read ASNs",
 	},
-	tc.Capability {
-		Name: "asns-write",
+	tc.Capability{
+		Name:        "asns-write",
 		Description: "Write ASNs",
 	},
-	tc.Capability {
-		Name: "cache-groups-read",
+	tc.Capability{
+		Name:        "cache-groups-read",
 		Description: "Read CGs",
 	},
 }
@@ -58,7 +58,7 @@ func TestCapabilities(t *testing.T) {
 }
 
 func CreateTestCapabilities(t *testing.T) {
-	for _,c := range testData.Capabilities {
+	for _, c := range testData.Capabilities {
 		resp, _, err := TOSession.CreateCapability(c)
 		t.Log("Response: ", c.Name, " ", resp)
 		if err != nil {
@@ -71,7 +71,7 @@ func GetTestCapabilities(t *testing.T) {
 	testDataLen := len(testData.Capabilities) + len(staticCapabilities)
 	capMap := make(map[string]string, testDataLen)
 
-	for _,c := range testData.Capabilities {
+	for _, c := range testData.Capabilities {
 		capMap[c.Name] = c.Description
 		cap, _, err := TOSession.GetCapability(c.Name)
 		if err != nil {
@@ -88,10 +88,9 @@ func GetTestCapabilities(t *testing.T) {
 	}
 
 	// Hopefully this won't need to be done for much longer
-	for _,c := range staticCapabilities {
+	for _, c := range staticCapabilities {
 		capMap[c.Name] = c.Description
 	}
-
 
 	caps, _, err := TOSession.GetCapabilities()
 	if err != nil {
@@ -101,7 +100,7 @@ func GetTestCapabilities(t *testing.T) {
 		t.Fatalf("response returned different number of capabilities than those that exist; got %d, want %d", len(caps), testDataLen)
 	}
 
-	for _,c := range caps {
+	for _, c := range caps {
 		if desc, ok := capMap[c.Name]; !ok {
 			t.Errorf("capability '%s' found in response, but not in test data!", c.Name)
 		} else {
@@ -112,7 +111,7 @@ func GetTestCapabilities(t *testing.T) {
 		}
 	}
 
-	for c,_ := range capMap {
+	for c, _ := range capMap {
 		t.Errorf("Capability '%s' existed in the test data but didn't appear in the response!", c)
 	}
 }

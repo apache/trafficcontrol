@@ -120,7 +120,6 @@ func (to *Session) GetCacheGroupsNullable() ([]tc.CacheGroupNullable, ReqInf, er
 	return data.Response, reqInf, nil
 }
 
-
 // GET a CacheGroup by the CacheGroup id
 func (to *Session) GetCacheGroupNullableByID(id int) ([]tc.CacheGroupNullable, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)

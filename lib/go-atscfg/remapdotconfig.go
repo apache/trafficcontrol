@@ -59,7 +59,7 @@ type RemapConfigDSData struct {
 	ProfileID                *int
 	Protocol                 *int
 	AnonymousBlockingEnabled *bool
-	RangeSliceBlockSize     *int
+	RangeSliceBlockSize      *int
 	Active                   bool
 }
 

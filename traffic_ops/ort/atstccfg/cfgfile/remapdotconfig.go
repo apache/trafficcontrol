@@ -143,7 +143,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 				Protocol:                 ds.Protocol,
 				AnonymousBlockingEnabled: ds.AnonymousBlockingEnabled,
 				Active:                   *ds.Active,
-				RangeSliceBlockSize:     ds.RangeSliceBlockSize,
+				RangeSliceBlockSize:      ds.RangeSliceBlockSize,
 			})
 		}
 	}
