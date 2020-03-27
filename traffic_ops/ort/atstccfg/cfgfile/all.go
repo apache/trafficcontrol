@@ -71,6 +71,7 @@ func GetAllConfigs(toData *config.TOData, revalOnly bool) ([]config.ATSConfigFil
 }
 
 const HdrConfigFilePath = "Path"
+const HdrLineComment = "Line-Comment"
 
 // WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
 func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
@@ -94,7 +95,7 @@ func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
 	for _, cfg := range configs {
 		hdr := map[string][]string{
 			rfc.ContentType:   {cfg.ContentType},
-			"Line-Comment":    {cfg.LineComment},
+			HdrLineComment:    {cfg.LineComment},
 			HdrConfigFilePath: {filepath.Join(cfg.Location, cfg.FileNameOnDisk)},
 		}
 		partW, err := w.CreatePart(hdr)
