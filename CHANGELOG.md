@@ -114,6 +114,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /types/trimmed
   - /types/{{ID}} (GET)
   - /user/current/jobs
+  - /users/:id/deliveryservices
   - /servers/checks
   - /user/{{user ID}}/deliveryservices/available
 

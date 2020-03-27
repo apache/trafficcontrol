@@ -474,3 +474,11 @@ func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUp
 	}
 	return resp.Response, reqInf, err
 }
+
+// GetAccessibleDeliveryServicesByTenant gets all delivery services associated with the given tenant, and all of
+// it's children.
+func (to *Session) GetAccessibleDeliveryServicesByTenant(tenantId int) ([]tc.DeliveryService, ReqInf, error) {
+	data := tc.DeliveryServicesResponse{}
+	reqInf, err := get(to, fmt.Sprintf("%v?accessibleTo=%v", API_DELIVERY_SERVICES, tenantId), &data)
+	return data.Response, reqInf, err
+}

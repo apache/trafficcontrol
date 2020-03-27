@@ -20,6 +20,9 @@
 *********************************
 .. caution:: This endpoint has several issues related to tenancy and newer :term:`Delivery Service` fields. For these and other reasons, the assigning of :term:`Delivery Services` to users is strongly discouraged.
 
+.. deprecated:: ATCv4
+	Use the ``GET`` method of :ref:`to-api-deliveryservices` with the `accessibleTo` parameter instead.
+
 ``GET``
 =======
 Retrieves all :term:`Delivery Services` assigned to the user.
@@ -173,7 +176,10 @@ Response Structure
 	Date: Mon, 10 Jun 2019 16:50:25 GMT
 	Content-Length: 1348
 
-	{"response": [{
+	{"alerts": [{
+		"text": "This endpoint is deprecated, please use GET deliveryservices?accessibleTo={{tenantId}} instead",
+		"level": "warning"
+	}], "response": [{
 		"active": true,
 		"anonymousBlockingEnabled": false,
 		"cacheurl": null,
