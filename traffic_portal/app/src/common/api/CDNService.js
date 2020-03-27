@@ -176,7 +176,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.snapshot = function(cdn) {
-        return $http.put(ENV.api['root'] + '/snapshot', undefined, {params: {cdnID: cdn.id}}).then(
+        return $http.put(ENV.api['root'] + 'snapshot', undefined, {params: {cdnID: cdn.id}}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Snapshot performed'}], true);
                 locationUtils.navigateToPath('/cdns/' + cdn.id);
