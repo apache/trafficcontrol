@@ -23,6 +23,7 @@ const AstatsSeparator = "="
 const AstatsFileName = "astats.config"
 
 const ContentTypeAstatsDotConfig = ContentTypeTextASCII
+const LineCommentAstatsDotConfig = LineCommentHash
 
 func MakeAStatsDotConfig(
 	profileName string,

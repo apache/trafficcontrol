@@ -41,6 +41,7 @@ const JobKeywordPurge = "PURGE"
 const RegexRevalidateMinTTL = time.Hour
 
 const ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
+const LineCommentRegexRevalidateDotConfig = LineCommentHash
 
 type Job struct {
 	AssetURL string

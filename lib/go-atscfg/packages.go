@@ -30,6 +30,7 @@ const PackagesFileName = `packages`
 const PackagesParamConfigFile = `package`
 
 const ContentTypePackages = ContentTypeTextASCII
+const LineCommentPackages = ""
 
 type Package struct {
 	Name    string `json:"name"`

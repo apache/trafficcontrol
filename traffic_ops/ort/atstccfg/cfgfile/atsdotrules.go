@@ -27,7 +27,7 @@ import (
 
 const ATSDotRulesFileName = StorageFileName
 
-func GetConfigFileProfileATSDotRules(toData *config.TOData) (string, string, error) {
+func GetConfigFileProfileATSDotRules(toData *config.TOData) (string, string, string, error) {
 	paramData := map[string]string{}
 	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
 	for _, param := range toData.ServerParams {
@@ -47,5 +47,5 @@ func GetConfigFileProfileATSDotRules(toData *config.TOData) (string, string, err
 		}
 		paramData[param.Name] = param.Value
 	}
-	return atscfg.MakeATSDotRules(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeATSDotRules, nil
+	return atscfg.MakeATSDotRules(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeATSDotRules, atscfg.LineCommentATSDotRules, nil
 }

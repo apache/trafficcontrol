@@ -28,21 +28,21 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileURLSigConfig(toData *config.TOData, fileName string) (string, string, error) {
+func GetConfigFileProfileURLSigConfig(toData *config.TOData, fileName string) (string, string, string, error) {
 	paramData := ParamsToMap(FilterParams(toData.ServerParams, fileName, "", "", "location"))
 
 	dsName := GetDSFromURLSigConfigFileName(fileName)
 	if dsName == "" {
 		// extra safety, this should never happen, the routing shouldn't get here
-		return "", "", errors.New("getting ds name: malformed config file '" + fileName + "'")
+		return "", "", "", errors.New("getting ds name: malformed config file '" + fileName + "'")
 	}
 
 	urlSigKeys, ok := toData.URLSigKeys[tc.DeliveryServiceName(dsName)]
 	if !ok {
-		return "", "", errors.New("no keys fetched for ds '" + dsName + "!")
+		return "", "", "", errors.New("no keys fetched for ds '" + dsName + "!")
 	}
 
-	return atscfg.MakeURLSigConfig(toData.Server.Profile, urlSigKeys, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeParentDotConfig, nil
+	return atscfg.MakeURLSigConfig(toData.Server.Profile, urlSigKeys, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeURLSig, atscfg.LineCommentURLSig, nil
 }
 
 // GetDSFromURLSigConfigFileName returns the DS of a URLSig config file name.

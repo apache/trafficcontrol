@@ -28,6 +28,7 @@ import (
 )
 
 const ContentTypeSSLMultiCertDotConfig = ContentTypeTextASCII
+const LineCommentSSLMultiCertDotConfig = LineCommentHash
 const SSLMultiCertConfigFileName = `ssl_multicert.config`
 
 type SSLMultiCertDS struct {

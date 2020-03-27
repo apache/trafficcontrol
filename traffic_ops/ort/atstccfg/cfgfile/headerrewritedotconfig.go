@@ -28,7 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (string, string, error) {
+func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (string, string, string, error) {
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, atscfg.HeaderRewritePrefix), atscfg.ConfigSuffix) // TODO verify prefix and suffix? Perl doesn't
 
 	tcDS := tc.DeliveryServiceNullable{}
@@ -40,16 +40,16 @@ func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (stri
 		break
 	}
 	if tcDS.ID == nil {
-		return "", "", errors.New("ds '" + dsName + "' not found")
+		return "", "", "", errors.New("ds '" + dsName + "' not found")
 	}
 
 	if tcDS.CDNName == nil {
-		return "", "", errors.New("ds '" + dsName + "' missing cdn")
+		return "", "", "", errors.New("ds '" + dsName + "' missing cdn")
 	}
 
 	cfgDS, err := atscfg.HeaderRewriteDSFromDS(&tcDS)
 	if err != nil {
-		return "", "", errors.New("converting ds to config ds: " + err.Error())
+		return "", "", "", errors.New("converting ds to config ds: " + err.Error())
 	}
 
 	dsServers := FilterDSS(toData.DeliveryServiceServers, map[int]struct{}{cfgDS.ID: {}}, nil)
@@ -80,5 +80,5 @@ func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (stri
 		assignedEdges = append(assignedEdges, cfgServer)
 	}
 
-	return atscfg.MakeHeaderRewriteDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedEdges), atscfg.ContentTypeHeaderRewriteDotConfig, nil
+	return atscfg.MakeHeaderRewriteDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedEdges), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
 }

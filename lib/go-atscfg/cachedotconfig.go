@@ -28,6 +28,7 @@ import (
 )
 
 const ContentTypeCacheDotConfig = ContentTypeTextASCII
+const LineCommentCacheDotConfig = LineCommentHash
 
 type ProfileDS struct {
 	Type       tc.DSType

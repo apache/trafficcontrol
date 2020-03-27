@@ -32,6 +32,7 @@ import (
 )
 
 const ContentTypeParentDotConfig = ContentTypeTextASCII
+const LineCommentParentDotConfig = LineCommentHash
 
 const ParentConfigParamQStringHandling = "psel.qstring_handling"
 const ParentConfigParamMSOAlgorithm = "mso.algorithm"

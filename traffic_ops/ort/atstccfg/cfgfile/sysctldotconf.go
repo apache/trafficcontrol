@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileSysCtlDotConf(toData *config.TOData) (string, string, error) {
+func GetConfigFileProfileSysCtlDotConf(toData *config.TOData) (string, string, string, error) {
 	paramData := ParamsToMap(FilterParams(toData.ServerParams, atscfg.SysctlFileName, "", "", "location"))
-	return atscfg.MakeSysCtlDotConf(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeSysctlDotConf, nil
+	return atscfg.MakeSysCtlDotConf(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeSysctlDotConf, atscfg.LineCommentSysctlDotConf, nil
 }

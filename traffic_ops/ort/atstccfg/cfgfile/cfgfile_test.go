@@ -55,13 +55,13 @@ func TestWriteConfigs(t *testing.T) {
 
 	actual := buf.String()
 
-	expected0 := "Content-Type: text/plain\r\nPath: /my/config0/location/config0.txt\r\n\r\nconfig0\r\n"
+	expected0 := "Content-Type: text/plain\r\nLine-Comment: \r\nPath: /my/config0/location/config0.txt\r\n\r\nconfig0\r\n"
 
 	if !strings.Contains(actual, expected0) {
-		t.Errorf("WriteConfigs expecte '%v' actual '%v'", expected0, actual)
+		t.Errorf("WriteConfigs expected '%v' actual '%v'", expected0, actual)
 	}
 
-	expected1 := "Content-Type: text/csv\r\nPath: /my/config1/location/config1.txt\r\n\r\nconfig2,foo\r\n"
+	expected1 := "Content-Type: text/csv\r\nLine-Comment: \r\nPath: /my/config1/location/config1.txt\r\n\r\nconfig2,foo\r\n"
 	if !strings.Contains(actual, expected1) {
 		t.Errorf("WriteConfigs expected config1 '%v' actual '%v'", expected1, actual)
 	}

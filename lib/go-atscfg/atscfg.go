@@ -37,6 +37,8 @@ const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 
 const ContentTypeTextASCII = `text/plain; charset=us-ascii`
 
+const LineCommentHash = "#"
+
 type ServerCapability string
 
 type ServerInfo struct {

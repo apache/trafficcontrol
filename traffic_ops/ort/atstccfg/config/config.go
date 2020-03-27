@@ -199,6 +199,7 @@ type ATSConfigFile struct {
 	tc.ATSConfigMetaDataConfigFile
 	Text        string
 	ContentType string
+	LineComment string
 }
 
 // ATSConfigFiles implements sort.Interface and sorts by the Location and then FileNameOnDisk, i.e. the full file path.

@@ -26,6 +26,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const ContentTypeURLSig = ContentTypeTextASCII
+const LineCommentURLSig = LineCommentHash
+
 func MakeURLSigConfig(
 	profileName string,
 	urlSigKeys tc.URLSigKeys,
