@@ -31,7 +31,13 @@ If a Delivery Service is assigned to a Topology, any `deliveryservice_server` as
 
 ### Traffic Portal Impact
 
-Traffic Portal will need new pages for creating and viewing Topologies, and the Delivery Service form will need to be updated to add a new Topology field for assigning a Delivery Service to a Topology. If a Delivery Service is assigned to a Topology, Traffic Portal should prohibit assigning `EDGE` servers to the Delivery Service (`ORIGIN` servers may still need to be assignable for MSO).
+Traffic Portal will need new pages for:
+- creating and viewing Topologies (and since TP sidebar menu currently has "Topology" as an item already, that may need to be renamed if "Topologies" is going to be a sub-menu item of that)
+
+Existing Traffic Portal pages will need to be updated:
+- all the delivery services and delivery service requests views, to include the new `topology` field
+- delivery service server assignment views should prohibit assigning `EDGE` servers to a delivery service that has a Topology assigned already (`ORIGIN` servers may still need to be assignable for MSO purposes)
+- the CDN snapshot view, in order to account for a new top-level section (`topologies`) in the `CRConfig`
 
 Since Delivery Services will no longer be constrained to one global Topology as they are today, it would be extremely useful to be able to visualize a Delivery Service's Topology like a tree, where each node in the tree is a cachegroup, and the edges between nodes are the primary/secondary parent relationships between them. Clicking on a particular node would show all the servers in that cachegroup that could serve a request for the Delivery Service. This visualization will most likely be different from the Topology form for creating a Topology and does not necessarily need to be provided by Traffic Portal.
 
@@ -80,12 +86,15 @@ The following table describes the `node` sub-object:
 | parents    | array of integers | required    | zero-based indexes to other nodes in the Topology's `nodes` array, where the 1st element is for the *primary* parent relationship and the 2nd element is for the *secondary* parent relationship, and so on |
 
 API constraints:
+- a Topology's `name` must consist of alphanumeric or hyphen characters
 - a Topology must have at least 1 `node`; otherwise, it is useless
 - there cannot be multiple `nodes` for the same cachegroup in a Topology
 - `parents` must have 0, 1 or 2 elements, cannot contain duplicates, cannot contain the index of its own `node`, and cannot contain the index of `nodes` whose cachegroup is of type `EDGE_LOC`
 - leaf `nodes` must be cachegroups of type `EDGE_LOC`
 - all `nodes` in the Topology must be reachable -- i.e. a `node` is either a leaf (which would be an `EDGE_LOC`) or is a parent of at least one other node
 - a Topology cannot contain a cycle (through any combination of primary/secondary parent relationships)
+- a Topology cannot be deleted if one or more Delivery Services are still assigned to it
+- a Cachegroup cannot be deleted if it is currently being used in a Topology
 
 The following new endpoints will be required:
 
@@ -248,6 +257,16 @@ All relevant Delivery Service APIs will have their JSON request and response obj
 }
 ```
 
+The `GET /deliveryservices` endpoint should be updated to support `?topology=foo` as a query parameter to retrieve all the Delivery Services that are assigned to a given Topology.
+
+##### `/cachegroups` endpoints
+
+`GET /cachegroups` should be updated to support `?topology=foo` as a query parameter to retrieve all the Cachegroups that are used in a given Topology.
+
+`DELETE /cachegroups` should be updated to return a useful error when trying to delete a Cachegroup that is currently used in a Topology.
+
+`PUT /cachegroups` should update all foreign key references if `short_name` is updated. This should be done automatically in the database via the FK references.
+
 ##### The various `/snapshot` endpoints
 
 The various `/snapshot` endpoints will need to be updated to include new Topologies data along with their associations to Delivery Services in the `CRConfig.json` snapshot. The data should only include the `EDGE_LOC` cachegroups of the Topologies, because those are all Traffic Router needs.
@@ -255,9 +274,8 @@ The various `/snapshot` endpoints will need to be updated to include new Topolog
 ##### Various endpoints that are affected by cachegroup parentage or deliveryservice-server assignment
 
 API endpoints that do things such as the following may need to be updated to take Topology-based Delivery Service assignment and parentage into account:
-- assign a Delivery Service to a server (or vice versa)
-- return the servers that are assigned to a Delivery Service (or vice versa)
-- perform an operation on "child" cachegroups -- like queueing updates on "child" caches when changing the status of a "parent" cache
+- assign a Delivery Service to a server (or vice versa). It should be prohibited to assign an `EDGE` server to a Delivery Service (or vice versa) that has a Topology assigned already.
+- perform an operation on "child" cachegroups -- like queueing updates on "child" caches when changing the status of a "parent" cache. Child caches via both Topologies and legacy Cachegroup parentage would all need to be updated in that case.
 
 #### Client Impact
 
@@ -267,7 +285,11 @@ New Go client methods will be added for the `/topologies` endpoints in order to 
 
 ##### Go structs
 
-New `Topology` and `TopologyNode` structs will be added for the `/topologies` endpoints, mapping directly to the JSON request bodies in the REST API Impact section. The `DeliveryService` struct will be updated with a new `Topology` field which is the name of the Topology the Delivery Service is assigned to.
+New structs will be added for the `/topologies` endpoints, mapping directly to the JSON request bodies in the REST API Impact section:
+- `Topology`: for the top-level Topology object, which includes the `nodes` array
+- `TopologyNode`: for objects in a Topology's `nodes` array
+
+The `DeliveryService` struct will be updated with a new `Topology` field which is the name of the Topology the Delivery Service is assigned to.
 
 ##### Traffic Ops Database
 
@@ -315,6 +337,10 @@ The `deliveryservice` table will be updated to add a new column for the topology
 - if a delivery service is assigned to a cache via a Topology, the parent and secondary parent cachegroups for that delivery service are determined via the Topology it's assigned to. Otherwise, the parents are determined by the server's cachegroup as they are today.
 
 Since new Topologies can be more than 2 tiers (`EDGE` -> `MID`), `atstccfg` may need to break some assumptions about the current 2-tier hierarchy in order to work with an arbitrary number of "forward proxy tiers" -- e.g. `EDGE` -> `MID` -> `MID` -> `ORIGIN`. Basically, `MID` caches need to be able to forward requests to other `MID` caches -- they can no longer assume that their parents are always origins.
+
+#### ATS config-related fields on Delivery Services
+
+Edge header rewrite rules and raw remap rules should still be applied only to the `EDGE` tier of Topologies. Mid header rewrite rules should probably only be applied at the *first* `MID` tier if there are multiple `MID` tiers in a Topology, because it might not be safe to assume that all mid header rewrite rules could be applied safely through multiple `MID` tiers.
 
 ### Traffic Monitor Impact
 
@@ -377,6 +403,10 @@ Until legacy `deliveryservice_server` assignments are fully removed in favor of 
 Once all Delivery Services have been migrated to Topologies, CDN operators will no longer have to "clone Delivery Service assignments" from a nearby edge cache in the same cachegroup when adding a new edge cache into the CDN. Since Topologies are composed of cachegroups, simply adding a server into a particular cachegroup will give it all the Delivery Service assignments from all the Topologies the cachegroup is used in.
 
 Troubleshooting issues with Delivery Services on the CDN may become slightly more difficult due to the fact that you will no longer be able to assume that any given Delivery Service will follow the same global hierarchy. Unique Topologies will provide unique paths through the CDN from client to origin, so an operator now needs to look up what the path *should be* based on the Delivery Service's Topology in order to triage issues along the delivery path. This may necessitate the development of Topology-based troubleshooting tools and visualizations.
+
+#### Third Party Logging/Monitoring/Analytics
+
+Any external 3rd party logging, analytics, or monitoring tools presuming a 2-tiered CDN architecture may need to be updated to deal with more dynamic and complex N-tiered Topologies, and it may become more difficult to model them accurately. For instance, each "tier" may need to be grouped or modeled differently, and relying on the server type `MID` to mean "the mid tier" will no longer be accurate.
 
 ### Developer Impact
 
