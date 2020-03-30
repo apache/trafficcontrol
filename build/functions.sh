@@ -206,7 +206,7 @@ function verify_and_set_go_version () {
     
     go_version=`$g version | awk '{print $3}'`
 
-    if [[ $go_version =~ go([1-9])\.([1-9]+) ]] && [[ ${BASH_REMATCH[1]} -ge 1 ]] && [[ ${BASH_REMATCH[2]} -ge 13 ]]; then
+    if [[ $go_version =~ go([1-9])\.([1-9]+) ]] && [[ ${BASH_REMATCH[1]} -ge 1 ]] && [[ ${BASH_REMATCH[2]} -ge 14 ]]; then
       GO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; export GO_VERSION
       GO=$g; export GO
       PATH=`dirname $g`:$PATH; export PATH
