@@ -517,6 +517,8 @@ This file sets authentication options for connections to Traffic Vault. `traffic
 :tlsConfig:	Options specifying how Traffic Ops uses TLS to connect to Traffic Vault go here. For a complete list of options, see `the crypto/tls GoDoc <https://godoc.org/crypto/tls#Config>`_.
 	:maxVersion:	This is the highest TLS version that Traffic Ops is allowed to use to connect to Traffic Vault. TLS 1.0 is 769, TLS 1.1 is 770, etc.
 
+.. note:: In addition to setting ``maxVersion`` to ``770`` in ``riak.conf``, enabling TLS 1.1 in Traffic Vault itself is required for Traffic Ops to communicate with Traffic Vault. See :ref:`Enabling TLS 1.1 <tv-admin-enable-tlsv1.1>` for details.
+
 Example riak.conf
 '''''''''''''''''
 .. include:: ../../../traffic_ops/app/conf/production/riak.conf

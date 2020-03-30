@@ -66,6 +66,9 @@ The following steps need to be performed on each Riak server in the cluster:
 
 .. _tv-admin-enable-tlsv1.1:
 
+Enabling TLS 1.1
+""""""""""""""""
+
 #. Add a line at the bottom of the :file:`riak.conf` for TLSv1.1 by setting ``tls_protocols.tlsv1.1 = on``
 #. Once the configuration file has been updated restart Riak
 #. Consult the `Riak documentation <https://docs.riak.com/riak/kv/latest/setup/installing/verify/>`_ for instructions on how to verify the installed service
