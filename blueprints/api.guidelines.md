@@ -302,7 +302,9 @@ denied access.
 
 #### 404 Not Found
 This MUST be the returned status code when the client requests a path that does
-not exist on the server.
+not exist on the server. Note that a _path_ does not include a _query string_;
+in the URL `http://example.test/some/path?query#frag` the _path_ consists of
+only `/some/path`.
 
 #### 409 Conflict
 This SHOULD be used when the request cannot be completed because the current
