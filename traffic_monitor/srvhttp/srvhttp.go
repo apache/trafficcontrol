@@ -229,11 +229,11 @@ func DateStr(t time.Time) string {
 }
 
 func (s *Server) handleRootFunc(staticFileDir string) (http.HandlerFunc, error) {
-	return s.handleFile(staticFileDir + "/index.html")
+	return s.handleFile(staticFileDir + "index.html")
 }
 
 func (s *Server) handleScriptFunc(staticFileDir string) (http.HandlerFunc, error) {
-	bytes, err := ioutil.ReadFile(staticFileDir + "/script.s")
+	bytes, err := ioutil.ReadFile(staticFileDir + "script.js")
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func (s *Server) handleScriptFunc(staticFileDir string) (http.HandlerFunc, error
 }
 
 func (s *Server) handleStyleFunc(staticFileDir string) (http.HandlerFunc, error) {
-	bytes, err := ioutil.ReadFile(staticFileDir + "/style.css")
+	bytes, err := ioutil.ReadFile(staticFileDir + "style.css")
 	if err != nil {
 		return nil, err
 	}
