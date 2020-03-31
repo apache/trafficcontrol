@@ -17,6 +17,8 @@
  * under the License.
  */
 
+"use strict";
+
 const millisecondsInSecond = 1000;
 const kilobitsInGigabit = 1000000;
 const kilobitsInMegabit = 1000;
