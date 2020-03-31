@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/hydrogen18/stoppableListener"
 )
 
@@ -232,11 +233,25 @@ func (s *Server) handleRootFunc(staticFileDir string) (http.HandlerFunc, error) 
 }
 
 func (s *Server) handleScriptFunc(staticFileDir string) (http.HandlerFunc, error) {
-	return s.handleFile(staticFileDir + "/script.js")
+	bytes, err := ioutil.ReadFile(staticFileDir + "/script.s")
+	if err != nil {
+		return nil, err
+	}
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set(rfc.ContentType, rfc.MIME_JS.String())
+		w.Write(bytes)
+	}, nil
 }
 
 func (s *Server) handleStyleFunc(staticFileDir string) (http.HandlerFunc, error) {
-	return s.handleFile(staticFileDir + "/style.css")
+	bytes, err := ioutil.ReadFile(staticFileDir + "/style.css")
+	if err != nil {
+		return nil, err
+	}
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set(rfc.ContentType, rfc.MIME_CSS.String())
+		w.Write(bytes)
+	}, nil
 }
 
 func (s *Server) handleFile(name string) (http.HandlerFunc, error) {
