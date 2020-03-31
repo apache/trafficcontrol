@@ -46,7 +46,7 @@ Request Structure
 	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 	| type        | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier |
 	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| xmlId       | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                     |
+	| xmlId       | no       | Show only the :term:`Delivery Service` that has this text-based, unique identifier                                                   |
 	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                        |
 	|             |          | array                                                                                                                                |
