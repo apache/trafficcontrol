@@ -163,8 +163,9 @@ type DeliveryServiceNullableV15 DeliveryServiceNullable // this type alias shoul
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV14
-	EcsEnabled          bool `json:"ecsEnabled" db:"ecs_enabled"`
-	RangeSliceBlockSize *int `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
+	EcsEnabled          bool    `json:"ecsEnabled" db:"ecs_enabled"`
+	RangeSliceBlockSize *int    `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
+	Topology            *string `json:"topology" db:"topology"`
 }
 
 type DeliveryServiceNullableV14 struct {
@@ -415,6 +416,14 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"topology": validation.Validate(ds,
+			validation.By(func(dsi interface{}) error {
+				ds := dsi.(*DeliveryServiceNullable)
+				if ds.Topology != nil && DSType(typeName).IsSteering() {
+					return fmt.Errorf("steering deliveryservice types cannot be assigned to a topology")
+				}
+				return nil
+			})),
 	}
 	toErrs := tovalidate.ToErrors(errs)
 	if len(toErrs) > 0 {

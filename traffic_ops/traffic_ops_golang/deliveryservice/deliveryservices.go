@@ -283,6 +283,7 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.SigningAlgorithm,
 		&ds.SSLKeyVersion,
 		&ds.TenantID,
+		&ds.Topology,
 		&ds.TRRequestHeaders,
 		&ds.TRResponseHeaders,
 		&ds.TypeID,
@@ -615,7 +616,8 @@ func updateV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	query := `
 SELECT
   ds.ecs_enabled,
-  ds.range_slice_block_size
+  ds.range_slice_block_size,
+  ds.topology
 FROM
   deliveryservice ds
 WHERE
@@ -623,6 +625,7 @@ WHERE
 	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
 		&dsV15.EcsEnabled,
 		&dsV15.RangeSliceBlockSize,
+		&dsV15.Topology,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV15.ID), nil
@@ -738,6 +741,7 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.MaxOriginConnections,
 		&ds.EcsEnabled,
 		&ds.RangeSliceBlockSize,
+		&ds.Topology,
 		&ds.ID)
 
 	if err != nil {
@@ -906,6 +910,7 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 		"logsEnabled":      dbhelpers.WhereColumnInfo{"ds.logs_enabled", api.IsBool},
 		"tenant":           dbhelpers.WhereColumnInfo{"ds.tenant_id", api.IsInt},
 		"signingAlgorithm": dbhelpers.WhereColumnInfo{"ds.signing_algorithm", nil},
+		"topology":         dbhelpers.WhereColumnInfo{"ds.topology", nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
@@ -1135,6 +1140,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.SSLKeyVersion,
 			&ds.TenantID,
 			&ds.Tenant,
+			&ds.Topology,
 			&ds.TRRequestHeaders,
 			&ds.TRResponseHeaders,
 			&ds.Type,
@@ -1655,6 +1661,7 @@ ds.range_slice_block_size,
 ds.ssl_key_version,
 ds.tenant_id,
 tenant.name,
+ds.topology,
 ds.tr_request_headers,
 ds.tr_response_headers,
 type.name,
@@ -1726,8 +1733,9 @@ anonymous_blocking_enabled=$50,
 consistent_hash_regex=$51,
 max_origin_connections=$52,
 ecs_enabled=$53,
-range_slice_block_size=$54
-WHERE id=$55
+range_slice_block_size=$54,
+topology=$55
+WHERE id=$56
 RETURNING last_updated
 `
 }
@@ -1783,6 +1791,7 @@ routing_name,
 signing_algorithm,
 ssl_key_version,
 tenant_id,
+topology,
 tr_request_headers,
 tr_response_headers,
 type,
@@ -1790,7 +1799,7 @@ xml_id,
 ecs_enabled,
 range_slice_block_size
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55)
 RETURNING id, last_updated
 `
 }

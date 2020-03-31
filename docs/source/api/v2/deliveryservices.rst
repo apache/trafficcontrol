@@ -44,6 +44,8 @@ Request Structure
 	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| tenant       | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier                  |
 	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| topology     | no       | Show only the :term:`Delivery Services` assigned to the Topology identified by this unique identifier                                   |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| type         | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier    |
 	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| accessibleTo | no       | Return the :term:`Delivery Services` accessible from a :term:`Tenant` *or it's children* identified by this integral, unique identifier |
@@ -133,6 +135,7 @@ Response Structure
 :rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
 :sslKeyVersion:        This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+:topology:             The unique identifier of the Topology that this :term:`Delivery Service` is assigned to
 :trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders:    If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:                 The :ref:`ds-types` of this :term:`Delivery Service`
@@ -234,7 +237,8 @@ Response Structure
 		],
 		"maxOriginConnections": 0,
 		"ecsEnabled": false,
-		"rangeSliceBlockSize": null
+		"rangeSliceBlockSize": null,
+		"topology": null
 	}]}
 
 
@@ -304,6 +308,7 @@ Request Structure
 :rangeSliceBlockSize:      An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3. It can only be between (inclusive) 262144 (256KB) - 33554432 (32MB).
 :sslKeyVersion:             This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:                  The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+:topology:                  The unique identifier of the Topology that this :term:`Delivery Service` is assigned to
 :trRequestHeaders:          If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders:         If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:                      The :ref:`ds-types` of this :term:`Delivery Service`
@@ -423,6 +428,7 @@ Response Structure
 :rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
 :sslKeyVersion: 	   This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+:topology:             The unique identifier of the Topology that this :term:`Delivery Service` is assigned to
 :trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders:    If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:                 The :ref:`ds-types` of this :term:`Delivery Service`
@@ -520,7 +526,8 @@ Response Structure
 			"signingAlgorithm": null,
 			"tenant": "root",
 			"ecsEnabled": true,
-			"rangeSliceBlockSize": null
+			"rangeSliceBlockSize": null,
+			"topology": null
 		}
 	]}
 
