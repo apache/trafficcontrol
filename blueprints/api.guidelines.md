@@ -513,6 +513,10 @@ Service itself has Servers as a property. Thus assignments are manipulated by
 manipulating that property. So the only endpoints necessary for fully defining
 and dealing with such relationships are `/delivery_services` and `/servers`.
 
+### Change Logging
+All manipulations of objects (i.e. any operation that is not merely "reading"
+data) MUST add a Change Log entry indicating what was changed.
+
 ## Component Impact
 The intent here is to establish guidelines *moving forward* - no breaking
 changes should be made inside a major version and this is **not** a proposal to
