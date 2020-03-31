@@ -35,7 +35,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
 func GetDataFuncs() map[string]func(config.TCCfg, io.Writer) error {
@@ -83,7 +82,7 @@ const SystemInfoParamConfigFile = `global`
 // This is identical to the /api/1.x/system/info endpoint, except it does not include a '{response: {parameters:' wrapper.
 //
 func WriteSystemInfo(cfg config.TCCfg, output io.Writer) error {
-	paramArr, err := toreq.GetConfigFileParameters(cfg, SystemInfoParamConfigFile)
+	paramArr, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile)
 	if err != nil {
 		return errors.New("getting system info parameters: " + err.Error())
 	}
@@ -100,7 +99,7 @@ func WriteSystemInfo(cfg config.TCCfg, output io.Writer) error {
 // WriteStatuses writes the Traffic Ops statuses to output.
 // Note this is identical to /api/1.x/statuses except it omits the '{response:' wrapper.
 func WriteStatuses(cfg config.TCCfg, output io.Writer) error {
-	statuses, err := toreq.GetStatuses(cfg)
+	statuses, err := cfg.TOClient.GetStatuses()
 	if err != nil {
 		return errors.New("getting statuses: " + err.Error())
 	}
@@ -113,7 +112,7 @@ func WriteStatuses(cfg config.TCCfg, output io.Writer) error {
 // WriteUpdateStatus writes the Traffic Ops server update status to output.
 // Note this is identical to /api/1.x/servers/name/update_status except it omits the '[]' wrapper.
 func WriteServerUpdateStatus(cfg config.TCCfg, output io.Writer) error {
-	status, err := toreq.GetServerUpdateStatus(cfg)
+	status, err := cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
 	if err != nil {
 		return errors.New("getting server update status: " + err.Error())
 	}
@@ -137,11 +136,11 @@ func WritePackages(cfg config.TCCfg, output io.Writer) error {
 }
 
 func GetPackages(cfg config.TCCfg) ([]atscfg.Package, error) {
-	server, err := toreq.GetServerByHostName(cfg, string(cfg.CacheHostName))
+	server, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
 	}
-	params, err := toreq.GetServerProfileParameters(cfg, server.Profile)
+	params, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
 	if err != nil {
 		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
 	}
@@ -169,11 +168,11 @@ func WriteChkconfig(cfg config.TCCfg, output io.Writer) error {
 }
 
 func GetChkconfig(cfg config.TCCfg) ([]atscfg.ChkConfigEntry, error) {
-	server, err := toreq.GetServerByHostName(cfg, string(cfg.CacheHostName))
+	server, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
 	}
-	params, err := toreq.GetServerProfileParameters(cfg, server.Profile)
+	params, err := cfg.TOClient.GetServerProfileParameters(server.Profile)
 	if err != nil {
 		return nil, errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
 	}
@@ -191,8 +190,9 @@ func GetChkconfig(cfg config.TCCfg) ([]atscfg.ChkConfigEntry, error) {
 func SetUpdateStatus(cfg config.TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
 	// TODO change this to an API path, when one exists
 	path := `/update/` + string(serverName) + `?updated=` + jsonBoolStr(queue) + `&reval_updated=` + jsonBoolStr(revalPending)
-	// RawRequest should generally never be used, but the alternatve here is to manually get the cookie and do an http.Get. We need to hit a non-API endpoint, no API endpoint exists for what we need.
-	resp, _, err := (*cfg.TOClient).RawRequest(http.MethodPost, path, nil)
+	// C and RawRequest should generally never be used, but the alternatve here is to manually get the cookie and do an http.Get. We need to hit a non-API endpoint, no API endpoint exists for what we need.
+	// TODO move to a func in TOClient?
+	resp, _, err := cfg.TOClient.C.RawRequest(http.MethodPost, path, nil)
 	if err != nil {
 		return errors.New("setting update statuses: " + err.Error())
 	}

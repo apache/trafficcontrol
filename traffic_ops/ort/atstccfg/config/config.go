@@ -22,7 +22,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"math"
 	"net/url"
 	"os"
 	"strings"
@@ -31,7 +30,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreqnew"
 
 	flag "github.com/ogier/pflag"
 )
@@ -68,7 +68,8 @@ type Cfg struct {
 
 type TCCfg struct {
 	Cfg
-	TOClient **toclient.Session
+	TOClient    *toreq.TOClient
+	TOClientNew *toreqnew.TOClient
 }
 
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
@@ -192,11 +193,6 @@ func ValidateURL(u *url.URL) error {
 		return errors.New("no host")
 	}
 	return nil
-}
-
-func RetryBackoffSeconds(currentRetry int) int {
-	// TODO make configurable?
-	return int(math.Pow(2.0, float64(currentRetry)))
 }
 
 type ATSConfigFile struct {
