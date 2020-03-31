@@ -1474,6 +1474,18 @@ ALTER TABLE to_extension_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE to_extension_id_seq OWNED BY to_extension.id;
 
+--
+-- Name: topology; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE topology (
+    name text PRIMARY KEY NOT NULL,
+    description text NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE topology OWNER TO traffic_ops;
 
 --
 -- Name: type; Type: TABLE; Schema: public; Owner: traffic_ops
