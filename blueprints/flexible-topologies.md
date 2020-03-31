@@ -95,6 +95,7 @@ API constraints:
 - a Topology cannot contain a cycle (through any combination of primary/secondary parent relationships)
 - a Topology cannot be deleted if one or more Delivery Services are still assigned to it
 - a Cachegroup cannot be deleted if it is currently being used in a Topology
+- a Topology cannot have `STEERING` or `CLIENT_STEERING` delivery services assigned to it (because those types are not assigned to caches -- their _targets_ are)
 
 The following new endpoints will be required:
 
