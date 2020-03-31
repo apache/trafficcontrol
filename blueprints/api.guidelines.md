@@ -180,8 +180,8 @@ objects - which can actually be defined - generally obey this restriction. In
 general, fulfilling this restriction means that handlers will need to require
 the entirety of an object be defined in the request body.
 
-When an object is modified, the response body MUST contain a representation of
-the object after modification.
+When an object is replaced, the response body MUST contain a representation of
+the object after replacement.
 While RFC 2616 states that servers MAY create objects for the passed
 representations if they do not already exist, Traffic Ops API endpoint authors
 MUST instead use POST handlers for object creation.
