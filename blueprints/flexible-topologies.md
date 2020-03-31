@@ -333,7 +333,7 @@ The `deliveryservice` table will be updated to add a new column for the topology
 ### ORT Impact
 
 `atstccfg` will need to be updated to request the Topologies from Traffic Ops and use that data to determine the following for config generation:
-- what delivery services are assigned to a cache via Topologies -- in addition to legacy `deliveryservice_server` assignments used today
+- what delivery services are assigned to a cache via Topologies -- in addition to legacy `deliveryservice_server` assignments used today -- still taking Server Capabilities into account
 - if a delivery service is assigned to a cache via a Topology, the parent and secondary parent cachegroups for that delivery service are determined via the Topology it's assigned to. Otherwise, the parents are determined by the server's cachegroup as they are today.
 
 Since new Topologies can be more than 2 tiers (`EDGE` -> `MID`), `atstccfg` may need to break some assumptions about the current 2-tier hierarchy in order to work with an arbitrary number of "forward proxy tiers" -- e.g. `EDGE` -> `MID` -> `MID` -> `ORIGIN`. Basically, `MID` caches need to be able to forward requests to other `MID` caches -- they can no longer assume that their parents are always origins.
@@ -350,7 +350,7 @@ There should be little (if any) impact to Traffic Monitor for this feature.
 
 Traffic Router will need to be made aware of Topologies and their associations to Delivery Services via additions to the CRConfig. No new TR profile parameters should be required to enable Topology-based routing since Topologies are configurable on a per-delivery-service basis.
 
-The CRConfig will need a new top-level field for `topologies`, which will be a map of Topology names to arrays of cachegroup names that make up the "edge tier" of that Topology. The `deliveryServices` section will add an optional `topology` field to each delivery service that is assigned to a Topology. Delivery services that have a Topology assigned will not be referenced explicitly by any `contentServer` objects. Traffic Router will use the Topology information to determine which "edge" cachegroups can be routed to for a particular delivery service. While Traffic Router *could* assume that every cache in a cachegroup for a Topology could be routed to, we might need to make Traffic Router aware of Server Capabilities so that it only routes to servers in a Topology that have the required Capabilities.
+The CRConfig will need a new top-level field for `topologies`, which will be a map of Topology names to arrays of cachegroup names that make up the "edge tier" of that Topology. The `deliveryServices` section will add an optional `topology` field to each delivery service that is assigned to a Topology. Delivery services that have a Topology assigned will not be referenced explicitly by any `contentServer` objects. Traffic Router will use the Topology information to determine which "edge" cachegroups can be routed to for a particular delivery service. Taking Server Capabilities into account, the CRConfig modifications would ideally be designed in a way that doesn't require Traffic Router to be aware of what Server Capabilities edges have.
 
 Since Topologies will be optional, new Traffic Routers should remain backwards-compatible with old CRConfigs, and old Traffic Routers should remain forwards-compatible with new CRConfigs because Traffic Router ignores unknown fields by default.
 
