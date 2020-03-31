@@ -61,9 +61,13 @@ func (s *Server) registerEndpoints(sm *http.ServeMux, endpoints map[string]http.
 	if err != nil {
 		return fmt.Errorf("Error getting root endpoint: %v", err)
 	}
-	handleSortableJs, err := s.handleSortableFunc(staticFileDir)
+	handleScript, err := s.handleScriptFunc(staticFileDir)
 	if err != nil {
-		return fmt.Errorf("Error getting sortable endpoint: %v", err)
+		return fmt.Errorf("Error getting script endpoint: %v", err)
+	}
+	handleStyle, err := s.handleStyleFunc(staticFileDir)
+	if err != nil {
+		return fmt.Errorf("Error getting style endpoint: %v", err)
 	}
 
 	for path, f := range endpoints {
@@ -71,7 +75,8 @@ func (s *Server) registerEndpoints(sm *http.ServeMux, endpoints map[string]http.
 	}
 
 	sm.HandleFunc("/", handleRoot)
-	sm.HandleFunc("/sorttable.js", handleSortableJs)
+	sm.HandleFunc("/script.js", handleScript)
+	sm.HandleFunc("/style.css", handleStyle)
 
 	return nil
 }
@@ -226,8 +231,12 @@ func (s *Server) handleRootFunc(staticFileDir string) (http.HandlerFunc, error) 
 	return s.handleFile(staticFileDir + "/index.html")
 }
 
-func (s *Server) handleSortableFunc(staticFileDir string) (http.HandlerFunc, error) {
-	return s.handleFile(staticFileDir + "/sorttable.js")
+func (s *Server) handleScriptFunc(staticFileDir string) (http.HandlerFunc, error) {
+	return s.handleFile(staticFileDir + "/script.js")
+}
+
+func (s *Server) handleStyleFunc(staticFileDir string) (http.HandlerFunc, error) {
+	return s.handleFile(staticFileDir + "/style.css")
 }
 
 func (s *Server) handleFile(name string) (http.HandlerFunc, error) {
