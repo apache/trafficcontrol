@@ -923,12 +923,12 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 	if accessibleTo, ok := params["accessibleTo"]; ok {
 		if err := api.IsInt(accessibleTo); err != nil {
 			log.Errorln("unknown parameter value: " + err.Error())
-			return nil, nil, tc.DBError, http.StatusInternalServerError
+			return nil, errors.New("accessibleTo must be an integer"), nil, http.StatusBadRequest
 		}
 		accessibleTo, _ := strconv.Atoi(accessibleTo)
 		accessibleTenants, err := tenant.GetUserTenantIDListTx(tx.Tx, accessibleTo)
 		if err != nil {
-			log.Errorln("unable to get teanants: " + err.Error())
+			log.Errorln("unable to get tenants: " + err.Error())
 			return nil, nil, tc.DBError, http.StatusInternalServerError
 		}
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
