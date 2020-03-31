@@ -333,7 +333,7 @@ other components are not functioning properly, or what process failed. Generally
 it is advisable that the resultant \code{alerts} array entry just say "Internal
 Server Error" and nothing else.
 
-#### 501 Not Implemented}
+#### 501 Not Implemented
 This is the response code used when the client requests an API version not
 implemented by the server. It SHOULD NOT be used in any other case.
 
