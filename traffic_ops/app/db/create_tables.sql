@@ -1503,6 +1503,23 @@ CREATE TABLE topology_cachegroup (
 ALTER TABLE topology_cachegroup OWNER TO traffic_ops;
 
 --
+-- Name: topology_cachegroup_parents; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE topology_cachegroup_parents (
+    child bigint NOT NULL,
+    parent bigint NOT NULL,
+    rank integer NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT topology_cachegroup_parents_rank_check CHECK (((rank = 1) OR (rank = 2))),
+    CONSTRAINT unique_child_rank UNIQUE (child, rank),
+    CONSTRAINT unique_child_parent UNIQUE (child, parent)
+);
+
+
+ALTER TABLE topology_cachegroup_parents OWNER TO traffic_ops;
+
+--
 -- Name: type; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -2604,6 +2621,18 @@ CREATE INDEX origin_tenant_fkey ON origin USING btree (tenant);
 CREATE INDEX topology_cachegroup_cachegroup_fkey ON topology_cachegroup USING btree (cachegroup);
 
 --
+-- Name: topology_cachegroup_parents_child_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX topology_cachegroup_parents_child_fkey ON topology_cachegroup_parents USING btree (child);
+
+--
+-- Name: topology_cachegroup_parents_parents_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX topology_cachegroup_parents_parents_fkey ON topology_cachegroup_parents USING btree (parent);
+
+--
 -- Name: topology_cachegroup_topology_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
@@ -3271,6 +3300,20 @@ ALTER TABLE ONLY deliveryservice_tmuser
 
 ALTER TABLE ONLY topology_cachegroup
     ADD CONSTRAINT topology_cachegroup_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup(short_name) ON UPDATE CASCADE ON DELETE CASCADE;
+
+--
+-- Name: topology_cachegroup_parents topology_cachegroup_parents_child_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY topology_cachegroup_parents
+    ADD CONSTRAINT topology_cachegroup_parents_child_fkey FOREIGN KEY (child) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+--
+-- Name: topology_cachegroup_parents topology_cachegroup_parents_parent_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY topology_cachegroup_parents
+    ADD CONSTRAINT topology_cachegroup_parents_parent_fkey FOREIGN KEY (parent) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
 -- Name: topology_cachegroup topology_cachegroup_topology_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
