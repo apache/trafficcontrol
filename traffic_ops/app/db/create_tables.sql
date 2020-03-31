@@ -1488,6 +1488,21 @@ CREATE TABLE topology (
 ALTER TABLE topology OWNER TO traffic_ops;
 
 --
+-- Name: topology_cachegroup; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE topology_cachegroup (
+    id bigint PRIMARY KEY NOT NULL,
+    topology text NOT NULL,
+    cachegroup text NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT unique_topology_cachegroup UNIQUE (topology, cachegroup)
+);
+
+
+ALTER TABLE topology_cachegroup OWNER TO traffic_ops;
+
+--
 -- Name: type; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -2582,6 +2597,18 @@ CREATE INDEX origin_cachegroup_fkey ON origin USING btree (cachegroup);
 
 CREATE INDEX origin_tenant_fkey ON origin USING btree (tenant);
 
+--
+-- Name: topology_cachegroup_cachegroup_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX topology_cachegroup_cachegroup_fkey ON topology_cachegroup USING btree (cachegroup);
+
+--
+-- Name: topology_cachegroup_topology_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX topology_cachegroup_topology_fkey ON topology_cachegroup USING btree (topology);
+
 
 --
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
@@ -3238,6 +3265,19 @@ ALTER TABLE ONLY deliveryservice_tmuser
 ALTER TABLE ONLY deliveryservice_tmuser
     ADD CONSTRAINT fk_tm_user_id FOREIGN KEY (tm_user_id) REFERENCES tm_user(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
+--
+-- Name: topology_cachegroup topology_cachegroup_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY topology_cachegroup
+    ADD CONSTRAINT topology_cachegroup_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup(short_name) ON UPDATE CASCADE ON DELETE CASCADE;
+
+--
+-- Name: topology_cachegroup topology_cachegroup_topology_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY topology_cachegroup
+    ADD CONSTRAINT topology_cachegroup_topology_fkey FOREIGN KEY (topology) REFERENCES topology(name) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
 -- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
