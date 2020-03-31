@@ -380,7 +380,15 @@ method.
 
 When accepting data in the request body of requests, the endpoint MUST properly
 document the object representations (properties and their types) it accepts and
-MUST reject semantically invalid data with a `400 Bad Request`.
+MUST reject semantically invalid data with a `400 Bad Request`.  For example,
+if an endpoint specifies it accepts a representation of a Foo object, assuming
+Foo objects possess only the Bar property which is an arbitrary string, then
+the endpoint MUST accept `{"bar": "testquest"}` as semantically valid (The data
+may be rejected for other reasons, e.g. if a Foo with such a Bar property
+already exists and Bars must be unique among all Foos) and MUST reject
+`{"bar": "testquest", "someOtherProperty": 10}` as semantically invalid. This
+is in contrast to the API's behavior at the time of this writing, which
+silently ignores unrecognized properties of request body objects.
 
 The decision to pass data in the request body or query string is mainly up to
 the author, but some helpful tips:
