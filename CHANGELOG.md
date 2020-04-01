@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/servercheck `GET`
   - /api/2.0/servercheck/extensions/:id `(DELETE)`
   - /api/2.0/servercheck/extensions `(GET, POST)`
+  - /api/2.0/servers/:name-or-id/update `POST`
   - /api/2.0/plugins `(GET)`
   - /api/2.0/snapshot `PUT`
 
