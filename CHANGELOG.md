@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Traffic Monitor to default to polling both IPv4 and IPv6.
 
 ### Deprecated/Removed
+- The Traffic Ops `db/admin.pl` script has now been removed. Please use the `db/admin` binary instead.
 - Traffic Ops Python client no longer supports Python 2.
 - Traffic Ops API Endpoints
   - /api_capabilities/:id

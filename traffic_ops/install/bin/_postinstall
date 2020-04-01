@@ -638,7 +638,7 @@ sub invoke_db_admin_pl {
     my $action    = shift;
 
     chdir("/opt/traffic_ops/app");
-    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", $action );
+    my $result = InstallUtils::execCommand( "db/admin", "--env=production", $action );
 
     if ( $result != 0 ) {
         errorOut("Database $action failed");
