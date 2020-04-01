@@ -47,6 +47,7 @@ my $override_hostname_full = '';
 my $override_domainname = '';
 my $use_cache = 1;
 my $cache_max_age_seconds = 900;
+my $to_timeout_ms = 30000;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
@@ -59,6 +60,7 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "override_domainname=s" => \$override_domainname,
             "use_cache=i" => \$use_cache,
             "cache_max_age_seconds=i" => \$cache_max_age_seconds,
+            "to_timeout_ms=i" => \$to_timeout_ms,
           );
 
 if ( $#ARGV < 1 ) {
@@ -363,6 +365,7 @@ sub usage {
 	print "\t   override_domainname=<text>     => override the domainname of the OS for config generation. Default = ''.\n";
 	print "\t   use_cache=<0|1>                => whether to use cached Traffic Ops data for config generation. Default = 1, use cache.\n";
 	print "\t   cache_max_age_seconds=<time>   => the max time in seconds to use cache files. Default = 900 (15 minutes).\n";
+	print "\t   to_timeout_ms=<time>           => the Traffic Ops request timeout in milliseconds. Default = 30000 (30 seconds).\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -1527,7 +1530,12 @@ sub lwp_get {
 		$cache_age_arg = "--cache-file-max-age-seconds=$cache_max_age_seconds";
 	}
 
-	$response_content = `$atstccfg_cmd $no_cache_arg $cache_age_arg --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
+	my $timeout_arg='';
+	if (length $to_timeout_ms > 0) {
+		$timeout_arg = "--traffic-ops-timeout-milliseconds=$to_timeout_ms";
+	}
+
+	$response_content = `$atstccfg_cmd $no_cache_arg $cache_age_arg $timeout_arg --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
 
 	my $atstccfg_exit_code = $?;
 	$atstccfg_exit_code = atstccfg_code_to_http_code($atstccfg_exit_code);
