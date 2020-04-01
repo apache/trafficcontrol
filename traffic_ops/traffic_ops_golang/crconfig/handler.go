@@ -31,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
 )
@@ -174,6 +175,16 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 			return
 		}
 		cdn = name
+	} else {
+		_, ok, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdn))
+		if err != nil {
+			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Error getting CDN ID from name: "+err.Error()), deprecated, &alt)
+			return
+		}
+		if !ok {
+			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("No CDN ID found with that name"), nil, deprecated, &alt)
+			return
+		}
 	}
 
 	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
