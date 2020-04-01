@@ -163,8 +163,8 @@ var DefaultConfig = Config{
 	CRConfigBackupFile:           CRConfigBackupFile,
 	TMConfigBackupFile:           TMConfigBackupFile,
 	TrafficOpsDiskRetryMax:       2,
-	CachePollingProtocol:         IPv4Only,
-	PeerPollingProtocol:          IPv4Only,
+	CachePollingProtocol:         Both,
+	PeerPollingProtocol:          Both,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/

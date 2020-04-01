@@ -54,9 +54,9 @@ Traffic Monitor is configured via two JSON configuration files, :file:`traffic_o
 
 Polling protocol can be set for peers and caches and has 3 options:
 
-:ipv4only (the default): Traffic Monitor will communicate with the peers or caches only over IPv4
+:ipv4only: Traffic Monitor will communicate with the peers or caches only over IPv4
 :ipv6only: Traffic Monitor will communicate with the peers or caches only over IPv6 (use case for peers is if the other Traffic Monitor are only available over IPv6)
-:both: Traffic Monitor will alternate its communication between IPv4 and IPv6 (note: this does not affect the polling frequency so if polling frequency is 1 second IPv4 will be polled every 2 seconds)
+:both (the default): Traffic Monitor will alternate its communication between IPv4 and IPv6 (note: this does not affect the polling frequency so if polling frequency is 1 second IPv4 will be polled every 2 seconds)
 
 .. Note:: ``both`` will poll IPv4 and IPv6 and report on availability based on if the respective IP addresses are defined on the server.  So if only an IPv4 address is defined and the protocol is set to ``both`` then it will only show the availability over IPv4, but if both addresses are defined then it will show availability based on IPv4 and IPv6.
 
