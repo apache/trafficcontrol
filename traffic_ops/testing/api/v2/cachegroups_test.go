@@ -25,7 +25,8 @@ import (
 
 func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups}, func() {
-		GetTestCacheGroups(t)
+		GetTestCacheGroupsByName(t)
+		GetTestCacheGroupsByShortName(t)
 		CheckCacheGroupsAuthentication(t)
 		UpdateTestCacheGroups(t)
 	})
@@ -63,11 +64,20 @@ func CreateTestCacheGroups(t *testing.T) {
 	}
 }
 
-func GetTestCacheGroups(t *testing.T) {
+func GetTestCacheGroupsByName(t *testing.T) {
 	for _, cg := range testData.CacheGroups {
 		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 		if err != nil {
 			t.Errorf("cannot GET CacheGroup by name: %v - %v", err, resp)
+		}
+	}
+}
+
+func GetTestCacheGroupsByShortName(t *testing.T) {
+	for _, cg := range testData.CacheGroups {
+		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.ShortName)
+		if err != nil {
+			t.Errorf("cannot GET CacheGroup by shortName: %v - %v", err, resp)
 		}
 	}
 }
