@@ -323,12 +323,6 @@ status
 	return query
 }
 
-func deleteRequestQuery() string {
-	query := `DELETE FROM deliveryservice_request
-WHERE id=:id`
-	return query
-}
-
 ////////////////////////////////////////////////////////////////
 // Assignment change
 

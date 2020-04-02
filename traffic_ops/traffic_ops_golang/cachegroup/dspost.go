@@ -268,11 +268,6 @@ INSERT INTO profile_parameter (parameter, profile) (
 	return nil
 }
 
-func deleteConfigFile(tx *sql.Tx, configFile string) error {
-	_, err := tx.Exec(`DELETE FROM parameter WHERE name = 'location' AND config_file = $1`, configFile)
-	return err
-}
-
 func getDSTenants(tx *sql.Tx, dsIDs []int64) ([]int64, error) {
 	q := `
 SELECT COALESCE(tenant_id, 0) FROM deliveryservice

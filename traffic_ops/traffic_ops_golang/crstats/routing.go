@@ -206,16 +206,6 @@ func getCRSStats(respond chan<- RouterResp, wg *sync.WaitGroup, routerFQDN, cdn 
 	respond <- r
 }
 
-func getRouterForwardProxy(tx *sql.Tx) (string, error) {
-	forwardProxy, forwardProxyExists, err := dbhelpers.GetGlobalParam(tx, RouterProxyParameter)
-	if err != nil {
-		return "", errors.New("getting global router proxy parameter: " + err.Error())
-	} else if !forwardProxyExists {
-		forwardProxy = ""
-	}
-	return forwardProxy, nil
-}
-
 // getCDNRouterFQDNs returns an FQDN, including port, of an online router for each CDN, for each router. If a CDN has no online routers, that CDN will not have an entry in the map. The port returned is the API port.
 func getCDNRouterFQDNs(tx *sql.Tx, requiredCDN *string) (map[tc.CDNName][]string, error) {
 	rows, err := tx.Query(`

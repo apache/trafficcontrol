@@ -269,12 +269,6 @@ AND s.server = ANY(:serverids)
 	return selectStmt, nil
 }
 
-func deleteQuery() string {
-	query := `DELETE FROM deliveryservice_server
-	WHERE deliveryservice=:deliveryservice and server=:server`
-	return query
-}
-
 type DSServerIds struct {
 	DsId    *int  `json:"dsId" db:"deliveryservice"`
 	Servers []int `json:"servers"`
@@ -282,11 +276,6 @@ type DSServerIds struct {
 }
 
 type TODSServerIds DSServerIds
-
-func createServersForDsIdRef() *TODSServerIds {
-	var dsserversRef = TODSServerIds(DSServerIds{})
-	return &dsserversRef
-}
 
 func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
@@ -375,11 +364,6 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
-
-func createServersRef() *TODeliveryServiceServers {
-	serversRef := TODeliveryServiceServers(tc.DeliveryServiceServers{})
-	return &serversRef
-}
 
 // GetCreateHandler assigns an existing Server to and existing Deliveryservice in response to api/1.1/deliveryservices/{xml_id}/servers
 func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
@@ -491,11 +475,6 @@ func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (err
 func insertIdsQuery() string {
 	query := `INSERT INTO deliveryservice_server (deliveryservice, server)
 VALUES (:id, :server )`
-	return query
-}
-
-func selectServerIds() string {
-	query := `SELECT id FROM server WHERE host_name in (?)`
 	return query
 }
 
@@ -674,17 +653,6 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 		returnable = append(returnable, ds)
 	}
 	return returnable, nil, nil, http.StatusOK
-}
-
-func updateQuery() string {
-	query := `UPDATE
-	profile_parameter SET
-	profile=:profile_id,
-	parameter=:parameter_id
-	WHERE profile=:profile_id AND
-      parameter = :parameter_id
-      RETURNING last_updated`
-	return query
 }
 
 type DSInfo struct {
