@@ -1,8 +1,13 @@
 package topology
 
 import (
+	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
 )
 
@@ -22,7 +27,29 @@ func (topology *TOTopology) GetType() string {
 }
 
 func (topology *TOTopology) Validate() error {
-	return nil
+	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters.")
+	rules := validation.Errors{}
+	rules["name"] = validation.Validate(topology.Name, validation.Required, nameRule)
+
+	nodeCount := len(topology.Nodes)
+	rules["length"] = validation.Validate(nodeCount, validation.Min(1))
+	cacheGroups := make([]*tc.CacheGroupNullable, nodeCount)
+	var err error
+	for index := 0; index < nodeCount; index++ {
+		node := &topology.Nodes[index]
+		rules[fmt.Sprintf("node %v parents size", index)] = validation.Validate(node.Parents, validation.Length(0, 2))
+		rules[fmt.Sprintf("node %v duplicate parents", index)] = checkForDuplicateParents(&topology.Nodes, index)
+		if cacheGroups[index], err = cachegroup.GetCacheGroupByName(node.Cachegroup, &topology.APIInfoImpl); err != nil {
+			rules[fmt.Sprintf("node %v parents size", index)] = fmt.Errorf("error getting cachegroup %v: %v", node.Cachegroup, err.Error())
+		}
+	}
+	rules["duplicate cachegroup name"] = checkUniqueCacheGroupNames(topology.Nodes)
+
+	for index := 0; index < nodeCount; index++ {
+		rules["parents edge type"] = checkForEdgeParents(&topology.Nodes, &cacheGroups, index)
+	}
+	errs := tovalidate.ToErrors(rules)
+	return util.JoinErrs(errs)
 }
 
 // Implementation of the Identifier, Validator interface functions

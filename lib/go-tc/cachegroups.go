@@ -95,3 +95,7 @@ type CachegroupQueueUpdatesRequest struct {
 	CDN    *CDNName         `json:"cdn"`
 	CDNID  *util.JSONIntStr `json:"cdnId"`
 }
+
+const (
+	EdgeCacheGroupType = "EDGE_LOC"
+)

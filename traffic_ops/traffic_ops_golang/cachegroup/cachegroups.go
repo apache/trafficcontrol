@@ -379,6 +379,21 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 	return nil
 }
 
+func GetCacheGroupByName(name string, apiInfo *api.APIInfoImpl) (*tc.CacheGroupNullable, error) {
+	apiInfo.ReqInfo.Params = map[string]string{"name": name}
+	cacheGroup := TOCacheGroup{APIInfoImpl: *apiInfo}
+	result, userErr, sysErr, _ := cacheGroup.Read()
+	if userErr != nil || sysErr != nil {
+		return nil, util.JoinErrs([]error{userErr, sysErr})
+	}
+	if len(result) == 0 {
+		return nil, fmt.Errorf("No cache group exists by the name of %v", name)
+	}
+
+	cacheGroup = result[0].(TOCacheGroup)
+	return &cacheGroup.CacheGroupNullable, nil
+}
+
 func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
