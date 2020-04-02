@@ -3,3 +3,4 @@ etc/*
 docker/*
 build/*
 dist/*
+bower_components/*
