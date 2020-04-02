@@ -511,10 +511,10 @@ rascal.properties
 '''''''''''''''''
 This Config File is meant to be on Parameters assigned to either Traffic Monitor Profiles_ or :term:`cache server` Profiles_. Its allowed :ref:`Parameter Names <parameter-name>` are all configuration options for Traffic Monitor. The :ref:`Names <parameter-name>` with meaning are as follows.
 
+.. seealso:: :ref:`health-proto`
+
 health.threshold.loadavg
 	The Value_ of this Parameter sets the "load average" above which the associated :ref:`Profile <profiles>`'s :term:`cache server` will be considered "unhealthy".
-
-	.. seealso:: :ref:`health-proto`
 
 	.. seealso:: The definition of a "load average" can be found in the documentation for the Linux/Unix command :manpage:`uptime(1)`.
 
@@ -523,9 +523,12 @@ health.threshold.loadavg
 health.threshold.availableBandwidthInKbps
 	The Value_ of this Parameter sets the amount of bandwidth (in kilobits per second) that Traffic Control will try to keep available on the :term:`cache server`. For example a Value_ of ">1500000" indicates that the :term:`cache server` will be marked "unhealthy" if its available remaining bandwidth on the network interface used by the caching proxy falls below 1.5Gbps.
 
-	.. seealso:: :ref:`health-proto`
-
 	.. caution:: If more than one Parameter with this :ref:`parameter-name` and Config File exist on the same :ref:`Profile <profiles>` with different :ref:`Values <parameter-value>`, the actual Value_ used by any given Traffic Monitor instance is undefined (though it will be the Value_ of one of those Parameters).
+
+history.count
+	The Value_ of this Parameter sets the maximum number of collected statistics will retain at a time. For example, if this is "30", then Traffic Monitor will keep up to the past 30 collected statistics runs for the :term:`cache servers` using the :ref:`Profile <profiles>` that has this Parameter. The minimum history size is 1, and if this Parameter's Value_ is set below that, it will be treated as though it were 1.
+
+	.. caution:: This **must** be an integer. What happens when the Value_ of this Parameter is *not* an integer is not known to this author; at a guess, in all likelihood it would be treated as though it were 1 and warnings/errors would be logged by Traffic Monitor and/or Traffic Ops. However, this is not known and setting it improperly is potentially dangerous, so *please ensure it is* **always** *an integer*.
 
 records.config
 ''''''''''''''
