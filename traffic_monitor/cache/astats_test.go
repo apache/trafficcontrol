@@ -140,3 +140,11 @@ func TestAstatsPrecompute(t *testing.T) {
 		}
 	}
 }
+
+func ExampleLoadavgFromRawLine() {
+	loadavg, err := LoadavgFromRawLine("0.30 0.12 0.21 1/863 1421")
+	fmt.Println(err)
+	fmt.Printf("%.2f %.2f %.2f %d/%d %d", loadavg.One, loadavg.Five, loadavg.Fifteen, loadavg.CurrentProcesses, loadavg.TotalProcesses, loadavg.LatestPID)
+	// Output: <nil>
+	// 0.30 0.12 0.21 1/863 1421
+}
