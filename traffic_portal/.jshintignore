@@ -2,5 +2,6 @@ node_modules/*
 etc/*
 docker/*
 build/*
-dist/*
-bower_components/*
+app/dist/*
+app/bower_components/*
+app/src/assets/js/*
