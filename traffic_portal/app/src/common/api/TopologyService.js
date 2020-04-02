@@ -26,53 +26,36 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 				"desc": "a topology for Foo DSes",
 				"nodes": [
 					{
-						"id": 0,
-						"cachegroup": "aurora",
+						"cachegroup": "us-de-newcastle",
 						"parents": [
-							1,
-							2
-						]
-					},
-					{
-						"id": 1,
-						"cachegroup": "denver",
-						"parents": [
-							5,
-							6
-						]
-					},
-					{
-						"id": 2,
-						"cachegroup": "sac",
-						"parents": [
-							5,
-							6
-						]
-					},
-					{
-						"id": 3,
-						"cachegroup": "boston",
-						"parents": [
-							6,
+							4,
 							5
 						]
 					},
 					{
-						"id": 4,
-						"cachegroup": "albany",
+						"cachegroup": "us-ga-atlanta",
 						"parents": [
-							5,
-							6
+							3,
+							5
 						]
 					},
 					{
-						"id": 5,
-						"cachegroup": "mid-west",
+						"cachegroup": "us-co-denver",
+						"parents": [
+							5,
+							4
+						]
+					},
+					{
+						"cachegroup": "mid-southcentral",
 						"parents": []
 					},
 					{
-						"id": 6,
-						"cachegroup": "mid-east",
+						"cachegroup": "mid-northeast",
+						"parents": []
+					},
+					{
+						"cachegroup": "mid-west",
 						"parents": []
 					}
 				]

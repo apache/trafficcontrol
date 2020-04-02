@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var FormEditTopologyController = function(topologies, $scope, $controller, $uibModal, $anchorScroll, locationUtils, topologyService) {
+var FormEditTopologyController = function(topologies, cacheGroups, $scope, $controller, $uibModal, $anchorScroll, locationUtils, topologyService) {
 
 	// extends the FormTopologyController to inherit common methods
-	angular.extend(this, $controller('FormTopologyController', { topology: topologies[0], $scope: $scope }));
+	angular.extend(this, $controller('FormTopologyController', { topology: topologies[0], cacheGroups: cacheGroups, $scope: $scope }));
 
 	var deleteTopology = function(topology) {
 		topologyService.deleteTopology(topology.id)
@@ -68,5 +68,5 @@ var FormEditTopologyController = function(topologies, $scope, $controller, $uibM
 
 };
 
-FormEditTopologyController.$inject = ['topologies', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'topologyService'];
+FormEditTopologyController.$inject = ['topologies', 'cacheGroups', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'topologyService'];
 module.exports = FormEditTopologyController;

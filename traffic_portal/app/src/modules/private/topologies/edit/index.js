@@ -29,6 +29,9 @@ module.exports = angular.module('trafficPortal.private.topologies.edit', [])
 						resolve: {
 							topologies: function($stateParams, topologyService) {
 								return topologyService.getTopologies({ id: $stateParams.topologyId });
+							},
+							cacheGroups: function(cacheGroupService) {
+								return cacheGroupService.getCacheGroups();
 							}
 						}
 					}

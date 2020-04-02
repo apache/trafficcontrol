@@ -18,4 +18,5 @@
  */
 
 module.exports = angular.module('trafficPortal.table.cacheGroups', [])
-    .controller('TableCacheGroupsController', require('./TableCacheGroupsController'));
+    .controller('TableCacheGroupsController', require('./TableCacheGroupsController'))
+    .controller('TableSelectCacheGroupsController', require('./TableSelectCacheGroupsController'));

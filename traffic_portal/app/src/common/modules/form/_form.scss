@@ -270,3 +270,9 @@ input:focus + .slider {
 input:checked + .slider::before {
   transform: translateX(13px);
 }
+
+#tree-root {
+	.tree-node.error, .tree-node.error:hover {
+		background-color: #f2dede;
+	}
+}

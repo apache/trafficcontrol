@@ -87,20 +87,20 @@ under the License.
 
 
         <script type="text/ng-template" id="nodes_renderer.html">
-            <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content">
+            <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content" ng-class="{'error': (node.type === 'MID_LOC' || node.type === 'ORG_LOC') && (!node.children || node.children.length == 0)}">
                 <a class="btn btn-success btn-xs" ng-if="node.children && node.children.length > 0" data-nodrag ng-click="toggle(this)">
                     <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
-                </a> {{node.cachegroup}}
-                <a class="pull-right btn btn-danger btn-xs" data-nodrag ng-click="remove(this)">
+                </a> {{node.cachegroup}} [{{node.type}}]
+                <a title="Remove {{node.cachegroup}} Cache Group" class="pull-right btn btn-danger btn-xs" data-nodrag ng-click="deleteCacheGroup(this)">
                     <i class="fa fa-times"></i>
                 </a>
-                <a class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="newSubItem(this)" style="margin-right: 8px;">
+                <a ng-disabled="node.type === 'EDGE_LOC'" title="{{(node.type !== 'EDGE_LOC') ? 'Add cache groups to ' + node.cachegroup : 'Cache groups cannot be added to EDGE_LOC cache groups'}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
                     <i class="fa fa-plus"></i>
                 </a>
                 <a class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="viewServers(this)" style="margin-right: 8px;">
                     <i class="fa fa-server"></i>
                 </a>
-                <a class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="second()" style="margin-right: 8px;">
+                <a title="Set Secondary Parent Cache Group for {{node.cachegroup}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="second()" style="margin-right: 8px;">
                     {{(node.secParent) ? node.secParent : 'None'}}
                 </a>
             </div>
