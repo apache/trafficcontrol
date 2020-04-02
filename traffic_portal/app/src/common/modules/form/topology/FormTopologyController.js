@@ -76,7 +76,13 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 			}
 		});
 
-		$scope.massaged = roots;
+		$scope.massaged = [
+			{
+				cachegroup: "ORIGIN LAYER",
+				type: "ORIGIN_LAYER",
+				children: roots
+			}
+		];
 
 		// console.log(_.flatten(_.map(roots, _.values)) );
 
@@ -106,88 +112,25 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 		})
 	};
 
-	$scope.target = [
-		{
-			"id": 3,
-			"depth": 0,
-			"secParent": "",
-			"title": "mid-west",
-			"name": "mid-west",
-			"type": "MID_LOC",
-			"nodrop": true,
-			"children": [
-				{
-					"id": 18,
-					"depth": 1,
-					"secParent": "mid-east",
-					"title": "denver",
-					"name": "denver",
-					"type": "MID_LOC",
-					"children": [
-						{
-							"id": 41,
-							"depth": 2,
-							"secParent": "sacramento",
-							"size": 100,
-							"title": "aurora",
-							"name": "aurora",
-							"type": "EDGE_LOC",
-							"children": []
-						}
-					]
-				},
-				{
-					"id": 1,
-					"depth": 1,
-					"secParent": "mid-east",
-					"title": "sacramento",
-					"name": "sacramento",
-					"children": []
-				}
-			]
-		},
-		{
-			"id": 2,
-			"depth": 0,
-			"secParent": "",
-			"title": "mid-east",
-			"name": "mid-east",
-			"nodrop": true,
-			"children": [
-				{
-					"id": 21,
-					"depth": 1,
-					"secParent": "mid-west",
-					"size": 100,
-					"title": "boston",
-					"name": "boston",
-					"children": []
-				},
-				{
-					"id": 22,
-					"depth": 1,
-					"secParent": "mid-west",
-					"size": 200,
-					"title": "albany",
-					"name": "albany",
-					"children": []
-				}
-			]
-		}
-	];
-
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	$scope.hasError = formUtils.hasError;
 
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
+	$scope.nodeLabel = function(node) {
+		if (node.type === 'ORIGIN_LAYER') return 'ORIGIN LAYER';
+		return node.cachegroup + ' [' + node.type + ']'
+	};
+
 	$scope.second = function() {
 		alert('add 2nd parent');
 	};
 
-	$scope.deleteCacheGroup = function(scope) {
-		console.log(scope);
+	$scope.deleteCacheGroup = function(node, scope) {
+
+		if (node.type === 'ORIGIN_LAYER') return;
+
 		let cg = scope.$nodeScope.$modelValue.cachegroup;
 		if (confirm("Remove " + cg + " and all its children?")){
 			scope.remove();

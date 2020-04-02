@@ -45,7 +45,7 @@ under the License.
                 </div>
             </div>
             <div class="form-group">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache groups *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache Groups *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <div ui-tree="treeOptions" id="tree-root">
                         <ol ui-tree-nodes ng-model="massaged">
@@ -61,53 +61,41 @@ under the License.
         </form>
 
         <div class="row">
-            <div class="col-md-4 col-sm-4 col-xs-12">
+            <div class="col-md-6 col-sm-6 col-xs-12">
                 <div class="info">
                     {{info}}
                 </div>
                 <pre class="code">{{ topology.nodes | json }}</pre>
             </div>
-            <div class="col-md-4 col-sm-4 col-xs-12">
+            <div class="col-md-6 col-sm-6 col-xs-12">
                 <div class="info">
                     {{info}}
                 </div>
                 <pre class="code">{{ massaged | json }}</pre>
             </div>
-            <div class="col-md-4 col-sm-4 col-xs-12">
-                <div class="info">
-                    {{info}}
-                </div>
-                <pre class="code">{{ target | json }}</pre>
-            </div>
         </div>
-
-
     </div>
 </div>
 
-
-        <script type="text/ng-template" id="nodes_renderer.html">
-            <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content" ng-class="{'error': (node.type === 'MID_LOC' || node.type === 'ORG_LOC') && (!node.children || node.children.length == 0)}">
-                <a class="btn btn-success btn-xs" ng-if="node.children && node.children.length > 0" data-nodrag ng-click="toggle(this)">
-                    <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
-                </a> {{node.cachegroup}} [{{node.type}}]
-                <a title="Remove {{node.cachegroup}} Cache Group" class="pull-right btn btn-danger btn-xs" data-nodrag ng-click="deleteCacheGroup(this)">
-                    <i class="fa fa-times"></i>
-                </a>
-                <a ng-disabled="node.type === 'EDGE_LOC'" title="{{(node.type !== 'EDGE_LOC') ? 'Add cache groups to ' + node.cachegroup : 'Cache groups cannot be added to EDGE_LOC cache groups'}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
-                    <i class="fa fa-plus"></i>
-                </a>
-                <a class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="viewServers(this)" style="margin-right: 8px;">
-                    <i class="fa fa-server"></i>
-                </a>
-                <a title="Set Secondary Parent Cache Group for {{node.cachegroup}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="second()" style="margin-right: 8px;">
-                    {{(node.secParent) ? node.secParent : 'None'}}
-                </a>
-            </div>
-            <ol ui-tree-nodes="" ng-model="node.children" ng-class="{hidden: collapsed}">
-                <li ng-repeat="node in node.children" ui-tree-node ng-include="'nodes_renderer.html'"></li>
-            </ol>
-        </script>
-
+<script type="text/ng-template" id="nodes_renderer.html">
+    <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content" ng-class="{'error': (node.type === 'MID_LOC' || node.type === 'ORG_LOC') && (!node.children || node.children.length == 0), 'origin': node.type === 'ORIGIN_LAYER' || node.type === 'ORG_LOC'}">
+        <a class="btn btn-success btn-xs" ng-if="node.children && node.children.length > 0" data-nodrag ng-click="toggle(this)">
+            <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
+        </a> {{nodeLabel(node)}}
+        <a ng-if="node.type !== 'ORIGIN_LAYER'" title="Remove {{node.cachegroup}} Cache Group" class="pull-right btn btn-danger btn-xs" data-nodrag ng-click="deleteCacheGroup(node, this)">
+            <i class="fa fa-times"></i>
+        </a>
+        <a ng-disabled="node.type === 'EDGE_LOC'" title="{{(node.type !== 'EDGE_LOC') ? 'Add cache groups to ' + node.cachegroup : 'Cache groups cannot be added to EDGE_LOC cache groups'}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
+            <i class="fa fa-plus"></i>
+        </a>
+        <a ng-show="node.type !== 'ORIGIN_LAYER'" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="viewServers(this)" style="margin-right: 8px;">
+            <i class="fa fa-server"></i>
+        </a>
+        <a ng-show="node.type !== 'ORIGIN_LAYER'" title="Set Secondary Parent Cache Group for {{node.cachegroup}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="second()" style="margin-right: 8px;">
+            {{(node.secParent) ? node.secParent : 'None'}}
+        </a>
     </div>
-</div>
+    <ol ui-tree-nodes="" ng-model="node.children" ng-class="{hidden: collapsed}">
+        <li ng-repeat="node in node.children" ui-tree-node ng-include="'nodes_renderer.html'"></li>
+    </ol>
+</script>

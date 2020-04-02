@@ -275,4 +275,7 @@ input:checked + .slider::before {
 	.tree-node.error, .tree-node.error:hover {
 		background-color: #f2dede;
 	}
+	.tree-node.origin, .tree-node.origin:hover {
+		background-color: #d4edda;
+	}
 }
