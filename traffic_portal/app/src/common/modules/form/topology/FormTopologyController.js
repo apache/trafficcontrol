@@ -110,7 +110,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 	var addCacheGroupTypeToTopology = function() {
 		topology.nodes.forEach(function(node) {
 			var cg = _.findWhere(cacheGroups, { name: node.cachegroup} );
-			_.extend(node, { type: cg.typeName });
+			_.extend(node, { cachegroupId: cg.id, type: cg.typeName });
 		})
 	};
 
@@ -178,6 +178,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 				cacheGroupNodes = _.map(selectedCacheGroups, function(cg) {
 					return {
 						secParent: "",
+						cachegroupId: cg.id,
 						cachegroup: cg.name,
 						type: cg.typeName,
 						children: []
@@ -192,14 +193,25 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 		});
 	};
 
-	$scope.viewServers = function(scope) {
-		var nodeData = scope.$modelValue;
-		alert('open dialog with cachegroup servers');
-		// serverService.getServers({ cachegroup: nodeData.id })
-		// 	.then(function(result) {
-		// 		debugger;
-		// 		$scope.cacheGroupServers = result;
-		// 	});
+	$scope.viewCacheGroupServers = function(node) {
+		let modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/topologyCacheGroupServers/table.topologyCacheGroupServers.tpl.html',
+			controller: 'TableTopologyCacheGroupServersController',
+			size: 'lg',
+			resolve: {
+				cacheGroupName: function() {
+					return node.cachegroup;
+				},
+				cacheGroupServers: function(serverService) {
+					return serverService.getServers({ cachegroup: node.cachegroupId });
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+
+		}, function () {
+			// do nothing
+		});
 
 	};
 

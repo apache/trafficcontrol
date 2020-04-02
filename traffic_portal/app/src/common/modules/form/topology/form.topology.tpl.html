@@ -89,7 +89,7 @@ under the License.
         <a ng-disabled="node.type === 'EDGE_LOC'" title="{{(node.type !== 'EDGE_LOC') ? 'Add cache groups to ' + node.cachegroup : 'Cache groups cannot be added to EDGE_LOC cache groups'}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
             <i class="fa fa-plus"></i>
         </a>
-        <a ng-show="node.type !== 'ORIGIN_LAYER'" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="viewServers(this)" style="margin-right: 8px;">
+        <a ng-show="node.type !== 'ORIGIN_LAYER'" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="viewCacheGroupServers(node)" style="margin-right: 8px;">
             <i class="fa fa-server"></i>
         </a>
         <a ng-show="node.type !== 'ORIGIN_LAYER'" title="Set Secondary Parent Cache Group for {{node.cachegroup}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="second()" style="margin-right: 8px;">
