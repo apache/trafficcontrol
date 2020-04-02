@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.table.cacheGroups', [])
-    .controller('TableCacheGroupsController', require('./TableCacheGroupsController'));
+module.exports = angular.module('trafficPortal.table.topologyCacheGroups', [])
+	.controller('TableSelectTopologyCacheGroupsController', require('./TableSelectTopologyCacheGroupsController'));

@@ -25,23 +25,25 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 
 	$scope.treeOptions = {
 		beforeDrop: function(evt) {
-			console.log(evt);
 
 			let node = evt.source.nodeScope.$modelValue,
 				parent = evt.dest.nodesScope.$parent.$modelValue;
 
-			let parentName = (parent) ? parent.cachegroup : 'root';
+			if (!parent) return false; // no dropping outside the tree
 
-			console.log(node);
 			console.log(parent);
 
-
-			if (parent && parent.type === 'EDGE_LOC') {
-				alert('sorry');
+			if (node.type === 'ORG_LOC' && parent.type !== 'ORIGIN_LAYER') {
+				alert('sorry, org_loc must be at top of topology');
 				return false;
 			}
 
-			return confirm("Move " + node.cachegroup + " under " + parentName + "?");
+			if (parent.type === 'EDGE_LOC') {
+				alert('sorry, edge_loc cannot have children');
+				return false;
+			}
+
+			return confirm("Move " + node.cachegroup + " under " + parent.cachegroup + "?");
 		}
 	};
 
@@ -153,10 +155,13 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 			stripped = objectUtils.removeKeysWithout(flat, 'cachegroup');
 
 		let modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/table/cacheGroups/table.selectCacheGroups.tpl.html',
-			controller: 'TableSelectCacheGroupsController',
+			templateUrl: 'common/modules/table/topologyCacheGroups/table.selectTopologyCacheGroups.tpl.html',
+			controller: 'TableSelectTopologyCacheGroupsController',
 			size: 'lg',
 			resolve: {
+				node: function() {
+					return node;
+				},
 				topology: function() {
 					return topology;
 				},

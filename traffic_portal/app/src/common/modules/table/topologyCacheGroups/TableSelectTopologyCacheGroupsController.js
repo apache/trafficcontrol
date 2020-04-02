@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableSelectCacheGroupsController = function(topology, cacheGroups, usedCacheGroupNames, $scope, $uibModalInstance) {
+var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGroups, usedCacheGroupNames, $scope, $uibModalInstance) {
 
 	var selectedCacheGroups = [],
 		usedCacheGroupCount = 0;
@@ -44,6 +44,18 @@ var TableSelectCacheGroupsController = function(topology, cacheGroups, usedCache
 		updateSelectedCount();
 	};
 
+	var decorateCacheGroups = function() {
+		$scope.cacheGroups = _.map(cacheGroups, function(cg) {
+			var isUsed = _.find(usedCacheGroupNames, function(usedCacheGroupName) { return usedCacheGroupName == cg.name });
+			if (isUsed) {
+				cg['selected'] = true;
+				cg['used'] = true;
+				usedCacheGroupCount++;
+			}
+			return cg;
+		});
+	};
+
 	var updateSelectedCount = function() {
 		selectedCacheGroups = _.filter($scope.cacheGroups, function(cg) { return cg['selected'] == true && !cg['used'] } );
 		$('div.selected-count').html('<strong><span class="text-success">' + selectedCacheGroups.length + ' selected</span><span> | ' + usedCacheGroupCount + ' currently used</span></strong>');
@@ -51,17 +63,11 @@ var TableSelectCacheGroupsController = function(topology, cacheGroups, usedCache
 
 	$scope.topology = topology;
 
-	$scope.cacheGroups = cacheGroups;
-
-
-	$scope.cacheGroups = _.map(cacheGroups, function(cg) {
-		var isUsed = _.find(usedCacheGroupNames, function(usedCacheGroupName) { return usedCacheGroupName == cg.name });
-		if (isUsed) {
-			cg['selected'] = true;
-			cg['used'] = true;
-			usedCacheGroupCount++;
-		}
-		return cg;
+	$scope.cacheGroups = _.filter(cacheGroups, function(cg) {
+		// all cg types (ORG_LOC, MID_LOC, EDGE_LOC) can be added to the top of a topology
+		// but only EDGE_LOC and MID_LOC can be added farther down the topology tree
+		if (node.type === 'ORIGIN_LAYER') return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC');
+		return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC');
 	});
 
 	$scope.selectAll = function($event) {
@@ -105,10 +111,11 @@ var TableSelectCacheGroupsController = function(topology, cacheGroups, usedCache
 		availableCacheGroupsTable.on( 'search.dt', function () {
 			$("#selectAllCB").removeAttr("checked"); // uncheck the all box when filtering
 		} );
+		decorateCacheGroups();
 		updateSelectedCount();
 	});
 
 };
 
-TableSelectCacheGroupsController.$inject = ['topology', 'cacheGroups', 'usedCacheGroupNames', '$scope', '$uibModalInstance'];
-module.exports = TableSelectCacheGroupsController;
+TableSelectTopologyCacheGroupsController.$inject = ['node', 'topology', 'cacheGroups', 'usedCacheGroupNames', '$scope', '$uibModalInstance'];
+module.exports = TableSelectTopologyCacheGroupsController;

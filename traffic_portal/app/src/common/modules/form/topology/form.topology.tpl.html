@@ -78,7 +78,8 @@ under the License.
 </div>
 
 <script type="text/ng-template" id="nodes_renderer.html">
-    <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content" ng-class="{'error': (node.type === 'MID_LOC' || node.type === 'ORG_LOC') && (!node.children || node.children.length == 0), 'origin': node.type === 'ORIGIN_LAYER' || node.type === 'ORG_LOC'}">
+    <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content"
+         ng-class="{'error': (node.type === 'MID_LOC' || node.type === 'ORG_LOC') && (!node.children || node.children.length == 0), 'origin': node.type === 'ORIGIN_LAYER' || node.type === 'ORG_LOC'}">
         <a class="btn btn-success btn-xs" ng-if="node.children && node.children.length > 0" data-nodrag ng-click="toggle(this)">
             <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
         </a> {{nodeLabel(node)}}

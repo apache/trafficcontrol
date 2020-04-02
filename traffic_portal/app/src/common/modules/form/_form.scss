@@ -273,7 +273,7 @@ input:checked + .slider::before {
 
 #tree-root {
 	.tree-node.error, .tree-node.error:hover {
-		background-color: #f2dede;
+		background-color: #f2dede !important;
 	}
 	.tree-node.origin, .tree-node.origin:hover {
 		background-color: #d4edda;
