@@ -82,7 +82,7 @@ The following table describes the `node` sub-object:
 
 | field      | type              | optionality | description                                                                                                                                                                                                 |
 | ---------- | ----------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| cachegroup | string            | required    | the `name` of a cachegroup this node maps to in the Topology                                                                                                                                          |
+| cachegroup | string            | required    | the `name` of a cachegroup this node maps to in the Topology                                                                                                                                                |
 | parents    | array of integers | required    | zero-based indexes to other nodes in the Topology's `nodes` array, where the 1st element is for the *primary* parent relationship and the 2nd element is for the *secondary* parent relationship, and so on |
 
 API constraints:
@@ -307,7 +307,7 @@ A new `topology_cachegroup` table will be created to model the association of ca
 | ---------- | ---- | ----------------------------------------------- |
 | id         | int  | not null, PK                                    |
 | topology   | text | not null, FK: references topology(name)         |
-| cachegroup | text | not null, FK: references cachegroup(name) |
+| cachegroup | text | not null, FK: references cachegroup(name)       |
 
 **Constraints**:
 - unique (topology, cachegroup) -- a cachegroup can only be in a Topology once.
