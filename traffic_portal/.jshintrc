@@ -2,9 +2,13 @@
     "bitwise": true,
     "browser": true,
     "curly": true,
+    "devel": true,
     "eqeqeq": true,
     "esversion": 6,
+    "jasmine": true,
+    "jquery": true,
     "latedef": true,
+    "module": true,
     "noarg": true,
     "regexp": true,
     "smarttabs": true,
@@ -13,6 +17,16 @@
     "undef": true,
     "unused": true,
     "globals": {
-        "angular": false
+        "_": false,
+        "angular": false,
+        "browser": false,
+        "by": false,
+        "element": false,
+        "exports": false,
+        "module": false,
+        "moment": false
+        "process": false,
+        "protractor": false,
+        "require": false,
     }
 }
