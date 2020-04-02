@@ -82,7 +82,7 @@ The following table describes the `node` sub-object:
 
 | field      | type              | optionality | description                                                                                                                                                                                                 |
 | ---------- | ----------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| cachegroup | string            | required    | the `short_name` of a cachegroup this node maps to in the Topology                                                                                                                                          |
+| cachegroup | string            | required    | the `name` of a cachegroup this node maps to in the Topology                                                                                                                                          |
 | parents    | array of integers | required    | zero-based indexes to other nodes in the Topology's `nodes` array, where the 1st element is for the *primary* parent relationship and the 2nd element is for the *secondary* parent relationship, and so on |
 
 API constraints:
@@ -266,7 +266,7 @@ The `GET /deliveryservices` endpoint should be updated to support `?topology=foo
 
 `DELETE /cachegroups` should be updated to return a useful error when trying to delete a Cachegroup that is currently used in a Topology.
 
-`PUT /cachegroups` should update all foreign key references if `short_name` is updated. This should be done automatically in the database via the FK references.
+`PUT /cachegroups` should update all foreign key references if `name` is updated. This should be done automatically in the database via the FK references.
 
 ##### The various `/snapshot` endpoints
 
@@ -307,7 +307,7 @@ A new `topology_cachegroup` table will be created to model the association of ca
 | ---------- | ---- | ----------------------------------------------- |
 | id         | int  | not null, PK                                    |
 | topology   | text | not null, FK: references topology(name)         |
-| cachegroup | text | not null, FK: references cachegroup(short_name) |
+| cachegroup | text | not null, FK: references cachegroup(name) |
 
 **Constraints**:
 - unique (topology, cachegroup) -- a cachegroup can only be in a Topology once.
