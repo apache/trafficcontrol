@@ -229,10 +229,6 @@ For the bootstrap component:
 /*! normalize.css v3.0.1 | MIT License | git.io/normalize */
 ./licenses/MIT-normalize
 
-For the sorttable component:
-@traffic_monitor/static/sorttable.js
-./licenses/MIT-sorttable
-
 For the jQuery component:
 ./licenses/MIT-jquery
 

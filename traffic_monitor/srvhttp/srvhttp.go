@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/hydrogen18/stoppableListener"
 )
 
@@ -61,9 +62,13 @@ func (s *Server) registerEndpoints(sm *http.ServeMux, endpoints map[string]http.
 	if err != nil {
 		return fmt.Errorf("Error getting root endpoint: %v", err)
 	}
-	handleSortableJs, err := s.handleSortableFunc(staticFileDir)
+	handleScript, err := s.handleScriptFunc(staticFileDir)
 	if err != nil {
-		return fmt.Errorf("Error getting sortable endpoint: %v", err)
+		return fmt.Errorf("Error getting script endpoint: %v", err)
+	}
+	handleStyle, err := s.handleStyleFunc(staticFileDir)
+	if err != nil {
+		return fmt.Errorf("Error getting style endpoint: %v", err)
 	}
 
 	for path, f := range endpoints {
@@ -71,7 +76,8 @@ func (s *Server) registerEndpoints(sm *http.ServeMux, endpoints map[string]http.
 	}
 
 	sm.HandleFunc("/", handleRoot)
-	sm.HandleFunc("/sorttable.js", handleSortableJs)
+	sm.HandleFunc("/script.js", handleScript)
+	sm.HandleFunc("/style.css", handleStyle)
 
 	return nil
 }
@@ -223,11 +229,29 @@ func DateStr(t time.Time) string {
 }
 
 func (s *Server) handleRootFunc(staticFileDir string) (http.HandlerFunc, error) {
-	return s.handleFile(staticFileDir + "/index.html")
+	return s.handleFile(staticFileDir + "index.html")
 }
 
-func (s *Server) handleSortableFunc(staticFileDir string) (http.HandlerFunc, error) {
-	return s.handleFile(staticFileDir + "/sorttable.js")
+func (s *Server) handleScriptFunc(staticFileDir string) (http.HandlerFunc, error) {
+	bytes, err := ioutil.ReadFile(staticFileDir + "script.js")
+	if err != nil {
+		return nil, err
+	}
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set(rfc.ContentType, rfc.MIME_JS.String())
+		w.Write(bytes)
+	}, nil
+}
+
+func (s *Server) handleStyleFunc(staticFileDir string) (http.HandlerFunc, error) {
+	bytes, err := ioutil.ReadFile(staticFileDir + "style.css")
+	if err != nil {
+		return nil, err
+	}
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set(rfc.ContentType, rfc.MIME_CSS.String())
+		w.Write(bytes)
+	}, nil
 }
 
 func (s *Server) handleFile(name string) (http.HandlerFunc, error) {
