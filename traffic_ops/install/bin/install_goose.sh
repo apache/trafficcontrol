@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+trap "echo Error on line ${LINENO} of '$0'; exit 1" ERR
+set -o errexit -o nounset
 echo "Now installing goose"
 export GOPATH=/opt/traffic_ops/go
 mkdir -p $GOPATH
