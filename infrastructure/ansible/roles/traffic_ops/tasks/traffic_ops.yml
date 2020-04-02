@@ -114,7 +114,7 @@
   notify: Restart Traffic Ops
 
 - name: Upgrade TODB
-  command: ./db/admin.pl -env=production upgrade
+  command: ./db/admin -env=production upgrade
   args:
     chdir: "{{ to_app_installdir }}"
   environment:
