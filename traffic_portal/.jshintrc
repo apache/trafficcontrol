@@ -24,9 +24,9 @@
         "element": false,
         "exports": false,
         "module": false,
-        "moment": false
+        "moment": false,
         "process": false,
         "protractor": false,
-        "require": false,
+        "require": false
     }
 }
