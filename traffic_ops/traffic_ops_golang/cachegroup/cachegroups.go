@@ -385,7 +385,7 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"id":        dbhelpers.WhereColumnInfo{"cachegroup.id", api.IsInt},
 		"name":      dbhelpers.WhereColumnInfo{"cachegroup.name", nil},
-		"shortName": dbhelpers.WhereColumnInfo{"short_name", nil},
+		"shortName": dbhelpers.WhereColumnInfo{"cachegroup.short_name", nil},
 		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
