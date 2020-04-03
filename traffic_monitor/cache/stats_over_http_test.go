@@ -48,11 +48,11 @@ func TestStatsOverHTTPParse(t *testing.T) {
 		t.Errorf("Incorrect current_processes, expected 803, got %d", stats.Loadavg.CurrentProcesses)
 	}
 
-	if len(stats.Interfaces) < 1 {
-		t.Fatalf("Expected at least one interface, but found 0")
-	}
 	if len(stats.Interfaces) != 1 {
 		t.Errorf("Expected exactly one interface, got %d", len(stats.Interfaces))
+		if len(stats.Interfaces) < 1 {
+			t.FailNow()
+		}
 	}
 
 	found := false
