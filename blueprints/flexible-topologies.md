@@ -341,7 +341,7 @@ Since new Topologies can be more than 2 tiers (`EDGE` -> `MID`), `atstccfg` may 
 
 #### ATS config-related fields on Delivery Services
 
-Edge header rewrite rules and raw remap rules should still be applied only to the `EDGE` tier of Topologies. Mid header rewrite rules should probably only be applied at the *first* `MID` tier if there are multiple `MID` tiers in a Topology, because it might not be safe to assume that all mid header rewrite rules could be applied safely through multiple `MID` tiers.
+Edge header rewrite rules and raw remap rules should still be applied only to the `EDGE` tier of Topologies. Mid header rewrite rules should probably only be applied at the *first* `MID` tier if there are multiple `MID` tiers in a Topology, because it might not be safe to assume that all mid header rewrite rules could be applied safely through multiple `MID` tiers. This does bring up the question of whether or not we also want to be able to apply header rewrites to any arbitrary "tier" of a Topology. That might not be a requirement for this MVP, but it may be something we'll need to add in the future when a use case arises.
 
 ### Traffic Monitor Impact
 
@@ -404,6 +404,8 @@ Until legacy `deliveryservice_server` assignments are fully removed in favor of 
 Once all Delivery Services have been migrated to Topologies, CDN operators will no longer have to "clone Delivery Service assignments" from a nearby edge cache in the same cachegroup when adding a new edge cache into the CDN. Since Topologies are composed of cachegroups, simply adding a server into a particular cachegroup will give it all the Delivery Service assignments from all the Topologies the cachegroup is used in.
 
 Troubleshooting issues with Delivery Services on the CDN may become slightly more difficult due to the fact that you will no longer be able to assume that any given Delivery Service will follow the same global hierarchy. Unique Topologies will provide unique paths through the CDN from client to origin, so an operator now needs to look up what the path *should be* based on the Delivery Service's Topology in order to triage issues along the delivery path. This may necessitate the development of Topology-based troubleshooting tools and visualizations.
+
+As something to be aware of, content revalidations (via `regex_revalidate.config`) may take longer to propagate through a Topology the more tiers that it has, due to the nature of how ORT waits to revalidate until its cache's parents no longer have revalidations pending.
 
 #### Third Party Logging/Monitoring/Analytics
 
