@@ -264,7 +264,6 @@ func parseSearchCriteriaAndQueryValues(searchQueryParamsToSQLCols map[string]Whe
 	for _, searchColParam := range strings.Split(searchColParams, ",") {
 		colInfo, ok := searchQueryParamsToSQLCols[searchColParam]
 		if !ok {
-			errs = append(errs, fmt.Errorf("query parameter %s is not searchable", searchColParam))
 			continue
 		}
 		searchColParam += "_search"
