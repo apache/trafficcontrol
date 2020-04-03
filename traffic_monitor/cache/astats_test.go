@@ -37,7 +37,7 @@ func TestAstats(t *testing.T) {
 
 	text, err := ioutil.ReadFile("astats.json")
 	if err != nil {
-		t.Log(err)
+		t.Fatal(err)
 	}
 	aStats := Astats{}
 	json := jsoniter.ConfigFastest
