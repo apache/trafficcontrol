@@ -116,7 +116,7 @@ func TestAddSearchableWhereClause(t *testing.T) {
 			description:         "Success: Existing Where Clause",
 			expectErrors:        false,
 			startingWhereClause: "\nWHERE foo=:bar",
-			expectedWhereClause: "\nWHERE foo=:bar AND (UPPER(t.col) LIKE UPPER(:key1_search) AND UPPER(t1.col) LIKE UPPER(:key2_search)) ",
+			expectedWhereClause: "\nWHERE foo=:bar AND (UPPER(t.col) LIKE UPPER(:key1_search) OR UPPER(t1.col) LIKE UPPER(:key2_search)) ",
 			parameters: map[string]string{
 				SearchValueParam:   "test",
 				SearchColumnsParam: "key1,key2",
@@ -130,7 +130,7 @@ func TestAddSearchableWhereClause(t *testing.T) {
 			description:         "Success: New Where Clause",
 			expectErrors:        false,
 			startingWhereClause: "",
-			expectedWhereClause: "\nWHERE UPPER(t.col) LIKE UPPER(:key1_search) AND UPPER(t1.col) LIKE UPPER(:key2_search)",
+			expectedWhereClause: "\nWHERE UPPER(t.col) LIKE UPPER(:key1_search) OR UPPER(t1.col) LIKE UPPER(:key2_search)",
 			parameters: map[string]string{
 				SearchValueParam:   "test",
 				SearchColumnsParam: "key1,key2",

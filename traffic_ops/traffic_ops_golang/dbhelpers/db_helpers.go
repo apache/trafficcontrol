@@ -272,7 +272,7 @@ func parseSearchCriteriaAndQueryValues(searchQueryParamsToSQLCols map[string]Whe
 		queryValues[searchColParam] = searchVal
 	}
 
-	filter := "AND"
+	filter := "OR"
 
 	if searchOperator, exists := parameters[SearchFilterParam]; exists {
 		if strings.ToLower(searchOperator) != "and" && strings.ToLower(searchOperator) != "or" {
