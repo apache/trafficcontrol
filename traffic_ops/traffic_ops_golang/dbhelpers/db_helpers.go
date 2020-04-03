@@ -42,6 +42,9 @@ const BaseWhere = "\nWHERE"
 const BaseOrderBy = "\nORDER BY"
 const BaseLimit = "\nLIMIT"
 const BaseOffset = "\nOFFSET"
+const SearchColumnsParam = "search"
+const SearchValueParam = "searchValue"
+const SearchFilterParam = "searchOperator"
 
 const getDSTenantIDFromXMLIDQuery = `
 SELECT deliveryservice.tenant_id
@@ -217,6 +220,70 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 		}
 	}
 	criteria = strings.Join(criteriaArgs, " AND ")
+
+	return criteria, queryValues, errs
+}
+
+// AddSearchableWhereClause takes in an existing where clause and adds the searchable parameters to it
+func AddSearchableWhereClause(whereClause string, queryValues map[string]interface{}, parameters map[string]string, searchQueryParamsToSQLCols map[string]WhereColumnInfo) (string, map[string]interface{}, []error) {
+	searchColParams, scExists := parameters[SearchColumnsParam]
+	searchVal, svExists := parameters[SearchValueParam]
+
+	var criteria string
+	var errs []error
+
+	if !svExists && !scExists {
+		return whereClause, queryValues, errs
+	} else if !svExists || !scExists {
+		return whereClause, queryValues, append(errs, fmt.Errorf("both %s and %s query parameters must be supplied if conducting a search", SearchValueParam, SearchColumnsParam))
+	}
+
+	criteria, queryValues, errs = parseSearchCriteriaAndQueryValues(searchQueryParamsToSQLCols, queryValues, parameters, searchColParams, searchVal)
+
+	if len(errs) > 0 {
+		return whereClause, queryValues, errs
+	}
+	if len(queryValues) > 0 {
+		if len(whereClause) == 0 {
+			whereClause = BaseWhere + " " + criteria
+		} else {
+			whereClause += " AND (" + criteria + ") "
+		}
+	}
+	return whereClause, queryValues, errs
+}
+
+func parseSearchCriteriaAndQueryValues(searchQueryParamsToSQLCols map[string]WhereColumnInfo, queryValues map[string]interface{}, parameters map[string]string, searchColParams, searchVal string) (string, map[string]interface{}, []error) {
+	var criteria string
+	searchVal = "%" + searchVal + "%"
+	var criteriaArgs []string
+	errs := []error{}
+	if queryValues == nil {
+		queryValues = map[string]interface{}{}
+	}
+	for _, searchColParam := range strings.Split(searchColParams, ",") {
+		colInfo, ok := searchQueryParamsToSQLCols[searchColParam]
+		if !ok {
+			errs = append(errs, fmt.Errorf("query parameter %s is not searchable", searchColParam))
+			continue
+		}
+		searchColParam += "_search"
+		criteria = "UPPER(" + colInfo.Column + ") LIKE UPPER(:" + searchColParam + ")"
+		criteriaArgs = append(criteriaArgs, criteria)
+		queryValues[searchColParam] = searchVal
+	}
+
+	filter := "AND"
+
+	if searchOperator, exists := parameters[SearchFilterParam]; exists {
+		if strings.ToLower(searchOperator) != "and" && strings.ToLower(searchOperator) != "or" {
+			errs = append(errs, fmt.Errorf("searchOperator parameter %s can only be set to AND or OR", searchOperator))
+		} else {
+			filter = searchOperator
+		}
+	}
+
+	criteria = strings.Join(criteriaArgs, fmt.Sprintf(" %s ", filter))
 
 	return criteria, queryValues, errs
 }

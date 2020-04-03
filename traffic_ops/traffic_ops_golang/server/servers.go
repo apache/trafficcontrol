@@ -205,7 +205,7 @@ func (s *TOServer) Read() ([]interface{}, error, error, int) {
 
 	returnable := []interface{}{}
 
-	servers, userErr, sysErr, errCode := getServers(s.ReqInfo.Params, s.ReqInfo.Tx, s.ReqInfo.User)
+	servers, userErr, sysErr, errCode := getServers(version.Major, s.ReqInfo.Params, s.ReqInfo.Tx, s.ReqInfo.User)
 
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
@@ -226,7 +226,7 @@ func (s *TOServer) Read() ([]interface{}, error, error, int) {
 	return returnable, nil, nil, http.StatusOK
 }
 
-func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, error, error, int) {
+func getServers(apiMajorVersion uint64, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -240,6 +240,30 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		"status":           dbhelpers.WhereColumnInfo{"st.name", nil},
 		"type":             dbhelpers.WhereColumnInfo{"t.name", nil},
 		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
+	}
+
+	searchQueryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"cachegroup":   dbhelpers.WhereColumnInfo{"cg.name", nil},
+		"cdn":          dbhelpers.WhereColumnInfo{"cdn.name", nil},
+		"domainName":   dbhelpers.WhereColumnInfo{"s.domain_name", nil},
+		"hostName":     dbhelpers.WhereColumnInfo{"s.host_name", nil},
+		"iloIP":        dbhelpers.WhereColumnInfo{"s.ilo_ip_address", nil},
+		"iloNetmask":   dbhelpers.WhereColumnInfo{"s.ilo_ip_netmask", nil},
+		"iloGateway":   dbhelpers.WhereColumnInfo{"s.ilo_ip_gateway", nil},
+		"iloUserName":  dbhelpers.WhereColumnInfo{"s.ilo_username", nil},
+		"mgmtAddress":  dbhelpers.WhereColumnInfo{"s.mgmt_ip_address", nil},
+		"mgmtNetmask":  dbhelpers.WhereColumnInfo{"s.mgmt_ip_netmask", nil},
+		"mgmtGateway":  dbhelpers.WhereColumnInfo{"s.mgmt_ip_gateway", nil},
+		"ip":           dbhelpers.WhereColumnInfo{"s.ip_address", nil},
+		"ipNetmask":    dbhelpers.WhereColumnInfo{"s.ip_netmask", nil},
+		"ipGateway":    dbhelpers.WhereColumnInfo{"s.ip_gateway", nil},
+		"ip6":          dbhelpers.WhereColumnInfo{"s.ip6_address", nil},
+		"ip6Gateway":   dbhelpers.WhereColumnInfo{"s.ip6_gateway", nil},
+		"interface":    dbhelpers.WhereColumnInfo{"s.interface_name", nil},
+		"physLocation": dbhelpers.WhereColumnInfo{"pl.name", nil},
+		"profile":      dbhelpers.WhereColumnInfo{"p.name", nil},
+		"status":       dbhelpers.WhereColumnInfo{"st.name", nil},
+		"type":         dbhelpers.WhereColumnInfo{"t.name", nil},
 	}
 
 	usesMids := false
@@ -273,6 +297,13 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+
+	if apiMajorVersion >= 2 {
+		where, queryValues, errs = dbhelpers.AddSearchableWhereClause(where, queryValues, params, searchQueryParamsToSQLCols)
+		if len(errs) > 0 {
+			return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		}
 	}
 
 	query := selectQuery() + queryAddition + where + orderBy + pagination

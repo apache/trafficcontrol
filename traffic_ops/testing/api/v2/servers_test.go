@@ -16,13 +16,18 @@ package v2
 */
 
 import (
+	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestServers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Servers}, func() {
+		GetTestSearchServers(t)
 		UpdateTestServers(t)
 		GetTestServers(t)
 	})
@@ -48,6 +53,54 @@ func GetTestServers(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Server by name: %v - %v", err, resp)
 		}
+	}
+}
+
+func GetTestSearchServers(t *testing.T) {
+	var testCases = []struct {
+		description string
+		searchValue *string
+		search      *string
+		searchOp    *string
+		checkFunc   func(s tc.Server) error
+	}{
+		{
+			description: "Success: domainName search",
+			searchValue: util.StrPtr("kabletown"),
+			search:      util.StrPtr("hostName"),
+			checkFunc: func(s tc.Server) error {
+				if !strings.Contains(s.DomainName, "kabletown") {
+					return fmt.Errorf("expected kabletown to be contained in %s domainName: %s", s.HostName, s.DomainName)
+				}
+				return nil
+			},
+		},
+		{
+			description: "Success: OR Operator search",
+			searchValue: util.StrPtr("1"), //cdn - cdn1 and cachegroup - cachegroup1 will both be caught
+			search:      util.StrPtr("cdn,cachegroup"),
+			searchOp:    util.StrPtr("OR"),
+			checkFunc: func(s tc.Server) error {
+				if !(strings.Contains(s.CDNName, "1") || strings.Contains(s.Cachegroup, "1")) {
+					return fmt.Errorf("expected 1 to be contained in %s cdn: %s or cachegroup: %s", s.HostName, s.CDNName, s.Cachegroup)
+				}
+				return nil
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			t.Log("Starting test scenario: ", tc.description)
+			resp, _, err := TOSession.GetServersBySearch(tc.search, tc.searchValue, tc.searchOp)
+			if err != nil {
+				t.Errorf("cannot GET Server by search: %v", err)
+			}
+			for _, s := range resp {
+				if e := tc.checkFunc(s); e != nil {
+					t.Error(e)
+				}
+			}
+		})
 	}
 }
 

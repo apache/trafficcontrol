@@ -167,7 +167,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 
 	user := auth.CurrentUser{}
 
-	servers, userErr, sysErr, errCode := getServers(v, db.MustBegin(), &user)
+	servers, userErr, sysErr, errCode := getServers(2, v, db.MustBegin(), &user)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}

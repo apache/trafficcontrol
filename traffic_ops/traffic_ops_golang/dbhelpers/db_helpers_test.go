@@ -25,6 +25,8 @@ import (
 	"testing"
 	"unicode"
 
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -79,6 +81,139 @@ FROM table t
 		t.Errorf("expected: %v error, actual: %v", actualQuery, expectedV2)
 	}
 
+}
+
+func TestAddSearchableWhereClause(t *testing.T) {
+	var testCases = []struct {
+		description                string
+		expectErrors               bool
+		expectedWhereClause        string
+		startingWhereClause        string
+		parameters                 map[string]string
+		searchQueryParamsToSQLCols map[string]WhereColumnInfo
+	}{
+		{
+			description:         "Failure: Missing search parameter",
+			expectErrors:        true,
+			startingWhereClause: "",
+			expectedWhereClause: "",
+			parameters: map[string]string{
+				SearchValueParam: "test",
+			},
+			searchQueryParamsToSQLCols: map[string]WhereColumnInfo{},
+		},
+		{
+			description:         "Failure: Missing search parameter value",
+			expectErrors:        true,
+			startingWhereClause: "",
+			expectedWhereClause: "",
+			parameters: map[string]string{
+				SearchColumnsParam: "key1",
+			},
+			searchQueryParamsToSQLCols: map[string]WhereColumnInfo{},
+		},
+		{
+			description:         "Success: Existing Where Clause",
+			expectErrors:        false,
+			startingWhereClause: "\nWHERE foo=:bar",
+			expectedWhereClause: "\nWHERE foo=:bar AND (UPPER(t.col) LIKE UPPER(:key1_search) AND UPPER(t1.col) LIKE UPPER(:key2_search)) ",
+			parameters: map[string]string{
+				SearchValueParam:   "test",
+				SearchColumnsParam: "key1,key2",
+			},
+			searchQueryParamsToSQLCols: map[string]WhereColumnInfo{
+				"key1": WhereColumnInfo{"t.col", nil},
+				"key2": WhereColumnInfo{"t1.col", nil},
+			},
+		},
+		{
+			description:         "Success: New Where Clause",
+			expectErrors:        false,
+			startingWhereClause: "",
+			expectedWhereClause: "\nWHERE UPPER(t.col) LIKE UPPER(:key1_search) AND UPPER(t1.col) LIKE UPPER(:key2_search)",
+			parameters: map[string]string{
+				SearchValueParam:   "test",
+				SearchColumnsParam: "key1,key2",
+			},
+			searchQueryParamsToSQLCols: map[string]WhereColumnInfo{
+				"key1": WhereColumnInfo{"t.col", nil},
+				"key2": WhereColumnInfo{"t1.col", nil},
+			},
+		},
+		{
+			description:         "Success: No search parameters",
+			expectErrors:        false,
+			startingWhereClause: "",
+			expectedWhereClause: "",
+			parameters:          map[string]string{},
+			searchQueryParamsToSQLCols: map[string]WhereColumnInfo{
+				"key1": WhereColumnInfo{"t.col", nil},
+				"key2": WhereColumnInfo{"t1.col", nil},
+			},
+		},
+		{
+			description:         "Success: Defined join operator - AND",
+			expectErrors:        false,
+			startingWhereClause: "",
+			expectedWhereClause: "\nWHERE UPPER(t.col) LIKE UPPER(:key1_search) AND UPPER(t1.col) LIKE UPPER(:key2_search)",
+			parameters: map[string]string{
+				SearchValueParam:   "test",
+				SearchColumnsParam: "key1,key2",
+				SearchFilterParam:  "AND",
+			},
+			searchQueryParamsToSQLCols: map[string]WhereColumnInfo{
+				"key1": WhereColumnInfo{"t.col", nil},
+				"key2": WhereColumnInfo{"t1.col", nil},
+			},
+		},
+		{
+			description:         "Success: Defined join operator - OR",
+			expectErrors:        false,
+			startingWhereClause: "",
+			expectedWhereClause: "\nWHERE UPPER(t.col) LIKE UPPER(:key1_search) OR UPPER(t1.col) LIKE UPPER(:key2_search)",
+			parameters: map[string]string{
+				SearchValueParam:   "test",
+				SearchColumnsParam: "key1,key2",
+				SearchFilterParam:  "OR",
+			},
+			searchQueryParamsToSQLCols: map[string]WhereColumnInfo{
+				"key1": WhereColumnInfo{"t.col", nil},
+				"key2": WhereColumnInfo{"t1.col", nil},
+			},
+		},
+		{
+			description:         "Failure: Invalid join operator",
+			expectErrors:        true,
+			startingWhereClause: "",
+			expectedWhereClause: "",
+			parameters: map[string]string{
+				SearchValueParam:   "test",
+				SearchColumnsParam: "key1,key2",
+				SearchFilterParam:  "Bogus",
+			},
+			searchQueryParamsToSQLCols: map[string]WhereColumnInfo{
+				"key1": WhereColumnInfo{"t.col", nil},
+				"key2": WhereColumnInfo{"t1.col", nil},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			t.Log("Starting test scenario: ", tc.description)
+			where, _, errors := AddSearchableWhereClause(tc.startingWhereClause, nil, tc.parameters, tc.searchQueryParamsToSQLCols)
+			if len(errors) == 0 && tc.expectErrors {
+				t.Error("expected errors on building search where clause and received non")
+				return
+			} else if len(errors) != 0 && !tc.expectErrors {
+				t.Errorf("expected no errors on building search where clause and received: %v", util.JoinErrs(errors))
+				return
+			}
+			if where != tc.expectedWhereClause {
+				t.Errorf("expected resulting WHERE Clause %v received %v", tc.expectedWhereClause, where)
+			}
+		})
+	}
 }
 
 func TestGetCacheGroupByName(t *testing.T) {

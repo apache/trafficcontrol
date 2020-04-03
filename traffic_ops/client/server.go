@@ -186,6 +186,37 @@ func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, er
 	return data.Response, reqInf, nil
 }
 
+// GetServersBySearch GETs Servers by searching.
+func (to *Session) GetServersBySearch(search, searchVal, searchOp *string) ([]tc.Server, ReqInf, error) {
+	v := url.Values{}
+	if search != nil {
+		v.Add("search", *search)
+	}
+	if searchVal != nil {
+		v.Add("searchValue", *searchVal)
+	}
+	if searchOp != nil {
+		v.Add("searchOperator", *searchOp)
+	}
+	url := API_SERVERS
+	if qStr := v.Encode(); len(qStr) > 0 {
+		url = fmt.Sprintf("%s?%s", url, qStr)
+	}
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ServersResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
 // DeleteServerByID DELETEs a Server by ID.
 func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
