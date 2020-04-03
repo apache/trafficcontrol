@@ -38,7 +38,17 @@ type StatsTypeDecoder struct {
 
 // StatisticsDecoder is a function that parses raw input data for a given
 // statistics format and returns the meaningful statistics.
-type StatisticsDecoder func(string, io.Reader) (Statistics, error)
+// In addition to the decoded statistics, the decoder should also return
+// whatever miscellaneous data was in the payload but not represented by
+// the properties of a Statistics object, so that it can be used in later
+// calculations if necessary.
+type StatisticsDecoder func(string, io.Reader) (Statistics, map[string]interface{}, error)
+
+// StatisticsPrecomputer is a function that "pre-computes" some statistics
+// beyond the basic ones covered by a Statistics object.
+// Precomputers aren't called until a statistics poll is done, whereas basic
+// Statistics are calculated even for Health polls.
+type StatisticsPrecomputer func(string, todata.TOData, Statistics, map[string]interface{}) PrecomputedData
 
 // StatsTypeParser takes the bytes returned from the cache's stats endpoint,
 // along with the cache name, and returns the map of raw stats (whose names

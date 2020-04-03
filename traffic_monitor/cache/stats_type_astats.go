@@ -71,36 +71,35 @@ type Astats struct {
 	System AstatsSystem           `json:"system"`
 }
 
-func parseAstats(cacheName string, rdr io.Reader) (Statistics, error) {
+func parseAstats(cacheName string, rdr io.Reader) (Statistics, map[string]interface{}, error) {
 	var stats Statistics
 	if rdr == nil {
 		log.Warnf("%s handle reader nil", cacheName)
-		return stats, errors.New("handler got nil reader")
+		return stats, nil, errors.New("handler got nil reader")
 	}
 
 	var astats Astats
 	if err := json.NewDecoder(rdr).Decode(&astats); err != nil {
-		return stats, err
+		return stats, nil, err
 	}
 
 	if err := stats.AddInterfaceFromRawLine(astats.System.ProcNetDev); err != nil {
-		return stats, fmt.Errorf("Failed to parse interface line for cache '%s': %v", cacheName, err)
+		return stats, nil, fmt.Errorf("Failed to parse interface line for cache '%s': %v", cacheName, err)
 	}
 	if inf, ok := stats.Interfaces[astats.System.InfName]; !ok {
-		return stats, errors.New("/proc/net/dev line didn't match reported interface line")
+		return stats, nil, errors.New("/proc/net/dev line didn't match reported interface line")
 	} else {
 		inf.Speed = int64(astats.System.InfSpeed)
 		stats.Interfaces[astats.System.InfName] = inf
 	}
 
 	if load, err := LoadavgFromRawLine(astats.System.ProcLoadavg); err != nil {
-		return stats, fmt.Errorf("Failed to parse loadavg line for cache '%s': %v", cacheName, err)
+		return stats, nil, fmt.Errorf("Failed to parse loadavg line for cache '%s': %v", cacheName, err)
 	} else {
 		stats.Loadavg = load
 	}
 
-	stats.Miscellaneous = astats.Ats
-	return stats, nil
+	return stats, astats.Ats, nil
 }
 
 func astatsParse(cache tc.CacheName, rdr io.Reader) (error, map[string]interface{}, AstatsSystem) {

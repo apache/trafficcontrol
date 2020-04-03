@@ -78,6 +78,22 @@ import "strconv"
 
 import "github.com/apache/trafficcontrol/lib/go-log"
 
+// LOADAVG_SHIFT is the amount by which "loadavg" values returned by
+// stats_over_http need to be divided to obtain the values with which ATC
+// operators are more familiar.
+//
+// The reason for this is that the Linux kernel stores loadavg values as
+// integral types internally, and performs conversions to floating-point
+// numbers on-the-fly when the contents of /proc/loadavg are read. Since
+// astats_over_http used to always just read that file to get the numbers,
+// everyone's used to the floating-point form. But stats_over_http gets
+// the numbers directly from a syscall, so they aren't pre-converted for us.
+//
+// Dividing by this number is kind of a shortcut, for the actual transformation
+// used by the kernel itself, refer to the source:
+// https://github.com/torvalds/linux/blob/master/fs/proc/loadavg.c
+// const LOADAVG_SHIFT = 65536
+
 func init() {
 	// AddStatsType("stats_over_http", statsParse, statsPrecompute)
 	registerDecoder("stats_over_http", parseStats)
@@ -87,36 +103,35 @@ type stats_over_httpData struct {
 	Global map[string]interface{} `json:"global"`
 }
 
-func parseStats(cacheName string, data io.Reader) (Statistics, error) {
+func parseStats(cacheName string, data io.Reader) (Statistics, map[string]interface{}, error) {
 	var stats Statistics
 	if (data == nil) {
 		log.Warnf("Cannot read stats data for cache '%s' - nil data reader", cacheName)
-		return stats, errors.New("handler got nil reader")
+		return stats, nil, errors.New("handler got nil reader")
 	}
 
 	var sohData stats_over_httpData
 	err := json.NewDecoder(data).Decode(&sohData)
 	if err != nil {
-		return stats, err
+		return stats, nil, err
 	}
 
 	if len(sohData.Global) < 1 {
-		return stats, errors.New("No 'global' data object found in stats_over_http payload")
+		return stats, nil, errors.New("No 'global' data object found in stats_over_http payload")
 	}
 
 	statMap := sohData.Global
 
 	if stats.Loadavg, err = parseLoadAvg(statMap); err != nil {
-		return stats, fmt.Errorf("Error parsing loadavg for cache '%s': %v", cacheName, err)
+		return stats, nil, fmt.Errorf("Error parsing loadavg for cache '%s': %v", cacheName, err)
 	}
 
 	stats.Interfaces = parseInterfaces(statMap)
 	if len(stats.Interfaces) < 1 {
-		return stats, fmt.Errorf("cache '%s' had no interfaces", cacheName)
+		return stats, nil, fmt.Errorf("cache '%s' had no interfaces", cacheName)
 	}
 
-	stats.Miscellaneous = statMap
-	return stats, nil
+	return stats, statMap, nil
 }
 
 func parseLoadAvg(stats map[string]interface{}) (Loadavg, error) {
