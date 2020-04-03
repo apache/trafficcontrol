@@ -207,8 +207,8 @@ func parseInterfaces(stats map[string]interface{}) (map[string]Interface) {
 		// of the right form you don't KNOW something went wrong; it could just be
 		// that you're not looking at what you think you're looking at. So when that
 		// happens we issue a warning and continue.
-		if strings.HasPrefix(stat, "plugin.system_stats.net") {
-			statParts := strings.SplitN(strings.TrimPrefix(stat, "plugin.system_stats.net"), ".", 2)
+		if strings.HasPrefix(stat, "plugin.system_stats.net.") {
+			statParts := strings.SplitN(strings.TrimPrefix(stat, "plugin.system_stats.net."), ".", 2)
 			if len(statParts) != 2 {
 				log.Warnf("stat '%s' appears to be network related, but is not an interface", stat)
 				continue
