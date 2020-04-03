@@ -19,6 +19,13 @@
 
 var TableTopologyCacheGroupServersController = function(cacheGroupName, cacheGroupServers, $scope, $uibModalInstance) {
 
+	let adjustTableColumns = function() {
+		window.setTimeout(function() {
+			$($.fn.dataTable.tables(true)).DataTable()
+				.columns.adjust();
+		},100);
+	};
+
 	$scope.cacheGroupName = cacheGroupName;
 
 	$scope.cacheGroupServers = cacheGroupServers;
@@ -35,6 +42,12 @@ var TableTopologyCacheGroupServersController = function(cacheGroupName, cacheGro
 			"buttons": []
 		});
 	});
+
+	let init = function() {
+		// ensures the column headers are positioned correctly
+		adjustTableColumns();
+	};
+	init();
 
 };
 

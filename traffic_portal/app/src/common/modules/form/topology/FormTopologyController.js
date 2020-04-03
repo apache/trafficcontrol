@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormTopologyController = function(topology, cacheGroups, $scope, $location, $uibModal, formUtils, locationUtils, objectUtils) {
+var FormTopologyController = function(topology, cacheGroups, $scope, $location, $uibModal, formUtils, locationUtils, objectUtils, messageModel) {
 
 	$scope.topology = topology;
 
@@ -29,17 +29,20 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 			let node = evt.source.nodeScope.$modelValue,
 				parent = evt.dest.nodesScope.$parent.$modelValue;
 
-			if (!parent) return false; // no dropping outside the tree
+			if (!parent) {
+				messageModel.setMessages([ { level: 'error', text: 'Please keep cache groups inside the topology tree.' } ], false);
+				return false; // no dropping outside the toplogy tree
+			}
 
 			console.log(parent);
 
-			if (node.type === 'ORG_LOC' && parent.type !== 'ORIGIN_LAYER') {
-				alert('sorry, org_loc must be at top of topology');
+			if (node.type === 'ORG_LOC' && parent.type !== 'ROOT') {
+				messageModel.setMessages([ { level: 'error', text: 'Cache groups of ORG_LOC type must be at the top of the topology tree.' } ], false);
 				return false;
 			}
 
 			if (parent.type === 'EDGE_LOC') {
-				alert('sorry, edge_loc cannot have children');
+				messageModel.setMessages([ { level: 'error', text: 'Cache groups of EDGE_LOC type must not have children.' } ], false);
 				return false;
 			}
 
@@ -80,8 +83,8 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 
 		$scope.massaged = [
 			{
-				cachegroup: "ORIGIN LAYER",
-				type: "ORIGIN_LAYER",
+				cachegroup: "TOPOLOGY ROOT (ORIGIN LAYER)",
+				type: "ROOT",
 				children: roots
 			}
 		];
@@ -121,7 +124,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
 	$scope.nodeLabel = function(node) {
-		if (node.type === 'ORIGIN_LAYER') return 'ORIGIN LAYER';
+		if (node.type === 'ROOT') return 'TOPOLOGY ROOT (ORIGIN LAYER)';
 		return node.cachegroup + ' [' + node.type + ']'
 	};
 
@@ -131,7 +134,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 
 	$scope.deleteCacheGroup = function(node, scope) {
 
-		if (node.type === 'ORIGIN_LAYER') return;
+		if (node.type === 'ROOT') return;
 
 		let cg = scope.$nodeScope.$modelValue.cachegroup;
 		if (confirm("Remove " + cg + " and all its children?")){
@@ -185,7 +188,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 					}
 				});
 			cacheGroupNodes.forEach(function(node) {
-				nodeData.children.push(node);
+				nodeData.children.unshift(node);
 			});
 
 		}, function () {
@@ -224,5 +227,5 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 
 };
 
-FormTopologyController.$inject = ['topology', 'cacheGroups', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'objectUtils'];
+FormTopologyController.$inject = ['topology', 'cacheGroups', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'objectUtils', 'messageModel'];
 module.exports = FormTopologyController;

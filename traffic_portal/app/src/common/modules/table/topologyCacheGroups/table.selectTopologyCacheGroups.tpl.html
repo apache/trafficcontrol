@@ -32,6 +32,7 @@ under the License.
             <th>Type</th>
             <th>Latitude</th>
             <th>Longitude</th>
+            <th style="text-align: right;">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -41,6 +42,9 @@ under the License.
             <td data-search="^{{::cg.typeName}}$">{{::cg.typeName}}</td>
             <td data-search="^{{::cg.latitude}}$">{{::cg.latitude}}</td>
             <td data-search="^{{::cg.longitude}}$">{{::cg.longitude}}</td>
+            <td style="text-align: right;">
+                <a class="link action-link" title="View Cache Group Servers" ng-click="viewCacheGroupServers(cg, $event)">View Servers</a>
+            </td>
         </tr>
         </tbody>
     </table>

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGroups, usedCacheGroupNames, $scope, $uibModalInstance) {
+var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGroups, usedCacheGroupNames, $scope, $uibModal, $uibModalInstance, serverService) {
 
 	var selectedCacheGroups = [],
 		usedCacheGroupCount = 0;
@@ -64,9 +64,9 @@ var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGro
 	$scope.topology = topology;
 
 	$scope.cacheGroups = _.filter(cacheGroups, function(cg) {
-		// all cg types (ORG_LOC, MID_LOC, EDGE_LOC) can be added to the top of a topology
+		// all cg types (ORG_LOC, MID_LOC, EDGE_LOC) can be added to the root of a topology
 		// but only EDGE_LOC and MID_LOC can be added farther down the topology tree
-		if (node.type === 'ORIGIN_LAYER') return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC');
+		if (node.type === 'ROOT') return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC');
 		return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC');
 	});
 
@@ -88,6 +88,32 @@ var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGro
 		updateSelectedCount();
 	};
 
+	$scope.viewCacheGroupServers = function(cg, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
+
+		let modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/topologyCacheGroupServers/table.topologyCacheGroupServers.tpl.html',
+			controller: 'TableTopologyCacheGroupServersController',
+			size: 'lg',
+			resolve: {
+				cacheGroupName: function() {
+					return cg.name;
+				},
+				cacheGroupServers: function(serverService) {
+					return serverService.getServers({ cachegroup: cg.id });
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+
+		}, function () {
+			// do nothing
+		});
+
+	};
+
 	$scope.submit = function() {
 		$uibModalInstance.close(selectedCacheGroups);
 	};
@@ -103,7 +129,7 @@ var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGro
 			"order": [[ 1, 'asc' ]],
 			"dom": '<"selected-count">frtip',
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 0 },
+				{ 'orderable': false, 'targets': [0,5] },
 				{ "width": "5%", "targets": 0 }
 			],
 			"stateSave": false
@@ -117,5 +143,5 @@ var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGro
 
 };
 
-TableSelectTopologyCacheGroupsController.$inject = ['node', 'topology', 'cacheGroups', 'usedCacheGroupNames', '$scope', '$uibModalInstance'];
+TableSelectTopologyCacheGroupsController.$inject = ['node', 'topology', 'cacheGroups', 'usedCacheGroupNames', '$scope', '$uibModal', '$uibModalInstance', 'serverService'];
 module.exports = TableSelectTopologyCacheGroupsController;
