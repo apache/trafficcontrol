@@ -42,11 +42,11 @@ func TestAstats(t *testing.T) {
 	aStats := Astats{}
 	json := jsoniter.ConfigFastest
 	err = json.Unmarshal(text, &aStats)
-	fmt.Printf("aStats ---> %v\n", aStats)
+	t.Logf("aStats ---> %v\n", aStats)
 	if err != nil {
-		t.Log(err)
+		t.Error(err)
 	}
-	fmt.Printf("Found %v key/val pairs in ats\n", len(aStats.Ats))
+	t.Logf("Found %v key/val pairs in ats\n", len(aStats.Ats))
 }
 
 func getMockTODataDSNameDirectMatches() map[tc.DeliveryServiceName]string {
