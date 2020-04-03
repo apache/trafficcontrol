@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGroups, usedCacheGroupNames, $scope, $uibModal, $uibModalInstance, serverService) {
+var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheGroups, usedCacheGroupNames, $scope, $uibModal, $uibModalInstance, serverService) {
 
 	var selectedCacheGroups = [],
 		usedCacheGroupCount = 0;
@@ -46,7 +46,7 @@ var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGro
 
 	var decorateCacheGroups = function() {
 		$scope.cacheGroups = _.map(cacheGroups, function(cg) {
-			var isUsed = _.find(usedCacheGroupNames, function(usedCacheGroupName) { return usedCacheGroupName == cg.name });
+			var isUsed = _.find(usedCacheGroupNames, function(usedCacheGroupName) { return usedCacheGroupName.name == cg.name });
 			if (isUsed) {
 				cg['selected'] = true;
 				cg['used'] = true;
@@ -58,15 +58,15 @@ var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGro
 
 	var updateSelectedCount = function() {
 		selectedCacheGroups = _.filter($scope.cacheGroups, function(cg) { return cg['selected'] == true && !cg['used'] } );
-		$('div.selected-count').html('<strong><span class="text-success">' + selectedCacheGroups.length + ' selected</span><span> | ' + usedCacheGroupCount + ' currently used</span></strong>');
+		$('div.selected-count').html('<strong><span class="text-success">' + selectedCacheGroups.length + ' selected</span><span> | ' + usedCacheGroupCount + ' already used in topology</span></strong>');
 	};
 
-	$scope.topology = topology;
+	$scope.parent = parent;
 
 	$scope.cacheGroups = _.filter(cacheGroups, function(cg) {
 		// all cg types (ORG_LOC, MID_LOC, EDGE_LOC) can be added to the root of a topology
 		// but only EDGE_LOC and MID_LOC can be added farther down the topology tree
-		if (node.type === 'ROOT') return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC');
+		if (parent.type === undefined) return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC');
 		return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC');
 	});
 
@@ -115,7 +115,52 @@ var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGro
 	};
 
 	$scope.submit = function() {
-		$uibModalInstance.close(selectedCacheGroups);
+		let params = {
+			title: 'Assign secondary parent?',
+			message: 'Would you like to assign a secondary parent to the following cache groups? (primary parent = ' + parent.cachegroup + ')<br><br>'
+		};
+		params.message += _.pluck(selectedCacheGroups, 'name').join('<br>') + '<br><br>';
+		let modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			// user wants to select a secondary parent
+			let params = {
+				title: 'Select a secondary parent',
+				message: 'Please select a secondary parent that is part of the ' + topology.name + ' topology',
+				key: 'name'
+			};
+			let modalInstance = $uibModal.open({
+				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+				controller: 'DialogSelectController',
+				size: 'md',
+				resolve: {
+					params: function () {
+						return params;
+					},
+					collection: function() {
+						return usedCacheGroupNames;
+					}
+				}
+			});
+			modalInstance.result.then(function(cg) {
+				// user selected a secondary parent
+				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, secParent: cg.name });
+			}, function () {
+				// user apparently changed their mind and doesn't want to select a secondary parent
+				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, secParent: '' });
+			});
+		}, function () {
+			// user doesn't want to select a secondary parent
+			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, secParent: '' });
+		});
 	};
 
 	$scope.cancel = function () {
@@ -143,5 +188,5 @@ var TableSelectTopologyCacheGroupsController = function(node, topology, cacheGro
 
 };
 
-TableSelectTopologyCacheGroupsController.$inject = ['node', 'topology', 'cacheGroups', 'usedCacheGroupNames', '$scope', '$uibModal', '$uibModalInstance', 'serverService'];
+TableSelectTopologyCacheGroupsController.$inject = ['parent', 'topology', 'cacheGroups', 'usedCacheGroupNames', '$scope', '$uibModal', '$uibModalInstance', 'serverService'];
 module.exports = TableSelectTopologyCacheGroupsController;
