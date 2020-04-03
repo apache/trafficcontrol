@@ -357,8 +357,8 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	}
 
 	if dnssecEnabled {
-		if err := PutDNSSecKeys(tx, cfg, *ds.XMLID, cdnName, ds.ExampleURLs); err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys: " + err.Error())
+		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, cfg, *ds.XMLID, cdnName, ds.ExampleURLs); userErr != nil || sysErr != nil {
+			return nil, statusCode, userErr, sysErr
 		}
 	}
 
