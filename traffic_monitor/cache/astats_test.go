@@ -33,8 +33,6 @@ import (
 )
 
 func TestAstats(t *testing.T) {
-	t.Log("Running Astats Tests")
-
 	text, err := ioutil.ReadFile("astats.json")
 	if err != nil {
 		t.Fatal(err)
@@ -42,7 +40,6 @@ func TestAstats(t *testing.T) {
 	aStats := Astats{}
 	json := jsoniter.ConfigFastest
 	err = json.Unmarshal(text, &aStats)
-	t.Logf("aStats ---> %v\n", aStats)
 	if err != nil {
 		t.Error(err)
 	}
