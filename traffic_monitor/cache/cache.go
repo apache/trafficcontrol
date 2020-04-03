@@ -57,7 +57,7 @@ func (handler Handler) Precompute() bool {
 
 // PrecomputedData represents data parsed and pre-computed from the Result.
 type PrecomputedData struct {
-	DeliveryServiceStats map[tc.DeliveryServiceName]*AStat
+	DeliveryServiceStats map[tc.DeliveryServiceName]*DSStat
 	OutBytes             int64
 	MaxKbps              int64
 	Errors               []error
@@ -66,18 +66,51 @@ type PrecomputedData struct {
 }
 
 // Result is the data result returned by a cache.
+// type Result struct {
+// 	ID              tc.CacheName
+// 	Error           error
+// 	Astats          Astats
+// 	Time            time.Time
+// 	RequestTime     time.Duration
+// 	Vitals          Vitals
+// 	PollID          uint64
+// 	UsingIPv4       bool
+// 	PollFinished    chan<- uint64
+// 	PrecomputedData PrecomputedData
+// 	Available       bool
+// }
+
+// Result is a result of polling a cache server for statistics.
 type Result struct {
-	ID              tc.CacheName
-	Error           error
-	Astats          Astats
-	Time            time.Time
-	RequestTime     time.Duration
-	Vitals          Vitals
-	PollID          uint64
-	UsingIPv4       bool
-	PollFinished    chan<- uint64
-	PrecomputedData PrecomputedData
-	Available       bool
+	// Available indicates whether or not the cache server should be considered
+	// "available" based on its status as configured in Traffic Ops, the cache
+	// server's own reported availability (if applicable), and the polled
+	// vitals and statistics as compared to threshold values.
+	Available bool
+	// Error holds what error - if any - caused the statistic polling to fail.
+	Error error
+	// ID is the fully qualified domain name of the cache server being polled.
+	// (This is assumed to be unique even though that isn't necessarily true)
+	ID string
+	// PollFinished is a channel to which data should be sent to indicate that
+	// polling has been completed and a Result has been produced.
+	PollFinished chan <- uint64
+	// PollID is a unique identifier for the specific polling instance that
+	// produced this Result.
+	PollID uint64
+	// RequestTime holds the elapsed duration between making a statistics
+	// polling request and either receiving a result or giving up.
+	RequestTime time.Duration
+	// Statistics holds the parsed statistic data returned by the cache server.
+	Statistics Statistics
+	// Time is the time at which the result has been obtained.
+	Time time.Time
+	// UsingIPv4 indicates whether IPv4 can/should be/was used by the polling
+	// instance that produced this Result. If ``false'', it may be assumed that
+	// IPv6 was used instead.
+	UsingIPv4 bool
+	// Vitals holds the parsed health information returned by the cache server.
+	Vitals Vitals
 }
 
 // HasStat returns whether the given stat is in the Result.
@@ -86,7 +119,7 @@ func (result *Result) HasStat(stat string) bool {
 	if _, ok := computedStats[stat]; ok {
 		return true // health poll has all computed stats
 	}
-	if _, ok := result.Astats.Ats[stat]; ok {
+	if _, ok := result.Statistics.Miscellaneous[stat]; ok {
 		return true
 	}
 	return false
@@ -210,7 +243,7 @@ func ComputedStats() map[string]StatComputeFunc {
 func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, usingIPv4 bool, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v (format '%v') handle start\n", pollID, time.Now(), format)
 	result := Result{
-		ID:           tc.CacheName(id),
+		ID:           id,
 		Time:         reqEnd,
 		RequestTime:  reqTime,
 		PollID:       pollID,
@@ -225,6 +258,19 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 		return
 	}
 
+	decoder, err := GetDecoder(format)
+	if err != nil {
+		log.Errorln(err.Error())
+	}
+
+	stats, err := decoder(string(result.ID), rdr)
+	if err != nil {
+		log.Warnf("%s decode error '%v'", id, err)
+		result.Error = err
+		handler.resultChan <- result
+		return
+	}
+
 	statDecoder, ok := StatsTypeDecoders[format]
 	if !ok {
 		log.Errorf("Handler cache '%s' stat type '%s' not found! Returning handle error for this cache poll.\n", id, format)
@@ -233,20 +279,20 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 		return
 	}
 
-	decodeErr := error(nil)
-	if decodeErr, result.Astats.Ats, result.Astats.System = statDecoder.Parse(result.ID, rdr); decodeErr != nil {
-		log.Warnf("%s decode error '%v'\n", id, decodeErr)
-		result.Error = decodeErr
-		handler.resultChan <- result
-		return
-	}
+	// decodeErr := error(nil)
+	// if decodeErr, result.Astats.Ats, result.Astats.System = statDecoder.Parse(result.ID, rdr); decodeErr != nil {
+	// 	log.Warnf("%s decode error '%v'\n", id, decodeErr)
+	// 	result.Error = decodeErr
+	// 	handler.resultChan <- result
+	// 	return
+	// }
 
-	if result.Astats.System.ProcNetDev == "" {
-		log.Warnf("Handler cache %s procnetdev empty\n", id)
-	}
-	if result.Astats.System.InfSpeed == 0 {
-		log.Warnf("Handler cache %s inf.speed empty\n", id)
-	}
+	// if result.Astats.System.ProcNetDev == "" {
+	// 	log.Warnf("Handler cache %s procnetdev empty\n", id)
+	// }
+	// if result.Astats.System.InfSpeed == 0 {
+	// 	log.Warnf("Handler cache %s inf.speed empty\n", id)
+	// }
 
 	result.Available = true
 
