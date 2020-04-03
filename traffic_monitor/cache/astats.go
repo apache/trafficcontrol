@@ -23,12 +23,32 @@ import "fmt"
 import "strconv"
 import "strings"
 
-type AStat struct {
+// DSStat is a single Delivery Service statistic, which is associated with
+// a particular cache server.
+// DSStats are referenced by name in a map associated with cache server data,
+// and so that name (XMLID) is not reiterated here.
+type DSStat struct {
+	// InBytes is the total number of bytes received by the cache server which
+	// were for the Delivery Service.
 	InBytes   uint64
+	// OutBytes is the total number of bytes transmitted by the cache server
+	// in service of the Delivery Service.
 	OutBytes  uint64
+	// Status2xx is the number of requests for the Delivery Service's content
+	// that were served with responses having response codes on the interval
+	// [200, 300).
 	Status2xx uint64
+	// Status3xx is the number of requests for the Delivery Service's content
+	// that were served with responses having response codes on the interval
+	// [300, 400).
 	Status3xx uint64
+	// Status4xx is the number of requests for the Delivery Service's content
+	// that were served with responses having response codes on the interval
+	// [400, 500).
 	Status4xx uint64
+	// Status2xx is the number of requests for the Delivery Service's content
+	// that were served with responses having response codes on the interval
+	// [500, 600).
 	Status5xx uint64
 }
 
@@ -135,16 +155,6 @@ type Statistics struct {
 	// Interfaces is a map of network interface names to statistic data about
 	// those interfaces.
 	Interfaces map[string]Interface
-	// Miscellaneous contains all other data that was returned by the
-	// statistics query to the cache server that has no special meaning.
-	// In general, such responses are expected to be in JSON format, and so
-	// this is more or less a direct mapping of the top-level properties of
-	// such a payload to their arbitrary values.
-	//
-	// Note that fields which are parsed into the other Statistics properties
-	// may or may not be included - some parsers trim them out, some do not,
-	// and some trim out only what they can.
-	Miscellaneous map[string]interface{}
 }
 
 // AddInterfaceFromRawLine parses the raw line - presumably read from
