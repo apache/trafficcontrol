@@ -833,7 +833,7 @@ sub check_revalidate_state {
 			( $log_level >> $ERROR ) && print "ERROR status file $status_file does not exist.\n";
 		}
 
-		for my $status ( @{$statuses->{'response'}} ) {
+		for my $status ( @{$statuses} ) {
 			next if ( $status->{name} eq $my_status );
 			my $other_status = $status_dir . "/" . $status->{name};
 
