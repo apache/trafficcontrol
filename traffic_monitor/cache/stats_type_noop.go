@@ -34,6 +34,28 @@ func init() {
 	AddStatsType(StatsTypeNOOP, noopParse, noopPrecompute)
 }
 
+func parseNoOp(string, io.Reader) (Statistics, error) {
+	stats := Statistics{
+		Loadavg: Loadavg{
+			One: 0.1,
+			Five: 0.05,
+			Fifteen: 0.05,
+			CurrentProcesses: 1,
+			TotalProcesses: 1000,
+			LatestPID: 30000,
+		},
+		Interfaces: map[string]Interface{
+			"bond0": Interface{
+				Speed: 20000,
+				BytesIn: 10000,
+				BytesOut: 100000,
+			},
+		},
+		Miscellaneous: map[string]interface{}{},
+	}
+	return stats, nil
+}
+
 func noopParse(cache tc.CacheName, r io.Reader) (error, map[string]interface{}, AstatsSystem) {
 	// we need to make a fake system, so the health parse succeeds
 	return nil, map[string]interface{}{}, AstatsSystem{
