@@ -29,6 +29,7 @@ package cache
 //   `in_bytes`, `out_bytes`, `status_2xx`, `status_3xx`, `status_4xx`, `status_5xx`
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -44,6 +45,62 @@ import (
 
 func init() {
 	AddStatsType("astats", astatsParse, astatsPrecompute)
+	registerDecoder("astats", parseAstats)
+}
+
+
+// AstatsSystem represents fixed system stats returned from the
+// 'astats_over_http' ATS plugin.
+type AstatsSystem struct {
+	InfName           string `json:"inf.name"`
+	InfSpeed          int    `json:"inf.speed"`
+	ProcNetDev        string `json:"proc.net.dev"`
+	ProcLoadavg       string `json:"proc.loadavg"`
+	ConfigLoadRequest int    `json:"configReloadRequests"`
+	LastReloadRequest int    `json:"lastReloadRequest"`
+	ConfigReloads     int    `json:"configReloads"`
+	LastReload        int    `json:"lastReload"`
+	AstatsLoad        int    `json:"astatsLoad"`
+	NotAvailable      bool   `json:"notAvailable,omitempty"`
+}
+
+// Astats contains ATS data returned from the Astats ATS plugin.
+// This includes generic stats, as well as fixed system stats.
+type Astats struct {
+	Ats    map[string]interface{} `json:"ats"`
+	System AstatsSystem           `json:"system"`
+}
+
+func parseAstats(cacheName string, rdr io.Reader) (Statistics, error) {
+	var stats Statistics
+	if rdr == nil {
+		log.Warnf("%s handle reader nil", cacheName)
+		return stats, errors.New("handler got nil reader")
+	}
+
+	var astats Astats
+	if err := json.NewDecoder(rdr).Decode(&astats); err != nil {
+		return stats, err
+	}
+
+	if err := stats.AddInterfaceFromRawLine(astats.System.ProcNetDev); err != nil {
+		return stats, fmt.Errorf("Failed to parse interface line for cache '%s': %v", cacheName, err)
+	}
+	if inf, ok := stats.Interfaces[astats.System.InfName]; !ok {
+		return stats, errors.New("/proc/net/dev line didn't match reported interface line")
+	} else {
+		inf.Speed = int64(astats.System.InfSpeed)
+		stats.Interfaces[astats.System.InfName] = inf
+	}
+
+	if load, err := LoadavgFromRawLine(astats.System.ProcLoadavg); err != nil {
+		return stats, fmt.Errorf("Failed to parse loadavg line for cache '%s': %v", cacheName, err)
+	} else {
+		stats.Loadavg = load
+	}
+
+	stats.Miscellaneous = astats.Ats
+	return stats, nil
 }
 
 func astatsParse(cache tc.CacheName, rdr io.Reader) (error, map[string]interface{}, AstatsSystem) {
@@ -53,8 +110,8 @@ func astatsParse(cache tc.CacheName, rdr io.Reader) (error, map[string]interface
 	}
 	astats := Astats{}
 
-	json := jsoniter.ConfigFastest // TODo make configurable?
-	err := json.NewDecoder(rdr).Decode(&astats)
+	jsonI := jsoniter.ConfigFastest // TODo make configurable?
+	err := jsonI.NewDecoder(rdr).Decode(&astats)
 	return err, astats.Ats, astats.System
 }
 

@@ -23,26 +23,6 @@ import "fmt"
 import "strconv"
 import "strings"
 
-// Astats contains ATS data returned from the Astats ATS plugin. This includes generic stats, as well as fixed system stats.
-type Astats struct {
-	Ats    map[string]interface{} `json:"ats"`
-	System AstatsSystem           `json:"system"`
-}
-
-// AstatsSystem represents fixed system stats returne from ATS by the Astats plugin.
-type AstatsSystem struct {
-	InfName           string `json:"inf.name"`
-	InfSpeed          int    `json:"inf.speed"`
-	ProcNetDev        string `json:"proc.net.dev"`
-	ProcLoadavg       string `json:"proc.loadavg"`
-	ConfigLoadRequest int    `json:"configReloadRequests"`
-	LastReloadRequest int    `json:"lastReloadRequest"`
-	ConfigReloads     int    `json:"configReloads"`
-	LastReload        int    `json:"lastReload"`
-	AstatsLoad        int    `json:"astatsLoad"`
-	NotAvailable      bool   `json:"notAvailable,omitempty"`
-}
-
 type AStat struct {
 	InBytes   uint64
 	OutBytes  uint64
