@@ -312,7 +312,7 @@ func getDisabledLocations(deliveryService string, deliveryServiceServers []strin
 	return disabledLocations
 }
 
-func getDeliveryServiceCacheAvailability(cacheStates map[string]tc.IsAvailable, deliveryServiceServers []string) (map[string]tc.IsAvailable) {
+func getDeliveryServiceCacheAvailability(cacheStates map[string]tc.IsAvailable, deliveryServiceServers []string) map[string]tc.IsAvailable {
 	dsCacheStates := map[string]tc.IsAvailable{}
 	for _, server := range deliveryServiceServers {
 		dsCacheStates[server] = cacheStates[server]

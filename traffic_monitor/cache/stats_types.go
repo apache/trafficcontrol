@@ -95,7 +95,7 @@ const DefaultStatsType = "astats"
 // of a particular format, and parsing that data and precomputing related
 // data, respectively.
 type StatsDecoder struct {
-	Parse StatisticsParser
+	Parse      StatisticsParser
 	Precompute StatisticsPrecomputer
 }
 
@@ -112,7 +112,6 @@ type StatisticsParser func(string, io.Reader) (Statistics, map[string]interface{
 // Precomputers aren't called until a statistics poll is done, whereas basic
 // Statistics are calculated even for Health polls.
 type StatisticsPrecomputer func(string, todata.TOData, Statistics, map[string]interface{}) PrecomputedData
-
 
 var statDecoders = map[string]StatsDecoder{}
 

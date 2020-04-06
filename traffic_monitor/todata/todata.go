@@ -64,9 +64,9 @@ func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (string
 // NewRegexes constructs a new Regexes object, initializing internal pointer members.
 func NewRegexes() Regexes {
 	return Regexes{
-		DirectMatches: map[string]string{},
+		DirectMatches:                      map[string]string{},
 		DotStartSlashDotFooSlashDotDotStar: map[string]string{},
-		RegexMatch: map[*regexp.Regexp]string{},
+		RegexMatch:                         map[*regexp.Regexp]string{},
 	}
 }
 
@@ -123,8 +123,8 @@ func (d TODataThreadsafe) set(newTOData TOData) {
 type CRConfig struct {
 	ContentServers map[string]struct {
 		DeliveryServices map[string][]string `json:"deliveryServices"`
-		CacheGroup       string                              `json:"cacheGroup"`
-		Type             string                              `json:"type"`
+		CacheGroup       string              `json:"cacheGroup"`
+		Type             string              `json:"type"`
 	} `json:"contentServers"`
 	DeliveryServices map[string]struct {
 		Matchsets []struct {

@@ -193,7 +193,7 @@ func addHealth(cacheData []CacheData, crStates tc.CRStates) []CacheData {
 }
 
 type CacheData struct {
-	HostName    string      `json:"hostname"`
+	HostName    string            `json:"hostname"`
 	CacheGroup  tc.CacheGroupName `json:"cachegroup"`
 	Status      string            `json:"status"`
 	Profile     string            `json:"profile"`

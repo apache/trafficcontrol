@@ -34,22 +34,22 @@ import (
 
 func TestCalcAvailabilityThresholds(t *testing.T) {
 	result := cache.Result{
-		ID:    "myCacheName",
-		Error: nil,
+		ID:            "myCacheName",
+		Error:         nil,
 		Miscellaneous: map[string]interface{}{},
 		Statistics: cache.Statistics{
 			Loadavg: cache.Loadavg{
-				One: 5.43,
-				Five: 4.32,
-				Fifteen: 3.21,
+				One:              5.43,
+				Five:             4.32,
+				Fifteen:          3.21,
 				CurrentProcesses: 3,
-				TotalProcesses: 1234,
-				LatestPID: 32109,
+				TotalProcesses:   1234,
+				LatestPID:        32109,
 			},
 			Interfaces: map[string]cache.Interface{
 				"bond0": cache.Interface{
-					Speed: 20000,
-					BytesIn: 1234567891011121,
+					Speed:    20000,
+					BytesIn:  1234567891011121,
 					BytesOut: 12345678910111213,
 				},
 			},

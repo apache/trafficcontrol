@@ -35,17 +35,17 @@ func init() {
 func noOpParse(string, io.Reader) (Statistics, map[string]interface{}, error) {
 	stats := Statistics{
 		Loadavg: Loadavg{
-			One: 0.1,
-			Five: 0.05,
-			Fifteen: 0.05,
+			One:              0.1,
+			Five:             0.05,
+			Fifteen:          0.05,
 			CurrentProcesses: 1,
-			TotalProcesses: 1000,
-			LatestPID: 30000,
+			TotalProcesses:   1000,
+			LatestPID:        30000,
 		},
 		Interfaces: map[string]Interface{
 			"bond0": Interface{
-				Speed: 20000,
-				BytesIn: 10000,
+				Speed:    20000,
+				BytesIn:  10000,
 				BytesOut: 100000,
 			},
 		},

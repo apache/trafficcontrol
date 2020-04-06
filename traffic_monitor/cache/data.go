@@ -58,10 +58,10 @@ type AvailableStatus struct {
 	LastCheckedIPv4    bool
 	// The name of the actual status the cache server has, as configured in
 	// Traffic Ops.
-	Status             string
+	Status string
 	// Why will contain the reason a cache server has been purposely marked
 	// unavailable by a Traffic Ops operator, if indeed that has occurred.
-	Why                string
+	Why string
 	// UnavailableStat is the stat whose threshold made the cache unavailable.
 	// If this is the empty string, the cache is unavailable for a
 	// non-threshold reason. This exists so a poller (health, stat) won't mark
@@ -114,7 +114,7 @@ type ResultStatVal struct {
 	// have the value, the time of the last poll, and a Span of 50.
 	// Assuming the poll time is every 8 seconds, users will then know, looking
 	// at the Span, that the value was unchanged for the last 50*8=400 seconds.
-	Span uint64      `json:"span"`
+	Span uint64 `json:"span"`
 	// Time is the time this stat was returned.
 	Time time.Time   `json:"time"`
 	Val  interface{} `json:"value"`

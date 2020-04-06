@@ -25,7 +25,7 @@ import (
 
 // CRStates includes availability data for caches and delivery services, as gathered and aggregated by this Traffic Monitor. It is designed to be served at an API endpoint primarily for Traffic Routers (Content Router) to consume.
 type CRStates struct {
-	Caches          map[string]IsAvailable                       `json:"caches"`
+	Caches          map[string]IsAvailable             `json:"caches"`
 	DeliveryService map[string]CRStatesDeliveryService `json:"deliveryServices"`
 }
 

@@ -29,9 +29,7 @@ import "strconv"
 import "github.com/apache/trafficcontrol/lib/go-log"
 import "github.com/apache/trafficcontrol/traffic_monitor/todata"
 
-
 import "github.com/json-iterator/go"
-
 
 // LOADAVG_SHIFT is the amount by which "loadavg" values returned by
 // stats_over_http need to be divided to obtain the values with which ATC
@@ -60,7 +58,7 @@ type stats_over_httpData struct {
 
 func statsOverHTTPParse(cacheName string, data io.Reader) (Statistics, map[string]interface{}, error) {
 	var stats Statistics
-	if (data == nil) {
+	if data == nil {
 		log.Warnf("Cannot read stats data for cache '%s' - nil data reader", cacheName)
 		return stats, nil, errors.New("handler got nil reader")
 	}
@@ -171,7 +169,7 @@ func parseLoadAvg(stats map[string]interface{}) (Loadavg, error) {
 	return load, nil
 }
 
-func parseInterfaces(stats map[string]interface{}) (map[string]Interface) {
+func parseInterfaces(stats map[string]interface{}) map[string]Interface {
 	ifaces := make(map[string]Interface)
 	for stat, value := range stats {
 		// The form of the output isn't fully documented, so when something isn't
@@ -317,7 +315,7 @@ func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statist
 	precomputed.MaxKbps = 0
 	for _, iface := range stats.Interfaces {
 		precomputed.OutBytes += iface.BytesOut
-		if (iface.Speed > precomputed.MaxKbps) {
+		if iface.Speed > precomputed.MaxKbps {
 			precomputed.MaxKbps = iface.Speed
 		}
 	}

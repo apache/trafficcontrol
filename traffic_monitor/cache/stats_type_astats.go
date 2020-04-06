@@ -46,7 +46,6 @@ func init() {
 	registerDecoder("astats", astatsParse, astatsPrecompute)
 }
 
-
 // AstatsSystem represents fixed system stats returned from the
 // 'astats_over_http' ATS plugin.
 type AstatsSystem struct {

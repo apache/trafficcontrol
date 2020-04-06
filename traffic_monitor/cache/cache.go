@@ -59,13 +59,13 @@ type PrecomputedData struct {
 	DeliveryServiceStats map[string]*DSStat
 	// This is the total bytes transmitted by all interfaces on the Cache
 	// Server.
-	OutBytes             uint64
+	OutBytes uint64
 	// MaxKbps is the maximum bandwidth of all interfaces on the Cache Server,
 	// each one calculated as the speed of the interface in Kbps.
-	MaxKbps              int64
-	Errors               []error
-	Reporting            bool
-	Time                 time.Time
+	MaxKbps   int64
+	Errors    []error
+	Reporting bool
+	Time      time.Time
 }
 
 // Result is the data result returned by a cache.
@@ -93,14 +93,14 @@ type Result struct {
 	Error error
 	// ID is the fully qualified domain name of the cache server being polled.
 	// (This is assumed to be unique even though that isn't necessarily true)
-	ID string
+	ID            string
 	Miscellaneous map[string]interface{}
 	// PollFinished is a channel to which data should be sent to indicate that
 	// polling has been completed and a Result has been produced.
-	PollFinished chan <- uint64
+	PollFinished chan<- uint64
 	// PollID is a unique identifier for the specific polling instance that
 	// produced this Result.
-	PollID uint64
+	PollID          uint64
 	PrecomputedData PrecomputedData
 	// RequestTime holds the elapsed duration between making a statistics
 	// polling request and either receiving a result or giving up.

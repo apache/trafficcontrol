@@ -74,22 +74,22 @@ func getMockRawStats(cacheName string, dsNameFQDNs map[string]string) map[string
 func getMockStatistics(infSpeed int64, outBytes uint64) Statistics {
 	infName := randStr()
 	return Statistics{
-		Loadavg: Loadavg {
-			One: 1.2,
-			Five: 2.34,
-			Fifteen: 5.67,
+		Loadavg: Loadavg{
+			One:              1.2,
+			Five:             2.34,
+			Fifteen:          5.67,
 			CurrentProcesses: 1,
-			TotalProcesses: 876,
-			LatestPID: 1234,
+			TotalProcesses:   876,
+			LatestPID:        1234,
 		},
 		Interfaces: map[string]Interface{
 			infName: Interface{
-				Speed: infSpeed,
+				Speed:    infSpeed,
 				BytesOut: outBytes,
-				BytesIn: 12234567,
+				BytesIn:  12234567,
 			},
 		},
-		NotAvailable:      randBool(),
+		NotAvailable: randBool(),
 	}
 
 }

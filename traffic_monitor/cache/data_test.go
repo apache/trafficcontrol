@@ -86,17 +86,17 @@ func randStats() (Statistics, map[string]interface{}) {
 func randStatistics() Statistics {
 	return Statistics{
 		Loadavg: Loadavg{
-			One: rand.Float64(),
-			Five: rand.Float64(),
-			Fifteen: rand.Float64(),
+			One:              rand.Float64(),
+			Five:             rand.Float64(),
+			Fifteen:          rand.Float64(),
 			CurrentProcesses: rand.Uint64(),
-			TotalProcesses: rand.Uint64(),
-			LatestPID: rand.Int63(),
+			TotalProcesses:   rand.Uint64(),
+			LatestPID:        rand.Int63(),
 		},
 		Interfaces: map[string]Interface{
 			randStr(): Interface{
-				Speed: rand.Int63(),
-				BytesIn: rand.Uint64(),
+				Speed:    rand.Int63(),
+				BytesIn:  rand.Uint64(),
 				BytesOut: rand.Uint64(),
 			},
 		},

@@ -30,10 +30,10 @@ import "strings"
 type DSStat struct {
 	// InBytes is the total number of bytes received by the cache server which
 	// were for the Delivery Service.
-	InBytes   uint64
+	InBytes uint64
 	// OutBytes is the total number of bytes transmitted by the cache server
 	// in service of the Delivery Service.
-	OutBytes  uint64
+	OutBytes uint64
 	// Status2xx is the number of requests for the Delivery Service's content
 	// that were served with responses having response codes on the interval
 	// [200, 300).
