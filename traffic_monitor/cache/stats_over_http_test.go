@@ -28,21 +28,22 @@ func TestStatsOverHTTPParse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stats, _, err := statsOverHTTPParse("test", fd)
+	stats, misc, err := statsOverHTTPParse("test", fd)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Logf("parsed %d miscellaneous stats", len(stats.Miscellaneous))
+	t.Logf("parsed %d miscellaneous stats", len(misc))
 
-	if stats.Loadavg.One != 0.092773438 {
-		t.Errorf("Incorrect one-minute loadavg, expected 0.092773438, got '%f'", stats.Loadavg.One)
+	// Floating-Point arithmetic...
+	if stats.Loadavg.One <= 0.092773437 || stats.Loadavg.One >= 0.092773439 {
+		t.Errorf("Incorrect one-minute loadavg, expected roughly 0.092773438, got '%.10f'", stats.Loadavg.One)
 	}
-	if stats.Loadavg.Five != 0.254394531 {
-		t.Errorf("Incorrect five-minute loadavg, expected 0.254394531, got %f", stats.Loadavg.Five)
+	if stats.Loadavg.Five <= 0.25439453 || stats.Loadavg.Five >= 0.254394532 {
+		t.Errorf("Incorrect five-minute loadavg, expected roughly 0.254394531, got %.10f", stats.Loadavg.Five)
 	}
-	if stats.Loadavg.Fifteen != 0.639160156 {
-		t.Errorf("Incorrect fifteen-minute loadavg, expected 0.639160156, got %f", stats.Loadavg.Fifteen)
+	if stats.Loadavg.Fifteen <= 0.639160155 || stats.Loadavg.Fifteen >= 639160157 {
+		t.Errorf("Incorrect fifteen-minute loadavg, expected roughly 0.639160156, got %.10f", stats.Loadavg.Fifteen)
 	}
 	if stats.Loadavg.TotalProcesses != 803 {
 		t.Errorf("Incorrect current_processes, expected 803, got %d", stats.Loadavg.CurrentProcesses)
