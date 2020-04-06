@@ -68,7 +68,6 @@ package cache
  * under the License.
  */
 
-import "encoding/json"
 import "errors"
 import "fmt"
 import "io"
@@ -77,6 +76,11 @@ import "strings"
 import "strconv"
 
 import "github.com/apache/trafficcontrol/lib/go-log"
+import "github.com/apache/trafficcontrol/traffic_monitor/todata"
+
+
+import "github.com/json-iterator/go"
+
 
 // LOADAVG_SHIFT is the amount by which "loadavg" values returned by
 // stats_over_http need to be divided to obtain the values with which ATC
@@ -92,18 +96,18 @@ import "github.com/apache/trafficcontrol/lib/go-log"
 // Dividing by this number is kind of a shortcut, for the actual transformation
 // used by the kernel itself, refer to the source:
 // https://github.com/torvalds/linux/blob/master/fs/proc/loadavg.c
-// const LOADAVG_SHIFT = 65536
+const LOADAVG_SHIFT = 65536
 
 func init() {
 	// AddStatsType("stats_over_http", statsParse, statsPrecompute)
-	registerDecoder("stats_over_http", parseStats)
+	registerDecoder("stats_over_http", statsOverHTTPParse, statsOverHTTPPrecompute)
 }
 
 type stats_over_httpData struct {
 	Global map[string]interface{} `json:"global"`
 }
 
-func parseStats(cacheName string, data io.Reader) (Statistics, map[string]interface{}, error) {
+func statsOverHTTPParse(cacheName string, data io.Reader) (Statistics, map[string]interface{}, error) {
 	var stats Statistics
 	if (data == nil) {
 		log.Warnf("Cannot read stats data for cache '%s' - nil data reader", cacheName)
@@ -111,6 +115,7 @@ func parseStats(cacheName string, data io.Reader) (Statistics, map[string]interf
 	}
 
 	var sohData stats_over_httpData
+	json := jsoniter.ConfigFastest
 	err := json.NewDecoder(data).Decode(&sohData)
 	if err != nil {
 		return stats, nil, err
@@ -141,12 +146,12 @@ func parseLoadAvg(stats map[string]interface{}) (Loadavg, error) {
 	} else {
 		switch t := stat.(type) {
 		case float64:
-			load.One = stat.(float64)
+			load.One = stat.(float64) / LOADAVG_SHIFT
 		case string:
 			if statVal, err := strconv.ParseFloat(stat.(string), 64); err != nil {
 				return load, fmt.Errorf("loadavg.one could not parse to float, was '%v' (%v)", stat, err)
 			} else {
-				load.One = statVal
+				load.One = statVal / LOADAVG_SHIFT
 			}
 		default:
 			return load, fmt.Errorf("loadavg.one had unrecognized type '%T'", t)
@@ -159,12 +164,12 @@ func parseLoadAvg(stats map[string]interface{}) (Loadavg, error) {
 	} else {
 		switch t := stat.(type) {
 		case float64:
-			load.Five = stat.(float64)
+			load.Five = stat.(float64) / LOADAVG_SHIFT
 		case string:
 			if statVal, err := strconv.ParseFloat(stat.(string), 64); err != nil {
 				return load, fmt.Errorf("loadavg.five could not parse to float, was '%v' (%v)", stat, err)
 			} else {
-				load.Five = statVal
+				load.Five = statVal / LOADAVG_SHIFT
 			}
 		default:
 			return load, fmt.Errorf("loadavg.five had unrecognized type '%T'", t)
@@ -177,12 +182,12 @@ func parseLoadAvg(stats map[string]interface{}) (Loadavg, error) {
 	} else {
 		switch t := stat.(type) {
 		case float64:
-			load.Fifteen = stat.(float64)
+			load.Fifteen = stat.(float64) / LOADAVG_SHIFT
 		case string:
 			if statVal, err := strconv.ParseFloat(stat.(string), 64); err != nil {
 				return load, fmt.Errorf("loadavg.fifteen could not parse to float, was '%v' (%v)", stat, err)
 			} else {
-				load.Fifteen = statVal
+				load.Fifteen = statVal / LOADAVG_SHIFT
 			}
 		default:
 			return load, fmt.Errorf("loadavg.fifteen had unrecognized type '%T'", t)
@@ -309,57 +314,127 @@ func parseInterfaces(stats map[string]interface{}) (map[string]Interface) {
 	return ifaces
 }
 
-func statsParse(cacheName string, data io.Reader) (error, map[string]interface{}, AstatsSystem) {
-	var outStats AstatsSystem
-	if (data == nil) {
-		log.Warnf("Cannot read stats data for cache '%s' - nil data reader", cacheName)
-		return errors.New("handler got nil reader"), nil, outStats
+func parseNumericStat(value interface{}) (uint64, error) {
+	switch t := value.(type) {
+	case uint:
+		return uint64(value.(uint)), nil
+	case uint32:
+		return uint64(value.(uint32)), nil
+	case uint64:
+		return value.(uint64), nil
+	case int:
+		if value.(int) < 0 {
+			return 0, errors.New("value was negative")
+		}
+		return uint64(value.(int)), nil
+	case int32:
+		if value.(int32) < 0 {
+			return 0, errors.New("value was negative")
+		}
+		return uint64(value.(int32)), nil
+	case int64:
+		if value.(int64) < 0 {
+			return 0, errors.New("value was negative")
+		}
+		return uint64(value.(uint64)), nil
+	case float64:
+		if value.(float64) > math.MaxUint64 || value.(float64) < 0 {
+			return 0, errors.New("value out of range for uint64")
+		}
+		return uint64(value.(float64)), nil
+	case float32:
+		if value.(float32) > math.MaxUint64 || value.(float32) < 0 {
+			return 0, errors.New("value out of range for uint64")
+		}
+		return uint64(value.(float64)), nil
+	case string:
+		if statVal, err := strconv.ParseUint(value.(string), 10, 64); err != nil {
+			return 0, fmt.Errorf("Could not parse '%v' to uint64: %v", value, err)
+		} else {
+			return statVal, nil
+		}
+	default:
+		return 0, fmt.Errorf("value '%v' is of unrecognized type %T", value, t)
 	}
+}
 
-	statsData := make(map[string]interface{})
-	if err := json.NewDecoder(data).Decode(&statsData); err != nil {
-		return err, nil, outStats
+func statsOverHTTPPrecompute(cacheName string, data todata.TOData, stats Statistics, miscStats map[string]interface{}) PrecomputedData {
+	var precomputed PrecomputedData
+	precomputed.DeliveryServiceStats = make(map[string]*DSStat)
+
+	precomputed.OutBytes = 0
+	precomputed.MaxKbps = 0
+	for _, iface := range stats.Interfaces {
+		precomputed.OutBytes += iface.BytesOut
+		if (iface.Speed > precomputed.MaxKbps) {
+			precomputed.MaxKbps = iface.Speed
+		}
 	}
+	precomputed.MaxKbps *= 1000
 
-	if stat, ok := statsData["plugin.system_stats.loadavg.one"]; !ok {
-		return errors.New("Data was missing 'plugin.system_stats.loadavg.one'"), nil, outStats
-	} else if statStr, ok := stat.(string); !ok {
-		return errors.New("'plugin.system_stats.loadavg.one' was not a string"), nil, outStats
-	} else {
-		outStats.ProcLoadavg = statStr
-	}
+	for stat, value := range miscStats {
+		if strings.HasPrefix(stat, "plugin.remap_stats.") {
+			trimmedStat := strings.TrimPrefix(stat, "plugin.remap_stats.")
 
-	if stat, ok := statsData["plugin.system_stats.loadavg.five"]; !ok {
-		return errors.New("Data was missing 'plugin.system_stats.loadavg.five'"), nil, outStats
-	} else if statStr, ok := stat.(string); !ok {
-		return errors.New("'plugin.system_stats.loadavg.five' was not a string"), nil, outStats
-	} else {
-		outStats.ProcLoadavg += " " + statStr
-	}
-
-	if stat, ok := statsData["plugin.system_stats.loadavg.ten"]; !ok {
-		return errors.New("Data was missing 'plugin.system_stats.loadavg.ten'"), nil, outStats
-	} else if statStr, ok := stat.(string); !ok {
-		return errors.New("'plugin.system_stats.loadavg.ten' was not a string"), nil, outStats
-	} else {
-		outStats.ProcLoadavg += " " + statStr + " 0/0 0" // Dummy end stats, since they aren't used by TM and aren't reported by stats_over_http
-	}
-
-	systemStatsData := make(map[string]interface{})
-	for key, value := range statsData {
-		if strings.HasPrefix(key, "plugin.system_stats.") {
-			key = strings.TrimPrefix(key, "plugin.system_stats.")
-			if strings.HasPrefix(key, "loadavg.") {
-				key = strings.TrimPrefix(key, "loadavg.")
+			statParts := strings.Split(trimmedStat, ".")
+			if len(statParts) < 3 {
+				err := errors.New("stat has no remap_stats deliveryservice and name parts")
+				log.Infof("precomputing cache %s stat %s value %v error %v", cacheName, stat, value, err)
+				precomputed.Errors = append(precomputed.Errors, err)
+				continue
 			}
-			systemStatsData[strings.TrimPrefix(key, "plugin.system_stats")] = value
+
+			subsubdomain := statParts[0]
+			subdomain := statParts[1]
+			domain := strings.Join(statParts[2:len(statParts)-1], ".")
+
+			ds, ok := data.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
+			if !ok {
+				err := errors.New("No Delivery Service match for stat")
+				log.Infof("precomputing cache %s stat %s value %v error %v", cacheName, stat, value, err)
+				precomputed.Errors = append(precomputed.Errors, err)
+				continue
+			}
+			if ds == "" {
+				err := errors.New("Empty Delivery Service FQDN")
+				log.Infof("precomputing cache %s stat %s value %v error %v", cacheName, stat, value, err)
+				precomputed.Errors = append(precomputed.Errors, err)
+				continue
+			}
+
+			dsName := string(ds)
+			dsStat := precomputed.DeliveryServiceStats[dsName]
+
+			parsedStat, err := parseNumericStat(value)
+			if err != nil {
+				err = fmt.Errorf("couldn't parse numeric stat: %v", err)
+				log.Infof("precomputing cache %s stat %s value %v error %v", cacheName, stat, value, err)
+				precomputed.Errors = append(precomputed.Errors, err)
+				continue
+			}
+
+			switch statParts[len(statParts)-1] {
+			case "status_2xx":
+				dsStat.Status2xx = parsedStat
+			case "status_3xx":
+				dsStat.Status3xx = parsedStat
+			case "status_4xx":
+				dsStat.Status4xx = parsedStat
+			case "status_5xx":
+				dsStat.Status5xx = parsedStat
+			case "out_bytes":
+				dsStat.OutBytes = parsedStat
+			case "in_bytes":
+				dsStat.InBytes = parsedStat
+			default:
+				err = fmt.Errorf("Unknown stat '%s'", statParts[len(statParts)-1])
+				log.Infof("precomputing cache %s stat %s value %v error %v", cacheName, stat, value, err)
+				precomputed.Errors = append(precomputed.Errors, err)
+				continue
+			}
+			precomputed.DeliveryServiceStats[dsName] = dsStat
 		}
 	}
 
-	return nil, nil, outStats
-
+	return precomputed
 }
-
-// func statsPrecompute(cacheName string, data todata.TOData, stats map[string]interface{}, systemStats AstatsSystem) PrecomputedData {
-
-// }
