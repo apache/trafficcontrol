@@ -58,10 +58,9 @@ func CreateTestTypes(t *testing.T) {
 		}
 
 		if err != nil {
-			t.Errorf("could not CREATE types: %v", err)
+			t.Fatalf("could not CREATE types: %v", err)
 		}
 	}
-
 }
 
 func UpdateTestTypes(t *testing.T) {
@@ -74,11 +73,18 @@ func UpdateTestTypes(t *testing.T) {
 		if err != nil {
 			t.Fatalf("cannot GET Type by name: %v - %v", originalType.Name, err)
 		}
+		if len(resp) < 1 {
+			t.Fatalf("no types by name: %v", originalType.Name)
+		}
+
 		remoteType := resp[0]
 		remoteType.Name = expectedTypeName
+		// Ensure TO checks DB for UseInTable value
+		remoteType.UseInTable = "server"
+
 		var alert tc.Alerts
 		alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
-		if remoteType.UseInTable != "server" {
+		if originalType.UseInTable != "server" {
 			if err == nil {
 				t.Fatalf("expected UPDATE on type %v to fail", remoteType.ID)
 			}
@@ -95,6 +101,9 @@ func UpdateTestTypes(t *testing.T) {
 		respType := resp[0]
 		if respType.Name != expectedTypeName {
 			t.Fatalf("results do not match actual: %s, expected: %s", respType.Name, expectedTypeName)
+		}
+		if respType.UseInTable != originalType.UseInTable {
+			t.Fatalf("use in table should never be updated, got: %v, expected %v", respType.UseInTable, originalType.UseInTable)
 		}
 
 		// Revert name change
