@@ -19,7 +19,8 @@ package cache
  * under the License.
  */
 
-// stats_type_noop is a no-op parser designed to work with the the noop poller, to report caches as healthy without actually polling them.
+// noop is a no-op parser designed to work with the the no-op poller,
+// to report caches as healthy without actually polling them.
 
 import (
 	"io"
@@ -28,7 +29,6 @@ import (
 )
 
 func init() {
-	// AddStatsType(StatsTypeNOOP, noopParse, noopPrecompute)
 	registerDecoder("noop", noOpParse, noopPrecompute)
 }
 
