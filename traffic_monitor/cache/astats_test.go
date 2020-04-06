@@ -20,7 +20,6 @@ package cache
  */
 
 import (
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"testing"
