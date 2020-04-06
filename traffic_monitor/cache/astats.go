@@ -155,6 +155,10 @@ type Statistics struct {
 	// Interfaces is a map of network interface names to statistic data about
 	// those interfaces.
 	Interfaces map[string]Interface
+	// NotAvailable reports whether or not the cache server is unavailable.
+	// Sometimes caches can directly report this, but it's not supported by
+	// stats_over_http (afaik), so it always just uses ``false''
+	NotAvailable bool
 }
 
 // AddInterfaceFromRawLine parses the raw line - presumably read from
