@@ -138,7 +138,7 @@ results that could possibly be returned given the non-pagination query
 parameters supplied by the client.
 
 ### HTTP Request Methods
-[RFC 2616 Section 9](https://tools.ietf.org/html/rfc2616#section-9) defines the
+[RFC 7231 Section 4](https://tools.ietf.org/html/rfc7231#section-4) defines the
 semantics of HTTP/1.1 request methods. Authors should conform to that set of
 standards whenever possible, but for convenience the methods recognized by
 Traffic Ops and their meanings in that context are herein defined.
