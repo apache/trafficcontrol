@@ -36,13 +36,21 @@ type StatsTypeDecoder struct {
 	Precompute StatsTypePrecomputer
 }
 
-// StatisticsDecoder is a function that parses raw input data for a given
+// StatsDecoder is a pair of functions registered for decoding statistics
+// of a particular format, and parsing that data and precomputing related
+// data, respectively.
+type StatsDecoder struct {
+	Parse StatisticsParser
+	Precompute StatisticsPrecomputer
+}
+
+// StatisticsParser is a function that parses raw input data for a given
 // statistics format and returns the meaningful statistics.
 // In addition to the decoded statistics, the decoder should also return
 // whatever miscellaneous data was in the payload but not represented by
 // the properties of a Statistics object, so that it can be used in later
 // calculations if necessary.
-type StatisticsDecoder func(string, io.Reader) (Statistics, map[string]interface{}, error)
+type StatisticsParser func(string, io.Reader) (Statistics, map[string]interface{}, error)
 
 // StatisticsPrecomputer is a function that "pre-computes" some statistics
 // beyond the basic ones covered by a Statistics object.
@@ -72,17 +80,17 @@ func AddStatsType(typeName string, parser StatsTypeParser, precomputer StatsType
 	StatsTypeDecoders[typeName] = StatsTypeDecoder{Parse: parser, Precompute: precomputer}
 }
 
-var statDecoders = map[string]StatisticsDecoder{}
+var statDecoders = map[string]StatsDecoder{}
 
 // GetDecoder gets a decoder for the given statistic format. Returns an error
 // if no parser for the given format exists.
-func GetDecoder(format string) (StatisticsDecoder, error) {
+func GetDecoder(format string) (StatsDecoder, error) {
 	if decoder, ok := statDecoders[format]; ok {
 		return decoder, nil
 	}
-	return nil, fmt.Errorf("No decoder registered for format '%s'", format)
+	return StatsDecoder{}, fmt.Errorf("No decoder registered for format '%s'", format)
 }
 
-func registerDecoder(format string, decoder StatisticsDecoder) {
-	statDecoders[format] = decoder
+func registerDecoder(format string, parser StatisticsParser, precomputer StatisticsPrecomputer) {
+	statDecoders[format] = StatsDecoder{Parse: parser, Precompute: precomputer}
 }
