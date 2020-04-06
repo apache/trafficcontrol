@@ -1,0 +1,7 @@
+node_modules/*
+etc/*
+docker/*
+build/*
+app/dist/*
+app/bower_components/*
+app/src/assets/js/*
