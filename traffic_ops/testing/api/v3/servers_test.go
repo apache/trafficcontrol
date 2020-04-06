@@ -121,7 +121,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Assign server to DS
-	_, err = TOSession.CreateDeliveryServiceServers(*dses[0].ID, []int{remoteServer.ID}, true)
+	_, _, err = TOSession.CreateDeliveryServiceServers(*dses[0].ID, []int{remoteServer.ID}, true)
 	if err != nil {
 		t.Fatalf("POST delivery service servers: %v", err)
 	}

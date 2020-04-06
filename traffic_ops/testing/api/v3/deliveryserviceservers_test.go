@@ -17,6 +17,7 @@ package v3
 
 import (
 	"errors"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -27,6 +28,7 @@ import (
 func TestDeliveryServiceServers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		DeleteTestDeliveryServiceServers(t)
+		AssignServersToTopologyBasedDeliveryService(t)
 	})
 }
 
@@ -35,6 +37,52 @@ func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		CreateTestDeliveryServiceServersWithRequiredCapabilities(t)
 		CreateTestMSODSServerWithReqCap(t)
 	})
+}
+
+func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top")
+	if err != nil {
+		t.Fatalf("cannot GET delivery service 'ds-top': %s", err.Error())
+	}
+	if len(ds) != 1 {
+		t.Fatalf("expected one delivery service: 'ds-top', actual: %v", ds)
+	}
+	if ds[0].Topology == nil {
+		t.Fatal("expected delivery service: 'ds-top' to have a non-nil Topology, actual: nil")
+	}
+	serversResp, _, err := TOSession.GetServers()
+	servers := []tc.Server{}
+	for _, s := range serversResp {
+		if s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
+			servers = append(servers, s)
+		}
+	}
+	if len(servers) < 1 {
+		t.Fatalf("expected: at least one EDGE in cdn %s, actual: %v", *ds[0].CDNName, servers)
+	}
+	serverNames := []string{}
+	for _, s := range servers {
+		if s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
+			serverNames = append(serverNames, s.HostName)
+		} else {
+			t.Fatalf("expected only EDGE servers in cdn '%s', actual: %v", *ds[0].CDNName, servers)
+		}
+	}
+	_, reqInf, err := TOSession.AssignServersToDeliveryService(serverNames, "ds-top")
+	if err == nil {
+		t.Fatal("assigning servers to topology-based delivery service - expected: error, actual: nil error")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("assigning servers to topology-based delivery service - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+	}
+
+	_, reqInf, err = TOSession.CreateDeliveryServiceServers(*ds[0].ID, []int{servers[0].ID}, false)
+	if err == nil {
+		t.Fatal("creating delliveryserviceserver assignment for topology-based delivery service - expected: error, actual: nil error")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("creating delliveryserviceserver assignment for topology-based delivery service - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+	}
 }
 
 func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
@@ -89,7 +137,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 				t.Fatalf("could not POST the server capability %v to server %v: %v", *ctc.ssc.ServerCapability, *ctc.ssc.Server, err)
 			}
 
-			_, got := TOSession.CreateDeliveryServiceServers(*ctc.capability.DeliveryServiceID, []int{server.ID}, true)
+			_, _, got := TOSession.CreateDeliveryServiceServers(*ctc.capability.DeliveryServiceID, []int{server.ID}, true)
 			if (ctc.err == nil && got != nil) || (ctc.err != nil && !strings.Contains(got.Error(), ctc.err.Error())) {
 				t.Fatalf("expected ctc.err to contain %v, got %v", ctc.err, got)
 			}
@@ -149,7 +197,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 		t.Fatal("expected to find origin server denver-mso-org-01 to be in eligible server return even though it is missing a required capability")
 	}
 
-	if _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap[0].DeliveryServiceID, []int{s.ID}, true); err != nil {
+	if _, _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap[0].DeliveryServiceID, []int{s.ID}, true); err != nil {
 		t.Fatalf("POST delivery service origin servers without capabilities: %v", err)
 	}
 
@@ -181,7 +229,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	dses, servers := getServersAndDSes(t)
 	ds, server := dses[0], servers[0]
 
-	_, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{server.ID}, true)
+	_, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{server.ID}, true)
 	if err != nil {
 		t.Errorf("POST delivery service servers: %v", err)
 	}

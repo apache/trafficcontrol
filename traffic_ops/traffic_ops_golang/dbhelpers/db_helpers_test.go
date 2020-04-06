@@ -126,7 +126,7 @@ func TestGetCacheGroupByName(t *testing.T) {
 				mock.ExpectQuery("cachegroup").WillReturnRows(rows)
 			}
 			mock.ExpectCommit()
-			_, exists, err := GetCacheGroupNameFromID(db.MustBegin().Tx, int64(1))
+			_, exists, err := GetCacheGroupNameFromID(db.MustBegin().Tx, 1)
 			if testCase.storageError != nil && err == nil {
 				t.Errorf("Storage error expected: received no storage error")
 			}
