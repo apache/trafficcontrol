@@ -21,8 +21,6 @@ package health
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -42,57 +40,25 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 		return
 	}
 
-	newResult.Vitals.LoadAvg = newResult.Statistics.Loadavg.One
 	// proc.loadavg -- we're using the 1 minute average (!?)
-	// value looks like: "0.20 0.07 0.07 1/967 29536" (without the quotes)
-	// loadAverages := strings.Fields(newResult.Astats.System.ProcLoadavg)
-	// if len(loadAverages) > 0 {
-	// 	oneMinAvg, err := strconv.ParseFloat(loadAverages[0], 64)
-	// 	if err != nil {
-	// 		setErr(newResult, fmt.Errorf("Error converting load average string '%s': %v", newResult.Astats.System.ProcLoadavg, err))
-	// 		return
-	// 	}
-	// 	newResult.Vitals.LoadAvg = oneMinAvg
-	// } else {
-	// 	setErr(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.ID))
-	// 	return
-	// }
+	newResult.Vitals.LoadAvg = newResult.Statistics.Loadavg.One
 
-	// proc.net.dev -- need to compare to prevSample
-	// value looks like
-	// "bond0:8495786321839 31960528603    0    0    0     0          0   2349716 143283576747316 101104535041    0    0    0     0       0          0"
-	// (without the quotes)
-	parts := strings.Split(newResult.Astats.System.ProcNetDev, ":")
-	if len(parts) > 1 {
-		numbers := strings.Fields(parts[1])
-		var err error
-		newResult.Vitals.BytesOut, err = strconv.ParseInt(numbers[8], 10, 64)
-		if err != nil {
-			setErr(newResult, fmt.Errorf("Error converting BytesOut from procnetdev: %v", err))
-			return
-		}
-		newResult.Vitals.BytesIn, err = strconv.ParseInt(numbers[0], 10, 64)
-		if err != nil {
-			setErr(newResult, fmt.Errorf("Error converting BytesIn from procnetdev: %v", err))
-			return
-		}
-		if prevResult != nil && prevResult.Vitals.BytesOut != 0 {
-			elapsedTimeInSecs := float64(newResult.Time.UnixNano()-prevResult.Time.UnixNano()) / 1000000000
-			newResult.Vitals.KbpsOut = int64(float64(((newResult.Vitals.BytesOut - prevResult.Vitals.BytesOut) * 8 / 1000)) / elapsedTimeInSecs)
-		} else {
-			// log.Infoln("prevResult == nil for id " + newResult.Id + ". Hope we're just starting up?")
-		}
-	} else {
-		setErr(newResult, fmt.Errorf("Error parsing procnetdev: no fields found"))
-		return
+	// For now, just getting the first encountered interface in the list of
+	// interfaces parsed out into statistics. In the future, vitals will need
+	// to consider all interfaces configured on a cache server.
+	for name, iface := range newResult.Statistics.Interfaces {
+		log.Infof("Cache '%s' has %d interfaces, we have arbitrarily chosen %s for vitality", newResult.ID, len(newResult.Statistics.Interfaces), name)
+		newResult.Vitals.BytesOut = iface.BytesOut
+		newResult.Vitals.BytesIn = iface.BytesIn
+		// TODO JvD: Should we really be running this code every second for every cache polled????? I don't think so.
+		newResult.Vitals.MaxKbpsOut = iface.Speed * 1000
+		break
+	}
+	if prevResult != nil && prevResult.Vitals.BytesOut != 0 {
+		elapsedTimeInSecs := float64(newResult.Time.UnixNano()-prevResult.Time.UnixNano()) / 1000000000
+		newResult.Vitals.KbpsOut = int64(float64(((newResult.Vitals.BytesOut - prevResult.Vitals.BytesOut) * 8 / 1000)) / elapsedTimeInSecs)
 	}
 
-	// inf.speed -- value looks like "10000" (without the quotes) so it is in Mbps.
-	// TODO JvD: Should we really be running this code every second for every cache polled????? I don't think so.
-	interfaceBandwidth := newResult.Astats.System.InfSpeed
-	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth) * 1000
-
-	// log.Infoln(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
 }
 
 func EvalCacheWithStatusInfo(result cache.ResultInfo, mc *tc.TrafficMonitorConfigMap, status tc.CacheStatus, serverInfo tc.TrafficServer) (bool, string, string) {
@@ -319,8 +285,8 @@ func eventDesc(status tc.CacheStatus, message string) string {
 }
 
 //calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName, states peer.CRStatesThreadsafe, toData todata.TOData) {
-	cacheStates := states.GetCaches() // map[tc.CacheName]IsAvailable
+func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, states peer.CRStatesThreadsafe, toData todata.TOData) {
+	cacheStates := states.GetCaches() // map[string]IsAvailable
 
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
@@ -333,7 +299,7 @@ func calculateDeliveryServiceState(deliveryServiceServers map[tc.DeliveryService
 	}
 }
 
-func getDisabledLocations(deliveryService tc.DeliveryServiceName, deliveryServiceServers []tc.CacheName, cacheStates map[tc.CacheName]tc.IsAvailable, serverCacheGroups map[tc.CacheName]tc.CacheGroupName) []tc.CacheGroupName {
+func getDisabledLocations(deliveryService string, deliveryServiceServers []string, cacheStates map[string]tc.IsAvailable, serverCacheGroups map[string]tc.CacheGroupName) []tc.CacheGroupName {
 	disabledLocations := []tc.CacheGroupName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
 	dsCacheStates := getDeliveryServiceCacheAvailability(cacheStates, deliveryServiceServers)
 	dsCachegroupsAvailable := getDeliveryServiceCachegroupAvailability(dsCacheStates, serverCacheGroups)
@@ -346,15 +312,15 @@ func getDisabledLocations(deliveryService tc.DeliveryServiceName, deliveryServic
 	return disabledLocations
 }
 
-func getDeliveryServiceCacheAvailability(cacheStates map[tc.CacheName]tc.IsAvailable, deliveryServiceServers []tc.CacheName) map[tc.CacheName]tc.IsAvailable {
-	dsCacheStates := map[tc.CacheName]tc.IsAvailable{}
+func getDeliveryServiceCacheAvailability(cacheStates map[string]tc.IsAvailable, deliveryServiceServers []string) (map[string]tc.IsAvailable) {
+	dsCacheStates := map[string]tc.IsAvailable{}
 	for _, server := range deliveryServiceServers {
 		dsCacheStates[server] = cacheStates[server]
 	}
 	return dsCacheStates
 }
 
-func getDeliveryServiceCachegroupAvailability(dsCacheStates map[tc.CacheName]tc.IsAvailable, serverCachegroups map[tc.CacheName]tc.CacheGroupName) map[tc.CacheGroupName]bool {
+func getDeliveryServiceCachegroupAvailability(dsCacheStates map[string]tc.IsAvailable, serverCachegroups map[string]tc.CacheGroupName) map[tc.CacheGroupName]bool {
 	cgAvail := map[tc.CacheGroupName]bool{}
 	for cache, available := range dsCacheStates {
 		cg, ok := serverCachegroups[cache]
