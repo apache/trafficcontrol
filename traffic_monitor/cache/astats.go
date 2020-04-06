@@ -172,7 +172,7 @@ type Statistics struct {
 // describing the problem is returned.
 //
 // Note that this does *not* set the interface's Speed.
-func (s Statistics) AddInterfaceFromRawLine(line string) error {
+func (s *Statistics) AddInterfaceFromRawLine(line string) error {
 	var iface Interface
 	parts := strings.Split(line, ":")
 	if len(parts) != 2 {
