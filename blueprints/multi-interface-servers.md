@@ -51,7 +51,7 @@ interface IPAddress {
 	/**
 	 * The IP (v4 or v6) address of the gateway used by this IP address.
 	 */
-	gateway: string;
+	gateway: string | null;
 
 	/**
 	 * Tells whether or not this address of this interface is the server's
@@ -188,14 +188,14 @@ is described below.
      Column     |  Type   | Collation | Nullable | Default
 ----------------+---------+-----------+----------+---------
  address        | inet    |           | not null |
- gateway        | inet    |           | not null |
+ gateway        | inet    |           |          |
  serviceaddress | boolean |           | not null |
  server         | bigint  |           | not null |
  interface      | text    |           | not null |
 Indexes:
     "ip_address_pkey" PRIMARY KEY, btree (address, interface, server)
 Check constraints:
-    "ip_address_gateway_check" CHECK (masklen(gateway) = 0)
+    "ip_address_gateway_check" CHECK (gateway IS NULL OR masklen(gateway) = 0)
 Foreign-key constraints:
     "ip_address_interface_fkey" FOREIGN KEY (interface, server) REFERENCES interface(name, server)
     "ip_address_server_fkey" FOREIGN KEY (server) REFERENCES server(id)
