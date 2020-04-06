@@ -141,29 +141,3 @@ func TestAstatsPrecompute(t *testing.T) {
 		}
 	}
 }
-
-func ExampleLoadavgFromRawLine() {
-	loadavg, err := LoadavgFromRawLine("0.30 0.12 0.21 1/863 1421")
-	fmt.Println(err)
-	fmt.Printf("%.2f %.2f %.2f %d/%d %d", loadavg.One, loadavg.Five, loadavg.Fifteen, loadavg.CurrentProcesses, loadavg.TotalProcesses, loadavg.LatestPID)
-	// Output: <nil>
-	// 0.30 0.12 0.21 1/863 1421
-}
-
-func ExampleAddInterfaceFromRawLine() {
-	var s Statistics
-	raw := "eth0:47907832129 14601260    0    0    0     0          0   790726 728207677726 10210700052    0    0    0     0       0          0"
-
-	if err := s.AddInterfaceFromRawLine(raw); err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	iface, ok := s.Interfaces["eth0"]
-	if !ok {
-		fmt.Printf("Error, no 'eth0' interface!\n%+v", s.Interfaces)
-		return
-	}
-	fmt.Printf("eth0: {BytesOut: %d, BytesIn: %d}", iface.BytesOut, iface.BytesIn)
-	// Output: eth0: {BytesOut: 728207677726, BytesIn: 47907832129}
-}
