@@ -29,7 +29,6 @@ package cache
 //   `in_bytes`, `out_bytes`, `status_2xx`, `status_3xx`, `status_4xx`, `status_5xx`
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -37,15 +36,14 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/json-iterator/go"
 )
 
 func init() {
-	AddStatsType("astats", astatsParse, astatsPrecompute)
-	registerDecoder("astats", parseAstats)
+	// AddStatsType("astats", astatsParse, astatsPrecompute)
+	registerDecoder("astats", astatsParse, astatsPrecompute)
 }
 
 
@@ -71,7 +69,7 @@ type Astats struct {
 	System AstatsSystem           `json:"system"`
 }
 
-func parseAstats(cacheName string, rdr io.Reader) (Statistics, map[string]interface{}, error) {
+func astatsParse(cacheName string, rdr io.Reader) (Statistics, map[string]interface{}, error) {
 	var stats Statistics
 	if rdr == nil {
 		log.Warnf("%s handle reader nil", cacheName)
@@ -79,6 +77,7 @@ func parseAstats(cacheName string, rdr io.Reader) (Statistics, map[string]interf
 	}
 
 	var astats Astats
+	json := jsoniter.ConfigFastest
 	if err := json.NewDecoder(rdr).Decode(&astats); err != nil {
 		return stats, nil, err
 	}
@@ -99,42 +98,35 @@ func parseAstats(cacheName string, rdr io.Reader) (Statistics, map[string]interf
 		stats.Loadavg = load
 	}
 
+	stats.NotAvailable = astats.System.NotAvailable
+
 	return stats, astats.Ats, nil
 }
 
-func astatsParse(cache tc.CacheName, rdr io.Reader) (error, map[string]interface{}, AstatsSystem) {
-	if rdr == nil {
-		log.Warnln(string(cache) + " handle reader nil")
-		return errors.New("handler got nil reader"), nil, AstatsSystem{}
-	}
-	astats := Astats{}
-
-	jsonI := jsoniter.ConfigFastest // TODo make configurable?
-	err := jsonI.NewDecoder(rdr).Decode(&astats)
-	return err, astats.Ats, astats.System
-}
-
-func astatsPrecompute(cache tc.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
-	stats := map[tc.DeliveryServiceName]*AStat{}
-
-	precomputed := PrecomputedData{}
-	var err error
-	if precomputed.OutBytes, err = astatsOutBytes(system.ProcNetDev, system.InfName); err != nil {
-		precomputed.OutBytes = 0
-		log.Errorf("precomputeAstats %s handle precomputing outbytes '%v'\n", cache, err)
-	}
-
-	kbpsInMbps := int64(1000)
-	precomputed.MaxKbps = int64(system.InfSpeed) * kbpsInMbps
-
-	for stat, value := range rawStats {
-		stats, err = astatsProcessStat(cache, stats, toData, stat, value)
-		if err != nil && err != dsdata.ErrNotProcessedStat {
-			log.Infof("precomputing cache %v stat %v value %v error %v", cache, stat, value, err)
-			precomputed.Errors = append(precomputed.Errors, err)
+func astatsPrecompute(cacheName string, data todata.TOData, stats Statistics, miscStats map[string]interface{}) PrecomputedData {
+	dsStats := make(map[string]*DSStat)
+	var precomputed PrecomputedData
+	precomputed.OutBytes = 0
+	precomputed.MaxKbps = 0
+	for _, iface := range stats.Interfaces {
+		precomputed.OutBytes += iface.BytesOut
+		kbps := iface.Speed * 1000
+		if kbps > precomputed.MaxKbps {
+			precomputed.MaxKbps = kbps
 		}
 	}
-	precomputed.DeliveryServiceStats = stats
+
+	var err error
+	for stat, value := range miscStats {
+		dsStats, err = astatsProcessStat(cacheName, dsStats, data, stat, value)
+		if err != nil && err != dsdata.ErrNotProcessedStat {
+			log.Infof("precomputing cache %s stat %s value %v error %v", cacheName, stat, value, err)
+			precomputed.Errors = append(precomputed.Errors, err)
+			err = nil
+		}
+	}
+
+	precomputed.DeliveryServiceStats = dsStats
 	return precomputed
 }
 
@@ -162,7 +154,7 @@ func astatsOutBytes(procNetDev, iface string) (int64, error) {
 }
 
 // astatsProcessStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-func astatsProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsProcessStat(server string, stats map[string]*DSStat, toData todata.TOData, stat string, value interface{}) (map[string]*DSStat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -180,7 +172,7 @@ func astatsProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceName]*AS
 	}
 }
 
-func astatsProcessStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsProcessStatPlugin(server string, stats map[string]*DSStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[string]*DSStat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
@@ -192,79 +184,77 @@ func astatsProcessStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceNa
 	}
 }
 
-func astatsProcessStatPluginRemapStats(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsProcessStatPluginRemapStats(server string, stats map[string]*DSStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[string]*DSStat, error) {
 	if len(statParts) < 3 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
 
-	// the FQDN is `subsubdomain`.`subdomain`.`domain`. For a HTTP delivery service, `subsubdomain` will be the cache hostname; for a DNS delivery service, it will be `edge`. Then, `subdomain` is the delivery service regex.
+	// the FQDN is `subsubdomain`.`subdomain`.`domain`. For a HTTP Delivery
+	// Service, `subsubdomain` will be the cache hostname; for a DNS Delivery
+	// Service, it will be `edge`. Then, `subdomain` is the Delivery Service
+	// regex.
 	subsubdomain := statParts[0]
 	subdomain := statParts[1]
 	domain := strings.Join(statParts[2:len(statParts)-1], ".")
 
 	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
 	if !ok {
-		fqdn := fmt.Sprintf("%s.%s.%s", subsubdomain, subdomain, domain)
-		return stats, fmt.Errorf("ERROR no delivery service match for fqdn '%v' stat '%v'\n", fqdn, strings.Join(statParts, "."))
+		return stats, fmt.Errorf("No Delivery Service match for '%s.%s.%s' stat '%v'", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
 	}
 	if ds == "" {
-		fqdn := fmt.Sprintf("%s.%s.%s", subsubdomain, subdomain, domain)
-		return stats, fmt.Errorf("ERROR EMPTY delivery service fqdn %v stat %v\n", fqdn, strings.Join(statParts, "."))
+		return stats, fmt.Errorf("Empty Delivery Service fqdn '%s.%s.%s' stat %v", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
 	}
 
 	statName := statParts[len(statParts)-1]
+	dsName := string(ds)
 
-	dsStat, ok := stats[ds]
-	if !ok {
-		dsStat = &AStat{}
-		stats[ds] = dsStat
-	}
+	dsStat := stats[dsName]
 
 	if err := astatsAddCacheStat(dsStat, statName, value); err != nil {
 		return stats, err
 	}
-	stats[ds] = dsStat // TODO verify unnecessary, remove
+	stats[dsName] = dsStat
 	return stats, nil
 }
 
 // addCacheStat adds the given stat to the existing stat. Note this adds, it doesn't overwrite. Numbers are summed, strings are concatenated.
 // TODO make this less duplicate code somehow.
-func astatsAddCacheStat(stat *AStat, name string, val interface{}) error {
+func astatsAddCacheStat(stat *DSStat, name string, val interface{}) error {
 	switch name {
 	case "status_2xx":
 		v, ok := val.(float64)
 		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+			return fmt.Errorf("stat '%s' value expected float64 actual '%v' type %T", name, val, val)
 		}
 		stat.Status2xx += uint64(v)
 	case "status_3xx":
 		v, ok := val.(float64)
 		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+			return fmt.Errorf("stat '%s' value expected float64 actual '%v' type %T", name, val, val)
 		}
 		stat.Status3xx += uint64(v)
 	case "status_4xx":
 		v, ok := val.(float64)
 		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+			return fmt.Errorf("stat '%s' value expected float64 actual '%v' type %T", name, val, val)
 		}
 		stat.Status4xx += uint64(v)
 	case "status_5xx":
 		v, ok := val.(float64)
 		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+			return fmt.Errorf("stat '%s' value expected float64 actual '%v' type %T", name, val, val)
 		}
 		stat.Status5xx += uint64(v)
 	case "out_bytes":
 		v, ok := val.(float64)
 		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+			return fmt.Errorf("stat '%s' value expected float64 actual '%v' type %T", name, val, val)
 		}
 		stat.OutBytes += uint64(v)
 	case "in_bytes":
 		v, ok := val.(float64)
 		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+			return fmt.Errorf("stat '%s' value expected float64 actual '%v' type %T", name, val, val)
 		}
 		stat.InBytes += uint64(v)
 	case "status_unknown":
