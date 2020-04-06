@@ -70,8 +70,7 @@ type PrecomputedData struct {
 
 // Result is the data result returned by a cache.
 // type Result struct {
-// 	ID              tc.CacheName
-// 	Error           error
+// 	ID              string// 	Error           error
 // 	Astats          Astats
 // 	Time            time.Time
 // 	RequestTime     time.Duration
@@ -132,9 +131,10 @@ func (result *Result) HasStat(stat string) bool {
 
 // Vitals is the vitals data returned from a cache.
 type Vitals struct {
+	// LoadAvg is the one-minute "loadavg" of the cache server.
 	LoadAvg    float64
-	BytesOut   int64
-	BytesIn    int64
+	BytesOut   uint64
+	BytesIn    uint64
 	KbpsOut    int64
 	MaxKbpsOut int64
 }

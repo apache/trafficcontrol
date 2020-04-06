@@ -31,11 +31,11 @@ import (
 // PeerStateFilter fulfills the cache.Filter interface, for filtering stats. See the `NewPeerStateFilter` documentation for details on which query parameters are used to filter.
 type PeerStateFilter struct {
 	historyCount int
-	cachesToUse  map[tc.CacheName]struct{}
+	cachesToUse  map[string]struct{}
 	peersToUse   map[tc.TrafficMonitorName]struct{}
 	wildcard     bool
 	cacheType    tc.CacheType
-	cacheTypes   map[tc.CacheName]tc.CacheType
+	cacheTypes   map[string]tc.CacheType
 }
 
 // UsePeer returns whether the given Traffic Monitor peer is in this filter.
@@ -47,7 +47,7 @@ func (f *PeerStateFilter) UsePeer(name tc.TrafficMonitorName) bool {
 }
 
 // UseCache returns whether the given cache is in this filter.
-func (f *PeerStateFilter) UseCache(name tc.CacheName) bool {
+func (f *PeerStateFilter) UseCache(name string) bool {
 	if f.cacheType != tc.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
 		return false
 	}
@@ -85,7 +85,7 @@ func (f *PeerStateFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all cache types are returned.
-func NewPeerStateFilter(path string, params url.Values, cacheTypes map[tc.CacheName]tc.CacheType) (*PeerStateFilter, error) {
+func NewPeerStateFilter(path string, params url.Values, cacheTypes map[string]tc.CacheType) (*PeerStateFilter, error) {
 	// TODO change legacy `stats` and `hosts` to `caches` and `monitors` (or `peers`).
 	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "peers": struct{}{}}
 	if len(params) > len(validParams) {
@@ -105,12 +105,12 @@ func NewPeerStateFilter(path string, params url.Values, cacheTypes map[tc.CacheN
 		}
 	}
 
-	cachesToUse := map[tc.CacheName]struct{}{}
+	cachesToUse := map[string]struct{}{}
 	// TODO rename 'stats' to 'caches'
 	if paramStats, exists := params["stats"]; exists && len(paramStats) > 0 {
 		commaStats := strings.Split(paramStats[0], ",")
 		for _, stat := range commaStats {
-			cachesToUse[tc.CacheName(stat)] = struct{}{}
+			cachesToUse[stat] = struct{}{}
 		}
 	}
 

@@ -26,7 +26,7 @@ import (
 // CRStates includes availability data for caches and delivery services, as gathered and aggregated by this Traffic Monitor. It is designed to be served at an API endpoint primarily for Traffic Routers (Content Router) to consume.
 type CRStates struct {
 	Caches          map[string]IsAvailable                       `json:"caches"`
-	DeliveryService map[DeliveryServiceName]CRStatesDeliveryService `json:"deliveryServices"`
+	DeliveryService map[string]CRStatesDeliveryService `json:"deliveryServices"`
 }
 
 // CRStatesDeliveryService contains data about the availability of a particular delivery service, and which caches in that delivery service have been marked as unavailable.
@@ -46,7 +46,7 @@ type IsAvailable struct {
 func NewCRStates() CRStates {
 	return CRStates{
 		Caches:          map[string]IsAvailable{},
-		DeliveryService: map[DeliveryServiceName]CRStatesDeliveryService{},
+		DeliveryService: map[string]CRStatesDeliveryService{},
 	}
 }
 
@@ -63,8 +63,8 @@ func (a CRStates) Copy() CRStates {
 }
 
 // CopyDeliveryServices creates a deep copy of the delivery service availability data.. It does not mutate, and is thus safe for multiple goroutines.
-func (a CRStates) CopyDeliveryServices() map[DeliveryServiceName]CRStatesDeliveryService {
-	b := map[DeliveryServiceName]CRStatesDeliveryService{}
+func (a CRStates) CopyDeliveryServices() map[string]CRStatesDeliveryService {
+	b := map[string]CRStatesDeliveryService{}
 	for k, v := range a.DeliveryService {
 		b[k] = v
 	}

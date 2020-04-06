@@ -46,14 +46,14 @@ func TestAstats(t *testing.T) {
 	t.Logf("Found %v key/val pairs in ats\n", len(aStats.Ats))
 }
 
-func getMockTODataDSNameDirectMatches() map[tc.DeliveryServiceName]string {
-	return map[tc.DeliveryServiceName]string{
+func getMockTODataDSNameDirectMatches() map[string]string {
+	return map[string]string{
 		"ds0": "ds0.example.invalid",
 		"ds1": "ds1.example.invalid",
 	}
 }
 
-func getMockTOData(dsNameFQDNs map[tc.DeliveryServiceName]string) todata.TOData {
+func getMockTOData(dsNameFQDNs map[string]string) todata.TOData {
 	tod := todata.New()
 	for dsName, dsDirectMatch := range dsNameFQDNs {
 		tod.DeliveryServiceRegexes.DirectMatches[dsDirectMatch] = dsName
@@ -61,7 +61,7 @@ func getMockTOData(dsNameFQDNs map[tc.DeliveryServiceName]string) todata.TOData 
 	return *tod
 }
 
-func getMockRawStats(cacheName string, dsNameFQDNs map[tc.DeliveryServiceName]string) map[string]interface{} {
+func getMockRawStats(cacheName string, dsNameFQDNs map[string]string) map[string]interface{} {
 	st := map[string]interface{}{}
 	for _, dsFQDN := range dsNameFQDNs {
 		st["plugin.remap_stats."+dsFQDN+".in_bytes"] = float64(rand.Uint64())
@@ -100,7 +100,7 @@ func TestAstatsPrecompute(t *testing.T) {
 	infSpeedMbps := 9876554433210
 	system := getMockSystem(infSpeedMbps, outBytes)
 
-	prc := astatsPrecompute(tc.CacheName(cacheName), toData, rawStats, system)
+	prc := astatsPrecompute(cacheName, toData, rawStats, system)
 
 	if len(prc.Errors) != 0 {
 		t.Fatalf("astatsPrecompute Errors expected 0, actual: %+v\n", prc.Errors)

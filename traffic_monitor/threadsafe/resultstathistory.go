@@ -62,7 +62,7 @@ func (h *ResultInfoHistory) Set(v cache.ResultInfoHistory) {
 	h.m.Unlock()
 }
 
-type ResultStatHistory struct{ *sync.Map } // map[tc.CacheName]ResultStatValHistory
+type ResultStatHistory struct{ *sync.Map } // map[string]ResultStatValHistory
 
 func NewResultStatHistory() ResultStatHistory {
 	return ResultStatHistory{&sync.Map{}}
@@ -75,9 +75,9 @@ func (h ResultStatHistory) LoadOrStore(cache string) ResultStatValHistory {
 }
 
 // Range behaves like sync.Map.Range. It calls f for every value in the map; if f returns false, the iteration is stopped.
-func (h ResultStatHistory) Range(f func(cache tc.CacheName, val ResultStatValHistory) bool) {
+func (h ResultStatHistory) Range(f func(cache string, val ResultStatValHistory) bool) {
 	h.Map.Range(func(k, v interface{}) bool {
-		return f(k.(tc.CacheName), v.(ResultStatValHistory))
+		return f(k.(string), v.(ResultStatValHistory))
 	})
 }
 

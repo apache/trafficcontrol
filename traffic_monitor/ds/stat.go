@@ -36,13 +36,13 @@ import (
 
 // TODO remove 'ds' and 'stat' from names
 
-func setStaticData(dsStats *dsdata.Stats, dsServers map[tc.DeliveryServiceName][]tc.CacheName) {
+func setStaticData(dsStats *dsdata.Stats, dsServers map[string][]string) {
 	for ds, stat := range dsStats.DeliveryService {
 		stat.CommonStats.CachesConfiguredNum.Value = int64(len(dsServers[ds]))
 	}
 }
 
-func addAvailableData(dsStats *dsdata.Stats, crStates tc.CRStates, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverDs map[tc.CacheName][]tc.DeliveryServiceName, serverTypes map[tc.CacheName]tc.CacheType, precomputed map[tc.CacheName]cache.PrecomputedData, lastStats *dsdata.LastStats, events health.ThreadsafeEvents) {
+func addAvailableData(dsStats *dsdata.Stats, crStates tc.CRStates, serverCachegroups map[string]tc.CacheGroupName, serverDs map[string][]string, serverTypes map[string]tc.CacheType, precomputed map[string]cache.PrecomputedData, lastStats *dsdata.LastStats, events health.ThreadsafeEvents) {
 	for cache, available := range crStates.Caches {
 		cacheGroup, ok := serverCachegroups[cache]
 		if !ok {
@@ -116,8 +116,8 @@ func addAvailableData(dsStats *dsdata.Stats, crStates tc.CRStates, serverCachegr
 			return health.Event{
 				Time:        health.Time(time.Now()),
 				Description: desc,
-				Name:        dsName.String(),
-				Hostname:    dsName.String(),
+				Name:        dsName,
+				Hostname:    dsName,
 				Type:        "Delivery Service",
 				Available:   stat.CommonStats.IsAvailable.Value,
 			}
@@ -149,7 +149,7 @@ func newLastDSStat() *dsdata.LastDSStat {
 	return &dsdata.LastDSStat{
 		CacheGroups: map[tc.CacheGroupName]*dsdata.LastStatsData{},
 		Type:        map[tc.CacheType]*dsdata.LastStatsData{},
-		Caches:      map[tc.CacheName]*dsdata.LastStatsData{},
+		Caches:      map[string]*dsdata.LastStatsData{},
 	}
 }
 
@@ -222,7 +222,7 @@ func addLastStatsToStatCacheStats(s *dsdata.StatCacheStats, l *dsdata.LastStatsD
 
 // addLastDSStatTotals takes a LastDSStat with only raw `Caches` data, and calculates and sets the `CacheGroups`, `Type`, and `Total` data, and returns the augmented structure.
 // Note lastStat is mutated, with the calculated values being set in it.
-func addLastDSStatTotals(lastStat *dsdata.LastDSStat, cachesReporting map[tc.CacheName]bool, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType) {
+func addLastDSStatTotals(lastStat *dsdata.LastDSStat, cachesReporting map[string]bool, serverCachegroups map[string]tc.CacheGroupName, serverTypes map[string]tc.CacheType) {
 	cacheGroups := map[tc.CacheGroupName]*dsdata.LastStatsData{}
 	cacheTypes := map[tc.CacheType]*dsdata.LastStatsData{}
 	total := dsdata.LastStatsData{}
@@ -261,7 +261,7 @@ func addLastDSStatTotals(lastStat *dsdata.LastDSStat, cachesReporting map[tc.Cac
 
 // addDSPerSecStats calculates and adds the per-second delivery service stats to both the Stats and LastStats structures.
 // Note this mutates both dsStats and lastStats, adding the per-second stats to them.
-func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName tc.DeliveryServiceName, stat *dsdata.Stat, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, precomputed map[tc.CacheName]cache.PrecomputedData, states peer.CRStatesThreadsafe) {
+func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName string, stat *dsdata.Stat, serverCachegroups map[string]tc.CacheGroupName, serverTypes map[string]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, precomputed map[string]cache.PrecomputedData, states peer.CRStatesThreadsafe) {
 	lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
 	if !lastStatExists {
 		lastStat = newLastDSStat() // TODO sync.Pool?
@@ -327,8 +327,8 @@ func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName
 		return health.Event{
 			Time:        health.Time(time.Now()),
 			Description: desc,
-			Name:        dsName.String(),
-			Hostname:    dsName.String(),
+			Name:        dsName,
+			Hostname:    dsName,
 			Type:        "DELIVERYSERVICE",
 			Available:   stat.CommonStats.IsAvailable.Value,
 		}
@@ -342,8 +342,10 @@ func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName
 	lastStat.Available = stat.CommonStats.IsAvailable.Value
 }
 
-// latestBytes returns the most recent OutBytes from the given cache results, and the time of that result. It assumes zero results are not valid, but nonzero results with errors are valid.
-func latestBytes(p cache.PrecomputedData) (int64, time.Time, error) {
+// latestBytes returns the most recent OutBytes from the given cache results,
+// and the time of that result. It assumes zero results are not valid, but
+// nonzero results with errors are valid.
+func latestBytes(p cache.PrecomputedData) (uint64, time.Time, error) {
 	if p.OutBytes == 0 {
 		return 0, time.Time{}, fmt.Errorf("no valid results")
 	}
@@ -352,7 +354,7 @@ func latestBytes(p cache.PrecomputedData) (int64, time.Time, error) {
 
 // addCachePerSecStats calculates the cache per-second stats, adds them to LastStats.
 // Note this mutates lastStats, adding the calculated per-second stats to it.
-func addCachePerSecStats(lastStats *dsdata.LastStats, cacheName tc.CacheName, precomputed cache.PrecomputedData) {
+func addCachePerSecStats(lastStats *dsdata.LastStats, cacheName string, precomputed cache.PrecomputedData) {
 	outBytes, outBytesTime, err := latestBytes(precomputed) // it's ok if `latestBytes` returns 0s with an error, `addLastStat` will refrain from setting it (unless the previous calculation was nonzero, in which case it will error appropriately).
 	if err != nil {
 		log.Warnf("while computing delivery service data for cache %v: %v\n", cacheName, err)
@@ -362,7 +364,7 @@ func addCachePerSecStats(lastStats *dsdata.LastStats, cacheName tc.CacheName, pr
 		lastStat = &dsdata.LastStatsData{}
 		lastStats.Caches[cacheName] = lastStat
 	}
-	if err = addLastStat(&lastStat.Bytes, outBytes, outBytesTime); err != nil {
+	if err = addLastStat(&lastStat.Bytes, int64(outBytes), outBytesTime); err != nil {
 		log.Warnf("while computing delivery service data for cache %v: %v\n", cacheName, err)
 	}
 }
@@ -377,7 +379,7 @@ func addCachePerSecStats(lastStats *dsdata.LastStats, cacheName tc.CacheName, pr
 //
 // Note this mutates both dsStats and lastStats, adding the per-second stats to them.
 //
-func addPerSecStats(precomputed map[tc.CacheName]cache.PrecomputedData, dsStats *dsdata.Stats, lastStats *dsdata.LastStats, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) {
+func addPerSecStats(precomputed map[string]cache.PrecomputedData, dsStats *dsdata.Stats, lastStats *dsdata.LastStats, serverCachegroups map[string]tc.CacheGroupName, serverTypes map[string]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) {
 	for dsName, stat := range dsStats.DeliveryService {
 		addDSPerSecStats(lastStats, dsStats, dsName, stat, serverCachegroups, serverTypes, mc, events, precomputed, states)
 	}
@@ -388,7 +390,7 @@ func addPerSecStats(precomputed map[tc.CacheName]cache.PrecomputedData, dsStats 
 
 // CreateStats aggregates and creates statistics from given precomputed stat history. It returns the created stats, information about these stats necessary for the next calculation, and any error.
 // Note lastStats is mutated, being set with the new last stats.
-func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData todata.TOData, crStates tc.CRStates, lastStats *dsdata.LastStats, now time.Time, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) (*dsdata.Stats, error) {
+func CreateStats(precomputed map[string]cache.PrecomputedData, toData todata.TOData, crStates tc.CRStates, lastStats *dsdata.LastStats, now time.Time, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) (*dsdata.Stats, error) {
 	start := time.Now()
 	dsStats := dsdata.NewStats(len(toData.DeliveryServiceServers)) // TODO sync.Pool?
 	for deliveryService := range toData.DeliveryServiceServers {
@@ -458,17 +460,17 @@ func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData toda
 	return dsStats, nil
 }
 
-func getDSErr(dsName tc.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig tc.TrafficMonitorConfigMap) error {
-	if tpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalTPSThreshold; tpsThreshold > 0 && dsStats.TpsTotal.Value > float64(tpsThreshold) {
+func getDSErr(dsName string, dsStats dsdata.StatCacheStats, monitorConfig tc.TrafficMonitorConfigMap) error {
+	if tpsThreshold := monitorConfig.DeliveryService[dsName].TotalTPSThreshold; tpsThreshold > 0 && dsStats.TpsTotal.Value > float64(tpsThreshold) {
 		return fmt.Errorf("total.tps_total too high (%.2f > %v)", dsStats.TpsTotal.Value, tpsThreshold)
 	}
-	if kbpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalKbpsThreshold; kbpsThreshold > 0 && dsStats.Kbps.Value > float64(kbpsThreshold) {
+	if kbpsThreshold := monitorConfig.DeliveryService[dsName].TotalKbpsThreshold; kbpsThreshold > 0 && dsStats.Kbps.Value > float64(kbpsThreshold) {
 		return fmt.Errorf("total.kbps too high (%.2f > %v)", dsStats.Kbps.Value, kbpsThreshold)
 	}
 	return nil
 }
 
-func SumDSAstats(ds *dsdata.StatCacheStats, cacheStat *cache.AStat) {
+func SumDSAstats(ds *dsdata.StatCacheStats, cacheStat *cache.DSStat) {
 	ds.OutBytes.Value += int64(cacheStat.OutBytes)
 	ds.InBytes.Value += float64(cacheStat.InBytes)
 	ds.Status2xx.Value += int64(cacheStat.Status2xx)

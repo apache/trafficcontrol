@@ -34,7 +34,7 @@ import (
 // TODO combine with cache.Filter?
 type Filter interface {
 	UseStat(name string) bool
-	UseDeliveryService(name tc.DeliveryServiceName) bool
+	UseDeliveryService(name string) bool
 	WithinStatHistoryMax(int) bool
 }
 
@@ -51,13 +51,13 @@ type StatOld struct {
 
 // StatsOld is the old JSON representation of stats, from Traffic Monitor 1.0. It is designed to be serialized and returns from an API, and includes stat history for each delivery service, as well as data common to most endpoints.
 type StatsOld struct {
-	DeliveryService map[tc.DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
+	DeliveryService map[string]map[StatName][]StatOld `json:"deliveryService"`
 	srvhttp.CommonAPIData
 }
 
 // StatsReadonly is a read-only interface for delivery service Stats, designed to be passed to multiple goroutine readers.
 type StatsReadonly interface {
-	Get(tc.DeliveryServiceName) (StatReadonly, bool)
+	Get(string) (StatReadonly, bool)
 	JSON(Filter, url.Values) StatsOld
 }
 
@@ -74,7 +74,7 @@ type StatReadonly interface {
 type StatCommonReadonly interface {
 	Copy() StatCommon
 	CachesConfigured() StatInt
-	CachesReportingNames() []tc.CacheName
+	CachesReportingNames() []string
 	Error() StatString
 	Status() StatString
 	Healthy() StatBool
@@ -114,7 +114,7 @@ type StatString struct {
 // StatCommon contains stat data common to most delivery service stats.
 type StatCommon struct {
 	CachesConfiguredNum StatInt               `json:"caches_configured"`
-	CachesReporting     map[tc.CacheName]bool `json:"caches_reporting"`
+	CachesReporting     map[string]bool `json:"caches_reporting"`
 	ErrorStr            StatString            `json:"error_string"`
 	StatusStr           StatString            `json:"status"`
 	IsHealthy           StatBool              `json:"is_healthy"`
@@ -142,14 +142,14 @@ func (a StatCommon) CachesConfigured() StatInt {
 }
 
 // CacheReporting returns the number of caches reporting for this delivery service stat. It is part of the StatCommonReadonly interface.
-func (a StatCommon) CacheReporting(name tc.CacheName) (bool, bool) {
+func (a StatCommon) CacheReporting(name string) (bool, bool) {
 	c, ok := a.CachesReporting[name]
 	return c, ok
 }
 
 // CachesReportingNames returns the list of caches reporting for this delivery service stat. It is part of the StatCommonReadonly interface.
-func (a StatCommon) CachesReportingNames() []tc.CacheName {
-	names := make([]tc.CacheName, 0, len(a.CachesReporting))
+func (a StatCommon) CachesReportingNames() []string{
+	names := make([]string, 0, len(a.CachesReporting))
 	for name := range a.CachesReporting {
 		names = append(names, name)
 	}
@@ -226,7 +226,7 @@ type Stat struct {
 	CommonStats StatCommon
 	CacheGroups map[tc.CacheGroupName]*StatCacheStats
 	Types       map[tc.CacheType]*StatCacheStats
-	Caches      map[tc.CacheName]*StatCacheStats
+	Caches      map[string]*StatCacheStats
 	TotalStats  StatCacheStats
 }
 
@@ -238,8 +238,8 @@ func NewStat() *Stat {
 	return &Stat{
 		CacheGroups: map[tc.CacheGroupName]*StatCacheStats{},
 		Types:       map[tc.CacheType]*StatCacheStats{},
-		CommonStats: StatCommon{CachesReporting: map[tc.CacheName]bool{}},
-		Caches:      map[tc.CacheName]*StatCacheStats{},
+		CommonStats: StatCommon{CachesReporting: map[string]bool{}},
+		Caches:      map[string]*StatCacheStats{},
 	}
 }
 
@@ -251,7 +251,7 @@ func (a Stat) Copy() *Stat {
 		TotalStats:  a.TotalStats,
 		CacheGroups: map[tc.CacheGroupName]*StatCacheStats{},
 		Types:       map[tc.CacheType]*StatCacheStats{},
-		Caches:      map[tc.CacheName]*StatCacheStats{},
+		Caches:      map[string]*StatCacheStats{},
 	}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v
@@ -289,7 +289,7 @@ func (a *Stat) Total() *StatCacheStats {
 
 // Stats is the JSON-serialisable representation of delivery service Stats. It maps delivery service names to individual stat objects.
 type Stats struct {
-	DeliveryService map[tc.DeliveryServiceName]*Stat `json:"deliveryService"`
+	DeliveryService map[string]*Stat `json:"deliveryService"`
 	Time            time.Time                        `json:"-"`
 }
 
@@ -304,7 +304,7 @@ func (s *Stats) Copy() *Stats {
 }
 
 // Get returns the stats for the given delivery service, and whether it exists.
-func (s Stats) Get(name tc.DeliveryServiceName) (StatReadonly, bool) {
+func (s Stats) Get(name string) (StatReadonly, bool) {
 	ds, ok := s.DeliveryService[name]
 	return ds, ok
 }
@@ -315,7 +315,7 @@ func (s Stats) JSON(filter Filter, params url.Values) StatsOld {
 	now := s.Time.UnixNano() / int64(time.Millisecond) // Traffic Monitor 1.0 API is 'ms since the epoch'
 	jsonObj := &StatsOld{
 		CommonAPIData:   srvhttp.GetCommonAPIData(params, time.Now()),
-		DeliveryService: map[tc.DeliveryServiceName]map[StatName][]StatOld{},
+		DeliveryService: map[string]map[StatName][]StatOld{},
 	}
 
 	for deliveryService, stat := range s.DeliveryService {
@@ -338,19 +338,19 @@ func (s Stats) JSON(filter Filter, params url.Values) StatsOld {
 // NewStats creates a new Stats object, initializing any pointer members.
 // TODO rename to just 'New'?
 func NewStats(size int) *Stats {
-	return &Stats{DeliveryService: make(map[tc.DeliveryServiceName]*Stat, size)}
+	return &Stats{DeliveryService: make(map[string]*Stat, size)}
 }
 
 // LastStats includes the previously recieved stats for DeliveryServices and Caches, the stat itself, when it was received, and the stat value per second.
 type LastStats struct {
-	DeliveryServices map[tc.DeliveryServiceName]*LastDSStat
-	Caches           map[tc.CacheName]*LastStatsData
+	DeliveryServices map[string]*LastDSStat
+	Caches           map[string]*LastStatsData
 }
 
 // NewLastStats returns a new LastStats object, initializing internal pointer values.
 func NewLastStats(dsLen, cacheLen int) *LastStats {
 	// TODO add map size params?
-	return &LastStats{DeliveryServices: map[tc.DeliveryServiceName]*LastDSStat{}, Caches: map[tc.CacheName]*LastStatsData{}}
+	return &LastStats{DeliveryServices: map[string]*LastDSStat{}, Caches: map[string]*LastStatsData{}}
 }
 
 // Copy performs a deep copy of this LastStats object.
@@ -368,7 +368,7 @@ func (a *LastStats) Copy() *LastStats {
 // LastDSStat maps and aggregates the last stats received for the given delivery service to caches, cache groups, types, and total.
 // TODO figure a way to associate this type with StatHTTP, with which its members correspond.
 type LastDSStat struct {
-	Caches      map[tc.CacheName]*LastStatsData
+	Caches      map[string]*LastStatsData
 	CacheGroups map[tc.CacheGroupName]*LastStatsData
 	Type        map[tc.CacheType]*LastStatsData
 	Total       LastStatsData
@@ -380,7 +380,7 @@ func (a LastDSStat) Copy() *LastDSStat {
 	b := &LastDSStat{
 		CacheGroups: map[tc.CacheGroupName]*LastStatsData{},
 		Type:        map[tc.CacheType]*LastStatsData{},
-		Caches:      map[tc.CacheName]*LastStatsData{},
+		Caches:      map[string]*LastStatsData{},
 		Total:       a.Total,
 		Available:   a.Available,
 	}
@@ -427,7 +427,7 @@ type LastStatData struct {
 	Time   time.Time
 }
 
-func addCommonData(s *StatsOld, c *StatCommon, deliveryService tc.DeliveryServiceName, t int64, filter Filter) *StatsOld {
+func addCommonData(s *StatsOld, c *StatCommon, deliveryService string, t int64, filter Filter) *StatsOld {
 	add := func(name string, val interface{}) {
 		if filter.UseStat(name) {
 			s.DeliveryService[deliveryService][StatName(name)] = []StatOld{StatOld{Time: t, Value: val}}
@@ -444,7 +444,7 @@ func addCommonData(s *StatsOld, c *StatCommon, deliveryService tc.DeliveryServic
 	return s
 }
 
-func addStatCacheStats(s *StatsOld, c *StatCacheStats, deliveryService tc.DeliveryServiceName, prefix string, t int64, filter Filter) *StatsOld {
+func addStatCacheStats(s *StatsOld, c *StatCacheStats, deliveryService string, prefix string, t int64, filter Filter) *StatsOld {
 	add := func(name, val string) {
 		if filter.UseStat(name) {
 			// This is for compatibility with the Traffic Monitor 1.0 API.

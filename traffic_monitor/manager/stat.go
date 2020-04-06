@@ -42,9 +42,9 @@ func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 	return history
 }
 
-func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[tc.CacheName]struct{} {
+func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[string]struct{} {
 	monitorConfig := monitorConfigTS.Get()
-	caches := map[tc.CacheName]struct{}{}
+	caches := map[string]struct{}{}
 	for cacheName := range localStates.GetCaches() {
 		// ONLINE and OFFLINE caches are not polled.
 		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.ServerStatus == string(tc.CacheStatusOnline) || ts.ServerStatus == string(tc.CacheStatusOffline) {
@@ -74,16 +74,16 @@ func StartStatHistoryManager(
 	statResultHistory := threadsafe.NewResultStatHistory()
 	statMaxKbpses := threadsafe.NewCacheKbpses()
 	lastStatDurations := threadsafe.NewDurationMap()
-	lastStatEndTimes := map[tc.CacheName]time.Time{}
+	lastStatEndTimes := map[string]time.Time{}
 	lastStats := threadsafe.NewLastStats()
 	dsStats := threadsafe.NewDSStats()
 	unpolledCaches := threadsafe.NewUnpolledCaches()
 	localCacheStatus := threadsafe.NewCacheAvailableStatus()
 
-	precomputedData := map[tc.CacheName]cache.PrecomputedData{}
+	precomputedData := map[string]cache.PrecomputedData{}
 
-	lastResults := map[tc.CacheName]cache.Result{}
-	overrideMap := map[tc.CacheName]bool{}
+	lastResults := map[string]cache.Result{}
+	overrideMap := map[string]bool{}
 
 	haveCachesChanged := func() bool {
 		select {
@@ -243,16 +243,16 @@ func processStatResults(
 	toData todata.TOData,
 	errorCount threadsafe.Uint,
 	dsStats threadsafe.DSStats,
-	lastStatEndTimes map[tc.CacheName]time.Time,
+	lastStatEndTimes map[string]time.Time,
 	lastStatDurationsThreadsafe threadsafe.DurationMap,
 	unpolledCaches threadsafe.UnpolledCaches,
 	mc tc.TrafficMonitorConfigMap,
-	precomputedData map[tc.CacheName]cache.PrecomputedData,
-	lastResults map[tc.CacheName]cache.Result,
+	precomputedData map[string]cache.PrecomputedData,
+	lastResults map[string]cache.Result,
 	localStates peer.CRStatesThreadsafe,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
-	overrideMap map[tc.CacheName]bool,
+	overrideMap map[string]bool,
 	combineState func(),
 	pollingProtocol config.PollingProtocol,
 ) {

@@ -48,7 +48,7 @@ func (t *CRStatesThreadsafe) Get() tc.CRStates {
 }
 
 // GetDeliveryServices returns the internal Crstates delivery services map for reading.
-func (t *CRStatesThreadsafe) GetDeliveryServices() map[tc.DeliveryServiceName]tc.CRStatesDeliveryService {
+func (t *CRStatesThreadsafe) GetDeliveryServices() map[string]tc.CRStatesDeliveryService {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.crStates.CopyDeliveryServices()
@@ -70,7 +70,7 @@ func (t *CRStatesThreadsafe) GetCaches() map[string]tc.IsAvailable {
 }
 
 // GetDeliveryService returns the availability data of the given delivery service. This does not mutate, and is thus safe for multiple goroutines to call.
-func (t *CRStatesThreadsafe) GetDeliveryService(name tc.DeliveryServiceName) (ds tc.CRStatesDeliveryService, ok bool) {
+func (t *CRStatesThreadsafe) GetDeliveryService(name string) (ds tc.CRStatesDeliveryService, ok bool) {
 	t.m.RLock()
 	ds, ok = t.crStates.DeliveryService[name]
 	t.m.RUnlock()
@@ -101,14 +101,14 @@ func (t *CRStatesThreadsafe) DeleteCache(name string) {
 }
 
 // SetDeliveryService sets the availability data for the given delivery service.
-func (t *CRStatesThreadsafe) SetDeliveryService(name tc.DeliveryServiceName, ds tc.CRStatesDeliveryService) {
+func (t *CRStatesThreadsafe) SetDeliveryService(name string, ds tc.CRStatesDeliveryService) {
 	t.m.Lock()
 	t.crStates.DeliveryService[name] = ds
 	t.m.Unlock()
 }
 
 // DeleteDeliveryService deletes the given delivery service from the internal data. This MUST NOT be called by multiple goroutines.
-func (t *CRStatesThreadsafe) DeleteDeliveryService(name tc.DeliveryServiceName) {
+func (t *CRStatesThreadsafe) DeleteDeliveryService(name string) {
 	t.m.Lock()
 	delete(t.crStates.DeliveryService, name)
 	t.m.Unlock()

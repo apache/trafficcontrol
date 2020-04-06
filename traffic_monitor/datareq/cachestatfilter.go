@@ -35,12 +35,12 @@ type CacheStatFilter struct {
 	statsToUse   map[string]struct{}
 	wildcard     bool
 	cacheType    tc.CacheType
-	hosts        map[tc.CacheName]struct{}
-	cacheTypes   map[tc.CacheName]tc.CacheType
+	hosts        map[string]struct{}
+	cacheTypes   map[string]tc.CacheType
 }
 
 // UseCache returns whether the given cache is in the filter.
-func (f *CacheStatFilter) UseCache(name tc.CacheName) bool {
+func (f *CacheStatFilter) UseCache(name string) bool {
 	if _, inHosts := f.hosts[name]; len(f.hosts) != 0 && !inHosts {
 		return false
 	}
@@ -84,7 +84,7 @@ func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all cache types are returned.
-func NewCacheStatFilter(path string, params url.Values, cacheTypes map[tc.CacheName]tc.CacheType) (cache.Filter, error) {
+func NewCacheStatFilter(path string, params url.Values, cacheTypes map[string]tc.CacheType) (cache.Filter, error) {
 	validParams := map[string]struct{}{
 		"hc":       struct{}{},
 		"stats":    struct{}{},
@@ -131,29 +131,29 @@ func NewCacheStatFilter(path string, params url.Values, cacheTypes map[tc.CacheN
 		}
 	}
 
-	hosts := map[tc.CacheName]struct{}{}
+	hosts := map[string]struct{}{}
 	if paramHosts, exists := params["hosts"]; exists && len(paramHosts) > 0 {
 		commaHosts := strings.Split(paramHosts[0], ",")
 		for _, host := range commaHosts {
-			hosts[tc.CacheName(host)] = struct{}{}
+			hosts[host] = struct{}{}
 		}
 	}
 	if paramHosts, exists := params["cache"]; exists && len(paramHosts) > 0 {
 		commaHosts := strings.Split(paramHosts[0], ",")
 		for _, host := range commaHosts {
-			hosts[tc.CacheName(host)] = struct{}{}
+			hosts[host] = struct{}{}
 		}
 	}
 
 	pathArgument := getPathArgument(path)
 	if pathArgument != "" {
-		hosts[tc.CacheName(pathArgument)] = struct{}{}
+		hosts[pathArgument] = struct{}{}
 	}
 
 	// parameters without values are considered hosts, e.g. `?my-cache-0`
 	for maybeHost, val := range params {
 		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
-			hosts[tc.CacheName(maybeHost)] = struct{}{}
+			hosts[maybeHost] = struct{}{}
 		}
 	}
 

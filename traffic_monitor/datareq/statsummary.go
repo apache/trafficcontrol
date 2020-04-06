@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
@@ -36,7 +35,7 @@ import (
 )
 
 type StatSummary struct {
-	Caches map[tc.CacheName]map[string]StatSummaryStat `json:"caches"`
+	Caches map[string]map[string]StatSummaryStat `json:"caches"`
 	srvhttp.CommonAPIData
 }
 
@@ -66,11 +65,11 @@ func srvStatSummary(params url.Values, errorCount threadsafe.Uint, path string, 
 func createStatSummary(statResultHistory threadsafe.ResultStatHistory, filter cache.Filter, params url.Values) StatSummary {
 	statPrefix := "ats."
 	ss := StatSummary{
-		Caches:        map[tc.CacheName]map[string]StatSummaryStat{},
+		Caches:        map[string]map[string]StatSummaryStat{},
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 	}
 
-	statResultHistory.Range(func(cacheName tc.CacheName, stats threadsafe.ResultStatValHistory) bool {
+	statResultHistory.Range(func(cacheName string, stats threadsafe.ResultStatValHistory) bool {
 		if !filter.UseCache(cacheName) {
 			return true
 		}

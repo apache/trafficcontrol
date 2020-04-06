@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
@@ -62,14 +61,14 @@ type StatisticsPrecomputer func(string, todata.TOData, Statistics, map[string]in
 // along with the cache name, and returns the map of raw stats (whose names
 // must be strings, and values may be any primitive type but MUST be float64
 // if they are used by a Parameter Threshold) and System information.
-type StatsTypeParser func(cache tc.CacheName, r io.Reader) (error, map[string]interface{}, AstatsSystem)
+type StatsTypeParser func(cache string, r io.Reader) (error, map[string]interface{}, AstatsSystem)
 
 // StatsTypePrecomputer takes the cache name, the time the given stats were
 // received, the Traffic Ops data, and the raw stats and system information
 //created by Parse, and returns the PrecomputedData. Note this will only be
 // called for Stats polls, not Health polls. Note errors should be returned
 // in PrecomputedData.Errors
-type StatsTypePrecomputer func(cache tc.CacheName, toData todata.TOData, stats map[string]interface{}, system AstatsSystem) PrecomputedData
+type StatsTypePrecomputer func(cache string, toData todata.TOData, stats map[string]interface{}, system AstatsSystem) PrecomputedData
 
 // StatsTypeDecoders holds the functions for parsing cache stats. This is
 // not const, because Go doesn't allow constant maps. This is populated

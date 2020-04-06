@@ -90,12 +90,12 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	}
 
 	toData := todata.TOData{
-		ServerTypes:            map[tc.CacheName]tc.CacheType{},
-		DeliveryServiceServers: map[tc.DeliveryServiceName][]tc.CacheName{},
-		ServerCachegroups:      map[tc.CacheName]tc.CacheGroupName{},
+		ServerTypes:            map[string]tc.CacheType{},
+		DeliveryServiceServers: map[string][]string},
+		ServerCachegroups:      map[string]tc.CacheGroupName{},
 	}
 	toData.ServerTypes[result.ID] = tc.CacheTypeEdge
-	toData.DeliveryServiceServers["myDS"] = []tc.CacheName{result.ID}
+	toData.DeliveryServiceServers["myDS"] = []stringresult.ID}
 	toData.ServerCachegroups[result.ID] = "myCG"
 
 	localCacheStatusThreadsafe := threadsafe.NewCacheAvailableStatus()

@@ -48,7 +48,7 @@ func randAvailableStatuses() AvailableStatuses {
 	a := AvailableStatuses{}
 	num := 100
 	for i := 0; i < num; i++ {
-		a[tc.CacheName(randStr())] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
+		a[randStr()] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
 	}
 	return a
 }
@@ -64,7 +64,7 @@ func TestAvailableStatusesCopy(t *testing.T) {
 		}
 
 		// verify a and b don't point to the same map
-		a[tc.CacheName(randStr())] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
+		a[randStr()] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map: a: %+v", a)
 		}
@@ -135,10 +135,10 @@ func randStatCacheStats() dsdata.StatCacheStats {
 }
 
 func randStatCommon() dsdata.StatCommon {
-	cachesReporting := map[tc.CacheName]bool{}
+	cachesReporting := map[string]bool{}
 	num := 5
 	for i := 0; i < num; i++ {
-		cachesReporting[tc.CacheName(randStr())] = randBool()
+		cachesReporting[randStr()] = randBool()
 	}
 	return dsdata.StatCommon{
 		CachesConfiguredNum: dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
@@ -162,11 +162,11 @@ func randAStat() *AStat {
 	}
 }
 
-func randDsStats() map[tc.DeliveryServiceName]*AStat {
+func randDsStats() map[string]*AStat {
 	num := 5
-	a := map[tc.DeliveryServiceName]*AStat{}
+	a := map[string]*AStat{}
 	for i := 0; i < num; i++ {
-		a[tc.DeliveryServiceName(randStr())] = randAStat()
+		a[randStr()] = randAStat()
 	}
 	return a
 }
@@ -194,7 +194,7 @@ func randPrecomputedData() PrecomputedData {
 
 func randResult() Result {
 	return Result{
-		ID:              tc.CacheName(randStr()),
+		ID:              randStr(),
 		Error:           fmt.Errorf(randStr()),
 		Astats:          randAstats(),
 		Time:            time.Now(),
@@ -220,7 +220,7 @@ func randResultHistory() ResultHistory {
 	a := ResultHistory{}
 	num := 5
 	for i := 0; i < num; i++ {
-		a[tc.CacheName(randStr())] = randResultSlice()
+		a[randStr()] = randResultSlice()
 	}
 	return a
 }
@@ -236,7 +236,7 @@ func TestResultHistoryCopy(t *testing.T) {
 		}
 
 		// verify a and b don't point to the same map
-		a[tc.CacheName(randStr())] = randResultSlice()
+		a[randStr()] = randResultSlice()
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map: %+v", a)
 		}
