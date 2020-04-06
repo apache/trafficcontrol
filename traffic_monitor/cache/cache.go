@@ -20,7 +20,6 @@ package cache
  */
 
 import (
-	"fmt"
 	"io"
 	"time"
 
@@ -57,8 +56,12 @@ func (handler Handler) Precompute() bool {
 
 // PrecomputedData represents data parsed and pre-computed from the Result.
 type PrecomputedData struct {
-	DeliveryServiceStats map[tc.DeliveryServiceName]*DSStat
-	OutBytes             int64
+	DeliveryServiceStats map[string]*DSStat
+	// This is the total bytes transmitted by all interfaces on the Cache
+	// Server.
+	OutBytes             uint64
+	// MaxKbps is the maximum bandwidth of all interfaces on the Cache Server,
+	// each one calculated as the speed of the interface in Kbps.
 	MaxKbps              int64
 	Errors               []error
 	Reporting            bool
@@ -92,12 +95,14 @@ type Result struct {
 	// ID is the fully qualified domain name of the cache server being polled.
 	// (This is assumed to be unique even though that isn't necessarily true)
 	ID string
+	Miscellaneous map[string]interface{}
 	// PollFinished is a channel to which data should be sent to indicate that
 	// polling has been completed and a Result has been produced.
 	PollFinished chan <- uint64
 	// PollID is a unique identifier for the specific polling instance that
 	// produced this Result.
 	PollID uint64
+	PrecomputedData PrecomputedData
 	// RequestTime holds the elapsed duration between making a statistics
 	// polling request and either receiving a result or giving up.
 	RequestTime time.Duration
@@ -119,7 +124,7 @@ func (result *Result) HasStat(stat string) bool {
 	if _, ok := computedStats[stat]; ok {
 		return true // health poll has all computed stats
 	}
-	if _, ok := result.Statistics.Miscellaneous[stat]; ok {
+	if _, ok := result.Miscellaneous[stat]; ok {
 		return true
 	}
 	return false
@@ -143,13 +148,13 @@ type Stat struct {
 // Stats is designed for returning via the API. It contains result history for each cache, as well as common API data.
 type Stats struct {
 	srvhttp.CommonAPIData
-	Caches map[tc.CacheName]map[string][]ResultStatVal `json:"caches"`
+	Caches map[string]map[string][]ResultStatVal `json:"caches"`
 }
 
 // Filter filters whether stats and caches should be returned from a data set.
 type Filter interface {
 	UseStat(name string) bool
-	UseCache(name tc.CacheName) bool
+	UseCache(name string) bool
 	WithinStatHistoryMax(int) bool
 }
 
@@ -207,34 +212,44 @@ func ComputedStats() map[string]StatComputeFunc {
 			return serverInfo.ServerStatus
 		},
 		"system.astatsLoad": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.AstatsLoad
+			// return info.System.AstatsLoad
+			return 0
 		},
 		"system.configReloadRequests": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.ConfigLoadRequest
+			// return info.System.ConfigLoadRequest
+			return 0
 		},
 		"system.configReloads": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.ConfigReloads
+			// return info.System.ConfigReloads
+			return 0
 		},
 		"system.inf.name": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.InfName
+			// return info.System.InfName
+			return 0
 		},
 		"system.inf.speed": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.InfSpeed
+			// return info.System.InfSpeed
+			return 0
 		},
 		"system.lastReload": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.LastReload
+			// return info.System.LastReload
+			return 0
 		},
 		"system.lastReloadRequest": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.LastReloadRequest
+			// return info.System.LastReloadRequest
+			return 0
 		},
 		"system.notAvailable": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.NotAvailable
+			// return info.System.NotAvailable
+			return 0
 		},
 		"system.proc.loadavg": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.ProcLoadavg
+			// return info.System.ProcLoadavg
+			return 0
 		},
 		"system.proc.net.dev": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return info.System.ProcNetDev
+			// return info.System.ProcNetDev
+			return 0
 		},
 	}
 }
@@ -261,9 +276,12 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 	decoder, err := GetDecoder(format)
 	if err != nil {
 		log.Errorln(err.Error())
+		result.Error = err
+		handler.resultChan <- result
+		return
 	}
 
-	stats, err := decoder(string(result.ID), rdr)
+	stats, miscStats, err := decoder.Parse(string(result.ID), rdr)
 	if err != nil {
 		log.Warnf("%s decode error '%v'", id, err)
 		result.Error = err
@@ -271,33 +289,13 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 		return
 	}
 
-	statDecoder, ok := StatsTypeDecoders[format]
-	if !ok {
-		log.Errorf("Handler cache '%s' stat type '%s' not found! Returning handle error for this cache poll.\n", id, format)
-		result.Error = fmt.Errorf("handler stat type %s missing", format)
-		handler.resultChan <- result
-		return
-	}
-
-	// decodeErr := error(nil)
-	// if decodeErr, result.Astats.Ats, result.Astats.System = statDecoder.Parse(result.ID, rdr); decodeErr != nil {
-	// 	log.Warnf("%s decode error '%v'\n", id, decodeErr)
-	// 	result.Error = decodeErr
-	// 	handler.resultChan <- result
-	// 	return
-	// }
-
-	// if result.Astats.System.ProcNetDev == "" {
-	// 	log.Warnf("Handler cache %s procnetdev empty\n", id)
-	// }
-	// if result.Astats.System.InfSpeed == 0 {
-	// 	log.Warnf("Handler cache %s inf.speed empty\n", id)
-	// }
+	result.Statistics = stats
+	result.Miscellaneous = miscStats
 
 	result.Available = true
 
 	if handler.Precompute() {
-		result.PrecomputedData = statDecoder.Precompute(result.ID, handler.ToData.Get(), result.Astats.Ats, result.Astats.System)
+		result.PrecomputedData = decoder.Precompute(result.ID, handler.ToData.Get(), result.Statistics, result.Miscellaneous)
 	}
 	result.PrecomputedData.Reporting = true
 	result.PrecomputedData.Time = result.Time
