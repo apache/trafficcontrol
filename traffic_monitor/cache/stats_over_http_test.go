@@ -28,21 +28,21 @@ func TestStatsOverHTTPParse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stats, err := parseStats("test", fd)
+	stats, _, err := statsOverHTTPParse("test", fd)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Logf("parsed %d miscellaneous stats", len(stats.Miscellaneous))
 
-	if stats.Loadavg.One != 6080 {
-		t.Errorf("Incorrect one-minute loadavg, expected 6080, got '%f'", stats.Loadavg.One)
+	if stats.Loadavg.One != 0.092773438 {
+		t.Errorf("Incorrect one-minute loadavg, expected 0.092773438, got '%f'", stats.Loadavg.One)
 	}
-	if stats.Loadavg.Five != 16672 {
-		t.Errorf("Incorrect five-minute loadavg, expected 16672, got %f", stats.Loadavg.Five)
+	if stats.Loadavg.Five != 0.254394531 {
+		t.Errorf("Incorrect five-minute loadavg, expected 0.254394531, got %f", stats.Loadavg.Five)
 	}
-	if stats.Loadavg.Fifteen != 41888 {
-		t.Errorf("Incorrect fifteen-minute loadavg, expected 41888, got %f", stats.Loadavg.Fifteen)
+	if stats.Loadavg.Fifteen != 0.639160156 {
+		t.Errorf("Incorrect fifteen-minute loadavg, expected 0.639160156, got %f", stats.Loadavg.Fifteen)
 	}
 	if stats.Loadavg.TotalProcesses != 803 {
 		t.Errorf("Incorrect current_processes, expected 803, got %d", stats.Loadavg.CurrentProcesses)
