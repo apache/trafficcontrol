@@ -614,13 +614,15 @@ func updateV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	// query the DB for existing 1.5 fields in order to "upgrade" this 1.4 request into a 1.5 request
 	query := `
 SELECT
-  ds.ecs_enabled
+  ds.ecs_enabled,
+  ds.range_slice_block_size
 FROM
   deliveryservice ds
 WHERE
   ds.id = $1`
 	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
 		&dsV15.EcsEnabled,
+		&dsV15.RangeSliceBlockSize,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV15.ID), nil
