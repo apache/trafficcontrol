@@ -206,14 +206,15 @@ func astatsProcessStatPluginRemapStats(server string, stats map[string]*DSStat, 
 	}
 
 	statName := statParts[len(statParts)-1]
-	dsName := string(ds)
+	if _, ok := stats[ds]; !ok {
+		stats[ds] = new(DSStat)
+	}
 
-	dsStat := stats[dsName]
+	dsStat := stats[ds]
 
 	if err := astatsAddCacheStat(dsStat, statName, value); err != nil {
 		return stats, err
 	}
-	stats[dsName] = dsStat
 	return stats, nil
 }
 

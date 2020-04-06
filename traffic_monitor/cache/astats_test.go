@@ -23,10 +23,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
-	"strconv"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 
 	"github.com/json-iterator/go"
@@ -74,18 +72,24 @@ func getMockRawStats(cacheName string, dsNameFQDNs map[string]string) map[string
 	return st
 }
 
-func getMockSystem(infSpeed int, outBytes int) AstatsSystem {
+func getMockStatistics(infSpeed int64, outBytes uint64) Statistics {
 	infName := randStr()
-	return AstatsSystem{
-		InfName:           infName,
-		InfSpeed:          9876554433210,
-		ProcNetDev:        infName + ":12234567 8901234    1    2    3     4          5   12345 " + strconv.Itoa(outBytes) + " 923412341234    6    7    8     9       10          11",
-		ProcLoadavg:       "1.2 2.34 5.67 1/876 1234",
-		ConfigLoadRequest: rand.Int(),
-		LastReloadRequest: rand.Int(),
-		ConfigReloads:     rand.Int(),
-		LastReload:        rand.Int(),
-		AstatsLoad:        rand.Int(),
+	return Statistics{
+		Loadavg: Loadavg {
+			One: 1.2,
+			Five: 2.34,
+			Fifteen: 5.67,
+			CurrentProcesses: 1,
+			TotalProcesses: 876,
+			LatestPID: 1234,
+		},
+		Interfaces: map[string]Interface{
+			infName: Interface{
+				Speed: infSpeed,
+				BytesOut: outBytes,
+				BytesIn: 12234567,
+			},
+		},
 		NotAvailable:      randBool(),
 	}
 
@@ -96,19 +100,19 @@ func TestAstatsPrecompute(t *testing.T) {
 	toData := getMockTOData(dsNameFQDNs)
 	cacheName := "cache0"
 	rawStats := getMockRawStats(cacheName, dsNameFQDNs)
-	outBytes := 987655443321
-	infSpeedMbps := 9876554433210
-	system := getMockSystem(infSpeedMbps, outBytes)
+	outBytes := uint64(987655443321)
+	infSpeedMbps := int64(9876554433210)
+	stats := getMockStatistics(infSpeedMbps, outBytes)
 
-	prc := astatsPrecompute(cacheName, toData, rawStats, system)
+	prc := astatsPrecompute(cacheName, toData, stats, rawStats)
 
 	if len(prc.Errors) != 0 {
 		t.Fatalf("astatsPrecompute Errors expected 0, actual: %+v\n", prc.Errors)
 	}
-	if prc.OutBytes != int64(outBytes) {
+	if prc.OutBytes != outBytes {
 		t.Fatalf("astatsPrecompute OutBytes expected 987655443321, actual: %+v\n", prc.OutBytes)
 	}
-	if prc.MaxKbps != int64(infSpeedMbps*1000) {
+	if prc.MaxKbps != infSpeedMbps*1000 {
 		t.Fatalf("astatsPrecompute MaxKbps expected 9876554433210000, actual: %+v\n", prc.MaxKbps)
 	}
 

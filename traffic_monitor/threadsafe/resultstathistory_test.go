@@ -96,8 +96,8 @@ func randResultInfo() cache.ResultInfo {
 func randVitals() cache.Vitals {
 	return cache.Vitals{
 		LoadAvg:    rand.Float64(),
-		BytesOut:   rand.Int63(),
-		BytesIn:    rand.Int63(),
+		BytesOut:   rand.Uint64(),
+		BytesIn:    rand.Uint64(),
 		KbpsOut:    rand.Int63(),
 		MaxKbpsOut: rand.Int63(),
 	}
@@ -124,7 +124,7 @@ func (f DummyFilterNever) UseStat(name string) bool {
 	return false
 }
 
-func (f DummyFilterNever) UseCache(name string bool {
+func (f DummyFilterNever) UseCache(name string) bool {
 	return false
 }
 

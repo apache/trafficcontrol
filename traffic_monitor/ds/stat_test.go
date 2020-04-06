@@ -45,12 +45,12 @@ func TestCreateStats(t *testing.T) {
 	events := health.NewThreadsafeEvents(maxEvents)
 	localCRStates := peer.NewCRStatesThreadsafe()
 
-	dses := []string}
+	dses := []string{}
 	for ds, _ := range toData.DeliveryServiceServers {
 		dses = append(dses, ds)
 	}
 
-	caches := []string}
+	caches := []string{}
 	for cache, _ := range toData.ServerDeliveryServices {
 		caches = append(caches, cache)
 	}
@@ -95,7 +95,7 @@ func TestCreateStats(t *testing.T) {
 				t.Fatalf("CreateStats cachegroup expected: %+v, actual: %+v", cgMap, cgName)
 			}
 
-			cgExpected := cache.AStat{}
+			var cgExpected cache.DSStat
 			for pCache, pData := range precomputeds {
 				if toData.ServerCachegroups[pCache] != cgName {
 					continue
@@ -122,7 +122,7 @@ func TestCreateStats(t *testing.T) {
 				t.Fatalf("CreateStats type expected: %+v, actual: %+v", tpMap, tpName)
 			}
 
-			tpExpected := cache.AStat{}
+			var tpExpected cache.DSStat
 			for pCache, pData := range precomputeds {
 				if toData.ServerTypes[pCache] != tpName {
 					continue
@@ -148,7 +148,7 @@ func TestCreateStats(t *testing.T) {
 				t.Fatalf("CreateStats cache expected: %+v, actual: %+v", caMap, caName)
 			}
 
-			caExpected := cache.AStat{}
+			var caExpected cache.DSStat
 			for pCache, pData := range precomputeds {
 				if pCache != caName {
 					continue
@@ -207,7 +207,7 @@ func TestCreateStats(t *testing.T) {
 
 // compareAStatToStatCacheStats compares the two stats, and returns an error string, which is empty of both are equal.
 // The fields in StatCacheStats but not AStat are ignored.
-func compareAStatToStatCacheStats(expected *cache.AStat, actual *dsdata.StatCacheStats) string {
+func compareAStatToStatCacheStats(expected *cache.DSStat, actual *dsdata.StatCacheStats) string {
 	if actual.InBytes.Value != float64(expected.InBytes) {
 		return fmt.Sprintf("InBytes expected: \n%+v, actual: \n%+v", expected.InBytes, actual.InBytes.Value)
 	}
@@ -284,12 +284,12 @@ func getMockTOData() todata.TOData {
 
 	types := []tc.CacheType{tc.CacheTypeEdge, tc.CacheTypeEdge, tc.CacheTypeEdge, tc.CacheTypeEdge, tc.CacheTypeEdge, tc.CacheTypeMid}
 
-	caches := []string}
+	caches := []string{}
 	for i := 0; i < numCaches; i++ {
 		caches = append(caches, randStr())
 	}
 
-	dses := []string}
+	dses := []string{}
 	for i := 0; i < numDSes; i++ {
 		dses = append(dses, randStr())
 	}
@@ -299,14 +299,14 @@ func getMockTOData() todata.TOData {
 		cgs = append(cgs, tc.CacheGroupName(randStr()))
 	}
 
-	serverDSes := map[string][]string}
+	serverDSes := map[string][]string{}
 	for _, ca := range caches {
 		for i := 0; i < numCacheDSes; i++ {
 			serverDSes[ca] = append(serverDSes[ca], dses[rand.Intn(len(dses))])
 		}
 	}
 
-	dsServers := map[string][]string}
+	dsServers := map[string][]string{}
 	for server, dses := range serverDSes {
 		for _, ds := range dses {
 			dsServers[ds] = append(dsServers[ds], server)
@@ -331,7 +331,7 @@ func getMockTOData() todata.TOData {
 	return *tod
 }
 
-func randCachesPrecomputedData(caches []string toData todata.TOData) map[string]cache.PrecomputedData {
+func randCachesPrecomputedData(caches []string, toData todata.TOData) map[string]cache.PrecomputedData {
 	prc := map[string]cache.PrecomputedData{}
 	for _, ca := range caches {
 		prc[ca] = randPrecomputedData(toData)
@@ -347,23 +347,23 @@ func randPrecomputedData(toData todata.TOData) cache.PrecomputedData {
 	}
 	return cache.PrecomputedData{
 		DeliveryServiceStats: dsStats,
-		OutBytes:             int64(dsTotal),
+		OutBytes:             dsTotal,
 		MaxKbps:              rand.Int63(),
 		Errors:               randErrs(),
 		Reporting:            true,
 	}
 }
 
-func randDsStats(toData todata.TOData) map[string]*cache.AStat {
-	a := map[string]*cache.AStat{}
+func randDsStats(toData todata.TOData) map[string]*cache.DSStat {
+	a := map[string]*cache.DSStat{}
 	for ds, _ := range toData.DeliveryServiceServers {
 		a[ds] = randAStat()
 	}
 	return a
 }
 
-func randAStat() *cache.AStat {
-	return &cache.AStat{
+func randAStat() *cache.DSStat {
+	return &cache.DSStat{
 		InBytes:   uint64(rand.Intn(1000)),
 		OutBytes:  uint64(rand.Intn(1000)),
 		Status2xx: uint64(rand.Intn(1000)),
