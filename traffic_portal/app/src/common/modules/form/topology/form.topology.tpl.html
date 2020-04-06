@@ -92,7 +92,7 @@ under the License.
         <a ng-show="node.type !== undefined" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="viewCacheGroupServers(node)" style="margin-right: 8px;">
             <i class="fa fa-server"></i>
         </a>
-        <a ng-show="node.type !== undefined" title="Set Secondary Parent Cache Group for {{node.cachegroup}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="second()" style="margin-right: 8px;">
+        <a ng-show="node.cachegroup && node.parent" title="Set Secondary Parent Cache Group for {{node.cachegroup}}" class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="editSecParent(node)" style="margin-right: 8px;">
             {{(node.secParent) ? node.secParent : 'None'}}
         </a>
     </div>

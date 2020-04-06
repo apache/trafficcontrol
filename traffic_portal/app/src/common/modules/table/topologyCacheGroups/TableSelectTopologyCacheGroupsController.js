@@ -46,7 +46,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 
 	var decorateCacheGroups = function() {
 		$scope.cacheGroups = _.map(cacheGroups, function(cg) {
-			var isUsed = _.find(usedCacheGroupNames, function(usedCacheGroupName) { return usedCacheGroupName.name == cg.name });
+			var isUsed = _.find(usedCacheGroupNames, function(usedCacheGroupName) { return usedCacheGroupName == cg.name });
 			if (isUsed) {
 				cg['selected'] = true;
 				cg['used'] = true;
@@ -115,9 +115,19 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	$scope.submit = function() {
+		// cache groups that are eligible to be a secondary parent include cache groups that are:
+		let eligibleSecParentCandidates = _.filter(cacheGroups, function(cg) {
+			return cg.typeName !== 'EDGE_LOC' && // not an edge_loc cache group
+				(parent.cachegroup && parent.cachegroup !== cg.name) && // not the primary parent cache group
+				usedCacheGroupNames.includes(cg.name); // a cache group that exists in the topology
+		});
+		if (eligibleSecParentCandidates.length === 0) {
+			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: '', secParent: '' });
+			return;
+		}
 		let params = {
 			title: 'Assign secondary parent?',
-			message: 'Would you like to assign a secondary parent to the following cache groups? (primary parent = ' + parent.cachegroup + ')<br><br>'
+			message: 'Would you like to assign a secondary parent to the following cache groups?<br><br>primary parent = ' + parent.cachegroup + '<br><br>'
 		};
 		params.message += _.pluck(selectedCacheGroups, 'name').join('<br>') + '<br><br>';
 		let modalInstance = $uibModal.open({
@@ -146,20 +156,21 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 						return params;
 					},
 					collection: function() {
-						return usedCacheGroupNames;
+						// cache groups that are eligible to be a secondary parent include cache groups that are:
+						return eligibleSecParentCandidates;
 					}
 				}
 			});
 			modalInstance.result.then(function(cg) {
 				// user selected a secondary parent
-				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, secParent: cg.name });
+				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: parent.cachegroup, secParent: cg.name });
 			}, function () {
 				// user apparently changed their mind and doesn't want to select a secondary parent
-				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, secParent: '' });
+				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: parent.cachegroup, secParent: '' });
 			});
 		}, function () {
 			// user doesn't want to select a secondary parent
-			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, secParent: '' });
+			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: parent.cachegroup, secParent: '' });
 		});
 	};
 

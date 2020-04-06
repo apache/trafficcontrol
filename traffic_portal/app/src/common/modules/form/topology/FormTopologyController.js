@@ -30,11 +30,10 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 				parent = evt.dest.nodesScope.$parent.$modelValue;
 
 			if (!parent) {
-				messageModel.setMessages([ { level: 'error', text: 'Please keep cache groups inside the topology tree.' } ], false);
 				return false; // no dropping outside the toplogy tree
 			}
 
-			if (node.type === 'ORG_LOC' && parent.type !== undefined) {
+			if (node.type === 'ORG_LOC' && parent.cachegroup !== undefined) {
 				messageModel.setMessages([ { level: 'error', text: 'Cache groups of ORG_LOC type must be at the top of the topology tree.' } ], false);
 				return false;
 			}
@@ -42,6 +41,17 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 			if (parent.type === 'EDGE_LOC') {
 				messageModel.setMessages([ { level: 'error', text: 'Cache groups of EDGE_LOC type must not have children.' } ], false);
 				return false;
+			}
+
+			// change the node parent based on where the node is dragged
+			if (parent.cachegroup) {
+				node.parent = parent.cachegroup;
+				if (node.parent === node.secParent) {
+					node.secParent = "";
+				}
+			} else {
+				node.parent = "";
+				node.secParent = "";
 			}
 
 			return true;
@@ -65,6 +75,8 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 				item.children = []
 			}
 			if (item.parents.length === 0) {
+				item.parent = "";
+				item.secParent = "";
 				roots.push(item)
 			} else if (item.parents[0] in all) {
 				var p = all[item.parents[0]]
@@ -72,6 +84,8 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 					p.children = []
 				}
 				p.children.push(item);
+				// add parent to each node
+				item.parent = all[item.parents[0]].cachegroup;
 				// add secParent to each node
 				if (item.parents.length === 2 && item.parents[1] in all) {
 					item.secParent = all[item.parents[1]].cachegroup;
@@ -89,6 +103,17 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 
 
 		// traverse(roots[0]);
+	};
+
+	var scrubSecParent = function(arr, name) {
+		arr.forEach(function(node) {
+			if (node.secParent && node.secParent === name) {
+				node.secParent = '';
+			}
+			if (node.children && node.children.length > 0) {
+				scrubSecParent(node.children, name);
+			}
+		});
 	};
 
 	const traverse = function(obj) {
@@ -110,7 +135,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 		topology.nodes.forEach(function(node) {
 			var cg = _.findWhere(cacheGroups, { name: node.cachegroup} );
 			_.extend(node, { id: cg.id, type: cg.typeName });
-		})
+		});
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -124,16 +149,53 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 		return node.cachegroup + ' [' + node.type + ']'
 	};
 
-	$scope.second = function() {
-		alert('edit 2nd parent');
+	$scope.editSecParent = function(node) {
+
+		if (!node.parent) return;
+
+		console.log(node);
+
+		let flat = objectUtils.flatten(angular.copy($scope.massaged));
+		let usedNames = _.values(objectUtils.removeKeysWithout(flat, 'cachegroup'));
+
+		console.log(usedNames);
+
+		let eligibleSecParentCandidates = _.filter(cacheGroups, function(cg) {
+
+			return cg.typeName !== 'EDGE_LOC' && // not an edge_loc cache group
+				(node.parent && node.parent !== cg.name) && // not the primary parent cache group
+				usedNames.includes(cg.name); // a cache group that exists in the topology
+		});
+
+		console.log(eligibleSecParentCandidates);
+
+		let params = {
+			title: 'Select a secondary parent',
+			message: 'Please select a secondary parent that is part of the ' + topology.name + ' topology',
+			key: 'name'
+		};
+		let modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function() {
+					return eligibleSecParentCandidates;
+				}
+			}
+		});
+		modalInstance.result.then(function(cg) {
+			// user selected a secondary parent
+			node.secParent = cg.name;
+		});
 	};
 
 	$scope.deleteCacheGroup = function(node, scope) {
-
-		if (node.type === undefined) return;
-
-		let cg = scope.$nodeScope.$modelValue.cachegroup;
-		if (confirm("Remove " + cg + " and all its children?")){
+		if (node.cachegroup) {
+			scrubSecParent($scope.massaged, node.cachegroup);
 			scope.remove();
 		}
 	};
@@ -150,8 +212,6 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 		}
 
 		let flat = objectUtils.flatten(angular.copy($scope.massaged));
-		console.log(flat);
-
 		let stripped = objectUtils.removeKeysWithout(flat, 'cachegroup');
 
 		let modalInstance = $uibModal.open({
@@ -169,7 +229,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 					return cacheGroupService.getCacheGroups();
 				},
 				usedCacheGroupNames: function() {
-					return _.map(_.values(stripped), function(cg) { return { name: cg} });
+					return _.values(stripped);
 				}
 			}
 		});
@@ -177,10 +237,11 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 			let nodeData = scope.$modelValue,
 				cacheGroupNodes = _.map(result.selectedCacheGroups, function(cg) {
 					return {
-						secParent: result.secParent,
 						id: cg.id,
 						cachegroup: cg.name,
 						type: cg.typeName,
+						parent: result.parent,
+						secParent: result.secParent,
 						children: []
 					}
 				});
