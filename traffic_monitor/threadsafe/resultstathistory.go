@@ -68,7 +68,7 @@ func NewResultStatHistory() ResultStatHistory {
 	return ResultStatHistory{&sync.Map{}}
 }
 
-func (h ResultStatHistory) LoadOrStore(cache tc.CacheName) ResultStatValHistory {
+func (h ResultStatHistory) LoadOrStore(cache string) ResultStatValHistory {
 	// TODO change to use sync.Pool?
 	v, _ := h.Map.LoadOrStore(cache, NewResultStatValHistory())
 	return v.(ResultStatValHistory)
@@ -118,7 +118,7 @@ func (a ResultStatHistory) Add(r cache.Result, limit uint64) error {
 		limit = 1
 	}
 
-	for statName, statVal := range r.Astats.Ats {
+	for statName, statVal := range r.Miscellaneous {
 		statHistory := resultHistory.Load(statName)
 		if len(statHistory) == 0 {
 			statHistory = make([]cache.ResultStatVal, 0, limit) // initialize to the limit, to avoid multiple allocations. TODO put in .Load(statName, defaultSize)?
@@ -187,7 +187,7 @@ func newStatEqual(history []cache.ResultStatVal, stat interface{}) (bool, error)
 func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInfoHistory, combinedStates tc.CRStates, monitorConfig tc.TrafficMonitorConfigMap, statMaxKbpses cache.Kbpses, filter cache.Filter, params url.Values) ([]byte, error) {
 	stats := cache.Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Caches:        map[tc.CacheName]map[string][]cache.ResultStatVal{},
+		Caches:        map[string]map[string][]cache.ResultStatVal{},
 	}
 
 	computedStats := cache.ComputedStats()
@@ -199,7 +199,7 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 			continue
 		}
 
-		cacheStatResultHistory := statResultHistory.LoadOrStore(id)
+		cacheStatResultHistory := statResultHistory.LoadOrStore(string(id))
 		cacheStatResultHistory.Range(func(stat string, vals []cache.ResultStatVal) bool {
 			stat = "ats." + stat // TM1 prefixes ATS stats with 'ats.'
 			if !filter.UseStat(stat) {

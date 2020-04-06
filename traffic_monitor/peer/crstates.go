@@ -55,7 +55,7 @@ func (t *CRStatesThreadsafe) GetDeliveryServices() map[tc.DeliveryServiceName]tc
 }
 
 // GetCache returns the availability data of the given cache. This does not mutate, and is thus safe for multiple goroutines to call.
-func (t *CRStatesThreadsafe) GetCache(name tc.CacheName) (available tc.IsAvailable, ok bool) {
+func (t *CRStatesThreadsafe) GetCache(name string) (available tc.IsAvailable, ok bool) {
 	t.m.RLock()
 	available, ok = t.crStates.Caches[name]
 	t.m.RUnlock()
@@ -63,7 +63,7 @@ func (t *CRStatesThreadsafe) GetCache(name tc.CacheName) (available tc.IsAvailab
 }
 
 // GetCaches returns the availability data of all caches. This does not mutate, and is thus safe for multiple goroutines to call.
-func (t *CRStatesThreadsafe) GetCaches() map[tc.CacheName]tc.IsAvailable {
+func (t *CRStatesThreadsafe) GetCaches() map[string]tc.IsAvailable {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.crStates.CopyCaches()
@@ -78,7 +78,7 @@ func (t *CRStatesThreadsafe) GetDeliveryService(name tc.DeliveryServiceName) (ds
 }
 
 // SetCache sets the internal availability data for a particular cache. It does NOT set data if the cache doesn't already exist. By adding newly received caches with `AddCache`, this allows easily avoiding a race condition when an in-flight poller tries to set a cache which has been removed.
-func (t *CRStatesThreadsafe) SetCache(cacheName tc.CacheName, available tc.IsAvailable) {
+func (t *CRStatesThreadsafe) SetCache(cacheName string, available tc.IsAvailable) {
 	t.m.Lock()
 	if _, ok := t.crStates.Caches[cacheName]; ok {
 		t.crStates.Caches[cacheName] = available
@@ -87,14 +87,14 @@ func (t *CRStatesThreadsafe) SetCache(cacheName tc.CacheName, available tc.IsAva
 }
 
 // AddCache adds the internal availability data for a particular cache.
-func (t *CRStatesThreadsafe) AddCache(cacheName tc.CacheName, available tc.IsAvailable) {
+func (t *CRStatesThreadsafe) AddCache(cacheName string, available tc.IsAvailable) {
 	t.m.Lock()
 	t.crStates.Caches[cacheName] = available
 	t.m.Unlock()
 }
 
 // DeleteCache deletes the given cache from the internal data.
-func (t *CRStatesThreadsafe) DeleteCache(name tc.CacheName) {
+func (t *CRStatesThreadsafe) DeleteCache(name string) {
 	t.m.Lock()
 	delete(t.crStates.Caches, name)
 	t.m.Unlock()

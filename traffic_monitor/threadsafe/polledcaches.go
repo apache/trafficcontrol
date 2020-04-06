@@ -144,7 +144,7 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.Last
 			}
 
 			// TODO fix "whether a cache has ever been polled" to be generic somehow. The result.System.NotAvailable check is duplicated in health.EvalCache, and is fragile. What if another "successfully polled but unavailable" flag were added?
-			if !result.Available || result.Error != nil || result.Astats.System.NotAvailable {
+			if !result.Available || result.Error != nil || result.Statistics.NotAvailable {
 				log.Debugf("polled %v\n", cache)
 				delete(unpolledCaches, cache)
 				delete(seenCaches, cache)

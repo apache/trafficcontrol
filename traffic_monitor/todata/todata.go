@@ -70,7 +70,7 @@ func NewRegexes() Regexes {
 type TOData struct {
 	DeliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName
 	ServerDeliveryServices map[tc.CacheName][]tc.DeliveryServiceName
-	ServerTypes            map[tc.CacheName]tc.CacheType
+	ServerTypes            map[string]tc.CacheType
 	DeliveryServiceTypes   map[tc.DeliveryServiceName]tc.DSTypeCategory
 	DeliveryServiceRegexes Regexes
 	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
@@ -81,7 +81,7 @@ func New() *TOData {
 	return &TOData{
 		DeliveryServiceServers: map[tc.DeliveryServiceName][]tc.CacheName{},
 		ServerDeliveryServices: map[tc.CacheName][]tc.DeliveryServiceName{},
-		ServerTypes:            map[tc.CacheName]tc.CacheType{},
+		ServerTypes:            map[string]tc.CacheType{},
 		DeliveryServiceTypes:   map[tc.DeliveryServiceName]tc.DSTypeCategory{},
 		DeliveryServiceRegexes: NewRegexes(),
 		ServerCachegroups:      map[tc.CacheName]tc.CacheGroupName{},
@@ -117,7 +117,7 @@ func (d TODataThreadsafe) set(newTOData TOData) {
 // CRConfig is the CrConfig data needed by TOData. Note this is not all data in the CRConfig.
 // TODO change strings to type?
 type CRConfig struct {
-	ContentServers map[tc.CacheName]struct {
+	ContentServers map[string]struct {
 		DeliveryServices map[tc.DeliveryServiceName][]string `json:"deliveryServices"`
 		CacheGroup       string                              `json:"cacheGroup"`
 		Type             string                              `json:"type"`
@@ -271,8 +271,8 @@ func getServerCachegroups(crc CRConfig) (map[tc.CacheName]tc.CacheGroupName, err
 }
 
 // getServerTypes gets the cache type of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
-func getServerTypes(crc CRConfig) (map[tc.CacheName]tc.CacheType, error) {
-	serverTypes := map[tc.CacheName]tc.CacheType{}
+func getServerTypes(crc CRConfig) (map[string]tc.CacheType, error) {
+	serverTypes := map[string]tc.CacheType{}
 
 	for server, serverData := range crc.ContentServers {
 		t := tc.CacheTypeFromString(serverData.Type)
