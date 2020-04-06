@@ -41,20 +41,22 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 		log.Errorf("cache_health.GetVitals() called with an errored Result!")
 		return
 	}
+
+	newResult.Vitals.LoadAvg = newResult.Statistics.Loadavg.One
 	// proc.loadavg -- we're using the 1 minute average (!?)
 	// value looks like: "0.20 0.07 0.07 1/967 29536" (without the quotes)
-	loadAverages := strings.Fields(newResult.Astats.System.ProcLoadavg)
-	if len(loadAverages) > 0 {
-		oneMinAvg, err := strconv.ParseFloat(loadAverages[0], 64)
-		if err != nil {
-			setErr(newResult, fmt.Errorf("Error converting load average string '%s': %v", newResult.Astats.System.ProcLoadavg, err))
-			return
-		}
-		newResult.Vitals.LoadAvg = oneMinAvg
-	} else {
-		setErr(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.ID))
-		return
-	}
+	// loadAverages := strings.Fields(newResult.Astats.System.ProcLoadavg)
+	// if len(loadAverages) > 0 {
+	// 	oneMinAvg, err := strconv.ParseFloat(loadAverages[0], 64)
+	// 	if err != nil {
+	// 		setErr(newResult, fmt.Errorf("Error converting load average string '%s': %v", newResult.Astats.System.ProcLoadavg, err))
+	// 		return
+	// 	}
+	// 	newResult.Vitals.LoadAvg = oneMinAvg
+	// } else {
+	// 	setErr(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.ID))
+	// 	return
+	// }
 
 	// proc.net.dev -- need to compare to prevSample
 	// value looks like
@@ -111,8 +113,8 @@ func EvalCacheWithStatusInfo(result cache.ResultInfo, mc *tc.TrafficMonitorConfi
 		return true, eventDesc(status, availability), ""
 	case result.Error != nil:
 		return false, eventDesc(status, fmt.Sprintf("%v", result.Error)), ""
-	case result.System.NotAvailable == true:
-		return false, eventDesc(status, fmt.Sprintf("system.notAvailable == %v", result.System.NotAvailable)), ""
+	case result.Statistics.NotAvailable == true:
+		return false, eventDesc(status, fmt.Sprintf("system.notAvailable == %v", result.Statistics.NotAvailable)), ""
 	}
 	return result.Available, eventDesc(status, availability), ""
 }
