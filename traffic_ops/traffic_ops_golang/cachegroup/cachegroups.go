@@ -621,12 +621,6 @@ LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
 }
 
-// unused?
-// select type name so checks are based on name instead of id
-func selectTypeNameQuery() string {
-	return `SELECT name FROM type WHERE id = $1;`
-}
-
 func UpdateQuery() string {
 	// to disambiguate struct scans, the named
 	// parameter 'type_id' is an alias to cachegroup.type

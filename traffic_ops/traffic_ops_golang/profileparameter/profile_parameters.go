@@ -169,17 +169,6 @@ JOIN parameter param ON param.id = pp.parameter`
 	return query
 }
 
-func updateQuery() string {
-	query := `UPDATE
-profile_parameter SET
-profile=:profile_id,
-parameter=:parameter_id
-WHERE profile=:profile_id AND
-      parameter = :parameter_id
-      RETURNING last_updated`
-	return query
-}
-
 func deleteQuery() string {
 	query := `DELETE FROM profile_parameter
 	WHERE profile=:profile_id and parameter=:parameter_id`

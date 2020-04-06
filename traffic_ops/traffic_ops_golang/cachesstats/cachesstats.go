@@ -25,7 +25,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -45,8 +44,6 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	api.RespWriter(w, r, inf.Tx.Tx)(getCachesStats(inf.Tx.Tx))
 }
 
-const MonitorProxyParameter = "tm.traffic_mon_fwd_proxy"
-const MonitorRequestTimeout = time.Second * 10
 const MonitorOnlineStatus = "ONLINE"
 
 func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
@@ -242,16 +239,6 @@ WHERE
 	return data, nil
 }
 
-func getMonitorForwardProxy(tx *sql.Tx) (string, error) {
-	forwardProxy, forwardProxyExists, err := getGlobalParam(tx, MonitorProxyParameter)
-	if err != nil {
-		return "", errors.New("getting global monitor proxy parameter: " + err.Error())
-	} else if !forwardProxyExists {
-		forwardProxy = ""
-	}
-	return forwardProxy, nil
-}
-
 // getCDNMonitors returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.
 func getCDNMonitorFQDNs(tx *sql.Tx) (map[tc.CDNName][]string, error) {
 	qry := `
@@ -290,21 +277,4 @@ WHERE
 		monitors[cdn] = append(monitors[cdn], fqdn)
 	}
 	return monitors, nil
-}
-
-// getGlobalParams returns the value of the global param, whether it existed, or any error
-func getGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
-	return getParam(tx, name, "global")
-}
-
-// getGlobalParams returns the value of the param, whether it existed, or any error.
-func getParam(tx *sql.Tx, name string, configFile string) (string, bool, error) {
-	val := ""
-	if err := tx.QueryRow(`SELECT value FROM parameter WHERE name = $1 AND config_file = $2`, name, configFile).Scan(&val); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("Error querying global paramter '" + name + "': " + err.Error())
-	}
-	return val, true, nil
 }

@@ -236,14 +236,3 @@ WHERE dsu.tm_user_id = $1
 	}
 	return dses, nil
 }
-
-func getUserTenantIDByID(tx *sql.Tx, id int) (*int, bool, error) {
-	tenantID := (*int)(nil)
-	if err := tx.QueryRow(`SELECT tenant_id FROM tm_user WHERE id = $1`, id).Scan(&tenantID); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, false, nil
-		}
-		return nil, false, errors.New("querying user: " + err.Error())
-	}
-	return tenantID, true, nil
-}

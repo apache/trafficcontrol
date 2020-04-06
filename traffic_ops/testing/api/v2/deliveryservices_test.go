@@ -19,9 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"reflect"
 	"strconv"
 	"testing"
@@ -332,7 +329,7 @@ func GetAccessibleToTest(t *testing.T) {
 	if err != nil {
 		t.Fatal("unable to get tenant " + err.Error())
 	}
-	err = getByTenants(childTenant.ID, len(testData.DeliveryServices) - 1)
+	err = getByTenants(childTenant.ID, len(testData.DeliveryServices)-1)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -465,27 +462,6 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("cannot POST deliveryservice, failed to marshal JSON: %s", err.Error())
 	}
 
-}
-
-// TODO: move this helper function into a better location
-func makeRequest(version string, method string, path string, body io.Reader, respStruct interface{}) error {
-	req, err := http.NewRequest(method, TOSession.URL+"/api/"+version+"/"+path, body)
-	if err != nil {
-		return fmt.Errorf("failed to create request: %s", err.Error())
-	}
-	resp, err := TOSession.Client.Do(req)
-	if err != nil {
-		return fmt.Errorf("running request: %s", err.Error())
-	}
-	defer resp.Body.Close()
-	bts, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("reading body: " + err.Error())
-	}
-	if err = json.Unmarshal(bts, respStruct); err != nil {
-		return fmt.Errorf("unmarshalling body '" + string(bts) + "': " + err.Error())
-	}
-	return nil
 }
 
 func DeliveryServiceTenancyTest(t *testing.T) {

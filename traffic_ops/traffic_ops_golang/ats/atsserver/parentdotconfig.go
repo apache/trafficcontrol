@@ -354,14 +354,6 @@ func getParentConfigDSRaw(tx *sql.Tx, qry string, qryParams []interface{}) ([]at
 	return dses, nil
 }
 
-func parentConfigDSesToNames(dses []atscfg.ParentConfigDS) []string {
-	names := []string{}
-	for _, ds := range dses {
-		names = append(names, string(ds.Name))
-	}
-	return names
-}
-
 func parentConfigDSesToNamesTopLevel(dses []atscfg.ParentConfigDSTopLevel) []string {
 	names := []string{}
 	for _, ds := range dses {
@@ -819,42 +811,6 @@ WHERE
 		sParams[param.ProfileID] = profileCache
 	}
 	return sParams, nil
-}
-
-func getServerParams(tx *sql.Tx, serverID int) (map[string]string, error) {
-	qry := `
-SELECT
-  pa.name
-  pa.value
-FROM
-  parameter pa
-  JOIN profile_parameter pp ON pp.parameter = pa.id
-  JOIN profile pr ON pr.id = pp.profile
-  JOIN server s on s.profile = pr.id
-WHERE
-  s.id = $1
-  AND pa.config_file = 'parent.config'
-  AND pa.name IN (
-    '` + atscfg.ParentConfigParamQStringHandling + `',
-    '` + atscfg.ParentConfigParamAlgorithm + `',
-    '` + atscfg.ParentConfigParamQString + `'
-  )
-`
-	rows, err := tx.Query(qry, serverID)
-	if err != nil {
-		return nil, errors.New("querying: " + err.Error())
-	}
-	defer rows.Close()
-	params := map[string]string{}
-	for rows.Next() {
-		name := ""
-		val := ""
-		if err := rows.Scan(&name, &val); err != nil {
-			return nil, errors.New("scanning: " + err.Error())
-		}
-		params[name] = val
-	}
-	return params, nil
 }
 
 type ParentConfigServerParams struct {
