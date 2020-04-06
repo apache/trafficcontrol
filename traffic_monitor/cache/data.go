@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/json-iterator/go"
 )
 
@@ -74,12 +73,12 @@ type AvailableStatus struct {
 }
 
 // CacheAvailableStatuses is the available status of each cache.
-type AvailableStatuses map[tc.CacheName]AvailableStatus
+type AvailableStatuses map[string]AvailableStatus
 
 // Copy copies this CacheAvailableStatuses. It does not modify, and thus is
 // safe for multiple reader goroutines.
 func (a AvailableStatuses) Copy() AvailableStatuses {
-	b := AvailableStatuses(map[tc.CacheName]AvailableStatus{})
+	b := AvailableStatuses(map[string]AvailableStatus{})
 	for k, v := range a {
 		b[k] = v
 	}
@@ -88,7 +87,7 @@ func (a AvailableStatuses) Copy() AvailableStatuses {
 
 // ResultHistory is a map of cache names, to an array of result history from
 // each cache server.
-type ResultHistory map[tc.CacheName][]Result
+type ResultHistory map[string][]Result
 
 func copyResult(a []Result) []Result {
 	b := make([]Result, len(a), len(a))
@@ -167,28 +166,28 @@ type ResultInfoHistory map[string][]ResultInfo
 // any errors, the time of the poll, the request time duration, Astats System
 // (Vitals), Poll ID, and Availability.
 type ResultInfo struct {
-	ID          string
-	Error       error
-	Time        time.Time
-	RequestTime time.Duration
-	Vitals      Vitals
-	System      AstatsSystem
-	PollID      uint64
-	UsingIPv4   bool
 	Available   bool
+	Error       error
+	ID          string
+	PollID      uint64
+	RequestTime time.Duration
+	Statistics  Statistics
+	Time        time.Time
+	UsingIPv4   bool
+	Vitals      Vitals
 }
 
 func ToInfo(r Result) ResultInfo {
 	return ResultInfo{
-		ID:          r.ID,
-		Error:       r.Error,
-		Time:        r.Time,
-		RequestTime: r.RequestTime,
-		Vitals:      r.Vitals,
-		PollID:      r.PollID,
-		UsingIPv4:   r.UsingIPv4,
 		Available:   r.Available,
-		System:      r.Astats.System,
+		Error:       r.Error,
+		ID:          r.ID,
+		PollID:      r.PollID,
+		RequestTime: r.RequestTime,
+		Statistics:  r.Statistics,
+		Time:        r.Time,
+		UsingIPv4:   r.UsingIPv4,
+		Vitals:      r.Vitals,
 	}
 }
 
