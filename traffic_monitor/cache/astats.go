@@ -33,7 +33,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"

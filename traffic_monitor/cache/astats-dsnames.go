@@ -26,7 +26,6 @@ package cache
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
