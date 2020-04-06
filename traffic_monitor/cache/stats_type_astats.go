@@ -20,7 +20,8 @@ package cache
  */
 
 // stats_type_astats is the default Stats format for Traffic Control.
-// It is the Stats format produced by the `astats` plugin to Apache Traffic Server, included with Traffic Control.
+// It is the Stats format produced by the `astats` plugin to Apache Traffic
+// Server, included with Traffic Control.
 //
 // Stats are of the form `{"ats": {"name", number}}`,
 // Where `name` is of the form:
@@ -129,30 +130,8 @@ func astatsPrecompute(cacheName string, data todata.TOData, stats Statistics, mi
 	return precomputed
 }
 
-// outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
-func astatsOutBytes(procNetDev, iface string) (int64, error) {
-	if procNetDev == "" {
-		return 0, fmt.Errorf("procNetDev empty")
-	}
-	if iface == "" {
-		return 0, fmt.Errorf("iface empty")
-	}
-	ifacePos := strings.Index(procNetDev, iface)
-	if ifacePos == -1 {
-		return 0, fmt.Errorf("interface '%s' not found in proc.net.dev '%s'", iface, procNetDev)
-	}
-
-	procNetDevIfaceBytes := procNetDev[ifacePos+len(iface)+1:]
-	procNetDevIfaceBytesArr := strings.Fields(procNetDevIfaceBytes) // TODO test
-	if len(procNetDevIfaceBytesArr) < 10 {
-		return 0, fmt.Errorf("proc.net.dev iface '%v' unknown format '%s'", iface, procNetDev)
-	}
-	procNetDevIfaceBytes = procNetDevIfaceBytesArr[8]
-
-	return strconv.ParseInt(procNetDevIfaceBytes, 10, 64)
-}
-
-// astatsProcessStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
+// astatsProcessStat and its subsidiary functions act as a State Machine,
+// flowing the stat through states for each "." component of the stat name.
 func astatsProcessStat(server string, stats map[string]*DSStat, toData todata.TOData, stat string, value interface{}) (map[string]*DSStat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
@@ -217,7 +196,9 @@ func astatsProcessStatPluginRemapStats(server string, stats map[string]*DSStat, 
 	return stats, nil
 }
 
-// addCacheStat adds the given stat to the existing stat. Note this adds, it doesn't overwrite. Numbers are summed, strings are concatenated.
+// astatsAddCacheStat adds the given stat to the existing stat.
+// Note this adds, it doesn't overwrite. Numbers are summed, strings are
+// concatenated.
 // TODO make this less duplicate code somehow.
 func astatsAddCacheStat(stat *DSStat, name string, val interface{}) error {
 	switch name {
