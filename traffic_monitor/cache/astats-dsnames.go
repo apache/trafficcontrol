@@ -19,8 +19,10 @@ package cache
  * under the License.
  */
 
-// stats_type_astats_dsnames is a Stat format similar to the default Astats, but with Fully Qualified Domain Names replaced with Delivery Service names (xml_id)
-// That is, stat names are of the form: `"plugin.remap_stats.delivery-service-name.stat-name"`
+// stats_type_astats_dsnames is a Stat format similar to the default Astats,
+// but with Fully Qualified Domain Names replaced with Delivery Service XMLIDs.
+// That is, stat names are of the form:
+// `"plugin.remap_stats.delivery-service-xmlid.stat-name"`
 
 import (
 	"fmt"
@@ -33,7 +35,6 @@ import (
 )
 
 func init() {
-	// AddStatsType("astats-dsnames", astatsParse, astatsdsnamesPrecompute)
 	registerDecoder("astats-dsnames", astatsParse, astatsdsnamesPrecompute)
 }
 
@@ -62,7 +63,8 @@ func astatsdsnamesPrecompute(cache string, toData todata.TOData, stats Statistic
 	return precomputed
 }
 
-// astatsdsnamesProcessStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
+// astatsdsnamesProcessStat and its subsidiary functions act as a State Machine,
+// flowing the stat through states for each "." component of the stat name.
 func astatsdsnamesProcessStat(server string, stats map[string]*DSStat, toData todata.TOData, stat string, value interface{}) (map[string]*DSStat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
@@ -114,35 +116,8 @@ func astatsdsnamesProcessStatPluginRemapStats(server string, stats map[string]*D
 	return stats, nil
 }
 
-// astatsdsnamesOutBytes takes the proc.net.dev string, and the interface name,
-// and returns the OutBytes field.
-// NOTE this is superficially duplicated from astatsOutBytes, but they are
-// conceptually different, because the `astats` format changing should not
-// necessarily affect the `astats-dstypes` format. They MUST be kept separate,
-// and code between them MUST NOT be de-duplicated.
-func astatsdsnamesOutBytes(procNetDev, iface string) (uint64, error) {
-	if procNetDev == "" {
-		return 0, fmt.Errorf("procNetDev empty")
-	}
-	if iface == "" {
-		return 0, fmt.Errorf("iface empty")
-	}
-	ifacePos := strings.Index(procNetDev, iface)
-	if ifacePos == -1 {
-		return 0, fmt.Errorf("interface '%s' not found in proc.net.dev '%s'", iface, procNetDev)
-	}
-
-	procNetDevIfaceBytes := procNetDev[ifacePos+len(iface)+1:]
-	procNetDevIfaceBytesArr := strings.Fields(procNetDevIfaceBytes) // TODO test
-	if len(procNetDevIfaceBytesArr) < 10 {
-		return 0, fmt.Errorf("proc.net.dev iface '%v' unknown format '%s'", iface, procNetDev)
-	}
-	procNetDevIfaceBytes = procNetDevIfaceBytesArr[8]
-
-	return strconv.ParseUint(procNetDevIfaceBytes, 10, 64)
-}
-
-// astatsdstypesAddCacheStat adds the given stat to the existing stat. Note this adds, it doesn't overwrite. Numbers are summed, strings are concatenated.
+// astatsdstypesAddCacheStat adds the given stat to the existing stat. Note this
+// adds, it doesn't overwrite. Numbers are summed, strings are concatenated.
 func astatsdstypesAddCacheStat(stat *DSStat, name string, val interface{}) error {
 	// TODO make this less duplicate code somehow.
 	// NOTE this is superficially duplicated from astatsAddCacheStat, but they are conceptually different, because the `astats` format changing should not necessarily affect the `astats-dstypes` format. The MUST be kept separate, and code between them MUST NOT be de-duplicated.
