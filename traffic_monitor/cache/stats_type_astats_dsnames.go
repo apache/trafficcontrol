@@ -34,35 +34,37 @@ import (
 )
 
 func init() {
-	AddStatsType("astats-dsnames", astatsParse, astatsdsnamesPrecompute)
+	// AddStatsType("astats-dsnames", astatsParse, astatsdsnamesPrecompute)
+	registerDecoder("astats-dsnames", astatsParse, astatsdsnamesPrecompute)
 }
 
-func astatsdsnamesPrecompute(cache tc.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
-	stats := map[tc.DeliveryServiceName]*AStat{}
-	precomputed := PrecomputedData{}
-	var err error
-	if precomputed.OutBytes, err = astatsdsnamesOutBytes(system.ProcNetDev, system.InfName); err != nil {
-		precomputed.OutBytes = 0
-		log.Errorf("astatsdsnamesPrecompute %s handle precomputing outbytes '%v'\n", cache, err)
+func astatsdsnamesPrecompute(cache string, toData todata.TOData, stats Statistics, rawStats map[string]interface{}) PrecomputedData {
+	dsStats := make(map[string]*DSStat)
+	var precomputed PrecomputedData
+	precomputed.OutBytes = 0
+	precomputed.MaxKbps = 0
+	for _, iface := range stats.Interfaces {
+		precomputed.OutBytes += iface.BytesOut
+		if iface.Speed > precomputed.MaxKbps {
+			precomputed.MaxKbps = iface.Speed
+		}
 	}
-
-	kbpsInMbps := int64(1000)
-	precomputed.MaxKbps = int64(system.InfSpeed) * kbpsInMbps
+	precomputed.MaxKbps *= 1000
 
 	for stat, value := range rawStats {
 		var err error
-		stats, err = astatsdsnamesProcessStat(cache, stats, toData, stat, value)
+		dsStats, err = astatsdsnamesProcessStat(cache, dsStats, toData, stat, value)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
 			log.Infof("precomputing cache %v stat %v value %v error %v", cache, stat, value, err)
 			precomputed.Errors = append(precomputed.Errors, err)
 		}
 	}
-	precomputed.DeliveryServiceStats = stats
+	precomputed.DeliveryServiceStats = dsStats
 	return precomputed
 }
 
 // astatsdsnamesProcessStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-func astatsdsnamesProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsdsnamesProcessStat(server string, stats map[string]*DSStat, toData todata.TOData, stat string, value interface{}) (map[string]*DSStat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -80,7 +82,7 @@ func astatsdsnamesProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceN
 	}
 }
 
-func astatsdsnamesProcessStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsdsnamesProcessStatPlugin(server string, stats map[string]*DSStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[string]*DSStat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
@@ -92,24 +94,19 @@ func astatsdsnamesProcessStatPlugin(server tc.CacheName, stats map[tc.DeliverySe
 	}
 }
 
-func astatsdsnamesProcessStatPluginRemapStats(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
+func astatsdsnamesProcessStatPluginRemapStats(server string, stats map[string]*DSStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[string]*DSStat, error) {
 	if len(statParts) < 3 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
 
-	ds := tc.DeliveryServiceName(statParts[0])
+	ds := statParts[0]
 	statName := statParts[len(statParts)-1]
 
-	if _, ok := toData.DeliveryServiceTypes[ds]; !ok {
+	if _, ok := toData.DeliveryServiceTypes[tc.DeliveryServiceName(ds)]; !ok {
 		return stats, fmt.Errorf("no delivery service match for name '%v' stat '%v'\n", ds, statName)
 	}
 
-	dsStat, ok := stats[ds]
-	if !ok {
-		dsStat = &AStat{}
-		stats[ds] = dsStat
-	}
-
+	dsStat := stats[ds]
 	if err := astatsdstypesAddCacheStat(dsStat, statName, value); err != nil {
 		return stats, err
 	}
@@ -118,9 +115,13 @@ func astatsdsnamesProcessStatPluginRemapStats(server tc.CacheName, stats map[tc.
 	return stats, nil
 }
 
-// astatsdsnamesOutBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
-// NOTE this is superficially duplicated from astatsOutBytes, but they are conceptually different, because the `astats` format changing should not necessarily affect the `astats-dstypes` format. The MUST be kept separate, and code between them MUST NOT be de-duplicated.
-func astatsdsnamesOutBytes(procNetDev, iface string) (int64, error) {
+// astatsdsnamesOutBytes takes the proc.net.dev string, and the interface name,
+// and returns the OutBytes field.
+// NOTE this is superficially duplicated from astatsOutBytes, but they are
+// conceptually different, because the `astats` format changing should not
+// necessarily affect the `astats-dstypes` format. They MUST be kept separate,
+// and code between them MUST NOT be de-duplicated.
+func astatsdsnamesOutBytes(procNetDev, iface string) (uint64, error) {
 	if procNetDev == "" {
 		return 0, fmt.Errorf("procNetDev empty")
 	}
@@ -139,11 +140,11 @@ func astatsdsnamesOutBytes(procNetDev, iface string) (int64, error) {
 	}
 	procNetDevIfaceBytes = procNetDevIfaceBytesArr[8]
 
-	return strconv.ParseInt(procNetDevIfaceBytes, 10, 64)
+	return strconv.ParseUint(procNetDevIfaceBytes, 10, 64)
 }
 
 // astatsdstypesAddCacheStat adds the given stat to the existing stat. Note this adds, it doesn't overwrite. Numbers are summed, strings are concatenated.
-func astatsdstypesAddCacheStat(stat *AStat, name string, val interface{}) error {
+func astatsdstypesAddCacheStat(stat *DSStat, name string, val interface{}) error {
 	// TODO make this less duplicate code somehow.
 	// NOTE this is superficially duplicated from astatsAddCacheStat, but they are conceptually different, because the `astats` format changing should not necessarily affect the `astats-dstypes` format. The MUST be kept separate, and code between them MUST NOT be de-duplicated.
 	switch name {
