@@ -45,7 +45,7 @@ Guide
 		:caption: Example PostgreSQL Install Procedure
 
 		yum update -y
-		yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+		yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 		yum install -y postgresql96-server
 		su - postgres -c '/usr/pgsql-9.6/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
 
@@ -69,7 +69,7 @@ Guide
 	.. code-block:: shell
 		:caption: Installing PostgreSQL Client from a Hosted Source
 
-		yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+		yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 
 #. Install the Traffic Ops RPM. The Traffic Ops RPM file should have been built in an earlier step.
 

@@ -31,7 +31,7 @@
 FROM centos/systemd
 MAINTAINER dev@trafficcontrol.apache.org
 
-RUN yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm
+RUN yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 RUN yum install -y initscripts # needed for service command
 RUN yum install -y epel-release # needed for perl-Crypt-ScryptKDF
 RUN yum install -y perl-Crypt-ScryptKDF

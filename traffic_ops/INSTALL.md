@@ -28,7 +28,7 @@ Instructions are here: https://yum.postgresql.org/
 
 - From this page,  copy the link for CentOS 7 and install:
 
-    `$ sudo yum install https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-xxxx.noarch.rpm`
+    `$ sudo yum install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm`
     
 ## Install Postgres 9.6 server (in a container or on the host)
 
