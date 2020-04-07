@@ -158,7 +158,9 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		let params = {
 			title: 'Select a secondary parent',
 			message: 'Please select a secondary parent that is part of the ' + topology.name + ' topology',
-			key: 'name'
+			key: 'name',
+			required: false,
+			selectedItemKeyValue: node.secParent
 		};
 		let modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
@@ -173,9 +175,12 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 				}
 			}
 		});
-		modalInstance.result.then(function(cg) {
-			// user selected a secondary parent
-			node.secParent = cg.name;
+		modalInstance.result.then(function(selectedSecParent) {
+			if (selectedSecParent) {
+				node.secParent = selectedSecParent.name;
+			} else {
+				node.secParent = '';
+			}
 		});
 	};
 

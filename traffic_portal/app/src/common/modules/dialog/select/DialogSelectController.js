@@ -49,7 +49,7 @@ var DialogSelectController = function(params, collection, $scope, $uibModalInsta
 
 		$scope.required = ($scope.params.required !== undefined) ? $scope.params.required : true;
 
-		$scope.selectedItemKeyValue = ($scope.params.selectedItemKeyValue !== undefined) ? $scope.params.selectedItemKeyValue : null;
+		$scope.selectedItemKeyValue = ($scope.params.selectedItemKeyValue === undefined || !$scope.params.selectedItemKeyValue) ? null : $scope.params.selectedItemKeyValue;
 	};
 	init();
 
