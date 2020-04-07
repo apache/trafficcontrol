@@ -156,18 +156,6 @@ func TestUpdateInvalidType(t *testing.T) {
 	}
 }
 
-func TestCreateInvalidType(t *testing.T) {
-	invalidCreateType := createDummyType("test")
-
-	err, _, statusCode := invalidCreateType.Create()
-	if err == nil {
-		t.Fatalf("expected create type to have an error")
-	}
-	if statusCode != http.StatusBadRequest {
-		t.Fatalf("expected create type to return a %v error", http.StatusBadRequest)
-	}
-}
-
 func TestDeleteInvalidType(t *testing.T) {
 	invalidDeleteType := createDummyType("other")
 
@@ -177,6 +165,18 @@ func TestDeleteInvalidType(t *testing.T) {
 	}
 	if statusCode != http.StatusNotFound {
 		t.Fatalf("expected delete type to return a %v error", http.StatusNotFound)
+	}
+}
+
+func TestCreateInvalidType(t *testing.T) {
+	invalidCreateType := createDummyType("test")
+
+	err, _, statusCode := invalidCreateType.Create()
+	if err == nil {
+		t.Fatalf("expected create type to have an error")
+	}
+	if statusCode != http.StatusBadRequest {
+		t.Fatalf("expected create type to return a %v error", http.StatusBadRequest)
 	}
 }
 
