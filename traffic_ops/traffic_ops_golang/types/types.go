@@ -133,8 +133,7 @@ func (tp *TOType) AllowMutation(forCreation bool) bool {
 		} else if actualUseInTable != "server" {
 			return false
 		}
-	// Only allow creationg of types with UseInTable being "server"
-	} else if *tp.UseInTable != "server" {
+	} else if *tp.UseInTable != "server" { // Only allow creating of types with UseInTable being "server"
 		return false
 	}
 	return true
