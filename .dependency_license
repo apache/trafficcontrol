@@ -30,7 +30,6 @@ RobotoSlab-Regular\.ttf$, Apache
 \.test$, Apache
 \.config(\.example)?$, Apache
 /\.bowerrc$, Apache
-/\.jshintrc$, Apache
 \.traffic_ops$, Apache # JSON with a specific format.
 \.dist$, Apache # JSON with a specific format.
 traffic_monitor_config\.js$, Apache # Actually JSON with a specific format.
