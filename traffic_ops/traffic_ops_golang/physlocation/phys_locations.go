@@ -104,9 +104,9 @@ func (pl *TOPhysLocation) Read() ([]interface{}, error, error, int) {
 	}
 	return api.GenericRead(pl)
 }
-func (pl *TOPhysLocation) Update() (error, error, int)              { return api.GenericUpdate(pl) }
-func (pl *TOPhysLocation) Create() (error, error, int)              { return api.GenericCreate(pl) }
-func (pl *TOPhysLocation) Delete() (error, error, int)              { return api.GenericDelete(pl) }
+func (pl *TOPhysLocation) Update() (error, error, int) { return api.GenericUpdate(pl) }
+func (pl *TOPhysLocation) Create() (error, error, int) { return api.GenericCreate(pl) }
+func (pl *TOPhysLocation) Delete() (error, error, int) { return api.GenericDelete(pl) }
 
 func selectQuery() string {
 	return `

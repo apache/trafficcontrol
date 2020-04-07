@@ -67,4 +67,3 @@ func (to *Session) SnapshotCRConfigByID(id int) (tc.Alerts, ReqInf, error) {
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
-
