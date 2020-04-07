@@ -164,7 +164,7 @@ func TestDeleteInvalidType(t *testing.T) {
 		t.Fatalf("expected delete type to have an error")
 	}
 	if statusCode != http.StatusBadRequest {
-		t.Fatalf("expected delete type to return a %v error", http.StatusNotFound)
+		t.Fatalf("expected delete type to return a %v error", http.StatusBadRequest)
 	}
 }
 
