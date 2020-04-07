@@ -19,19 +19,19 @@
 
 var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheGroups, usedCacheGroupNames, $scope, $uibModal, $uibModalInstance, serverService) {
 
-	var selectedCacheGroups = [],
+	let selectedCacheGroups = [],
 		usedCacheGroupCount = 0;
 
-	var addAll = function() {
+	let addAll = function() {
 		markVisibleCacheGroups(true);
 	};
 
-	var removeAll = function() {
+	let removeAll = function() {
 		markVisibleCacheGroups(false);
 	};
 
-	var markVisibleCacheGroups = function(selected) {
-		var visibleCacheGroupNames = $('#availableCacheGroupsTable tr.cg-row').map(
+	let markVisibleCacheGroups = function(selected) {
+		let visibleCacheGroupNames = $('#availableCacheGroupsTable tr.cg-row').map(
 			function() {
 				return parseInt($(this).attr('id'));
 			}).get();
@@ -44,9 +44,9 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 		updateSelectedCount();
 	};
 
-	var decorateCacheGroups = function() {
+	let decorateCacheGroups = function() {
 		$scope.cacheGroups = _.map(cacheGroups, function(cg) {
-			var isUsed = _.find(usedCacheGroupNames, function(usedCacheGroupName) { return usedCacheGroupName == cg.name });
+			let isUsed = _.find(usedCacheGroupNames, function(usedCacheGroupName) { return usedCacheGroupName == cg.name });
 			if (isUsed) {
 				cg['selected'] = true;
 				cg['used'] = true;
@@ -56,7 +56,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 		});
 	};
 
-	var updateSelectedCount = function() {
+	let updateSelectedCount = function() {
 		selectedCacheGroups = _.filter($scope.cacheGroups, function(cg) { return cg['selected'] == true && !cg['used'] } );
 		$('div.selected-count').html('<strong><span class="text-success">' + selectedCacheGroups.length + ' selected</span><span> | ' + usedCacheGroupCount + ' already used in topology</span></strong>');
 	};
@@ -73,7 +73,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	$scope.selectAll = function($event) {
 		// todo:
 		alert('select/unselect all visible/not used cgs')
-		// var checkbox = $event.target;
+		// let checkbox = $event.target;
 		// if (checkbox.checked) {
 		// 	addAll();
 		// } else {
@@ -92,8 +92,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 		if ($event) {
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		}
-
-		let modalInstance = $uibModal.open({
+		$uibModal.open({
 			templateUrl: 'common/modules/table/topologyCacheGroupServers/table.topologyCacheGroupServers.tpl.html',
 			controller: 'TableTopologyCacheGroupServersController',
 			size: 'lg',
@@ -106,12 +105,6 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 				}
 			}
 		});
-		modalInstance.result.then(function() {
-
-		}, function () {
-			// do nothing
-		});
-
 	};
 
 	$scope.submit = function() {
@@ -179,7 +172,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	angular.element(document).ready(function () {
-		var availableCacheGroupsTable = $('#availableCacheGroupsTable').dataTable({
+		let availableCacheGroupsTable = $('#availableCacheGroupsTable').dataTable({
 			"scrollY": "60vh",
 			"paging": false,
 			"order": [[ 1, 'asc' ]],

@@ -47,9 +47,9 @@ under the License.
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache Groups *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <div ui-tree="treeOptions" id="tree-root">
-                        <ol ui-tree-nodes ng-model="massaged">
-                            <li ng-repeat="node in massaged" ui-tree-node ng-include="'nodes_renderer.html'"></li>
+                    <div ui-tree="topologyTreeOptions" id="tree-root">
+                        <ol ui-tree-nodes ng-model="topologyTree">
+                            <li ng-repeat="node in topologyTree" ui-tree-node ng-include="'nodes_renderer.html'"></li>
                         </ol>
                     </div>
                 </div>
@@ -71,7 +71,7 @@ under the License.
                 <div class="info">
                     {{info}}
                 </div>
-                <pre class="code">{{ massaged | json }}</pre>
+                <pre class="code">{{ topologyTree | json }}</pre>
             </div>
         </div>
     </div>

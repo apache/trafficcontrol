@@ -17,13 +17,15 @@
  * under the License.
  */
 
-var FormTopologyController = function(topology, cacheGroups, $scope, $location, $uibModal, formUtils, locationUtils, objectUtils, messageModel) {
+var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $scope, $location, $uibModal, formUtils, locationUtils, messageModel) {
+
+	let cacheGroupNamesInTopology = [];
 
 	$scope.topology = topology;
 
-	$scope.massaged = [];
+	$scope.topologyTree = [];
 
-	$scope.treeOptions = {
+	$scope.topologyTreeOptions = {
 		beforeDrop: function(evt) {
 
 			let node = evt.source.nodeScope.$modelValue,
@@ -34,11 +36,13 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 			}
 
 			if (node.type === 'ORG_LOC' && parent.cachegroup !== undefined) {
+				$anchorScroll(); // scrolls window to top
 				messageModel.setMessages([ { level: 'error', text: 'Cache groups of ORG_LOC type must be at the top of the topology tree.' } ], false);
 				return false;
 			}
 
 			if (parent.type === 'EDGE_LOC') {
+				$anchorScroll(); // scrolls window to top
 				messageModel.setMessages([ { level: 'error', text: 'Cache groups of EDGE_LOC type must not have children.' } ], false);
 				return false;
 			}
@@ -58,19 +62,24 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 		}
 	};
 
-	var massage = function(topology) {
-		var roots = []; // things without parent
+	let hydrateTopology = function() {
+		topology.nodes.forEach(function(node) {
+			var cg = _.findWhere(cacheGroups, { name: node.cachegroup} );
+			_.extend(node, { id: cg.id, type: cg.typeName });
+		});
+	};
 
-		// make them accessible by guid on this map
-		var all = {};
+	let createTopologyTree = function(topology) {
+		let roots = [], // topology items without parents (primary or secondary)
+			all = {};
 
 		topology.nodes.forEach(function(node, index) {
 			all[index] = node;
 		});
 
-		// connect childrens to its parent, and split roots apart
+		// create children based on parent definitions
 		Object.keys(all).forEach(function (guid) {
-			var item = all[guid];
+			let item = all[guid];
 			if (!('children' in item)) {
 				item.children = []
 			}
@@ -79,7 +88,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 				item.secParent = "";
 				roots.push(item)
 			} else if (item.parents[0] in all) {
-				var p = all[item.parents[0]]
+				let p = all[item.parents[0]]
 				if (!('children' in p)) {
 					p.children = []
 				}
@@ -93,48 +102,33 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 			}
 		});
 
-		$scope.massaged = [
+		$scope.topologyTree = [
 			{
 				children: roots
 			}
 		];
-
-		// console.log(_.flatten(_.map(roots, _.values)) );
-
-
-		// traverse(roots[0]);
 	};
 
-	var scrubSecParent = function(arr, name) {
+	let scrubCacheGroupByName = function(arr, name) {
 		arr.forEach(function(node) {
 			if (node.secParent && node.secParent === name) {
 				node.secParent = '';
 			}
 			if (node.children && node.children.length > 0) {
-				scrubSecParent(node.children, name);
+				scrubCacheGroupByName(node.children, name);
 			}
 		});
 	};
 
-	const traverse = function(obj) {
-		_.each(obj, function (val, key, obj) {
-			if (_.isArray(val)) {
-				val.forEach(function(el) {
-					traverse(el);
-				});
-			} else if (_.isObject(val)) {
-				traverse(val);
-			} else {
-				console.log('i am a leaf');
-				console.log(val);
+	let buildCacheGroupNamesInTopology = function(topologyTree, fromScratch) {
+		if (fromScratch) cacheGroupNamesInTopology = [];
+		topologyTree.forEach(function(node) {
+			if (node.cachegroup) {
+				cacheGroupNamesInTopology.push(node.cachegroup)
 			}
-		});
-	};
-
-	var addCacheGroupPropertiesToTopology = function() {
-		topology.nodes.forEach(function(node) {
-			var cg = _.findWhere(cacheGroups, { name: node.cachegroup} );
-			_.extend(node, { id: cg.id, type: cg.typeName });
+			if (node.children && node.children.length > 0) {
+				buildCacheGroupNamesInTopology(node.children, false);
+			}
 		});
 	};
 
@@ -145,29 +139,21 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
 	$scope.nodeLabel = function(node) {
-		if (node.type === undefined) return 'TOPOLOGY ROOT (ORIGIN LAYER)';
+		if (node.cachegroup === undefined) return 'TOPOLOGY ROOT (ORIGIN LAYER)';
 		return node.cachegroup + ' [' + node.type + ']'
 	};
 
 	$scope.editSecParent = function(node) {
 
-		if (!node.parent) return;
+		if (!node.parent) return; // if a node has no parent, it can't have a second parent
 
-		console.log(node);
-
-		let flat = objectUtils.flatten(angular.copy($scope.massaged));
-		let usedNames = _.values(objectUtils.removeKeysWithout(flat, 'cachegroup'));
-
-		console.log(usedNames);
+		buildCacheGroupNamesInTopology($scope.topologyTree, true);
 
 		let eligibleSecParentCandidates = _.filter(cacheGroups, function(cg) {
-
 			return cg.typeName !== 'EDGE_LOC' && // not an edge_loc cache group
 				(node.parent && node.parent !== cg.name) && // not the primary parent cache group
-				usedNames.includes(cg.name); // a cache group that exists in the topology
+				cacheGroupNamesInTopology.includes(cg.name); // a cache group that exists in the topology
 		});
-
-		console.log(eligibleSecParentCandidates);
 
 		let params = {
 			title: 'Select a secondary parent',
@@ -195,7 +181,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 
 	$scope.deleteCacheGroup = function(node, scope) {
 		if (node.cachegroup) {
-			scrubSecParent($scope.massaged, node.cachegroup);
+			scrubCacheGroupByName($scope.topologyTree, node.cachegroup);
 			scope.remove();
 		}
 	};
@@ -211,8 +197,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 			return;
 		}
 
-		let flat = objectUtils.flatten(angular.copy($scope.massaged));
-		let stripped = objectUtils.removeKeysWithout(flat, 'cachegroup');
+		buildCacheGroupNamesInTopology($scope.topologyTree, true);
 
 		let modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/table/topologyCacheGroups/table.selectTopologyCacheGroups.tpl.html',
@@ -229,7 +214,7 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 					return cacheGroupService.getCacheGroups();
 				},
 				usedCacheGroupNames: function() {
-					return _.values(stripped);
+					return cacheGroupNamesInTopology;
 				}
 			}
 		});
@@ -248,14 +233,11 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 			cacheGroupNodes.forEach(function(node) {
 				nodeData.children.unshift(node);
 			});
-
-		}, function () {
-			// do nothing
 		});
 	};
 
 	$scope.viewCacheGroupServers = function(node) {
-		let modalInstance = $uibModal.open({
+		$uibModal.open({
 			templateUrl: 'common/modules/table/topologyCacheGroupServers/table.topologyCacheGroupServers.tpl.html',
 			controller: 'TableTopologyCacheGroupServersController',
 			size: 'lg',
@@ -268,22 +250,14 @@ var FormTopologyController = function(topology, cacheGroups, $scope, $location, 
 				}
 			}
 		});
-		modalInstance.result.then(function() {
-
-		}, function () {
-			// do nothing
-		});
-
 	};
 
 	let init = function() {
-		addCacheGroupPropertiesToTopology();
-		massage(angular.copy($scope.topology));
+		hydrateTopology();
+		createTopologyTree(angular.copy($scope.topology));
 	};
 	init();
-
-
 };
 
-FormTopologyController.$inject = ['topology', 'cacheGroups', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'objectUtils', 'messageModel'];
+FormTopologyController.$inject = ['topology', 'cacheGroups', '$anchorScroll', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'messageModel'];
 module.exports = FormTopologyController;

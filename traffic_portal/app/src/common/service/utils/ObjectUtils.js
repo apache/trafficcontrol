@@ -19,6 +19,18 @@
 
 var ObjectUtils = function() {
 
+	let merge = function(objects) {
+		let out = {};
+
+		for (let i = 0; i < objects.length; i++) {
+			for (let p in objects[i]) {
+				out[p] = objects[i][p];
+			}
+		}
+
+		return out;
+	};
+
 	this.flatten = function(obj, name, branch) {
 		let out = {},
 			newBranch = (typeof branch !== 'undefined' && branch !== '') ? branch + '.' + name : name;
@@ -36,18 +48,6 @@ var ObjectUtils = function() {
 		return out;
 	};
 
-	let merge = function(objects) {
-		let out = {};
-
-		for (let i = 0; i < objects.length; i++) {
-			for (let p in objects[i]) {
-				out[p] = objects[i][p];
-			}
-		}
-
-		return out;
-	};
-
 	this.removeKeysWithout = function (obj, without) {
 		let out = _.clone(obj);
 
@@ -56,8 +56,22 @@ var ObjectUtils = function() {
 		});
 
 		return out;
-	}
+	};
 
+	this.traverse = function(obj) {
+		_.each(obj, function (val, key, obj) {
+			if (_.isArray(val)) {
+				val.forEach(function(el) {
+					traverse(el);
+				});
+			} else if (_.isObject(val)) {
+				traverse(val);
+			} else {
+				console.log('i am a leaf');
+				console.log(val);
+			}
+		});
+	};
 
 };
 
