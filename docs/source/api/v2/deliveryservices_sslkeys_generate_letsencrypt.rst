@@ -29,11 +29,8 @@ Generates an SSL certificate and private key using Let's Encrypt for a :term:`De
 
 Request Structure
 -----------------
-:key:             The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated
-:deliveryservice: The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated
-
-.. NOTE:: Either the ``key`` or the ``deliveryservice`` field must be provided. If both are provided, then they must match.
-
+:key:             The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated [#needOne]_
+:deliveryservice: The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated [#needOne]_
 :version:         An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
 :hostname:        The desired hostname of the :term:`Delivery Service`
 
@@ -65,3 +62,5 @@ Response Structure
 		"level": "success",
 		"text": "Beginning async call to Let's Encrypt for ds-01.  This may take a few minutes."
 	}]}
+
+.. [#needOne] Either the ``key`` or the ``deliveryservice`` field must be provided. If both are provided, then they must match.
