@@ -50,6 +50,8 @@ var TopologyUtils = function() {
 			}
 		});
 		normalizedTopology.nodes.forEach(function(currentNode) {
+			delete currentNode.id;
+			delete currentNode.type;
 			delete currentNode.parent;
 			delete currentNode.secParent;
 		});
