@@ -31,12 +31,12 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	let markVisibleCacheGroups = function(selected) {
-		let visibleCacheGroupNames = $('#availableCacheGroupsTable tr.cg-row').map(
+		let visibleCacheGroupIds = $('#availableCacheGroupsTable tr.cg-row').map(
 			function() {
 				return parseInt($(this).attr('id'));
 			}).get();
 		$scope.cacheGroups = _.map(cacheGroups, function(cg) {
-			if (visibleCacheGroupNames.includes(cg.id)) {
+			if (visibleCacheGroupIds.includes(cg.id)) {
 				cg['selected'] = selected;
 			}
 			return cg;
@@ -71,14 +71,12 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	});
 
 	$scope.selectAll = function($event) {
-		// todo:
-		alert('select/unselect all visible/not used cgs')
-		// let checkbox = $event.target;
-		// if (checkbox.checked) {
-		// 	addAll();
-		// } else {
-		// 	removeAll();
-		// }
+		let checkbox = $event.target;
+		if (checkbox.checked) {
+			addAll();
+		} else {
+			removeAll();
+		}
 	};
 
 	$scope.onChange = function(cg) {

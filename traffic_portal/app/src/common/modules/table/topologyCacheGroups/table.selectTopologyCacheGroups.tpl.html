@@ -36,7 +36,7 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr id="{{::cg.name}}" title="{{cg.used ? 'Cache group already used in topology' : ''}}" class="cg-row" ng-class="{ 'success': cg.selected && !cg.used, 'active': cg.used }" ng-repeat="cg in ::cacheGroups" ng-click="onChange(cg)">
+        <tr id="{{::cg.id}}" title="{{cg.used ? 'Cache group already used in topology' : ''}}" class="cg-row" ng-class="{ 'success': cg.selected && !cg.used, 'active': cg.used }" ng-repeat="cg in ::cacheGroups" ng-click="onChange(cg)">
             <td><input type="checkbox" ng-model="cg.selected" ng-disabled="cg.used"></td>
             <td data-search="^{{::cg.name}}$">{{::cg.name}}</td>
             <td data-search="^{{::cg.typeName}}$">{{::cg.typeName}}</td>
