@@ -507,11 +507,37 @@ For each Parameter with this Config File value on the same :ref:`Profile <profil
 
 .. seealso:: `The Apache Traffic server documentation on the plugin.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/plugin.config.en.html>`_ explains what Value_ and :ref:`parameter-name` a Parameter should have to be valid.
 
+.. tm-related-cache-server-params::
+
 rascal.properties
 '''''''''''''''''
 This Config File is meant to be on Parameters assigned to either Traffic Monitor Profiles_ or :term:`cache server` Profiles_. Its allowed :ref:`Parameter Names <parameter-name>` are all configuration options for Traffic Monitor. The :ref:`Names <parameter-name>` with meaning are as follows.
 
 .. seealso:: :ref:`health-proto`
+
+health.polling.url
+	The Value_ of this Parameter sets the URL requested when Traffic Monitor polls cache servers that have this Parameter in their Profiles_. Specifically, the Value_ is interpreted as a template - in a format reminiscent of variable interpolation in double-quoted strings in Bash -, that offers the following substitutions:
+
+	- ``${hostname}`` Replaced by the *IP Address* of the :term:`cache server` being polled, and **not** its (short) hostname. The IP address used will be its IPv4 service address if it has one, otherwise its IPv6 service address. IPv6 addresses are properly formatted when inserted into the template, so the template need not include "square brackets" (:kbd:`[` and :kbd:`]`) around ``${hostname}``s even when they anticipate they will be IPv6 addresses.
+	- ``${interface_name}`` Replaced by the name of the network interface that contains the :term:`cache server`'s service address(es). For most cache servers (specifically those using the ``stats_over_http`` :abbr:`ATS (Apache Traffic Server)` plugin to report their health and statistics) using this in a template won't be necessary.
+
+	If the template doesn't include a specific port number, the :term:`cache server`'s TCP port will be inserted if the URL uses the HTTP scheme, or its HTTPS Port if the :term:`cache server` uses the the HTTPS scheme.
+
+	Table :ref:`tbl-health-polling-url-examples` gives some examples of templates, inputs, and outputs.
+
+	.. tbl-health-polling-url-examples::
+
+	.. table:: health.polling.url Value Examples
+
+		+---------------------------------------------------------------+-------------------+----------+------------+----------------+--------------------------------------------------+
+		| Template                                                      | Chosen Service IP | TCP Port | HTTPS Port | Interface Name | Output                                           |
+		+===============================================================+===================+==========+============+================+==================================================+
+		| ``http://${hostname}/_astats?inf.name=${interface_name}``     | 192.0.2.42        | 8080     | 8443       | eth0           | ``http://192.0.2.42:8080/_astats?inf.name=eth0`` |
+		+---------------------------------------------------------------+-------------------+----------+------------+----------------+--------------------------------------------------+
+		| ``https://${hostname}/_stats``                                | 2001:DB8:0:0:1::1 | 8080     | 8443       | eth0           | ``https://[2001:DB8:0:0:1::1]/_stats``           |
+		+---------------------------------------------------------------+-------------------+----------+------------+----------------+--------------------------------------------------+
+		| ``http://${hostname}:80/custom/stats/path/${interface_name}`` | 192.0.2.42        | 8080     | 8443       | eth0           | ``http://192.0.2.42:80/custom/stats/path/eth0``  |
+		+---------------------------------------------------------------+-------------------+----------+------------+----------------+--------------------------------------------------+
 
 health.threshold.loadavg
 	The Value_ of this Parameter sets the "load average" above which the associated :ref:`Profile <profiles>`'s :term:`cache server` will be considered "unhealthy".
