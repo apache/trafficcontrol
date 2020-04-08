@@ -21,7 +21,6 @@ RobotoSlab-Regular\.ttf$, Apache
 \.webmanifest, Apache
 \.conf$, Apache
 \.prop$, Apache
-\.test$, Apache
 \.config(\.example)?$, Apache
 /\.bowerrc$, Apache
 \.traffic_ops$, Apache # JSON with a specific format.
