@@ -25,18 +25,23 @@ var TopologyService = function($http, ENV, locationUtils, messageModel, properti
 	};
 
 	this.createTopology = function(topology) {
-		return $http.post(ENV.api['root'] + 'topologies', topology).then(
-			function(result) {
-				messageModel.setMessages([ { level: 'success', text: 'Topology created' } ], true);
-				locationUtils.navigateToPath('/topologies');
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
+		console.log(topology);
+		propertiesModel.setTopology(topology);
 	};
+
+	// this.createTopology = function(topology) {
+	// 	return $http.post(ENV.api['root'] + 'topologies', topology).then(
+	// 		function(result) {
+	// 			messageModel.setMessages([ { level: 'success', text: 'Topology created' } ], true);
+	// 			locationUtils.navigateToPath('/topologies');
+	// 			return result;
+	// 		},
+	// 		function(err) {
+	// 			messageModel.setMessages(err.data.alerts, false);
+	// 			throw err;
+	// 		}
+	// 	);
+	// };
 
 	this.updateTopology = function(topology) {
 		console.log(topology);

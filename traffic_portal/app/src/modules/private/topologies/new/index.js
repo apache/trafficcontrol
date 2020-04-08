@@ -17,31 +17,29 @@
  * under the License.
  */
 
-var TableTopologiesController = function(topologies, $scope, $state, locationUtils) {
-
-	$scope.topologies = topologies;
-
-	$scope.editTopology = function(id) {
-		locationUtils.navigateToPath('/topologies/' + 2);
-	};
-
-	$scope.createTopology = function() {
-		locationUtils.navigateToPath('/topologies/new');
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	angular.element(document).ready(function () {
-		$('#topologiesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
+module.exports = angular.module('trafficPortal.private.topologies.new', [])
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.private.topologies.new', {
+				url: '/new',
+				views: {
+					topologiesContent: {
+						templateUrl: 'common/modules/form/topology/form.topology.tpl.html',
+						controller: 'FormNewTopologyController',
+						resolve: {
+							topology: function() {
+								console.log('i am trying');
+								return {
+									nodes: []
+								};
+							},
+							cacheGroups: function(cacheGroupService) {
+								return cacheGroupService.getCacheGroups();
+							}
+						}
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
 	});
-
-};
-
-TableTopologiesController.$inject = ['topologies', '$scope', '$state', 'locationUtils'];
-module.exports = TableTopologiesController;

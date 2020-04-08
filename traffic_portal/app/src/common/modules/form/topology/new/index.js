@@ -17,31 +17,5 @@
  * under the License.
  */
 
-var TableTopologiesController = function(topologies, $scope, $state, locationUtils) {
-
-	$scope.topologies = topologies;
-
-	$scope.editTopology = function(id) {
-		locationUtils.navigateToPath('/topologies/' + 2);
-	};
-
-	$scope.createTopology = function() {
-		locationUtils.navigateToPath('/topologies/new');
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	angular.element(document).ready(function () {
-		$('#topologiesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
-
-};
-
-TableTopologiesController.$inject = ['topologies', '$scope', '$state', 'locationUtils'];
-module.exports = TableTopologiesController;
+module.exports = angular.module('trafficPortal.form.topology.new', [])
+	.controller('FormNewTopologyController', require('./FormNewTopologyController'));
