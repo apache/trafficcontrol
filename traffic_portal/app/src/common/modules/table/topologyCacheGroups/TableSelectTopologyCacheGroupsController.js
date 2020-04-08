@@ -66,7 +66,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	$scope.cacheGroups = _.filter(cacheGroups, function(cg) {
 		// all cg types (ORG_LOC, MID_LOC, EDGE_LOC) can be added to the root of a topology
 		// but only EDGE_LOC and MID_LOC can be added farther down the topology tree
-		if (parent.type === undefined) return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC');
+		if (parent.type === 'ROOT') return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC');
 		return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC');
 	});
 
@@ -170,14 +170,16 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	angular.element(document).ready(function () {
-		let availableCacheGroupsTable = $('#availableCacheGroupsTable').dataTable({
+		let availableCacheGroupsTable = $('#availableCacheGroupsTable').DataTable({
 			"scrollY": "60vh",
 			"paging": false,
 			"order": [[ 1, 'asc' ]],
 			"dom": '<"selected-count">frtip',
 			"columnDefs": [
 				{ 'orderable': false, 'targets': [0,5] },
-				{ "width": "5%", "targets": 0 }
+				{ "width": "5%", "targets": [ 0 ] },
+				{ "width": "35%", "targets": [ 1 ] },
+				{ "width": "15%", "targets": [ 2,3,4,5 ] }
 			],
 			"stateSave": false
 		});
