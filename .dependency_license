@@ -13,7 +13,6 @@ CHANGELOG$, Docs
 #
 # These files cannot contain comments, so no header can be added.
 # They are nevertheless covered by the Apache license.
-\.classpath$, Apache
 \.project$, Apache
 RobotoSlab-Bold\.ttf$, Apache
 RobotoSlab-Regular\.ttf$, Apache
