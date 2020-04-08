@@ -295,7 +295,17 @@ input[type="checkbox"].dirty {
   }
 
   .tree-node-content {
+    height: 45px;
+    text-align: center;
+    font-size: 14px;
     margin-bottom: 10px;
+    small {
+      font-size: 65%;
+    }
+    .error-msg {
+      display: inline;
+      font-style: italic;
+    }
   }
 
   .tree-handle {

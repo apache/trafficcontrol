@@ -273,9 +273,9 @@ input:checked + .slider::before {
 
 #tree-root {
 	.tree-node.error, .tree-node.error:hover {
-		color: #721c24;
+		color: #721c24 !important;
 		background-color: #f2dede !important;
-		border-color: #f5c6cb;
+		border-color: #f5c6cb !important;
 	}
 	.tree-node.origin, .tree-node.origin:hover {
 		color: #5e5b79;

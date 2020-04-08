@@ -139,8 +139,8 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
 	$scope.nodeLabel = function(node) {
-		if (node.cachegroup === undefined) return 'TOPOLOGY ROOT (ORIGIN LAYER)';
-		return node.cachegroup + ' [' + node.type + ']'
+		if (node.cachegroup === undefined) return 'TOPOLOGY ROOT';
+		return node.cachegroup;
 	};
 
 	$scope.editSecParent = function(node) {
@@ -193,6 +193,21 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 
 	$scope.toggle = function(scope) {
 		scope.toggle();
+	};
+
+	$scope.hasNodeError = function(node) {
+		if (node.type !== 'EDGE_LOC' && node.children.length === 0) {
+			return true;
+		}
+		return false;
+	};
+
+	$scope.isOrigin = function(node) {
+		return node.type === undefined || node.type === 'ORG_LOC';
+	};
+
+	$scope.hasChildren = function(node) {
+		return node.children.length > 0;
 	};
 
 	$scope.addCacheGroups = function(parent, scope) {
