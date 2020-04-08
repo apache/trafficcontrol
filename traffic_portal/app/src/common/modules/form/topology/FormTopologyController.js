@@ -99,7 +99,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
 	$scope.nodeLabel = function(node) {
-		if (node.cachegroup === undefined) return 'TOPOLOGY ROOT';
+		if (node.cachegroup === undefined) return 'TOPOLOGY';
 		return node.cachegroup;
 	};
 
@@ -163,7 +163,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	};
 
 	$scope.isOrigin = function(node) {
-		return node.type === undefined || node.type === 'ORG_LOC';
+		return node.type === 'ROOT' || node.type === 'ORG_LOC';
 	};
 
 	$scope.hasChildren = function(node) {

@@ -104,6 +104,7 @@ var TopologyUtils = function() {
 
 		return [
 			{
+				type: 'ROOT',
 				children: roots
 			}
 		];
