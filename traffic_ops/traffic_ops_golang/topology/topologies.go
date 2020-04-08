@@ -1,19 +1,30 @@
 package topology
 
 import (
+	"errors"
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
+	"net/http"
 )
 
 type TOTopology struct {
 	api.APIInfoImpl `json:"-"`
 	tc.Topology
+}
+
+func (topology *TOTopology) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"name":        dbhelpers.WhereColumnInfo{"t.name", nil},
+		"description": dbhelpers.WhereColumnInfo{"t.description", nil},
+		"lastUpdated": dbhelpers.WhereColumnInfo{"t.last_updated", nil},
+	}
 }
 
 func (topology *TOTopology) SetLastUpdated(time tc.TimeNoMod) { topology.LastUpdated = &time }
@@ -136,6 +147,69 @@ func (topology *TOTopology) Create() (error, error, int) {
 
 	return nil, nil, 0
 }
+func (t *TOTopology) Read() ([]interface{}, error, error, int) {
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(t.ReqInfo.Params, t.ParamColumns())
+	if len(errs) > 0 {
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+	query := selectQuery() + where + orderBy + pagination
+	rows, err := t.ReqInfo.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, nil, errors.New("topology read: querying: " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+
+	interfaces := []interface{}{}
+	topologies := map[string]*tc.Topology{}
+	topology := tc.Topology{}
+	indices := map[int]int{}
+	for index := 0; rows.Next(); index++ {
+		var name, description string
+		var lastUpdated tc.TimeNoMod
+		topologyNode := tc.TopologyNode{}
+		topologyNode.Parents = []int{}
+		var parents pq.Int64Array
+		if err = rows.Scan(
+			&name,
+			&description,
+			&lastUpdated,
+			&topologyNode.Id,
+			&topologyNode.Cachegroup,
+			&parents,
+		); err != nil {
+			return nil, nil, errors.New("topology read: scanning: " + err.Error()), http.StatusInternalServerError
+		}
+		for _, id := range parents {
+			topologyNode.Parents = append(topologyNode.Parents, int(id))
+		}
+		indices[topologyNode.Id] = index
+		if _, exists := topologies[name]; ! exists {
+			topology = tc.Topology{}
+			topologies[name] = &topology
+			topology.Name = name
+			topology.Description = description
+			topology.LastUpdated = &lastUpdated
+		}
+		topology.Nodes = append(topology.Nodes, topologyNode)
+	}
+
+	for _, topology := range topologies {
+		nodes := &topology.Nodes
+		nodeCount := len(topology.Nodes)
+		nodeMap := map[int]int{}
+		for index := 0; index < nodeCount; index++ {
+			nodeMap[(*nodes)[index].Id] = index
+		}
+		for nodeIndex := 0; nodeIndex < nodeCount; nodeIndex++ {
+			node := &(*nodes)[nodeIndex]
+			for parentIndex := 0; parentIndex < len((*node).Parents); parentIndex++ {
+				(*node).Parents[parentIndex] = nodeMap[(*node).Parents[parentIndex]]
+			}
+		}
+		interfaces = append(interfaces, *topology)
+	}
+	return interfaces, nil, nil, 0
+}
 
 func insertQuery() string {
 	query := `
@@ -160,6 +234,22 @@ func nodeParentInsertQuery() string {
 INSERT INTO topology_cachegroup_parents (child, parent, rank)
 VALUES (unnest($1::int[]), unnest($2::int[]), unnest($3::int[]))
 RETURNING child, parent, rank
+`
+	return query
+}
+
+func selectQuery() string {
+	query := `
+SELECT t.name, t.description, t.last_updated,
+tc.id, tc.cachegroup,
+	(SELECT COALESCE (ARRAY_AGG (CAST (tcp.parent as INT))) AS parents
+	FROM topology_cachegroup tc2
+	INNER JOIN topology_cachegroup_parents tcp ON tc2.id = tcp.child
+	WHERE tc2.cachegroup = tc.cachegroup
+	GROUP BY tcp.rank ORDER BY tcp.rank ASC
+	)
+FROM topology t
+JOIN topology_cachegroup tc on t.name = tc.topology
 `
 	return query
 }
