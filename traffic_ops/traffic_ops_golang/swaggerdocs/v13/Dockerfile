@@ -16,10 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
  
-FROM golang:1.14.1 AS go-swagger
+FROM golang:1.14.2 AS go-swagger
 
 #  Swagger Spec Server
-FROM golang:1.14.1 AS swagger-server
+FROM golang:1.14.2 AS swagger-server
 
 ADD /swaggerspec .
 ADD ./swaggerspec-server /usr/src/swaggerspec-server

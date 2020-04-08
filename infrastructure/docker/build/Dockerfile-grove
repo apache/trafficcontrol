@@ -36,10 +36,10 @@ RUN	yum -y install \
 		rpm-build && \
 	yum -y clean all
 
-RUN curl -LO https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz && \
-    tar -C /usr/local -xvzf go1.14.1.linux-amd64.tar.gz && \
+RUN curl -LO https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -C /usr/local -xvzf go1.14.2.linux-amd64.tar.gz && \
     ln -s /usr/local/go/bin/go /usr/bin/go && \
-    rm go1.14.1.linux-amd64.tar.gz
+    rm go1.14.2.linux-amd64.tar.gz
 
 ###
 
