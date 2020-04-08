@@ -31,9 +31,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(topologyForm.name), 'has-feedback': hasError(topologyForm.name)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="name" type="text" class="form-control" ng-model="topology.name" required autofocus>
+                    <input name="name" type="text" class="form-control" ng-model="topology.name" pattern="[A-Za-z0-9]([A-Za-z\-0-9]*[A-Za-z0-9])?" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'pattern')">No spaces</small>
+                    <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'pattern')">No special characters, periods, underscores, or spaces and cannot begin or end with a hyphen</small>
                     <span ng-show="hasError(topologyForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -79,6 +79,7 @@ under the License.
 </div>
 
 <script type="text/ng-template" id="nodes_renderer.html">
+    <input name="error" ng-if="hasNodeError(node)" ng-model="error" type="hidden" required>
     <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content"
          ng-class="{ 'error': hasNodeError(node), 'origin': isOrigin(node) }">
         <div class="tree-node-label pull-left">
@@ -86,7 +87,7 @@ under the License.
                 <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
             </a> {{nodeLabel(node)}} <small>{{node.type}}</small>
         </div>
-        <div ng-show="hasNodeError(node)" class="error-msg">1+ child required for {{node.type}}</div>
+        <div ng-if="hasNodeError(node)" class="error-msg">1+ child required for {{node.type}}</div>
         <div class="pull-right">
             <a ng-show="node.cachegroup && node.parent" title="Set Secondary Parent Cache Group for {{node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="editSecParent(node)" style="margin-right: 8px;">
                 2nd: {{(node.secParent) ? node.secParent : 'None'}}
