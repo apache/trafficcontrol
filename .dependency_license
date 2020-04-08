@@ -80,7 +80,6 @@ BUILD_NUMBER$, Apache
 # Demo certificates
 ssl\.(crt|key)$, Apache
 /keystore, Apache
-COMODO.*\.crt$, Apache
 
 # Uncommentable files
 #
