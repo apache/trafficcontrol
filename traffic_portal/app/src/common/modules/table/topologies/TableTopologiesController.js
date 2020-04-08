@@ -26,7 +26,8 @@ var TableTopologiesController = function(topologies, $scope, $state, locationUti
 	};
 
 	$scope.createTopology = function() {
-		locationUtils.navigateToPath('/topologies/new');
+		alert('not hooked up yet. try editing a topology instead.')
+		// locationUtils.navigateToPath('/topologies/new');
 	};
 
 	$scope.refresh = function() {
