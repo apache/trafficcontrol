@@ -39,7 +39,7 @@ func CreateTestTypes(t *testing.T) {
 	defer func() {
 		err := db.Close()
 		if err != nil {
-			t.Errorf("unable to close connection to db, error: %v", err.Error())
+			t.Errorf("unable to close connection to db, error: %v", err)
 		}
 	}()
 	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%v', '%v', '%v');"
@@ -139,7 +139,7 @@ func DeleteTestTypes(t *testing.T) {
 	defer func() {
 		err := db.Close()
 		if err != nil {
-			t.Errorf("unable to close connection to db, error: %v", err.Error())
+			t.Errorf("unable to close connection to db, error: %v", err)
 		}
 	}()
 	dbDeleteTemplate := "DELETE FROM type WHERE name='%v';"
@@ -148,14 +148,14 @@ func DeleteTestTypes(t *testing.T) {
 		// Retrieve the Type by name so we can get the id for the Update
 		resp, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil || len(resp) == 0 {
-			t.Fatalf("cannot GET Type by name: %v - %v", typ.Name, err.Error())
+			t.Fatalf("cannot GET Type by name: %v - %v", typ.Name, err)
 		}
 		respType := resp[0]
 
 		if respType.UseInTable != "server" {
 			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, respType.Name), "type")
 			if err != nil {
-				t.Fatalf("cannot DELETE Type by name: %v", err.Error())
+				t.Fatalf("cannot DELETE Type by name: %v", err)
 			}
 		} else {
 			delResp, _, err := TOSession.DeleteTypeByID(respType.ID)
@@ -167,7 +167,7 @@ func DeleteTestTypes(t *testing.T) {
 		// Retrieve the Type to see if it got deleted
 		types, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil {
-			t.Errorf("error deleting Type name: %s", err.Error())
+			t.Errorf("error deleting Type name: %v", err)
 		}
 		if len(types) > 0 {
 			t.Errorf("expected Type name: %s to be deleted", typ.Name)
