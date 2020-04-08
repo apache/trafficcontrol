@@ -3,6 +3,7 @@ package topology
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/lib/pq"
 )
 
 type TOTopology struct {
@@ -44,26 +45,66 @@ func (topology *TOTopology) Create() (error, error, int) {
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		return userErr, sysErr, errCode
 	}
+
 	nodeCount := len(topology.Nodes)
+	cachegroups := make([]string, nodeCount)
 	for index := 0; index < nodeCount; index++ {
 		node := &topology.Nodes[index]
-		err := tx.QueryRow(nodeInsertQuery(), topology.Name, node.Cachegroup).Scan(&node.Id, &topology.Name, &node.Cachegroup, &node.LastUpdated)
+		cachegroups[index] = node.Cachegroup
+	}
+	rows, err := tx.Query(nodeInsertQuery(), topology.Name, pq.Array(cachegroups))
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return userErr, sysErr, errCode
+	}
+	for index := 0; index < nodeCount; index++ {
+		node := &topology.Nodes[index]
+		rows.Next()
+		err = rows.Scan(&node.Id, &topology.Name, &node.Cachegroup)
 		if err != nil {
 			userErr, sysErr, errCode := api.ParseDBError(err)
 			return userErr, sysErr, errCode
 		}
 	}
+	err = rows.Close()
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return userErr, sysErr, errCode
+	}
 
+	children := []int{}
+	parents := []int{}
+	ranks := []int{}
 	for index := 0; index < nodeCount; index++ {
 		node := &topology.Nodes[index]
 		for rank := 1; rank <= len(node.Parents); rank++ {
-			parent := topology.Nodes[node.Parents[rank-1]]
-			err := tx.QueryRow(nodeParentInsertQuery(), node.Id, parent.Id, &rank).Scan(&node.Id, &parent.Id, &rank)
+			parent := &topology.Nodes[node.Parents[rank-1]]
+			children = append(children, node.Id)
+			parents = append(parents, parent.Id)
+			ranks = append(ranks, rank)
+		}
+	}
+	rows, err = tx.Query(nodeParentInsertQuery(), pq.Array(children), pq.Array(parents), pq.Array(ranks))
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return userErr, sysErr, errCode
+	}
+	for index := 0; index < nodeCount; index++ {
+		node := &topology.Nodes[index]
+		for rank := 1; rank <= len(node.Parents); rank++ {
+			rows.Next()
+			parent := &topology.Nodes[node.Parents[rank-1]]
+			err = rows.Scan(&node.Id, &parent.Id, &rank)
 			if err != nil {
 				userErr, sysErr, errCode := api.ParseDBError(err)
 				return userErr, sysErr, errCode
 			}
 		}
+	}
+	err = rows.Close()
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return userErr, sysErr, errCode
 	}
 
 	return nil, nil, 0
@@ -81,8 +122,8 @@ RETURNING name, description, last_updated
 func nodeInsertQuery() string {
 	query := `
 INSERT INTO topology_cachegroup (topology, cachegroup)
-VALUES ($1, $2)
-RETURNING id, topology, cachegroup, last_updated
+VALUES ($1, unnest($2::text[]))
+RETURNING id, topology, cachegroup
 `
 	return query
 }
@@ -90,7 +131,7 @@ RETURNING id, topology, cachegroup, last_updated
 func nodeParentInsertQuery() string {
 	query := `
 INSERT INTO topology_cachegroup_parents (child, parent, rank)
-VALUES ($1, $2, $3)
+VALUES (unnest($1::int[]), unnest($2::int[]), unnest($3::int[]))
 RETURNING child, parent, rank
 `
 	return query
