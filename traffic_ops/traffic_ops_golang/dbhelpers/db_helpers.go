@@ -158,7 +158,7 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 		// try to convert to int, if it fails the limit parameter is invalid, so return an error
 		limitInt, err := strconv.Atoi(limit)
 		if err != nil || limitInt < -1 {
-			errs = append(errs, errors.New("limit parameter must be bigger then -1"))
+			errs = append(errs, errors.New("limit parameter must be bigger than -1"))
 			return "", "", "", queryValues, errs
 		}
 		log.Debugln("limit: ", limit)

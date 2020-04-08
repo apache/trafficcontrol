@@ -176,9 +176,9 @@ func VerifyPaginationSupport(t *testing.T) {
 
 	_, _, err = TOSession.GetOriginsByQueryParams("?limit=-2")
 	if err == nil {
-		t.Error("expected GET origins to return an error when limit is not bigger then -1")
-	} else if !strings.Contains(err.Error(), "must be bigger then -1") {
-		t.Errorf("expected GET origins to return an error for limit is not bigger then -1, actual error: " + err.Error())
+		t.Error("expected GET origins to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET origins to return an error for limit is not bigger than -1, actual error: " + err.Error())
 	}
 	_, _, err = TOSession.GetOriginsByQueryParams("?limit=1&offset=0")
 	if err == nil {
