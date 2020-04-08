@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $scope, $location, $uibModal, formUtils, locationUtils, messageModel) {
+var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $scope, $location, $uibModal, formUtils, locationUtils, topologyUtils, messageModel) {
 
 	let cacheGroupNamesInTopology = [];
 
@@ -67,46 +67,6 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 			var cg = _.findWhere(cacheGroups, { name: node.cachegroup} );
 			_.extend(node, { id: cg.id, type: cg.typeName });
 		});
-	};
-
-	let createTopologyTree = function(topology) {
-		let roots = [], // topology items without parents (primary or secondary)
-			all = {};
-
-		topology.nodes.forEach(function(node, index) {
-			all[index] = node;
-		});
-
-		// create children based on parent definitions
-		Object.keys(all).forEach(function (guid) {
-			let item = all[guid];
-			if (!('children' in item)) {
-				item.children = []
-			}
-			if (item.parents.length === 0) {
-				item.parent = "";
-				item.secParent = "";
-				roots.push(item)
-			} else if (item.parents[0] in all) {
-				let p = all[item.parents[0]]
-				if (!('children' in p)) {
-					p.children = []
-				}
-				p.children.push(item);
-				// add parent to each node
-				item.parent = all[item.parents[0]].cachegroup;
-				// add secParent to each node
-				if (item.parents.length === 2 && item.parents[1] in all) {
-					item.secParent = all[item.parents[1]].cachegroup;
-				}
-			}
-		});
-
-		$scope.topologyTree = [
-			{
-				children: roots
-			}
-		];
 	};
 
 	let scrubCacheGroupByName = function(arr, name) {
@@ -274,10 +234,10 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 
 	let init = function() {
 		hydrateTopology();
-		createTopologyTree(angular.copy($scope.topology));
+		$scope.topologyTree = topologyUtils.getTopologyTree($scope.topology);
 	};
 	init();
 };
 
-FormTopologyController.$inject = ['topology', 'cacheGroups', '$anchorScroll', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'messageModel'];
+FormTopologyController.$inject = ['topology', 'cacheGroups', '$anchorScroll', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'topologyUtils', 'messageModel'];
 module.exports = FormTopologyController;

@@ -66,6 +66,46 @@ var TopologyUtils = function() {
 		return normalizedTopology;
 	};
 
+	this.getTopologyTree = function(topology) {
+		let roots = [], // topology items without parents (primary or secondary)
+			all = {};
+
+		topology.nodes.forEach(function(node, index) {
+			all[index] = node;
+		});
+
+		// create children based on parent definitions
+		Object.keys(all).forEach(function (guid) {
+			let item = all[guid];
+			if (!('children' in item)) {
+				item.children = []
+			}
+			if (item.parents.length === 0) {
+				item.parent = "";
+				item.secParent = "";
+				roots.push(item)
+			} else if (item.parents[0] in all) {
+				let p = all[item.parents[0]]
+				if (!('children' in p)) {
+					p.children = []
+				}
+				p.children.push(item);
+				// add parent to each node
+				item.parent = all[item.parents[0]].cachegroup;
+				// add secParent to each node
+				if (item.parents.length === 2 && item.parents[1] in all) {
+					item.secParent = all[item.parents[1]].cachegroup;
+				}
+			}
+		});
+
+		return [
+			{
+				children: roots
+			}
+		];
+	};
+
 };
 
 TopologyUtils.$inject = [];
