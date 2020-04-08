@@ -15,7 +15,6 @@ CHANGELOG$, Docs
 # They are nevertheless covered by the Apache license.
 \.gitattributes$, Apache
 \.classpath$, Apache
-\.pmd$, Apache
 \.project$, Apache
 RobotoSlab-Bold\.ttf$, Apache
 RobotoSlab-Regular\.ttf$, Apache
