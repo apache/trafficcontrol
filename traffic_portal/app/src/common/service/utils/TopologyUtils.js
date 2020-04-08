@@ -67,10 +67,11 @@ var TopologyUtils = function() {
 	};
 
 	this.getTopologyTree = function(topology) {
+		let nodes = angular.copy(topology.nodes);
 		let roots = [], // topology items without parents (primary or secondary)
 			all = {};
 
-		topology.nodes.forEach(function(node, index) {
+		nodes.forEach(function(node, index) {
 			all[index] = node;
 		});
 
