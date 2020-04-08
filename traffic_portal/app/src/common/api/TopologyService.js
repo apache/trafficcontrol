@@ -17,142 +17,11 @@
  * under the License.
  */
 
-var TopologyService = function($http, ENV, locationUtils, messageModel) {
+var TopologyService = function($http, ENV, locationUtils, messageModel, propertiesModel) {
 
 	this.getTopologies = function(queryParams) {
-		return [
-			{
-				"name": "FooTopology",
-				"desc": "a topology for Foo DSes",
-				"nodes": [
-					{
-						"cachegroup": "us-de-newcastle",
-						"parents": [
-							4,
-							5
-						]
-					},
-					{
-						"cachegroup": "us-ga-atlanta",
-						"parents": [
-							3,
-							5
-						]
-					},
-					{
-						"cachegroup": "us-co-denver",
-						"parents": [
-							5,
-							4
-						]
-					},
-					{
-						"cachegroup": "mid-southcentral",
-						"parents": []
-					},
-					{
-						"cachegroup": "mid-northeast",
-						"parents": []
-					},
-					{
-						"cachegroup": "mid-west",
-						"parents": []
-					}
-				]
-			}
-		];
-		// return $http.get(ENV.api['root'] + 'topologies', {params: queryParams}).then(
-		// 	function (result) {
-		// 		return result.data.response;
-		// 	},
-		// 	function (err) {
-		// 		throw err;
-		// 	}
-		// )
-	};
-
-	this.getTopology = function(id) {
-		return {
-			"name": "Topology 1",
-			"desc": "a topology for Foo DSes",
-			"children": [
-				{
-					"id": 3,
-					"depth": 0,
-					"secParent": "",
-					"title": "mid-west",
-					"name": "mid-west",
-					"type": "MID_LOC",
-					"nodrop": true,
-					"children": [
-						{
-							"id": 18,
-							"depth": 1,
-							"secParent": "mid-east",
-							"title": "denver",
-							"name": "denver",
-							"type": "MID_LOC",
-							"children": [
-								{
-									"id": 41,
-									"depth": 2,
-									"secParent": "sacramento",
-									"size": 100,
-									"title": "aurora",
-									"name": "aurora",
-									"type": "EDGE_LOC",
-									"children": []
-								}
-							]
-						},
-						{
-							"id": 1,
-							"depth": 1,
-							"secParent": "mid-east",
-							"title": "sacramento",
-							"name": "sacramento",
-							"children": []
-						}
-					]
-				},
-				{
-					"id": 2,
-					"depth": 0,
-					"secParent": "",
-					"title": "mid-east",
-					"name": "mid-east",
-					"nodrop": true,
-					"children": [
-						{
-							"id": 21,
-							"depth": 1,
-							"secParent": "mid-west",
-							"size": 100,
-							"title": "boston",
-							"name": "boston",
-							"children": []
-						},
-						{
-							"id": 22,
-							"depth": 1,
-							"secParent": "mid-west",
-							"size": 200,
-							"title": "albany",
-							"name": "albany",
-							"children": []
-						}
-					]
-				}
-			]
-		};
-		// return $http.get(ENV.api['root'] + 'topologies', {params: {id: id}}).then(
-		// 	function (result) {
-		// 		return result.data.response[0];
-		// 	},
-		// 	function (err) {
-		// 		throw err;
-		// 	}
-		// )
+		let top = propertiesModel.topology;
+		return [ top ];
 	};
 
 	this.createTopology = function(topology) {
@@ -170,17 +39,22 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 	};
 
 	this.updateTopology = function(topology) {
-		return $http.put(ENV.api['root'] + 'topologies/' + topology.id, topology).then(
-			function(result) {
-				messageModel.setMessages([ { level: 'success', text: 'Topology updated' } ], false);
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
-				throw err;
-			}
-		);
+		console.log(topology);
+		propertiesModel.setTopology(topology);
 	};
+
+	// this.updateTopology = function(topology) {
+	// 	return $http.put(ENV.api['root'] + 'topologies/' + topology.id, topology).then(
+	// 		function(result) {
+	// 			messageModel.setMessages([ { level: 'success', text: 'Topology updated' } ], false);
+	// 			return result;
+	// 		},
+	// 		function(err) {
+	// 			messageModel.setMessages(err.data.alerts, false);
+	// 			throw err;
+	// 		}
+	// 	);
+	// };
 
 	this.deleteTopology = function(id) {
 		return $http.delete(ENV.api['root'] + "topologies/" + id).then(
@@ -197,5 +71,5 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 
 };
 
-TopologyService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
+TopologyService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel', 'propertiesModel'];
 module.exports = TopologyService;

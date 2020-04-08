@@ -17,12 +17,12 @@
  * under the License.
  */
 
-var FormEditTopologyController = function(topologies, cacheGroups, $scope, $controller, $uibModal, $anchorScroll, locationUtils, topologyService) {
+var FormEditTopologyController = function(topologies, cacheGroups, $scope, $controller, $uibModal, $anchorScroll, locationUtils, topologyService, messageModel, topologyUtils) {
 
 	// extends the FormTopologyController to inherit common methods
 	angular.extend(this, $controller('FormTopologyController', { topology: topologies[0], cacheGroups: cacheGroups, $scope: $scope }));
 
-	var deleteTopology = function(topology) {
+	let deleteTopology = function(topology) {
 		topologyService.deleteTopology(topology.id)
 			.then(function() {
 				locationUtils.navigateToPath('/topologies');
@@ -36,20 +36,19 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 		saveLabel: 'Update'
 	};
 
-	$scope.save = function(topology) {
-		topologyService.updateTopology(topology).
-		then(function() {
-			$scope.topologyName = angular.copy(topology.name);
-			$anchorScroll(); // scrolls window to top
-		});
+	$scope.save = function(name, desc, topologyTree) {
+		let normalizedTopology = topologyUtils.getNormalizedTopology(name, desc, topologyTree);
+		topologyService.updateTopology(normalizedTopology);
+		messageModel.setMessages([ { level: 'success', text: name + ' topology was updated' } ], true);
+		locationUtils.navigateToPath('/topologies');
 	};
 
 	$scope.confirmDelete = function(topology) {
-		var params = {
+		let params = {
 			title: 'Delete Topology: ' + topology.name,
 			key: topology.name
 		};
-		var modalInstance = $uibModal.open({
+		let modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
 			controller: 'DialogDeleteController',
 			size: 'md',
@@ -68,5 +67,5 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 
 };
 
-FormEditTopologyController.$inject = ['topologies', 'cacheGroups', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'topologyService'];
+FormEditTopologyController.$inject = ['topologies', 'cacheGroups', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'topologyService', 'messageModel', 'topologyUtils'];
 module.exports = FormEditTopologyController;

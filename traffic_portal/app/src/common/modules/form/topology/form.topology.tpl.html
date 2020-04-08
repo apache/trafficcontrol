@@ -56,7 +56,7 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(topology)">Delete</button>
-                <button type="button" class="btn btn-success" ng-disabled="topologyForm.$invalid" ng-click="save(topology)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="topologyForm.$invalid" ng-click="save(topology.name, topology.desc, topologyTree)">{{settings.saveLabel}}</button>
             </div>
         </form>
 
@@ -67,7 +67,7 @@ under the License.
                 </div>
                 <pre class="code">{{ topology.nodes | json }}</pre>
             </div>
-            <div class="col-md-6 col-sm-6 col-xs-12">
+            <div ng-show="false" class="col-md-6 col-sm-6 col-xs-12">
                 <div class="info">
                     {{info}}
                 </div>
