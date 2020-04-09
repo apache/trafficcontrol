@@ -123,8 +123,8 @@ func (d TODataThreadsafe) set(newTOData TOData) {
 type CRConfig struct {
 	ContentServers map[tc.CacheName]struct {
 		DeliveryServices map[tc.DeliveryServiceName][]string `json:"deliveryServices"`
-		CacheGroup       string              `json:"cacheGroup"`
-		Type             string              `json:"type"`
+		CacheGroup       string                              `json:"cacheGroup"`
+		Type             string                              `json:"type"`
 	} `json:"contentServers"`
 	DeliveryServices map[tc.DeliveryServiceName]struct {
 		Matchsets []struct {
