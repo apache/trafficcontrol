@@ -35,12 +35,14 @@ under the License.
             <tr class="headings">
                 <th>Name</th>
                 <th>Description</th>
+                <th>Cache Groups</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editTopology(t.id)" ng-repeat="t in ::topologies">
                 <td data-search="^{{::t.name}}$">{{::t.name}}</td>
                 <td data-search="^{{::t.desc}}$">{{::t.desc}}</td>
+                <td >{{::t.nodes.length}}</td>
             </tr>
             </tbody>
         </table>

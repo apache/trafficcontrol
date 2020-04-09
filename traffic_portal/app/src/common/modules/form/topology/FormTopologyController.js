@@ -166,6 +166,10 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		return node.type === 'ROOT' || node.type === 'ORG_LOC';
 	};
 
+	$scope.isMid = function(node) {
+		return node.type === 'MID_LOC';
+	};
+
 	$scope.hasChildren = function(node) {
 		return node.children.length > 0;
 	};

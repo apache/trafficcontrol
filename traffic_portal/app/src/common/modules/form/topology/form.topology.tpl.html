@@ -81,7 +81,7 @@ under the License.
 <script type="text/ng-template" id="nodes_renderer.html">
     <input name="error" ng-if="hasNodeError(node)" ng-model="error" type="hidden" required>
     <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content"
-         ng-class="{ 'error': hasNodeError(node), 'origin': isOrigin(node) }">
+         ng-class="{ 'error': hasNodeError(node), 'origin': isOrigin(node), 'mid': isMid(node) }">
         <div class="tree-node-label pull-left">
             <a class="tree-toggle btn btn-primary btn-xs" ng-if="hasChildren(node)" data-nodrag ng-click="toggle(this)">
                 <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>

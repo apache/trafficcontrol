@@ -209,7 +209,7 @@ input[type="checkbox"].dirty {
   }
 
   .angular-ui-tree-nodes .angular-ui-tree-nodes {
-    padding-left:20px;
+    padding-left:30px;
   }
 
   .angular-ui-tree-node, .angular-ui-tree-placeholder {
@@ -259,9 +259,9 @@ input[type="checkbox"].dirty {
   }
 
   .angular-ui-tree-handle:hover {
-    color: #438eb9;
-    background: #f4f6f7;
-    border-color: #dce2e8;
+    color: #155724 !important;
+    background-color: #D4EDD7 !important;
+    border-color: #c3e6cb !important;
   }
 
   .angular-ui-tree-placeholder {
