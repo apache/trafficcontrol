@@ -21,14 +21,14 @@ module.exports = angular.module('trafficPortal.private.topologies.edit', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.topologies.edit', {
-				url: '/{topologyId:[0-9]{1,8}}',
+				url: '/edit?name',
 				views: {
 					topologiesContent: {
 						templateUrl: 'common/modules/form/topology/form.topology.tpl.html',
 						controller: 'FormEditTopologyController',
 						resolve: {
 							topologies: function($stateParams, topologyService) {
-								return topologyService.getTopologies({ id: $stateParams.topologyId });
+								return topologyService.getTopologies({ name: $stateParams.name });
 							},
 							cacheGroups: function(cacheGroupService) {
 								return cacheGroupService.getCacheGroups();

@@ -28,7 +28,6 @@ module.exports = angular.module('trafficPortal.private.topologies.new', [])
 						controller: 'FormNewTopologyController',
 						resolve: {
 							topology: function() {
-								console.log('i am trying');
 								return {
 									nodes: []
 								};

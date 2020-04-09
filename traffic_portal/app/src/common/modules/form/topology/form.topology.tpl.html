@@ -37,11 +37,11 @@ under the License.
                     <span ng-show="hasError(topologyForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(topologyForm.desc), 'has-feedback': hasError(topologyForm.desc)}">
+            <div class="form-group" ng-class="{'has-error': hasError(topologyForm.description), 'has-feedback': hasError(topologyForm.description)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Description *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="desc" name="desc" rows="3" cols="17" class="form-control" ng-model="topology.desc" maxlength="256" required></textarea>
-                    <small class="input-error" ng-show="hasPropertyError(topologyForm.desc, 'required')">Required</small>
+                    <textarea id="description" name="description" rows="3" cols="17" class="form-control" ng-model="topology.description" maxlength="256" required></textarea>
+                    <small class="input-error" ng-show="hasPropertyError(topologyForm.description, 'required')">Required</small>
                 </div>
             </div>
             <div class="form-group">
@@ -56,7 +56,7 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(topology)">Delete</button>
-                <button type="button" class="btn btn-success" ng-disabled="topologyForm.$invalid" ng-click="save(topology.name, topology.desc, topologyTree)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="topologyForm.$invalid" ng-click="save(topology.name, topology.description, topologyTree)">{{settings.saveLabel}}</button>
             </div>
         </form>
 

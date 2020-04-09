@@ -19,9 +19,6 @@
 
 var FormNewTopologyController = function(topology, cacheGroups, $scope, $controller, locationUtils, topologyService, messageModel, topologyUtils) {
 
-	console.log('i am here');
-
-
 	// extends the FormTopologyController to inherit common methods
 	angular.extend(this, $controller('FormTopologyController', { topology: topology, cacheGroups: cacheGroups, $scope: $scope }));
 
@@ -32,15 +29,12 @@ var FormNewTopologyController = function(topology, cacheGroups, $scope, $control
 		saveLabel: 'Create'
 	};
 
-	$scope.save = function(name, desc, topologyTree) {
-		let normalizedTopology = topologyUtils.getNormalizedTopology(name, desc, topologyTree);
-		topologyService.createTopology(normalizedTopology);
-		messageModel.setMessages([ { level: 'success', text: name + ' topology was created' } ], true);
-		locationUtils.navigateToPath('/topologies');
-
-		// then(function() {
-		// 	locationUtils.navigateToPath('/tenants');
-		// });
+	$scope.save = function(name, description, topologyTree) {
+		let normalizedTopology = topologyUtils.getNormalizedTopology(name, description, topologyTree);
+		topologyService.createTopology(normalizedTopology).
+			then(function() {
+				locationUtils.navigateToPath('/topologies');
+			});
 	};
 
 };

@@ -21,8 +21,8 @@ var TableTopologiesController = function(topologies, $scope, $state, locationUti
 
 	$scope.topologies = topologies;
 
-	$scope.editTopology = function(id) {
-		locationUtils.navigateToPath('/topologies/' + 2);
+	$scope.editTopology = function(name) {
+		locationUtils.navigateToPath('/topologies/edit?name=' + name);
 	};
 
 	$scope.createTopology = function() {

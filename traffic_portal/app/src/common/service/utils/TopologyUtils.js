@@ -57,10 +57,10 @@ var TopologyUtils = function() {
 		});
 	};
 
-	this.getNormalizedTopology = function(name, desc, topologyTree) {
+	this.getNormalizedTopology = function(name, description, topologyTree) {
 		normalizedTopology = {
 			name: name,
-			desc: desc,
+			description: description,
 			nodes: []
 		};
 		flattenNormalizedTopology(topologyTree);
