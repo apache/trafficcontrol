@@ -241,11 +241,10 @@ func selectQuery() string {
 	query := `
 SELECT t.name, t.description, t.last_updated,
 tc.id, tc.cachegroup,
-	(SELECT COALESCE (ARRAY_AGG (CAST (tcp.parent as INT))) AS parents
+	(SELECT COALESCE (ARRAY_AGG (CAST (tcp.parent as INT) ORDER BY tcp.rank ASC)) AS parents
 	FROM topology_cachegroup tc2
 	INNER JOIN topology_cachegroup_parents tcp ON tc2.id = tcp.child
 	WHERE tc2.cachegroup = tc.cachegroup
-	GROUP BY tcp.rank ORDER BY tcp.rank ASC
 	)
 FROM topology t
 JOIN topology_cachegroup tc on t.name = tc.topology
