@@ -99,6 +99,18 @@ func astatsParse(cacheName string, rdr io.Reader) (Statistics, map[string]interf
 
 	stats.NotAvailable = astats.System.NotAvailable
 
+	// TODO: what's using these?? Can we get rid of them?
+	astats.Ats["system.astatsLoad"] = astats.System.AstatsLoad
+	astats.Ats["system.configReloadRequests"] = astats.System.ConfigLoadRequest
+	astats.Ats["system.configReloads"] = astats.System.ConfigReloads
+	astats.Ats["system.inf.name"] = astats.System.InfName
+	astats.Ats["system.inf.speed"] = astats.System.InfSpeed
+	astats.Ats["system.lastReload"] = astats.System.LastReload
+	astats.Ats["system.lastReloadRequest"] = astats.System.LastReloadRequest
+	astats.Ats["system.notAvailable"] = stats.NotAvailable
+	astats.Ats["system.proc.loadavg"] = astats.System.ProcLoadavg
+	astats.Ats["system.proc.net.dev"] = astats.System.ProcNetDev
+
 	return stats, astats.Ats, nil
 }
 

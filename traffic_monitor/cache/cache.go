@@ -148,13 +148,13 @@ type Stat struct {
 // Stats is designed for returning via the API. It contains result history for each cache, as well as common API data.
 type Stats struct {
 	srvhttp.CommonAPIData
-	Caches map[string]map[string][]ResultStatVal `json:"caches"`
+	Caches map[tc.CacheName]map[string][]ResultStatVal `json:"caches"`
 }
 
 // Filter filters whether stats and caches should be returned from a data set.
 type Filter interface {
 	UseStat(name string) bool
-	UseCache(name string) bool
+	UseCache(name tc.CacheName) bool
 	WithinStatHistoryMax(int) bool
 }
 
@@ -211,6 +211,13 @@ func ComputedStats() map[string]StatComputeFunc {
 		"status": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return serverInfo.ServerStatus
 		},
+
+		// These are back-up values for when a statistics format doesn't
+		// support reporting these stats - which would make sense because five
+		// of them are pre-parsed in Statistics structures already, and I'm not
+		// sure what the rest of them are even for. None of these are
+		// documented anywhere. The values in comments are the ones that astats
+		// parsers will give back (because it won't get this far).
 		"system.astatsLoad": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.AstatsLoad
 			return 0
