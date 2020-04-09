@@ -235,3 +235,63 @@ func TestServerQueueUpdate(t *testing.T) {
 		})
 	})
 }
+
+func TestSetServerUpdateStatuses(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
+		if len(testData.Servers) < 1 {
+			t.Fatal("cannot GET Server: no test data")
+		}
+		testServer := testData.Servers[0]
+
+		testVals := func(queue *bool, reval *bool) {
+			existingServer, _, err := TOSession.GetServerByHostName(testServer.HostName)
+			if err != nil {
+				t.Errorf("cannot GET Server by name: %v - %v", err, existingServer)
+			} else if len(existingServer) != 1 {
+				t.Fatalf("GET Server expected 1, actual %v", len(existingServer))
+			}
+
+			if _, err := TOSession.SetUpdateServerStatuses(testServer.HostName, queue, reval); err != nil {
+				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v", err)
+			}
+
+			newServer, _, err := TOSession.GetServerByHostName(testServer.HostName)
+			if err != nil {
+				t.Errorf("cannot GET Server by name: %v - %v", err, existingServer)
+			} else if len(newServer) != 1 {
+				t.Fatalf("GET Server expected 1, actual %v", len(newServer))
+			}
+
+			if queue != nil {
+				if newServer[0].UpdPending != *queue {
+					t.Errorf("set queue update pending to %v, but then got server %v", *queue, newServer[0].UpdPending)
+				}
+			} else {
+				if newServer[0].UpdPending != existingServer[0].UpdPending {
+					t.Errorf("set queue update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", newServer[0].UpdPending, existingServer[0].UpdPending)
+				}
+			}
+			if reval != nil {
+				if newServer[0].RevalPending != *reval {
+					t.Errorf("set reval update pending to %v, but then got server %v", *reval, newServer[0].RevalPending)
+				}
+			} else {
+				if newServer[0].RevalPending != existingServer[0].RevalPending {
+					t.Errorf("set reval update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", newServer[0].RevalPending, existingServer[0].RevalPending)
+				}
+			}
+		}
+
+		testVals(util.BoolPtr(true), util.BoolPtr(true))
+		testVals(util.BoolPtr(true), util.BoolPtr(false))
+		testVals(util.BoolPtr(false), util.BoolPtr(false))
+		testVals(nil, util.BoolPtr(true))
+		testVals(nil, util.BoolPtr(false))
+		testVals(util.BoolPtr(true), nil)
+		testVals(util.BoolPtr(false), nil)
+
+		if _, err := TOSession.SetUpdateServerStatuses(testServer.HostName, nil, nil); err == nil {
+			t.Errorf("UpdateServerStatuses with (nil,nil) expected error, actual nil")
+		}
+	})
+}
