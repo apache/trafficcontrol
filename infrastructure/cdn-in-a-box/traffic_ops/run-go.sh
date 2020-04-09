@@ -74,7 +74,7 @@ to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 while true; do
   echo "Verifying that edge was associated to delivery service..."
 
-  edge_name="$(to-get 'api/2.0/servers?hostName=edge' 2>/dev/null | jq -r -c '.response|.hostName')"
+  edge_name="$(to-get 'api/2.0/servers?hostName=edge' 2>/dev/null | jq -r -c '.response[0]|.hostName')"
   ds_name=$(to-get 'api/2.0/deliveryservices' 2>/dev/null | jq -r -c '.response[] | select(.cdnName == "'"$CDN_NAME"'").xmlId')
   ds_id=$(to-get 'api/2.0/deliveryservices' 2>/dev/null | jq -r -c '.response[] | select(.cdnName == "'"$CDN_NAME"'").id')
   edge_verify=$(to-get "/api/2.0/deliveryservices/$ds_id/servers" | jq -r '.response[]|.hostName')
