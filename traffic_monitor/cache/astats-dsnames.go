@@ -29,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
@@ -102,7 +103,7 @@ func astatsdsnamesProcessStatPluginRemapStats(server string, stats map[string]*D
 	ds := statParts[0]
 	statName := statParts[len(statParts)-1]
 
-	if _, ok := toData.DeliveryServiceTypes[ds]; !ok {
+	if _, ok := toData.DeliveryServiceTypes[tc.DeliveryServiceName(ds)]; !ok {
 		return stats, fmt.Errorf("no delivery service match for name '%v' stat '%v'\n", ds, statName)
 	}
 

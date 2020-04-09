@@ -175,16 +175,16 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 
 	for _, result := range results {
 		if statResultHistory != nil {
-			statResultsVal := statResultHistory.LoadOrStore(result.ID)
+			statResultsVal := statResultHistory.LoadOrStore(tc.CacheName(result.ID))
 			statResults = &statResultsVal
 		}
 		isAvailable, usingIPv4, whyAvailable, unavailableStat := EvalCache(cache.ToInfo(result), statResults, &mc)
 
 		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
-		previousStatus, hasPreviousStatus := localCacheStatuses[result.ID]
+		previousStatus, hasPreviousStatus := localCacheStatuses[tc.CacheName(result.ID)]
 		availableTuple := cache.AvailableTuple{}
 
-		serverInfo, ok := mc.TrafficServer[string(result.ID)]
+		serverInfo, ok := mc.TrafficServer[result.ID]
 		if !ok {
 			log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
 		}
@@ -214,7 +214,7 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 
 		newAvailableState := processAvailableTuple(availableTuple, serverInfo)
 
-		localCacheStatuses[result.ID] = cache.AvailableStatus{
+		localCacheStatuses[tc.CacheName(result.ID)] = cache.AvailableStatus{
 			Available:          availableTuple,
 			ProcessedAvailable: newAvailableState,
 			Status:             mc.TrafficServer[string(result.ID)].ServerStatus,
@@ -224,16 +224,16 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 			LastCheckedIPv4:    usingIPv4,
 		} // TODO move within localStates?
 
-		if available, ok := localStates.GetCache(result.ID); !ok || available.IsAvailable != newAvailableState {
+		if available, ok := localStates.GetCache(tc.CacheName(result.ID)); !ok || available.IsAvailable != newAvailableState {
 			protocol := "IPv4"
 			if !usingIPv4 {
 				protocol = "IPv6"
 			}
 			log.Infof("Changing state for %s was: %t now: %t because %s poller: %v on protocol %v error: %v", result.ID, available.IsAvailable, newAvailableState, whyAvailable, pollerName, protocol, result.Error)
-			events.Add(Event{Time: Time(time.Now()), Description: "Protocol: (" + protocol + ") " + whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: newAvailableState, IPv4Available: availableTuple.IPv4, IPv6Available: availableTuple.IPv6})
+			events.Add(Event{Time: Time(time.Now()), Description: "Protocol: (" + protocol + ") " + whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[tc.CacheName(result.ID)].String(), Available: newAvailableState, IPv4Available: availableTuple.IPv4, IPv6Available: availableTuple.IPv6})
 		}
 
-		localStates.SetCache(result.ID, tc.IsAvailable{IsAvailable: newAvailableState, Ipv4Available: availableTuple.IPv4, Ipv6Available: availableTuple.IPv6})
+		localStates.SetCache(tc.CacheName(result.ID), tc.IsAvailable{IsAvailable: newAvailableState, Ipv4Available: availableTuple.IPv4, Ipv6Available: availableTuple.IPv6})
 	}
 	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates, toData)
 	localCacheStatusThreadsafe.Set(localCacheStatuses)
@@ -285,8 +285,8 @@ func eventDesc(status tc.CacheStatus, message string) string {
 }
 
 //calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, states peer.CRStatesThreadsafe, toData todata.TOData) {
-	cacheStates := states.GetCaches() // map[string]IsAvailable
+func calculateDeliveryServiceState(deliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName, states peer.CRStatesThreadsafe, toData todata.TOData) {
+	cacheStates := states.GetCaches()
 
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
@@ -299,7 +299,7 @@ func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, s
 	}
 }
 
-func getDisabledLocations(deliveryService string, deliveryServiceServers []string, cacheStates map[string]tc.IsAvailable, serverCacheGroups map[string]tc.CacheGroupName) []tc.CacheGroupName {
+func getDisabledLocations(deliveryService tc.DeliveryServiceName, deliveryServiceServers []tc.CacheName, cacheStates map[tc.CacheName]tc.IsAvailable, serverCacheGroups map[tc.CacheName]tc.CacheGroupName) []tc.CacheGroupName {
 	disabledLocations := []tc.CacheGroupName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
 	dsCacheStates := getDeliveryServiceCacheAvailability(cacheStates, deliveryServiceServers)
 	dsCachegroupsAvailable := getDeliveryServiceCachegroupAvailability(dsCacheStates, serverCacheGroups)
@@ -312,15 +312,15 @@ func getDisabledLocations(deliveryService string, deliveryServiceServers []strin
 	return disabledLocations
 }
 
-func getDeliveryServiceCacheAvailability(cacheStates map[string]tc.IsAvailable, deliveryServiceServers []string) map[string]tc.IsAvailable {
-	dsCacheStates := map[string]tc.IsAvailable{}
+func getDeliveryServiceCacheAvailability(cacheStates map[tc.CacheName]tc.IsAvailable, deliveryServiceServers []tc.CacheName) map[tc.CacheName]tc.IsAvailable {
+	dsCacheStates := map[tc.CacheName]tc.IsAvailable{}
 	for _, server := range deliveryServiceServers {
-		dsCacheStates[server] = cacheStates[server]
+		dsCacheStates[server] = cacheStates[tc.CacheName(server)]
 	}
 	return dsCacheStates
 }
 
-func getDeliveryServiceCachegroupAvailability(dsCacheStates map[string]tc.IsAvailable, serverCachegroups map[string]tc.CacheGroupName) map[tc.CacheGroupName]bool {
+func getDeliveryServiceCachegroupAvailability(dsCacheStates map[tc.CacheName]tc.IsAvailable, serverCachegroups map[tc.CacheName]tc.CacheGroupName) map[tc.CacheGroupName]bool {
 	cgAvail := map[tc.CacheGroupName]bool{}
 	for cache, available := range dsCacheStates {
 		cg, ok := serverCachegroups[cache]

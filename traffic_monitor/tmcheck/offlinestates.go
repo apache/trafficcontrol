@@ -72,7 +72,7 @@ func ValidateCRStates(crstates *tc.CRStates, crconfig *tc.CRConfig) error {
 			continue
 		}
 
-		available, ok := crstates.Caches[cacheName]
+		available, ok := crstates.Caches[tc.CacheName(cacheName)]
 		if !ok {
 			return fmt.Errorf("Cache %v in CRConfig but not CRStates", cacheName)
 		}

@@ -38,7 +38,7 @@ func randResultStatHistory() ResultStatHistory {
 
 	num := 5
 	for i := 0; i < num; i++ {
-		hist.Store(randStr(), randResultStatValHistory())
+		hist.Store(tc.CacheName(randStr()), randResultStatValHistory())
 	}
 	return hist
 }
@@ -67,13 +67,12 @@ func randResultStatVal() cache.ResultStatVal {
 }
 
 func randResultInfoHistory() cache.ResultInfoHistory {
-	// type ResultInfoHistory map[string][]ResultInfo
 	hist := cache.ResultInfoHistory{}
 
 	num := 5
 	infNum := 5
 	for i := 0; i < num; i++ {
-		cacheName := randStr()
+		cacheName := tc.CacheName(randStr())
 		for j := 0; j < infNum; j++ {
 			hist[cacheName] = append(hist[cacheName], randResultInfo())
 		}
@@ -124,7 +123,7 @@ func (f DummyFilterNever) UseStat(name string) bool {
 	return false
 }
 
-func (f DummyFilterNever) UseCache(name string) bool {
+func (f DummyFilterNever) UseCache(name tc.CacheName) bool {
 	return false
 }
 

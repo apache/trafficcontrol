@@ -39,13 +39,13 @@ import (
 // 3. Everything else
 // This allows us to do a cheap match on 1 and 2, and only regex match the uncommon case.
 type Regexes struct {
-	DirectMatches                      map[string]string
-	DotStartSlashDotFooSlashDotDotStar map[string]string
-	RegexMatch                         map[*regexp.Regexp]string
+	DirectMatches                      map[string]tc.DeliveryServiceName
+	DotStartSlashDotFooSlashDotDotStar map[string]tc.DeliveryServiceName
+	RegexMatch                         map[*regexp.Regexp]tc.DeliveryServiceName
 }
 
 // DeliveryService returns the delivery service which matches the given fqdn, or false.
-func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (string, bool) {
+func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (tc.DeliveryServiceName, bool) {
 	if ds, ok := d.DotStartSlashDotFooSlashDotDotStar[subdomain]; ok {
 		return ds, true
 	}
@@ -64,31 +64,31 @@ func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (string
 // NewRegexes constructs a new Regexes object, initializing internal pointer members.
 func NewRegexes() Regexes {
 	return Regexes{
-		DirectMatches:                      map[string]string{},
-		DotStartSlashDotFooSlashDotDotStar: map[string]string{},
-		RegexMatch:                         map[*regexp.Regexp]string{},
+		DirectMatches:                      map[string]tc.DeliveryServiceName{},
+		DotStartSlashDotFooSlashDotDotStar: map[string]tc.DeliveryServiceName{},
+		RegexMatch:                         map[*regexp.Regexp]tc.DeliveryServiceName{},
 	}
 }
 
 // TOData holds CDN data fetched from Traffic Ops.
 type TOData struct {
 	DeliveryServiceRegexes Regexes
-	DeliveryServiceServers map[string][]string
-	DeliveryServiceTypes   map[string]tc.DSTypeCategory
-	ServerCachegroups      map[string]tc.CacheGroupName
-	ServerDeliveryServices map[string][]string
-	ServerTypes            map[string]tc.CacheType
+	DeliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName
+	DeliveryServiceTypes   map[tc.DeliveryServiceName]tc.DSTypeCategory
+	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
+	ServerDeliveryServices map[tc.CacheName][]tc.DeliveryServiceName
+	ServerTypes            map[tc.CacheName]tc.CacheType
 }
 
 // New returns a new empty TOData object, initializing pointer members.
 func New() *TOData {
 	return &TOData{
-		DeliveryServiceServers: map[string][]string{},
-		ServerDeliveryServices: map[string][]string{},
-		ServerTypes:            map[string]tc.CacheType{},
-		DeliveryServiceTypes:   map[string]tc.DSTypeCategory{},
+		DeliveryServiceServers: map[tc.DeliveryServiceName][]tc.CacheName{},
+		ServerDeliveryServices: map[tc.CacheName][]tc.DeliveryServiceName{},
+		ServerTypes:            map[tc.CacheName]tc.CacheType{},
+		DeliveryServiceTypes:   map[tc.DeliveryServiceName]tc.DSTypeCategory{},
 		DeliveryServiceRegexes: NewRegexes(),
-		ServerCachegroups:      map[string]tc.CacheGroupName{},
+		ServerCachegroups:      map[tc.CacheName]tc.CacheGroupName{},
 	}
 }
 
@@ -121,12 +121,12 @@ func (d TODataThreadsafe) set(newTOData TOData) {
 // CRConfig is the CrConfig data needed by TOData. Note this is not all data in the CRConfig.
 // TODO change strings to type?
 type CRConfig struct {
-	ContentServers map[string]struct {
-		DeliveryServices map[string][]string `json:"deliveryServices"`
+	ContentServers map[tc.CacheName]struct {
+		DeliveryServices map[tc.DeliveryServiceName][]string `json:"deliveryServices"`
 		CacheGroup       string              `json:"cacheGroup"`
 		Type             string              `json:"type"`
 	} `json:"contentServers"`
-	DeliveryServices map[string]struct {
+	DeliveryServices map[tc.DeliveryServiceName]struct {
 		Matchsets []struct {
 			Protocol  string `json:"protocol"`
 			MatchList []struct {
@@ -191,9 +191,9 @@ func (d TODataThreadsafe) Update(to towrap.ITrafficOpsSession, cdn string) error
 }
 
 // getDeliveryServiceServers gets the servers on each delivery services, for the given CDN, from Traffic Ops.
-func getDeliveryServiceServers(crc CRConfig) (map[string][]string, map[string][]string, error) {
-	dsServers := map[string][]string{}
-	serverDses := map[string][]string{}
+func getDeliveryServiceServers(crc CRConfig) (map[tc.DeliveryServiceName][]tc.CacheName, map[tc.CacheName][]tc.DeliveryServiceName, error) {
+	dsServers := map[tc.DeliveryServiceName][]tc.CacheName{}
+	serverDses := map[tc.CacheName][]tc.DeliveryServiceName{}
 
 	for serverName, serverData := range crc.ContentServers {
 		for deliveryServiceName := range serverData.DeliveryServices {
@@ -207,7 +207,7 @@ func getDeliveryServiceServers(crc CRConfig) (map[string][]string, map[string][]
 // getDeliveryServiceRegexes gets the regexes of each delivery service, for the given CDN, from Traffic Ops.
 // Returns a map[deliveryService][]regex.
 func getDeliveryServiceRegexes(crc CRConfig) (Regexes, error) {
-	dsRegexes := map[string][]string{}
+	dsRegexes := map[tc.DeliveryServiceName][]string{}
 
 	for dsName, dsData := range crc.DeliveryServices {
 		for _, matchset := range dsData.Matchsets {
@@ -226,11 +226,11 @@ func getDeliveryServiceRegexes(crc CRConfig) (Regexes, error) {
 }
 
 // TODO precompute, move to TOData; call when we get new delivery services, instead of every time we create new stats
-func createRegexes(dsToRegex map[string][]string) (Regexes, error) {
+func createRegexes(dsToRegex map[tc.DeliveryServiceName][]string) (Regexes, error) {
 	dsRegexes := Regexes{
-		DirectMatches:                      map[string]string{},
-		DotStartSlashDotFooSlashDotDotStar: map[string]string{},
-		RegexMatch:                         map[*regexp.Regexp]string{},
+		DirectMatches:                      map[string]tc.DeliveryServiceName{},
+		DotStartSlashDotFooSlashDotDotStar: map[string]tc.DeliveryServiceName{},
+		RegexMatch:                         map[*regexp.Regexp]tc.DeliveryServiceName{},
 	}
 
 	for ds, regexStrs := range dsToRegex {
@@ -265,8 +265,8 @@ func createRegexes(dsToRegex map[string][]string) (Regexes, error) {
 
 // getServerCachegroups gets the cachegroup of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
 // Returns a map[server]cachegroup.
-func getServerCachegroups(crc CRConfig) (map[string]tc.CacheGroupName, error) {
-	serverCachegroups := map[string]tc.CacheGroupName{}
+func getServerCachegroups(crc CRConfig) (map[tc.CacheName]tc.CacheGroupName, error) {
+	serverCachegroups := map[tc.CacheName]tc.CacheGroupName{}
 
 	for server, serverData := range crc.ContentServers {
 		serverCachegroups[server] = tc.CacheGroupName(serverData.CacheGroup)
@@ -275,8 +275,8 @@ func getServerCachegroups(crc CRConfig) (map[string]tc.CacheGroupName, error) {
 }
 
 // getServerTypes gets the cache type of each ATS Edge+Mid Cache server, for the given CDN, from Traffic Ops.
-func getServerTypes(crc CRConfig) (map[string]tc.CacheType, error) {
-	serverTypes := map[string]tc.CacheType{}
+func getServerTypes(crc CRConfig) (map[tc.CacheName]tc.CacheType, error) {
+	serverTypes := map[tc.CacheName]tc.CacheType{}
 
 	for server, serverData := range crc.ContentServers {
 		t := tc.CacheTypeFromString(serverData.Type)
@@ -288,8 +288,8 @@ func getServerTypes(crc CRConfig) (map[string]tc.CacheType, error) {
 	return serverTypes, nil
 }
 
-func getDeliveryServiceTypes(crc CRConfig) (map[string]tc.DSTypeCategory, error) {
-	dsTypes := map[string]tc.DSTypeCategory{}
+func getDeliveryServiceTypes(crc CRConfig) (map[tc.DeliveryServiceName]tc.DSTypeCategory, error) {
+	dsTypes := map[tc.DeliveryServiceName]tc.DSTypeCategory{}
 
 	for dsName, dsData := range crc.DeliveryServices {
 		if len(dsData.Matchsets) < 1 {

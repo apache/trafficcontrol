@@ -236,7 +236,7 @@ func monitorConfigListen(
 		for _, srv := range monitorConfig.TrafficServer {
 			caches[srv.HostName] = srv.ServerStatus
 
-			cacheName := srv.HostName
+			cacheName := tc.CacheName(srv.HostName)
 
 			srvStatus := tc.CacheStatusFromString(srv.ServerStatus)
 			if srvStatus == tc.CacheStatusOnline {
@@ -322,12 +322,12 @@ func monitorConfigListen(
 		// TODO because there are multiple writers to localStates.DeliveryService, there is a race condition, where MonitorConfig (this func) and HealthResultManager could write at the same time, and the HealthResultManager could overwrite a delivery service addition or deletion here. Probably the simplest and most performant fix would be a lock-free algorithm using atomic compare-and-swaps.
 		for _, ds := range monitorConfig.DeliveryService {
 			// since caches default to unavailable, also default DS false
-			if _, exists := localStates.GetDeliveryService(ds.XMLID); !exists {
-				localStates.SetDeliveryService(ds.XMLID, tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []tc.CacheGroupName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
+			if _, exists := localStates.GetDeliveryService(tc.DeliveryServiceName(ds.XMLID)); !exists {
+				localStates.SetDeliveryService(tc.DeliveryServiceName(ds.XMLID), tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []tc.CacheGroupName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
 			}
 		}
 		for ds := range localStates.GetDeliveryServices() {
-			if _, exists := monitorConfig.DeliveryService[ds]; !exists {
+			if _, exists := monitorConfig.DeliveryService[string(ds)]; !exists {
 				localStates.DeleteDeliveryService(ds)
 			}
 		}

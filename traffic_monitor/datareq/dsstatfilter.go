@@ -35,12 +35,12 @@ type DSStatFilter struct {
 	statsToUse       map[string]struct{}
 	wildcard         bool
 	dsType           tc.DSTypeCategory
-	deliveryServices map[string]struct{}
-	dsTypes          map[string]tc.DSTypeCategory
+	deliveryServices map[tc.DeliveryServiceName]struct{}
+	dsTypes          map[tc.DeliveryServiceName]tc.DSTypeCategory
 }
 
 // UseDeliveryService returns whether the given delivery service is in this filter.
-func (f *DSStatFilter) UseDeliveryService(name string) bool {
+func (f *DSStatFilter) UseDeliveryService(name tc.DeliveryServiceName) bool {
 	if _, inDSes := f.deliveryServices[name]; len(f.deliveryServices) != 0 && !inDSes {
 		return false
 	}
@@ -84,7 +84,7 @@ func (f *DSStatFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all types are returned.
-func NewDSStatFilter(path string, params url.Values, dsTypes map[string]tc.DSTypeCategory) (dsdata.Filter, error) {
+func NewDSStatFilter(path string, params url.Values, dsTypes map[tc.DeliveryServiceName]tc.DSTypeCategory) (dsdata.Filter, error) {
 	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "deliveryservices": struct{}{}}
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
@@ -124,24 +124,24 @@ func NewDSStatFilter(path string, params url.Values, dsTypes map[string]tc.DSTyp
 		}
 	}
 
-	deliveryServices := map[string]struct{}{}
+	deliveryServices := map[tc.DeliveryServiceName]struct{}{}
 	// TODO rename 'hosts' to 'names' for consistency
 	if paramNames, exists := params["deliveryservices"]; exists && len(paramNames) > 0 {
 		commaNames := strings.Split(paramNames[0], ",")
 		for _, name := range commaNames {
-			deliveryServices[name] = struct{}{}
+			deliveryServices[tc.DeliveryServiceName(name)] = struct{}{}
 		}
 	}
 
 	pathArgument := getPathArgument(path)
 	if pathArgument != "" {
-		deliveryServices[pathArgument] = struct{}{}
+		deliveryServices[tc.DeliveryServiceName(pathArgument)] = struct{}{}
 	}
 
 	// parameters without values are considered names, e.g. `?my-cache-0` or `?my-delivery-service`
 	for maybeName, val := range params {
 		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
-			deliveryServices[maybeName] = struct{}{}
+			deliveryServices[tc.DeliveryServiceName(maybeName)] = struct{}{}
 		}
 	}
 

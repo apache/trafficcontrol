@@ -194,12 +194,14 @@ func astatsProcessStatPluginRemapStats(server string, stats map[string]*DSStat, 
 		return stats, fmt.Errorf("Empty Delivery Service fqdn '%s.%s.%s' stat %v", subsubdomain, subdomain, domain, strings.Join(statParts, "."))
 	}
 
+	dsName := string(ds)
+
 	statName := statParts[len(statParts)-1]
-	if _, ok := stats[ds]; !ok {
-		stats[ds] = new(DSStat)
+	if _, ok := stats[dsName]; !ok {
+		stats[dsName] = new(DSStat)
 	}
 
-	dsStat := stats[ds]
+	dsStat := stats[dsName]
 
 	if err := astatsAddCacheStat(dsStat, statName, value); err != nil {
 		return stats, err

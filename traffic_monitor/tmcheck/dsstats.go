@@ -81,7 +81,7 @@ func ValidateDSStatsData(dsStats *dsdata.StatsOld, crconfig *tc.CRConfig) error 
 		if !hasCaches(dsName, crconfig) {
 			continue
 		}
-		if _, ok := dsStats.DeliveryService[dsName]; !ok {
+		if _, ok := dsStats.DeliveryService[tc.DeliveryServiceName(dsName)]; !ok {
 			return fmt.Errorf("Delivery Service %v in CRConfig but not DSStats", dsName)
 		}
 	}

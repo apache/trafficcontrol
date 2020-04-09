@@ -221,7 +221,7 @@ AND pa.name = 'health.threshold.availableBandwidthInKbps'
 
 // CacheStats contains the Monitor CacheStats needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
 type CacheStats struct {
-	Caches map[string]CacheStat `json:"caches"`
+	Caches map[tc.CacheName]CacheStat `json:"caches"`
 }
 
 type CacheStat struct {

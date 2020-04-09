@@ -42,9 +42,9 @@ func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 	return history
 }
 
-func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[string]struct{} {
+func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[tc.CacheName]struct{} {
 	monitorConfig := monitorConfigTS.Get()
-	caches := map[string]struct{}{}
+	caches := map[tc.CacheName]struct{}{}
 	for cacheName := range localStates.GetCaches() {
 		// ONLINE and OFFLINE caches are not polled.
 		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.ServerStatus == string(tc.CacheStatusOnline) || ts.ServerStatus == string(tc.CacheStatusOffline) {
@@ -74,16 +74,16 @@ func StartStatHistoryManager(
 	statResultHistory := threadsafe.NewResultStatHistory()
 	statMaxKbpses := threadsafe.NewCacheKbpses()
 	lastStatDurations := threadsafe.NewDurationMap()
-	lastStatEndTimes := map[string]time.Time{}
+	lastStatEndTimes := map[tc.CacheName]time.Time{}
 	lastStats := threadsafe.NewLastStats()
 	dsStats := threadsafe.NewDSStats()
 	unpolledCaches := threadsafe.NewUnpolledCaches()
 	localCacheStatus := threadsafe.NewCacheAvailableStatus()
 
-	precomputedData := map[string]cache.PrecomputedData{}
+	precomputedData := map[tc.CacheName]cache.PrecomputedData{}
 
-	lastResults := map[string]cache.Result{}
-	overrideMap := map[string]bool{}
+	lastResults := map[tc.CacheName]cache.Result{}
+	overrideMap := map[tc.CacheName]bool{}
 
 	haveCachesChanged := func() bool {
 		select {
@@ -243,16 +243,16 @@ func processStatResults(
 	toData todata.TOData,
 	errorCount threadsafe.Uint,
 	dsStats threadsafe.DSStats,
-	lastStatEndTimes map[string]time.Time,
+	lastStatEndTimes map[tc.CacheName]time.Time,
 	lastStatDurationsThreadsafe threadsafe.DurationMap,
 	unpolledCaches threadsafe.UnpolledCaches,
 	mc tc.TrafficMonitorConfigMap,
-	precomputedData map[string]cache.PrecomputedData,
-	lastResults map[string]cache.Result,
+	precomputedData map[tc.CacheName]cache.PrecomputedData,
+	lastResults map[tc.CacheName]cache.Result,
 	localStates peer.CRStatesThreadsafe,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
-	overrideMap map[string]bool,
+	overrideMap map[tc.CacheName]bool,
 	combineState func(),
 	pollingProtocol config.PollingProtocol,
 ) {
@@ -279,7 +279,7 @@ func processStatResults(
 		}
 
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		if lastResult, ok := lastResults[result.ID]; ok && result.Error == nil {
+		if lastResult, ok := lastResults[tc.CacheName(result.ID)]; ok && result.Error == nil {
 			health.GetVitals(&result, &lastResult, &mc) // TODO precompute
 			if result.Error == nil {
 				results[i] = result
@@ -297,12 +297,12 @@ func processStatResults(
 			statMaxKbpses.AddMax(result)
 			// if we failed to compute the OutBytes, keep the outbytes of the last result.
 			if result.PrecomputedData.OutBytes == 0 {
-				result.PrecomputedData.OutBytes = precomputedData[result.ID].OutBytes
+				result.PrecomputedData.OutBytes = precomputedData[tc.CacheName(result.ID)].OutBytes
 			}
-			precomputedData[result.ID] = result.PrecomputedData
+			precomputedData[tc.CacheName(result.ID)] = result.PrecomputedData
 
 		}
-		lastResults[result.ID] = result
+		lastResults[tc.CacheName(result.ID)] = result
 	}
 	statInfoHistoryThreadsafe.Set(statInfoHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
@@ -326,11 +326,11 @@ func processStatResults(
 	endTime := time.Now()
 	lastStatDurations := threadsafe.CopyDurationMap(lastStatDurationsThreadsafe.Get())
 	for _, result := range results {
-		if lastStatStart, ok := lastStatEndTimes[result.ID]; ok {
+		if lastStatStart, ok := lastStatEndTimes[tc.CacheName(result.ID)]; ok {
 			d := time.Since(lastStatStart)
-			lastStatDurations[result.ID] = d
+			lastStatDurations[tc.CacheName(result.ID)] = d
 		}
-		lastStatEndTimes[result.ID] = endTime
+		lastStatEndTimes[tc.CacheName(result.ID)] = endTime
 	}
 	lastStatDurationsThreadsafe.Set(lastStatDurations)
 	unpolledCaches.SetPolled(results, lastStats.Get())

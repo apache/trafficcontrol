@@ -42,7 +42,7 @@ func (f DummyFilterNever) UseStat(name string) bool {
 	return false
 }
 
-func (f DummyFilterNever) UseCache(name string) bool {
+func (f DummyFilterNever) UseCache(name tc.CacheName) bool {
 	return false
 }
 

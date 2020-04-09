@@ -70,11 +70,11 @@ func randBool() bool {
 	return rand.Int()%2 == 0
 }
 
-func getMockLastHealthTimes() map[string]time.Duration {
-	mockTimes := map[string]time.Duration{}
+func getMockLastHealthTimes() map[tc.CacheName]time.Duration {
+	mockTimes := map[tc.CacheName]time.Duration{}
 	numCaches := 10
 	for i := 0; i < numCaches; i++ {
-		mockTimes[randStr()] = time.Duration(rand.Int())
+		mockTimes[tc.CacheName(randStr())] = time.Duration(rand.Int())
 	}
 	return mockTimes
 }
@@ -97,12 +97,12 @@ func getMockPeerStates() peer.CRStatesThreadsafe {
 
 	numCaches := 10
 	for i := 0; i < numCaches; i++ {
-		ps.SetCache(randStr(), tc.IsAvailable{IsAvailable: randBool()})
+		ps.SetCache(tc.CacheName(randStr()), tc.IsAvailable{IsAvailable: randBool()})
 	}
 
 	numDSes := 10
 	for i := 0; i < numDSes; i++ {
-		ps.SetDeliveryService(randStr(), getMockCRStatesDeliveryService())
+		ps.SetDeliveryService(tc.DeliveryServiceName(randStr()), getMockCRStatesDeliveryService())
 	}
 	return ps
 }

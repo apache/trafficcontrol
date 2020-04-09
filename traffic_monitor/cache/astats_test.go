@@ -24,6 +24,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 
 	"github.com/json-iterator/go"
@@ -43,14 +44,14 @@ func TestAstats(t *testing.T) {
 	t.Logf("Found %v key/val pairs in ats\n", len(aStats.Ats))
 }
 
-func getMockTODataDSNameDirectMatches() map[string]string {
-	return map[string]string{
+func getMockTODataDSNameDirectMatches() map[tc.DeliveryServiceName]string {
+	return map[tc.DeliveryServiceName]string{
 		"ds0": "ds0.example.invalid",
 		"ds1": "ds1.example.invalid",
 	}
 }
 
-func getMockTOData(dsNameFQDNs map[string]string) todata.TOData {
+func getMockTOData(dsNameFQDNs map[tc.DeliveryServiceName]string) todata.TOData {
 	tod := todata.New()
 	for dsName, dsDirectMatch := range dsNameFQDNs {
 		tod.DeliveryServiceRegexes.DirectMatches[dsDirectMatch] = dsName
@@ -58,7 +59,7 @@ func getMockTOData(dsNameFQDNs map[string]string) todata.TOData {
 	return *tod
 }
 
-func getMockRawStats(cacheName string, dsNameFQDNs map[string]string) map[string]interface{} {
+func getMockRawStats(cacheName string, dsNameFQDNs map[tc.DeliveryServiceName]string) map[string]interface{} {
 	st := map[string]interface{}{}
 	for _, dsFQDN := range dsNameFQDNs {
 		st["plugin.remap_stats."+dsFQDN+".in_bytes"] = float64(rand.Uint64())
@@ -116,7 +117,7 @@ func TestAstatsPrecompute(t *testing.T) {
 	}
 
 	for dsName, dsFQDN := range dsNameFQDNs {
-		dsStat, ok := prc.DeliveryServiceStats[dsName]
+		dsStat, ok := prc.DeliveryServiceStats[string(dsName)]
 		if !ok {
 			t.Fatalf("astatsPrecompute DeliveryServiceStats expected %+v, actual: missing\n", dsName)
 		}

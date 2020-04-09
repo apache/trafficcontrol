@@ -62,22 +62,22 @@ func (h *ResultInfoHistory) Set(v cache.ResultInfoHistory) {
 	h.m.Unlock()
 }
 
-type ResultStatHistory struct{ *sync.Map } // map[string]ResultStatValHistory
+type ResultStatHistory struct{ *sync.Map } // map[tc.CacheName]ResultStatValHistory
 
 func NewResultStatHistory() ResultStatHistory {
 	return ResultStatHistory{&sync.Map{}}
 }
 
-func (h ResultStatHistory) LoadOrStore(cache string) ResultStatValHistory {
+func (h ResultStatHistory) LoadOrStore(cache tc.CacheName) ResultStatValHistory {
 	// TODO change to use sync.Pool?
 	v, _ := h.Map.LoadOrStore(cache, NewResultStatValHistory())
 	return v.(ResultStatValHistory)
 }
 
 // Range behaves like sync.Map.Range. It calls f for every value in the map; if f returns false, the iteration is stopped.
-func (h ResultStatHistory) Range(f func(cache string, val ResultStatValHistory) bool) {
+func (h ResultStatHistory) Range(f func(cache tc.CacheName, val ResultStatValHistory) bool) {
 	h.Map.Range(func(k, v interface{}) bool {
-		return f(k.(string), v.(ResultStatValHistory))
+		return f(k.(tc.CacheName), v.(ResultStatValHistory))
 	})
 }
 
@@ -112,7 +112,7 @@ func (h ResultStatValHistory) Store(stat string, vals []cache.ResultStatVal) {
 
 func (a ResultStatHistory) Add(r cache.Result, limit uint64) error {
 	errStrs := ""
-	resultHistory := a.LoadOrStore(r.ID)
+	resultHistory := a.LoadOrStore(tc.CacheName(r.ID))
 	if limit == 0 {
 		log.Warnln("ResultStatHistory.Add got limit 0 - setting to 1")
 		limit = 1
@@ -187,7 +187,7 @@ func newStatEqual(history []cache.ResultStatVal, stat interface{}) (bool, error)
 func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInfoHistory, combinedStates tc.CRStates, monitorConfig tc.TrafficMonitorConfigMap, statMaxKbpses cache.Kbpses, filter cache.Filter, params url.Values) ([]byte, error) {
 	stats := cache.Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Caches:        map[string]map[string][]cache.ResultStatVal{},
+		Caches:        map[tc.CacheName]map[string][]cache.ResultStatVal{},
 	}
 
 	computedStats := cache.ComputedStats()
@@ -199,7 +199,7 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 			continue
 		}
 
-		cacheStatResultHistory := statResultHistory.LoadOrStore(string(id))
+		cacheStatResultHistory := statResultHistory.LoadOrStore(id)
 		cacheStatResultHistory.Range(func(stat string, vals []cache.ResultStatVal) bool {
 			stat = "ats." + stat // TM1 prefixes ATS stats with 'ats.'
 			if !filter.UseStat(stat) {

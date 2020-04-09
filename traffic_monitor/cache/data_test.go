@@ -22,11 +22,13 @@ package cache
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"math/rand"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 )
 
 func randBool() bool {
@@ -47,7 +49,7 @@ func randAvailableStatuses() AvailableStatuses {
 	a := AvailableStatuses{}
 	num := 100
 	for i := 0; i < num; i++ {
-		a[randStr()] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
+		a[tc.CacheName(randStr())] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
 	}
 	return a
 }
@@ -63,7 +65,7 @@ func TestAvailableStatusesCopy(t *testing.T) {
 		}
 
 		// verify a and b don't point to the same map
-		a[randStr()] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
+		a[tc.CacheName(randStr())] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map: a: %+v", a)
 		}
@@ -137,10 +139,10 @@ func randStatCacheStats() dsdata.StatCacheStats {
 }
 
 func randStatCommon() dsdata.StatCommon {
-	cachesReporting := map[string]bool{}
+	cachesReporting := map[tc.CacheName]bool{}
 	num := 5
 	for i := 0; i < num; i++ {
-		cachesReporting[randStr()] = randBool()
+		cachesReporting[tc.CacheName(randStr())] = randBool()
 	}
 	return dsdata.StatCommon{
 		CachesConfiguredNum: dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
@@ -224,7 +226,7 @@ func randResultHistory() ResultHistory {
 	a := ResultHistory{}
 	num := 5
 	for i := 0; i < num; i++ {
-		a[randStr()] = randResultSlice()
+		a[tc.CacheName(randStr())] = randResultSlice()
 	}
 	return a
 }
@@ -240,7 +242,7 @@ func TestResultHistoryCopy(t *testing.T) {
 		}
 
 		// verify a and b don't point to the same map
-		a[randStr()] = randResultSlice()
+		a[tc.CacheName(randStr())] = randResultSlice()
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map: %+v", a)
 		}

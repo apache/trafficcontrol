@@ -77,23 +77,24 @@ func srvAPICacheStates(
 }
 
 func createCacheStatuses(
-	cacheTypes map[string]tc.CacheType,
+	cacheTypes map[tc.CacheName]tc.CacheType,
 	statInfoHistory cache.ResultInfoHistory,
 	statResultHistory threadsafe.ResultStatHistory,
-	healthHistory map[string][]cache.Result,
-	lastHealthDurations map[string]time.Duration,
-	cacheStates map[string]tc.IsAvailable,
+	healthHistory map[tc.CacheName][]cache.Result,
+	lastHealthDurations map[tc.CacheName]time.Duration,
+	cacheStates map[tc.CacheName]tc.IsAvailable,
 	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
 	servers map[string]tc.TrafficServer,
-) map[string]CacheStatus {
+) map[tc.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
-	statii := map[string]CacheStatus{}
+	statii := map[tc.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get().Copy() // TODO test whether copy is necessary
 	maxKbpses := statMaxKbpses.Get()
 
-	for cacheName, serverInfo := range servers {
+	for cacheNameStr, serverInfo := range servers {
+		cacheName := tc.CacheName(cacheNameStr)
 		status, statusPoller, ipv4, ipv6, combinedStatus := cacheStatusAndPoller(cacheName, serverInfo, localCacheStatus)
 
 		cacheTypeStr := ""
@@ -184,7 +185,7 @@ func createCacheStatuses(
 
 //cacheStatusAndPoller returns the the reason why a cache is unavailable (or that is available), the poller, and 3 booleans in order:
 // IPv4 availability, IPv6 availability and Processed availability which is what the monitor reports based on the PollingProtocol chosen (ipv4only,ipv6only or both)
-func cacheStatusAndPoller(server string, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
+func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
 	switch status := tc.CacheStatusFromString(serverInfo.ServerStatus); status {
 	case tc.CacheStatusAdminDown:
 		fallthrough
@@ -209,9 +210,9 @@ func cacheStatusAndPoller(server string, serverInfo tc.TrafficServer, localCache
 	return fmt.Sprintf("%s - unavailable", statusVal.Status), statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
 }
 
-func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[string]int64 {
-	conns := map[string]int64{}
-	statResultHistory.Range(func(server string, history threadsafe.ResultStatValHistory) bool {
+func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[tc.CacheName]int64 {
+	conns := map[tc.CacheName]int64{}
+	statResultHistory.Range(func(server tc.CacheName, history threadsafe.ResultStatValHistory) bool {
 		// for server, history := range statResultHistory {
 		vals := history.Load("proxy.process.http.current_client_connections")
 		if len(vals) == 0 {
@@ -230,7 +231,7 @@ func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[
 
 // infoResultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
 // Note this is unrelated to the Stat Span field.
-func infoResultSpanMS(cacheName string, history cache.ResultInfoHistory) (int64, error) {
+func infoResultSpanMS(cacheName tc.CacheName, history cache.ResultInfoHistory) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)
@@ -250,7 +251,7 @@ func infoResultSpanMS(cacheName string, history cache.ResultInfoHistory) (int64,
 
 // resultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
 // Note this is unrelated to the Stat Span field.
-func resultSpanMS(cacheName string, history map[string][]cache.Result) (int64, error) {
+func resultSpanMS(cacheName tc.CacheName, history map[tc.CacheName][]cache.Result) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)
@@ -268,7 +269,7 @@ func resultSpanMS(cacheName string, history map[string][]cache.Result) (int64, e
 	return int64(span / time.Millisecond), nil
 }
 
-func latestQueryTimeMS(cacheName string, lastDurations map[string]time.Duration) (int64, error) {
+func latestQueryTimeMS(cacheName tc.CacheName, lastDurations map[tc.CacheName]time.Duration) (int64, error) {
 	queryTime, ok := lastDurations[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v not in last durations\n", cacheName)
@@ -277,7 +278,7 @@ func latestQueryTimeMS(cacheName string, lastDurations map[string]time.Duration)
 }
 
 // latestResultTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result.
-func latestResultTimeMS(cacheName string, history map[string][]cache.Result) (int64, error) {
+func latestResultTimeMS(cacheName tc.CacheName, history map[tc.CacheName][]cache.Result) (int64, error) {
 
 	results, ok := history[cacheName]
 	if !ok {
@@ -302,7 +303,7 @@ func latestResultTimeMS(cacheName string, history map[string][]cache.Result) (in
 }
 
 // latestResultInfoTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result info.
-func latestResultInfoTimeMS(cacheName string, history cache.ResultInfoHistory) (int64, error) {
+func latestResultInfoTimeMS(cacheName tc.CacheName, history cache.ResultInfoHistory) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)

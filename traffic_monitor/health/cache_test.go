@@ -94,13 +94,13 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	}
 
 	toData := todata.TOData{
-		ServerTypes:            map[string]tc.CacheType{},
-		DeliveryServiceServers: map[string][]string{},
-		ServerCachegroups:      map[string]tc.CacheGroupName{},
+		ServerTypes:            map[tc.CacheName]tc.CacheType{},
+		DeliveryServiceServers: map[tc.DeliveryServiceName][]tc.CacheName{},
+		ServerCachegroups:      map[tc.CacheName]tc.CacheGroupName{},
 	}
-	toData.ServerTypes[result.ID] = tc.CacheTypeEdge
-	toData.DeliveryServiceServers["myDS"] = []string{result.ID}
-	toData.ServerCachegroups[result.ID] = "myCG"
+	toData.ServerTypes[tc.CacheName(result.ID)] = tc.CacheTypeEdge
+	toData.DeliveryServiceServers["myDS"] = []tc.CacheName{tc.CacheName(result.ID)}
+	toData.ServerCachegroups[tc.CacheName(result.ID)] = "myCG"
 
 	localCacheStatusThreadsafe := threadsafe.NewCacheAvailableStatus()
 	localStates := peer.NewCRStatesThreadsafe()
@@ -113,7 +113,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	CalcAvailability(results, pollerName, statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
 
 	localCacheStatuses := localCacheStatusThreadsafe.Get()
-	if localCacheStatus, ok := localCacheStatuses[result.ID]; !ok {
+	if localCacheStatus, ok := localCacheStatuses[tc.CacheName(result.ID)]; !ok {
 		t.Fatalf("expected: localCacheStatus[cacheName], actual: missing")
 	} else if localCacheStatus.Available.IPv4 {
 		t.Fatalf("localCacheStatus.Available.IPv4 over kbps threshold expected: false, actual: true")
@@ -143,7 +143,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	CalcAvailability(healthResults, healthPollerName, nil, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
 
 	localCacheStatuses = localCacheStatusThreadsafe.Get()
-	if localCacheStatus, ok := localCacheStatuses[result.ID]; !ok {
+	if localCacheStatus, ok := localCacheStatuses[tc.CacheName(result.ID)]; !ok {
 		t.Fatalf("expected: localCacheStatus[cacheName], actual: missing")
 	} else if localCacheStatus.Available.IPv4 {
 		t.Fatalf("localCacheStatus.Available.IPv4 over kbps threshold expected: false, actual: true")

@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/health"
@@ -81,7 +82,7 @@ func healthResultManagerListen(
 	localCacheStatus threadsafe.CacheAvailableStatus,
 	cfg config.Config,
 ) {
-	lastHealthEndTimes := map[string]time.Time{}
+	lastHealthEndTimes := map[tc.CacheName]time.Time{}
 	// This reads at least 1 value from the cacheHealthChan. Then, we loop, and try to read from the channel some more. If there's nothing to read, we hit `default` and process. If there is stuff to read, we read it, then inner-loop trying to read more. If we're continuously reading and the channel is never empty, and we hit the tick time, process anyway even though the channel isn't empty, to prevent never processing (starvation).
 	var ticker *time.Ticker
 
@@ -143,7 +144,7 @@ func processHealthResult(
 	errorCount threadsafe.Uint,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
-	lastHealthEndTimes map[string]time.Time,
+	lastHealthEndTimes map[tc.CacheName]time.Time,
 	healthHistory threadsafe.ResultHistory,
 	results []cache.Result,
 	cfg config.Config,
@@ -164,7 +165,7 @@ func processHealthResult(
 	for i, healthResult := range results {
 		fetchCount.Inc()
 		var prevResult cache.Result
-		healthResultHistory := healthHistoryCopy[healthResult.ID]
+		healthResultHistory := healthHistoryCopy[tc.CacheName(healthResult.ID)]
 		if len(healthResultHistory) != 0 {
 			prevResult = healthResultHistory[len(healthResultHistory)-1]
 		}
@@ -180,7 +181,7 @@ func processHealthResult(
 			maxHistory = 1
 		}
 
-		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
+		healthHistoryCopy[tc.CacheName(healthResult.ID)] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[tc.CacheName(healthResult.ID)]...), maxHistory)
 	}
 
 	pollerName := "health"
@@ -192,11 +193,11 @@ func processHealthResult(
 
 	lastHealthDurations := threadsafe.CopyDurationMap(lastHealthDurationsThreadsafe.Get())
 	for _, healthResult := range results {
-		if lastHealthStart, ok := lastHealthEndTimes[healthResult.ID]; ok {
+		if lastHealthStart, ok := lastHealthEndTimes[tc.CacheName(healthResult.ID)]; ok {
 			d := time.Since(lastHealthStart)
-			lastHealthDurations[healthResult.ID] = d
+			lastHealthDurations[tc.CacheName(healthResult.ID)] = d
 		}
-		lastHealthEndTimes[healthResult.ID] = time.Now()
+		lastHealthEndTimes[tc.CacheName(healthResult.ID)] = time.Now()
 	}
 	lastHealthDurationsThreadsafe.Set(lastHealthDurations)
 }

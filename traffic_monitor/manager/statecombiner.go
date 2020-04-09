@@ -55,7 +55,7 @@ func StartStateCombiner(events health.ThreadsafeEvents, peerStates peer.CRStates
 	}
 
 	go func() {
-		overrideMap := map[string]bool{}
+		overrideMap := map[tc.CacheName]bool{}
 		for range combineStateChan {
 			drain(combineStateChan)
 			combineCrStates(events, true, peerStates, localStates.Get(), combinedStates, overrideMap, toData.Get())
@@ -65,7 +65,7 @@ func StartStateCombiner(events health.ThreadsafeEvents, peerStates peer.CRStates
 	return combinedStates, combineState
 }
 
-func combineCacheState(cacheName string, localCacheState tc.IsAvailable, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[string]bool, toData todata.TOData) {
+func combineCacheState(cacheName tc.CacheName, localCacheState tc.IsAvailable, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
 	overrideCondition := ""
 	available := false
 	ipv4Available := false
@@ -125,21 +125,21 @@ func combineCacheState(cacheName string, localCacheState tc.IsAvailable, events 
 	}
 
 	if overrideCondition != "" {
-		events.Add(health.Event{Time: health.Time(time.Now()), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName, Hostname: cacheName, Type: toData.ServerTypes[cacheName].String(), Available: available, IPv4Available: ipv4Available, IPv6Available: ipv6Available})
+		events.Add(health.Event{Time: health.Time(time.Now()), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toData.ServerTypes[cacheName].String(), Available: available, IPv4Available: ipv4Available, IPv6Available: ipv6Available})
 	}
 
 	combinedStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: available, Ipv4Available: ipv4Available, Ipv6Available: ipv6Available})
 }
 
 func combineDSState(
-	deliveryServiceName string,
+	deliveryServiceName tc.DeliveryServiceName,
 	localDeliveryService tc.CRStatesDeliveryService,
 	events health.ThreadsafeEvents,
 	peerOptimistic bool,
 	peerStates peer.CRStatesPeersThreadsafe,
 	localStates tc.CRStates,
 	combinedStates peer.CRStatesThreadsafe,
-	overrideMap map[string]bool,
+	overrideMap map[tc.CacheName]bool,
 	toData todata.TOData,
 ) {
 	deliveryService := tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []tc.CacheGroupName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
@@ -197,7 +197,7 @@ func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates tc.
 	}
 }
 
-func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[string]bool, toData todata.TOData) {
+func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates, localStates, combinedStates, overrideMap, toData)
 	}

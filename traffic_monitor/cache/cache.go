@@ -288,7 +288,7 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 		return
 	}
 
-	stats, miscStats, err := decoder.Parse(string(result.ID), rdr)
+	stats, miscStats, err := decoder.Parse(result.ID, rdr)
 	if err != nil {
 		log.Warnf("%s decode error '%v'", id, err)
 		result.Error = err

@@ -48,14 +48,14 @@ func (t *CRStatesThreadsafe) Get() tc.CRStates {
 }
 
 // GetDeliveryServices returns the internal Crstates delivery services map for reading.
-func (t *CRStatesThreadsafe) GetDeliveryServices() map[string]tc.CRStatesDeliveryService {
+func (t *CRStatesThreadsafe) GetDeliveryServices() map[tc.DeliveryServiceName]tc.CRStatesDeliveryService {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.crStates.CopyDeliveryServices()
 }
 
 // GetCache returns the availability data of the given cache. This does not mutate, and is thus safe for multiple goroutines to call.
-func (t *CRStatesThreadsafe) GetCache(name string) (available tc.IsAvailable, ok bool) {
+func (t *CRStatesThreadsafe) GetCache(name tc.CacheName) (available tc.IsAvailable, ok bool) {
 	t.m.RLock()
 	available, ok = t.crStates.Caches[name]
 	t.m.RUnlock()
@@ -63,14 +63,14 @@ func (t *CRStatesThreadsafe) GetCache(name string) (available tc.IsAvailable, ok
 }
 
 // GetCaches returns the availability data of all caches. This does not mutate, and is thus safe for multiple goroutines to call.
-func (t *CRStatesThreadsafe) GetCaches() map[string]tc.IsAvailable {
+func (t *CRStatesThreadsafe) GetCaches() map[tc.CacheName]tc.IsAvailable {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.crStates.CopyCaches()
 }
 
 // GetDeliveryService returns the availability data of the given delivery service. This does not mutate, and is thus safe for multiple goroutines to call.
-func (t *CRStatesThreadsafe) GetDeliveryService(name string) (ds tc.CRStatesDeliveryService, ok bool) {
+func (t *CRStatesThreadsafe) GetDeliveryService(name tc.DeliveryServiceName) (ds tc.CRStatesDeliveryService, ok bool) {
 	t.m.RLock()
 	ds, ok = t.crStates.DeliveryService[name]
 	t.m.RUnlock()
@@ -78,7 +78,7 @@ func (t *CRStatesThreadsafe) GetDeliveryService(name string) (ds tc.CRStatesDeli
 }
 
 // SetCache sets the internal availability data for a particular cache. It does NOT set data if the cache doesn't already exist. By adding newly received caches with `AddCache`, this allows easily avoiding a race condition when an in-flight poller tries to set a cache which has been removed.
-func (t *CRStatesThreadsafe) SetCache(cacheName string, available tc.IsAvailable) {
+func (t *CRStatesThreadsafe) SetCache(cacheName tc.CacheName, available tc.IsAvailable) {
 	t.m.Lock()
 	if _, ok := t.crStates.Caches[cacheName]; ok {
 		t.crStates.Caches[cacheName] = available
@@ -87,28 +87,28 @@ func (t *CRStatesThreadsafe) SetCache(cacheName string, available tc.IsAvailable
 }
 
 // AddCache adds the internal availability data for a particular cache.
-func (t *CRStatesThreadsafe) AddCache(cacheName string, available tc.IsAvailable) {
+func (t *CRStatesThreadsafe) AddCache(cacheName tc.CacheName, available tc.IsAvailable) {
 	t.m.Lock()
 	t.crStates.Caches[cacheName] = available
 	t.m.Unlock()
 }
 
 // DeleteCache deletes the given cache from the internal data.
-func (t *CRStatesThreadsafe) DeleteCache(name string) {
+func (t *CRStatesThreadsafe) DeleteCache(name tc.CacheName) {
 	t.m.Lock()
 	delete(t.crStates.Caches, name)
 	t.m.Unlock()
 }
 
 // SetDeliveryService sets the availability data for the given delivery service.
-func (t *CRStatesThreadsafe) SetDeliveryService(name string, ds tc.CRStatesDeliveryService) {
+func (t *CRStatesThreadsafe) SetDeliveryService(name tc.DeliveryServiceName, ds tc.CRStatesDeliveryService) {
 	t.m.Lock()
 	t.crStates.DeliveryService[name] = ds
 	t.m.Unlock()
 }
 
 // DeleteDeliveryService deletes the given delivery service from the internal data. This MUST NOT be called by multiple goroutines.
-func (t *CRStatesThreadsafe) DeleteDeliveryService(name string) {
+func (t *CRStatesThreadsafe) DeleteDeliveryService(name tc.DeliveryServiceName) {
 	t.m.Lock()
 	delete(t.crStates.DeliveryService, name)
 	t.m.Unlock()

@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
+
 	"github.com/json-iterator/go"
 )
 
@@ -73,12 +75,12 @@ type AvailableStatus struct {
 }
 
 // CacheAvailableStatuses is the available status of each cache.
-type AvailableStatuses map[string]AvailableStatus
+type AvailableStatuses map[tc.CacheName]AvailableStatus
 
 // Copy copies this CacheAvailableStatuses. It does not modify, and thus is
 // safe for multiple reader goroutines.
 func (a AvailableStatuses) Copy() AvailableStatuses {
-	b := AvailableStatuses(map[string]AvailableStatus{})
+	b := AvailableStatuses(map[tc.CacheName]AvailableStatus{})
 	for k, v := range a {
 		b[k] = v
 	}
@@ -87,7 +89,7 @@ func (a AvailableStatuses) Copy() AvailableStatuses {
 
 // ResultHistory is a map of cache names, to an array of result history from
 // each cache server.
-type ResultHistory map[string][]Result
+type ResultHistory map[tc.CacheName][]Result
 
 func copyResult(a []Result) []Result {
 	b := make([]Result, len(a), len(a))
@@ -160,7 +162,7 @@ func pruneStats(history []ResultStatVal, limit uint64) []ResultStatVal {
 
 // TODO determine if anything ever needs more than the latest, and if not, change
 // ResultInfo to not be a slice.
-type ResultInfoHistory map[string][]ResultInfo
+type ResultInfoHistory map[tc.CacheName][]ResultInfo
 
 // ResultInfo contains all the non-stat result info. This includes the cache ID,
 // any errors, the time of the poll, the request time duration, Astats System
@@ -213,11 +215,11 @@ func pruneInfos(history []ResultInfo, limit uint64) []ResultInfo {
 }
 
 func (a ResultInfoHistory) Add(r Result, limit uint64) {
-	a[r.ID] = pruneInfos(append([]ResultInfo{ToInfo(r)}, a[r.ID]...), limit)
+	a[tc.CacheName(r.ID)] = pruneInfos(append([]ResultInfo{ToInfo(r)}, a[tc.CacheName(r.ID)]...), limit)
 }
 
 // Kbpses is the kbps values of each cache.
-type Kbpses map[string]int64
+type Kbpses map[tc.CacheName]int64
 
 func (a Kbpses) Copy() Kbpses {
 	b := Kbpses{}
@@ -228,5 +230,5 @@ func (a Kbpses) Copy() Kbpses {
 }
 
 func (a Kbpses) AddMax(r Result) {
-	a[r.ID] = r.PrecomputedData.MaxKbps
+	a[tc.CacheName(r.ID)] = r.PrecomputedData.MaxKbps
 }
