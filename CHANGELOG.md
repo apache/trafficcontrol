@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added the ability to view Hash ID field (aka xmppID) on Traffic Portals' server summary page
 - Added an indiciator to the Traffic Monitor UI when using a disk backup of Traffic ops.
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
+- Added ability to set DNS Listening IPs in dns.properties
 
 ### Fixed
 - Fixed #4743 - Validate absolute DNS name requirement on Static DNS entry for CNAME type [Related github issue](https://github.com/apache/trafficcontrol/issues/4743)
