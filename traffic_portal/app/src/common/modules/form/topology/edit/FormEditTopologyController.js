@@ -23,10 +23,10 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 	angular.extend(this, $controller('FormTopologyController', { topology: topologies[0], cacheGroups: cacheGroups, $scope: $scope }));
 
 	let deleteTopology = function(topology) {
-		topologyService.deleteTopology(topology.id)
-			.then(function() {
-				locationUtils.navigateToPath('/topologies');
-			});
+		topologyService.deleteTopology(topology.name)
+			// .then(function() {
+			// 	locationUtils.navigateToPath('/topologies');
+			// });
 	};
 
 	$scope.topologyName = angular.copy($scope.topology.name);
@@ -39,8 +39,8 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 	$scope.save = function(name, description, topologyTree) {
 		let normalizedTopology = topologyUtils.getNormalizedTopology(name, description, topologyTree);
 		topologyService.updateTopology(normalizedTopology);
-		messageModel.setMessages([ { level: 'success', text: name + ' topology was updated' } ], true);
-		locationUtils.navigateToPath('/topologies');
+		// messageModel.setMessages([ { level: 'success', text: name + ' topology was updated' } ], true);
+		// locationUtils.navigateToPath('/topologies');
 	};
 
 	$scope.confirmDelete = function(topology) {

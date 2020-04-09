@@ -25,50 +25,6 @@ var PropertiesModel = function() {
 		this.loaded = true;
 	};
 
-	this.setTopology = function(topology) {
-		this.topology = topology;
-	};
-
-	this.topology = {
-		"name": "FooTopology",
-		"desc": "a topology for Foo DSes",
-		"nodes": [
-			{
-				"cachegroup": "us-de-newcastle",
-				"parents": [
-					4,
-					5
-				]
-			},
-			{
-				"cachegroup": "us-ga-atlanta",
-				"parents": [
-					3,
-					5
-				]
-			},
-			{
-				"cachegroup": "us-co-denver",
-				"parents": [
-					5,
-					4
-				]
-			},
-			{
-				"cachegroup": "mid-southcentral",
-				"parents": []
-			},
-			{
-				"cachegroup": "mid-northeast",
-				"parents": []
-			},
-			{
-				"cachegroup": "mid-west",
-				"parents": []
-			}
-		]
-	};
-
 };
 
 PropertiesModel.$inject = [];

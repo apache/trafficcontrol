@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TopologyService = function($http, ENV, locationUtils, messageModel, propertiesModel) {
+var TopologyService = function($http, ENV, locationUtils, messageModel) {
 
 	this.getTopologies = function(queryParams) {
 		return $http.get(ENV.api['root'] + 'topologies', {params: queryParams}).then(
@@ -46,7 +46,7 @@ var TopologyService = function($http, ENV, locationUtils, messageModel, properti
 
 	this.updateTopology = function(topology) {
 		console.log(topology);
-		propertiesModel.setTopology(topology);
+		alert('not implemented yet. hold your horses.');
 	};
 
 	// this.updateTopology = function(topology) {
@@ -63,19 +63,20 @@ var TopologyService = function($http, ENV, locationUtils, messageModel, properti
 	// };
 
 	this.deleteTopology = function(id) {
-		return $http.delete(ENV.api['root'] + "topologies/" + id).then(
-			function(result) {
-				messageModel.setMessages([ { level: 'success', text: 'Topology deleted' } ], true);
-				return result;
-			},
-			function(err) {
-				messageModel.setMessages(err.data.alerts, true);
-				throw err;
-			}
-		);
+		alert('not implemented yet. hold your horses.');
+		// return $http.delete(ENV.api['root'] + "topologies/" + id).then(
+		// 	function(result) {
+		// 		messageModel.setMessages([ { level: 'success', text: 'Topology deleted' } ], true);
+		// 		return result;
+		// 	},
+		// 	function(err) {
+		// 		messageModel.setMessages(err.data.alerts, true);
+		// 		throw err;
+		// 	}
+		// );
 	};
 
 };
 
-TopologyService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel', 'propertiesModel'];
+TopologyService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
 module.exports = TopologyService;
