@@ -26,10 +26,10 @@ import (
 )
 
 const (
-	API_v13_CDNs = "/api/1.3/cdns"
+	API_CDNS = apiBase + "/cdns"
 )
 
-// Create a CDN
+// CreateCDN creates a CDN.
 func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -38,7 +38,7 @@ func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CDNs, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_CDNS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -48,7 +48,7 @@ func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// Update a CDN by ID
+// UpdateCDNByID updates a CDN by ID.
 func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -57,7 +57,7 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) 
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_CDNs, id)
+	route := fmt.Sprintf("%s/%d", API_CDNS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -68,9 +68,9 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) 
 	return alerts, reqInf, nil
 }
 
-// Returns a list of CDNs
+// GetCDNs eturns a list of CDNs.
 func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_CDNs, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_CDNS, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -82,9 +82,9 @@ func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a CDN by the CDN ID
+// GetCDNByID a CDN by the CDN ID.
 func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_CDNs, id)
+	route := fmt.Sprintf("%s?id=%v", API_CDNS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -100,9 +100,9 @@ func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a CDN by the CDN name
+// GetCDNByName gets a CDN by the CDN name.
 func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_CDNs, url.QueryEscape(name))
+	url := fmt.Sprintf("%s?name=%s", API_CDNS, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -118,9 +118,9 @@ func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// DELETE a CDN by ID
+// DeleteCDNByID deletes a CDN by ID.
 func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_CDNs, id)
+	route := fmt.Sprintf("%s/%d", API_CDNS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -133,7 +133,7 @@ func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
 }
 
 func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
-	url := fmt.Sprintf("%s/name/%s/sslkeys", API_v13_CDNs, name)
+	url := fmt.Sprintf("%s/name/%s/sslkeys", API_CDNS, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -147,30 +147,4 @@ func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
 	}
 
 	return data.Response, reqInf, nil
-}
-
-// Deprecated: use GetCDNs.
-func (to *Session) CDNs() ([]tc.CDN, error) {
-	cdns, _, err := to.GetCDNs()
-	return cdns, err
-}
-
-// CDNName gets an array of CDNs
-// Deprecated: use GetCDNByName
-func (to *Session) CDNName(name string) ([]tc.CDN, error) {
-	n, _, err := to.GetCDNByName(name)
-	return n, err
-}
-
-// CDNName gets an array of CDNs
-// Deprecated: use GetCDNByName
-func (to *Session) GetCDNName(name string) ([]tc.CDN, error) {
-	n, _, err := to.GetCDNByName(name)
-	return n, err
-}
-
-// Deprecated: use GetCDNSSLKeys
-func (to *Session) CDNSSLKeys(name string) ([]tc.CDNSSLKeys, error) {
-	ks, _, err := to.GetCDNSSLKeys(name)
-	return ks, err
 }

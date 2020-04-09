@@ -34,24 +34,26 @@ import (
 )
 
 func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
+	alt := "GET servers/details with query parameters hostName"
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, &alt)
 		return
 	}
 	defer inf.Close()
 
 	servers, err := getDetailServers(inf.Tx.Tx, inf.User, inf.Params["hostName"], -1, "", 0)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting detail servers: "+err.Error()))
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting detail servers: "+err.Error()), &alt)
 		return
 	}
 	if len(servers) == 0 {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, &alt)
 		return
 	}
 	server := servers[0]
-	api.WriteResp(w, r, server)
+	alerts := api.CreateDeprecationAlerts(&alt)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 }
 
 func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {

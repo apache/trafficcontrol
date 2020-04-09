@@ -1,3 +1,31 @@
+// atstccfg is a tool for generating configuration files server-side on ATC cache servers.
+//
+// Warning: atstccfg does not have a stable command-line interface, it can and will change without warning. Scripts should avoid calling it for the time being.
+//
+// Usage:
+//
+// 	atstccfg [-u TO_URL] [-U TO_USER] [-P TO_PASSWORD] [-n] [-r N] [-e ERROR_LOCATION] [-w WARNING_LOCATION] [-i INFO_LOCATION] [-g] [-s] [-t TIMEOUT] [-a MAX_AGE] [-l] [-v] [-h]
+//
+// The available options are:
+//
+// 	-a, --cache-file-max-age-seconds                                Sets the maximum age - in seconds - a cached response can be in order to be considered "fresh" - older files will be re-generated and cached. Default: 60
+// 	-e ERROR_LOCATION, --log-location-error ERROR_LOCATION          The file location to which to log errors. Respects the special string constants of github.com/apache/trafficcontrol/lib/go-log. Default: 'stderr'
+// 	-g, --print-generated-files                                     If given, the names of files generated (and not proxied to Traffic Ops) will be printed to stdout, then atstccfg will exit.
+// 	-h, --help                                                      Print usage information and exit.
+// 	-i INFO_LOCATION, --log-location-info INFO_LOCATION             The file location to which to log information messages. Respects the special string constants of github.com/apache/trafficcontrol/lib/go-log. Default: 'stderr'
+// 	-l, --list-plugins                                              List the loaded plugins and then exit.
+// 	-n, --no-cache                                                  If given, existing cache files will not be used. Cache files will still be created, existing ones just won't be used.
+// 	-P TO_PASSWORD                                                  Authenticate using this password - if not given, atstccfg will attempt to use the value of the TO_PASS environment variable
+// 	-r N, --num-retries N                                           The number of times to retry getting a file if it fails. Default: 5
+// 	-s, --traffic-ops-insecure                                      If given, SSL certificate errors will be ignored when communicating with Traffic Ops. NOT RECOMMENDED FOR PRODUCTION ENVIRONMENTS.
+// 	-t, --traffic-ops-timeout-milliseconds                          Sets the timeout - in milliseconds - for requests made to Traffic Ops. Default: 10000
+// 	-u TO_URL                                                       Request this URL, e.g. 'https://trafficops.infra.ciab.test/servers/edge/configfiles/ats'
+// 	-U TO_USER                                                      Authenticate as the user TO_USER - if not given, atstccfg will attempt to use the value of the TO_USER environment variable
+// 	-v, --version                                                   Print version information and exit.
+// 	-w WARNING_LOCATION, --log-location-warning WARNING_LOCATION    The file location to which to log warnings. Respects the special string constants of github.com/apache/trafficcontrol/lib/go-log. Default: 'stderr'
+//
+// atstccfg caches generated files in /tmp/atstccfg_cache/ for re-use.
+
 package main
 
 /*
@@ -21,15 +49,16 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/cfgfile"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/getdata"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreqnew"
 )
 
 func main() {
@@ -44,67 +73,54 @@ func main() {
 		os.Exit(0)
 	}
 
-	if cfg.PrintGeneratedFiles {
-		fmt.Println(strings.Join(GetGeneratedFilesList(), "\n"))
-		os.Exit(config.ExitCodeSuccess)
-	}
-
 	plugins := plugin.Get(cfg)
 	plugins.OnStartup(plugin.StartupData{Cfg: cfg})
 
-	log.Infoln("URL: '" + cfg.TOURL.String() + "' User: '" + cfg.TOUser + "' Pass len: '" + strconv.Itoa(len(cfg.TOPass)) + "'")
-	log.Infoln("TempDir: '" + cfg.TempDir + "'")
-
-	toFQDN := cfg.TOURL.Scheme + "://" + cfg.TOURL.Host
-	log.Infoln("TO FQDN: '" + toFQDN + "'")
-	log.Infoln("TO URL: '" + cfg.TOURL.String() + "'")
-
-	toClient, err := toreq.GetClient(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TempDir, cfg.CacheFileMaxAge, cfg.TOTimeout, cfg.TOInsecure)
+	toClient, err := toreq.New(cfg.TOURL, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, cfg.TOTimeout, config.UserAgent)
 	if err != nil {
-		log.Errorln("Logging in to Traffic Ops: " + err.Error())
+		log.Errorln(err)
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	tccfg := config.TCCfg{Cfg: cfg, TOClient: &toClient}
+	toClientNew, err := toreqnew.New(toClient.Cookies(cfg.TOURL), cfg.TOURL, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, cfg.TOTimeout, config.UserAgent)
 
-	onReqData := plugin.OnRequestData{Cfg: tccfg}
-	if handled := plugins.OnRequest(onReqData); handled {
-		return
+	tccfg := config.TCCfg{Cfg: cfg, TOClient: toClient, TOClientNew: toClientNew}
+
+	if tccfg.GetData != "" {
+		if err := getdata.WriteData(tccfg); err != nil {
+			log.Errorln("writing data: " + err.Error())
+			os.Exit(config.ExitCodeErrGeneric)
+		}
+		os.Exit(config.ExitCodeSuccess)
 	}
 
-	cfgFile, code, err := GetConfigFile(tccfg)
-	log.Infof("GetConfigFile returned %v %v\n", code, err)
+	if tccfg.SetRevalStatus != "" || tccfg.SetQueueStatus != "" {
+		if err := getdata.SetQueueRevalStatuses(tccfg); err != nil {
+			log.Errorln("writing queue and reval statuses: " + err.Error())
+			os.Exit(config.ExitCodeErrGeneric)
+		}
+		os.Exit(config.ExitCodeSuccess)
+	}
+
+	toData, err := cfgfile.GetTOData(tccfg)
 	if err != nil {
-		log.Errorln("Getting config file '" + cfg.TOURL.String() + "': " + err.Error())
-		if code == 0 {
-			code = config.ExitCodeErrGeneric
-		}
-		log.Infof("GetConfigFile exiting with code %v\n", code)
-		os.Exit(code)
+		log.Errorln("getting data from traffic ops: " + err.Error())
+		os.Exit(config.ExitCodeErrGeneric)
 	}
-	fmt.Println(cfgFile)
+
+	configs, err := cfgfile.GetAllConfigs(tccfg, toData)
+	if err != nil {
+		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
+		os.Exit(config.ExitCodeErrGeneric)
+	}
+
+	modifyFilesData := plugin.ModifyFilesData{Cfg: tccfg, TOData: toData, Files: configs}
+	configs = plugins.ModifyFiles(modifyFilesData)
+
+	if err := cfgfile.WriteConfigs(configs, os.Stdout); err != nil {
+		log.Errorln("Writing configs for '" + cfg.CacheHostName + "': " + err.Error())
+		os.Exit(config.ExitCodeErrGeneric)
+	}
+
 	os.Exit(config.ExitCodeSuccess)
-}
-
-func GetGeneratedFilesList() []string {
-	names := []string{}
-	for scope, fileFuncs := range ConfigFileFuncs() {
-		for cfgFile, _ := range fileFuncs {
-			names = append(names, scope+"/"+cfgFile)
-		}
-	}
-
-	names = append(names, "profiles/url_sig_*.config")     // url_sig configs are generated, but not in the funcs because they're not a literal match
-	names = append(names, "profiles/uri_signing_*.config") // uri_signing configs are generated, but not in the funcs because they're not a literal match
-	names = append(names, "profiles/*")                    // unknown profiles configs are generated, a.k.a. "take-and-bake"
-
-	return names
-}
-
-func HTTPCodeToExitCode(httpCode int) int {
-	switch httpCode {
-	case http.StatusNotFound:
-		return config.ExitCodeNotFound
-	}
-	return config.ExitCodeErrGeneric
 }

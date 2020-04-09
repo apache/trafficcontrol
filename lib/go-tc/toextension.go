@@ -49,6 +49,7 @@ type TOExtensionNullable struct {
 // TOExtensionResponse represents the response from Traffic Ops when getting TOExtension.
 type TOExtensionResponse struct {
 	Response []TOExtensionNullable `json:"response"`
+	Alerts
 }
 
 // TOExtensionPostResponse represents the response from Traffic Ops when creating TOExtension.

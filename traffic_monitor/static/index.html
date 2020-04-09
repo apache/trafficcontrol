@@ -19,453 +19,14 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-
-<html>
+<html lang="en">
 <head>
-	<!-- <script src="sorttable.js"></script> -->
 	<meta charset="UTF-8">
 	<title>Traffic Monitor</title>
-	<style>
-		body {
-			font-family: "Lato", sans-serif;
-			font-size: 14px;
-			margin: 0;
-			max-width: 100vw;
-		}
-
-		table {
-			border-collapse: separate;
-			border-spacing: 0px 0;
-			width: 100%;
-		}
-
-		th, td {
-			padding:5px 20px 5px 5px;
-		}
-
-		th {
-			white-space: nowrap;
-		}
-
-		tbody tr:nth-child(even) {
-			background: #dfe
-		}
-		tbody tr:nth-child(odd) {
-			background: #fff
-		}
-
-		li.endpoint {
-			margin: 4px 0;
-		}
-
-		div#top-bar {
-			display: inline-flex;
-			justify-content: space-around;
-			align-items: center;
-			width: 100%;
-			margin: 15px 0;
-		}
-
-		div#links {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			max-width: 100ch;
-		}
-		div#links div {
-			margin-left: 4px;
-		}
-		div#links a {
-			display: block;
-		}
-
-		tbody tr.error {
-			background-color: #f00;
-		}
-		tbody tr.warning {
-			background-color: #f80;
-		}
-
-	 	input[type=radio] {
-			visibility: hidden;
-			display: none;
-		}
-		label {
-			display: block;
-			padding: 14px 21px;
-			border-radius: 2px 2px 0 0;
-			cursor: pointer;
-			position: relative;
-			top: 4px;
-			transition: background-color ease-in-out 0.3s;
-			text-align: center;
-			border: 1px solid green;
-		}
-		label:hover {
-			background-color: #cfd;
-		}
-		ul.tabs {
-			list-style: none;
-			max-width: 100%;
-			border: 1px solid #ccc;
-			background-color: #f1f1f1;
-			position: relative;
-		}
-		div.tabcontent {
-			z-index: 2;
-			display: none;
-			visibility: hidden;
-			overflow: hidden;
-			width: 100%;
-			position: absolute;
-			top: 53px;
-			left: 0;
-			padding: 6px 0;
-			border-top: none;
-		}
-		input.tab:checked ~ div.tabcontent {
-			display: block;
-			visibility: visible;
-		}
-		input.tab:checked ~ label{
-			background-color: #adb;
-			border-bottom-width: 0;
-		}
-		ul.tabs li {
-			float: left;
-			display: block;
-		}
-	</style>
-	<script>
-		function init() {
-			getTopBar();
-			setInterval(getCacheCount, 4755);
-			setInterval(getCacheAvailableCount, 4800);
-			setInterval(getBandwidth, 4621);
-			setInterval(getBandwidthCapacity, 4591);
-			setInterval(getCacheDownCount, 4832);
-			setInterval(getVersion, 10007); // change to retry on failure, and only do on startup
-			setInterval(getTrafficOpsUri, 10019); // change to retry on failure, and only do on startup
-			setInterval(getTrafficOpsCdn, 10500); // change to retry on failure, and only do on startup
-			setInterval(getEvents, 2004); // change to retry on failure, and only do on startup
-			setInterval(getCacheStatuses, 5009);
-			setInterval(getDsStats, 4003);
-		}
-
-		// source: http://stackoverflow.com/a/2901298/292623
-		function numberStrWithCommas(x) {
-			return x.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-		}
-
-		function getCacheCount() {
-			ajax("/api/cache-count", function(r) {
-				document.getElementById("cache-count").innerHTML = r;
-			});
-		}
-
-		function getCacheAvailableCount() {
-			ajax("/api/cache-available-count", function(r) {
-				document.getElementById("cache-available").innerHTML = r;
-			});
-		}
-
-		function getBandwidth() {
-			ajax("/api/bandwidth-kbps", function(r) {
-				document.getElementById("bandwidth").innerHTML = numberStrWithCommas((parseFloat(r) / kilobitsInGigabit).toFixed(2));
-			});
-		}
-
-		function getBandwidthCapacity() {
-			ajax("/api/bandwidth-capacity-kbps", function(r) {
-				document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas((r / kilobitsInGigabit).toString());
-			});
-		}
-
-		function getCacheDownCount() {
-			ajax("/api/cache-down-count", function(r) {
-				document.getElementById("cache-down").innerHTML = r;
-			});
-		}
-
-		function getVersion() {
-			ajax("/api/version", function(r) {
-				document.getElementById("version").innerHTML = r;
-			});
-		}
-
-		function getTrafficOpsUri() {
-			ajax("/api/traffic-ops-uri", function(r) {
-				document.getElementById("source-uri").innerHTML = "<a href='" + r + "'>" + r + "</a>";
-			});
-		}
-
-
-		function getTrafficOpsCdn() {
-			ajax("/publish/ConfigDoc", function(r) {
-				var j = JSON.parse(r);
-				document.getElementById("cdn-name").innerHTML = j.cdnName;
-			});
-		}
-
-		var lastEvent = 0;
-		function getEvents() {
-			/// \todo add /api/events-since/{index} (and change Traffic Monitor to keep latest
-			ajax("/publish/EventLog", function(r) {
-				var jdata = JSON.parse(r);
-				for (i = jdata.events.length - 1; i >= 0; i--) {
-					var event = jdata.events[i];
-					if (event.index <= lastEvent) {
-						continue;
-					}
-					lastEvent = event.index
-					var row = document.getElementById("event-log").insertRow(0); //document.createElement("tr");
-					row.classList.add("stripes");
-					row.insertCell(0).id = row.id + "-name";
-					document.getElementById(row.id + "-name").textContent = event.name;
-					document.getElementById(row.id + "-name").style.whiteSpace = "nowrap";
-					row.insertCell(1).textContent = event.type;
-					row.insertCell(2).textContent = event.isAvailable ? "available" : "offline";
-					if(event.isAvailable) {
-						row.classList.add("stripes");
-						row.classList.remove("error");
-					} else {
-						row.classList.add("error");
-						row.classList.remove("stripes");
-					}
-					row.insertCell(3).textContent = event.description;
-					row.insertCell(4).id = row.id + "-last";
-					document.getElementById(row.id + "-last").textContent = new Date(event.time * 1000).toISOString();
-					document.getElementById(row.id + "-last").style.whiteSpace = "nowrap";
-					document.getElementById(row.id + "-last").style.textAlign = "right";
-				}
-			});
-		}
-
-		function getCacheStates() {
-			ajax("/api/cache-statuses", function(r) {
-				var jdata = JSON.parse(r);
-				var servers = Object.keys(jdata); //debug
-				var table = document.getElementById("cache-states");
-				for (i = 0; i < servers.length; i++) {
-					var server = servers[i];
-					if (!document.getElementById("cache-states-" + server)) {
-						var row = table.insertRow(0); //document.createElement("tr");
-						row.classList.add("stripes");
-						row.id = "cache-states-" + server
-						row.insertCell(0).id = row.id + "-server";
-						row.insertCell(1).id = row.id + "-type";
-						row.insertCell(2).id = row.id + "-status";
-						row.insertCell(3).id = row.id + "-load-average";
-						row.insertCell(4).id = row.id + "-query-time";
-						row.insertCell(5).id = row.id + "-health-time";
-						row.insertCell(6).id = row.id + "-stat-time";
-						row.insertCell(7).id = row.id + "-health-span";
-						row.insertCell(8).id = row.id + "-stat-span";
-						row.insertCell(9).id = row.id + "-bandwidth";
-						row.insertCell(10).id = row.id + "-connection-count";
-						document.getElementById(row.id + "-server").textContent = server;
-						document.getElementById(row.id + "-server").style.whiteSpace = "nowrap";
-						document.getElementById(row.id + "-load-average").style.textAlign = "right";
-						document.getElementById(row.id + "-query-time").style.textAlign = "right";
-						document.getElementById(row.id + "-health-time").style.textAlign = "right";
-						document.getElementById(row.id + "-stat-time").style.textAlign = "right";
-						document.getElementById(row.id + "-health-span").style.textAlign = "right";
-						document.getElementById(row.id + "-stat-span").style.textAlign = "right";
-						document.getElementById(row.id + "-bandwidth").style.textAlign = "right";
-						document.getElementById(row.id + "-connection-count").style.textAlign = "right";
-					}
-
-					/* \todo change to iterate over members, and make cells id constructed from these*/
-					if (jdata[server].hasOwnProperty("type")) {
-						document.getElementById("cache-states-" + server + "-type").textContent = jdata[server].type;
-					}
-					if (jdata[server].hasOwnProperty("status")) {
-						document.getElementById("cache-states-" + server + "-status").textContent = jdata[server].status;
-						var row = document.getElementById("cache-states-" + server);
-						if (jdata[server].status.indexOf("ADMIN_DOWN") != -1 || jdata[server].status.indexOf("OFFLINE") != -1) {
-							row.classList.add("warning");
-							row.classList.remove("error");
-							row.classList.remove("stripes");
-						} else if (jdata[server].status.indexOf(" available") == -1 && jdata[server].status.indexOf("ONLINE") != 0) {
-							row.classList.add("error");
-							row.classList.remove("warning");
-							row.classList.remove("stripes");
-						} else {
-							row.classList.add("stripe");
-							row.classList.remove("warning");
-							row.classList.remove("error");
-						}
-					}
-					if (jdata[server].hasOwnProperty("load_average")) {
-						document.getElementById("cache-states-" + server + "-load-average").textContent = jdata[server].load_average;
-					}
-					if (jdata[server].hasOwnProperty("query_time_ms")) {
-						document.getElementById("cache-states-" + server + "-query-time").textContent = jdata[server].query_time_ms;
-					}
-					if (jdata[server].hasOwnProperty("health_time_ms")) {
-						document.getElementById("cache-states-" + server + "-health-time").textContent = jdata[server].health_time_ms;
-					}
-					if (jdata[server].hasOwnProperty("stat_time_ms")) {
-						document.getElementById("cache-states-" + server + "-stat-time").textContent = jdata[server].stat_time_ms;
-					}
-					if (jdata[server].hasOwnProperty("health_span_ms")) {
-						document.getElementById("cache-states-" + server + "-health-span").textContent = jdata[server].health_span_ms;
-					}
-					if (jdata[server].hasOwnProperty("stat_span_ms")) {
-						document.getElementById("cache-states-" + server + "-stat-span").textContent = jdata[server].stat_span_ms;
-					}
-					if (jdata[server].hasOwnProperty("bandwidth_kbps")) {
-						var kbps = (jdata[server].bandwidth_kbps / kilobitsInMegabit).toFixed(2);
-						var max = numberStrWithCommas((jdata[server].bandwidth_capacity_kbps / kilobitsInMegabit).toFixed(0));
-						document.getElementById("cache-states-" + server + "-bandwidth").textContent = '' + kbps + ' / ' + max;
-					} else {
-						document.getElementById("cache-states-" + server + "-bandwidth").textContent = "N/A";
-					}
-					if (jdata[server].hasOwnProperty("connection_count")) {
-						document.getElementById("cache-states-" + server + "-connection-count").textContent = jdata[server].connection_count;
-					} else {
-						document.getElementById("cache-states-" + server + "-connection-count").textContent = "N/A";
-					}
-				}
-
-				for (var i = 1, row; row = table.rows[i]; i++) { // start at 1, because row[0] is the header
-					var server = row.id.replace(/^cache-states-/, '');
-					if(!(server in jdata)) {
-						table.deleteRow(i);
-					}
-				}
-
-			})
-		}
-
-		var millisecondsInSecond = 1000;
-		var kilobitsInGigabit = 1000000;
-		var kilobitsInMegabit = 1000;
-
-		// dsDisplayFloat takes a float, and returns the string to display. For nonzero values, it returns two decimal places. For zero values, it returns an empty string, to make nonzero values more visible.
-		function dsDisplayFloat(f) {
-			var s = f
-			if (f != 0.0) {
-				s = f.toFixed(2);
-			}
-			return s
-		}
-
-		function getDsStats() {
-			var now = Date.now();
-
-			/// \todo add /api/delivery-service-stats which only returns the data needed by the UI, for efficiency
-			ajax("/publish/DsStats", function(r) {
-				var j = JSON.parse(r);
-				var jds = j.deliveryService
-				var deliveryServiceNames = Object.keys(jds); //debug
-				//decrementing for loop so DsNames are alphabetical A-Z
-				//TODO allow for filtering of columns so this isn't necessary
-					for (var i = deliveryServiceNames.length - 1; i >= 0; i--) {
-					var deliveryService = deliveryServiceNames[i];
-
-					if (!document.getElementById("deliveryservice-stats-" + deliveryService)) {
-						var row = document.getElementById("deliveryservice-stats").insertRow(0); //document.createElement("tr");
-						row.id = "deliveryservice-stats-" + deliveryService
-						row.insertCell(0).id = row.id + "-delivery-service";
-						row.insertCell(1).id = row.id + "-status";
-						row.insertCell(2).id = row.id + "-caches-reporting";
-						row.insertCell(3).id = row.id + "-bandwidth";
-						row.insertCell(4).id = row.id + "-tps";
-						row.insertCell(5).id = row.id + "-2xx";
-						row.insertCell(6).id = row.id + "-3xx";
-						row.insertCell(7).id = row.id + "-4xx";
-						row.insertCell(8).id = row.id + "-5xx";
-						row.insertCell(9).id = row.id + "-disabled-locations";
-						document.getElementById(row.id + "-delivery-service").textContent = deliveryService;
-						document.getElementById(row.id + "-delivery-service").style.whiteSpace = "nowrap";
-						document.getElementById(row.id + "-caches-reporting").style.textAlign = "right";
-						document.getElementById(row.id + "-bandwidth").style.textAlign = "right";
-						document.getElementById(row.id + "-tps").style.textAlign = "right";
-						document.getElementById(row.id + "-2xx").style.textAlign = "right";
-						document.getElementById(row.id + "-3xx").style.textAlign = "right";
-						document.getElementById(row.id + "-4xx").style.textAlign = "right";
-						document.getElementById(row.id + "-5xx").style.textAlign = "right";
-					}
-
-					// \todo check that array has a member before dereferencing [0]
-					if (jds[deliveryService].hasOwnProperty("isAvailable")) {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-status").textContent = jds[deliveryService]["isAvailable"][0].value == "true" ? "available" : "unavailable - " + jds[deliveryService]["error-string"][0].value;
-					}
-					if (jds[deliveryService].hasOwnProperty("caches-reporting") && jds[deliveryService].hasOwnProperty("caches-available") && jds[deliveryService].hasOwnProperty("caches-configured")) {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-caches-reporting").textContent = jds[deliveryService]['caches-reporting'][0].value + " / " + jds[deliveryService]['caches-available'][0].value + " / " + jds[deliveryService]['caches-configured'][0].value;
-					}
-					if (jds[deliveryService].hasOwnProperty("total.kbps")) {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-bandwidth").textContent = (jds[deliveryService]['total.kbps'][0].value / kilobitsInMegabit).toFixed(2);
-					} else {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-bandwidth").textContent = "N/A";
-					}
-					if (jds[deliveryService].hasOwnProperty("total.tps_total")) {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-tps").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_total'][0].value));
-					} else {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-tps").textContent = "N/A";
-					}
-					if (jds[deliveryService].hasOwnProperty("total.tps_2xx")) {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_2xx'][0].value));
-					} else {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = "N/A";
-					}
-					if (jds[deliveryService].hasOwnProperty("total.tps_3xx")) {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_3xx'][0].value));
-					} else {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = "N/A";
-					}
-					if (jds[deliveryService].hasOwnProperty("total.tps_4xx")) {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_4xx'][0].value));
-					} else {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = "N/A";
-					}
-					if (jds[deliveryService].hasOwnProperty("total.tps_5xx")) {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_5xx'][0].value));
-					} else {
-						document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = "N/A";
-					}
-
-					// \todo implement disabled locations
-
-					var row = document.getElementById("deliveryservice-stats-" + deliveryService);
-					if (jds[deliveryService]["isAvailable"][0].value == "true") {
-						row.classList.add("stripes");
-						row.classList.remove("error");
-					} else {
-						row.classList.add("error");
-						row.classList.remove("stripes");
-					}
-				}
-			})
-		}
-
-		function getCacheStatuses() {
-			getCacheCount();
-			getCacheAvailableCount();
-			getCacheDownCount();
-			getCacheStates();
-		}
-
-		function getTopBar() {
-			getVersion();
-			getTrafficOpsUri();
-			getTrafficOpsCdn();
-			getCacheStatuses();
-		}
-
-		function ajax(endpoint, f) {
-			var xhttp = new XMLHttpRequest();
-			xhttp.onreadystatechange = function() {
-				if (xhttp.readyState == 4 && xhttp.status == 200) {
-					f(xhttp.responseText);
-				}
-			};
-			xhttp.open("GET", endpoint, true);
-			xhttp.send();
-		}
-	</script>
+	<link rel="stylesheet" type="text/css" href="./style.css"/>
+	<script src="./script.js"></script>
 </head>
-<body onload="init()">
+<body>
 	<div id="top-bar">
 		<div>Caches: count=<span id="cache-count">0</span> available=<span id="cache-available">0</span> down=<span id="cache-down">0</span> </div>
 		<div>Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-capacity">∞</span> gbps</div>
@@ -501,27 +62,31 @@ under the License.
 		</div>
 	</div>
 
-	<div id="update-num-text">Number of updates: <span id="update-num">0</span></div>
-	<div id="last-val-text">Last Val: <span id="last-val">0</span></div>
+	<!-- TODO: There's no reference to these in the script nor styling; safe to remove? -->
+	<div>Number of updates: <span>0</span></div>
+	<div>Last Val: <span>0</span></div>
+
 	<ul class="tabs" role="tablist">
-		<li class="tab tab-header" id="cache-states-content-tab">
-			<input type="radio" name="tabs" class="tab" id="cache-states-input" checked />
-			<label for="cache-states-input" aria-selected="true">Cache States</label>
+		<li class="tab" id="cache-states-content-tab">
+			<input type="radio" name="tabs" class="tab" id="cache-states-input" checked/>
+			<label for="cache-states-input">Cache States</label>
 			<div id="cache-states-content" class="tabcontent">
-				<table class="tab-grid sortable">
+				<table>
 					<thead>
 						<tr>
 							<th>Server</th>
 							<th>Type</th>
+							<th>IPv4</th>
+							<th>IPv6</th>
 							<th>Status</th>
-							<th align="right">Load Average</th>
-							<th align="right">Query Time (ms)</th>
-							<th align="right">Health Time (ms)</th>
-							<th align="right">Stat Time (ms)</th>
-							<th align="right">Health Span (ms)</th>
-							<th align="right">Stat Span (ms)</th>
-							<th align="right">Bandwidth (mbps)</th>
-							<th align="right">Connection Count</th>
+							<th>Load Average</th>
+							<th>Query Time (ms)</th>
+							<th>Health Time (ms)</th>
+							<th>Stat Time (ms)</th>
+							<th>Health Span (ms)</th>
+							<th>Stat Span (ms)</th>
+							<th>Bandwidth (mbps)</th>
+							<th>Connection Count</th>
 						</tr>
 					</thead>
 					<tbody id="cache-states"></tbody>
@@ -529,22 +94,22 @@ under the License.
 			</div>
 		</li>
 
-		<li class="tab tab-header" id="deliveryservice-stats-content-tab">
+		<li class="tab" id="deliveryservice-stats-content-tab">
 			<input type="radio" name="tabs" class="tab" id="deliveryservice-stats-input"/>
-			<label for="deliveryservice-stats-input" aria-selected="false">Delivery Service States</label>
+			<label for="deliveryservice-stats-input">Delivery Service States</label>
 			<div id="deliveryservice-stats-content" class="tabcontent">
-				<table class="tab-grid sortable">
+				<table>
 					<thead>
 						<tr>
 							<th>Delivery Service</th>
 							<th>Status</th>
-							<th align="right">Caches Reporting/Available/Configured</th>
-							<th align="right">Bandwidth (mbps)</th>
-							<th align="right">t/sec</th>
-							<th align="right">2xx/sec</th>
-							<th align="right">3xx/sec</th>
-							<th align="right">4xx/sec</th>
-							<th align="right">5xx/sec</th>
+							<th>Caches Reporting/Available/Configured</th>
+							<th>Bandwidth (mbps)</th>
+							<th>t/sec</th>
+							<th>2xx/sec</th>
+							<th>3xx/sec</th>
+							<th>4xx/sec</th>
+							<th>5xx/sec</th>
 							<th>Disabled Locations</th>
 						</tr>
 					</thead>
@@ -553,18 +118,18 @@ under the License.
 			</div>
 		</li>
 
-		<li id="event-log-content-tab" class="tab tab-header">
+		<li id="event-log-content-tab" class="tab">
 			<input type="radio" name="tabs" class="tab" id="event-log-input"/>
-			<label for="event-log-input" aria-selected="false">Event Log</label>
+			<label for="event-log-input">Event Log</label>
 			<div id="event-log-content" class="tabcontent">
-				<table class="tab-grid sortable">
+				<table>
 					<thead>
 						<tr>
 							<th>Name</th>
 							<th>Type</th>
 							<th>Status</th>
 							<th>Description</th>
-							<th align="center" id="event-log-last-header">Event Time</th>
+							<th>Event Time</th>
 						</tr>
 					</thead>
 					<tbody id="event-log"></tbody>

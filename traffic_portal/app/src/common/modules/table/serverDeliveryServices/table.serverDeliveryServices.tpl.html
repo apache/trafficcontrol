@@ -33,7 +33,7 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name' | filter:columnFilterFn">
                         <div class="checkbox">
                             <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
                         </div>
@@ -72,6 +72,7 @@ under the License.
                     <th>DNS Bypass TTL</th>
                     <th>DNS TTL</th>
                     <th>DSCP</th>
+                    <th>ECS Enabled</th>
                     <th>Edge Header Rewrite Rules</th>
                     <th>FQ Pacing Rate</th>
                     <th>Geo Limit</th>
@@ -107,11 +108,13 @@ under the License.
                     <th>Routing Name</th>
                     <th>Signed</th>
                     <th>Signing Algorithm</th>
+                    <th>Range Slice Block Size</th>
                     <th>Tenant</th>
                     <th>TR Request Headers</th>
                     <th>TR Response Headers</th>
                     <th>Type</th>
                     <th>XML ID (Key)</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -130,6 +133,7 @@ under the License.
                     <td data-search="^{{::ds.dnsBypassTtl}}$">{{::ds.dnsBypassTtl}}</td>
                     <td data-search="^{{::ds.ccrDnsTtl}}$">{{::ds.ccrDnsTtl}}</td>
                     <td data-search="^{{::ds.dscp}}$">{{::ds.dscp}}</td>
+                    <td data-search="^{{::ds.ecsEnabled}}$">{{::ds.ecsEnabled}}</td>
                     <td data-search="^{{::ds.edgeHeaderRewrite}}$">{{::ds.edgeHeaderRewrite}}</td>
                     <td data-search="^{{::ds.fqPacingRate}}$">{{::ds.fqPacingRate}}</td>
                     <td data-search="^{{::geoLimit(ds)}}$">{{::geoLimit(ds)}}</td>
@@ -165,11 +169,15 @@ under the License.
                     <td data-search="^{{::ds.routingName}}$">{{::ds.routingName}}</td>
                     <td data-search="^{{::ds.signed}}$">{{::ds.signed}}</td>
                     <td data-search="^{{::ds.signingAlgorithm}}$">{{::ds.signingAlgorithm}}</td>
+                    <td data-search="^{{::ds.rangeSliceBlockSize}}$">{{::ds.rangeSliceBlockSize}}</td>
                     <td data-search="^{{::ds.tenant}}$">{{::ds.tenant}}</td>
                     <td data-search="^{{::ds.trResponseHeaders}}$">{{::ds.trResponseHeaders}}</td>
                     <td data-search="^{{::ds.trRequestHeaders}}$">{{::ds.trRequestHeaders}}</td>
                     <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
-                    <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+                    <td name="xmlId" data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+                    <td style="text-align: right;">
+                        <a class="link action-link" title="Unlink Delivery Service from Server" ng-click="confirmRemoveDS(ds, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
+                    </td>
                 </tr>
             </tbody>
         </table>

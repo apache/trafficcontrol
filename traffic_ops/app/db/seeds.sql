@@ -202,6 +202,8 @@ insert into capability (name, description) values ('types-write', 'Ability to ed
 insert into capability (name, description) values ('users-register', 'Ability to register new users') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('users-read', 'Ability to view users') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('users-write', 'Ability to edit users') ON CONFLICT (name) DO NOTHING;
+-- vault
+insert into capability (name, description) values ('vault', 'Vault') ON CONFLICT (name) DO NOTHING;
 
 -- roles_capabilities
 -- out of the box, the admin role has ALL capabilities
@@ -278,6 +280,7 @@ insert into role_capability (role_id, cap_name) values ((select id from role whe
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'users-register') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'users-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'users-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'vault') ON CONFLICT (role_id, cap_name) DO NOTHING;
 
 -- Using role 'read-only'
 
@@ -480,6 +483,7 @@ insert into api_capability (http_method, route, capability) values ('GET', 'cdns
 insert into api_capability (http_method, route, capability) values ('GET', 'cdns/name/*/dnsseckeys', 'cdn-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('POST', 'cdns/dnsseckeys/generate', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'cdns/name/*/dnsseckeys/delete', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'cdns/name/*/dnsseckeys', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- change logs
 insert into api_capability (http_method, route, capability) values ('GET', 'logs', 'change-logs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'logs/*/days', 'change-logs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
@@ -727,6 +731,9 @@ insert into api_capability (http_method, route, capability) values ('GET', 'user
 insert into api_capability (http_method, route, capability) values ('GET', 'users/*/deliveryservices/available', 'users-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservice_user', 'users-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservice_user/*/*', 'users-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- vault
+insert into api_capability (http_method, route, capability) values ('GET', 'vault/ping', 'vault') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'vault/bucket/*/key/*/values', 'vault') ON CONFLICT (http_method, route, capability) DO NOTHING;
 
 -- types
 
@@ -761,6 +768,7 @@ insert into type (name, description, use_in_table) values ('EDGE_LOC', 'Edge Log
 insert into type (name, description, use_in_table) values ('MID_LOC', 'Mid Logical Location', 'cachegroup') ON CONFLICT (name) DO NOTHING;
 insert into type (name, description, use_in_table) values ('ORG_LOC', 'Origin Logical Site', 'cachegroup') ON CONFLICT (name) DO NOTHING;
 insert into type (name, description, use_in_table) values ('TR_LOC', 'Traffic Router Logical Location', 'cachegroup') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('TC_LOC', 'Traffic Control Component Location', 'cachegroup') ON CONFLICT (name) DO NOTHING;
 
 -- to_extension types
 insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension') ON CONFLICT (name) DO NOTHING;

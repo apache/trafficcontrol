@@ -26,6 +26,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const ContentTypeCacheURLDotConfig = ContentTypeTextASCII
+
 type CacheURLDS struct {
 	OrgServerFQDN string
 	QStringIgnore int

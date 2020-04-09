@@ -25,7 +25,7 @@ FROM centos:7
 # NOTE: temporary workaround for removal of golang packages from CentOS 7 base repo
 RUN yum install -y \
     epel-release \
-    https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm \
+    https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
     git && \
     yum -y install golang
 

@@ -21,6 +21,7 @@ package types
 
 import (
 	"errors"
+	"net/http"
 	"reflect"
 	"testing"
 	"time"
@@ -120,6 +121,62 @@ func TestInterfaces(t *testing.T) {
 	}
 	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("Type must be Identifier")
+	}
+}
+
+func createDummyType(field string) *TOType {
+	version := api.Version{
+		Major: 2,
+		Minor: 0,
+	}
+	apiInfo := api.APIInfo{
+		Version: &version,
+	}
+	return &TOType{
+		TypeNullable: tc.TypeNullable{
+			Name:        &field,
+			Description: &field,
+			UseInTable:  &field,
+		},
+		APIInfoImpl: api.APIInfoImpl{
+			ReqInfo: &apiInfo,
+		},
+	}
+}
+
+func TestUpdateInvalidType(t *testing.T) {
+	invalidUpdateType := createDummyType("test")
+
+	err, _, statusCode := invalidUpdateType.Update()
+	if err == nil {
+		t.Fatalf("expected update type tp have an error")
+	}
+	if statusCode != http.StatusBadRequest {
+		t.Fatalf("expected update to return a 400 error")
+	}
+}
+
+func TestDeleteInvalidType(t *testing.T) {
+	invalidDeleteType := createDummyType("other")
+
+	err, _, statusCode := invalidDeleteType.Delete()
+	if err == nil {
+		t.Fatalf("expected delete type to have an error")
+	}
+	if statusCode != http.StatusBadRequest {
+		t.Fatalf("expected delete type to return a %v error", http.StatusBadRequest)
+	}
+}
+
+func TestCreateInvalidType(t *testing.T) {
+	invalidCreateType := createDummyType("test")
+
+	err, _, statusCode := invalidCreateType.Create()
+	if err == nil {
+		t.Fatalf("expected create type to have an error")
+	}
+	if statusCode != http.StatusBadRequest {
+		t.Fatalf("expected create type to return a %v error", http.StatusBadRequest)
 	}
 }
 

@@ -22,7 +22,6 @@ package crconfig
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
@@ -33,40 +32,6 @@ import (
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
-
-func randStrArr() []string {
-	num := int(rand.Int63n(10))
-	s := []string{}
-	for i := 0; i < num; i++ {
-		s = append(s, *randStr())
-	}
-	return s
-}
-
-func randMatchlistArr() []tc.MatchList {
-	num := int(rand.Int63n(10))
-	arr := []tc.MatchList{}
-	for i := 0; i < num; i++ {
-		arr = append(arr, tc.MatchList{
-			Regex:     *randStr(),
-			MatchType: *randStr(),
-		})
-	}
-	return arr
-}
-
-func randMatchsetArr() []*tc.MatchSet {
-	num := int(rand.Int63n(10))
-	httpStr := "HTTP"
-	arr := []*tc.MatchSet{}
-	for i := 0; i < num; i++ {
-		arr = append(arr, &tc.MatchSet{
-			Protocol:  httpStr,
-			MatchList: randMatchlistArr(),
-		})
-	}
-	return arr
-}
 
 func randDS() tc.CRConfigDeliveryService {
 	// truePtr := true

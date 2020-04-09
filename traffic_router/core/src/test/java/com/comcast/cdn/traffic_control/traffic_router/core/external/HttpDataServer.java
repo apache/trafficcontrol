@@ -119,7 +119,7 @@ public class HttpDataServer implements HttpHandler {
 					path += ".json";
 				}
 
-				if ("api/1.3/user/login".equals(path)) {
+				if ("api/2.0/user/login".equals(path)) {
 					try {
 						Headers headers = httpExchange.getResponseHeaders();
 						headers.set("Set-Cookie", new HttpCookie("mojolicious","fake-cookie").toString());
@@ -130,13 +130,13 @@ public class HttpDataServer implements HttpHandler {
 				}
 
 				// Pretend that someone externally changed steering.json data
-				if (receivedSteeringPost && "internal/api/1.3/steering.json".equals(path)) {
-					path = "internal/api/1.3/steering2.json";
+				if (receivedSteeringPost && "api/2.0/steering".equals(path)) {
+					path = "api/2.0/steering2";
 				}
 
 				// pretend certificates have not been updated
-				if (!receivedCertificatesPost && "api/1.3/cdns/name/thecdn/sslkeys.json".equals(path)) {
-					path = path.replace("/sslkeys.json", "/sslkeys-missing-1.json");
+				if (!receivedCertificatesPost && "api/2.0/cdns/name/thecdn/sslkeys".equals(path)) {
+					path = path.replace("/sslkeys", "/sslkeys-missing-1");
 				}
 
 				if (path.contains("CrConfig") && receivedCrConfig2Post) {

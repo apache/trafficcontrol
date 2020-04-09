@@ -20,68 +20,12 @@ package cfgfile
  */
 
 import (
-	"errors"
-	"strconv"
-
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
-func GetConfigFileServerUnknownConfig(cfg config.TCCfg, serverNameOrID string, fileName string) (string, error) {
-	servers, err := toreq.GetServers(cfg)
-	if err != nil {
-		return "", errors.New("getting servers: " + err.Error())
-	}
-
-	server := tc.Server{ID: atscfg.InvalidID}
-	if serverID, err := strconv.Atoi(serverNameOrID); err == nil {
-		for _, toServer := range servers {
-			if toServer.ID == serverID {
-				server = toServer
-				break
-			}
-		}
-	} else {
-		serverName := serverNameOrID
-		for _, toServer := range servers {
-			if toServer.HostName == serverName {
-				server = toServer
-				break
-			}
-		}
-	}
-	if server.ID == atscfg.InvalidID {
-		return "", errors.New("server '" + serverNameOrID + " not found in servers")
-	}
-
-	serverName := tc.CacheName(server.HostName)
-	serverDomain := server.DomainName
-
-	toToolName, toURL, err := toreq.GetTOToolNameAndURLFromTO(cfg)
-	if err != nil {
-		return "", errors.New("getting global parameters: " + err.Error())
-	}
-
-	profileParams, err := toreq.GetProfileParameters(cfg, server.Profile)
-	if err != nil {
-		return "", errors.New("getting profile '" + server.Profile + "' parameters: " + err.Error())
-	}
-	if len(profileParams) == 0 {
-		// The TO endpoint behind toclient.GetParametersByProfileName returns an empty object with a 200, if the Profile doesn't exist.
-		// So we act as though we got a 404 if there are no params, to make ORT behave correctly.
-		return "", config.ErrNotFound
-	}
-
-	fileParams := map[string][]string{}
-
-	for _, param := range profileParams {
-		if param.ConfigFile != fileName {
-			continue
-		}
-		fileParams[param.Name] = append(fileParams[param.Name], param.Value)
-	}
-
-	return atscfg.MakeServerUnknown(serverName, serverDomain, toToolName, toURL, fileParams), nil
+func GetConfigFileServerUnknownConfig(toData *config.TOData, fileName string) (string, string, error) {
+	params := ParamsToMultiMap(FilterParams(toData.ServerParams, fileName, "", "", ""))
+	return atscfg.MakeServerUnknown(tc.CacheName(toData.Server.HostName), toData.Server.DomainName, toData.TOToolName, toData.TOURL, params), atscfg.ContentTypeServerUnknownConfig, nil
 }

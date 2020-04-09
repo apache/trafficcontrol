@@ -20,10 +20,12 @@ package api
  */
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -163,12 +165,7 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 // notice, optionally with a passed alternative route suggestion.
 func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var alerts tc.Alerts
-		if alternative != nil {
-			alerts = tc.CreateAlerts(tc.WarnLevel, fmt.Sprintf("This endpoint is deprecated, please use %s instead", *alternative))
-		} else {
-			alerts = tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
-		}
+		alerts := CreateDeprecationAlerts(alternative)
 
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -371,6 +368,92 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 	}
 }
 
+// DeprecatedDeleteHandler creates a handler function from the pointer to a struct implementing the Deleter interface with a optional deprecation notice
+//   this generic handler encapsulates the logic for handling:
+//   *fetching the id from the path parameter
+//   *current user
+//   *change log entry
+//   *forming and writing the body over the wire
+func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alternative)
+			return
+		}
+		defer inf.Close()
+
+		interfacePtr := reflect.ValueOf(deleter)
+		if interfacePtr.Kind() != reflect.Ptr {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"), alternative)
+			return
+		}
+		objectType := reflect.Indirect(interfacePtr).Type()
+		obj := reflect.New(objectType).Interface().(Deleter)
+		obj.SetInfo(inf)
+
+		deleteKeyOptionExists, userErr, sysErr, errCode := hasDeleteKeyOption(obj, inf.Params)
+		if userErr != nil || sysErr != nil {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alternative)
+			return
+		}
+		if !deleteKeyOptionExists {
+			keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
+			keys := make(map[string]interface{})
+			for _, kf := range keyFields {
+				paramKey := inf.Params[kf.Field]
+				if paramKey == "" {
+					HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil, alternative)
+					return
+				}
+
+				paramValue, err := kf.Func(paramKey)
+				if err != nil {
+					HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil, alternative)
+					return
+				}
+				keys[kf.Field] = paramValue
+			}
+			obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
+		}
+
+		if t, ok := obj.(Tenantable); ok {
+			authorized, err := t.IsTenantAuthorized(inf.User)
+			if err != nil {
+				HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()), alternative)
+				return
+			}
+			if !authorized {
+				HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil, alternative)
+				return
+			}
+		}
+
+		if deleteKeyOptionExists {
+			obj := reflect.New(objectType).Interface().(OptionsDeleter)
+			obj.SetInfo(inf)
+			userErr, sysErr, errCode = obj.OptionsDelete()
+		} else {
+			userErr, sysErr, errCode = obj.Delete()
+		}
+
+		if userErr != nil || sysErr != nil {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alternative)
+			return
+		}
+
+		log.Debugf("changelog for delete on object")
+		if err := CreateChangeLog(ApiChange, Deleted, obj, inf.User, inf.Tx.Tx); err != nil {
+			HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()), alternative)
+			return
+		}
+		alerts := CreateDeprecationAlerts(alternative)
+		alerts.AddNewAlert(tc.SuccessLevel, obj.GetType()+" was deleted.")
+
+		WriteAlerts(w, r, http.StatusOK, alerts)
+	}
+}
+
 // CreateHandler creates a handler function from the pointer to a struct implementing the Creator interface
 //   this generic handler encapsulates the logic for handling:
 //   *current user
@@ -395,34 +478,125 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Creator)
 		obj.SetInfo(inf)
 
-		err := decodeAndValidateRequestBody(r, obj)
-		if err != nil {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-			return
-		}
-
-		if t, ok := obj.(Tenantable); ok {
-			authorized, err := t.IsTenantAuthorized(inf.User)
+		if c, ok := obj.(MultipleCreator); ok && c.AllowMultipleCreates() {
+			data, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 				return
 			}
-			if !authorized {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+
+			objSlice, err := parseMultipleCreates(data, objectType, inf)
+			if err != nil {
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 				return
 			}
-		}
 
-		userErr, sysErr, errCode = obj.Create()
-		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
-		}
+			for _, objElemInt := range objSlice {
+				objElem := reflect.ValueOf(objElemInt).Interface().(Creator)
 
-		if err = CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
-			return
+				err = objElem.Validate()
+				if err != nil {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+					return
+				}
+
+				if t, ok := objElem.(Tenantable); ok {
+					authorized, err := t.IsTenantAuthorized(inf.User)
+					if err != nil {
+						HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+						return
+					}
+					if !authorized {
+						HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+						return
+					}
+				}
+
+				userErr, sysErr, errCode = objElem.Create()
+				if userErr != nil || sysErr != nil {
+					HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+					return
+				}
+
+				if err = CreateChangeLog(ApiChange, Created, objElem, inf.User, inf.Tx.Tx); err != nil {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+					return
+				}
+			}
+			if len(objSlice) == 0 {
+				WriteRespAlert(w, r, tc.SuccessLevel, "No objects were provided in request.")
+			} else if len(objSlice) == 1 {
+				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+" was created.", objSlice[0])
+			} else {
+				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+"s were created.", objSlice)
+			}
+
+		} else {
+			err := decodeAndValidateRequestBody(r, obj)
+			if err != nil {
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+				return
+			}
+
+			if t, ok := obj.(Tenantable); ok {
+				authorized, err := t.IsTenantAuthorized(inf.User)
+				if err != nil {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+					return
+				}
+				if !authorized {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+					return
+				}
+			}
+
+			userErr, sysErr, errCode = obj.Create()
+			if userErr != nil || sysErr != nil {
+				HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+				return
+			}
+
+			if err = CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+				return
+			}
+			WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was created.", obj)
 		}
-		WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was created.", obj)
 	}
+}
+
+func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *APIInfo) ([]Creator, error) {
+	buf := ioutil.NopCloser(bytes.NewReader(data))
+
+	var genericInt interface{}
+	err := json.NewDecoder(buf).Decode(&genericInt)
+	if err != nil {
+		return nil, err
+	}
+
+	var creatorSlice []Creator
+
+	_, ok := genericInt.([]interface{})
+	var parseErr error = nil
+	if !ok {
+		singleCreator := reflect.New(desiredType).Interface().(Creator)
+		singleCreator.SetInfo(inf)
+		parseErr = json.Unmarshal(data, &singleCreator)
+		creatorSlice = append(creatorSlice, singleCreator)
+	} else {
+		sliceOfT := reflect.SliceOf(desiredType)
+		ptr := reflect.New(sliceOfT)
+		parseErr = json.Unmarshal(data, ptr.Interface())
+
+		for i := 0; i < reflect.Indirect(ptr).Len(); i++ {
+			singleCreator := reflect.Indirect(ptr).Index(i).Addr().Interface().(Creator)
+			singleCreator.SetInfo(inf)
+			creatorSlice = append(creatorSlice, singleCreator)
+		}
+	}
+	if parseErr != nil {
+		return nil, parseErr
+	}
+
+	return creatorSlice, nil
 }

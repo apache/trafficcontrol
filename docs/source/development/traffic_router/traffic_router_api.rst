@@ -30,6 +30,8 @@ To override the self signed certificates with new ones from a certificate author
 
 Traffic Router API endpoints only respond to ``GET`` requests.
 
+.. _tr-api-crs-stats:
+
 ``/crs/stats``
 ==============
 General stats.
@@ -103,6 +105,8 @@ Response Structure
 		}
 	}}
 
+.. _tr-api-crs-stats-ip-ip:
+
 ``/crs/stats/ip/{{IP}}``
 ================================
 Geolocation information for an IPv4 or IPv6 address.
@@ -149,6 +153,8 @@ Response Structure
 	"locationByCoverageZone": "not found"
 	}
 
+.. _tr-api-crs-locations:
+
 ``/crs/locations``
 ==================
 A list of configured :term:`Cache Groups` to which the Traffic Router is capable of routing client traffic.
@@ -178,6 +184,8 @@ Response Structure
 	{ "locations": [
 		"CDN_in_a_Box_Edge"
 	]}
+
+.. _tr-api-crs-locations-caches:
 
 ``/crs/locations/caches``
 =========================
@@ -223,6 +231,8 @@ Response Structure
 			}
 		]
 	}}
+
+.. _tr-api-crs-locations-cachegroup-caches:
 
 ``/crs/locations/{{cachegroup}}/caches``
 ========================================
@@ -276,6 +286,7 @@ Response Structure
 		}
 	]}
 
+.. _tr-api-crs-consistenthash-cache-coveragezone:
 
 ``/crs/consistenthash/cache/coveragezone``
 ===========================================
@@ -299,6 +310,8 @@ Response Structure
 ------------------
 TBD
 
+.. _tr-api-crs-consistenthash-cache-deep-coveragezone:
+
 ``/crs/consistenthash/cache/deep/coveragezone``
 ===============================================
 The resulting cache of the consistent hash using deep coverage zone file (deep caching) for a given client IP, :term:`Delivery Service`, and request path.
@@ -321,6 +334,8 @@ Response Structure
 ------------------
 TBD
 
+.. _tr-api-crs-consistenthash-cache-geolocation:
+
 ``/crs/consistenthash/cache/geolocation``
 =========================================
 The resulting cache of the consistent hash using geographic location for a given client IP, :term:`Delivery Service`, and request path.
@@ -342,6 +357,8 @@ Request Structure
 Response Structure
 ------------------
 TBD
+
+.. _tr-api-crs-consistenthash-deliveryservice:
 
 ``/crs/consistenthash/deliveryservice/``
 ========================================
@@ -420,6 +437,8 @@ Response Structure
 	"available": true
 	}
 
+.. _tr-api-crs-coveragezone-caches:
+
 ``/crs/coveragezone/caches``
 ============================
 A list of caches for a given :term:`Delivery Service` and :term:`Cache Group`.
@@ -460,6 +479,8 @@ Response Structure
 ------------------
 TBD
 
+.. _tr-api-crs-deepcoveragezone-cachelocation:
+
 ``/crs/deepcoveragezone/cachelocation``
 =======================================
 The resulting :term:`Cache Group` using the :term:`Deep Coverage Zone File` (deep caching) for a given client IP and :term:`Delivery Service`.
@@ -479,6 +500,8 @@ Request Structure
 Response Structure
 ------------------
 TBD
+
+.. _tr-api-crs-consistenthash-patternbased-regex:
 
 ``/crs/consistenthash/patternbased/regex``
 ==========================================
@@ -520,6 +543,8 @@ Response Structure
 	"requestPath":"/text1234/name/asset.m3u8"
 	}
 
+.. _tr-api-crs-consistenthash-patternbased-deliveryservice:
+
 ``/crs/consistenthash/patternbased/deliveryservice``
 ====================================================
 The resulting path that will be used for consistent hashing for the given delivery service and the given request path.
@@ -559,6 +584,8 @@ Response Structure
 	"deliveryServiceId":"asdf",
 	"requestPath":"/sometext1234/stream_name/asset_name.m3u8"
 	}
+
+.. _tr-api-crs-consistenthash-cache-coveragezone-steering:
 
 ``/crs/consistenthash/cache/coveragezone/steering``
 ===================================================

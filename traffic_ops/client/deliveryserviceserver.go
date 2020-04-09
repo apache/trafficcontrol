@@ -49,7 +49,7 @@ func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, repla
 }
 
 func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alerts, ReqInf, error) {
-	route := apiBase + `/deliveryservice_server/` + strconv.Itoa(dsID) + "/" + strconv.Itoa(serverID)
+	route := apiBase + `/deliveryserviceserver/` + strconv.Itoa(dsID) + "/" + strconv.Itoa(serverID)
 	reqResp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

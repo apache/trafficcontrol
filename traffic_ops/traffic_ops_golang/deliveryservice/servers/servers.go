@@ -269,12 +269,6 @@ AND s.server = ANY(:serverids)
 	return selectStmt, nil
 }
 
-func deleteQuery() string {
-	query := `DELETE FROM deliveryservice_server
-	WHERE deliveryservice=:deliveryservice and server=:server`
-	return query
-}
-
 type DSServerIds struct {
 	DsId    *int  `json:"dsId" db:"deliveryservice"`
 	Servers []int `json:"servers"`
@@ -282,11 +276,6 @@ type DSServerIds struct {
 }
 
 type TODSServerIds DSServerIds
-
-func createServersForDsIdRef() *TODSServerIds {
-	var dsserversRef = TODSServerIds(DSServerIds{})
-	return &dsserversRef
-}
 
 func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
@@ -375,11 +364,6 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
-
-func createServersRef() *TODeliveryServiceServers {
-	serversRef := TODeliveryServiceServers(tc.DeliveryServiceServers{})
-	return &serversRef
-}
 
 // GetCreateHandler assigns an existing Server to and existing Deliveryservice in response to api/1.1/deliveryservices/{xml_id}/servers
 func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
@@ -494,11 +478,6 @@ VALUES (:id, :server )`
 	return query
 }
 
-func selectServerIds() string {
-	query := `SELECT id FROM server WHERE host_name in (?)`
-	return query
-}
-
 // GetReadAssigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
 func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 	getRead(w, r, false)
@@ -510,6 +489,7 @@ func GetReadUnassigned(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRead(w http.ResponseWriter, r *http.Request, unassigned bool) {
+	alerts := api.CreateDeprecationAlerts(nil)
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -519,10 +499,11 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool) {
 
 	servers, err := read(inf.Tx, inf.IntParams["id"], inf.User, unassigned)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		alerts.AddNewAlert(tc.ErrorLevel, err.Error())
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
-	api.WriteResp(w, r, servers)
+	api.WriteAlertsObj(w, r, 200, alerts, servers)
 }
 
 func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServer, error) {
@@ -672,17 +653,6 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 		returnable = append(returnable, ds)
 	}
 	return returnable, nil, nil, http.StatusOK
-}
-
-func updateQuery() string {
-	query := `UPDATE
-	profile_parameter SET
-	profile=:profile_id,
-	parameter=:parameter_id
-	WHERE profile=:profile_id AND
-      parameter = :parameter_id
-      RETURNING last_updated`
-	return query
 }
 
 type DSInfo struct {

@@ -44,8 +44,10 @@ type TOProfileParameter struct {
 	tc.ProfileParameterNullable
 }
 
-func (v *TOProfileParameter) NewReadObj() interface{} { return &tc.ProfileParametersNullable{} }
-func (v *TOProfileParameter) SelectQuery() string     { return selectQuery() }
+// AllowMultipleCreates indicates whether an array can be POSTed using the shared Create handler
+func (v *TOProfileParameter) AllowMultipleCreates() bool { return true }
+func (v *TOProfileParameter) NewReadObj() interface{}    { return &tc.ProfileParametersNullable{} }
+func (v *TOProfileParameter) SelectQuery() string        { return selectQuery() }
 func (v *TOProfileParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"profileId":   dbhelpers.WhereColumnInfo{"pp.profile", nil},
@@ -164,17 +166,6 @@ prof.name profile
 FROM profile_parameter pp
 JOIN profile prof ON prof.id = pp.profile
 JOIN parameter param ON param.id = pp.parameter`
-	return query
-}
-
-func updateQuery() string {
-	query := `UPDATE
-profile_parameter SET
-profile=:profile_id,
-parameter=:parameter_id
-WHERE profile=:profile_id AND
-      parameter = :parameter_id
-      RETURNING last_updated`
 	return query
 }
 

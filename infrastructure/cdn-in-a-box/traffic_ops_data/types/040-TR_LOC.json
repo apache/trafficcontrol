@@ -1,5 +1,0 @@
-{
-  "description": "Traffic Router Logical Site",
-  "name": "TR_LOC",
-  "useInTable": "cachegroup"
-}

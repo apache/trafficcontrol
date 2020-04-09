@@ -46,13 +46,11 @@ var DeliveryServiceUtils = function($window, propertiesModel) {
 	this.rrhs = {
 		0: "no cache",
 		1: "background_fetch",
-		2: "cache_range_requests"
+		2: "cache_range_requests",
+		3: "slice"
 	};
 
-	this.openCharts = function(ds, $event) {
-		if ($event) {
-			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		}
+	this.openCharts = function(ds) {
 		$window.open(
 			propertiesModel.properties.deliveryServices.charts.customLink.baseUrl + ds.xmlId,
 			'_blank'

@@ -26,6 +26,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const ContentTypeRegexRemapDotConfig = ContentTypeTextASCII
+
 type CDNDS struct {
 	OrgServerFQDN string
 	QStringIgnore int

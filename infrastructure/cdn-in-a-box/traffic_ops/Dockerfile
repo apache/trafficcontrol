@@ -28,9 +28,8 @@ ENV MOJO_MODE production
 
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
     rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
-    rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG && \
+    yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
     yum -y update ca-certificates && \
-    yum-config-manager --add-repo https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64 && \
     yum install -y \
         epel-release \
         pgdg-redhat-latest && \

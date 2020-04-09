@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
@@ -33,7 +34,15 @@ const DefaultLogLimit = 1000
 const DefaultLogLimitForDays = 1000000
 const DefaultLogDays = 30
 
+func GetDeprecated(w http.ResponseWriter, r *http.Request) {
+	get(w, r, api.CreateDeprecationAlerts(util.StrPtr("/logs")))
+}
+
 func Get(w http.ResponseWriter, r *http.Request) {
+	get(w, r, tc.Alerts{})
+}
+
+func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -52,7 +61,18 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setLastSeenCookie(w)
-	api.RespWriter(w, r, inf.Tx.Tx)(getLog(inf.Tx.Tx, days, limit))
+	logs, err := getLog(inf.Tx.Tx, days, limit)
+	if err != nil {
+		a.AddNewAlert(tc.ErrorLevel, err.Error())
+		api.WriteAlerts(w, r, http.StatusInternalServerError, a)
+		return
+	}
+	if a.HasAlerts() {
+		api.WriteAlertsObj(w, r, 200, a, logs)
+	} else {
+		api.WriteResp(w, r, logs)
+	}
+
 }
 
 func GetNewCount(w http.ResponseWriter, r *http.Request) {

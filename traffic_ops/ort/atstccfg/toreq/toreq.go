@@ -1,3 +1,9 @@
+// toreqnew implements a Traffic Ops client vendored one version back.
+//
+// This should be used for all requests, unless they require an endpoint or field added in the latest version.
+//
+// If a feature in the latest Traffic Ops is required, toreqnew should be used with a fallback to this client if the Traffic Ops is not the latest (which can be determined by the bool returned by all toreqnew.TOClient funcs).
+//
 package toreq
 
 /*
@@ -22,93 +28,98 @@ package toreq
 import (
 	"encoding/base64"
 	"errors"
-	"fmt"
+	"net"
+	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/torequtil"
 )
 
-func GetProfile(cfg config.TCCfg, profileID int) (tc.Profile, error) {
-	profile := tc.Profile{}
-	err := GetCachedJSON(cfg, "profile_"+strconv.Itoa(profileID)+".json", &profile, func(obj interface{}) error {
-		toProfiles, reqInf, err := (*cfg.TOClient).GetProfileByID(profileID)
-		if err != nil {
-			return errors.New("getting profile '" + strconv.Itoa(profileID) + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		if len(toProfiles) != 1 {
-			return errors.New("getting profile '" + strconv.Itoa(profileID) + "'from Traffic Ops '" + MaybeIPStr(reqInf) + "': expected 1 Profile, got " + strconv.Itoa(len(toProfiles)))
-		}
-
-		profile := obj.(*tc.Profile)
-		*profile = toProfiles[0]
-		return nil
-	})
-	if err != nil {
-		return tc.Profile{}, errors.New("getting profile '" + strconv.Itoa(profileID) + "': " + err.Error())
-	}
-	return profile, nil
+type TOClient struct {
+	C          *toclient.Session
+	NumRetries int
 }
 
-func GetProfileByName(cfg config.TCCfg, profileName string) (tc.Profile, error) {
+// New logs into Traffic Ops, returning the TOClient which contains the logged-in client.
+func New(url *url.URL, user string, pass string, insecure bool, timeout time.Duration, userAgent string) (*TOClient, error) {
+	log.Infoln("URL: '" + url.String() + "' User: '" + user + "' Pass len: '" + strconv.Itoa(len(pass)) + "'")
+
+	toFQDN := url.Scheme + "://" + url.Host
+	log.Infoln("TO FQDN: '" + toFQDN + "'")
+	log.Infoln("TO URL: '" + url.String() + "'")
+
+	toClient, toIP, err := toclient.LoginWithAgent(toFQDN, user, pass, insecure, userAgent, false, timeout)
+	if err != nil {
+		return nil, errors.New("Logging in to Traffic Ops '" + MaybeIPStr(toIP) + "': " + err.Error())
+	}
+
+	return &TOClient{C: toClient}, nil
+}
+
+// Cookies returns the HTTP session cookies from the client.
+// It does not do any kind of validation, but assumes the HTTP cookies exist from a prior login and are valid for a Traffic Ops session.
+// The url is the Traffic Ops URL, and should match this client's Traffic Ops URL, and the URL of the new client this session cookie is presumably being fetched for.
+func (cl *TOClient) Cookies(url *url.URL) string {
+	return torequtil.CookiesToString(cl.C.Client.Jar.Cookies(url))
+}
+
+// MaybeIPStr returns the addr string if it isn't nil, or the empty string if it is.
+// This is intended for logging, to allow logging with one line, whether addr is nil or not.
+func MaybeIPStr(addr net.Addr) string {
+	if addr != nil {
+		return addr.String()
+	}
+	return ""
+}
+
+func (cl *TOClient) GetProfileByName(profileName string) (tc.Profile, error) {
 	profile := tc.Profile{}
-	err := GetCachedJSON(cfg, "profile_"+profileName+".json", &profile, func(obj interface{}) error {
-		toProfiles, reqInf, err := (*cfg.TOClient).GetProfileByName(profileName)
+
+	err := torequtil.GetRetry(cl.NumRetries, "profile_"+profileName, &profile, func(obj interface{}) error {
+		toProfiles, reqInf, err := cl.C.GetProfileByName(profileName)
 		if err != nil {
-			return errors.New("getting profile '" + profileName + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting profile '" + profileName + "' from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		if len(toProfiles) != 1 {
-			return errors.New("getting profile '" + profileName + "'from Traffic Ops '" + MaybeIPStr(reqInf) + "': expected 1 Profile, got " + strconv.Itoa(len(toProfiles)))
+			return errors.New("getting profile '" + profileName + "'from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': expected 1 Profile, got " + strconv.Itoa(len(toProfiles)))
 		}
 
 		profile := obj.(*tc.Profile)
 		*profile = toProfiles[0]
 		return nil
 	})
+
 	if err != nil {
 		return tc.Profile{}, errors.New("getting profile '" + profileName + "': " + err.Error())
 	}
 	return profile, nil
 }
 
-func GetProfileParameters(cfg config.TCCfg, profileName string) ([]tc.Parameter, error) {
-	profileParameters := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "profile_"+profileName+"_parameters.json", &profileParameters, func(obj interface{}) error {
-		toParams, reqInf, err := (*cfg.TOClient).GetParametersByProfileName(profileName)
-		if err != nil {
-			return errors.New("getting profile '" + profileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		params := obj.(*[]tc.Parameter)
-		*params = toParams
-		return nil
-	})
-	if err != nil {
-		return nil, errors.New("getting profile '" + profileName + "' parameters: " + err.Error())
-	}
-	return profileParameters, nil
-}
-
-func GetGlobalParameters(cfg config.TCCfg) ([]tc.Parameter, error) {
+func (cl *TOClient) GetGlobalParameters() ([]tc.Parameter, error) {
 	globalParams := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "profile_global_parameters.json", &globalParams, func(obj interface{}) error {
-		toParams, reqInf, err := (*cfg.TOClient).GetParametersByProfileName(config.GlobalProfileName)
+	err := torequtil.GetRetry(cl.NumRetries, "profile_global_parameters", &globalParams, func(obj interface{}) error {
+		toParams, reqInf, err := cl.C.GetParametersByProfileName(tc.GlobalProfileName)
 		if err != nil {
-			return errors.New("getting global profile '" + config.GlobalProfileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting global profile '" + tc.GlobalProfileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		params := obj.(*[]tc.Parameter)
 		*params = toParams
 		return nil
 	})
 	if err != nil {
-		return nil, errors.New("getting global profile '" + config.GlobalProfileName + "' parameters: " + err.Error())
+		return nil, errors.New("getting global profile '" + tc.GlobalProfileName + "' parameters: " + err.Error())
 	}
 	return globalParams, nil
 }
 
 func GetTOToolNameAndURL(globalParams []tc.Parameter) (string, string) {
+	// TODO move somewhere generic
 	toToolName := ""
 	toURL := ""
 	for _, param := range globalParams {
@@ -131,21 +142,12 @@ func GetTOToolNameAndURL(globalParams []tc.Parameter) (string, string) {
 	return toToolName, toURL
 }
 
-func GetTOToolNameAndURLFromTO(cfg config.TCCfg) (string, string, error) {
-	globalParams, err := GetGlobalParameters(cfg)
-	if err != nil {
-		return "", "", err
-	}
-	toToolName, toURL := GetTOToolNameAndURL(globalParams)
-	return toToolName, toURL, nil
-}
-
-func GetServers(cfg config.TCCfg) ([]tc.Server, error) {
+func (cl *TOClient) GetServers() ([]tc.Server, error) {
 	servers := []tc.Server{}
-	err := GetCachedJSON(cfg, "servers.json", &servers, func(obj interface{}) error {
-		toServers, reqInf, err := (*cfg.TOClient).GetServers()
+	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
+		toServers, reqInf, err := cl.C.GetServers()
 		if err != nil {
-			return errors.New("getting servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting servers from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		servers := obj.(*[]tc.Server)
 		*servers = toServers
@@ -157,14 +159,14 @@ func GetServers(cfg config.TCCfg) ([]tc.Server, error) {
 	return servers, nil
 }
 
-func GetServerByHostName(cfg config.TCCfg, serverHostName string) (tc.Server, error) {
+func (cl *TOClient) GetServerByHostName(serverHostName string) (tc.Server, error) {
 	server := tc.Server{}
-	err := GetCachedJSON(cfg, "server-name-"+serverHostName+".json", &server, func(obj interface{}) error {
-		toServers, reqInf, err := (*cfg.TOClient).GetServerByHostName(serverHostName)
+	err := torequtil.GetRetry(cl.NumRetries, "server-name-"+serverHostName, &server, func(obj interface{}) error {
+		toServers, reqInf, err := cl.C.GetServerByHostName(serverHostName)
 		if err != nil {
-			return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		} else if len(toServers) < 1 {
-			return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': no servers returned")
+			return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': no servers returned")
 		}
 		server := obj.(*tc.Server)
 		*server = toServers[0]
@@ -176,31 +178,12 @@ func GetServerByHostName(cfg config.TCCfg, serverHostName string) (tc.Server, er
 	return server, nil
 }
 
-func GetServerByID(cfg config.TCCfg, serverID int) (tc.Server, error) {
-	server := tc.Server{}
-	err := GetCachedJSON(cfg, "server-id-"+strconv.Itoa(serverID)+".json", &server, func(obj interface{}) error {
-		toServers, reqInf, err := (*cfg.TOClient).GetServerByID(serverID)
-		if err != nil {
-			return fmt.Errorf("getting server id %v from Traffic Ops '%v': %v", serverID, MaybeIPStr(reqInf), err)
-		} else if len(toServers) < 1 {
-			return fmt.Errorf("getting server id %v from Traffic Ops '%v': %v", serverID, MaybeIPStr(reqInf), "no servers returned")
-		}
-		server := obj.(*tc.Server)
-		*server = toServers[0]
-		return nil
-	})
-	if err != nil {
-		return tc.Server{}, fmt.Errorf("getting server id %v: %v", serverID, err)
-	}
-	return server, nil
-}
-
-func GetCacheGroups(cfg config.TCCfg) ([]tc.CacheGroupNullable, error) {
+func (cl *TOClient) GetCacheGroups() ([]tc.CacheGroupNullable, error) {
 	cacheGroups := []tc.CacheGroupNullable{}
-	err := GetCachedJSON(cfg, "cachegroups.json", &cacheGroups, func(obj interface{}) error {
-		toCacheGroups, reqInf, err := (*cfg.TOClient).GetCacheGroupsNullable()
+	err := torequtil.GetRetry(cl.NumRetries, "cachegroups", &cacheGroups, func(obj interface{}) error {
+		toCacheGroups, reqInf, err := cl.C.GetCacheGroupsNullable()
 		if err != nil {
-			return errors.New("getting cachegroups from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting cachegroups from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		cacheGroups := obj.(*[]tc.CacheGroupNullable)
 		*cacheGroups = toCacheGroups
@@ -217,7 +200,7 @@ func GetCacheGroups(cfg config.TCCfg) ([]tc.CacheGroupNullable, error) {
 // If your use case is more efficient to only get the needed objects, for example if you're frequently requesting one file, set this false to get and cache the specific needed delivery services and servers.
 const DeliveryServiceServersAlwaysGetAll = true
 
-func GetDeliveryServiceServers(cfg config.TCCfg, dsIDs []int, serverIDs []int) ([]tc.DeliveryServiceServer, error) {
+func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int) ([]tc.DeliveryServiceServer, error) {
 	const sortIDsInHash = true
 
 	serverIDsStr := ""
@@ -236,11 +219,11 @@ func GetDeliveryServiceServers(cfg config.TCCfg, dsIDs []int, serverIDs []int) (
 	}
 
 	dsServers := []tc.DeliveryServiceServer{}
-	err := GetCachedJSON(cfg, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr+".json", &dsServers, func(obj interface{}) error {
+	err := torequtil.GetRetry(cl.NumRetries, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr, &dsServers, func(obj interface{}) error {
 		const noLimit = 999999 // TODO add "no limit" param to DSS endpoint
-		toDSS, reqInf, err := (*cfg.TOClient).GetDeliveryServiceServersWithLimits(noLimit, dsIDsToFetch, sIDsToFetch)
+		toDSS, reqInf, err := cl.C.GetDeliveryServiceServersWithLimits(noLimit, dsIDsToFetch, sIDsToFetch)
 		if err != nil {
-			return errors.New("getting delivery service servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting delivery service servers from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		dss := obj.(*[]tc.DeliveryServiceServer)
 		*dss = toDSS.Response
@@ -282,12 +265,12 @@ func GetDeliveryServiceServers(cfg config.TCCfg, dsIDs []int, serverIDs []int) (
 	return filteredDSServers, nil
 }
 
-func GetServerProfileParameters(cfg config.TCCfg, profileName string) ([]tc.Parameter, error) {
+func (cl *TOClient) GetServerProfileParameters(profileName string) ([]tc.Parameter, error) {
 	serverProfileParameters := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "profile_"+profileName+"_parameters.json", &serverProfileParameters, func(obj interface{}) error {
-		toParams, reqInf, err := (*cfg.TOClient).GetParametersByProfileName(profileName)
+	err := torequtil.GetRetry(cl.NumRetries, "profile_"+profileName+"_parameters", &serverProfileParameters, func(obj interface{}) error {
+		toParams, reqInf, err := cl.C.GetParametersByProfileName(profileName)
 		if err != nil {
-			return errors.New("getting server profile '" + profileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting server profile '" + profileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		params := obj.(*[]tc.Parameter)
 		*params = toParams
@@ -299,12 +282,12 @@ func GetServerProfileParameters(cfg config.TCCfg, profileName string) ([]tc.Para
 	return serverProfileParameters, nil
 }
 
-func GetCDNDeliveryServices(cfg config.TCCfg, cdnID int) ([]tc.DeliveryServiceNullable, error) {
+func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNullable, error) {
 	deliveryServices := []tc.DeliveryServiceNullable{}
-	err := GetCachedJSON(cfg, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices"+".json", &deliveryServices, func(obj interface{}) error {
-		toDSes, reqInf, err := (*cfg.TOClient).GetDeliveryServicesByCDNID(cdnID)
+	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
+		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID)
 		if err != nil {
-			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		dses := obj.(*[]tc.DeliveryServiceNullable)
 		*dses = toDSes
@@ -316,12 +299,12 @@ func GetCDNDeliveryServices(cfg config.TCCfg, cdnID int) ([]tc.DeliveryServiceNu
 	return deliveryServices, nil
 }
 
-func GetConfigFileParameters(cfg config.TCCfg, configFile string) ([]tc.Parameter, error) {
+func (cl *TOClient) GetConfigFileParameters(configFile string) ([]tc.Parameter, error) {
 	params := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "config_file_"+configFile+"_parameters"+".json", &params, func(obj interface{}) error {
-		toParams, reqInf, err := (*cfg.TOClient).GetParameterByConfigFile(configFile)
+	err := torequtil.GetRetry(cl.NumRetries, "config_file_"+configFile+"_parameters", &params, func(obj interface{}) error {
+		toParams, reqInf, err := cl.C.GetParameterByConfigFile(configFile)
 		if err != nil {
-			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		params := obj.(*[]tc.Parameter)
 		*params = toParams
@@ -333,15 +316,15 @@ func GetConfigFileParameters(cfg config.TCCfg, configFile string) ([]tc.Paramete
 	return params, nil
 }
 
-func GetCDN(cfg config.TCCfg, cdnName tc.CDNName) (tc.CDN, error) {
+func (cl *TOClient) GetCDN(cdnName tc.CDNName) (tc.CDN, error) {
 	cdn := tc.CDN{}
-	err := GetCachedJSON(cfg, "cdn_"+string(cdnName)+".json", &cdn, func(obj interface{}) error {
-		toCDNs, reqInf, err := (*cfg.TOClient).GetCDNByName(string(cdnName))
+	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+string(cdnName), &cdn, func(obj interface{}) error {
+		toCDNs, reqInf, err := cl.C.GetCDNByName(string(cdnName))
 		if err != nil {
-			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		if len(toCDNs) != 1 {
-			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': expected 1 CDN, got " + strconv.Itoa(len(toCDNs)))
+			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': expected 1 CDN, got " + strconv.Itoa(len(toCDNs)))
 		}
 		cdn := obj.(*tc.CDN)
 		*cdn = toCDNs[0]
@@ -353,32 +336,12 @@ func GetCDN(cfg config.TCCfg, cdnName tc.CDNName) (tc.CDN, error) {
 	return cdn, nil
 }
 
-func GetCDNByID(cfg config.TCCfg, cdnID int) (tc.CDN, error) {
-	cdn := tc.CDN{}
-	err := GetCachedJSON(cfg, "cdn_id_"+strconv.Itoa(cdnID)+".json", &cdn, func(obj interface{}) error {
-		toCDNs, reqInf, err := (*cfg.TOClient).GetCDNByID(cdnID)
-		if err != nil {
-			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		if len(toCDNs) != 1 {
-			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': expected 1 CDN, got " + strconv.Itoa(len(toCDNs)))
-		}
-		cdn := obj.(*tc.CDN)
-		*cdn = toCDNs[0]
-		return nil
-	})
-	if err != nil {
-		return tc.CDN{}, errors.New("getting cdn: " + err.Error())
-	}
-	return cdn, nil
-}
-
-func GetURLSigKeys(cfg config.TCCfg, dsName string) (tc.URLSigKeys, error) {
+func (cl *TOClient) GetURLSigKeys(dsName string) (tc.URLSigKeys, error) {
 	keys := tc.URLSigKeys{}
-	err := GetCachedJSON(cfg, "urlsigkeys_"+string(dsName)+".json", &keys, func(obj interface{}) error {
-		toKeys, reqInf, err := (*cfg.TOClient).GetDeliveryServiceURLSigKeys(dsName)
+	err := torequtil.GetRetry(cl.NumRetries, "urlsigkeys_"+string(dsName), &keys, func(obj interface{}) error {
+		toKeys, reqInf, err := cl.C.GetDeliveryServiceURLSigKeys(dsName)
 		if err != nil {
-			return errors.New("getting url sig keys from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting url sig keys from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		keys := obj.(*tc.URLSigKeys)
 		*keys = toKeys
@@ -390,12 +353,12 @@ func GetURLSigKeys(cfg config.TCCfg, dsName string) (tc.URLSigKeys, error) {
 	return keys, nil
 }
 
-func GetURISigningKeys(cfg config.TCCfg, dsName string) ([]byte, error) {
+func (cl *TOClient) GetURISigningKeys(dsName string) ([]byte, error) {
 	keys := []byte{}
-	err := GetCachedJSON(cfg, "urisigningkeys_"+string(dsName)+".json", &keys, func(obj interface{}) error {
-		toKeys, reqInf, err := (*cfg.TOClient).GetDeliveryServiceURISigningKeys(dsName)
+	err := torequtil.GetRetry(cl.NumRetries, "urisigningkeys_"+string(dsName), &keys, func(obj interface{}) error {
+		toKeys, reqInf, err := cl.C.GetDeliveryServiceURISigningKeys(dsName)
 		if err != nil {
-			return errors.New("getting url sig keys from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting url sig keys from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 
 		keys := obj.(*[]byte)
@@ -408,12 +371,12 @@ func GetURISigningKeys(cfg config.TCCfg, dsName string) ([]byte, error) {
 	return keys, nil
 }
 
-func GetParametersByName(cfg config.TCCfg, paramName string) ([]tc.Parameter, error) {
+func (cl *TOClient) GetParametersByName(paramName string) ([]tc.Parameter, error) {
 	params := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "parameters_name_"+paramName+".json", &params, func(obj interface{}) error {
-		toParams, reqInf, err := (*cfg.TOClient).GetParameterByName(paramName)
+	err := torequtil.GetRetry(cl.NumRetries, "parameters_name_"+paramName, &params, func(obj interface{}) error {
+		toParams, reqInf, err := cl.C.GetParameterByName(paramName)
 		if err != nil {
-			return errors.New("getting parameters name '" + paramName + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting parameters name '" + paramName + "' from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		params := obj.(*[]tc.Parameter)
 		*params = toParams
@@ -425,40 +388,12 @@ func GetParametersByName(cfg config.TCCfg, paramName string) ([]tc.Parameter, er
 	return params, nil
 }
 
-func GetCacheGroupParameters(cfg config.TCCfg, cacheGroupID int) ([]tc.Parameter, error) {
-	params := []tc.Parameter{}
-	err := GetCachedJSON(cfg, "cachegroup_parameters_id_"+strconv.Itoa(cacheGroupID)+".json", &params, func(obj interface{}) error {
-		toParams, reqInf, err := (*cfg.TOClient).GetCacheGroupParameters(cacheGroupID)
-		if err != nil {
-			return errors.New("getting cachegroup parameters id '" + strconv.Itoa(cacheGroupID) + "' from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		params := obj.(*[]tc.Parameter)
-		for _, cgParam := range toParams {
-			*params = append(*params, tc.Parameter{
-				ConfigFile:  cgParam.ConfigFile,
-				ID:          cgParam.ID,
-				LastUpdated: cgParam.LastUpdated,
-				Name:        cgParam.Name,
-				Secure:      cgParam.Secure,
-				Value:       cgParam.Value,
-			})
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, errors.New("getting params cachegroup id '" + strconv.Itoa(cacheGroupID) + "': " + err.Error())
-	}
-	return params, nil
-}
-
-// func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
-
-func GetDeliveryServiceRegexes(cfg config.TCCfg) ([]tc.DeliveryServiceRegexes, error) {
+func (cl *TOClient) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, error) {
 	regexes := []tc.DeliveryServiceRegexes{}
-	err := GetCachedJSON(cfg, "ds_regexes.json", &regexes, func(obj interface{}) error {
-		toRegexes, reqInf, err := (*cfg.TOClient).GetDeliveryServiceRegexes()
+	err := torequtil.GetRetry(cl.NumRetries, "ds_regexes", &regexes, func(obj interface{}) error {
+		toRegexes, reqInf, err := cl.C.GetDeliveryServiceRegexes()
 		if err != nil {
-			return errors.New("getting ds regexes from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting ds regexes from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		regexes := obj.(*[]tc.DeliveryServiceRegexes)
 		*regexes = toRegexes
@@ -470,12 +405,12 @@ func GetDeliveryServiceRegexes(cfg config.TCCfg) ([]tc.DeliveryServiceRegexes, e
 	return regexes, nil
 }
 
-func GetJobs(cfg config.TCCfg) ([]tc.Job, error) {
+func (cl *TOClient) GetJobs() ([]tc.Job, error) {
 	jobs := []tc.Job{}
-	err := GetCachedJSON(cfg, "jobs.json", &jobs, func(obj interface{}) error {
-		toJobs, reqInf, err := (*cfg.TOClient).GetJobs(nil, nil)
+	err := torequtil.GetRetry(cl.NumRetries, "jobs", &jobs, func(obj interface{}) error {
+		toJobs, reqInf, err := cl.C.GetJobs(nil, nil)
 		if err != nil {
-			return errors.New("getting jobs from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting jobs from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		jobs := obj.(*[]tc.Job)
 		*jobs = toJobs
@@ -486,7 +421,8 @@ func GetJobs(cfg config.TCCfg) ([]tc.Job, error) {
 	}
 	return jobs, nil
 }
-func GetServerCapabilitiesByID(cfg config.TCCfg, serverIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, error) {
+
+func (cl *TOClient) GetServerCapabilitiesByID(serverIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, error) {
 	serverIDsStr := ""
 	if len(serverIDs) > 0 {
 		sortIDsInHash := true
@@ -494,11 +430,11 @@ func GetServerCapabilitiesByID(cfg config.TCCfg, serverIDs []int) (map[int]map[a
 	}
 
 	serverCaps := map[int]map[atscfg.ServerCapability]struct{}{}
-	err := GetCachedJSON(cfg, "server_capabilities_s_"+serverIDsStr+".json", &serverCaps, func(obj interface{}) error {
+	err := torequtil.GetRetry(cl.NumRetries, "server_capabilities_s_"+serverIDsStr, &serverCaps, func(obj interface{}) error {
 		// TODO add list of IDs to API+Client
-		toServerCaps, reqInf, err := (*cfg.TOClient).GetServerServerCapabilities(nil, nil, nil)
+		toServerCaps, reqInf, err := cl.C.GetServerServerCapabilities(nil, nil, nil)
 		if err != nil {
-			return errors.New("getting server caps from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting server caps from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		serverCaps := obj.(*map[int]map[atscfg.ServerCapability]struct{})
 
@@ -522,7 +458,7 @@ func GetServerCapabilitiesByID(cfg config.TCCfg, serverIDs []int) (map[int]map[a
 	return serverCaps, nil
 }
 
-func GetDeliveryServiceRequiredCapabilitiesByID(cfg config.TCCfg, dsIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, error) {
+func (cl *TOClient) GetDeliveryServiceRequiredCapabilitiesByID(dsIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, error) {
 	dsIDsStr := ""
 	if len(dsIDs) > 0 {
 		sortIDsInHash := true
@@ -530,11 +466,11 @@ func GetDeliveryServiceRequiredCapabilitiesByID(cfg config.TCCfg, dsIDs []int) (
 	}
 
 	dsCaps := map[int]map[atscfg.ServerCapability]struct{}{}
-	err := GetCachedJSON(cfg, "ds_capabilities_d_"+dsIDsStr+".json", &dsCaps, func(obj interface{}) error {
+	err := torequtil.GetRetry(cl.NumRetries, "ds_capabilities_d_"+dsIDsStr, &dsCaps, func(obj interface{}) error {
 		// TODO add list of IDs to API+Client
-		toDSCaps, reqInf, err := (*cfg.TOClient).GetDeliveryServicesRequiredCapabilities(nil, nil, nil)
+		toDSCaps, reqInf, err := cl.C.GetDeliveryServicesRequiredCapabilities(nil, nil, nil)
 		if err != nil {
-			return errors.New("getting ds caps from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+			return errors.New("getting ds caps from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		dsCaps := obj.(*map[int]map[atscfg.ServerCapability]struct{})
 
@@ -558,32 +494,53 @@ func GetDeliveryServiceRequiredCapabilitiesByID(cfg config.TCCfg, dsIDs []int) (
 	return dsCaps, nil
 }
 
-func GetProfileNameFromProfileNameOrID(cfg config.TCCfg, profileNameOrID string) (string, error) {
-	profileName := profileNameOrID
-	if profileID, err := strconv.Atoi(profileNameOrID); err == nil {
-		profile, err := GetProfile(cfg, profileID)
+func (cl *TOClient) GetCDNSSLKeys(cdnName tc.CDNName) ([]tc.CDNSSLKeys, error) {
+	keys := []tc.CDNSSLKeys{}
+	err := torequtil.GetRetry(cl.NumRetries, "cdn_sslkeys_"+string(cdnName), &keys, func(obj interface{}) error {
+		toKeys, reqInf, err := cl.C.GetCDNSSLKeys(string(cdnName))
 		if err != nil {
-			return "", errors.New("getting profile '" + profileNameOrID + "': " + err.Error())
+			return errors.New("getting cdn ssl keys from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		if profile.Name == "" {
-			return "", errors.New("getting profile '" + profileNameOrID + "': got profile with empty name")
-		}
-		profileName = profile.Name
+		keys := obj.(*[]tc.CDNSSLKeys)
+		*keys = toKeys
+		return nil
+	})
+	if err != nil {
+		return []tc.CDNSSLKeys{}, errors.New("getting cdn ssl keys: " + err.Error())
 	}
-	return profileName, nil
+	return keys, nil
 }
 
-func GetCDNNameFromCDNNameOrID(cfg config.TCCfg, cdnNameOrID string) (tc.CDNName, error) {
-	cdnName := cdnNameOrID
-	if cdnID, err := strconv.Atoi(cdnNameOrID); err == nil {
-		cdn, err := GetCDNByID(cfg, cdnID)
+func (cl *TOClient) GetStatuses() ([]tc.Status, error) {
+	statuses := []tc.Status{}
+	err := torequtil.GetRetry(cl.NumRetries, "statuses", &statuses, func(obj interface{}) error {
+		toStatus, reqInf, err := cl.C.GetStatuses()
 		if err != nil {
-			return "", errors.New("getting cdn '" + cdnNameOrID + "': " + err.Error())
+			return errors.New("getting server update status from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		if cdn.Name == "" {
-			return "", errors.New("getting cdn '" + cdnNameOrID + "': got cdn with empty name")
-		}
-		cdnName = cdn.Name
+		status := obj.(*[]tc.Status)
+		*status = toStatus
+		return nil
+	})
+	if err != nil {
+		return nil, errors.New("getting server update status: " + err.Error())
 	}
-	return tc.CDNName(cdnName), nil
+	return statuses, nil
+}
+
+func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.ServerUpdateStatus, error) {
+	status := tc.ServerUpdateStatus{}
+	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), &status, func(obj interface{}) error {
+		toStatus, reqInf, err := cl.C.GetServerUpdateStatus(string(cacheHostName))
+		if err != nil {
+			return errors.New("getting server update status from Traffic Ops '" + MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		status := obj.(*tc.ServerUpdateStatus)
+		*status = toStatus
+		return nil
+	})
+	if err != nil {
+		return tc.ServerUpdateStatus{}, errors.New("getting server update status: " + err.Error())
+	}
+	return status, nil
 }

@@ -45,7 +45,7 @@ Guide
 		:caption: Example PostgreSQL Install Procedure
 
 		yum update -y
-		yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+		yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 		yum install -y postgresql96-server
 		su - postgres -c '/usr/pgsql-9.6/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
 
@@ -69,7 +69,7 @@ Guide
 	.. code-block:: shell
 		:caption: Installing PostgreSQL Client from a Hosted Source
 
-		yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+		yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 
 #. Install the Traffic Ops RPM. The Traffic Ops RPM file should have been built in an earlier step.
 
@@ -336,6 +336,16 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 :ldap_conf_location: An optional field which gives `traffic_ops_golang`_ the absolute or relative path to an `ldap.conf`_ file. Default if not specified is a file named ``ldap.conf`` in the same directory as this ``cdn.conf`` file.
 
 	.. warning:: While relative paths are allowed, they are discouraged, as the path will be relative to the working directory of the `traffic_ops_golang`_ process itself, not relative to the ``cdn.conf`` configuration file, which can be confusing.
+
+:lets_encrypt:
+
+	.. versionadded:: 4.1
+
+	:user_email: An optional email address to create an account with Let's Encrypt or to receive expiration updates
+	:send_expiration_email: A boolean option to send email summarizing certificate expiration status
+	:convert_self_signed: A boolean option to convert self signed to Let's Encrypt certificates as they expire. This only works for certificates labeled as Self Signed in the Certificate Source field.
+	:renew_days_before_expiration: Set the number of days before expiration date to renew certificates.
+	:environment: This specifies which Let's Encrypt environment to use: 'staging' or 'production'. It defaults to 'production'.
 
 :portal: This section provides information regarding a connected UI with which users interact, so that emails can include links to it.
 

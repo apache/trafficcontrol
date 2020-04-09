@@ -171,17 +171,6 @@ func (user *TOUser) Create() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-// returning true indicates the data related to the given tenantID should be visible
-// this is just a linear search;`tenantIDs` is presumed to be unsorted
-func checkTenancy(tenantID *int, tenantIDs []int) bool {
-	for _, id := range tenantIDs {
-		if id == *tenantID {
-			return true
-		}
-	}
-	return false
-}
-
 // This is not using GenericRead because of this tenancy check. Maybe we can add tenancy functionality to the generic case?
 func (this *TOUser) Read() ([]interface{}, error, error, int) {
 

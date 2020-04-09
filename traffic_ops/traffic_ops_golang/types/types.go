@@ -20,6 +20,10 @@ package types
  */
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -95,9 +99,64 @@ func (typ *TOType) Validate() error {
 }
 
 func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
-func (tp *TOType) Update() (error, error, int)              { return api.GenericUpdate(tp) }
-func (tp *TOType) Create() (error, error, int)              { return api.GenericCreate(tp) }
-func (tp *TOType) Delete() (error, error, int)              { return api.GenericDelete(tp) }
+
+func (tp *TOType) Update() (error, error, int) {
+	if !tp.AllowMutation(false) {
+		return errors.New("can not update type"), nil, http.StatusBadRequest
+	}
+	return api.GenericUpdate(tp)
+}
+
+func (tp *TOType) Delete() (error, error, int) {
+	if !tp.AllowMutation(false) {
+		return errors.New(fmt.Sprintf("can not delete type")), nil, http.StatusBadRequest
+	}
+	return api.GenericDelete(tp)
+}
+
+func (tp *TOType) Create() (error, error, int) {
+	if !tp.AllowMutation(true) {
+		return errors.New("can not create type"), nil, http.StatusBadRequest
+	}
+	return api.GenericCreate(tp)
+}
+
+func (tp *TOType) AllowMutation(forCreation bool) bool {
+	apiInfo := tp.APIInfo()
+	if apiInfo.Version.Major < 2 {
+		return true
+	}
+	if !forCreation {
+		userErr, sysErr, actualUseInTable := tp.loadUseInTable()
+		if userErr != nil || sysErr != nil {
+			return false
+		} else if actualUseInTable != "server" {
+			return false
+		}
+	} else if *tp.UseInTable != "server" { // Only allow creating of types with UseInTable being "server"
+		return false
+	}
+	return true
+}
+
+func (tp *TOType) loadUseInTable() (error, error, string) {
+	var useInTable string
+	// ID is only nil on creation, should not call this method in that case
+	if tp.ID != nil {
+		query := `SELECT use_in_table from type where id=$1`
+		err := tp.ReqInfo.Tx.Tx.QueryRow(query, tp.ID).Scan(&useInTable)
+		if err == sql.ErrNoRows {
+			return nil, nil, *tp.UseInTable
+		}
+		if err != nil {
+			return nil, err, ""
+		}
+	} else {
+		return errors.New("no type with that key found"), nil, ""
+	}
+
+	return nil, nil, useInTable
+}
 
 func selectQuery() string {
 	return `SELECT

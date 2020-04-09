@@ -235,7 +235,7 @@ sub get_crconfigs {
 	my $to_url = shift;
         my $outpath = shift;
 
-	my $to_cdn_url = $to_url . '/api/1.2/cdns.json';
+	my $to_cdn_url = $to_url . '/api/2.0/cdns';
 	my $result     = &curl_me($to_cdn_url);
 	my $cdn_json   = decode_json($result);
 
@@ -269,7 +269,7 @@ sub get_crconfigs {
                 }
                 my $to_url = shift;
 
-                my $to_server_url = $to_url . '/api/1.2/servers.json';
+                my $to_server_url = $to_url . '/api/2.0/servers';
                 my $result        = &curl_me($to_server_url);
                 my $server_json   = decode_json($result);
 

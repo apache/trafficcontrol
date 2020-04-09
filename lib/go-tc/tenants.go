@@ -22,6 +22,7 @@ package tc
 // GetTenantsResponse is the response for a request for a group of tenants
 type GetTenantsResponse struct {
 	Response []Tenant `json:"response"`
+	Alerts
 }
 
 // TenantResponse is the response to a create/update

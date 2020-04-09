@@ -324,6 +324,24 @@ WHERE ds.id = $1
 	return name, cdn, true, nil
 }
 
+// GetDSIDAndCDNFromName returns the delivery service ID and cdn name given from the delivery service name, whether a result existed, and any error.
+func GetDSIDAndCDNFromName(tx *sql.Tx, xmlID string) (int, tc.CDNName, bool, error) {
+	dsId := 0
+	cdn := tc.CDNName("")
+	if err := tx.QueryRow(`
+SELECT ds.id, cdn.name
+FROM deliveryservice as ds
+JOIN cdn on cdn.id = ds.cdn_id
+WHERE ds.xml_id = $1
+`, xmlID).Scan(&dsId, &cdn); err != nil {
+		if err == sql.ErrNoRows {
+			return dsId, tc.CDNName(""), false, nil
+		}
+		return dsId, tc.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
+	}
+	return dsId, cdn, true, nil
+}
+
 // GetFederationResolversByFederationID fetches all of the federation resolvers currently assigned to a federation.
 // In the event of an error, it will return an empty slice and the error.
 func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.FederationResolver, error) {
@@ -461,6 +479,18 @@ func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 		return "", false, errors.New("querying CDN ID: " + err.Error())
 	}
 	return tc.CDNName(name), true, nil
+}
+
+// GetCDNIDFromName returns the ID of the CDN if a CDN with the name exists
+func GetCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying CDN ID: " + err.Error())
+	}
+	return id, true, nil
 }
 
 // GetCDNDomainFromName returns the domain, whether the cdn exists, and any error.
@@ -747,11 +777,23 @@ func GetUserByID(id int, tx *sql.Tx) (tc.User, bool, error) {
 	return u, true, err
 }
 
-// ProfileParameterExistsByParameterID returns whether a profile parameter association with the given parameter id exists, and any error.
-func ProfileParameterExistsByParameterID(id int, tx *sql.Tx) (bool, error) {
+// CachegroupParameterAssociationExists returns whether a cachegroup parameter association with the given parameter id exists, and any error.
+func CachegroupParameterAssociationExists(id int, cachegroup int, tx *sql.Tx) (bool, error) {
 	count := 0
-	if err := tx.QueryRow(`SELECT count(*) from profile_parameter where parameter = $1`, id).Scan(&count); err != nil {
-		return false, errors.New("querying profile parameter existence from parameter id: " + err.Error())
+	if err := tx.QueryRow(`SELECT count(*) from cachegroup_parameter where parameter = $1 and cachegroup = $2`, id, cachegroup).Scan(&count); err != nil {
+		return false, errors.New("querying cachegroup parameter existence: " + err.Error())
 	}
 	return count > 0, nil
+}
+
+// GetDeliveryServiceType returns the type of the deliveryservice.
+func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, bool, error) {
+	var dsType tc.DSType
+	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DSTypeInvalid, false, nil
+		}
+		return tc.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
+	}
+	return dsType, true, nil
 }

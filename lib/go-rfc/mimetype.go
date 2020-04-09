@@ -257,3 +257,15 @@ var MIME_HTML = MimeType{
 	Name:       "text/html",
 	Parameters: map[string]string{"charset": "utf-8"},
 }
+
+// MIME_CSS is a pre-defined MimeType for CSS data.
+var MIME_CSS = MimeType{
+	Name:       "text/css",
+	Parameters: map[string]string{"charset": "utf-8"},
+}
+
+// MIME_JS is a pre-defined MimeType for JavaScript data.
+var MIME_JS = MimeType{
+	Name:       "text/javascript",
+	Parameters: map[string]string{"charset": "utf-8"},
+}

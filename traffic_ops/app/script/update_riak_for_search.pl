@@ -71,7 +71,7 @@ sub get_cookie {
 	my $u = shift;
 	my $p = shift;
 
-	my $url = $to_host . "/api/1.2/user/login";
+	my $url = $to_host . "/api/2.0/user/login";
 	my $json = encode_json({u => $u, p => $p});
 	my $req = HTTP::Request->new( 'POST', $url );
 	$req->header( 'Content-Type' => 'application/json' );
@@ -101,7 +101,7 @@ sub get_deliveryservices {
 	my $to_host = shift;
 	my $ua = shift;
 
-	my $url = $to_host . "/api/1.2/deliveryservices.json";
+	my $url = $to_host . "/api/2.0/deliveryservices";
 	my $response = $ua->get( $url );
 
 	if(!$response->is_success() || $response->code() > 400) {
@@ -117,7 +117,7 @@ sub get_riak_record {
 	my $xml_id = shift;
 	my $to_url = shift;
 	my $ua = shift;
-	my $url = $to_url . "/api/1.2/deliveryservices/xmlId/$xml_id/sslkeys.json";
+	my $url = $to_url . "/api/2.0/deliveryservices/xmlId/$xml_id/sslkeys";
 	my $response = $ua->get( $url );
 
 	if(!$response->is_success() || $response->code() > 400) {
@@ -134,7 +134,7 @@ sub send_riak_record {
 	my $to_url = shift;
 	my $ua = shift;
 
-	my $url = $to_url . "/api/1.2/deliveryservices/sslkeys/add";
+	my $url = $to_url . "/api/2.0/deliveryservices/sslkeys/add";
 	my $req = HTTP::Request->new( 'POST', $url );
 	$req->header( 'Content-Type' => 'application/json' );
 	$req->content( encode_json($record) );

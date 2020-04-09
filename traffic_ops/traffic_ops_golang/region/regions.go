@@ -44,10 +44,10 @@ func (v *TORegion) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 		"id":       dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
 	}
 }
-func (v *TORegion) UpdateQuery() string     { return updateQuery() }
+func (v *TORegion) UpdateQuery() string { return updateQuery() }
 
 // DeleteQuery returns a query, including a WHERE clause.
-func (v *TORegion) DeleteQuery() string     { return deleteQuery() }
+func (v *TORegion) DeleteQuery() string { return deleteQuery() }
 
 // DeleteQueryBase returns a query with no WHERE clause.
 func (v *TORegion) DeleteQueryBase() string { return deleteQueryBase() }
@@ -95,7 +95,7 @@ func (rg *TORegion) Create() (error, error, int)              { return api.Gener
 func (rg *TORegion) Delete() (error, error, int)              { return api.GenericDelete(rg) }
 
 // OptionsDelete deletes a resource identified either as a route parameter or as a query string parameter.
-func (rg *TORegion) OptionsDelete() (error, error, int)       { return api.GenericOptionsDelete(rg) }
+func (rg *TORegion) OptionsDelete() (error, error, int) { return api.GenericOptionsDelete(rg) }
 
 func selectQuery() string {
 	return `SELECT

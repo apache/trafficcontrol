@@ -28,6 +28,8 @@ import (
 const PackagesFileName = `packages`
 const PackagesParamConfigFile = `package`
 
+const ContentTypePackages = ContentTypeTextASCII
+
 type Package struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`

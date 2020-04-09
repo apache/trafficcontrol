@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
@@ -76,7 +77,7 @@ public final class SignatureManager {
 		synchronized(SignatureManager.class) {
 			final JsonNode config = cacheRegister.getConfig();
 
-			final boolean dnssecEnabled = JsonUtils.optBoolean(config, "dnssec.enabled");
+			final boolean dnssecEnabled = JsonUtils.optBoolean(config, TrafficRouter.DNSSEC_ENABLED);
 			if (dnssecEnabled) {
 				setDnssecEnabled(true);
 				setExpiredKeyAllowed(JsonUtils.optBoolean(config, "dnssec.allow.expired.keys", true)); // allowing this by default is the safest option
@@ -211,7 +212,7 @@ public final class SignatureManager {
 		final ObjectMapper mapper = new ObjectMapper();
 
 		try {
-			final String keyUrl = trafficOpsUtils.getUrl("keystore.api.url", "https://${toHostname}/api/1.3/cdns/name/${cdnName}/dnsseckeys.json");
+			final String keyUrl = trafficOpsUtils.getUrl("keystore.api.url", "https://${toHostname}/api/2.0/cdns/name/${cdnName}/dnsseckeys");
 			final JsonNode config = cacheRegister.getConfig();
 			final int timeout = JsonUtils.optInt(config, "keystore.fetch.timeout", 30000); // socket timeouts are in ms
 			final int retries = JsonUtils.optInt(config, "keystore.fetch.retries", 5);
@@ -377,7 +378,7 @@ public final class SignatureManager {
 				return true;
 			} else if (!isExpiredKeyAllowed() && now >= szk.getEarliestSigningKeyExpiration()) {
 				/*
-				 * The earliest signing key has expired, so force a resigning 
+				 * The earliest signing key has expired, so force a resigning
 				 * which will be done with new keys. This is because the keys themselves
 				 * don't have expiry that's tied to DNSSEC; it's administrative, so
 				 * we can be a little late on the swap.

@@ -42,8 +42,8 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 			hasBottomDivider: function() {
 				return true;
 			},
-			click: function ($itemScope) {
-				$scope.confirmRemoveServer($itemScope.s);
+			click: function ($itemScope, evt) {
+				$scope.confirmRemoveServer($itemScope.s, evt);
 			}
 		}
 	);
@@ -109,12 +109,22 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		dsServersTable.rows().invalidate().draw();
 	};
 
+	$scope.columnFilterFn = function(column) {
+		if (column.name === 'Action') {
+			return false;
+		}
+		return true;
+	};
+
 	angular.element(document).ready(function () {
 		dsServersTable = $('#dsServersTable').DataTable({
 			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"aaSorting": [],
-			"columns": $scope.columns,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 32 }
+			],
+			"columns": $scope.columns.concat([{ "name": "Action", "visible": true, "searchable": false }]),
 			"initComplete": function(settings, json) {
 				try {
 					// need to create the show/hide column checkboxes and bind to the current visibility

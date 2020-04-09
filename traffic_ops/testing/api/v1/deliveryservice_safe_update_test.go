@@ -26,7 +26,7 @@ func TestPutDeliveryServiceSafe(t *testing.T) {
 }
 
 func UpdateTestDeliveryServiceSafe(t *testing.T) {
-	if (len(testData.DeliveryServices) < 1) {
+	if len(testData.DeliveryServices) < 1 {
 		t.Fatalf("Need at least one test Delivery Service to test safe update")
 	}
 	first := testData.DeliveryServices[0]

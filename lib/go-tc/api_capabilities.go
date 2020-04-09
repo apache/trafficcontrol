@@ -31,4 +31,5 @@ type APICapability struct {
 // APICapabilityResponse represents an HTTP response to an API Capability request.
 type APICapabilityResponse struct {
 	Response []APICapability `json:"response"`
+	Alerts
 }

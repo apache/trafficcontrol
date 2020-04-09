@@ -22,6 +22,7 @@ package tc
 // ProfileParametersResponse ...
 type ProfileParametersResponse struct {
 	Response []ProfileParameter `json:"response"`
+	Alerts
 }
 
 // ProfileParameterResponse is a single ProfileParameter response for Create to
@@ -31,6 +32,7 @@ type ProfileParametersResponse struct {
 type ProfileParameterResponse struct {
 	// in: body
 	Response ProfileParameter `json:"response"`
+	Alerts
 }
 
 // ProfileParameter ...

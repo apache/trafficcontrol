@@ -29,14 +29,26 @@ import (
 )
 
 func GetTrimmed(w http.ResponseWriter, r *http.Request) {
+	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, please use '/cachegroups' instead")
+
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		userErr = api.LogErr(r, errCode, userErr, sysErr)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
 
 	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(getCachegroupsTrimmed(inf.Tx.Tx))
+
+	cg, err := getCachegroupsTrimmed(inf.Tx.Tx)
+	if err != nil {
+		userErr = api.LogErr(r, http.StatusInternalServerError, nil, err)
+		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
+		return
+	}
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, cg)
 }
 
 func getCachegroupsTrimmed(tx *sql.Tx) ([]tc.CachegroupTrimmedName, error) {

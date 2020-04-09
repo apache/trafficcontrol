@@ -31,17 +31,12 @@ var ToolsService = function($http, messageModel, ENV) {
 	};
 
 	this.generateISO = function(iso) {
-		let respType = 'json';
-		if (iso.stream === 'yes') {
-			respType = 'arraybuffer';
-		}
+		respType = 'arraybuffer';
 
 		return $http.post(ENV.api['root'] + "isos", iso, { responseType:respType }).then(
 			function(result) {
-				if (iso.stream === 'yes') {
-					const isoName = iso.hostName + "." + iso.domainName + "-" + iso.osversionDir + ".iso";
-					download(result.data, isoName);
-				}
+				const isoName = iso.hostName + "." + iso.domainName + "-" + iso.osversionDir + ".iso";
+				download(result.data, isoName);
 				return result.data.response;
 			},
 			function(err) {

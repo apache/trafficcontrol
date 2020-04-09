@@ -34,12 +34,13 @@ type DSSMapResponse struct {
 }
 
 type DSSReplaceResponse struct {
-	Alerts   []Alert        `json:"alerts"`
+	Alerts
 	Response DSSMapResponse `json:"response"`
 }
 
 type DSServersResponse struct {
 	Response DeliveryServiceServers `json:"response"`
+	Alerts
 }
 
 type DeliveryServiceServers struct {

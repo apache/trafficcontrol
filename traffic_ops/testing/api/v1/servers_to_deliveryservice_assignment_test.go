@@ -36,15 +36,18 @@ func AssignTestDeliveryService(t *testing.T) {
 	}
 	firstServer := rs[0]
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID(testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(testData.DeliveryServices[0].XMLID)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)
 	} else if len(rd) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
 	firstDS := rd[0]
+	if firstDS.ID == nil {
+		t.Fatal("Fetch DS information returned unknown ID")
+	}
 
-	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(firstServer.ID, []int{firstDS.ID}, true)
+	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(firstServer.ID, []int{*firstDS.ID}, true)
 	if err != nil {
 		t.Errorf("Couldn't assign DS '%+v' to server '%+v': %v (alerts: %v)", firstDS, firstServer, err, alerts)
 	}
@@ -58,7 +61,7 @@ func AssignTestDeliveryService(t *testing.T) {
 
 	var found bool
 	for _, ds := range response {
-		if ds.ID != nil && *ds.ID == firstDS.ID {
+		if ds.ID != nil && *ds.ID == *firstDS.ID {
 			found = true
 			break
 		}
@@ -70,7 +73,7 @@ func AssignTestDeliveryService(t *testing.T) {
 }
 
 func AssignIncorrectTestDeliveryService(t *testing.T) {
-	var server *tc.Server
+	var server *tc.ServerV1
 	for _, s := range testData.Servers {
 		if s.CDNName == "cdn2" {
 			server = &s
@@ -89,15 +92,18 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	}
 	server = &rs[0]
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID(testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(testData.DeliveryServices[0].XMLID)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)
 	} else if len(rd) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
 	firstDS := rd[0]
+	if firstDS.ID == nil {
+		t.Fatal("Fetch DS information returned unknown ID")
+	}
 
-	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(server.ID, []int{firstDS.ID}, false)
+	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(server.ID, []int{*firstDS.ID}, false)
 	if err == nil {
 		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
 	}
@@ -111,7 +117,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	var found bool
 	for _, ds := range response {
 
-		if ds.ID != nil && *ds.ID == firstDS.ID {
+		if ds.ID != nil && *ds.ID == *firstDS.ID {
 			found = true
 			break
 		}

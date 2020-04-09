@@ -263,6 +263,7 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         { "name": "Routing Name", "visible": false, "searchable": false },
         { "name": "Signed", "visible": false, "searchable": false },
         { "name": "Signing Algorithm", "visible": true, "searchable": true },
+        { "name": "Range Slice Block Size", "visible": false, "searchable": false },
         { "name": "Tenant", "visible": true, "searchable": true },
         { "name": "TR Request Headers", "visible": false, "searchable": false },
         { "name": "TR Response Headers", "visible": false, "searchable": false },
@@ -299,22 +300,8 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         null, // Divider
         {
             text: 'View Charts',
-            displayed: function () {
-                // only show if custom ds charts link is NOT configured
-                return !showCustomCharts;
-            },
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/charts?type=' + $itemScope.ds.type);
-            }
-        },
-        {
-            text: 'View Charts',
-            displayed: function () {
-                // only show if custom ds charts link IS configured
-                return showCustomCharts;
-            },
             click: function ($itemScope, evt) {
-                deliveryServiceUtils.openCharts($itemScope.ds, evt);
+                $scope.viewCharts($itemScope.ds, evt);
             }
         },
         null, // Divider
@@ -396,6 +383,18 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
     $scope.editDeliveryService = function(ds) {
         var path = '/delivery-services/' + ds.id + '?type=' + ds.type;
         locationUtils.navigateToPath(path);
+    };
+
+    $scope.viewCharts = function(ds, $event) {
+        if ($event) {
+            $event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+        }
+
+        if (showCustomCharts) {
+            deliveryServiceUtils.openCharts(ds);
+        } else {
+            locationUtils.navigateToPath('/delivery-services/' + ds.id + '/charts?type=' + ds.type);
+        }
     };
 
     $scope.refresh = function() {

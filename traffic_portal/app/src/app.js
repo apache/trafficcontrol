@@ -64,9 +64,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/cacheChecks').name,
         require('./modules/private/cacheStats').name,
         require('./modules/private/capabilities').name,
-        require('./modules/private/capabilities/new').name, // this must be defined before edit for the url matcher to work
         require('./modules/private/capabilities/list').name,
-        require('./modules/private/capabilities/edit').name,
         require('./modules/private/capabilities/endpoints').name,
         require('./modules/private/capabilities/users').name,
         require('./modules/private/cdns').name,
@@ -211,7 +209,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/types/deliveryServices').name,
         require('./modules/private/types/staticDnsEntries').name,
         require('./modules/private/users').name,
-        require('./modules/private/users/deliveryServices').name,
         require('./modules/private/users/edit').name,
         require('./modules/private/users/list').name,
         require('./modules/private/users/new').name,
@@ -254,9 +251,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/cacheGroup').name,
         require('./common/modules/form/cacheGroup/edit').name,
         require('./common/modules/form/cacheGroup/new').name,
-        require('./common/modules/form/capability').name,
-        require('./common/modules/form/capability/edit').name,
-        require('./common/modules/form/capability/new').name,
         require('./common/modules/form/cdn').name,
         require('./common/modules/form/cdn/edit').name,
         require('./common/modules/form/cdn/new').name,
@@ -399,7 +393,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/typeServers').name,
         require('./common/modules/table/typeStaticDnsEntries').name,
         require('./common/modules/table/users').name,
-        require('./common/modules/table/userDeliveryServices').name,
 
         // widgets
         require('./common/modules/widget/cacheGroups').name,

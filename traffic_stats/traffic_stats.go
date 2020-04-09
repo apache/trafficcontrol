@@ -442,7 +442,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		return
 	}
 
-	servers, err := to.Servers()
+	servers, _, err := to.GetServers()
 	if err != nil {
 		msg := fmt.Sprintf("Error getting server list from %v: %v ", config.ToURL, err)
 		if init {
@@ -459,7 +459,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 
 	cacheStatPath := "/publish/CacheStats?hc=1&wildcard=1&stats="
 	dsStatPath := "/publish/DsStats?hc=1&wildcard=1&stats="
-	parameters, err := to.Parameters("TRAFFIC_STATS")
+	parameters, _, err := to.GetParametersByProfileName("TRAFFIC_STATS")
 	if err != nil {
 		msg := fmt.Sprintf("Error getting parameter list from %v: %v", config.ToURL, err)
 		if init {

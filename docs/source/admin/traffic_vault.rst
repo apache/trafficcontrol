@@ -229,4 +229,4 @@ To validate the search is working run a query against the Riak database server, 
 	curl -kvs "https://admin:password@trafficvault.infra.ciab.test:8088/search/query/sslkeys?wt=json&q=cdn:CDN-in-a-Box"
 
 	# Verify using the Traffic Ops API
-	curl -Lvs -H "Cookie: $COOKIE" https://trafficops.infra.ciab.test/api/1.4/cdns/name/mycdn/sslkeys
+	curl -Lvs -H "Cookie: $COOKIE" https://trafficops.infra.ciab.test/api/2.0/cdns/name/mycdn/sslkeys

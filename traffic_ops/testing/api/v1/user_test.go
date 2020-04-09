@@ -24,7 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 )
 
 func TestUsers(t *testing.T) {
@@ -189,7 +189,6 @@ func UserSelfUpdateTest(t *testing.T) {
 		t.Errorf("results do not match actual: '%s', expected: 'operator@not.example.com'\n", *updatedUser.Email)
 	}
 
-
 	// Same thing using /user/current
 	user.FullName = util.StrPtr("ops-man")
 	user.Email = util.StrPtr("operator@example.com")
@@ -222,7 +221,7 @@ func UserSelfUpdateTest(t *testing.T) {
 
 	// now test using an invalid email address
 	currentEmail := *user.Email
-	user.Email = new(string);
+	user.Email = new(string)
 	updateResp, _, err = TOSession.UpdateCurrentUser(user)
 	if err == nil {
 		t.Fatal("error was expected updating user with email: '' - got none")

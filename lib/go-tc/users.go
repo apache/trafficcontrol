@@ -281,11 +281,13 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 // It is unused.
 type UsersResponseV13 struct {
 	Response []UserV13 `json:"response"`
+	Alerts
 }
 
 // UsersResponse can hold a Traffic Ops API response to a request to get a list of users.
 type UsersResponse struct {
 	Response []User `json:"response"`
+	Alerts
 }
 
 // CreateUserResponse can hold a Traffic Ops API response to a POST request to create a user.
@@ -310,6 +312,7 @@ type DeleteUserResponse struct {
 // or update the current user.
 type UserCurrentResponse struct {
 	Response UserCurrent `json:"response"`
+	Alerts
 }
 
 // UserDeliveryServiceDeleteResponse can hold a Traffic Ops API response to

@@ -17,12 +17,14 @@ package v1
 
 import (
 	"testing"
+	"sort"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestPhysLocations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters, Divisions, Regions, PhysLocations}, func() {
+		GetDefaultSortPhysLocationsTest(t)
 		UpdateTestPhysLocations(t)
 		GetTestPhysLocations(t)
 	})
@@ -103,5 +105,18 @@ func DeleteTestPhysLocations(t *testing.T) {
 				t.Errorf("expected PhysLocation name: %s to be deleted", cdn.Name)
 			}
 		}
+	}
+}
+
+func GetDefaultSortPhysLocationsTest(t *testing.T) {
+	resp, _, err := TOSession.GetPhysLocations()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	sorted := sort.SliceIsSorted(resp, func(i, j int) bool {
+		return resp[i].Name < resp[j].Name
+	})
+	if !sorted {
+		t.Error("expected response to be sorted by name")
 	}
 }

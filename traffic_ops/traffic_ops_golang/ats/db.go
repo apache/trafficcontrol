@@ -37,26 +37,6 @@ import (
 // RemapDotConfigIncludeInactiveDeliveryServices is whether delivery services with 'active' false are included in the remap.config.
 const RemapDotConfigIncludeInactiveDeliveryServices = true
 
-// getProfileData returns the necessary info about the profile, whether it exists, and any error.
-func getProfileData(tx *sql.Tx, id int) (ProfileData, bool, error) {
-	qry := `
-SELECT
-  p.name
-FROM
-  profile p
-WHERE
-  p.id = $1
-`
-	v := ProfileData{ID: id}
-	if err := tx.QueryRow(qry, id).Scan(&v.Name); err != nil {
-		if err == sql.ErrNoRows {
-			return ProfileData{}, false, nil
-		}
-		return ProfileData{}, false, errors.New("querying: " + err.Error())
-	}
-	return v, true, nil
-}
-
 // GetProfilesParamData returns a map[profileID][paramName]paramVal
 func GetProfilesParamData(tx *sql.Tx, profileIDs []int, configFile string) (map[int]map[string]string, error) {
 	qry := `

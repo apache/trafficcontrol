@@ -97,7 +97,7 @@ func GetTestIPAllowMidDotConfig(t *testing.T) {
 	}
 }
 
-func getServer(t *testing.T, serverType string) tc.Server {
+func getServer(t *testing.T, serverType string) tc.ServerV1 {
 	v := url.Values{}
 	v.Add("type", serverType)
 	servers, _, err := TOSession.GetServersByType(v)

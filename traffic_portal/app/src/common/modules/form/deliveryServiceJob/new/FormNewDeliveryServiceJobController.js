@@ -30,6 +30,8 @@ var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope,
 	};
 
 	$scope.save = function(job) {
+		job.startTime = (new Date((new Date()).getTime() + 5*60*1000)).toISOString();
+		job.deliveryService = deliveryService.xmlId;
 		jobService.createJob(job)
 			.then(
 				function() {

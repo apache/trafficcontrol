@@ -26,10 +26,10 @@ import (
 )
 
 const (
-	API_v13_Types = "/api/1.3/types"
+	API_TYPES = apiBase + "/types"
 )
 
-// Create a Type
+// CreateType creates a Type. There should be a very good reason for doing this.
 func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -38,7 +38,7 @@ func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Types, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_TYPES, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -48,7 +48,7 @@ func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// Update a Type by ID
+// UpdateTypeByID updates a Type by ID.
 func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -57,7 +57,7 @@ func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_Types, id)
+	route := fmt.Sprintf("%s/%d", API_TYPES, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -68,21 +68,15 @@ func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error
 	return alerts, reqInf, nil
 }
 
-// Types gets an array of Types.
-// optional parameter: userInTable
-// Deprecated: use GetTypes
-func (to *Session) Types(useInTable ...string) ([]tc.Type, error) {
-	t, _, err := to.GetTypes(useInTable...)
-	return t, err
-}
-
+// GetTypes returns a list of Types. If a 'useInTable' parameter is passed, the returned Types
+// are restricted to those with that exact 'useInTable' property. Only exactly 1 or exactly 0
+// 'useInTable' parameters may be passed; passing more will result in an error being returned.
 func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 	if len(useInTable) > 1 {
 		return nil, ReqInf{}, errors.New("Please pass in a single value for the 'useInTable' parameter")
 	}
 
-	url := apiBase + "/types.json"
-	resp, remoteAddr, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", API_TYPES, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -108,9 +102,9 @@ func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 	return types, reqInf, nil
 }
 
-// GET a Type by the Type ID
+// GetTypeByID GETs a Type by the Type ID.
 func (to *Session) GetTypeByID(id int) ([]tc.Type, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_Types, id)
+	route := fmt.Sprintf("%s?id=%d", API_TYPES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -126,9 +120,9 @@ func (to *Session) GetTypeByID(id int) ([]tc.Type, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a Type by the Type name
+// GetTypeByName GET a Type by the Type name.
 func (to *Session) GetTypeByName(name string) ([]tc.Type, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_Types, name)
+	url := fmt.Sprintf("%s?name=%s", API_TYPES, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -144,9 +138,9 @@ func (to *Session) GetTypeByName(name string) ([]tc.Type, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// DELETE a Type by ID
+// DeleteTypeByID DELETEs a Type by ID.
 func (to *Session) DeleteTypeByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_Types, id)
+	route := fmt.Sprintf("%s/%d", API_TYPES, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

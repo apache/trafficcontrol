@@ -37,7 +37,8 @@ func GetName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 	regionNames, err := getName(inf.Tx.Tx, inf.Params["name"])
 
-	alerts := tc.Alerts{Alerts: []tc.Alert{api.DeprecationWarning("GET /regions?name={{name}}")}}
+	deprecationMessage := "GET /regions?name={{name}}"
+	alerts := api.CreateDeprecationAlerts(&deprecationMessage)
 	if err != nil {
 		alerts.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)

@@ -85,3 +85,25 @@
     height: 555px;
     background-color: transparent;
 }
+
+label.count_top {
+  font-weight: normal;
+  margin-bottom: 0;
+  display: auto;
+  max-width: none;
+}
+
+output.count {
+    padding-top: 0;
+    font-size: 25px;
+    line-height: 47px;
+    color: inherit;
+
+    &.green {
+        color: #1ABB9C;
+    }
+
+    &.red {
+        color: #E74C3C;
+    }
+}

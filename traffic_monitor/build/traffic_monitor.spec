@@ -55,8 +55,9 @@ mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 
 src=src/github.com/apache/trafficcontrol/traffic_monitor
 cp -p "$src"/traffic_monitor               "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/traffic_monitor
-cp  "$src"/static/index.html               "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/index.html
-cp  "$src"/static/sorttable.js             "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/sorttable.js
+cp "$src"/static/index.html                "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/index.html
+cp "$src"/static/script.js                 "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/script.js
+cp "$src"/static/style.css                 "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/style.css
 cp "$src"/conf/traffic_ops.cfg             "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_ops.cfg
 cp "$src"/conf/traffic_monitor.cfg         "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_monitor.cfg
 cp "$src"/build/traffic_monitor.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_monitor

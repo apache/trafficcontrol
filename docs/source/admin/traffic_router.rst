@@ -242,12 +242,16 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| api.auth.url                            | CRConfig.json                | The URL of the authentication endpoint of the :ref:`to-api` (:ref:`to-api-user-login`). The actual                                    |
 	|                                         |                              | :abbr:`FQDN (Fully Qualified Domain Name)` can be subsituted with ``${tmHostname}`` to have Traffic Router automatically fill it in,  |
-	|                                         |                              | e.g. ``https://${tmHostname}/api/1.1/user/login``.                                                                                    |
+	|                                         |                              | e.g. ``https://${tmHostname}/api/2.0/user/login``.                                                                                    |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| consistent.dns.routing                  | CRConfig.json                | Control whether :ref:`DNS-routed <ds-types>` :term:`Delivery Services` use `Consistent Hashing`. May improve performance if set to    |
 	|                                         |                              | "true"; defaults to "false".                                                                                                          |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| dnssec.enabled                          | CRConfig.json                | Whether DNSSEC is enabled; this parameter is updated via the DNSSEC administration user interface in Traffic Portal.                  |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| dnssec.zone.diffing.enabled             | CRConfig.json                | If DNSSEC is enabled, enabling this parameter allows Traffic Router to diff existing zones with newly generated zones. If the newly   |
+	|                                         |                              | generated zone is the same as the existing zone, Traffic Router will simply reuse the existing signed zone instead of signing the     |
+	|                                         |                              | same new zone. This reduces the CPU time taken to process new snapshots and new DNSSEC keys. Defaults to "false".                     |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| dnssec.allow.expired.keys               | CRConfig.json                | Allow Traffic Router to use expired DNSSEC keys to sign zones; default is "true". This helps prevent DNSSEC related outages due to    |
 	|                                         |                              | failed Traffic Control components or connectivity issues.                                                                             |
@@ -691,8 +695,70 @@ The ordering of certificates within the certificate bundle matters. It must be:
 
 To see the ordering of certificates you may have to manually split up your certificate chain and use :manpage:`openssl(1ssl)` on each individual certificate
 
-Suggested Way of Setting up an HTTPS Delivery Service
------------------------------------------------------
+Let's Encrypt
+-------------
+Let’s Encrypt is a free, automated :abbr:`CA (Certificate Authority)` using :abbr:`ACME (Automated Certificate Management Environment)` protocol. Let's Encrypt performs a domain validation before issuing or renewing a certificate. There are several options for domain validation but for this application the DNS challenge is used in order to receive wildcard certificates. Let's Encrypt sends a token to be used as a TXT record at ``_acme-challenge.domain.example.com`` and after verifying that the token is accessible there, will return the newly generated and signed certificate and key. The basic workflow implemented is:
+
+#. ``POST`` to Let's Encrypt and receive the DNS challenge token.
+#. Traffic Ops stores the DNS challenge.
+#. Traffic Router has a watcher which checks with Traffic Ops for any new challenges or deleted challenges.
+#. When a new record appears, Traffic Router temporarily adds a static route for the specified :term:`Delivery Service` with the token from Let's Encrypt at ``_acme-challenge.domain.example.com``.
+#. Let's Encrypt continuously attempts to resolve it as a TXT record to verify ownership of the domain.
+
+.. Note:: DNSSec should be turned on for any CDN using Let's Encrypt to guard against a 'Man in the Middle' interference with this transaction.
+
+#. Let's Encrypt returns the signed certificate and key to Traffic Ops.
+#. Traffic Ops stores the certificate and key in Traffic Vault and removes the DNS challenge record.
+#. The Traffic Router watcher removes the TXT record.
+
+Let's Encrypt can be set up through :ref:`cdn.conf` by updating the following fields:
+
+.. table:: Fields to update for Let's Encrypt under `lets_encrypt`
+
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name                         | Type    | Description                                                                                                                                                      |
+	+==============================+=========+==================================================================================================================================================================+
+	| user_email                   | string  | Optional. Email to create account with Let's Encrypt or to receive expiration updates                                                                            |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| send_expiration_email        | boolean | Option to send email summarizing certificate expiration status                                                                                                   |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| convert_self_signed          | boolean | Option to convert self signed to Let's Encrypt certificates as they expire. Only works for certificates labeled as Self Signed in the Certificate Source field.  |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| renew_days_before_expiration | int     | Number of days before expiration date to renew certificates                                                                                                      |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| environment                  | string  | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'                                                               |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+.. table:: Fields to update for sending emails under `smtp`
+
+	+------------+------------------+----------------------------------------------------------------------+
+	| Name       | Type             | Description                                                          |
+	+============+==================+======================================================================+
+	| enabled    | boolean          | Enable sending emails through Simple Mail Transfer Protocol (SMTP)   |
+	+------------+------------------+----------------------------------------------------------------------+
+	| user       | string           | User for SMTP server access                                          |
+	+------------+------------------+----------------------------------------------------------------------+
+	| password   | string           | Password for SMTP server access                                      |
+	+------------+------------------+----------------------------------------------------------------------+
+	| address    | string           | SMTP server address including port                                   |
+	+------------+------------------+----------------------------------------------------------------------+
+
+
+Suggested Way of Setting up an HTTPS Delivery Service With Let's Encrypt Automation
+-----------------------------------------------------------------------------------
+Assuming you have already created a :term:`Delivery Service` which you plan to modify to use HTTPS, do the following in Traffic Portal:
+
+#. Select one of '1 - HTTPS', '2 - HTTP AND HTTPS', or '3 - HTTP TO HTTPS' for the protocol field of a :term:`Delivery Service` and click the :guilabel:`Update` button
+#. Go to :menuselection:`More --> Manage SSL Keys`
+#. Click on :menuselection:`More --> Generate SSL Keys`
+#. Click on the :guilabel:`Use Let's Encrypt` slider, click on the green :guilabel:`Generate Keys` button, then confirm that you want to make these changes
+#. Take a new CDN :term:`Snapshot`
+
+Once this is done you should be able to verify that you are being correctly redirected by Traffic Router using e.g. :manpage:`curl(1)` commands to HTTPS destinations on your :term:`Delivery Service`.
+
+
+Suggested Way of Setting up an HTTPS Delivery Service With Certificate Authority
+--------------------------------------------------------------------------------
 Assuming you have already created a :term:`Delivery Service` which you plan to modify to use HTTPS, do the following in Traffic Portal:
 
 #. Select one of '1 - HTTPS', '2 - HTTP AND HTTPS', or '3 - HTTP TO HTTPS' for the protocol field of a :term:`Delivery Service` and click the :guilabel:`Update` button

@@ -22,7 +22,9 @@ It extends the class provided by the official Apache Traffic Control Client.
 
 import typing
 import logging
+import re
 
+from munch import Munch
 from requests.compat import urljoin
 from requests.exceptions import RequestException
 
@@ -36,6 +38,8 @@ class API(TOSession):
 	"""
 	This class extends :class:`trafficops.tosession.TOSession` to provide some ease-of-use
 	functionality for getting things needed by :term:`ORT`.
+
+	TODO: update to 2.0 if/when atstccfg support is integrated.
 	"""
 
 	#: This should always be the latest API version supported - note this breaks compatability with
@@ -133,6 +137,12 @@ class API(TOSession):
 		except ValueError:
 			raise ConnectionError
 
+	def setConfigFileAPIVersion(self, files: Munch) -> None:
+		match_api_base = re.compile(r'^(/api/)\d+\.\d+(/)')
+		api_base_replacement = r'\g<1>%s\2' % API.VERSION
+		for configFile in files.configFiles:
+			configFile.apiUri = match_api_base.sub(api_base_replacement, configFile.apiUri)
+
 	def getMyConfigFiles(self, conf:Configuration) -> typing.List[dict]:
 		"""
 		Fetches configuration files constructed by Traffic Ops for this server
@@ -160,6 +170,7 @@ class API(TOSession):
 
 		logging.debug("Raw response from Traffic Ops: %s", myFiles[1].text)
 		myFiles = myFiles[0]
+		self.setConfigFileAPIVersion(myFiles)
 
 		try:
 			conf.serverInfo = ServerInfo(myFiles.info)

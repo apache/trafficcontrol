@@ -20,6 +20,7 @@ package api
  */
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -73,6 +74,52 @@ func TestRespWrittenAfterErrFails(t *testing.T) {
 		if string(alert.Level) != tc.ErrorLevel.String() {
 			t.Errorf("alert level expected: '%s', actual: '%s'", tc.ErrorLevel.String(), alert.Level)
 		}
+	}
+}
+
+func TestWriteAlertsObjEmpty(t *testing.T) {
+	w := &MockHTTPResponseWriter{}
+	r := &http.Request{URL: &url.URL{}}
+	a := tc.Alerts{}
+	code := http.StatusAlreadyReported
+
+	WriteAlertsObj(w, r, code, a, code)
+
+	resp := struct {
+		Response interface{} `json:"response"`
+	}{code}
+	serialized, _ := json.Marshal(resp)
+	if !bytes.Equal(append(serialized[:], '\n'), w.Body[:]) {
+		t.Error("expected response to only include object")
+	}
+	writeAlertsCodeTest(t, *w, code)
+}
+
+func TestWriteAlertsObj(t *testing.T) {
+	w := &MockHTTPResponseWriter{}
+	r := &http.Request{URL: &url.URL{}}
+	a := tc.CreateAlerts(tc.WarnLevel, "test")
+	code := http.StatusAlreadyReported
+
+	WriteAlertsObj(w, r, code, a, code)
+
+	resp := struct {
+		tc.Alerts
+		Response interface{} `json:"response"`
+	}{a, code}
+	serialized, _ := json.Marshal(resp)
+	if !bytes.Equal(append(serialized[:], '\n'), w.Body[:]) {
+		t.Error("expected response to include alert")
+	}
+	writeAlertsCodeTest(t, *w, code)
+}
+
+func writeAlertsCodeTest(t *testing.T, w MockHTTPResponseWriter, code int) {
+	if w.Body == nil || len(w.Body) == 0 {
+		t.Error("expected response body to be written to")
+	}
+	if w.Code != code {
+		t.Errorf("expected response code %v, got %v", code, w.Code)
 	}
 }
 

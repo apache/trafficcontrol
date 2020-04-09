@@ -32,6 +32,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
@@ -71,7 +72,7 @@ public class ConfigHandler {
 
 	private static long lastSnapshotTimestamp = 0;
 	private static Object configSync = new Object();
-	private static String deliveryServicesKey = "deliveryServices";
+	public static String deliveryServicesKey = "deliveryServices";
 
 	private TrafficRouterManager trafficRouterManager;
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
@@ -87,6 +88,7 @@ public class ConfigHandler {
 	private AnonymousIpConfigUpdater anonymousIpConfigUpdater;
 	private AnonymousIpDatabaseUpdater anonymousIpDatabaseUpdater;
 	private SteeringWatcher steeringWatcher;
+	private LetsEncryptDnsChallengeWatcher letsEncryptDnsChallengeWatcher;
 	private CertificatesPoller certificatesPoller;
 	private CertificatesPublisher certificatesPublisher;
 	private BlockingQueue<Boolean> publishStatusQueue;
@@ -224,11 +226,13 @@ public class ConfigHandler {
 
 				federationsWatcher.configure(config);
 				steeringWatcher.configure(config);
+				letsEncryptDnsChallengeWatcher.configure(config);
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				trafficRouterManager.getNameServer().setEcsEnable(JsonUtils.optBoolean(config, "ecsEnable", false));
 				trafficRouterManager.getNameServer().setEcsEnabledDses(deliveryServices.stream().filter(DeliveryService::isEcsEnabled).collect(Collectors.toSet()));
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.get("requestHeaders")));
 				trafficRouterManager.getTrafficRouter().configurationChanged();
+
 
 				/*
 				 * NetworkNode uses lazy loading to associate CacheLocations with NetworkNodes at request time in TrafficRouter.
@@ -819,6 +823,10 @@ public class ConfigHandler {
 
 	public void setSteeringWatcher(final SteeringWatcher steeringWatcher) {
 		this.steeringWatcher = steeringWatcher;
+	}
+
+	public void setLetsEncryptDnsChallengeWatcher(final LetsEncryptDnsChallengeWatcher letsEncryptDnsChallengeWatcher) {
+		this.letsEncryptDnsChallengeWatcher = letsEncryptDnsChallengeWatcher;
 	}
 
 	public void setCertificatesPoller(final CertificatesPoller certificatesPoller) {

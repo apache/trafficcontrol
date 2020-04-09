@@ -17,6 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.Inet4Address;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -82,6 +83,8 @@ public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
 	public static final String XTC_STEERING_OPTION = "x-tc-steering-option";
 	public static final String CLIENT_STEERING_DIVERSITY = "client.steering.forced.diversity";
+	public static final String DNSSEC_ENABLED = "dnssec.enabled";
+	public static final String DNSSEC_ZONE_DIFFING = "dnssec.zone.diffing.enabled";
 
 	private final CacheRegister cacheRegister;
 	private final ZoneManager zoneManager;
@@ -91,6 +94,7 @@ public class TrafficRouter {
 	private final FederationRegistry federationRegistry;
 	private final boolean consistentDNSRouting;
 	private final boolean clientSteeringDiversityEnabled;
+	private final boolean dnssecZoneDiffingEnabled;
 
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
@@ -117,6 +121,7 @@ public class TrafficRouter {
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing");
 		this.clientSteeringDiversityEnabled = JsonUtils.optBoolean(cr.getConfig(), CLIENT_STEERING_DIVERSITY);
+		this.dnssecZoneDiffingEnabled = JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ENABLED) && JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ZONE_DIFFING);
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 
 		if (cr.getConfig() != null) {
@@ -530,7 +535,7 @@ public class TrafficRouter {
 	 * @param track A {@link Track} object used to track routing statistics
 	 * @return The list of routes available to service the client's request.
 	 */
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
 
@@ -560,6 +565,11 @@ public class TrafficRouter {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 			List<Cache> caches = selectCaches(request, ds, track);
 
+			try {
+				caches = editCacheListForIpVersion(InetAddress.getByName(request.getClientIP()) instanceof Inet4Address, caches);
+			} catch (UnknownHostException e) {
+				LOGGER.debug("Could not parse IP, accepting cache list as is.");
+			}
 			// child Delivery Services can use their query parameters
 			final String pathToHash = steeringHash + ds.extractSignificantQueryParams(request);
 
@@ -691,7 +701,12 @@ public class TrafficRouter {
 
 		routeResult.setDeliveryService(deliveryService);
 
-		final List<Cache> caches = selectCaches(request, deliveryService, track);
+		List<Cache> caches = selectCaches(request, deliveryService, track);
+		try {
+			caches = editCacheListForIpVersion(InetAddress.getByName(request.getClientIP()) instanceof Inet4Address, caches);
+		} catch (UnknownHostException e) {
+			LOGGER.debug("Could not parse IP, accepting cache list as is.");
+		}
 
 		if (caches == null || caches.isEmpty()) {
 			if (track.getResult() == ResultType.GEO_REDIRECT) {
@@ -728,6 +743,18 @@ public class TrafficRouter {
 		routeResult.setUrl(new URL(uriString));
 
 		return routeResult;
+	}
+
+	private List<Cache> editCacheListForIpVersion(final boolean requestIsIpv4, final List<Cache> caches) {
+		final List<Cache> removeCaches = new ArrayList<>();
+		for (final Cache cache : caches) {
+			if ((!requestIsIpv4 && cache.getIpAvailableVersions() == Cache.IpVersions.IPV4ONLY) ||
+					requestIsIpv4 && cache.getIpAvailableVersions() == Cache.IpVersions.IPV6ONLY) {
+				removeCaches.add(cache);
+			}
+		}
+		caches.removeAll(removeCaches);
+		return caches;
 	}
 
 	@SuppressWarnings({"PMD.NPathComplexity"})
@@ -1256,6 +1283,10 @@ public class TrafficRouter {
 
 	public boolean isClientSteeringDiversityEnabled() {
 		return clientSteeringDiversityEnabled;
+	}
+
+	public boolean isDnssecZoneDiffingEnabled() {
+		return dnssecZoneDiffingEnabled;
 	}
 
 	private List<Cache> enforceGeoRedirect(final Track track, final DeliveryService ds, final String clientIp, final Geolocation queriedClientLocation) {

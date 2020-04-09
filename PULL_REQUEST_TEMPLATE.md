@@ -51,13 +51,13 @@ tests are unnecessary for this Pull Request. -->
 the best of your knowledge. It's also pretty helpful to include a commit hash
 of where 'master' is at the time this PR is opened (if it affects master),
 because what 'master' means will change over time. For example, if this PR
-fixes a bug that's present in master (at commit hash '2697ebac'), in v3.0.0,
-and in the current 3.0.1 Release candidate (e.g. RC1), then this list would
+fixes a bug that's present in master (at commit hash '1df853c8'), in v4.0.0,
+and in the current 4.0.1 Release candidate (e.g. RC1), then this list would
 look like:
 
-- master (2697ebac)
-- 3.0.0
-- 3.0.1 (RC1)
+- master (1df853c8)
+- 4.0.0
+- 4.0.1 (RC1)
 
 If you don't know what other versions might have this bug, AND don't know how
 to find the commit hash of 'master', then feel free to leave this section

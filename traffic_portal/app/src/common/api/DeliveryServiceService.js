@@ -144,7 +144,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getDeliveryServiceTarget = function(dsId, targetId) {
-        return $http.get(ENV.api['root'] + 'steering/' + dsId + '/targets/' + targetId).then(
+        return $http.get(ENV.api['root'] + 'steering/' + dsId + '/targets', {params: {target: targetId}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -208,7 +208,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.deleteDeliveryServiceServer = function(dsId, serverId) {
-        return $http.delete(ENV.api['root'] + 'deliveryservice_server/' + dsId + '/' + serverId).then(
+        return $http.delete(ENV.api['root'] + 'deliveryserviceserver/' + dsId + '/' + serverId).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;

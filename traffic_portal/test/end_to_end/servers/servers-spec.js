@@ -67,6 +67,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.ipAddress.sendKeys(mockVals.ipAddress);
 		pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
 		pageData.ipGateway.sendKeys(mockVals.ipGateway);
+		pageData.ipIsService.click();
 		pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
 		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);

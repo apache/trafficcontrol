@@ -29,7 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v1-client"
 )
 
 func TestDeliveryServices(t *testing.T) {
@@ -248,7 +248,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		}
 
 		// Retrieve the Server to see if it got deleted
-		foundDS, err := TOSession.DeliveryService(strconv.Itoa(ds.ID))
+		foundDS, _, err := TOSession.GetDeliveryService(strconv.Itoa(ds.ID))
 		if err == nil && foundDS != nil {
 			t.Errorf("expected Delivery Service: %s to be deleted", ds.XMLID)
 		}

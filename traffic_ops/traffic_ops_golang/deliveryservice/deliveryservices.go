@@ -287,7 +287,8 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.TRResponseHeaders,
 		&ds.TypeID,
 		&ds.XMLID,
-		&ds.EcsEnabled)
+		&ds.EcsEnabled,
+		&ds.RangeSliceBlockSize)
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -356,8 +357,8 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	}
 
 	if dnssecEnabled {
-		if err := PutDNSSecKeys(tx, cfg, *ds.XMLID, cdnName, ds.ExampleURLs); err != nil {
-			return nil, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys: " + err.Error())
+		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, cfg, *ds.XMLID, cdnName, ds.ExampleURLs); userErr != nil || sysErr != nil {
+			return nil, statusCode, userErr, sysErr
 		}
 	}
 
@@ -407,7 +408,7 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	if version == nil {
 		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError
 	}
-	if version.Major != 1 || version.Minor < 1 {
+	if version.Major == 1 && version.Minor < 1 {
 		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
 	}
 
@@ -425,7 +426,7 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Minor >= 5:
+		case version.Major > 1 || version.Minor >= 5:
 			returnable = append(returnable, ds)
 		case version.Minor >= 4:
 			returnable = append(returnable, ds.DeliveryServiceNullableV14)
@@ -613,13 +614,15 @@ func updateV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	// query the DB for existing 1.5 fields in order to "upgrade" this 1.4 request into a 1.5 request
 	query := `
 SELECT
-  ds.ecs_enabled
+  ds.ecs_enabled,
+  ds.range_slice_block_size
 FROM
   deliveryservice ds
 WHERE
   ds.id = $1`
 	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
 		&dsV15.EcsEnabled,
+		&dsV15.RangeSliceBlockSize,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV15.ID), nil
@@ -734,6 +737,7 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.ConsistentHashRegex,
 		&ds.MaxOriginConnections,
 		&ds.EcsEnabled,
+		&ds.RangeSliceBlockSize,
 		&ds.ID)
 
 	if err != nil {
@@ -917,6 +921,21 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
+
+	if accessibleTo, ok := params["accessibleTo"]; ok {
+		if err := api.IsInt(accessibleTo); err != nil {
+			log.Errorln("unknown parameter value: " + err.Error())
+			return nil, errors.New("accessibleTo must be an integer"), nil, http.StatusBadRequest
+		}
+		accessibleTo, _ := strconv.Atoi(accessibleTo)
+		accessibleTenants, err := tenant.GetUserTenantIDListTx(tx.Tx, accessibleTo)
+		if err != nil {
+			log.Errorln("unable to get tenants: " + err.Error())
+			return nil, nil, tc.DBError, http.StatusInternalServerError
+		}
+		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
+		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
+	}
 
 	query := selectQuery() + where + orderBy + pagination
 
@@ -1112,6 +1131,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.RemapText,
 			&ds.RoutingName,
 			&ds.SigningAlgorithm,
+			&ds.RangeSliceBlockSize,
 			&ds.SSLKeyVersion,
 			&ds.TenantID,
 			&ds.Tenant,
@@ -1557,18 +1577,6 @@ func getDSTenantIDByName(tx *sql.Tx, ds tc.DeliveryServiceName) (*int, bool, err
 	return tenantID, true, nil
 }
 
-// GetDeliveryServiceType returns the type of the deliveryservice.
-func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, bool, error) {
-	var dsType tc.DSType
-	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
-		if err == sql.ErrNoRows {
-			return tc.DSTypeInvalid, false, nil
-		}
-		return tc.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
-	}
-	return dsType, true, nil
-}
-
 // GetXMLID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
 func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 	xmlID := ""
@@ -1643,6 +1651,7 @@ ds.regional_geo_blocking,
 ds.remap_text,
 ds.routing_name,
 ds.signing_algorithm,
+ds.range_slice_block_size,
 ds.ssl_key_version,
 ds.tenant_id,
 tenant.name,
@@ -1716,8 +1725,9 @@ xml_id=$49,
 anonymous_blocking_enabled=$50,
 consistent_hash_regex=$51,
 max_origin_connections=$52,
-ecs_enabled=$53
-WHERE id=$54
+ecs_enabled=$53,
+range_slice_block_size=$54
+WHERE id=$55
 RETURNING last_updated
 `
 }
@@ -1777,9 +1787,10 @@ tr_request_headers,
 tr_response_headers,
 type,
 xml_id,
-ecs_enabled
+ecs_enabled,
+range_slice_block_size
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54)
 RETURNING id, last_updated
 `
 }

@@ -48,7 +48,7 @@ Configure Federations
 	.. code-block:: shell
 		:caption: Example cURL Command
 
-		curl -i -XPOST "http://localhost:3000/api/1.1/user/login" -H "Content-Type: application/json" -d '{ "u": "federation_user1", "p": "password" }'
+		curl -i -XPOST "http://localhost:3000/api/2.0/user/login" -H "Content-Type: application/json" -d '{ "u": "federation_user1", "p": "password" }'
 
 	.. code-block:: http
 		:caption: Example API Response
@@ -60,7 +60,7 @@ Configure Federations
 		Content-Type: application/json
 		Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 		Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-		Server: Mojolicious (Perl)
+		X-Server-Name: traffic_ops_golang/
 		Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
 		Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 		Connection: keep-alive
@@ -74,7 +74,7 @@ Configure Federations
 	.. code-block:: shell
 		:caption: Example cURL Command
 
-		curl -ki -H "Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1MTI2LCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---06b4f870d809d82a91433e92eae8320875c3e8b0;" -XPUT 'http://localhost:3000/api/1.2/federations' -d '
+		curl -ki -H "Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1MTI2LCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---06b4f870d809d82a91433e92eae8320875c3e8b0;" -XPUT 'http://localhost:3000/api/2.0/federations' -d '
 		{"federations": [
 			{ "deliveryService": "images-c1",
 			  "mappings":
@@ -89,7 +89,7 @@ Configure Federations
 
 		HTTP/1.1 200 OK
 		Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-		Server: Mojolicious (Perl)
+		X-Server-Name: traffic_ops_golang/
 		Date: Wed, 02 Dec 2015 21:25:42 GMT
 		Content-Length: 74
 		Access-Control-Allow-Credentials: true

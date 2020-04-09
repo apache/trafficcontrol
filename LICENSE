@@ -229,10 +229,6 @@ For the bootstrap component:
 /*! normalize.css v3.0.1 | MIT License | git.io/normalize */
 ./licenses/MIT-normalize
 
-For the sorttable component:
-@traffic_monitor/static/sorttable.js
-./licenses/MIT-sorttable
-
 For the jQuery component:
 ./licenses/MIT-jquery
 
@@ -452,3 +448,11 @@ For the ogier/pflag (commit 45c278a) component:
 For the errors (commit 27936f6) component:
 @vendor/github.com/pkg/errors/*
 ./vendor/github.com/pkg/errors/LICENSE
+
+For the GehirnInc/crypt (commit 6c0105a) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/GehirnInc/crypt/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/GehirnInc/crypt/LICENSE
+
+For the go-acme/lego (version 2.7.2) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/LICENSE

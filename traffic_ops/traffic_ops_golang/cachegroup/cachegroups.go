@@ -385,7 +385,7 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"id":        dbhelpers.WhereColumnInfo{"cachegroup.id", api.IsInt},
 		"name":      dbhelpers.WhereColumnInfo{"cachegroup.name", nil},
-		"shortName": dbhelpers.WhereColumnInfo{"short_name", nil},
+		"shortName": dbhelpers.WhereColumnInfo{"cachegroup.short_name", nil},
 		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
@@ -619,12 +619,6 @@ LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
-}
-
-// unused?
-// select type name so checks are based on name instead of id
-func selectTypeNameQuery() string {
-	return `SELECT name FROM type WHERE id = $1;`
 }
 
 func UpdateQuery() string {

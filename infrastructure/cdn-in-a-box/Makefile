@@ -83,7 +83,7 @@ traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
 	sudo ../../pkg -v traffic_stats_build
 
 clean:
-	$(RM) traffic_ops/traffic_ops.rpm traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm edge/traffic_ops_ort.rpm mid/traffic_ops_ort.rpm
+	$(RM) traffic_monitor/traffic_monitor.rpm traffic_ops/traffic_ops.rpm traffic_portal/traffic_portal.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm edge/traffic_ops_ort.rpm mid/traffic_ops_ort.rpm traffic_stats/traffic_stats.rpm
 
 very-clean: clean
 	$(warning This will destroy ALL OUTPUT RPMS IN 'dist'. Please be sure this is what you want)

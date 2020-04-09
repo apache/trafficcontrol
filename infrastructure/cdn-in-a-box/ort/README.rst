@@ -19,4 +19,14 @@
 Traffic Ops Operational Readiness Test (ORT)
 ********************************************
 
+About
+=====
+
 Please read `the official documentation <https://traffic-control-cdn.readthedocs.io/en/latest/development/ort/traffic_ops_ort.html>`_.
+
+Running Tests
+=============
+
+To run tests:
+
+    python3 -m unittest discover -s tests
