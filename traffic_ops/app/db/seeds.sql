@@ -768,6 +768,7 @@ insert into type (name, description, use_in_table) values ('EDGE_LOC', 'Edge Log
 insert into type (name, description, use_in_table) values ('MID_LOC', 'Mid Logical Location', 'cachegroup') ON CONFLICT (name) DO NOTHING;
 insert into type (name, description, use_in_table) values ('ORG_LOC', 'Origin Logical Site', 'cachegroup') ON CONFLICT (name) DO NOTHING;
 insert into type (name, description, use_in_table) values ('TR_LOC', 'Traffic Router Logical Location', 'cachegroup') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('TC_LOC', 'Traffic Control Component Location', 'cachegroup') ON CONFLICT (name) DO NOTHING;
 
 -- to_extension types
 insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension') ON CONFLICT (name) DO NOTHING;

@@ -1,5 +1,0 @@
-{
-  "description": "Location for Traffic Control Component Servers",
-  "name": "TC_LOC",
-  "useInTable": "cachegroup"
-}
