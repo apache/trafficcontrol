@@ -46,7 +46,7 @@ RUN sed -i -- "s/## listener.https.internal = 127.0.0.1:8098/listener.https.inte
 
 RUN mkdir /etc/riak/certs
 
-RUN echo "tls_protocols.tlsv1 = on" >> /etc/riak/riak.conf 
+RUN echo "tls_protocols.tlsv1.1 = on" >> /etc/riak/riak.conf
 
 EXPOSE 8098 8087 8088
 ADD run.sh /

@@ -39,7 +39,7 @@ function checkGroveEnvironment() {
 	export DIST="${TC_DIR}/dist"
 	export RPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
 
-	# grove needs to be built with go 1.11 or greater
+	# grove needs to be built with go 1.14 or greater
 	verify_and_set_go_version
 	if [[ $? -ne 1 ]]; then
 		exit 0

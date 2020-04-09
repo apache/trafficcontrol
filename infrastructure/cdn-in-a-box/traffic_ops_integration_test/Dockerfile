@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.11.13-alpine3.10 AS integration-builder
+FROM golang:1.14.2-alpine3.11 AS integration-builder
 
 RUN apk add --no-cache --update git gcc
 

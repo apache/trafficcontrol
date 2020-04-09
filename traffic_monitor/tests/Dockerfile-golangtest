@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-FROM golang:1.11
+FROM golang:1.14.2
 ARG DIR=github.com/apache/trafficcontrol
 
 ADD traffic_monitor /go/src/$DIR/traffic_monitor
