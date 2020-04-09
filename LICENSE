@@ -273,6 +273,10 @@ For the angular-moment-picker component:
 @traffic_portal/app/src/assets/js/moment-picker/angular-moment-picker.min_0.10.2.js
 ./licenses/MIT-angular_moment_picker
 
+For the angular-ui-tree component:
+@traffic_portal/app/src/assets/js/angular-ui-tree-min_2.22.6.js
+./licenses/MIT-angular_ui_tree
+
 For the Chart.js component:
 @traffic_portal/app/src/assets/js/chartjs/Chart.min_2.7.2.js
 ./licenses/MIT-chartjs
