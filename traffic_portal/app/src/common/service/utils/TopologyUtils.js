@@ -63,7 +63,7 @@ var TopologyUtils = function() {
 			description: description,
 			nodes: []
 		};
-		flattenNormalizedTopology(topologyTree);
+		flattenNormalizedTopology(topologyTree, true);
 		addNodeIndexes();
 		return normalizedTopology;
 	};

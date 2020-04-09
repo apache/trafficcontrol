@@ -83,7 +83,7 @@ under the License.
     <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content"
          ng-class="{ 'error': hasNodeError(node), 'origin': isOrigin(node), 'mid': isMid(node) }">
         <div class="tree-node-label pull-left">
-            <a class="tree-toggle btn btn-primary btn-xs" ng-if="hasChildren(node)" data-nodrag ng-click="toggle(this)">
+            <a class="tree-toggle btn btn-primary btn-xs" ng-if="node.type !== 'ROOT' && hasChildren(node)" data-nodrag ng-click="toggle(this)">
                 <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
             </a> {{nodeLabel(node)}} <small>{{node.type}}</small>
         </div>

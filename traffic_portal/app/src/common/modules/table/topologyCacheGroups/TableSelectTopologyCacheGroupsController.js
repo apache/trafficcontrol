@@ -113,7 +113,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 				usedCacheGroupNames.includes(cg.name); // a cache group that exists in the topology
 		});
 		if (eligibleSecParentCandidates.length === 0) {
-			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: '', secParent: '' });
+			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: parent.cachegroup, secParent: '' });
 			return;
 		}
 		let params = {
