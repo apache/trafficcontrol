@@ -270,21 +270,3 @@ input:focus + .slider {
 input:checked + .slider::before {
   transform: translateX(13px);
 }
-
-#tree-root {
-	.tree-node.origin {
-		color: #004085;
-		background-color: #cce5ff;
-		border-color: #b8daff;
-	}
-	.tree-node.mid {
-		color: #383d41;
-		background-color: #e2e3e5;
-		border-color: #d6d8db;
-	}
-	.tree-node.error {
-		color: #721c24;
-		background-color: #f2dede;
-		border-color: #f5c6cb;
-	}
-}
