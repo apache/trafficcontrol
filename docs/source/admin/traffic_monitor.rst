@@ -81,3 +81,19 @@ It is not recommended to set either flush interval to 0, regardless of the stat 
 Troubleshooting and Log Files
 =============================
 Traffic Monitor log files are in :file:`/opt/traffic_monitor/var/log/`.
+
+Extensions
+==========
+Traffic Monitor allows extensions to its parsers for the statistics returned by :term:`cache servers` and/or their plugins. The formats supported by Traffic Monitor by default are ``astats``, ``astats-dsnames`` (which is an odd variant of ``astats`` that probably shouldn't be used), and ``stats_over_http``. The format of a :term:`cache server`'s health and statistics reporting payloads must be declared on its :term:`Profile` as the :ref:`param-health-polling-format` :term:`Parameter`, or the default format (``astats``) will be assumed.
+
+For instructions on how to develop a parsing extension, refer to the :atc-godoc:`traffic_monitor/cache` package's documentation.
+
+Importantly, though, a statistics provider *must* respond to HTTP GET requests over either plain HTTP or HTTPS (which is used will be controlled by the :ref:`param-health-polling-url` :term:`Parameter`), and it *must* provide the following statistics, or enough information to calculate them:
+
+- System "loadavg" (only requires the one-minute value)
+
+	.. seealso:: For more information on what "loadavg" is, refer to the :manpage:`proc(5)` manual page.
+
+- Input bytes, output bytes, and speeds for all monitored network interfaces
+
+There are other optional and/or :term:`Delivery Service`-related statistics that may cause Traffic Stats to not have the right information if not provided, but the above are essential for implementing :ref:`health-proto`.

@@ -507,13 +507,15 @@ For each Parameter with this Config File value on the same :ref:`Profile <profil
 
 .. seealso:: `The Apache Traffic server documentation on the plugin.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/plugin.config.en.html>`_ explains what Value_ and :ref:`parameter-name` a Parameter should have to be valid.
 
-.. tm-related-cache-server-params::
+.. _tm-related-cache-server-params:
 
 rascal.properties
 '''''''''''''''''
 This Config File is meant to be on Parameters assigned to either Traffic Monitor Profiles_ or :term:`cache server` Profiles_. Its allowed :ref:`Parameter Names <parameter-name>` are all configuration options for Traffic Monitor. The :ref:`Names <parameter-name>` with meaning are as follows.
 
 .. seealso:: :ref:`health-proto`
+
+.. _param-health-polling-url:
 
 health.polling.url
 	The Value_ of this Parameter sets the URL requested when Traffic Monitor polls cache servers that have this Parameter in their Profiles_. Specifically, the Value_ is interpreted as a template - in a format reminiscent of variable interpolation in double-quoted strings in Bash -, that offers the following substitutions:
@@ -525,7 +527,7 @@ health.polling.url
 
 	Table :ref:`tbl-health-polling-url-examples` gives some examples of templates, inputs, and outputs.
 
-	.. tbl-health-polling-url-examples::
+	.. _tbl-health-polling-url-examples:
 
 	.. table:: health.polling.url Value Examples
 
