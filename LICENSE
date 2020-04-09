@@ -274,6 +274,7 @@ For the angular-moment-picker component:
 ./licenses/MIT-angular_moment_picker
 
 For the angular-ui-tree component:
+@traffic_portal/app/src/assets/css/angular-ui-tree_2.22.6.js
 @traffic_portal/app/src/assets/js/angular-ui-tree-min_2.22.6.js
 ./licenses/MIT-angular_ui_tree
 
