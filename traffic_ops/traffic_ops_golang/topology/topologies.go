@@ -84,69 +84,17 @@ func (topology *TOTopology) Create() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	nodeCount := len(topology.Nodes)
-	cachegroups := make([]string, nodeCount)
-	for index := 0; index < nodeCount; index++ {
-		node := &topology.Nodes[index]
-		cachegroups[index] = node.Cachegroup
-	}
-	rows, err := tx.Query(nodeInsertQuery(), topology.Name, pq.Array(cachegroups))
-	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		return userErr, sysErr, errCode
-	}
-	for index := 0; index < nodeCount; index++ {
-		node := &topology.Nodes[index]
-		rows.Next()
-		err = rows.Scan(&node.Id, &topology.Name, &node.Cachegroup)
-		if err != nil {
-			userErr, sysErr, errCode := api.ParseDBError(err)
-			return userErr, sysErr, errCode
-		}
-	}
-	err = rows.Close()
-	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
+	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
-	children := []int{}
-	parents := []int{}
-	ranks := []int{}
-	for index := 0; index < nodeCount; index++ {
-		node := &topology.Nodes[index]
-		for rank := 1; rank <= len(node.Parents); rank++ {
-			parent := &topology.Nodes[node.Parents[rank-1]]
-			children = append(children, node.Id)
-			parents = append(parents, parent.Id)
-			ranks = append(ranks, rank)
-		}
-	}
-	rows, err = tx.Query(nodeParentInsertQuery(), pq.Array(children), pq.Array(parents), pq.Array(ranks))
-	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		return userErr, sysErr, errCode
-	}
-	for index := 0; index < nodeCount; index++ {
-		node := &topology.Nodes[index]
-		for rank := 1; rank <= len(node.Parents); rank++ {
-			rows.Next()
-			parent := &topology.Nodes[node.Parents[rank-1]]
-			err = rows.Scan(&node.Id, &parent.Id, &rank)
-			if err != nil {
-				userErr, sysErr, errCode := api.ParseDBError(err)
-				return userErr, sysErr, errCode
-			}
-		}
-	}
-	err = rows.Close()
-	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
+	if userErr, sysErr, errCode := topology.addParents(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
 	return nil, nil, 0
 }
+
 func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(t.ReqInfo.Params, t.ParamColumns())
 	if len(errs) > 0 {
@@ -209,6 +157,73 @@ func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 		interfaces = append(interfaces, *topology)
 	}
 	return interfaces, nil, nil, http.StatusOK
+}
+
+func (topology *TOTopology) addNodes() (error, error, int) {
+	nodeCount := len(topology.Nodes)
+	cachegroups := make([]string, nodeCount)
+	for index := 0; index < nodeCount; index++ {
+		cachegroups[index] = topology.Nodes[index].Cachegroup
+	}
+
+	rows, err := topology.ReqInfo.Tx.Query(nodeInsertQuery(), topology.Name, pq.Array(cachegroups))
+	if err != nil {
+		return nil, errors.New("error adding nodes: " + err.Error()), http.StatusInternalServerError
+	}
+	for index := 0; index < nodeCount; index++ {
+		rows.Next()
+		node := &topology.Nodes[index]
+		err = rows.Scan(&node.Id, &topology.Name, &node.Cachegroup)
+		if err != nil {
+			userErr, sysErr, errCode := api.ParseDBError(err)
+			return userErr, sysErr, errCode
+		}
+	}
+	err = rows.Close()
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return userErr, sysErr, errCode
+	}
+	return nil, nil, http.StatusOK
+}
+
+func (topology *TOTopology) addParents() (error, error, int) {
+	children := []int{}
+	parents := []int{}
+	ranks := []int{}
+	nodeCount := len(topology.Nodes)
+	for index := 0; index < nodeCount; index++ {
+		node := &topology.Nodes[index]
+		for rank := 1; rank <= len(node.Parents); rank++ {
+			parent := &topology.Nodes[node.Parents[rank-1]]
+			children = append(children, node.Id)
+			parents = append(parents, parent.Id)
+			ranks = append(ranks, rank)
+		}
+	}
+	rows, err := topology.ReqInfo.Tx.Query(nodeParentInsertQuery(), pq.Array(children), pq.Array(parents), pq.Array(ranks))
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return userErr, sysErr, errCode
+	}
+	for index := 0; index < nodeCount; index++ {
+		node := &topology.Nodes[index]
+		for rank := 1; rank <= len(node.Parents); rank++ {
+			rows.Next()
+			parent := &topology.Nodes[node.Parents[rank-1]]
+			err = rows.Scan(&node.Id, &parent.Id, &rank)
+			if err != nil {
+				userErr, sysErr, errCode := api.ParseDBError(err)
+				return userErr, sysErr, errCode
+			}
+		}
+	}
+	err = rows.Close()
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return userErr, sysErr, errCode
+	}
+	return nil, nil, http.StatusOK
 }
 
 func insertQuery() string {
