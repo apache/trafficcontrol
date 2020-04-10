@@ -19,12 +19,20 @@ type TOTopology struct {
 	tc.Topology
 }
 
+func (topology *TOTopology) DeleteQueryBase() string {
+	return deleteQueryBase()
+}
+
 func (topology *TOTopology) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":        dbhelpers.WhereColumnInfo{"t.name", nil},
 		"description": dbhelpers.WhereColumnInfo{"t.description", nil},
 		"lastUpdated": dbhelpers.WhereColumnInfo{"t.last_updated", nil},
 	}
+}
+
+func (topology *TOTopology) DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo {
+	return topology.ParamColumns()
 }
 
 func (topology *TOTopology) SetLastUpdated(time tc.TimeNoMod) { topology.LastUpdated = &time }
@@ -315,6 +323,36 @@ func (newTopology *TOTopology) Update() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+// Delete is unused and simply satisfies the Deleter interface
+// (although TOTOpology is used as an OptionsDeleter)
+func (topology *TOTopology) Delete() (error, error, int) {
+	return nil, nil, 0
+}
+
+func (topology *TOTopology) OptionsDelete() (error, error, int) {
+	topologies, userErr, sysErr, errCode := topology.Read()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+	if len(topologies) != 1 {
+		return fmt.Errorf("cannot find exactly 1 topology with the query string provided."), nil, http.StatusBadRequest
+	}
+	topology = &TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
+
+	var cachegroups []string
+	for _, node := range topology.Nodes {
+		cachegroups = append(cachegroups, node.Cachegroup)
+	}
+	if err := topology.removeNodes(&cachegroups); err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	if err := topology.removeParents(); err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	api.GenericOptionsDelete(topology)
+	return nil, nil, http.StatusOK
+}
+
 func insertQuery() string {
 	query := `
 INSERT INTO topology (name, description)
@@ -358,14 +396,9 @@ JOIN topology_cachegroup tc on t.name = tc.topology
 	return query
 }
 
-func deleteParentsQuery() string {
+func deleteQueryBase() string {
 	query := `
-DELETE FROM topology_cachegroup_parents tcp
-WHERE tcp.child IN
-    (SELECT tc.id
-    FROM topology t
-    JOIN topology_cachegroup tc on t.name = tc.topology
-    WHERE t.name = $1)
+DELETE FROM topology t
 `
 	return query
 }
@@ -375,6 +408,18 @@ func deleteNodesQuery() string {
 DELETE FROM topology_cachegroup tc
 WHERE tc.topology = $1
 AND tc.cachegroup = ANY ($2::text[])
+`
+	return query
+}
+
+func deleteParentsQuery() string {
+	query := `
+DELETE FROM topology_cachegroup_parents tcp
+WHERE tcp.child IN
+    (SELECT tc.id
+    FROM topology t
+    JOIN topology_cachegroup tc on t.name = tc.topology
+    WHERE t.name = $1)
 `
 	return query
 }

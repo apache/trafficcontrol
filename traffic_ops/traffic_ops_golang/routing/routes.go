@@ -283,6 +283,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodPost, `topologies/?$`, api.CreateHandler(&topology.TOTopology{}), auth.PrivLevelOperations, Authenticated, nil, 3871452221, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `topologies/?$`, api.ReadHandler(&topology.TOTopology{}), auth.PrivLevelReadOnly, Authenticated, nil, 3871452222, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `topologies/?$`, api.UpdateHandler(&topology.TOTopology{}), auth.PrivLevelReadOnly, Authenticated, nil, 3871452223, noPerlBypass},
+		{api.Version{2, 0}, http.MethodDelete, `topologies/?$`, api.DeleteHandler(&topology.TOTopology{}), auth.PrivLevelReadOnly, Authenticated, nil, 3871452224, noPerlBypass},
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
