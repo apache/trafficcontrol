@@ -51,7 +51,7 @@ Example Playbook
       riak_listener_protobuf_internal: "{{ ansible_default_ipv4.address }}:8087"
       riak_protobuf_backlog: 4096
       riak_listener_https_internal: "{{ ansible_default_ipv4.address }}:8088"
-      riak_tls_protocols_tlsv1: 'on'
+      riak_tls_protocols_tlsv1_1: 'on'
       riak_ringleader: "riak@{{ hostvars[groups['riak'] | first].ansible_default_ipv4.address }}"
       riak_ssl_certfile: /etc/pki/tls/certs/server.crt
       riak_ssl_keyfile: /etc/pki/tls/private/server.key.pem
