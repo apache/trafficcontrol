@@ -109,7 +109,6 @@ func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 
 	interfaces := []interface{}{}
 	topologies := map[string]*tc.Topology{}
-	topology := tc.Topology{}
 	indices := map[int]int{}
 	for index := 0; rows.Next(); index++ {
 		var name, description string
@@ -132,13 +131,13 @@ func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 		}
 		indices[topologyNode.Id] = index
 		if _, exists := topologies[name]; !exists {
-			topology = tc.Topology{}
+			topology := tc.Topology{}
 			topologies[name] = &topology
 			topology.Name = name
 			topology.Description = description
 			topology.LastUpdated = &lastUpdated
 		}
-		topology.Nodes = append(topology.Nodes, topologyNode)
+		topologies[name].Nodes = append(topologies[name].Nodes, topologyNode)
 	}
 
 	for _, topology := range topologies {
