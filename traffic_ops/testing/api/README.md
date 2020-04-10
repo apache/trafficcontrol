@@ -41,7 +41,31 @@ In order to run the tests you will need the following:
     and here: `traffic-ops-test.conf` 
 
     The Traffic Ops users will be created by the tool for accessing the API once the database is accessible.
-
+    
+    Note that for the database to successfully set up the tables and run the migrations, you will need `goose`.
+    On your local machines(Macs), DO NOT install `goose` using `homebrew`. It will install another non compliant
+    version of `goose` which doesn't support the `-env` flag. Instead, install it using the script located at
+    `traffic_ops/install/bin/install_goose.sh`. 
+    To test if `goose` migrated everything correctly, you can run the following command from the `traffic_ops/app`
+    directory:
+    `goose -env=test status "user=traffic_ops dbname=to_test sslmode=disable"`
+    
+    The result should be something similar to:
+    `goose: status for environment 'test'
+     Applied At                  Migration
+     =======================================
+     Thu Apr  9 21:55:29 2020 -- 20181206000000_create_monitor_snapshots.sql
+     Thu Apr  9 21:55:29 2020 -- 20190219000000_add_consistent_hash_regex.sql
+     Thu Apr  9 21:55:29 2020 -- 20190319000000_add_max_origin_connections.sql
+     Thu Apr  9 21:55:30 2020 -- 20190513000000_add-allowed_query_keys.sql
+     Thu Apr  9 21:55:30 2020 -- 20191004000000_add_server_capabilities.sql
+     Thu Apr  9 21:55:30 2020 -- 20191005000000_add_server_server_capability.sql
+     Thu Apr  9 21:55:30 2020 -- 20191024000000_add_deliveryservices_required_capability.sql
+     Thu Apr  9 21:55:30 2020 -- 20191215000000_add_ecs_enabled.sql
+     Thu Apr  9 21:55:30 2020 -- 20200218000000_add_dns_challenges.sql
+     Thu Apr  9 21:55:30 2020 -- 20200227000000_add_ds_slice_block_size.sql
+     Thu Apr  9 21:55:30 2020 -- 20200313000000_add_server_ip_toggles.sql`
+    
     For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
 
 3. A running Traffic Ops instance running with the `secure` (https) and is pointing to the `to_test` 
@@ -60,7 +84,49 @@ In order to run the tests you will need the following:
 	change `traffic_ops_golang->port` to 8443
 
     `$ go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/test/database.conf`
-
+    
+    In your local development environment, if the above command fails for an error similar to 
+    `ERROR: traffic_ops_golang.go:193: 2020-04-10T10:55:53.190298-06:00: cannot open /etc/pki/tls/certs/localhost.crt for read: open /etc/pki/tls/certs/localhost.crt: no such file or directory`
+    you might not have the right certificates at the right locations. Follow the following procedure
+    to fix it:
+    ```bash
+         $ openssl genrsa -des3 -passout pass:x -out localhost.pass.key 2048
+         Generating RSA private key, 2048 bit long modulus
+         ...
+         $ openssl rsa -passin pass:x -in localhost.pass.key -out localhost.key
+         writing RSA key
+         $ rm localhost.pass.key
+         
+         $ openssl req -new -key localhost.key -out localhost.csr
+         You are about to be asked to enter information that will be incorporated
+         into your certificate request.
+         What you are about to enter is what is called a Distinguished Name or a DN.
+         There are quite a few fields but you can leave some blank
+         For some fields there will be a default value,
+         If you enter '.', the field will be left blank.
+         -----
+         Country Name (2 letter code) [XX]:US<enter>
+         State or Province Name (full name) []:CO<enter>
+         Locality Name (eg, city) [Default City]:Denver<enter>
+         Organization Name (eg, company) [Default Company Ltd]: <enter>
+         Organizational Unit Name (eg, section) []: <enter>
+         Common Name (eg, your name or your server's hostname) []: <enter>
+         Email Address []: <enter>
+         
+         Please enter the following 'extra' attributes
+         to be sent with your certificate request
+         A challenge password []: pass<enter>
+         An optional company name []: <enter>
+         $ openssl x509 -req -sha256 -days 365 -in localhost.csr -signkey localhost.key -out localhost.crt
+         Signature ok
+         subject=/C=US/ST=CO/L=Denver/O=Default Company Ltd
+         Getting Private key
+         $ sudo cp localhost.crt /etc/pki/tls/certs
+         $ sudo cp localhost.key /etc/pki/tls/private
+         $ sudo chown trafops:trafops /etc/pki/tls/certs/localhost.crt
+         $ sudo chown trafops:trafops /etc/pki/tls/private/localhost.key
+    ```
+     
 ## Running the API Tests
 The integration tests are run using `go test`, however, there are some flags that need to be provided in order for the tests to work.  
 
