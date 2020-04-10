@@ -21,7 +21,7 @@ var TopologyUtils = function() {
 
 	let normalizedTopology;
 
-	let flattenNormalizedTopology = function(topologyTree, fromScratch) {
+	let flattenTopology = function(topologyTree, fromScratch) {
 		if (fromScratch) normalizedTopology.nodes = [];
 		topologyTree.forEach(function(node) {
 			if (node.cachegroup) {
@@ -33,7 +33,7 @@ var TopologyUtils = function() {
 				});
 			}
 			if (node.children && node.children.length > 0) {
-				flattenNormalizedTopology(node.children, false);
+				flattenTopology(node.children, false);
 			}
 		});
 	};
@@ -49,21 +49,16 @@ var TopologyUtils = function() {
 				}
 			}
 		});
-		normalizedTopology.nodes.forEach(function(currentNode) {
-			delete currentNode.id;
-			delete currentNode.type;
-			delete currentNode.parent;
-			delete currentNode.secParent;
-		});
 	};
 
 	this.getNormalizedTopology = function(name, description, topologyTree) {
+		// build a normalized (flat) topology with parent indexes required for topology create/update
 		normalizedTopology = {
 			name: name,
 			description: description,
 			nodes: []
 		};
-		flattenNormalizedTopology(topologyTree, true);
+		flattenTopology(topologyTree, true);
 		addNodeIndexes();
 		return normalizedTopology;
 	};
