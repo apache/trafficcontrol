@@ -380,9 +380,11 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 }
 
 func GetCacheGroupByName(name string, apiInfo *api.APIInfoImpl) (*tc.CacheGroupNullable, error) {
+	originalParams := apiInfo.ReqInfo.Params
 	apiInfo.ReqInfo.Params = map[string]string{"name": name}
 	cacheGroup := TOCacheGroup{APIInfoImpl: *apiInfo}
 	result, userErr, sysErr, _ := cacheGroup.Read()
+	apiInfo.ReqInfo.Params = originalParams
 	if userErr != nil || sysErr != nil {
 		return nil, util.JoinErrs([]error{userErr, sysErr})
 	}
