@@ -72,7 +72,7 @@ TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
 traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF");
 if [[ "$TO_DEBUG_ENABLE" == true ]]; then
-  traffic_ops_golang_command=(dlv '--check-go-version=false' '--accept-multiclient' '--continue' '--listen=:2345' '--headless=true' '--api-version=2' exec
+  traffic_ops_golang_command=(dlv '--accept-multiclient' '--continue' '--listen=:2345' '--headless=true' '--api-version=2' exec
     "${traffic_ops_golang_command[0]}" -- "${traffic_ops_golang_command[@]:1}");
 fi;
 "${traffic_ops_golang_command[@]}" &
