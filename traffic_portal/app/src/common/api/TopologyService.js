@@ -33,8 +33,6 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 	this.createTopology = function(topology) {
 		return $http.post(ENV.api['root'] + 'topologies', topology).then(
 			function(result) {
-				messageModel.setMessages([ { level: 'success', text: 'Topology created' } ], true);
-				locationUtils.navigateToPath('/topologies');
 				return result;
 			},
 			function(err) {
@@ -45,22 +43,16 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 	};
 
 	this.updateTopology = function(topology) {
-		console.log(topology);
-		alert('not implemented yet. hold your horses.');
+		return $http.put(ENV.api['root'] + 'topologies?name=' + topology.name, topology).then(
+			function(result) {
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
-
-	// this.updateTopology = function(topology) {
-	// 	return $http.put(ENV.api['root'] + 'topologies/' + topology.id, topology).then(
-	// 		function(result) {
-	// 			messageModel.setMessages([ { level: 'success', text: 'Topology updated' } ], false);
-	// 			return result;
-	// 		},
-	// 		function(err) {
-	// 			messageModel.setMessages(err.data.alerts, false);
-	// 			throw err;
-	// 		}
-	// 	);
-	// };
 
 	this.deleteTopology = function(id) {
 		alert('not implemented yet. hold your horses.');

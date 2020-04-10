@@ -33,6 +33,7 @@ var FormNewTopologyController = function(topology, cacheGroups, $scope, $control
 		let normalizedTopology = topologyUtils.getNormalizedTopology(name, description, topologyTree);
 		topologyService.createTopology(normalizedTopology).
 			then(function() {
+				messageModel.setMessages([ { level: 'success', text: 'Topology created' } ], true);
 				locationUtils.navigateToPath('/topologies');
 			});
 	};

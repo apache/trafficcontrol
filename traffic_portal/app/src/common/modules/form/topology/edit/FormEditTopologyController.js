@@ -38,9 +38,10 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 
 	$scope.save = function(name, description, topologyTree) {
 		let normalizedTopology = topologyUtils.getNormalizedTopology(name, description, topologyTree);
-		topologyService.updateTopology(normalizedTopology);
-		// messageModel.setMessages([ { level: 'success', text: name + ' topology was updated' } ], true);
-		// locationUtils.navigateToPath('/topologies');
+		topologyService.updateTopology(normalizedTopology).
+			then(function() {
+				messageModel.setMessages([ { level: 'success', text: 'Topology updated' } ], false);
+			});
 	};
 
 	$scope.confirmDelete = function(topology) {
