@@ -159,6 +159,22 @@ func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 	return interfaces, nil, nil, http.StatusOK
 }
 
+func (topology *TOTopology) removeParents() error {
+	_, err := topology.ReqInfo.Tx.Exec(deleteParentsQuery(), topology.Name)
+	if err != nil {
+		return errors.New("topology update: error deleting old parents: " + err.Error())
+	}
+	return nil
+}
+
+func (topology *TOTopology) removeNodes(cachegroups *[]string) error {
+	_, err := topology.ReqInfo.Tx.Exec(deleteNodesQuery(), topology.Name, pq.Array(*cachegroups))
+	if err != nil {
+		return errors.New("topology update: error removing old unused nodes: " + err.Error())
+	}
+	return nil
+}
+
 func (topology *TOTopology) addNodes() (error, error, int) {
 	nodeCount := len(topology.Nodes)
 	cachegroups := make([]string, nodeCount)
@@ -226,6 +242,80 @@ func (topology *TOTopology) addParents() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+func (topology *TOTopology) setDescription() (error, error, int) {
+	rows, err := topology.ReqInfo.Tx.Query(updateQuery(), topology.Description, topology.Name)
+	if err != nil {
+		return nil, fmt.Errorf("topology update: error setting the description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
+	}
+	for rows.Next() {
+		err = rows.Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
+		if err != nil {
+			userErr, sysErr, errCode := api.ParseDBError(err)
+			return userErr, sysErr, errCode
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
+func (newTopology *TOTopology) Update() (error, error, int) {
+	topologies, userErr, sysErr, errCode := newTopology.Read()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+	if len(topologies) != 1 {
+		return fmt.Errorf("cannot find exactly 1 topology with the query string provided."), nil, http.StatusBadRequest
+	}
+	topology := TOTopology{APIInfoImpl: newTopology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
+	if userErr, sysErr, errCode := newTopology.setDescription(); userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+
+	if err := topology.removeParents(); err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	var oldNodes, newNodes = map[string]int{}, map[string]int{}
+	var oldNodesLength, newNodesLength = len(topology.Nodes), len(newTopology.Nodes)
+	for index := 0; index < oldNodesLength; index++ {
+		node := &topology.Nodes[index]
+		oldNodes[(*node).Cachegroup] = index
+	}
+	for index := 0; index < newNodesLength; index++ {
+		node := &newTopology.Nodes[index]
+		newNodes[(*node).Cachegroup] = index
+	}
+	var toRemove, toAdd = []string{}, []tc.TopologyNode{}
+	for cachegroupName, _ := range oldNodes {
+		if _, exists := newNodes[cachegroupName]; !exists {
+			toRemove = append(toRemove, cachegroupName)
+		} else {
+			newTopology.Nodes[newNodes[cachegroupName]].Id = topology.Nodes[oldNodes[cachegroupName]].Id
+		}
+	}
+	for cachegroupName, index := range newNodes {
+		if _, exists := oldNodes[cachegroupName]; !exists {
+			toAdd = append(toAdd, newTopology.Nodes[index])
+		}
+	}
+	if err := topology.removeNodes(&toRemove); err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	topology.Nodes = toAdd
+	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+	nodeCount := len(topology.Nodes)
+	for index := 0; index < nodeCount; index++ {
+		newTopology.Nodes[newNodes[topology.Nodes[index].Cachegroup]] = topology.Nodes[index]
+	}
+
+	if userErr, sysErr, errCode := newTopology.addParents(); userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+
+	return nil, nil, http.StatusOK
+}
+
 func insertQuery() string {
 	query := `
 INSERT INTO topology (name, description)
@@ -264,6 +354,47 @@ tc.id, tc.cachegroup,
 	)
 FROM topology t
 JOIN topology_cachegroup tc on t.name = tc.topology
+`
+	return query
+}
+
+func deleteParentsQuery() string {
+	query := `
+DELETE FROM topology_cachegroup_parents tcp
+WHERE tcp.child IN
+    (SELECT tc.id
+    FROM topology t
+    JOIN topology_cachegroup tc on t.name = tc.topology
+    WHERE t.name = $1)
+`
+	return query
+}
+
+func deleteNodesQuery() string {
+	query := `
+DELETE FROM topology_cachegroup tc
+WHERE tc.topology = $1
+AND tc.cachegroup = ANY ($2::text[])
+`
+	return query
+}
+
+func updateQuery() string {
+	query := `
+UPDATE topology t SET
+description = $1
+WHERE t.name = $2
+RETURNING t.name, t.description, t.last_updated
+`
+	return query
+}
+
+func nodeUpdateQuery() string {
+	query := `
+UPDATE topology_cachegroup tc SET
+tc.topology = $1, tc.cachegroup = unnest($2::text[])
+WHERE tc.id = unnest($3::int[])
+RETURNING tc.id, tc.topology, tc.cachegroup
 `
 	return query
 }
