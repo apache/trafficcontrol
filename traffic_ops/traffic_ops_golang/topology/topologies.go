@@ -350,7 +350,8 @@ tc.id, tc.cachegroup,
 	(SELECT COALESCE (ARRAY_AGG (CAST (tcp.parent as INT) ORDER BY tcp.rank ASC)) AS parents
 	FROM topology_cachegroup tc2
 	INNER JOIN topology_cachegroup_parents tcp ON tc2.id = tcp.child
-	WHERE tc2.cachegroup = tc.cachegroup
+	WHERE tc2.topology = tc.topology
+	AND tc2.cachegroup = tc.cachegroup
 	)
 FROM topology t
 JOIN topology_cachegroup tc on t.name = tc.topology
