@@ -161,6 +161,7 @@ func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 
 	interfaces := []interface{}{}
 	topologies := map[string]*tc.Topology{}
+	topology := tc.Topology{}
 	indices := map[int]int{}
 	for index := 0; rows.Next(); index++ {
 		var name, description string
@@ -182,14 +183,14 @@ func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 			topologyNode.Parents = append(topologyNode.Parents, int(id))
 		}
 		indices[topologyNode.Id] = index
-		if _, exists := topologies[name]; ! exists {
-			topology := tc.Topology{}
+		if _, exists := topologies[name]; !exists {
+			topology = tc.Topology{}
 			topologies[name] = &topology
 			topology.Name = name
 			topology.Description = description
 			topology.LastUpdated = &lastUpdated
 		}
-		topologies[name].Nodes = append(topologies[name].Nodes, topologyNode)
+		topology.Nodes = append(topology.Nodes, topologyNode)
 	}
 
 	for _, topology := range topologies {
@@ -207,7 +208,7 @@ func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 		}
 		interfaces = append(interfaces, *topology)
 	}
-	return interfaces, nil, nil, 0
+	return interfaces, nil, nil, http.StatusOK
 }
 
 func insertQuery() string {
