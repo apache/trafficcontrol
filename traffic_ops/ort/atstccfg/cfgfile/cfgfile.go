@@ -34,6 +34,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
 )
 
+const TrafficOpsProxyParameterName = `tm.rev_proxy.url`
+
 // TODO: validate all "profile scope" files are the server's profile.
 //       If they ever weren't, we'll send bad data, because we're only getting the server's profile data.
 //       Getting all data for all profiles in TOData isn't reasonable.
@@ -43,6 +45,36 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 	defer func() { log.Infof("GetTOData took %v\n", time.Since(start)) }()
 
 	toData := &config.TOData{}
+
+	globalParams, err := cfg.TOClient.GetGlobalParameters()
+	if err != nil {
+		return nil, errors.New("getting global parameters: " + err.Error())
+	}
+	toData.GlobalParams = globalParams
+	toData.TOToolName, toData.TOURL = toreq.GetTOToolNameAndURL(globalParams)
+
+	if !cfg.DisableProxy {
+		toProxyURLStr := ""
+		for _, param := range globalParams {
+			if param.Name == TrafficOpsProxyParameterName {
+				toProxyURLStr = param.Value
+				break
+			}
+		}
+		if toProxyURLStr != "" {
+			realTOURL := cfg.TOClient.C.URL
+			cfg.TOClient.C.URL = toProxyURLStr
+			log.Infoln("using Traffic Ops proxy '" + toProxyURLStr + "'")
+			if _, _, err := cfg.TOClient.C.GetCDNs(); err != nil {
+				log.Warnln("Traffic Ops proxy '" + toProxyURLStr + "' failed to get CDNs, falling back to real Traffic Ops")
+				cfg.TOClient.C.URL = realTOURL
+			}
+		} else {
+			log.Infoln("Traffic Ops proxy enabled, but GLOBAL Parameter '" + TrafficOpsProxyParameterName + "' missing or empty, not using proxy")
+		}
+	} else {
+		log.Infoln("Traffic Ops proxy is disabled, not checking or using GLOBAL Parameter '" + TrafficOpsProxyParameterName)
+	}
 
 	serversF := func() error {
 		defer func(start time.Time) { log.Infof("serversF took %v\n", time.Since(start)) }(time.Now())
@@ -192,16 +224,6 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		toData.CacheGroups = cacheGroups
 		return nil
 	}
-	globalParamsF := func() error {
-		defer func(start time.Time) { log.Infof("globalParamsF took %v\n", time.Since(start)) }(time.Now())
-		globalParams, err := cfg.TOClient.GetGlobalParameters()
-		if err != nil {
-			return errors.New("getting global parameters: " + err.Error())
-		}
-		toData.GlobalParams = globalParams
-		toData.TOToolName, toData.TOURL = toreq.GetTOToolNameAndURL(globalParams)
-		return nil
-	}
 	scopeParamsF := func() error {
 		defer func(start time.Time) { log.Infof("scopeParamsF took %v\n", time.Since(start)) }(time.Now())
 		scopeParams, err := cfg.TOClient.GetParametersByName("scope")
@@ -279,7 +301,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		return nil
 	}
 
-	fs := []func() error{dssF, serversF, cgF, globalParamsF, scopeParamsF, jobsF}
+	fs := []func() error{dssF, serversF, cgF, scopeParamsF, jobsF}
 	if !cfg.RevalOnly {
 		// skip data not needed for reval, if we're reval-only
 		fs = append([]func() error{dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF}, fs...)
