@@ -245,7 +245,8 @@ sub hash_pass {
 sub generateLdapConf {
     my %userInput = %{$_[0]}; shift;
     my $fileName  = shift;
-    my $useLdap = %{@{$userInput{$fileName}}[0]}{"Do you want to set up LDAP?"};
+    my %ldapInput = %{@{$userInput{$fileName}}[0]};
+    my $useLdap = $ldapInput{"Do you want to set up LDAP?"};
 
     if ( !lc $useLdap =~ /^y(?:es)?/ ) {
         InstallUtils::logger( "Not setting up ldap", "info" );
@@ -324,8 +325,9 @@ sub sanityCheckDefaults {
         foreach my $defaultValue ( @{ $defaultInputs{$file} } ) {
             my $question = getConfigQuestion(\%$defaultValue);
 
-            if ( !defined %$defaultValue{"config_var"}
-                || %$defaultValue{"config_var"} eq "" )
+            my %defaultValueHash = %$defaultValue;
+            if ( !defined $defaultValueHash{"config_var"}
+                || $defaultValueHash{"config_var"} eq "" )
             {
                 errorOut("Question '$question' in file '$file' has no config_var");
             }
