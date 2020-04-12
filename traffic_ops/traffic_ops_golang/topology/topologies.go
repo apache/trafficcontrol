@@ -50,23 +50,24 @@ func (topology *TOTopology) Validate() error {
 	rules := validation.Errors{}
 	rules["name"] = validation.Validate(topology.Name, validation.Required, nameRule)
 
-	nodeCount := len(topology.Nodes)
+	nodeCount := len(*topology.Nodes)
 	rules["length"] = validation.Validate(nodeCount, validation.Min(1))
 	cacheGroups := make([]*tc.CacheGroupNullable, nodeCount)
 	var err error
 	for index := 0; index < nodeCount; index++ {
-		node := &topology.Nodes[index]
-		rules[fmt.Sprintf("node %v parents size", index)] = validation.Validate(node.Parents, validation.Length(0, 2))
-		rules[fmt.Sprintf("node %v duplicate parents", index)] = checkForDuplicateParents(&topology.Nodes, index)
-		if cacheGroups[index], err = cachegroup.GetCacheGroupByName(node.Cachegroup, &topology.APIInfoImpl); err != nil {
-			rules[fmt.Sprintf("node %v parents size", index)] = fmt.Errorf("error getting cachegroup %v: %v", node.Cachegroup, err.Error())
+		node := (*topology.Nodes)[index]
+		rules[fmt.Sprintf("node %v parents size", index)] = validation.Validate((*node).Parents, validation.Length(0, 2))
+		rules[fmt.Sprintf("node %v duplicate parents", index)] = checkForDuplicateParents(topology.Nodes, index)
+		if cacheGroups[index], err = cachegroup.GetCacheGroupByName((*node).Cachegroup, &topology.APIInfoImpl); err != nil {
+			rules[fmt.Sprintf("node %v parents size", index)] = fmt.Errorf("error getting cachegroup %v: %v", (*node).Cachegroup, err.Error())
 		}
 	}
 	rules["duplicate cachegroup name"] = checkUniqueCacheGroupNames(topology.Nodes)
 
 	for index := 0; index < nodeCount; index++ {
-		rules["parents edge type"] = checkForEdgeParents(&topology.Nodes, &cacheGroups, index)
+		rules["parents edge type"] = checkForEdgeParents(topology.Nodes, &cacheGroups, index)
 	}
+
 	errs := tovalidate.ToErrors(rules)
 	return util.JoinErrs(errs)
 }
@@ -139,24 +140,23 @@ func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 		}
 		indices[topologyNode.Id] = index
 		if _, exists := topologies[name]; !exists {
-			topology := tc.Topology{}
+			topology := tc.Topology{Nodes: &[]*tc.TopologyNode{}}
 			topologies[name] = &topology
 			topology.Name = name
 			topology.Description = description
 			topology.LastUpdated = &lastUpdated
 		}
-		topologies[name].Nodes = append(topologies[name].Nodes, topologyNode)
+		*topologies[name].Nodes = append(*topologies[name].Nodes, &topologyNode)
 	}
 
 	for _, topology := range topologies {
-		nodes := &topology.Nodes
-		nodeCount := len(topology.Nodes)
+		nodes := topology.Nodes
+		nodeCount := len(*topology.Nodes)
 		nodeMap := map[int]int{}
 		for index := 0; index < nodeCount; index++ {
 			nodeMap[(*nodes)[index].Id] = index
 		}
-		for nodeIndex := 0; nodeIndex < nodeCount; nodeIndex++ {
-			node := &(*nodes)[nodeIndex]
+		for _, node := range *nodes {
 			for parentIndex := 0; parentIndex < len((*node).Parents); parentIndex++ {
 				(*node).Parents[parentIndex] = nodeMap[(*node).Parents[parentIndex]]
 			}
@@ -183,19 +183,18 @@ func (topology *TOTopology) removeNodes(cachegroups *[]string) error {
 }
 
 func (topology *TOTopology) addNodes() (error, error, int) {
-	nodeCount := len(topology.Nodes)
+	nodeCount := len(*topology.Nodes)
 	cachegroups := make([]string, nodeCount)
 	for index := 0; index < nodeCount; index++ {
-		cachegroups[index] = topology.Nodes[index].Cachegroup
+		cachegroups[index] = (*topology.Nodes)[index].Cachegroup
 	}
 
 	rows, err := topology.ReqInfo.Tx.Query(nodeInsertQuery(), topology.Name, pq.Array(cachegroups))
 	if err != nil {
 		return nil, errors.New("error adding nodes: " + err.Error()), http.StatusInternalServerError
 	}
-	for index := 0; index < nodeCount; index++ {
+	for _, node := range *topology.Nodes {
 		rows.Next()
-		node := &topology.Nodes[index]
 		err = rows.Scan(&node.Id, &topology.Name, &node.Cachegroup)
 		if err != nil {
 			userErr, sysErr, errCode := api.ParseDBError(err)
@@ -214,11 +213,11 @@ func (topology *TOTopology) addParents() (error, error, int) {
 	children := []int{}
 	parents := []int{}
 	ranks := []int{}
-	nodeCount := len(topology.Nodes)
+	nodeCount := len(*topology.Nodes)
 	for index := 0; index < nodeCount; index++ {
-		node := &topology.Nodes[index]
+		node := (*topology.Nodes)[index]
 		for rank := 1; rank <= len(node.Parents); rank++ {
-			parent := &topology.Nodes[node.Parents[rank-1]]
+			parent := (*topology.Nodes)[node.Parents[rank-1]]
 			children = append(children, node.Id)
 			parents = append(parents, parent.Id)
 			ranks = append(ranks, rank)
@@ -230,10 +229,10 @@ func (topology *TOTopology) addParents() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 	for index := 0; index < nodeCount; index++ {
-		node := &topology.Nodes[index]
+		node := (*topology.Nodes)[index]
 		for rank := 1; rank <= len(node.Parents); rank++ {
 			rows.Next()
-			parent := &topology.Nodes[node.Parents[rank-1]]
+			parent := (*topology.Nodes)[node.Parents[rank-1]]
 			err = rows.Scan(&node.Id, &parent.Id, &rank)
 			if err != nil {
 				userErr, sysErr, errCode := api.ParseDBError(err)
@@ -281,39 +280,39 @@ func (newTopology *TOTopology) Update() (error, error, int) {
 		return nil, err, http.StatusInternalServerError
 	}
 	var oldNodes, newNodes = map[string]int{}, map[string]int{}
-	var oldNodesLength, newNodesLength = len(topology.Nodes), len(newTopology.Nodes)
+	var oldNodesLength, newNodesLength = len(*topology.Nodes), len(*newTopology.Nodes)
 	for index := 0; index < oldNodesLength; index++ {
-		node := &topology.Nodes[index]
+		node := (*topology.Nodes)[index]
 		oldNodes[(*node).Cachegroup] = index
 	}
 	for index := 0; index < newNodesLength; index++ {
-		node := &newTopology.Nodes[index]
+		node := (*newTopology.Nodes)[index]
 		newNodes[(*node).Cachegroup] = index
 	}
-	var toRemove, toAdd = []string{}, []tc.TopologyNode{}
+	var toRemove, toAdd = []string{}, []*tc.TopologyNode{}
 	for cachegroupName, _ := range oldNodes {
 		if _, exists := newNodes[cachegroupName]; !exists {
 			toRemove = append(toRemove, cachegroupName)
 		} else {
-			newTopology.Nodes[newNodes[cachegroupName]].Id = topology.Nodes[oldNodes[cachegroupName]].Id
+			(*newTopology.Nodes)[newNodes[cachegroupName]].Id = (*topology.Nodes)[oldNodes[cachegroupName]].Id
 		}
 	}
 	for cachegroupName, index := range newNodes {
 		if _, exists := oldNodes[cachegroupName]; !exists {
-			toAdd = append(toAdd, newTopology.Nodes[index])
+			toAdd = append(toAdd, (*newTopology.Nodes)[index])
 		}
 	}
 	if err := topology.removeNodes(&toRemove); err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
 
-	topology.Nodes = toAdd
+	topology.Nodes = &toAdd
 	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-	nodeCount := len(topology.Nodes)
+	nodeCount := len(*topology.Nodes)
 	for index := 0; index < nodeCount; index++ {
-		newTopology.Nodes[newNodes[topology.Nodes[index].Cachegroup]] = topology.Nodes[index]
+		(*newTopology.Nodes)[newNodes[(*topology.Nodes)[index].Cachegroup]] = (*topology.Nodes)[index]
 	}
 
 	if userErr, sysErr, errCode := newTopology.addParents(); userErr != nil || sysErr != nil {
@@ -340,7 +339,7 @@ func (topology *TOTopology) OptionsDelete() (error, error, int) {
 	topology = &TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
 
 	var cachegroups []string
-	for _, node := range topology.Nodes {
+	for _, node := range *topology.Nodes {
 		cachegroups = append(cachegroups, node.Cachegroup)
 	}
 	if err := topology.removeNodes(&cachegroups); err != nil {

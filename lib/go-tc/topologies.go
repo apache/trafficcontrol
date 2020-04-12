@@ -22,7 +22,7 @@ package tc
 type Topology struct {
 	Description string         `json:"description" db:"description"`
 	Name        string         `json:"name" db:"name"`
-	Nodes       []TopologyNode `json:"nodes"`
+	Nodes       *[]*TopologyNode `json:"nodes"`
 	LastUpdated *TimeNoMod     `json:"lastUpdated" db:"last_updated"`
 }
 
