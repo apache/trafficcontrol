@@ -20,7 +20,7 @@
 var TopologyService = function($http, ENV, locationUtils, messageModel) {
 
 	this.getTopologies = function(queryParams) {
-		return $http.get(ENV.api['root'] + 'topologies', {params: queryParams}).then(
+		return $http.get(ENV.api['root'] + 'topologies', { params: queryParams }).then(
 			function(result) {
 				return result.data.response;
 			},
@@ -54,18 +54,16 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 		);
 	};
 
-	this.deleteTopology = function(id) {
-		alert('not implemented yet. hold your horses.');
-		// return $http.delete(ENV.api['root'] + "topologies/" + id).then(
-		// 	function(result) {
-		// 		messageModel.setMessages([ { level: 'success', text: 'Topology deleted' } ], true);
-		// 		return result;
-		// 	},
-		// 	function(err) {
-		// 		messageModel.setMessages(err.data.alerts, true);
-		// 		throw err;
-		// 	}
-		// );
+	this.deleteTopology = function(topology) {
+		return $http.delete(ENV.api['root'] + "topologies?name=" + topology.name).then(
+			function(result) {
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, true);
+				throw err;
+			}
+		);
 	};
 
 };

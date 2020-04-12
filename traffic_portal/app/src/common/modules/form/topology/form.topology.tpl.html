@@ -31,7 +31,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(topologyForm.name), 'has-feedback': hasError(topologyForm.name)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="name" type="text" class="form-control" ng-model="topology.name" pattern="[A-Za-z0-9]([A-Za-z\-0-9]*[A-Za-z0-9])?" required autofocus>
+                    <input name="name" type="text" class="form-control" ng-model="topology.name" ng-disabled="!settings.isNew" pattern="[A-Za-z0-9]([A-Za-z\-0-9]*[A-Za-z0-9])?" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'pattern')">No special characters, periods, underscores, or spaces and cannot begin or end with a hyphen</small>
                     <span ng-show="hasError(topologyForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
