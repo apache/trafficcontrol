@@ -894,7 +894,7 @@ sub main {
         errorOut("File '$inputFile' not found") if ( !-f $inputFile );
 
         # read and store the input file
-        %userInput = InstallUtils::readJson($inputFile);
+        %userInput = %{InstallUtils::readJson($inputFile)};
     }
 
     # sanity check the defaults if running them automatically
