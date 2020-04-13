@@ -50,6 +50,7 @@ type TrafficControl struct {
 	StatsSummaries                       []tc.StatsSummary                       `json:"statsSummaries"`
 	Tenants                              []tc.Tenant                             `json:"tenants"`
 	ServerCheckExtensions                []tc.ServerCheckExtensionNullable       `json:"servercheck_extensions"`
+	Topologies                           []tc.Topology                           `json:"topologies"`
 	Types                                []tc.Type                               `json:"types"`
 	SteeringTargets                      []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                         []tc.ServercheckRequestNullable         `json:"serverchecks"`

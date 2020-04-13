@@ -33,6 +33,11 @@ type TopologyNode struct {
 	LastUpdated *TimeNoMod `json:"-" db:"last_updated"`
 }
 
+type TopologyResponse struct {
+	Response Topology `json:"response"`
+	Alerts
+}
+
 type TopologiesResponse struct {
 	Response []Topology `json:"response"`
 	Alerts

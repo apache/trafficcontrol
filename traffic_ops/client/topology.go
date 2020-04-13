@@ -29,7 +29,7 @@ const (
 )
 
 // CreateTopology creates a topology and returns the response.
-func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologiesResponse, ReqInf, error) {
+func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf, error) {
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(top)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -41,7 +41,7 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologiesResponse, ReqI
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
-	var topResp tc.TopologiesResponse
+	var topResp tc.TopologyResponse
 	if err = json.NewDecoder(resp.Body).Decode(&topResp); err != nil {
 		return nil, reqInf, err
 	}

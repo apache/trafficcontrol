@@ -34,6 +34,13 @@
         {
             "latitude": 0,
             "longitude": 0,
+            "name": "parentCachegroup2",
+            "shortName": "pg2",
+            "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
             "name": "secondaryCachegroup",
             "shortName": "sg1",
             "typeName": "MID_LOC"
@@ -2220,6 +2227,48 @@
             "active": true,
             "name": "tenant4",
             "parentName": "root"
+        }
+    ],
+    "topologies": [
+        {
+            "name": "my-topology",
+            "description": "a topology",
+            "nodes": [
+                {
+                  "cachegroup": "parentCachegroup",
+                  "parents": []
+                },
+                {
+                    "cachegroup": "secondaryCachegroup",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "cachegroup1",
+                    "parents": [0, 1]
+                }
+            ]
+        },
+        {
+            "name": "another-topology",
+            "description": "another topology",
+            "nodes": [
+                {
+                  "cachegroup": "parentCachegroup",
+                  "parents": []
+                },
+                {
+                    "cachegroup": "cachegroup1",
+                    "parents": [0]
+                },
+                {
+                    "cachegroup": "secondaryCachegroup",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "cachegroup2",
+                    "parents": [2]
+                }
+            ]
         }
     ],
     "types": [
