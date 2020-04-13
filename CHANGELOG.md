@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/servers/:name-or-id/update `POST`
   - /api/2.0/plugins `(GET)`
   - /api/2.0/snapshot `PUT`
+- Added an API 2.0 endpoint, /api/2.0/topologies, to create, read, update and delete flexible topologies.
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
