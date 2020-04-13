@@ -17,8 +17,11 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -77,4 +80,31 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool) (tc.Serv
 	err = json.NewDecoder(httpResp.Body).Decode(&resp)
 
 	return resp, reqInf, err
+}
+
+// UpdateServerStatus updates a server's queue status and/or reval status.
+// Either updateStatus or revalStatus may be nil, in which case that status isn't updated (but not both, because that wouldn't do anything).
+func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool, revalStatus *bool) (ReqInf, error) {
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+	if updateStatus == nil && revalStatus == nil {
+		return reqInf, errors.New("either updateStatus or revalStatus must be non-nil; nothing to do")
+	}
+
+	path := apiBase + `/servers/` + serverName + `/update?`
+	queryParams := []string{}
+	if updateStatus != nil {
+		queryParams = append(queryParams, `updated=`+strconv.FormatBool(*updateStatus))
+	}
+	if revalStatus != nil {
+		queryParams = append(queryParams, `reval_updated=`+strconv.FormatBool(*revalStatus))
+	}
+	path += strings.Join(queryParams, `&`)
+
+	resp, remoteAddr, err := to.request(http.MethodPost, path, nil)
+	reqInf.RemoteAddr = remoteAddr
+	if err != nil {
+		return reqInf, err
+	}
+	resp.Body.Close()
+	return reqInf, nil
 }

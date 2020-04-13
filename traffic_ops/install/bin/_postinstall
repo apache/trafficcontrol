@@ -76,12 +76,12 @@ my $outputConfigFile = "/opt/traffic_ops/install/bin/configuration_file.json";
 
 my $inputFile = "";
 my $automatic = 0;
-my $defaultInputs;
+my %defaultInputs;
 
 # given a var to the hash of config_var and question, will return the question
 sub getConfigQuestion {
     my $var = shift;
-    foreach my $key ( keys $var ) {
+    foreach my $key ( keys %{ $var } ) {
         if ( $key ne "hidden" && $key ne "config_var" ) {
             return $key;
         }
@@ -122,18 +122,18 @@ sub getField {
 #  and returns the hash of answers
 
 sub getConfig {
-    my $userInput = shift;
+    my %userInput = %{$_[0]}; shift;
     my $fileName  = shift;
 
     my %config;
 
-    if ( !defined $userInput->{$fileName} ) {
+    if ( !defined $userInput{$fileName} ) {
         InstallUtils::logger( "No $fileName found in config", "error" );
     }
 
     InstallUtils::logger( "===========$fileName===========", "info" );
 
-    foreach my $var ( @{ $userInput->{$fileName} } ) {
+    foreach my $var ( @{ $userInput{$fileName} } ) {
         my $question = getConfigQuestion($var);
         my $hidden   = $var->{"hidden"} if ( exists $var->{"hidden"} );
         my $answer   = $config{ $var->{"config_var"} } = getField( $question, $var->{$question}, $hidden );
@@ -153,18 +153,18 @@ sub getConfig {
 # Generates a config file for the database based on the questions and answers in the input config file
 
 sub generateDbConf {
-    my $userInput    = shift;
+    my %userInput = %{$_[0]}; shift;
     my $dbFileName   = shift;
     my $toDBFileName = shift;
 
-    my %dbconf = getConfig( $userInput, $dbFileName );
+    my %dbconf = getConfig( \%userInput, $dbFileName );
     $dbconf{"description"} = "$dbconf{type} database on $dbconf{hostname}:$dbconf{port}";
     make_path( dirname($dbFileName), { mode => 0755 } );
     InstallUtils::writeJson( $dbFileName, \%dbconf );
     InstallUtils::logger( "Database configuration has been saved", "info" );
 
     # broken out into separate file/config area
-    my %todbconf = getConfig( $userInput, $toDBFileName );
+    my %todbconf = getConfig( \%userInput, $toDBFileName );
 
     # Check if the Postgres db is used and set the driver to be "postgres"
     my $dbDriver = $dbconf{type};
@@ -188,10 +188,10 @@ sub generateDbConf {
 # Generates a config file for the CDN
 
 sub generateCdnConf {
-    my $userInput = shift;
+    my %userInput = %{$_[0]}; shift;
     my $fileName  = shift;
 
-    my %cdnConfiguration = getConfig( $userInput, $fileName );
+    my %cdnConfiguration = getConfig( \%userInput, $fileName );
 
     # First, read existing one -- already loaded with a bunch of stuff
     my $cdnConf;
@@ -243,17 +243,17 @@ sub hash_pass {
 # Generates an LDAP config file
 
 sub generateLdapConf {
-    my $userInput = shift;
+    my %userInput = %{$_[0]}; shift;
     my $fileName  = shift;
-
-    my $useLdap = $userInput->{$fileName}[0]->{"Do you want to set up LDAP?"};
+    my %ldapInput = %{@{$userInput{$fileName}}[0]};
+    my $useLdap = $ldapInput{"Do you want to set up LDAP?"};
 
     if ( !lc $useLdap =~ /^y(?:es)?/ ) {
         InstallUtils::logger( "Not setting up ldap", "info" );
         return;
     }
 
-    my %ldapConf = getConfig( $userInput, $fileName );
+    my %ldapConf = getConfig( \%userInput, $fileName );
     # convert any deprecated keys to the correct key name
     my %keys_converted = ( password => 'admin_pass', hostname => 'host' );
     for my $key (keys %ldapConf) {
@@ -281,11 +281,11 @@ sub generateLdapConf {
 }
 
 sub generateUsersConf {
-    my $userInput = shift;
+    my %userInput = %{$_[0]}; shift;
     my $fileName  = shift;
 
     my %user = ();
-    my %config = getConfig( $userInput, $fileName );
+    my %config = getConfig( \%userInput, $fileName );
 
     $user{username} = $config{tmAdminUser};
     $user{password} = hash_pass( $config{tmAdminPw} );
@@ -296,37 +296,38 @@ sub generateUsersConf {
 }
 
 sub generateProfilesDir {
-    my $userInput = shift;
+    my %userInput = %{$_[0]}; shift;
     my $fileName  = shift;
 
-    my $userIn = $userInput->{$fileName};
+    my $userIn = $userInput{$fileName};
 }
 
 sub generateOpenSSLConf {
-    my $userInput = shift;
+    my %userInput = %{$_[0]}; shift;
     my $fileName  = shift;
 
-    my %config = getConfig( $userInput, $fileName );
+    my %config = getConfig( \%userInput, $fileName );
     return \%config;
 }
 
 sub generateParamConf {
-    my $userInput = shift;
+    my %userInput = %{$_[0]}; shift;
     my $fileName  = shift;
 
-    my %config = getConfig( $userInput, $fileName );
+    my %config = getConfig( \%userInput, $fileName );
     InstallUtils::writeJson( $fileName, \%config );
     return \%config;
 }
 
 # check default values for missing config_var parameter
 sub sanityCheckDefaults {
-    foreach my $file ( ( keys $defaultInputs ) ) {
-        foreach my $defaultValue ( @{ $defaultInputs->{$file} } ) {
-            my $question = getConfigQuestion($defaultValue);
+    foreach my $file ( ( keys %defaultInputs ) ) {
+        foreach my $defaultValue ( @{ $defaultInputs{$file} } ) {
+            my $question = getConfigQuestion(\%$defaultValue);
 
-            if ( !defined $defaultValue->{"config_var"}
-                || $defaultValue->{"config_var"} eq "" )
+            my %defaultValueHash = %$defaultValue;
+            if ( !defined $defaultValueHash{"config_var"}
+                || $defaultValueHash{"config_var"} eq "" )
             {
                 errorOut("Question '$question' in file '$file' has no config_var");
             }
@@ -340,19 +341,19 @@ sub sanityCheckDefaults {
 #  is not located in the input config file it will output a warning message.
 
 sub sanityCheckConfig {
-    my $userInput = shift;
+    my %userInput = %{$_[0]}; shift;
     my $diffs     = 0;
 
-    foreach my $file ( ( keys $defaultInputs ) ) {
-        if ( !defined $userInput->{$file} ) {
+    foreach my $file ( ( keys %defaultInputs ) ) {
+        if ( !defined $userInput{$file} ) {
             InstallUtils::logger( "File '$file' found in defaults but not config file", "warn" );
-            $userInput->{$file} = [];
+            @{$userInput{$file}} = [];
         }
 
-        foreach my $defaultValue ( @{ $defaultInputs->{$file} } ) {
+        foreach my $defaultValue ( @{ $defaultInputs{$file} } ) {
 
             my $found = 0;
-            foreach my $configValue ( @{ $userInput->{$file} } ) {
+            foreach my $configValue ( @{ $userInput{$file} } ) {
                 if ( $defaultValue->{"config_var"} eq $configValue->{"config_var"} ) {
                     $found = 1;
                 }
@@ -393,7 +394,7 @@ sub sanityCheckConfig {
                     $temp{"hidden"} .= "true";
                 }
 
-                push $userInput->{$file}, \%temp;
+                push @{ $userInput{$file} }, \%temp;
 
                 $diffs++;
             }
@@ -407,7 +408,7 @@ sub sanityCheckConfig {
 #  user input config file or if there are questions in the input config file which do not have answers
 
 sub getDefaults {
-    return {
+    return (
         $databaseConfFile => [
             {
                 "Database type" => "Pg",
@@ -576,8 +577,8 @@ sub getDefaults {
                 "DNS sub-domain for which your CDN is authoritative" => "cdn1.kabletown.net",
                 "config_var"                                         => "dns_subdomain"
             }
-        ]
-    };
+        ],
+    );
 }
 
 # carried over from old postinstall
@@ -832,7 +833,7 @@ sub main {
     ) or die($usageString);
 
     # stores the default questions and answers
-    $defaultInputs = getDefaults();
+    %defaultInputs = getDefaults();
 
     if ($help) {
         print $usageString;
@@ -867,7 +868,7 @@ sub main {
 	    $outputConfigFile = $dumpDefaults;
         }
         InstallUtils::logger( "Writing default configuration to $outputConfigFile", "info" );
-        InstallUtils::writeJson( $outputConfigFile, $defaultInputs );
+        InstallUtils::writeJson( $outputConfigFile, %defaultInputs );
         return;
     }
 
@@ -879,12 +880,12 @@ sub main {
     }
 
     # used to store the questions and answers provided by the user
-    my $userInput;
+    my %userInput;
 
     # if no input file provided use the defaults
     if ( $inputFile eq "" ) {
         InstallUtils::logger( "No input file given - using defaults", "info" );
-        $userInput = $defaultInputs;
+        %userInput = %defaultInputs;
     }
     else {
         InstallUtils::logger( "Using input file $inputFile", "info" );
@@ -893,25 +894,25 @@ sub main {
         errorOut("File '$inputFile' not found") if ( !-f $inputFile );
 
         # read and store the input file
-        $userInput = InstallUtils::readJson($inputFile);
+        %userInput = %{InstallUtils::readJson($inputFile)};
     }
 
     # sanity check the defaults if running them automatically
     sanityCheckDefaults();
 
     # check the input config file against the defaults to check for missing questions
-    sanityCheckConfig($userInput) if ( $inputFile ne "" );
+    sanityCheckConfig(\%userInput) if ( $inputFile ne "" );
 
     chdir("/opt/traffic_ops/install/bin");
 
     # The generator functions handle checking input/default/automatic mode
     # todbconf will be used later when setting up the database
-    my $todbconf = generateDbConf( $userInput, $databaseConfFile, $dbConfFile );
-    generateLdapConf( $userInput, $ldapConfFile );
-    my $adminconf = generateUsersConf( $userInput, $usersConfFile );
-    my $custom_profile = generateProfilesDir( $userInput, $profilesConfFile );
-    my $opensslconf = generateOpenSSLConf( $userInput, $opensslConfFile );
-    my $paramconf = generateParamConf( $userInput, $paramConfFile );
+    my $todbconf = generateDbConf( \%userInput, $databaseConfFile, $dbConfFile );
+    generateLdapConf( \%userInput, $ldapConfFile );
+    my $adminconf = generateUsersConf( \%userInput, $usersConfFile );
+    my $custom_profile = generateProfilesDir( \%userInput, $profilesConfFile );
+    my $opensslconf = generateOpenSSLConf( \%userInput, $opensslConfFile );
+    my $paramconf = generateParamConf( \%userInput, $paramConfFile );
 
     if ( !-f $post_install_cfg ) {
         InstallUtils::writeJson( $post_install_cfg, {} );
@@ -919,7 +920,7 @@ sub main {
 
     setupMaxMind( $todbconf->{"maxmind"} );
     setupCertificates( $opensslconf );
-    generateCdnConf( $userInput, $cdnConfFile );
+    generateCdnConf( \%userInput, $cdnConfFile );
 
     my $dbh = Database::connect($databaseConfFile, $todbconf);
     if (!$dbh) {

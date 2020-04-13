@@ -53,6 +53,7 @@ services:
   trafficvault:
     ports:
       - "8087:8087"
+      - "8088:8088"
       - "8098:8098"
   edge:
     ports:

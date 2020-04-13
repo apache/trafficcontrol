@@ -16,7 +16,7 @@
 # under the License.
 FROM basho/riak-kv:ubuntu-2.2.3
 
-EXPOSE 8087 8098
+EXPOSE 8087 8088 8098
 
 RUN rm -rfv /etc/riak/prestart.d/* /etc/riak/poststart.d/*
 

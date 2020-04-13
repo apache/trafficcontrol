@@ -409,6 +409,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Servers
 		{api.Version{2, 0}, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler, auth.PrivLevelOperations, Authenticated, nil, 280128253, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler, auth.PrivLevelReadOnly, Authenticated, nil, 238451599, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPost, `servers/{id-or-name}/update$`, server.UpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 14381323, noPerlBypass},
 
 		//StaticDNSEntries
 		{api.Version{2, 0}, http.MethodGet, `staticdnsentries/?$`, api.ReadHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelReadOnly, Authenticated, nil, 228939477, noPerlBypass},

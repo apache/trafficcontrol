@@ -182,7 +182,6 @@ func updateNewClientUsage(appDir string) error {
 				}
 				if line == spacePrefix+`if `+errVar+` == nil && `+unsupportedVar+` {` ||
 					line == spacePrefix+`if `+unsupportedVar+` && `+errVar+` == nil `+` {` ||
-					line == spacePrefix+`if `+unsupportedVar+` {` ||
 					line == spacePrefix+`if `+unsupportedVar+` {` {
 					state = stateInTOClientNewUnsupportedBlock
 					continue // continue without adding this line - we want to remove the check-and-fallback

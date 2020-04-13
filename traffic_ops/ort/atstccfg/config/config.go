@@ -50,6 +50,7 @@ var ErrBadRequest = errors.New("bad request")
 
 type Cfg struct {
 	CacheHostName   string
+	DisableProxy    bool
 	GetData         string
 	ListPlugins     bool
 	LogLocationErr  string
@@ -97,6 +98,7 @@ func GetCfg() (Cfg, error) {
 	setQueueStatusPtr := flag.StringP("set-queue-status", "q", "", "POSTs to Traffic Ops setting the queue status of the server. Must be 'true' or 'false'. Requires --set-reval-status also be set")
 	setRevalStatusPtr := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revaliate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
 	revalOnlyPtr := flag.BoolP("revalidate-only", "y", false, "Whether to exclude files not named 'regex_revalidate.config'")
+	disableProxyPtr := flag.BoolP("traffic-ops-disable-proxy", "p", false, "Whether to not use the Traffic Ops proxy specified in the GLOBAL Parameter tm.rev_proxy.url")
 
 	flag.Parse()
 
@@ -125,6 +127,7 @@ func GetCfg() (Cfg, error) {
 	setQueueStatus := *setQueueStatusPtr
 	setRevalStatus := *setRevalStatusPtr
 	revalOnly := *revalOnlyPtr
+	disableProxy := *disableProxyPtr
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -175,6 +178,7 @@ func GetCfg() (Cfg, error) {
 		SetRevalStatus:  setRevalStatus,
 		SetQueueStatus:  setQueueStatus,
 		RevalOnly:       revalOnly,
+		DisableProxy:    disableProxy,
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
