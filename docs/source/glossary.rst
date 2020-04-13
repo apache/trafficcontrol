@@ -390,6 +390,10 @@ Glossary
 	Tenancies
 		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Services` and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Services` and does **not** apply permissions restrictions to any other aspect of Traffic Control.
 
+	Topology
+	Topologies
+		A structure composed of :term:`Cache Groups` and parent relationships, which is assignable to one or more :term:`Delivery Services`
+
 	Type
 	Types
 		A :dfn:`Type` defines a type of some kind of object configured in Traffic Ops. Unfortunately, that is exactly as specific as this definition can be.
