@@ -179,6 +179,7 @@ to_ldap_timeout_secs: ""
 to_riak_conf: "{{ to_config_dir }}/riak.conf"
 to_riak_username:
 to_riak_username_password:
+to_riak_tls_max_version: "1.1"
 to_riak_admin_username:
 to_riak_admin_username_password:
 to_riak_uri: "https://riak1.kabletown.invalid:8088"
