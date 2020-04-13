@@ -98,4 +98,5 @@ type CachegroupQueueUpdatesRequest struct {
 
 const (
 	EdgeCacheGroupType = "EDGE_LOC"
+	MidCacheGroupType = "MID_LOC"
 )

@@ -39,6 +39,33 @@ func checkForEdgeParents(nodes *[]*tc.TopologyNode, cachegroups *[]*tc.CacheGrou
 	return util.JoinErrs(errs)
 }
 
+func checkForLeafMids(nodes *[]*tc.TopologyNode, cacheGroups *[]*tc.CacheGroupNullable) *[]*tc.TopologyNode {
+	length := len(*nodes)
+	isLeafMid := make([]bool, length)
+	for index := range isLeafMid {
+		isLeafMid[index] = true
+	}
+	for index, node := range *nodes {
+		if *(*cacheGroups)[index].Type == tc.EdgeCacheGroupType {
+			isLeafMid[index] = false
+		}
+		for _, parentIndex := range (*node).Parents {
+			if ! isLeafMid[parentIndex] {
+				continue
+			}
+			isLeafMid[parentIndex] = false
+		}
+	}
+
+	leafMids := &[]*tc.TopologyNode{}
+	for index, node := range *nodes {
+		if isLeafMid[index] {
+			*leafMids = append(*leafMids, node)
+		}
+	}
+	return leafMids
+}
+
 func checkForCycles(nodes *[]*tc.TopologyNode) error {
 	components := tarjan(nodes)
 	errs := []error{}
