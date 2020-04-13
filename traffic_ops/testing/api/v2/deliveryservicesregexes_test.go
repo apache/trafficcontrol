@@ -1,0 +1,97 @@
+package v2
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
+func TestDeliveryServicesRegexes(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, DeliveryServicesRegexes}, func() {
+	})
+}
+
+func CreateTestDeliveryServicesRegexes(t *testing.T) {
+	db, err := OpenConnection()
+	if err != nil {
+		t.Fatal("cannot open db")
+	}
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			t.Errorf("unable to close connection to db, error: %v", err)
+		}
+	}()
+
+	dbRegexInsertTemplate := "INSERT INTO regex (pattern, type) VALUES ('%v', '%v');"
+	dbRegexQueryTemplate := "SELECT id FROM regex order by id desc limit 1;"
+	dbDSRegexInsertTemplate := "INSERT INTO deliveryservice_regex (deliveryservice, regex, set_number) VALUES ('%v', '%v', '%v');"
+
+	for i, regex := range testData.DeliveryServicesRegexes {
+		loadDSRegexIDs(t, &regex)
+
+		err = execSQL(db, fmt.Sprintf(dbRegexInsertTemplate, regex.Pattern, regex.Type), "regex")
+		if err != nil {
+			t.Fatalf("unable to create regex: %v", err)
+		}
+
+		row := db.QueryRow(dbRegexQueryTemplate)
+		err = row.Scan(&regex.ID)
+		if err != nil {
+			t.Fatalf("unable to query regex: %v", err)
+		}
+
+		err = execSQL(db, fmt.Sprintf(dbDSRegexInsertTemplate, regex.DSID, regex.ID, regex.SetNumber), "deliveryservice_regex")
+		if err != nil {
+			t.Fatalf("unable to create ds regex %v", err)
+		}
+
+		testData.DeliveryServicesRegexes[i] = regex
+	}
+}
+
+func DeleteTestDeliveryServicesRegexes(t *testing.T) {
+	db, err := OpenConnection()
+	if err != nil {
+		t.Fatal("cannot open db")
+	}
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			t.Errorf("unable to close connection to db, error: %v", err)
+		}
+	}()
+
+	for _, regex := range testData.DeliveryServicesRegexes {
+		err = execSQL(db, fmt.Sprintf("DELETE FROM deliveryservice_regex WHERE deliveryservice = '%v' and regex ='%v';", regex.DSID, regex.ID), "regex")
+		if err != nil {
+			t.Fatalf("unable to delete deliveryservice_regex by regex %v and ds %v: %v", regex.ID, regex.DSID, err)
+		}
+
+		err := execSQL(db, fmt.Sprintf("DELETE FROM regex WHERE Id = '%v';", regex.ID), "regex")
+		if err != nil {
+			t.Fatalf("unable to delete regex %v: %v", regex.ID, err)
+		}
+	}
+}
+
+func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
+	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName)
+	if err != nil {
+		t.Fatalf("unable to get type by name %v: %v", test.TypeName, err)
+	}
+	if len(dsTypes) < 1 {
+		t.Fatalf("could not find any types by name %v", test.TypeName)
+	}
+	test.Type = dsTypes[0].ID
+
+	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(test.DSName)
+	if err != nil {
+		t.Fatalf("unable to ds by xmlid %v: %v", test.DSName, err)
+	}
+	if len(dses) != 1 {
+		t.Fatalf("unable to find ds by xmlid %v", test.DSName)
+	}
+	test.DSID = *dses[0].ID
+}

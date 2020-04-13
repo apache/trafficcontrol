@@ -699,6 +699,14 @@
             "anonymousBlockingEnabled": true
         }
     ],
+    "deliveryServicesRegexes": [
+        {
+            "dsName": "ds1",
+            "typeName": "HOST_REGEXP",
+            "setNumber": 1,
+            "pattern" : ".*"
+        }
+    ],
     "deliveryservicesRequiredCapabilities": [
         {
             "xmlID": "ds1",
