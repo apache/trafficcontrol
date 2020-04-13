@@ -51,25 +51,31 @@ func (topology *TOTopology) Validate() error {
 	rules["name"] = validation.Validate(topology.Name, validation.Required, nameRule)
 
 	nodeCount := len(*topology.Nodes)
-	rules["length"] = validation.Validate(nodeCount, validation.Min(1))
+	if nodeCount < 1 {
+		rules["length"] = fmt.Errorf("must provide 1 or more node, %v found", nodeCount)
+	}
 	cacheGroups := make([]*tc.CacheGroupNullable, nodeCount)
 	var err error
+	cacheGroupsExist := true
 	for index := 0; index < nodeCount; index++ {
 		node := (*topology.Nodes)[index]
 		rules[fmt.Sprintf("node %v parents size", index)] = validation.Validate((*node).Parents, validation.Length(0, 2))
 		rules[fmt.Sprintf("node %v duplicate parents", index)] = checkForDuplicateParents(topology.Nodes, index)
 		if cacheGroups[index], err = cachegroup.GetCacheGroupByName((*node).Cachegroup, &topology.APIInfoImpl); err != nil {
-			rules[fmt.Sprintf("node %v parents size", index)] = fmt.Errorf("error getting cachegroup %v: %v", (*node).Cachegroup, err.Error())
+			rules[fmt.Sprintf("cachegroup %v not found", index)] = fmt.Errorf("error getting cachegroup %v: %v", (*node).Cachegroup, err.Error())
+			cacheGroupsExist = false
 		}
 	}
 	rules["duplicate cachegroup name"] = checkUniqueCacheGroupNames(topology.Nodes)
 
-	for index := 0; index < nodeCount; index++ {
-		rules["parents edge type"] = checkForEdgeParents(topology.Nodes, &cacheGroups, index)
-	}
+	if cacheGroupsExist {
+		for index := 0; index < nodeCount; index++ {
+			rules[fmt.Sprintf("parent '%v' edge type", (*topology.Nodes)[index].Cachegroup)] = checkForEdgeParents(topology.Nodes, &cacheGroups, index)
+		}
 
-	for _, leafMid := range *checkForLeafMids(topology.Nodes, &cacheGroups) {
-		rules[fmt.Sprintf("node %v leaf mid", (*leafMid).Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 child)", (*leafMid).Cachegroup, tc.MidCacheGroupType)
+		for _, leafMid := range *checkForLeafMids(topology.Nodes, &cacheGroups) {
+			rules[fmt.Sprintf("node %v leaf mid", (*leafMid).Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 child)", (*leafMid).Cachegroup, tc.MidCacheGroupType)
+		}
 	}
 	rules["topology cycles"] = checkForCycles(topology.Nodes)
 
