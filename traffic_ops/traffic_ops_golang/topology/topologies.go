@@ -61,6 +61,7 @@ func (topology *TOTopology) Validate() error {
 		node := (*topology.Nodes)[index]
 		rules[fmt.Sprintf("node %v parents size", index)] = validation.Validate((*node).Parents, validation.Length(0, 2))
 		rules[fmt.Sprintf("node %v duplicate parents", index)] = checkForDuplicateParents(topology.Nodes, index)
+		rules[fmt.Sprintf("node %v self parent", index)] = checkForSelfParents(topology.Nodes, index)
 		if cacheGroups[index], err = cachegroup.GetCacheGroupByName((*node).Cachegroup, &topology.APIInfoImpl); err != nil {
 			rules[fmt.Sprintf("cachegroup %v not found", index)] = fmt.Errorf("error getting cachegroup %v: %v", (*node).Cachegroup, err.Error())
 			cacheGroupsExist = false

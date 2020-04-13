@@ -26,6 +26,15 @@ func checkForDuplicateParents(nodes *[]*tc.TopologyNode, index int) error {
 	return fmt.Errorf("cachegroup %v cannot be both a primary and secondary parent of cachegroup %v.", (*nodes)[parents[0]].Cachegroup, (*nodes)[index].Cachegroup)
 }
 
+func checkForSelfParents(nodes *[]*tc.TopologyNode, index int) error {
+	for _, parentIndex := range (*nodes)[index].Parents {
+		if index == parentIndex {
+			return fmt.Errorf("cachegroup %v cannot be a parent of itself.", index)
+		}
+	}
+	return nil
+}
+
 func checkForEdgeParents(nodes *[]*tc.TopologyNode, cachegroups *[]*tc.CacheGroupNullable, nodeIndex int) error {
 	node := &(*nodes)[nodeIndex]
 	parentsLength := len((*node).Parents)

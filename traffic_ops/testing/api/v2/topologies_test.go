@@ -24,6 +24,10 @@ func CreateTestTopologies(t *testing.T) {
 func ValidationTestTopologies(t *testing.T) {
 	invalidTopologies := []tc.Topology{
 		{Name: "empty-top", Description: "Invalid because there are no nodes", Nodes: &[]*tc.TopologyNode{}},
+		{Name: "self-parent", Description: "Invalid because a node lists itself as a parent", Nodes: &[]*tc.TopologyNode{
+			{Cachegroup: "cachegroup1", Parents: []int{1}},
+			{Cachegroup: "parentCachegroup", Parents: []int{1}},
+		}},
 		{Name: "duplicate-parents", Description: "Invalid because a node lists the same parent twice", Nodes: &[]*tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1, 1}},
 			{Cachegroup: "parentCachegroup", Parents: []int{}},
@@ -50,6 +54,7 @@ func ValidationTestTopologies(t *testing.T) {
 	}
 	expectations := []string{
 		"no nodes",
+		"a node listing itself as a parent",
 		"duplicate parents",
 		"too many parents",
 		"a parent edge",
