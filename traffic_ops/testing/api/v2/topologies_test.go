@@ -44,7 +44,7 @@ func ValidationTestTopologies(t *testing.T) {
 		}},
 		{Name: "cyclical-nodes", Description: "Invalid because it contains cycles", Nodes: &[]*tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1, 2}},
-			{Cachegroup: "parentCachegroup", Parents: []int{}},
+			{Cachegroup: "parentCachegroup", Parents: []int{2}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{1}},
 		}},
 	}
@@ -57,7 +57,7 @@ func ValidationTestTopologies(t *testing.T) {
 		"cyclical nodes",
 	}
 	for index, invalidTopology := range invalidTopologies {
-		if _, _, err := TOSession.CreateTopology(invalidTopology); err != nil {
+		if _, _, err := TOSession.CreateTopology(invalidTopology); err == nil {
 			t.Errorf("expected POST with %v to return an error, actual: nil", expectations[index])
 		}
 	}
