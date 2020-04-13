@@ -197,7 +197,7 @@ WHERE dsu.tm_user_id = $1
 	dses := []tc.DeliveryServiceNullable{}
 	for rows.Next() {
 		ds := tc.DeliveryServiceNullable{}
-		err := rows.Scan(&ds.Active, &ds.AnonymousBlockingEnabled, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CDNName,
+		err := rows.Scan(&ds.Active, &ds.AnonymousBlockingEnabled, &ds.CCRDNSTTL, &ds.CDNID, &ds.CDNName,
 			&ds.CheckPath, &ds.DeepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6,
 			&ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries,
 			&ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.ID, &ds.InfoURL,
