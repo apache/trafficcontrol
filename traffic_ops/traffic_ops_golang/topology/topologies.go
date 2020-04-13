@@ -68,6 +68,8 @@ func (topology *TOTopology) Validate() error {
 		rules["parents edge type"] = checkForEdgeParents(topology.Nodes, &cacheGroups, index)
 	}
 
+	rules["topology cycles"] = checkForCycles(topology.Nodes)
+
 	errs := tovalidate.ToErrors(rules)
 	return util.JoinErrs(errs)
 }

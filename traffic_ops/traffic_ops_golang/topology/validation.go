@@ -38,3 +38,26 @@ func checkForEdgeParents(nodes *[]*tc.TopologyNode, cachegroups *[]*tc.CacheGrou
 	}
 	return util.JoinErrs(errs)
 }
+
+func checkForCycles(nodes *[]*tc.TopologyNode) error {
+	components := tarjan(nodes)
+	errs := []error{}
+	for _, component := range *components {
+		if len(*component) > 1 {
+			errString := "cycle detected between cachegroups "
+			var node *tc.TopologyNode
+			for _, node = range *component {
+				errString += (*node).Cachegroup + ", "
+			}
+			length := len(errString)
+			cachegroupNameLength := len((*node).Cachegroup)
+			errString = errString[0:length-2-cachegroupNameLength-2] + " and " + errString[length-2-cachegroupNameLength:length-2]
+			errs = append(errs, fmt.Errorf(errString))
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	errs = append([]error{fmt.Errorf("topology cannot have cycles")}, errs...)
+	return util.JoinErrs(errs)
+}
