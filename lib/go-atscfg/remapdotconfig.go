@@ -150,9 +150,8 @@ func getServerConfigRemapDotConfigForMid(
 			continue // skip remap rules from extra HOST_REGEXP entries
 		}
 
-		// multiple uses of cacheurl and cachekey plugins don't work right in ATS, but Perl has always done it.
+		// multiple uses of cachekey plugins don't work right in ATS, but Perl has always done it.
 		// So for now, keep track of it, so we can log an error when it happens.
-		hasCacheURL := false
 		hasCacheKey := false
 
 		midRemap := ""
@@ -168,10 +167,7 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if ds.QStringIgnore != nil && *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
-			qstr, addedCacheURL, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
-			if addedCacheURL {
-				hasCacheURL = true
-			}
+			qstr, _, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
 			if addedCacheKey {
 				hasCacheKey = true
 			}
@@ -344,9 +340,8 @@ func buildEdgeRemapLine(
 		}
 	}
 
-	// multiple uses of cacheurl and cachekey plugins don't work right in ATS, but Perl has always done it.
+	// multiple uses of cachekey plugins don't work right in ATS, but Perl has always done it.
 	// So for now, keep track of it, so we can log an error when it happens.
-	hasCacheURL := false
 	hasCacheKey := false
 
 	if ds.QStringIgnore != nil {
@@ -357,10 +352,7 @@ func buildEdgeRemapLine(
 			if _, globalExists := cacheURLConfigParams["location"]; globalExists {
 				warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter")
 			} else {
-				qstr, addedCacheURL, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
-				if addedCacheURL {
-					hasCacheURL = true
-				}
+				qstr, _, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
 				if addedCacheKey {
 					hasCacheKey = true
 				}
