@@ -52,7 +52,27 @@ Traffic Monitor
 	mydc build --no-cache trafficmonitor
 	mydc up
 
-* Install `an IDE that supports delve <https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code>`_ and create a debugging configuration over port 2344.
+* Install `an IDE that supports delve <https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code>`_ and create a debugging configuration over port 2344. If you are using VS Code, the configuration should look like this:
+
+.. code-block:: json
+	:caption: VS Code launch.json for debugging Traffic Ops
+
+	{
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Traffic Monitor",
+				"type": "go",
+				"request": "launch",
+				"mode": "remote",
+				"port": 2344,
+				"program": "${workspaceRoot}/traffic_monitor",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_monitor",
+				"env": {},
+				"args": []
+			}
+		]
+	}
 
 * Use the debugging configuration you created to start debugging Traffic Monitor. It should connect without first breaking at any line.
 
@@ -81,7 +101,27 @@ Traffic Ops (Go)
 	mydc build --no-cache trafficops
 	mydc up
 
-* Install `an IDE that supports delve <https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code>`_ and create a debugging configuration over port 2345.
+* Install `an IDE that supports delve <https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code>`_ and create a debugging configuration over port 2345. If you are using VS Code, the configuration should look like this:
+
+.. code-block:: json
+	:caption: VS Code launch.json for debugging Traffic Ops
+
+	{
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Traffic Ops",
+				"type": "go",
+				"request": "launch",
+				"mode": "remote",
+				"port": 2345,
+				"program": "${workspaceRoot}/traffic_ops/traffic_ops_golang",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang",
+				"env": {},
+				"args": []
+			}
+		]
+	}
 
 * Use the debugging configuration you created to start debugging Traffic Ops. It should connect without first breaking at any line.
 
