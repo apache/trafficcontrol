@@ -270,7 +270,50 @@ The `GET /deliveryservices` endpoint should be updated to support `?topology=foo
 
 ##### The various `/snapshot` endpoints
 
-The various `/snapshot` endpoints will need to be updated to include new Topologies data along with their associations to Delivery Services in the `CRConfig.json` snapshot. The data should only include the `EDGE_LOC` cachegroups of the Topologies, because those are all Traffic Router needs.
+The various `/snapshot` endpoints will need to be updated to include new Topologies data along with their associations to Delivery Services in the `CRConfig.json` snapshot. The data should only include the `EDGE_LOC` cachegroups of the Topologies, because those are all Traffic Router needs. Additionally, delivery service required capabilities and server capabilities data will need to be added in order for Traffic Router to take them into account. This is because delivery services that are assigned to Topologies will not be explicitly assigned to individual servers. Servers are transitively assigned to topology-based delivery services based on their cachegroup (server -> cachegroup -> topology), unless the server lacks the capabilities required by the delivery service. While we could continue to use traditional deliveryservice-server mappings in the CRConfig, doing away with them helps reduce the overall size of the CRConfig and prevents it from growing at the current rate of (# of delivery services x # of servers).
+
+The following example illustrates new changes to the CRConfig snapshot:
+
+```JSON
+{
+    "topologies": {  // NEW
+        "topology-1": {  // topology name
+            "nodes": [
+                "west-cachegroup",  // "leaf node" (edge) cachegroup names in the topology
+                "central-cachegroup",
+                "east-cachegroup"
+            ]
+        },
+        "topology-2": {...}  // and so on
+    },
+    "contentServers": {
+        "edge-1": {
+            "cacheGroup": "west-cachegroup",
+            "capabilities": [  // NEW: the server's capabilities
+                "FOO",
+                "BAR"
+            ],
+            "deliveryServices": {}  // UPDATE: topology-based DSes will not have an explicit mapping here
+            ...
+        }
+    },
+    "deliveryServices": {
+        "ds-1": {
+            "requiredCapabilities": [  // NEW: the delivery service's required capabilities
+                "FOO"
+            ],
+            "topology": "topology-1",  // NEW: the topology this delivery service is assigned to
+            ...
+        }
+    },
+    "edgeLocations": {  // nothing new here, included for illustrative purposes only
+        "west-cachegroup": {...},
+        "central-cachegroup": {...},
+        "east-cachegroup": {...}
+    }
+    ...
+}
+```
 
 ##### Various endpoints that are affected by cachegroup parentage or deliveryservice-server assignment
 
@@ -349,9 +392,22 @@ There should be little (if any) impact to Traffic Monitor for this feature.
 
 ### Traffic Router Impact
 
-Traffic Router will need to be made aware of Topologies and their associations to Delivery Services via additions to the CRConfig. No new TR profile parameters should be required to enable Topology-based routing since Topologies are configurable on a per-delivery-service basis.
+Traffic Router will need to be made aware of Topologies, their associations to Delivery Services, as well as Server Capabilities via additions to the CRConfig. No new TR profile parameters should be required to enable Topology-based routing since Topologies are configurable on a per-delivery-service basis.
 
-The CRConfig will need a new top-level field for `topologies`, which will be a map of Topology names to arrays of cachegroup names that make up the "edge tier" of that Topology. The `deliveryServices` section will add an optional `topology` field to each delivery service that is assigned to a Topology. Delivery services that have a Topology assigned will not be referenced explicitly by any `contentServer` objects. Traffic Router will use the Topology information to determine which "edge" cachegroups can be routed to for a particular delivery service. Taking Server Capabilities into account, the CRConfig modifications would ideally be designed in a way that doesn't require Traffic Router to be aware of what Server Capabilities edges have.
+TR will process the new changes to the CRConfig as outlined in the `/snapshot` section above, using a process along the lines of this pseudo-code:
+
+```
+for every DS:
+    if the DS has a topology:
+       look up the cachegroups in the topology
+       for every cachegroup in the topology:
+            look up all the servers in the cachegroup
+            for every server in the cachegroup:
+                if the server has the DS's required capabilities:
+                    add the DS to the server
+    else:
+        the DS uses explicit server mappings which should already be handled by existing code
+```
 
 Since Topologies will be optional, new Traffic Routers should remain backwards-compatible with old CRConfigs, and old Traffic Routers should remain forwards-compatible with new CRConfigs because Traffic Router ignores unknown fields by default.
 
