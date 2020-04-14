@@ -274,7 +274,7 @@ The various `/snapshot` endpoints will need to be updated to include new Topolog
 
 The following example illustrates new changes to the CRConfig snapshot:
 
-```JSON
+```JSONC
 {
     "topologies": {  // NEW
         "topology-1": {  // topology name
@@ -284,7 +284,7 @@ The following example illustrates new changes to the CRConfig snapshot:
                 "east-cachegroup"
             ]
         },
-        "topology-2": {...}  // and so on
+        "topology-2": {/* ... */}  // and so on
     },
     "contentServers": {
         "edge-1": {
@@ -294,7 +294,7 @@ The following example illustrates new changes to the CRConfig snapshot:
                 "BAR"
             ],
             "deliveryServices": {}  // UPDATE: topology-based DSes will not have an explicit mapping here
-            ...
+            // ...
         }
     },
     "deliveryServices": {
@@ -303,15 +303,15 @@ The following example illustrates new changes to the CRConfig snapshot:
                 "FOO"
             ],
             "topology": "topology-1",  // NEW: the topology this delivery service is assigned to
-            ...
+            // ...
         }
     },
     "edgeLocations": {  // nothing new here, included for illustrative purposes only
-        "west-cachegroup": {...},
-        "central-cachegroup": {...},
-        "east-cachegroup": {...}
+        "west-cachegroup": {/* ... */},
+        "central-cachegroup": {/* ... */},
+        "east-cachegroup": {/* ... */}
     }
-    ...
+    // ...
 }
 ```
 
