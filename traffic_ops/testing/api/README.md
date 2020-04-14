@@ -87,46 +87,8 @@ In order to run the tests you will need the following:
     
     In your local development environment, if the above command fails for an error similar to 
     `ERROR: traffic_ops_golang.go:193: 2020-04-10T10:55:53.190298-06:00: cannot open /etc/pki/tls/certs/localhost.crt for read: open /etc/pki/tls/certs/localhost.crt: no such file or directory`
-    you might not have the right certificates at the right locations. Follow the following procedure
-    to fix it:
-    ```bash
-         $ openssl genrsa -des3 -passout pass:x -out localhost.pass.key 2048
-         Generating RSA private key, 2048 bit long modulus
-         ...
-         $ openssl rsa -passin pass:x -in localhost.pass.key -out localhost.key
-         writing RSA key
-         $ rm localhost.pass.key
-         
-         $ openssl req -new -key localhost.key -out localhost.csr
-         You are about to be asked to enter information that will be incorporated
-         into your certificate request.
-         What you are about to enter is what is called a Distinguished Name or a DN.
-         There are quite a few fields but you can leave some blank
-         For some fields there will be a default value,
-         If you enter '.', the field will be left blank.
-         -----
-         Country Name (2 letter code) [XX]:US<enter>
-         State or Province Name (full name) []:CO<enter>
-         Locality Name (eg, city) [Default City]:Denver<enter>
-         Organization Name (eg, company) [Default Company Ltd]: <enter>
-         Organizational Unit Name (eg, section) []: <enter>
-         Common Name (eg, your name or your server's hostname) []: <enter>
-         Email Address []: <enter>
-         
-         Please enter the following 'extra' attributes
-         to be sent with your certificate request
-         A challenge password []: pass<enter>
-         An optional company name []: <enter>
-         $ openssl x509 -req -sha256 -days 365 -in localhost.csr -signkey localhost.key -out localhost.crt
-         Signature ok
-         subject=/C=US/ST=CO/L=Denver/O=Default Company Ltd
-         Getting Private key
-         $ sudo cp localhost.crt /etc/pki/tls/certs
-         $ sudo cp localhost.key /etc/pki/tls/private
-         $ sudo chown trafops:trafops /etc/pki/tls/certs/localhost.crt
-         $ sudo chown trafops:trafops /etc/pki/tls/private/localhost.key
-    ```
-     
+    you might not have the right certificates at the right locations. Follow the procedure listed
+    [here](https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops.html#id12) to fix it. 
 ## Running the API Tests
 The integration tests are run using `go test`, however, there are some flags that need to be provided in order for the tests to work.  
 
