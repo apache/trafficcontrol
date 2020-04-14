@@ -55,7 +55,7 @@ Traffic Monitor
 * Install `an IDE that supports delve <https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code>`_ and create a debugging configuration over port 2344. If you are using VS Code, the configuration should look like this:
 
 .. code-block:: json
-	:caption: VS Code launch.json for debugging Traffic Ops
+	:caption: VS Code launch.json for debugging Traffic Monitor
 
 	{
 		"version": "0.2.0",
@@ -63,13 +63,11 @@ Traffic Monitor
 			{
 				"name": "Traffic Monitor",
 				"type": "go",
-				"request": "launch",
+				"request": "attach",
 				"mode": "remote",
 				"port": 2344,
-				"program": "${workspaceRoot}/traffic_monitor",
+				"cwd": "${workspaceRoot}/traffic_monitor",
 				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_monitor",
-				"env": {},
-				"args": []
 			}
 		]
 	}
@@ -112,13 +110,11 @@ Traffic Ops (Go)
 			{
 				"name": "Traffic Ops",
 				"type": "go",
-				"request": "launch",
+				"request": "attach",
 				"mode": "remote",
 				"port": 2345,
-				"program": "${workspaceRoot}/traffic_ops/traffic_ops_golang",
+				"cwd": "${workspaceRoot}/traffic_ops/traffic_ops_golang",
 				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang",
-				"env": {},
-				"args": []
 			}
 		]
 	}
