@@ -25,7 +25,7 @@ import (
 
 func TestDeliveryServicesRegexes(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, DeliveryServicesRegexes}, func() {
-		TestQueryDSRegex(t)
+		QueryDSRegexTest(t)
 	})
 }
 
@@ -113,14 +113,24 @@ func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 	test.DSID = *dses[0].ID
 }
 
-func TestQueryDSRegex(t *testing.T) {
+func QueryDSRegexTest(t *testing.T) {
 	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1")
 	if err != nil {
+		t.Fatalf("unable to get ds ds1: %v", err)
+	}
+	if len(ds) == 0 {
 		t.Fatal("unable to get ds ds1")
 	}
-	dsRegexes, _, err := TOSession.GetDeliveryServiceRegexesByDSID(*ds[0].ID, nil)
+	var dsID int
+	if ds[0].ID == nil {
+		t.Fatal("ds has a nil id")
+	} else {
+		dsID = *ds[0].ID
+	}
+
+	dsRegexes, _, err := TOSession.GetDeliveryServiceRegexesByDSID(dsID, nil)
 	if err != nil {
-		t.Fatal("unable to get ds_regex by id " + strconv.Itoa(*ds[0].ID))
+		t.Fatal("unable to get ds_regex by id " + strconv.Itoa(dsID))
 	}
 	if len(dsRegexes) != 3 {
 		t.Fatal("expected to get 3 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
@@ -128,9 +138,9 @@ func TestQueryDSRegex(t *testing.T) {
 
 	params := make(map[string]string)
 	params["id"] = strconv.Itoa(dsRegexes[0].ID)
-	dsRegexes, _, err = TOSession.GetDeliveryServiceRegexesByDSID(*ds[0].ID, params)
+	dsRegexes, _, err = TOSession.GetDeliveryServiceRegexesByDSID(dsID, params)
 	if err != nil {
-		t.Fatalf("unable to get ds_regex by id %v with query param %v", *ds[0].ID, params["id"])
+		t.Fatalf("unable to get ds_regex by id %v with query param %v", dsID, params["id"])
 	}
 	if len(dsRegexes) != 1 {
 		t.Fatal("expected to get 1 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
