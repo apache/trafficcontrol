@@ -43,8 +43,8 @@ In order to run the tests you will need the following:
     The Traffic Ops users will be created by the tool for accessing the API once the database is accessible.
     
     Note that for the database to successfully set up the tables and run the migrations, you will need `goose`.
-    On your local machines(Macs), DO NOT install `goose` using `homebrew`. It will install another non compliant
-    version of `goose` which doesn't support the `-env` flag. Instead, install it using the script located at
+    On your local machines(Macs), DO NOT install `goose` using `homebrew`. It will install a different version
+    `goose`. Instead, install it using the script located at
     `traffic_ops/install/bin/install_goose.sh`. 
     To test if `goose` migrated everything correctly, you can run the following command from the `traffic_ops/app`
     directory:
