@@ -705,6 +705,18 @@
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
             "pattern" : ".*"
+        },
+        {
+            "dsName": "ds1",
+            "typeName": "HOST_REGEXP",
+            "setNumber": 2,
+            "pattern" : "\\d+"
+        },
+        {
+            "dsName": "ds2",
+            "typeName": "HOST_REGEXP",
+            "setNumber": 1,
+            "pattern" : ".*"
         }
     ],
     "deliveryservicesRequiredCapabilities": [

@@ -17,6 +17,7 @@ package v2
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -24,6 +25,7 @@ import (
 
 func TestDeliveryServicesRegexes(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, DeliveryServicesRegexes}, func() {
+		TestQueryDSRegex(t)
 	})
 }
 
@@ -109,4 +111,28 @@ func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 		t.Fatalf("unable to find ds by xmlid %v", test.DSName)
 	}
 	test.DSID = *dses[0].ID
+}
+
+func TestQueryDSRegex(t *testing.T) {
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1")
+	if err != nil {
+		t.Fatal("unable to get ds ds1")
+	}
+	dsRegexes, _, err := TOSession.GetDeliveryServiceRegexesByDSID(*ds[0].ID, nil)
+	if err != nil {
+		t.Fatal("unable to get ds_regex by id " + strconv.Itoa(*ds[0].ID))
+	}
+	if len(dsRegexes) != 3 {
+		t.Fatal("expected to get 3 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
+	}
+
+	params := make(map[string]string)
+	params["id"] = strconv.Itoa(dsRegexes[0].ID)
+	dsRegexes, _, err = TOSession.GetDeliveryServiceRegexesByDSID(*ds[0].ID, params)
+	if err != nil {
+		t.Fatalf("unable to get ds_regex by id %v with query param %v", *ds[0].ID, params["id"])
+	}
+	if len(dsRegexes) != 1 {
+		t.Fatal("expected to get 1 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
+	}
 }

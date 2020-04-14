@@ -51,6 +51,7 @@ type DeliveryServiceIDRegex struct {
 	Pattern   string `json:"pattern"`
 }
 
+// Used to represent the entire deliveryservice_regex for testing
 type DeliveryServiceRegexesTest struct {
 	DSName string `json:"dsName"`
 	DSID   int
