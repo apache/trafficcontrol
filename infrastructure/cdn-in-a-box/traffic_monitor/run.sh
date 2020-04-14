@@ -123,11 +123,12 @@ else
 fi;
 
 envsubst < /opt/traffic_monitor/conf/traffic_monitor.cfg.template > /opt/traffic_monitor/conf/traffic_monitor.cfg
-cd /opt/traffic_monitor
 
 traffic_monitor_command=(/opt/traffic_monitor/bin/traffic_monitor -opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg -config /opt/traffic_monitor/conf/traffic_monitor.cfg);
 if [[ "$TM_DEBUG_ENABLE" == true ]]; then
-  traffic_monitor_command=(dlv '--continue' '--listen=:2344' '--accept-multiclient=true' '--headless=true' '--api-version=2' exec
-    "${traffic_monitor_command[0]}" -- "${traffic_monitor_command[@]:1}");
+  dlv '--continue' '--listen=:2344' '--accept-multiclient=true' '--headless=true' '--api-version=2' exec \
+    "${traffic_monitor_command[0]}" -- "${traffic_monitor_command[@]:1}" &
+  tail -f /dev/null;
+else
+  "${traffic_monitor_command[@]}"
 fi;
-"${traffic_monitor_command[@]}"
