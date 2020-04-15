@@ -30,7 +30,6 @@ Request Structure
 -----------------
 :id:            The integral, unique identifier assigned to the :term:`DSR <Delivery Service Request>`
 :assignee:      The username of the user to whom the :term:`Delivery Service Request` is assigned.
-:assignee:      The username of the user to whom the :term:`Delivery Service Request` is assigned.
 
 .. code-block:: http
 	:caption: Request Example
