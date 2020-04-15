@@ -51,7 +51,8 @@ In order to run the tests you will need the following:
     `goose -env=test status "user=traffic_ops dbname=to_test sslmode=disable"`
     
     The result should be something similar to:
-    `goose: status for environment 'test'
+    ```
+     goose: status for environment 'test'
      Applied At                  Migration
      =======================================
      Thu Apr  9 21:55:29 2020 -- 20181206000000_create_monitor_snapshots.sql
@@ -64,7 +65,8 @@ In order to run the tests you will need the following:
      Thu Apr  9 21:55:30 2020 -- 20191215000000_add_ecs_enabled.sql
      Thu Apr  9 21:55:30 2020 -- 20200218000000_add_dns_challenges.sql
      Thu Apr  9 21:55:30 2020 -- 20200227000000_add_ds_slice_block_size.sql
-     Thu Apr  9 21:55:30 2020 -- 20200313000000_add_server_ip_toggles.sql`
+     Thu Apr  9 21:55:30 2020 -- 20200313000000_add_server_ip_toggles.sql
+     ```
     
     For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
 
