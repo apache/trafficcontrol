@@ -20,7 +20,7 @@ CREATE TABLE interface (
 	name text NOT NULL CHECK (name != ''),
 	server bigint NOT NULL,
 	PRIMARY KEY (name, server),
-	FOREIGN KEY (server) REFERENCES server(id)
+	FOREIGN KEY (server) REFERENCES server(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 CREATE TABLE ip_address (
 	address inet NOT NULL,
@@ -29,8 +29,8 @@ CREATE TABLE ip_address (
 	server bigint NOT NULL,
 	service_address boolean NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (address, interface, server),
-	FOREIGN KEY (server) REFERENCES server(id),
-	FOREIGN KEY (interface, server) REFERENCES interface(name, server)
+	FOREIGN KEY (server) REFERENCES server(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (interface, server) REFERENCES interface(name, server) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 INSERT INTO interface(
@@ -148,3 +148,4 @@ AND server.ip6_address != '';
 
 -- +goose Down
 DROP TABLE IF EXISTS ip_address;
+DROP TABLE IF EXISTS interface;
