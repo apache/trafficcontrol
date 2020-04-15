@@ -24,8 +24,8 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	let hydrateTopology = function() {
 		// add some needed fields to each cache group (aka node) of a topology
 		topology.nodes.forEach(function(node) {
-			let cg = _.findWhere(cacheGroups, { name: node.cachegroup} );
-			_.extend(node, { id: cg.id, type: cg.typeName });
+			let cacheGroup = cacheGroups.find( function(cg) { return cg.name === node.cachegroup} );
+			Object.assign(node, { id: cacheGroup.id, type: cacheGroup.typeName });
 		});
 	};
 
@@ -119,7 +119,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 			2. cache groups that are not currently acting as the primary parent
 			3. cache groups that exist currently in the topology
 		 */
-		let eligibleSecParentCandidates = _.filter(cacheGroups, function(cg) {
+		let eligibleSecParentCandidates = cacheGroups.filter(function(cg) {
 			return cg.typeName !== 'EDGE_LOC' &&
 				(node.parent && node.parent !== cg.name) &&
 				cacheGroupNamesInTopology.includes(cg.name);
@@ -215,7 +215,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		});
 		modalInstance.result.then(function(result) {
 			let nodeData = scope.$modelValue,
-				cacheGroupNodes = _.map(result.selectedCacheGroups, function(cg) {
+				cacheGroupNodes = result.selectedCacheGroups.map(function(cg) {
 					return {
 						id: cg.id,
 						cachegroup: cg.name,

@@ -35,7 +35,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 			function() {
 				return parseInt($(this).attr('id'));
 			}).get();
-		$scope.cacheGroups = _.map(cacheGroups, function(cg) {
+		$scope.cacheGroups = cacheGroups.map(function(cg) {
 			if (visibleCacheGroupIds.includes(cg.id)) {
 				cg['selected'] = selected;
 			}
@@ -45,8 +45,8 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	let decorateCacheGroups = function() {
-		$scope.cacheGroups = _.map(cacheGroups, function(cg) {
-			let isUsed = _.find(usedCacheGroupNames, function(usedCacheGroupName) { return usedCacheGroupName == cg.name });
+		$scope.cacheGroups = cacheGroups.map(function(cg) {
+			let isUsed = usedCacheGroupNames.find(function(usedCacheGroupName) { return usedCacheGroupName === cg.name });
 			if (isUsed) {
 				cg['selected'] = true;
 				cg['used'] = true;
@@ -57,13 +57,13 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	let updateSelectedCount = function() {
-		selectedCacheGroups = _.filter($scope.cacheGroups, function(cg) { return cg['selected'] == true && !cg['used'] } );
+		selectedCacheGroups = $scope.cacheGroups.filter(function(cg) { return cg['selected'] == true && !cg['used'] } );
 		$('div.selected-count').html('<strong><span class="text-success">' + selectedCacheGroups.length + ' selected</span><span> | ' + usedCacheGroupCount + ' already used in topology</span></strong>');
 	};
 
 	$scope.parent = parent;
 
-	$scope.cacheGroups = _.filter(cacheGroups, function(cg) {
+	$scope.cacheGroups = cacheGroups.filter(function(cg) {
 		// all cg types (ORG_LOC, MID_LOC, EDGE_LOC) can be added to the root of a topology
 		// but only EDGE_LOC and MID_LOC can be added farther down the topology tree
 		if (parent.type === 'ROOT') return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC');
@@ -107,7 +107,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 
 	$scope.submit = function() {
 		// cache groups that are eligible to be a secondary parent include cache groups that are:
-		let eligibleSecParentCandidates = _.filter(cacheGroups, function(cg) {
+		let eligibleSecParentCandidates = cacheGroups.filter(function(cg) {
 			return cg.typeName !== 'EDGE_LOC' && // not an edge_loc cache group
 				(parent.cachegroup && parent.cachegroup !== cg.name) && // not the primary parent cache group
 				usedCacheGroupNames.includes(cg.name); // a cache group that exists in the topology
@@ -120,7 +120,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 			title: 'Assign secondary parent?',
 			message: 'Would you like to assign a secondary parent to the following cache groups?<br><br>primary parent = ' + parent.cachegroup + '<br><br>'
 		};
-		params.message += _.pluck(selectedCacheGroups, 'name').join('<br>') + '<br><br>';
+		params.message += selectedCacheGroups.map(function(cg) { return cg.name }).join('<br>') + '<br><br>';
 		let modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
 			controller: 'DialogConfirmController',
