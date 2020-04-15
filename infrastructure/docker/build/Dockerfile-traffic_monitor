@@ -32,6 +32,8 @@ RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 
 ### traffic_monitor specific requirements
 RUN	yum -y install \
+		# gcc is necessary in case -gcflags 'all=-N -l' is passed to go build
+		gcc \
 		git \
 		rpm-build && \
 	yum -y clean all

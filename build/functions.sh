@@ -136,6 +136,10 @@ function buildRpm () {
 		local rpm="${pre}.$(uname -m).rpm"
 		local srpm="${pre}.src.rpm"
 		echo "Building the rpm."
+		if [[ "$DEBUG_BUILD" == true ]]; then
+			echo 'RPM will not strip binaries before packaging.';
+			echo '%__os_install_post %{nil}' >> /etc/rpm/macros; # Do not strip binaries before packaging
+		fi;
 
 		cd "$RPMBUILD" && \
 			rpmbuild --define "_topdir $(pwd)" \

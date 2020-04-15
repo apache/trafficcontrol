@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an API 1.5 endpoint to GET a single or all records for Let's Encrypt DNS challenge
 - Added an API 1.5 endpoint to renew certificates
 - Added ability to create multiple objects from generic API Create with a single POST.
+- Added debugging functionality to CDN-in-a-Box.
 - Traffic Ops Golang Endpoints
   - /api/2.0 for all of the most recent route versions
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
