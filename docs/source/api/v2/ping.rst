@@ -41,7 +41,7 @@ No parameters available.
 
 Response Structure
 ------------------
-:ping:		Returns an object containing only the ``"ping"	 property, which always has the value ``"pong"``.
+:ping:		Returns an object containing only the ``"ping"`` property, which always has the value ``"pong"``.
 
 .. code-block:: http
 	:caption: Response Example
