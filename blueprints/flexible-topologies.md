@@ -85,7 +85,7 @@ The following table describes the `node` sub-object:
 | cachegroup | string            | required    | the `name` of a cachegroup this node maps to in the Topology                                                                                                                                                |
 | parents    | array of integers | required    | zero-based indexes to other nodes in the Topology's `nodes` array, where the 1st element is for the *primary* parent relationship and the 2nd element is for the *secondary* parent relationship, and so on |
 
-API constraints:
+**API constraints:**
 - a Topology's `name` must consist of alphanumeric or hyphen characters
 - a Topology must have at least 1 `node`; otherwise, it is useless
 - there cannot be multiple `nodes` for the same cachegroup in a Topology
@@ -250,11 +250,29 @@ response JSON:
 
 ##### `/deliveryservices` endpoints
 
-All relevant Delivery Service APIs will have their JSON request and response objects modified to include a new `topology` field which references the name of the topology it's assigned to:
-```JSON
+All relevant Delivery Service APIs will have their JSON request and response objects modified to include the following new fields:
+- `topology` - the name of the topology it's assigned to
+- `firstHeaderRewrite` - the header_rewrite ATS config that will be applied to the *first tier* caches in the Delivery Service's Topology
+- `middleHeaderRewrite` - the header_rewrite ATS config that will be applied to all *middle tier* caches in this Delivery Service's Topology
+- `lastHeaderRewrite` - the header_rewrite ATS config that will be applied to all *last tier* caches in this Delivery Service's Topology
+
+**Note:** these three header_rewrite "buckets" were chosen because header_rewrite configs usually fall into one of three categories:
+- affects requests to/from the client ("first")
+- affects requests to/from the origin ("last")
+- don't affect clients or origins ("middle")
+
+**API Constraints:**
+- `firstHeaderRewrite`, `middleHeaderRewrite`, and `lastHeaderRewrite` can only be set if `topology` is not null
+- `edgeHeaderRewrite` and `midHeaderRewrite` cannot be set if `topology` is not null
+
+**Example JSON:**
+```JSONC
 {
-    ...
-    "topology": "foo"
+    // ...
+    "topology": "foo",
+    "firstHeaderRewrite": "foo",
+    "middleHeaderRewrite": "foo",
+    "lastHeaderRewrite": "foo"
 }
 ```
 
@@ -333,7 +351,11 @@ New structs will be added for the `/topologies` endpoints, mapping directly to t
 - `Topology`: for the top-level Topology object, which includes the `nodes` array
 - `TopologyNode`: for objects in a Topology's `nodes` array
 
-The `DeliveryService` struct will be updated with a new `Topology` field which is the name of the Topology the Delivery Service is assigned to.
+The `DeliveryService` struct will be updated with new fields, mapping directly to the new JSON fields outlined in the REST API Impact section:
+- `Topology`
+- `FirstHeaderRewrite`
+- `MiddleHeaderRewrite`
+- `LastHeaderRewrite`
 
 ##### Traffic Ops Database
 
@@ -346,11 +368,11 @@ A new `topology` table will be created:
 
 A new `topology_cachegroup` table will be created to model the association of cachegroups to topologies:
 
-| column     | type | modifiers                                       |
-| ---------- | ---- | ----------------------------------------------- |
-| id         | int  | not null, PK                                    |
-| topology   | text | not null, FK: references topology(name)         |
-| cachegroup | text | not null, FK: references cachegroup(name)       |
+| column     | type | modifiers                                 |
+| ---------- | ---- | ----------------------------------------- |
+| id         | int  | not null, PK                              |
+| topology   | text | not null, FK: references topology(name)   |
+| cachegroup | text | not null, FK: references cachegroup(name) |
 
 **Constraints**:
 - unique (topology, cachegroup) -- a cachegroup can only be in a Topology once.
@@ -368,11 +390,14 @@ A new `topology_cachegroup_parents` table will be created to model the parent re
 - unique (child, parent) -- within a Topology, a cachegroup cannot relate to another cachegroup more than once.
 - check (rank is either 1 or 2) -- a cachegroup can only have primary and secondary parents currently.
 
-The `deliveryservice` table will be updated to add a new column for the topology it is associated to:
+The `deliveryservice` table will be updated to add the following new columns:
 
-| column   | type | modifiers                     |
-| -------- | ---- | ----------------------------- |
-| topology | text | FK: references topology(name) |
+| column                | type | modifiers                     |
+| --------------------- | ---- | ----------------------------- |
+| topology              | text | FK: references topology(name) |
+| first_header_rewrite  | text |                               |
+| middle_header_rewrite | text |                               |
+| last_header_rewrite   | text |                               |
 
 ### ORT Impact
 
@@ -384,7 +409,9 @@ Since new Topologies can be more than 2 tiers (`EDGE` -> `MID`), `atstccfg` may 
 
 #### ATS config-related fields on Delivery Services
 
-Edge header rewrite rules and raw remap rules should still be applied only to the `EDGE` tier of Topologies. Mid header rewrite rules should probably only be applied at the *first* `MID` tier if there are multiple `MID` tiers in a Topology, because it might not be safe to assume that all mid header rewrite rules could be applied safely through multiple `MID` tiers. This does bring up the question of whether or not we also want to be able to apply header rewrites to any arbitrary "tier" of a Topology. That might not be a requirement for this MVP, but it may be something we'll need to add in the future when a use case arises.
+*Topology-based* delivery services will use the new `firstHeaderRewrite`, `middleHeaderRewrite`, and `lastHeaderRewrite` fields (described in the REST API Impact section above) for adding ATS header_rewrite configs. If a cache is both a "first" and a "last" in a given Topology (for instance, in a single-tier, edge-only Topology), both the `firstHeaderRewrite` and `lastHeaderRewrite` should be considered for adding. Otherwise, a given cache will be either a "first", "middle", or a "last".
+
+*Legacy* delivery services (not assigned to a Topology) will continue to use the `edgeHeaderRewrite` and `midHeaderRewrite` fields as they do today.
 
 ### Traffic Monitor Impact
 
@@ -447,7 +474,7 @@ Creating or updating Topologies should be restricted to users with the `operatio
 
 ### Upgrade Impact
 
-This feature will require a database migration to create new tables and add a new field to the `deliveryservice` table, but existing data does not need to be modified or migrated. Therefore, rolling back the database migration will not cause any data loss until Topologies are actually created and assigned. Additionally, since this feature will not remove any existing tables or columns, the new database schema should be backwards-compatible with the previous version of Traffic Ops. However, this blueprint cannot make any claim as to the backwards-compatibility of schema changes required by *other* features, which would affect the overall backwards-compatibility of the entire release.
+This feature will require a database migration to create new tables and add new fields to the `deliveryservice` table, but existing data does not need to be modified or migrated. Therefore, rolling back the database migration will not cause any data loss until Topologies are actually created and assigned. Additionally, since this feature will not remove any existing tables or columns, the new database schema should be backwards-compatible with the previous version of Traffic Ops. However, this blueprint cannot make any claim as to the backwards-compatibility of schema changes required by *other* features, which would affect the overall backwards-compatibility of the entire release.
 
 This feature will not require components to be upgraded in a specific order, and no special manual steps will be required before, during, or after the upgrade is done.
 
