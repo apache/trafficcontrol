@@ -34,22 +34,26 @@ import (
 
 func TestCalcAvailabilityThresholds(t *testing.T) {
 	result := cache.Result{
-		ID:    "myCacheName",
-		Error: nil,
-		Astats: cache.Astats{
-			Ats: map[string]interface{}{},
-			System: cache.AstatsSystem{
-				InfName:           "bond0",
-				InfSpeed:          20000,
-				ProcNetDev:        "bond0: 1234567891011121 123456789101    0    5    0     0          0  9876543 12345678910111213 1234567891011    0 1234    0     0       0          0",
-				ProcLoadavg:       "5.43 4.32 3.21 3/1234 32109",
-				ConfigLoadRequest: 9,
-				LastReloadRequest: 1559237772,
-				ConfigReloads:     1,
-				LastReload:        1559237773,
-				AstatsLoad:        1559237774,
-				NotAvailable:      false,
+		ID:            "myCacheName",
+		Error:         nil,
+		Miscellaneous: map[string]interface{}{},
+		Statistics: cache.Statistics{
+			Loadavg: cache.Loadavg{
+				One:              5.43,
+				Five:             4.32,
+				Fifteen:          3.21,
+				CurrentProcesses: 3,
+				TotalProcesses:   1234,
+				LatestPID:        32109,
 			},
+			Interfaces: map[string]cache.Interface{
+				"bond0": cache.Interface{
+					Speed:    20000,
+					BytesIn:  1234567891011121,
+					BytesOut: 12345678910111213,
+				},
+			},
+			NotAvailable: false,
 		},
 		Time:            time.Now(),
 		RequestTime:     time.Second,
@@ -94,9 +98,9 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 		DeliveryServiceServers: map[tc.DeliveryServiceName][]tc.CacheName{},
 		ServerCachegroups:      map[tc.CacheName]tc.CacheGroupName{},
 	}
-	toData.ServerTypes[result.ID] = tc.CacheTypeEdge
-	toData.DeliveryServiceServers["myDS"] = []tc.CacheName{result.ID}
-	toData.ServerCachegroups[result.ID] = "myCG"
+	toData.ServerTypes[tc.CacheName(result.ID)] = tc.CacheTypeEdge
+	toData.DeliveryServiceServers["myDS"] = []tc.CacheName{tc.CacheName(result.ID)}
+	toData.ServerCachegroups[tc.CacheName(result.ID)] = "myCG"
 
 	localCacheStatusThreadsafe := threadsafe.NewCacheAvailableStatus()
 	localStates := peer.NewCRStatesThreadsafe()
@@ -109,7 +113,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	CalcAvailability(results, pollerName, statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
 
 	localCacheStatuses := localCacheStatusThreadsafe.Get()
-	if localCacheStatus, ok := localCacheStatuses[result.ID]; !ok {
+	if localCacheStatus, ok := localCacheStatuses[tc.CacheName(result.ID)]; !ok {
 		t.Fatalf("expected: localCacheStatus[cacheName], actual: missing")
 	} else if localCacheStatus.Available.IPv4 {
 		t.Fatalf("localCacheStatus.Available.IPv4 over kbps threshold expected: false, actual: true")
@@ -129,14 +133,17 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	// https://github.com/apache/trafficcontrol/issues/3646
 
 	healthResult := result
-	healthResult.Astats.System.ProcNetDev = "bond0: 1234567891011121 123456789101    0    5    0     0          0  9876543 12345680160111212 1234567891011    0 1234    0     0       0          0" // 10Gb more than result
+	healthResultInf := result.Statistics.Interfaces["bond0"]
+	healthResultInf.BytesOut = 12345680160111212
+	healthResult.Statistics.Interfaces["bond0"] = healthResultInf
+
 	GetVitals(&healthResult, &result, nil)
 	healthPollerName := "health"
 	healthResults := []cache.Result{healthResult}
 	CalcAvailability(healthResults, healthPollerName, nil, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
 
 	localCacheStatuses = localCacheStatusThreadsafe.Get()
-	if localCacheStatus, ok := localCacheStatuses[result.ID]; !ok {
+	if localCacheStatus, ok := localCacheStatuses[tc.CacheName(result.ID)]; !ok {
 		t.Fatalf("expected: localCacheStatus[cacheName], actual: missing")
 	} else if localCacheStatus.Available.IPv4 {
 		t.Fatalf("localCacheStatus.Available.IPv4 over kbps threshold expected: false, actual: true")

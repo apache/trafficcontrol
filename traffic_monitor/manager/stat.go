@@ -279,7 +279,7 @@ func processStatResults(
 		}
 
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		if lastResult, ok := lastResults[result.ID]; ok && result.Error == nil {
+		if lastResult, ok := lastResults[tc.CacheName(result.ID)]; ok && result.Error == nil {
 			health.GetVitals(&result, &lastResult, &mc) // TODO precompute
 			if result.Error == nil {
 				results[i] = result
@@ -297,12 +297,12 @@ func processStatResults(
 			statMaxKbpses.AddMax(result)
 			// if we failed to compute the OutBytes, keep the outbytes of the last result.
 			if result.PrecomputedData.OutBytes == 0 {
-				result.PrecomputedData.OutBytes = precomputedData[result.ID].OutBytes
+				result.PrecomputedData.OutBytes = precomputedData[tc.CacheName(result.ID)].OutBytes
 			}
-			precomputedData[result.ID] = result.PrecomputedData
+			precomputedData[tc.CacheName(result.ID)] = result.PrecomputedData
 
 		}
-		lastResults[result.ID] = result
+		lastResults[tc.CacheName(result.ID)] = result
 	}
 	statInfoHistoryThreadsafe.Set(statInfoHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
@@ -326,11 +326,11 @@ func processStatResults(
 	endTime := time.Now()
 	lastStatDurations := threadsafe.CopyDurationMap(lastStatDurationsThreadsafe.Get())
 	for _, result := range results {
-		if lastStatStart, ok := lastStatEndTimes[result.ID]; ok {
+		if lastStatStart, ok := lastStatEndTimes[tc.CacheName(result.ID)]; ok {
 			d := time.Since(lastStatStart)
-			lastStatDurations[result.ID] = d
+			lastStatDurations[tc.CacheName(result.ID)] = d
 		}
-		lastStatEndTimes[result.ID] = endTime
+		lastStatEndTimes[tc.CacheName(result.ID)] = endTime
 	}
 	lastStatDurationsThreadsafe.Set(lastStatDurations)
 	unpolledCaches.SetPolled(results, lastStats.Get())

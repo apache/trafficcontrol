@@ -112,13 +112,13 @@ func (h ResultStatValHistory) Store(stat string, vals []cache.ResultStatVal) {
 
 func (a ResultStatHistory) Add(r cache.Result, limit uint64) error {
 	errStrs := ""
-	resultHistory := a.LoadOrStore(r.ID)
+	resultHistory := a.LoadOrStore(tc.CacheName(r.ID))
 	if limit == 0 {
 		log.Warnln("ResultStatHistory.Add got limit 0 - setting to 1")
 		limit = 1
 	}
 
-	for statName, statVal := range r.Astats.Ats {
+	for statName, statVal := range r.Miscellaneous {
 		statHistory := resultHistory.Load(statName)
 		if len(statHistory) == 0 {
 			statHistory = make([]cache.ResultStatVal, 0, limit) // initialize to the limit, to avoid multiple allocations. TODO put in .Load(statName, defaultSize)?
