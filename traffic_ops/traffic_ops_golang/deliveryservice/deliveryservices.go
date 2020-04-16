@@ -403,7 +403,7 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 	return c, nil
 }
 
-func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
+func (ds *TODeliveryService) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	version := ds.APIInfo().Version
 	if version == nil {
 		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError

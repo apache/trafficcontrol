@@ -159,7 +159,7 @@ func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	}
 }
 
-func (v *TOFedDSes) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
+func (v *TOFedDSes) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(v) }
 
 func (v *TOFedDSes) Delete() (error, error, int) {
 	dsIDStr, ok := v.APIInfo().Params["dsID"]

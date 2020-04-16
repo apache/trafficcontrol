@@ -100,6 +100,6 @@ func (v *TOServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (v *TOServerCapability) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
+func (v *TOServerCapability) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(v) }
 func (v *TOServerCapability) Create() (error, error, int)              { return api.GenericCreateNameBasedID(v) }
 func (v *TOServerCapability) Delete() (error, error, int)              { return api.GenericDelete(v) }

@@ -143,7 +143,7 @@ func checkTenancy(tenantID *int, tenantIDs []int) bool {
 	return false
 }
 
-func (fed *TOCDNFederation) Read() ([]interface{}, error, error, int) {
+func (fed *TOCDNFederation) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	if idstr, ok := fed.APIInfo().Params["id"]; ok {
 		id, err := strconv.Atoi(idstr)
 		if err != nil {

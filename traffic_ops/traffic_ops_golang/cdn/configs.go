@@ -43,7 +43,7 @@ id
 FROM cdn`
 }
 
-func (v *TOCDNConf) Read() ([]interface{}, error, error, int) {
+func (v *TOCDNConf) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	return api.GenericRead(v)
 }
 

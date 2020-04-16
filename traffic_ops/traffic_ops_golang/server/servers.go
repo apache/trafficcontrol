@@ -197,7 +197,7 @@ func (s TOServer) ChangeLogMessage(action string) (string, error) {
 	return message, nil
 }
 
-func (s *TOServer) Read() ([]interface{}, error, error, int) {
+func (s *TOServer) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	version := s.APIInfo().Version
 	if version == nil {
 		return nil, nil, errors.New("TOServer.Read called with nil API version"), http.StatusInternalServerError

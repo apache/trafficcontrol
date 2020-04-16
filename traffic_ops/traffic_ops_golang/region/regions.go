@@ -89,7 +89,7 @@ func (region *TORegion) Validate() error {
 	return nil
 }
 
-func (rg *TORegion) Read() ([]interface{}, error, error, int) { return api.GenericRead(rg) }
+func (rg *TORegion) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(rg) }
 func (rg *TORegion) Update() (error, error, int)              { return api.GenericUpdate(rg) }
 func (rg *TORegion) Create() (error, error, int)              { return api.GenericCreate(rg) }
 func (rg *TORegion) Delete() (error, error, int)              { return api.GenericDelete(rg) }

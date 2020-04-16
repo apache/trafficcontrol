@@ -99,7 +99,7 @@ func (asn TOASNV11) Validate() error {
 }
 
 func (as *TOASNV11) Create() (error, error, int)              { return api.GenericCreate(as) }
-func (as *TOASNV11) Read() ([]interface{}, error, error, int) { return api.GenericRead(as) }
+func (as *TOASNV11) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(as) }
 func (as *TOASNV11) Update() (error, error, int)              { return api.GenericUpdate(as) }
 func (as *TOASNV11) Delete() (error, error, int)              { return api.GenericDelete(as) }
 

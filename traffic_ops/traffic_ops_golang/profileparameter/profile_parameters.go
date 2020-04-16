@@ -154,7 +154,7 @@ parameter) VALUES (
 func (pp *TOProfileParameter) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
-func (pp *TOProfileParameter) Read() ([]interface{}, error, error, int) { return api.GenericRead(pp) }
+func (pp *TOProfileParameter) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(pp) }
 func (pp *TOProfileParameter) Delete() (error, error, int)              { return api.GenericDelete(pp) }
 
 func selectQuery() string {

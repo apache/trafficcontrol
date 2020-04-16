@@ -121,7 +121,7 @@ func (pa *TOParameter) Create() (error, error, int) {
 	return api.GenericCreate(pa)
 }
 
-func (param *TOParameter) Read() ([]interface{}, error, error, int) {
+func (param *TOParameter) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := param.ParamColumns()
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(param.APIInfo().Params, queryParamsToQueryCols)
 	if len(errs) > 0 {

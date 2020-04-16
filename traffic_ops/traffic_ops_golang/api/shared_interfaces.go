@@ -26,7 +26,7 @@ import (
 
 type CRUDer interface {
 	Create() (error, error, int)
-	Read() ([]interface{}, error, error, int)
+	Read(h map[string][]string) ([]interface{}, error, error, int)
 	Update() (error, error, int)
 	Delete() (error, error, int)
 	APIInfoer
@@ -66,7 +66,7 @@ type MultipleCreator interface {
 
 type Reader interface {
 	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Read() ([]interface{}, error, error, int)
+	Read(map[string][]string) ([]interface{}, error, error, int)
 	APIInfoer
 }
 

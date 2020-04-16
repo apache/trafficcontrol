@@ -152,10 +152,31 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		results, userErr, sysErr, errCode := obj.Read(r.Header)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
+		}
+		if r.Header.Get("If-Modified-Since") != "" {
+			//res := make([]interface{}, len(results))
+			//for i, r := range results {
+			//	res[i] = reflect.New(objectType)
+			//}
+			//if results != nil && len(results) != 0 {
+			//	sri := results[0]
+			//	switch v := results[0].(type) {
+			//	case types.TOType:
+			//		fmt.Println("Srijeet!! TYPE IS TO TYPE 222222")
+			//		ans := sri.(types.TOType)
+			//		fmt.Println(ans.LastUpdated)
+			//		fmt.Println("HEREEEEEE!! ", v, ans)
+			//	default:
+			//		fmt.Println("SC!!! HERE")
+			//	}
+			//}
+			fmt.Println("Srijeet type is ", objectType)
+
+			w.WriteHeader(304)
 		}
 		WriteResp(w, r, results)
 	}
@@ -187,7 +208,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		results, userErr, sysErr, errCode := obj.Read(r.Header)
 		if userErr != nil || sysErr != nil {
 			userErr = LogErr(r, http.StatusInternalServerError, userErr, sysErr)
 			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
@@ -207,6 +228,9 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 //   *forming and writing the body over the wire
 func UpdateHandler(updater Updater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ans := r.Header.Get("Cookie")
+		fmt.Println("Srijeet! Ans is ", ans)
+		fmt.Println("Srijeet! Headers are ", r.Header)
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -228,7 +252,8 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 			return
 		}
 
-		keyFields := obj.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
+		keyFields := obj.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert
+		// a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
 		// ignoring ok value -- will be checked after param processing
 
 		keys := make(map[string]interface{}) // a map of keyField to keyValue where keyValue is an {}interface

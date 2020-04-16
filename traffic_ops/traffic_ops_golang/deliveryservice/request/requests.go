@@ -76,7 +76,7 @@ func (req TODeliveryServiceRequest) GetType() string {
 }
 
 // Read implements the api.Reader interface
-func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
+func (req *TODeliveryServiceRequest) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
 		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},

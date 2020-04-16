@@ -166,7 +166,7 @@ func (rc *RequiredCapability) Update() (error, error, int) {
 }
 
 // Read implements the api.CRUDer interface.
-func (rc *RequiredCapability) Read() ([]interface{}, error, error, int) {
+func (rc *RequiredCapability) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	tenantIDs, err := rc.getTenantIDs()
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError

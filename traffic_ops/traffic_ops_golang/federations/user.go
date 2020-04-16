@@ -117,7 +117,7 @@ func (v *TOUsers) GetType() string {
 	return fedUserType
 }
 
-func (v *TOUsers) Read() ([]interface{}, error, error, int) {
+func (v *TOUsers) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	fedIDStr := v.APIInfo().Params["id"]
 	fedID, err := strconv.Atoi(fedIDStr)
 	if err != nil {

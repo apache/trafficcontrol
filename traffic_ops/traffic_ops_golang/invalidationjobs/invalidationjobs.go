@@ -193,7 +193,7 @@ type apiResponse struct {
 
 // Used by GET requests to `/jobs`, simply returns a filtered list of
 // content invalidation jobs according to the provided query parameters.
-func (job *InvalidationJob) Read() ([]interface{}, error, error, int) {
+func (job *InvalidationJob) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
 		"id":              dbhelpers.WhereColumnInfo{"job.id", api.IsInt},
 		"keyword":         dbhelpers.WhereColumnInfo{"job.keyword", nil},

@@ -63,7 +63,7 @@ func (cgparam *TOCacheGroupParameter) GetType() string {
 	return "cachegroup parameter"
 }
 
-func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) {
+func (cgparam *TOCacheGroupParameter) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := cgparam.ParamColumns()
 	parameters := cgparam.APIInfo().Params
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)

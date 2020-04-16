@@ -98,7 +98,7 @@ func (pl *TOPhysLocation) Validate() error {
 	return nil
 }
 
-func (pl *TOPhysLocation) Read() ([]interface{}, error, error, int) {
+func (pl *TOPhysLocation) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	if _, ok := pl.APIInfo().Params["orderby"]; !ok {
 		pl.APIInfo().Params["orderby"] = "name"
 	}

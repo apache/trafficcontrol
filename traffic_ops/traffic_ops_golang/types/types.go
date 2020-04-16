@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -32,7 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation"
 )
 
 //we need a type alias to define functions on
@@ -98,7 +99,44 @@ func (typ *TOType) Validate() error {
 	return nil
 }
 
-func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
+func (tp *TOType) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	if ims != nil && len(ims) != 0 {
+		fmt.Println("SRIJEET!! INSIDE TOTYPE IMS is ", ims[0])
+	}
+	//modifiedSince, ok := web.GetHTTPDate(h, "If-Modified-Since")
+	//if !ok {
+	//	fmt.Println("SC!!!!!!! ERRRRRRRRRROOOOOOOOOORRRRRRRRRRR!")
+	//}
+	var modifiedSince time.Time
+	if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+		modifiedSince = t
+	} else {
+		fmt.Println("ERROR!!!! ", err)
+	}
+	fmt.Println("REQUEST TIME ", modifiedSince)
+	results, e1, e2, code := api.GenericRead(tp)
+	if e1 != nil && e2 != nil {
+		return results, e1, e2, code
+	}
+	var finalResults []interface{}
+	for _,r := range results {
+		sri := r.(*tc.TypeNullable)
+		fmt.Println("Srijeet!! TYPE IS TO TYPE 222222")
+		fmt.Println("LAST UPDATED!!! ", sri.LastUpdated)
+
+		if sri.LastUpdated.After(modifiedSince) {
+			fmt.Println("MODIFIEDDDDDDDDD!!! Send 200 with new value")
+			finalResults = append(finalResults, r)
+		} else {
+			fmt.Println("NOT MODIFIEDDDDDDD!!! Send 304")
+		}
+	}
+	if len(finalResults) == 0 {
+		return finalResults, e1, e2, 304
+	}
+	return results, e1, e2, code
+}
 
 func (tp *TOType) Update() (error, error, int) {
 	if !tp.AllowMutation(false) {
@@ -129,6 +167,8 @@ func (tp *TOType) AllowMutation(forCreation bool) bool {
 	if !forCreation {
 		userErr, sysErr, actualUseInTable := tp.loadUseInTable()
 		if userErr != nil || sysErr != nil {
+			fmt.Println("USER ERR ", userErr)
+			fmt.Println("System ERR ", sysErr)
 			return false
 		} else if actualUseInTable != "server" {
 			return false

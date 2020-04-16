@@ -115,7 +115,7 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (en *TOStaticDNSEntry) Read() ([]interface{}, error, error, int) { return api.GenericRead(en) }
+func (en *TOStaticDNSEntry) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(en) }
 func (en *TOStaticDNSEntry) Create() (error, error, int)              { return api.GenericCreate(en) }
 func (en *TOStaticDNSEntry) Update() (error, error, int)              { return api.GenericUpdate(en) }
 func (en *TOStaticDNSEntry) Delete() (error, error, int)              { return api.GenericDelete(en) }

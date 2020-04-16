@@ -118,7 +118,7 @@ func (coordinate TOCoordinate) Validate() error {
 }
 
 func (coord *TOCoordinate) Create() (error, error, int)              { return api.GenericCreate(coord) }
-func (coord *TOCoordinate) Read() ([]interface{}, error, error, int) { return api.GenericRead(coord) }
+func (coord *TOCoordinate) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(coord) }
 func (coord *TOCoordinate) Update() (error, error, int)              { return api.GenericUpdate(coord) }
 func (coord *TOCoordinate) Delete() (error, error, int)              { return api.GenericDelete(coord) }
 

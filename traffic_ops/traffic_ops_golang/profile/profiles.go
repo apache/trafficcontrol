@@ -101,7 +101,7 @@ func (prof *TOProfile) Validate() error {
 	return nil
 }
 
-func (prof *TOProfile) Read() ([]interface{}, error, error, int) {
+func (prof *TOProfile) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{

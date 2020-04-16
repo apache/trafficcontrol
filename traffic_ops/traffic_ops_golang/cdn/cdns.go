@@ -123,7 +123,7 @@ func (cdn *TOCDN) Create() (error, error, int) {
 	return api.GenericCreate(cdn)
 }
 
-func (cdn *TOCDN) Read() ([]interface{}, error, error, int) { return api.GenericRead(cdn) }
+func (cdn *TOCDN) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(cdn) }
 
 func (cdn *TOCDN) Update() (error, error, int) {
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)

@@ -122,7 +122,7 @@ func (ten TOTenant) Validate() error {
 
 func (tn *TOTenant) Create() (error, error, int) { return api.GenericCreate(tn) }
 
-func (ten *TOTenant) Read() ([]interface{}, error, error, int) {
+func (ten *TOTenant) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
 		return nil, nil, nil, http.StatusOK
 	}

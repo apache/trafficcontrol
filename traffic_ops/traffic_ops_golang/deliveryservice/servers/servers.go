@@ -597,7 +597,7 @@ type TODSSDeliveryService struct {
 }
 
 // Read shows all of the delivery services associated with the specified server.
-func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
+func (dss *TODSSDeliveryService) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 	params := dss.APIInfo().Params
 	tx := dss.APIInfo().Tx.Tx
