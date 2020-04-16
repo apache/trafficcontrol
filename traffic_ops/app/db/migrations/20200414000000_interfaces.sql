@@ -24,7 +24,15 @@ CREATE TABLE interface (
 );
 CREATE TABLE ip_address (
 	address inet NOT NULL,
-	gateway inet CHECK (gateway IS NULL OR masklen(gateway) = 32),
+	gateway inet CHECK (
+		gateway IS NULL OR (
+			family(gateway) = 4 AND
+			masklen(gateway) = 32
+		) OR (
+			family(gateway) = 6 AND
+			masklen(gateway) = 128
+		)
+	),
 	interface text NOT NULL,
 	server bigint NOT NULL,
 	service_address boolean NOT NULL DEFAULT FALSE,
@@ -84,7 +92,7 @@ SELECT
 				) AS digits)
 		END
 	),
-	NULLIF(server.mgmt_ip_gateway, '')::inet,
+	NULLIF(regexp_replace(server.mgmt_ip_gateway, '/\d+$', ''), '')::inet,
 	'mgmt',
 	server.id,
 	FALSE
@@ -121,7 +129,7 @@ SELECT
 				) AS digits)
 		END
 	),
-	NULLIF(server.ip_gateway, '')::inet,
+	NULLIF(regexp_replace(server.ip_gateway, '/\d+$', '')::inet,
 	server.interface_name,
 	server.id,
 	server.ip_address_is_service
@@ -138,7 +146,7 @@ INSERT INTO ip_address(
 )
 SELECT
 	trim(BOTH '[]' FROM server.ip6_address)::inet,
-	NULLIF(server.ip6_gateway, '')::inet,
+	NULLIF(regexp_replace(server.ip6_gateway, '/\d+$', ''), '')::inet,
 	server.interface_name,
 	server.id,
 	server.ip6_address_is_service
