@@ -54,19 +54,18 @@ func TestAssignDsesToServer(t *testing.T) {
 	remapConfigRow.AddRow(remapConfigLocation + "/")          // verifies we strip off the trailing slash
 	mock.ExpectQuery("SELECT").WillReturnRows(remapConfigRow) //remap.config
 
-	//select xmlids and edge_header_rewrite, regex_remap, and cache_url  for each ds
-	dsFieldRows := sqlmock.NewRows([]string{"xml_id", "edge_header_rewrite", "regex_remap", "cacheurl"})
-	dsFieldRows.AddRow("ds1", nil, "regexRemapPlaceholder", "cacheurlPlaceholder")
-	dsFieldRows.AddRow("ds2", "edgeHeaderRewritePlaceholder2", "regexRemapPlaceholder", "cacheurlPlaceholder")
-	dsFieldRows.AddRow("ds3", "", nil, "cacheurlPlaceholder")
+	//select xmlids and edge_header_rewrite, regex_remap for each ds
+	dsFieldRows := sqlmock.NewRows([]string{"xml_id", "edge_header_rewrite", "regex_remap"})
+	dsFieldRows.AddRow("ds1", nil, "regexRemapPlaceholder")
+	dsFieldRows.AddRow("ds2", "edgeHeaderRewritePlaceholder2", "regexRemapPlaceholder")
+	dsFieldRows.AddRow("ds3", "", nil)
 	mock.ExpectQuery("SELECT").WithArgs(pqNewDses).WillReturnRows(dsFieldRows)
 
 	//prepare the insert and delete parameter slices as they should be constructed in the function
 	headerRewritePrefix := "hdr_rw_"
 	regexRemapPrefix := "regex_remap_"
-	cacheurlPrefix := "cacheurl_"
 	configPostfix := ".config"
-	insert := []string{regexRemapPrefix + "ds1" + configPostfix, cacheurlPrefix + "ds1" + configPostfix, headerRewritePrefix + "ds2" + configPostfix, regexRemapPrefix + "ds2" + configPostfix, cacheurlPrefix + "ds2" + configPostfix, cacheurlPrefix + "ds3" + configPostfix}
+	insert := []string{regexRemapPrefix + "ds1" + configPostfix, headerRewritePrefix + "ds2" + configPostfix, regexRemapPrefix + "ds2" + configPostfix}
 	delete := []string{headerRewritePrefix + "ds1" + configPostfix, headerRewritePrefix + "ds3" + configPostfix, regexRemapPrefix + "ds3" + configPostfix}
 	fileNamesPq := pq.Array(insert)
 	//insert the parameters
