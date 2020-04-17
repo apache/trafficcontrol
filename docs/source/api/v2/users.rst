@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-users:
+.. _to-api-v2-users:
 
 *********
 ``users``

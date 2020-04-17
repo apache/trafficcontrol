@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-federations-id-users:
+.. _to-api-v2-federations-id-users:
 
 ****************************
 ``federations/{{ID}}/users``

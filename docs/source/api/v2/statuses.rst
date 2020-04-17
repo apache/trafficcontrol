@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-statuses:
+.. _to-api-v2-statuses:
 
 ************
 ``statuses``

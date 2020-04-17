@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-xmlid-servers:
+.. _to-api-v2-deliveryservices-xmlid-servers:
 
 ***************************************
 ``deliveryservices/{{xml_id}}/servers``

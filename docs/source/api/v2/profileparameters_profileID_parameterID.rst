@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-profileparameters-profileID-parameterID:
+.. _to-api-v2-profileparameters-profileID-parameterID:
 
 ***************************************************
 ``profileparameters/{{profileID}}/{{parameterID}}``
