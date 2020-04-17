@@ -114,7 +114,21 @@ cd $TO_DIR && \
 # Add admin user -- all other users should be created using API
 /adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD admin | psql -v ON_ERROR_STOP=1 -U$DB_USER -h$DB_SERVER $DB_NAME || { echo "adding traffic_ops admin user failed!"; exit 1; }
 
-cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
+cd $TO_DIR || exit 1;
+
+if [[ "$TO_PERL_DEBUG_ENABLE" == true ]]; then
+  set -o allexport;
+  PERL5_DEBUG_HOST=0.0.0.0;
+  PERL5_DEBUG_PORT=5000;
+  PERL5_DEBUG_ROLE=server;
+  MOJO_LISTEN="${TO_PERL_SCHEME}://*:${TO_PERL_PORT}?cert=${X509_CA_DIR}/${INFRA_FQDN}.crt&key=${X509_CA_DIR}/${INFRA_FQDN}.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:"'!RC4:!MD5:!aNULL:!EDH:!ED';
+  MOJO_INACTIVITY_TIMEOUT=$(( 60 * 60 * 24 )); # 24 hours
+  set +o allexport;
+
+  perl -d:Camelcadedb $TO_DIR/local/bin/morbo script/cdn &
+else
+  $TO_DIR/local/bin/hypnotoad script/cdn &
+fi;
 
 until [[ -f ${ENROLLER_DIR}/enroller-started ]]; do
     echo "waiting for enroller"

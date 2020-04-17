@@ -63,17 +63,21 @@ func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (tc.Del
 
 // NewRegexes constructs a new Regexes object, initializing internal pointer members.
 func NewRegexes() Regexes {
-	return Regexes{DirectMatches: map[string]tc.DeliveryServiceName{}, DotStartSlashDotFooSlashDotDotStar: map[string]tc.DeliveryServiceName{}, RegexMatch: map[*regexp.Regexp]tc.DeliveryServiceName{}}
+	return Regexes{
+		DirectMatches:                      map[string]tc.DeliveryServiceName{},
+		DotStartSlashDotFooSlashDotDotStar: map[string]tc.DeliveryServiceName{},
+		RegexMatch:                         map[*regexp.Regexp]tc.DeliveryServiceName{},
+	}
 }
 
 // TOData holds CDN data fetched from Traffic Ops.
 type TOData struct {
+	DeliveryServiceRegexes Regexes
 	DeliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName
+	DeliveryServiceTypes   map[tc.DeliveryServiceName]tc.DSTypeCategory
+	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
 	ServerDeliveryServices map[tc.CacheName][]tc.DeliveryServiceName
 	ServerTypes            map[tc.CacheName]tc.CacheType
-	DeliveryServiceTypes   map[tc.DeliveryServiceName]tc.DSTypeCategory
-	DeliveryServiceRegexes Regexes
-	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
 }
 
 // New returns a new empty TOData object, initializing pointer members.

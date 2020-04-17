@@ -19,31 +19,40 @@ package cache
  * under the License.
  */
 
-// stats_type_noop is a no-op parser designed to work with the the noop poller, to report caches as healthy without actually polling them.
+// noop is a no-op parser designed to work with the the no-op poller,
+// to report caches as healthy without actually polling them.
 
 import (
 	"io"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
-const StatsTypeNOOP = "noop"
-
 func init() {
-	AddStatsType(StatsTypeNOOP, noopParse, noopPrecompute)
+	registerDecoder("noop", noOpParse, noopPrecompute)
 }
 
-func noopParse(cache tc.CacheName, r io.Reader) (error, map[string]interface{}, AstatsSystem) {
-	// we need to make a fake system, so the health parse succeeds
-	return nil, map[string]interface{}{}, AstatsSystem{
-		ProcLoadavg: "0.10 0.05 0.05 1/1000 30000",
-		ProcNetDev:  "bond0:10000 10000    0    0    0     0          0   1000 100000 1000000    0    0    0     0       0          0",
-		InfSpeed:    20000,
-		InfName:     "bond0",
+func noOpParse(string, io.Reader) (Statistics, map[string]interface{}, error) {
+	stats := Statistics{
+		Loadavg: Loadavg{
+			One:              0.1,
+			Five:             0.05,
+			Fifteen:          0.05,
+			CurrentProcesses: 1,
+			TotalProcesses:   1000,
+			LatestPID:        30000,
+		},
+		Interfaces: map[string]Interface{
+			"bond0": Interface{
+				Speed:    20000,
+				BytesIn:  10000,
+				BytesOut: 100000,
+			},
+		},
 	}
+	return stats, map[string]interface{}{}, nil
 }
 
-func noopPrecompute(cache tc.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
-	return PrecomputedData{DeliveryServiceStats: map[tc.DeliveryServiceName]*AStat{}}
+func noopPrecompute(cache string, toData todata.TOData, stats Statistics, rawStats map[string]interface{}) PrecomputedData {
+	return PrecomputedData{DeliveryServiceStats: map[string]*DSStat{}}
 }

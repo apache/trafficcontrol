@@ -64,7 +64,7 @@ type DeliveryServiceSSLKeysV15 struct {
 }
 
 type DeliveryServiceSSLKeysReq struct {
-	AuthType        *string `json:authType,omitempty`
+	AuthType        *string `json:"authType,omitempty"`
 	CDN             *string `json:"cdn,omitempty"`
 	DeliveryService *string `json:"deliveryservice,omitempty"`
 	BusinessUnit    *string `json:"businessUnit,omitempty"`
@@ -137,7 +137,7 @@ func (r *DeliveryServiceAddSSLKeysReq) Validate(tx *sql.Tx) error {
 		if r.Certificate.Crt == "" {
 			errs = append(errs, "certificate.crt required")
 		}
-		if r.Certificate.CSR == "" && *r.AuthType != LetsEncryptAuthType {
+		if r.Certificate.CSR == "" && (r.AuthType == nil || *r.AuthType != LetsEncryptAuthType) {
 			errs = append(errs, "certificate.csr required")
 		}
 	}

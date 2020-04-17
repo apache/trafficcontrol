@@ -419,6 +419,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:proxy_tls_timeout: An optional field that sets the timeout in seconds for TLS handshakes from Traffic Ops to the `Legacy Perl Script`_. If set to zero, there is no timeout. The default if not specified is zero.
 	:read_header_timeout: An optional timeout in seconds before which Traffic Ops must be able to finish reading the headers of an incoming request or it will drop the connection. If set to zero, there is no timeout. Default if not specified is zero.
 	:read_timeout: An optional timeout in seconds before which Traffic Ops must be able to finish reading an entire incoming request (including body) or it will drop the connection. If set to zero, there is no timeout. Default if not specified is zero.
+	:request_timeout: An optional timeout in seconds that serves as the maximum time each Traffic Ops middleware can take to execute. If it is exceeded, the text "server timed out" is served in place of a response. If set to :code:`0`, :code:`60` is used instead. Default if not specified is :code:`60`.
 	:riak_port: An optional field that sets the port on which Traffic Ops will try to contact Traffic Vault for storage and retrieval of sensitive encryption keys.
 
 		.. impl-detail:: The name of this field is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
@@ -429,6 +430,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 		.. warning:: OAuth support in Traffic Ops is still in its infancy, so most users are advised to avoid defining this field without good cause.
 
 	:write_timeout: An optional timeout in seconds set on handlers. After reading a request's header, the server will have this long to send back a response. If set to zero, there is no timeout. Default if not specified is zero.
+
+	.. _admin-routing-blacklist:
+
 	:routing_blacklist: Optional configuration for explicitly routing requests to TO-Perl via ``perl_routes`` (only routes that are hardcoded to be able to bypass to TO-Perl -- not all Go routes can be bypassed to Perl) or explicitly disabling any routes via ``disabled_routes``.
 
 		.. versionadded:: 4.0

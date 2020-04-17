@@ -193,7 +193,7 @@ After Riak has been configured to use Riak Search, permissions still need need t
 		# and the server is accessible at port 8088 on the hostname "trafficvault.infra.ciab.test"
 		curl --tlsv1.1 --tls-max 1.1 -kvsX PUT "https://admin:pass@trafficvault.infra.ciab.test:8088/search/index/sslkeys" -H 'Content-Type: application/json' -d '{"schema":"sslkeys"}'
 
-4. Associate the ``sslkeys`` index to the ``ssl`` bucket in Riak
+#. Associate the ``sslkeys`` index to the ``ssl`` bucket in Riak
 
 	.. code-block:: bash
 		:caption: Using the Riak API to Create an Index-to-Bucket Association for ``sslkeys``
@@ -202,36 +202,19 @@ After Riak has been configured to use Riak Search, permissions still need need t
 		# and the server is accessible at port 8088 on the hostname "trafficvault.infra.ciab.test"
 		curl --tlsv1.1 --tls-max 1.1 -kvs -XPUT "https://admin:pass@trafficvault.infra.ciab.test:8088/buckets/ssl/props" -H'content-type:application/json' -d'{"props":{"search_index":"sslkeys"}}'
 
-Adding Newly Indexed Fields to Existing Records
-"""""""""""""""""""""""""""""""""""""""""""""""
-Riak Search (using Apache Solr) will now index all **new** records that are added to the ``ssl`` bucket. The ``cdn``, ``deliveryservice``, and ``hostname`` fields are indexed. When a search is performed Riak will return the indexed fields along with the certificate and key values for a SSL record. In order to add the indexed fields to current records and to get the current records added, the :file:`traffic_ops/app/script/update_riak_for_search.pl` script needs to be run. This does not need to be done on new installs. The following explains how to run the script.
+#. To validate the search is working run a query against the Riak database server, or use the Traffic Ops API endpoint: :ref:`to-api-cdns-name-name-sslkeys`
 
-.. code-block:: bash
-	:caption: Example Usage of :file:`traffic_ops/app/script/update_riak_for_search.pl`
+	.. code-block:: bash
+		:caption: Validate Riak Search is Working
 
-	### Note that the following steps should be done on the Traffic VAULT server ###
+		# Note that the assumptions made here are that the "admin" user's password is
+		# "pass", the Traffic Vault server's Riak database is accessible at port 8088 on
+		# the hostname "trafficvault.infra.ciab.test", $COOKIE contains a valid
+		# Mojolicious cookie for a Traffic Ops user with proper permissions, and the
+		# Traffic Ops server is available at the hostname "trafficops.infra.ciab.test"
 
-	# Obtain the script - in this example by downloading it from GitHub
-	wget https://raw.githubusercontent.com/apache/trafficcontrol/master/traffic_ops/app/script/update_riak_for_search.pl
+		# Verify by querying Riak directly
+		curl --tlsv1.1 --tls-max 1.1 -kvs "https://admin:password@trafficvault.infra.ciab.test:8088/search/query/sslkeys?wt=json&q=cdn:CDN-in-a-Box"
 
-	# Assuming Traffic Ops is hosted at trafficops.infra.ciab.test, with username 'admin' and password 'twelve!'
-	# the script should be run like so:
-
-	./update_riak_for_search.pl -to_url=https://trafficops.infra.ciab.test -to_un=admin -to_pw="twelve!"
-
-To validate the search is working run a query against the Riak database server, or use the Traffic Ops API endpoint: :ref:`to-api-cdns-name-name-sslkeys`
-
-.. code-block:: bash
-	:caption: Validate Riak Search is Working
-
-	# Note that the assumptions made here are that the "admin" user's password is
-	# "pass", the Traffic Vault server's Riak database is accessible at port 8088 on
-	# the hostname "trafficvault.infra.ciab.test", $COOKIE contains a valid
-	# Mojolicious cookie for a Traffic Ops user with proper permissions, and the
-	# Traffic Ops server is available at the hostname "trafficops.infra.ciab.test"
-
-	# Verify by querying Riak directly
-	curl --tlsv1.1 --tls-max 1.1 -kvs "https://admin:password@trafficvault.infra.ciab.test:8088/search/query/sslkeys?wt=json&q=cdn:CDN-in-a-Box"
-
-	# Verify using the Traffic Ops API
-	curl -Lvs -H "Cookie: $COOKIE" https://trafficops.infra.ciab.test/api/2.0/cdns/name/mycdn/sslkeys
+		# Verify using the Traffic Ops API
+		curl -Lvs -H "Cookie: $COOKIE" https://trafficops.infra.ciab.test/api/2.0/cdns/name/mycdn/sslkeys
