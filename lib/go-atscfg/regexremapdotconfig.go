@@ -89,7 +89,6 @@ func MakeRegexRemapDotConfig(
 type cdnDS struct {
 	OrgServerFQDN string
 	QStringIgnore int
-	CacheURL      string
 	RegexRemap    string
 }
 

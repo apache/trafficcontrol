@@ -40,7 +40,6 @@ func TestMakeCacheURLDotConfigWithDS(t *testing.T) {
 	ds0.XMLID = util.StrPtr("myds")
 	ds0.OrgServerFQDN = util.StrPtr("http://myorigin.example.net")
 	ds0.QStringIgnore = util.IntPtr(0)
-	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
 	servers := []Server{*server}
 	dses := []DeliveryService{*ds0}
@@ -79,7 +78,6 @@ func TestMakeCacheURLDotConfigGlobalFile(t *testing.T) {
 	ds0.XMLID = util.StrPtr("ds0")
 	ds0.OrgServerFQDN = util.StrPtr("http://myorigin.example.net")
 	ds0.QStringIgnore = util.IntPtr(1)
-	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
 	servers := []Server{*server}
 	dses := []DeliveryService{*ds0}
@@ -102,10 +100,6 @@ func TestMakeCacheURLDotConfigGlobalFile(t *testing.T) {
 	if !strings.Contains(txt, "myorigin") {
 		t.Errorf("expected: contains origin, actual: %v", txt)
 	}
-
-	if strings.Contains(txt, "mycacheurl") {
-		t.Errorf("expected: global file to NOT contain cacheurl, actual: contains cacheurl")
-	}
 }
 
 func TestMakeCacheURLDotConfigGlobalFileNoQStringIgnore(t *testing.T) {
@@ -122,7 +116,6 @@ func TestMakeCacheURLDotConfigGlobalFileNoQStringIgnore(t *testing.T) {
 	ds0.XMLID = util.StrPtr("ds0")
 	ds0.OrgServerFQDN = util.StrPtr("http://myorigin.example.net")
 	ds0.QStringIgnore = util.IntPtr(0)
-	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
 	servers := []Server{*server}
 	dses := []DeliveryService{*ds0}
@@ -165,7 +158,6 @@ func TestMakeCacheURLDotConfigQStringFile(t *testing.T) {
 	ds0.XMLID = util.StrPtr("ds0")
 	ds0.OrgServerFQDN = util.StrPtr("http://myorigin.example.net")
 	ds0.QStringIgnore = util.IntPtr(0)
-	ds0.CacheURL = util.StrPtr("http://mycacheurl.net")
 
 	servers := []Server{*server}
 	dses := []DeliveryService{*ds0}
