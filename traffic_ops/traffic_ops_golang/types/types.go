@@ -101,41 +101,28 @@ func (typ *TOType) Validate() error {
 
 func (tp *TOType) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	ims := h["If-Modified-Since"]
-	if ims != nil && len(ims) != 0 {
-		fmt.Println("SRIJEET!! INSIDE TOTYPE IMS is ", ims[0])
-	}
-	//modifiedSince, ok := web.GetHTTPDate(h, "If-Modified-Since")
-	//if !ok {
-	//	fmt.Println("SC!!!!!!! ERRRRRRRRRROOOOOOOOOORRRRRRRRRRR!")
-	//}
 	var modifiedSince time.Time
-	if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
-		modifiedSince = t
-	} else {
-		fmt.Println("ERROR!!!! ", err)
+	res := []interface{}{}
+
+	if ims == nil || len(ims) == 0 {
+		return api.GenericRead(tp)
 	}
-	fmt.Println("REQUEST TIME ", modifiedSince)
+	if t, err := time.Parse(time.RFC1123, ims[0]); err != nil {
+		return nil, err, nil, http.StatusBadRequest
+	} else {
+		modifiedSince = t
+	}
 	results, e1, e2, code := api.GenericRead(tp)
-	if e1 != nil && e2 != nil {
+	if e1 != nil || e2 != nil || len(results) == 0{
 		return results, e1, e2, code
 	}
-	var finalResults []interface{}
 	for _,r := range results {
-		sri := r.(*tc.TypeNullable)
-		fmt.Println("Srijeet!! TYPE IS TO TYPE 222222")
-		fmt.Println("LAST UPDATED!!! ", sri.LastUpdated)
-
-		if sri.LastUpdated.After(modifiedSince) {
-			fmt.Println("MODIFIEDDDDDDDDD!!! Send 200 with new value")
-			finalResults = append(finalResults, r)
-		} else {
-			fmt.Println("NOT MODIFIEDDDDDDD!!! Send 304")
+		obj := r.(*tc.TypeNullable)
+		if obj.LastUpdated.After(modifiedSince) {
+			return results, e1, e2, code
 		}
 	}
-	if len(finalResults) == 0 {
-		return finalResults, e1, e2, 304
-	}
-	return results, e1, e2, code
+	return res, e1, e2, http.StatusNotModified
 }
 
 func (tp *TOType) Update() (error, error, int) {
@@ -167,8 +154,6 @@ func (tp *TOType) AllowMutation(forCreation bool) bool {
 	if !forCreation {
 		userErr, sysErr, actualUseInTable := tp.loadUseInTable()
 		if userErr != nil || sysErr != nil {
-			fmt.Println("USER ERR ", userErr)
-			fmt.Println("System ERR ", sysErr)
 			return false
 		} else if actualUseInTable != "server" {
 			return false

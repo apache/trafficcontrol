@@ -90,7 +90,7 @@ func TestReadCoordinates(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.CoordinateNullable{},
 	}
-	coordinates, userErr, sysErr, _ := obj.Read()
+	coordinates, userErr, sysErr, _ := obj.Read(map[string][]string{})
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}

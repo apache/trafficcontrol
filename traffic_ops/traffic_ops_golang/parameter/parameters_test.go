@@ -103,7 +103,7 @@ func TestGetParameters(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.ParameterNullable{},
 	}
-	pps, userErr, sysErr, _ := obj.Read()
+	pps, userErr, sysErr, _ := obj.Read(map[string][]string{})
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}

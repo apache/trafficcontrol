@@ -197,7 +197,7 @@ func TestReadCacheGroupParameters(t *testing.T) {
 				reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: testCase.params}
 				toParameterReader.SetInfo(&reqInfo)
 
-				parameters, userErr, sysErr, returnCode := toParameterReader.Read()
+				parameters, userErr, sysErr, returnCode := toParameterReader.Read(map[string][]string{})
 
 				if testCase.storageError != nil {
 					if sysErr == nil {
