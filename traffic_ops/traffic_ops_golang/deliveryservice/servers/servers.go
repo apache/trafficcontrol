@@ -996,7 +996,6 @@ type DSInfo struct {
 	MidHeaderRewrite     *string
 	RegexRemap           *string
 	SigningAlgorithm     *string
-	CacheURL             *string
 	MaxOriginConnections *int
 	Topology             *string
 	CDNID                *int
@@ -1013,7 +1012,6 @@ SELECT
   ds.mid_header_rewrite,
   ds.regex_remap,
   ds.signing_algorithm,
-  ds.cacheurl,
   ds.max_origin_connections,
   ds.topology,
   ds.cdn_id
@@ -1021,6 +1019,8 @@ FROM
   deliveryservice ds
   JOIN type tp ON ds.type = tp.id
 `
+	di := DSInfo{ID: id}
+	if err := tx.QueryRow(qry, id).Scan(&di.Name, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.MaxOriginConnections, &di.Topology, &di.CDNID); err != nil {
 
 func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 	di := DSInfo{}
@@ -1033,7 +1033,6 @@ func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 		&di.MidHeaderRewrite,
 		&di.RegexRemap,
 		&di.SigningAlgorithm,
-		&di.CacheURL,
 		&di.MaxOriginConnections,
 		&di.Topology,
 		&di.CDNID,

@@ -1650,18 +1650,6 @@ func ensureRegexRemapParams(tx *sql.Tx, dsID int, xmlID string, regexRemap *stri
 	return createDSLocationProfileParams(tx, locationParamID, dsID)
 }
 
-func ensureCacheURLParams(tx *sql.Tx, dsID int, xmlID string, cacheURL *string) error {
-	configFile := "cacheurl_" + xmlID + ".config"
-	if cacheURL == nil || *cacheURL == "" {
-		return deleteLocationParam(tx, configFile)
-	}
-	locationParamID, err := ensureLocation(tx, configFile)
-	if err != nil {
-		return err
-	}
-	return createDSLocationProfileParams(tx, locationParamID, dsID)
-}
-
 // createDSLocationProfileParams adds the given parameter to all profiles assigned to servers which are assigned to the given delivery service.
 func createDSLocationProfileParams(tx *sql.Tx, locationParamID int, deliveryServiceID int) error {
 	profileParameterQuery := `
@@ -1828,7 +1816,6 @@ func selectQuery() string {
 SELECT
 ds.active,
 ds.anonymous_blocking_enabled,
-ds.cacheurl,
 ds.ccr_dns_ttl,
 ds.cdn_id,
 cdn.name as cdnName,
@@ -1914,7 +1901,6 @@ func updateDSQuery() string {
 UPDATE
 deliveryservice SET
 active=$1,
-cacheurl=$2,
 ccr_dns_ttl=$3,
 cdn_id=$4,
 check_path=$5,
@@ -1983,7 +1969,6 @@ func insertQuery() string {
 INSERT INTO deliveryservice (
 active,
 anonymous_blocking_enabled,
-cacheurl,
 ccr_dns_ttl,
 cdn_id,
 check_path,
@@ -2042,7 +2027,7 @@ last_header_rewrite,
 service_category,
 max_request_header_bytes
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59)
 RETURNING id, last_updated
 `
 }

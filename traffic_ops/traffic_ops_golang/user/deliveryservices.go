@@ -122,7 +122,6 @@ func getUserDSes(tx *sql.Tx, userID int) ([]tc.DeliveryServiceNullable, error) {
 SELECT
 ds.active,
 ds.anonymous_blocking_enabled,
-ds.cacheurl,
 ds.ccr_dns_ttl,
 ds.cdn_id,
 cdn.name as cdnName,
