@@ -15,4 +15,25 @@
 
 package client
 
-const apiBase = "/api/3.0"
+import (
+	"encoding/json"
+	"net/http"
+)
+
+const (
+	API_PING = apiBase + "/ping"
+)
+
+// Ping returns a static json object to show that traffic_ops is responsive
+func (to *Session) Ping() (map[string]string, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PING, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data map[string]string
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data, reqInf, nil
+}

@@ -1,3 +1,9 @@
+package client
+
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +19,11 @@
    limitations under the License.
 */
 
-package client
-
-const apiBase = "/api/3.0"
+func (to *Session) GetDomains() ([]tc.Domain, ReqInf, error) {
+	var data tc.DomainsResponse
+	inf, err := get(to, apiBase+"/cdns/domains", &data)
+	if err != nil {
+		return nil, inf, err
+	}
+	return data.Response, inf, nil
+}

@@ -1,5 +1,6 @@
-/*
+package client
 
+/*
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -13,6 +14,16 @@
    limitations under the License.
 */
 
-package client
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
 
-const apiBase = "/api/3.0"
+// GetCurrentStats gets current stats for each CDNs and a total across them
+func (to *Session) GetCurrentStats() (tc.TrafficStatsCDNStatsResponse, ReqInf, error) {
+	resp := tc.TrafficStatsCDNStatsResponse{}
+	reqInf, err := get(to, apiBase+"/current_stats", &resp)
+	if err != nil {
+		return resp, reqInf, err
+	}
+	return resp, reqInf, nil
+}

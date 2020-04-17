@@ -15,4 +15,24 @@
 
 package client
 
-const apiBase = "/api/3.0"
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
+func (to *Session) Steering() ([]tc.Steering, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering`, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	data := struct {
+		Response []tc.Steering `json:"response"`
+	}{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data.Response, reqInf, err
+}
