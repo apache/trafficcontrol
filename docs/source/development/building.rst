@@ -32,7 +32,7 @@ If any local work on Traffic Monitor, Traffic Router Golang, Grove or Traffic Op
 
 Build Using ``pkg``
 ===================
-This is the easiest way to build all the components of Traffic Control; all requirements are automatically loaded into the image used to build each component.
+This is the easiest way to build all the components of Traffic Control; all requirements are automatically loaded into the image used to build each component.  The ``pkg`` command can be found at the root of the Traffic Control `repository <https://github.com/apache/trafficcontrol/blob/master/pkg>`_.
 
 Requirements
 ------------
