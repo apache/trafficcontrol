@@ -112,7 +112,7 @@ JOIN type as rt ON r.type = rt.id
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
 	}
-	if len(where) == 0 {
+	if len(where) > 0 {
 		where += " AND ds.tenant_id = ANY(:tenants) "
 	} else {
 		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) "
@@ -120,6 +120,7 @@ JOIN type as rt ON r.type = rt.id
 	queryValues["tenants"] = pq.Array(accessibleTenants)
 
 	query := q + where + " ORDER BY dsr.set_number ASC" + pagination
+
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("querying deliveryserviceregexes get: "+err.Error()))

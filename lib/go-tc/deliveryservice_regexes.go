@@ -51,6 +51,13 @@ type DeliveryServiceIDRegex struct {
 	Pattern   string `json:"pattern"`
 }
 
+// Used to represent the entire deliveryservice_regex for testing
+type DeliveryServiceRegexesTest struct {
+	DSName string `json:"dsName"`
+	DSID   int
+	DeliveryServiceIDRegex
+}
+
 // DeliveryServiceRegexPost holds all of the information necessary to create a
 // new routing regular expression for a delivery service.
 type DeliveryServiceRegexPost struct {
