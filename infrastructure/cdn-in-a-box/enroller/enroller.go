@@ -33,7 +33,7 @@ import (
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	client "github.com/apache/trafficcontrol/traffic_ops/client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/fsnotify.v1"
 )
