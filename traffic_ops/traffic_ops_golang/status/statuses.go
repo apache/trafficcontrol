@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -92,6 +93,17 @@ func (status TOStatus) Validate() error {
 }
 
 func (st *TOStatus) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	modified := false
+	code := http.StatusOK
+
+	if ims != nil && len(ims) != 0 {
+		if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+			modifiedSince = t
+		}
+	}
+
 	readVals, userErr, sysErr, errCode := api.GenericRead(st)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
@@ -105,9 +117,20 @@ func (st *TOStatus) Read(h map[string][]string) ([]interface{}, error, error, in
 		if status.SQLDescription.Valid {
 			status.Description = &status.SQLDescription.String
 		}
+		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+		// we send back the entire array of results
+		if !status.LastUpdated.Before(modifiedSince) {
+			modified = true
+		}
 	}
 
-	return readVals, nil, nil, http.StatusOK
+	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
+	// we send back a 304, with an empty response
+	if modified == false {
+		code =  http.StatusNotModified
+		readVals = []interface{}{}
+	}
+	return readVals, nil, nil, code
 }
 
 func (st *TOStatus) Update() (error, error, int) { return api.GenericUpdate(st) }

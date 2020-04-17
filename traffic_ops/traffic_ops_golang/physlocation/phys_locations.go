@@ -20,7 +20,9 @@ package physlocation
  */
 
 import (
+	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -102,7 +104,29 @@ func (pl *TOPhysLocation) Read(h map[string][]string) ([]interface{}, error, err
 	if _, ok := pl.APIInfo().Params["orderby"]; !ok {
 		pl.APIInfo().Params["orderby"] = "name"
 	}
-	return api.GenericRead(pl)
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	var res []interface{}
+
+	if ims == nil || len(ims) == 0 {
+		return api.GenericRead(pl)
+	}
+	if t, err := time.Parse(time.RFC1123, ims[0]); err != nil {
+		return nil, err, nil, http.StatusBadRequest
+	} else {
+		modifiedSince = t
+	}
+	results, e1, e2, code := api.GenericRead(pl)
+	if e1 != nil || e2 != nil || len(results) == 0{
+		return results, e1, e2, code
+	}
+	for _,r := range results {
+		obj := r.(*tc.PhysLocationNullable)
+		if !obj.LastUpdated.Before(modifiedSince) {
+			return results, e1, e2, code
+		}
+	}
+	return res, e1, e2, http.StatusNotModified
 }
 func (pl *TOPhysLocation) Update() (error, error, int) { return api.GenericUpdate(pl) }
 func (pl *TOPhysLocation) Create() (error, error, int) { return api.GenericCreate(pl) }

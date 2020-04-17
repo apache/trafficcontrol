@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/jmoiron/sqlx"
@@ -126,7 +127,29 @@ func (ssc *TOServerServerCapability) Update() (error, error, int) {
 }
 
 func (ssc *TOServerServerCapability) Read(h map[string][]string) ([]interface{}, error, error, int) {
-	return api.GenericRead(ssc)
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	var res []interface{}
+
+	if ims == nil || len(ims) == 0 {
+		return api.GenericRead(ssc)
+	}
+	if t, err := time.Parse(time.RFC1123, ims[0]); err != nil {
+		return nil, err, nil, http.StatusBadRequest
+	} else {
+		modifiedSince = t
+	}
+	results, e1, e2, code := api.GenericRead(ssc)
+	if e1 != nil || e2 != nil || len(results) == 0{
+		return results, e1, e2, code
+	}
+	for _,r := range results {
+		obj := r.(*tc.ServerServerCapability)
+		if !obj.LastUpdated.Before(modifiedSince) {
+			return results, e1, e2, code
+		}
+	}
+	return res, e1, e2, http.StatusNotModified
 }
 
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {

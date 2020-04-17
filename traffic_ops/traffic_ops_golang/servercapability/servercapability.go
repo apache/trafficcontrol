@@ -25,6 +25,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"net/http"
+	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -100,6 +102,30 @@ func (v *TOServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (v *TOServerCapability) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(v) }
+func (v *TOServerCapability) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	var res []interface{}
+
+	if ims == nil || len(ims) == 0 {
+		return api.GenericRead(v)
+	}
+	if t, err := time.Parse(time.RFC1123, ims[0]); err != nil {
+		return nil, err, nil, http.StatusBadRequest
+	} else {
+		modifiedSince = t
+	}
+	results, e1, e2, code := api.GenericRead(v)
+	if e1 != nil || e2 != nil || len(results) == 0{
+		return results, e1, e2, code
+	}
+	for _,r := range results {
+		obj := r.(*tc.ServerCapability)
+		if !obj.LastUpdated.Before(modifiedSince) {
+			return results, e1, e2, code
+		}
+	}
+	return res, e1, e2, http.StatusNotModified
+}
 func (v *TOServerCapability) Create() (error, error, int)              { return api.GenericCreateNameBasedID(v) }
 func (v *TOServerCapability) Delete() (error, error, int)              { return api.GenericDelete(v) }

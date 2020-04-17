@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -380,6 +381,16 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 }
 
 func (cg *TOCacheGroup) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	modified := false
+	code := http.StatusOK
+
+	if ims != nil && len(ims) != 0 {
+		if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+			modifiedSince = t
+		}
+	}
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -426,10 +437,20 @@ func (cg *TOCacheGroup) Read(h map[string][]string) ([]interface{}, error, error
 		}
 		s.LocalizationMethods = &lms
 		s.Fallbacks = &cgfs
+		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+		// we send back the entire array of results
+		if !s.LastUpdated.Before(modifiedSince) {
+			modified = true
+		}
 		cacheGroups = append(cacheGroups, s)
 	}
-
-	return cacheGroups, nil, nil, http.StatusOK
+	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
+	// we send back a 304, with an empty response
+	if modified == false {
+		code =  http.StatusNotModified
+		cacheGroups = []interface{}{}
+	}
+	return cacheGroups, nil, nil, code
 }
 
 //The TOCacheGroup implementation of the Updater interface

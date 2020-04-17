@@ -32,7 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func getTestCacheGroups() []tc.CacheGroup {
@@ -141,7 +141,9 @@ func TestReadCacheGroups(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.CacheGroupNullable{},
 	}
-	cachegroups, userErr, sysErr, _ := obj.Read(map[string][]string{})
+	headers := make(map[string][]string)
+	headers["If-Modified-Since"] = []string{"Mon, 01 Jan 0001 00:00:00 +0000 UTC"}
+	cachegroups, userErr, sysErr, _ := obj.Read(headers)
 
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)

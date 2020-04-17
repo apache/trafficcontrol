@@ -197,7 +197,9 @@ func TestReadCacheGroupParameters(t *testing.T) {
 				reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: testCase.params}
 				toParameterReader.SetInfo(&reqInfo)
 
-				parameters, userErr, sysErr, returnCode := toParameterReader.Read(map[string][]string{})
+				headers := make(map[string][]string)
+				headers["If-Modified-Since"] = []string{"Tue, 02 Jan 0001 00:00:00 +0000 UTC"}
+				parameters, userErr, sysErr, returnCode := toParameterReader.Read(headers)
 
 				if testCase.storageError != nil {
 					if sysErr == nil {

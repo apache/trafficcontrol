@@ -20,8 +20,10 @@ package division
  */
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -96,7 +98,29 @@ func (dv *TODivision) Read(h map[string][]string) ([]interface{}, error, error, 
 	if strings.HasSuffix(params["name"], ".json") {
 		params["name"] = params["name"][:len(params["name"])-len(".json")]
 	}
-	return api.GenericRead(dv)
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	var res []interface{}
+
+	if ims == nil || len(ims) == 0 {
+		return api.GenericRead(dv)
+	}
+	if t, err := time.Parse(time.RFC1123, ims[0]); err != nil {
+		return nil, err, nil, http.StatusBadRequest
+	} else {
+		modifiedSince = t
+	}
+	results, e1, e2, code := api.GenericRead(dv)
+	if e1 != nil || e2 != nil || len(results) == 0{
+		return results, e1, e2, code
+	}
+	for _,r := range results {
+		obj := r.(*tc.DivisionNullable)
+		if !obj.LastUpdated.Before(modifiedSince) {
+			return results, e1, e2, code
+		}
+	}
+	return res, e1, e2, http.StatusNotModified
 }
 func (dv *TODivision) Update() (error, error, int) { return api.GenericUpdate(dv) }
 func (dv *TODivision) Delete() (error, error, int) { return api.GenericDelete(dv) }

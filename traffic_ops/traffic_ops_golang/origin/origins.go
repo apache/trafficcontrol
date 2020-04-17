@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -130,6 +131,17 @@ func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 }
 
 func (origin *TOOrigin) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	modified := false
+	code := http.StatusOK
+
+	if ims != nil && len(ims) != 0 {
+		if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+			modifiedSince = t
+		}
+	}
+
 	returnable := []interface{}{}
 
 	origins, userErr, sysErr, errCode := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User)
@@ -138,10 +150,21 @@ func (origin *TOOrigin) Read(h map[string][]string) ([]interface{}, error, error
 	}
 
 	for _, origin := range origins {
+		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+		// we send back the entire array of results
+		if !origin.LastUpdated.Before(modifiedSince) {
+			modified = true
+		}
 		returnable = append(returnable, origin)
 	}
 
-	return returnable, nil, nil, http.StatusOK
+	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
+	// we send back a 304, with an empty response
+	if modified == false {
+		code =  http.StatusNotModified
+		returnable = []interface{}{}
+	}
+	return returnable, nil, nil, code
 }
 
 func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.Origin, error, error, int) {

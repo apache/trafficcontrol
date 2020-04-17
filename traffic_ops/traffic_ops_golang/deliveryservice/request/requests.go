@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -77,6 +78,17 @@ func (req TODeliveryServiceRequest) GetType() string {
 
 // Read implements the api.Reader interface
 func (req *TODeliveryServiceRequest) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	modified := false
+	code := http.StatusOK
+
+	if ims != nil && len(ims) != 0 {
+		if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+			modifiedSince = t
+		}
+	}
+
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
 		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},
@@ -123,10 +135,21 @@ func (req *TODeliveryServiceRequest) Read(h map[string][]string) ([]interface{},
 		if err = rows.StructScan(&s); err != nil {
 			return nil, nil, errors.New("dsr scanning: " + err.Error()), http.StatusInternalServerError
 		}
+		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+		// we send back the entire array of results
+		if !s.LastUpdated.Before(modifiedSince) {
+			modified = true
+		}
 		deliveryServiceRequests = append(deliveryServiceRequests, s)
 	}
 
-	return deliveryServiceRequests, nil, nil, http.StatusOK
+	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
+	// we send back a 304, with an empty response
+	if modified == false {
+		code =  http.StatusNotModified
+		deliveryServiceRequests = []interface{}{}
+	}
+	return deliveryServiceRequests, nil, nil, code
 }
 
 func selectDeliveryServiceRequestsQuery() string {

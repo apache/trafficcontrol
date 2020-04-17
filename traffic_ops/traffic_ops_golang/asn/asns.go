@@ -22,6 +22,7 @@ package asn
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -99,7 +100,32 @@ func (asn TOASNV11) Validate() error {
 }
 
 func (as *TOASNV11) Create() (error, error, int)              { return api.GenericCreate(as) }
-func (as *TOASNV11) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(as) }
+func (as *TOASNV11) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	var res []interface{}
+
+	if ims == nil || len(ims) == 0 {
+		return api.GenericRead(as)
+	}
+	if t, err := time.Parse(time.RFC1123, ims[0]); err != nil {
+		return nil, err, nil, http.StatusBadRequest
+	} else {
+		modifiedSince = t
+	}
+	results, e1, e2, code := api.GenericRead(as)
+	if e1 != nil || e2 != nil || len(results) == 0{
+		return results, e1, e2, code
+	}
+	for _,r := range results {
+		obj := r.(*tc.ASNNullable)
+		if !obj.LastUpdated.Before(modifiedSince) {
+			return results, e1, e2, code
+		}
+	}
+	return res, e1, e2, http.StatusNotModified
+	return api.GenericRead(as)
+}
 func (as *TOASNV11) Update() (error, error, int)              { return api.GenericUpdate(as) }
 func (as *TOASNV11) Delete() (error, error, int)              { return api.GenericDelete(as) }
 

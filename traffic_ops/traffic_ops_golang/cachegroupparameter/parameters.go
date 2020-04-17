@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -64,6 +65,17 @@ func (cgparam *TOCacheGroupParameter) GetType() string {
 }
 
 func (cgparam *TOCacheGroupParameter) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	modified := false
+	code := http.StatusOK
+
+	if ims != nil && len(ims) != 0 {
+		if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+			modifiedSince = t
+		}
+	}
+
 	queryParamsToQueryCols := cgparam.ParamColumns()
 	parameters := cgparam.APIInfo().Params
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
@@ -99,10 +111,22 @@ func (cgparam *TOCacheGroupParameter) Read(h map[string][]string) ([]interface{}
 		if p.Secure != nil && *p.Secure && cgparam.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
 			p.Value = &parameter.HiddenField
 		}
+		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+		// we send back the entire array of results
+		fmt.Println(p.LastUpdated)
+		fmt.Println(modifiedSince)
+		if !p.LastUpdated.Before(modifiedSince) {
+			modified = true
+		}
 		params = append(params, p)
 	}
-
-	return params, nil, nil, http.StatusOK
+	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
+	// we send back a 304, with an empty response
+	if modified == false {
+		code =  http.StatusNotModified
+		params = []interface{}{}
+	}
+	return params, nil, nil, code
 }
 
 func selectQuery() string {

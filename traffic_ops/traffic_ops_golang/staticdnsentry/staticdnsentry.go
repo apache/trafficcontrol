@@ -20,7 +20,9 @@ package staticdnsentry
  */
 
 import (
+	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -115,7 +117,31 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (en *TOStaticDNSEntry) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(en) }
+func (en *TOStaticDNSEntry) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	var res []interface{}
+
+	if ims == nil || len(ims) == 0 {
+		return api.GenericRead(en)
+	}
+	if t, err := time.Parse(time.RFC1123, ims[0]); err != nil {
+		return nil, err, nil, http.StatusBadRequest
+	} else {
+		modifiedSince = t
+	}
+	results, e1, e2, code := api.GenericRead(en)
+	if e1 != nil || e2 != nil || len(results) == 0{
+		return results, e1, e2, code
+	}
+	for _,r := range results {
+		obj := r.(*tc.StaticDNSEntryNullable)
+		if !obj.LastUpdated.Before(modifiedSince) {
+			return results, e1, e2, code
+		}
+	}
+	return res, e1, e2, http.StatusNotModified
+}
 func (en *TOStaticDNSEntry) Create() (error, error, int)              { return api.GenericCreate(en) }
 func (en *TOStaticDNSEntry) Update() (error, error, int)              { return api.GenericUpdate(en) }
 func (en *TOStaticDNSEntry) Delete() (error, error, int)              { return api.GenericDelete(en) }

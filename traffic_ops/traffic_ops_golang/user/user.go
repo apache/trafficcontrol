@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -173,6 +174,16 @@ func (user *TOUser) Create() (error, error, int) {
 
 // This is not using GenericRead because of this tenancy check. Maybe we can add tenancy functionality to the generic case?
 func (this *TOUser) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	modified := false
+	code := http.StatusOK
+
+	if ims != nil && len(ims) != 0 {
+		if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+			modifiedSince = t
+		}
+	}
 
 	inf := this.APIInfo()
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, this.ParamColumns())
@@ -204,10 +215,22 @@ func (this *TOUser) Read(h map[string][]string) ([]interface{}, error, error, in
 		if err = rows.StructScan(user); err != nil {
 			return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError
 		}
+		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+		// we send back the entire array of results
+		if !user.LastUpdated.Before(modifiedSince) {
+			modified = true
+		}
 		users = append(users, *user)
 	}
 
-	return users, nil, nil, http.StatusOK
+
+	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
+	// we send back a 304, with an empty response
+	if modified == false {
+		code =  http.StatusNotModified
+		users = []interface{}{}
+	}
+	return users, nil, nil, code
 }
 
 func (user *TOUser) privCheck() (error, error, int) {

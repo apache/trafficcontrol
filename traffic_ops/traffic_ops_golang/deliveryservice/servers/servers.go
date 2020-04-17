@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -598,6 +599,16 @@ type TODSSDeliveryService struct {
 
 // Read shows all of the delivery services associated with the specified server.
 func (dss *TODSSDeliveryService) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	modified := false
+	code := http.StatusOK
+
+	if ims != nil && len(ims) != 0 {
+		if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+			modifiedSince = t
+		}
+	}
 	returnable := []interface{}{}
 	params := dss.APIInfo().Params
 	tx := dss.APIInfo().Tx.Tx
@@ -650,9 +661,20 @@ func (dss *TODSSDeliveryService) Read(h map[string][]string) ([]interface{}, err
 	}
 
 	for _, ds := range dses {
+		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+		// we send back the entire array of results
+		if !ds.LastUpdated.Before(modifiedSince) {
+			modified = true
+		}
 		returnable = append(returnable, ds)
 	}
-	return returnable, nil, nil, http.StatusOK
+	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
+	// we send back a 304, with an empty response
+	if modified == false {
+		code =  http.StatusNotModified
+		returnable = []interface{}{}
+	}
+	return returnable, nil, nil, code
 }
 
 type DSInfo struct {

@@ -20,8 +20,10 @@ package cdn
  */
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -123,7 +125,31 @@ func (cdn *TOCDN) Create() (error, error, int) {
 	return api.GenericCreate(cdn)
 }
 
-func (cdn *TOCDN) Read(h map[string][]string) ([]interface{}, error, error, int) { return api.GenericRead(cdn) }
+func (cdn *TOCDN) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	var res []interface{}
+
+	if ims == nil || len(ims) == 0 {
+		return api.GenericRead(cdn)
+	}
+	if t, err := time.Parse(time.RFC1123, ims[0]); err != nil {
+		return nil, err, nil, http.StatusBadRequest
+	} else {
+		modifiedSince = t
+	}
+	results, e1, e2, code := api.GenericRead(cdn)
+	if e1 != nil || e2 != nil || len(results) == 0{
+		return results, e1, e2, code
+	}
+	for _,r := range results {
+		obj := r.(*tc.CDNNullable)
+		if !obj.LastUpdated.Before(modifiedSince) {
+			return results, e1, e2, code
+		}
+	}
+	return res, e1, e2, http.StatusNotModified
+}
 
 func (cdn *TOCDN) Update() (error, error, int) {
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)

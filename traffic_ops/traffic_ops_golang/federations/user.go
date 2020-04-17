@@ -23,13 +23,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/lib/pq"
+	"net/http"
+	"strconv"
 )
 
 const (

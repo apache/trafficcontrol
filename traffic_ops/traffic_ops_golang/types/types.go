@@ -102,7 +102,7 @@ func (typ *TOType) Validate() error {
 func (tp *TOType) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	ims := h["If-Modified-Since"]
 	var modifiedSince time.Time
-	res := []interface{}{}
+	var res []interface{}
 
 	if ims == nil || len(ims) == 0 {
 		return api.GenericRead(tp)
@@ -118,7 +118,7 @@ func (tp *TOType) Read(h map[string][]string) ([]interface{}, error, error, int)
 	}
 	for _,r := range results {
 		obj := r.(*tc.TypeNullable)
-		if obj.LastUpdated.After(modifiedSince) {
+		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code
 		}
 	}

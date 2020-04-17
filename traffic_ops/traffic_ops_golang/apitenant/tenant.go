@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -123,6 +124,16 @@ func (ten TOTenant) Validate() error {
 func (tn *TOTenant) Create() (error, error, int) { return api.GenericCreate(tn) }
 
 func (ten *TOTenant) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	modified := false
+	code := http.StatusOK
+
+	if ims != nil && len(ims) != 0 {
+		if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+			modifiedSince = t
+		}
+	}
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
 		return nil, nil, nil, http.StatusOK
 	}
@@ -144,9 +155,20 @@ func (ten *TOTenant) Read(h map[string][]string) ([]interface{}, error, error, i
 			continue
 		}
 		p := *tenantNames[*t.ParentID]
+		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+		// we send back the entire array of results
+		if !t.LastUpdated.Before(modifiedSince) {
+			modified = true
+		}
 		t.ParentName = &p // copy
 	}
-	return tenants, nil, nil, http.StatusOK
+	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
+	// we send back a 304, with an empty response
+	if modified == false {
+		code =  http.StatusNotModified
+		tenants = []interface{}{}
+	}
+	return tenants, nil, nil, code
 }
 
 // IsTenantAuthorized implements the Tenantable interface for TOTenant

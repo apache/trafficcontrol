@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -167,6 +168,16 @@ func (rc *RequiredCapability) Update() (error, error, int) {
 
 // Read implements the api.CRUDer interface.
 func (rc *RequiredCapability) Read(h map[string][]string) ([]interface{}, error, error, int) {
+	ims := h["If-Modified-Since"]
+	var modifiedSince time.Time
+	modified := false
+	code := http.StatusOK
+
+	if ims != nil && len(ims) != 0 {
+		if t, err := time.Parse(time.RFC1123, ims[0]); err == nil {
+			modifiedSince = t
+		}
+	}
 	tenantIDs, err := rc.getTenantIDs()
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError
@@ -179,10 +190,20 @@ func (rc *RequiredCapability) Read(h map[string][]string) ([]interface{}, error,
 
 	results := []interface{}{}
 	for _, capability := range capabilities {
+		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+		// we send back the entire array of results
+		if !capability.LastUpdated.Before(modifiedSince) {
+			modified = true
+		}
 		results = append(results, capability)
 	}
-
-	return results, nil, nil, http.StatusOK
+	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
+	// we send back a 304, with an empty response
+	if modified == false {
+		code =  http.StatusNotModified
+		results = []interface{}{}
+	}
+	return results, nil, nil, code
 }
 
 func (rc *RequiredCapability) getTenantIDs() ([]int, error) {
