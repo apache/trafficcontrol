@@ -230,6 +230,7 @@ type DeliveryServiceNullableV11 struct {
 	//
 	Active                   *bool                   `json:"active" db:"active"`
 	AnonymousBlockingEnabled *bool                   `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
+	CacheURL                 *string                 `json:"cacheurl" db:"cacheurl"`
 	CCRDNSTTL                *int                    `json:"ccrDnsTtl" db:"ccr_dns_ttl"`
 	CDNID                    *int                    `json:"cdnId" db:"cdn_id"`
 	CDNName                  *string                 `json:"cdnName"`
