@@ -19,42 +19,90 @@ under the License.
 # Delivery Services 'Active' field
 
 ## Problem Description
-<!--
-*What* is being asked for?
-*Why* is this necessary?
-*How* will this be used?
--->
+Setting a Delivery Service to "Inactive" actually only sets it to "not routed".
+Currently, there is no way to create a Delivery Service (with assigned servers)
+that will not be distributed to cache server configuration.
 
 ## Proposed Change
-<!--
-*How* will this be implemented (at a high level)?
--->
+This blueprint proposes changing the `Active` property of Delivery Services
+from a boolean to an enumerated string constant that can represent three
+different "Activity States" for a Delivery Service.
+
+## Data Model Impact
+The proposed new type of the field is expressed below as a TypeScript
+enumeration.
+```typescript
+/**
+ * This defines what other components of ATC will consider a Delivery Service
+ * "active".
+ *
+ * It's not an object exposed through the API in its own right, just a
+ * specification of the allowed values.
+*/
+enum DeliveryServiceActiveState {
+	/**
+	 * A Delivery Service that is ”active” is one that is functionally
+	 * in service, and fully capable of delivering content.
+	 *
+	 * This means that its configuration is deployed to Cache Servers and it is
+	 * available for routing traffic.
+	*/
+	ACTIVE = 'ACTIVE',
+	/**
+	 * A Delivery Service that is ”inactive” is not available for
+	 * routing and has not had its configuration distributed to its assigned
+	 * Cache Servers.
+	*/
+	INACTIVE = 'INACTIVE',
+	/**
+	 * A Delivery Service that is ”primed” has had its configuration
+	 * distributed to the various servers required to serve its content.
+	 * However, the content itself is still inaccessible via routing.
+	*/
+	PRIMED = 'PRIMED'
+}
+```
+
+We don't have a real data model for
+<abbr title="Apache Traffic Control">ATC</abbr>, so what is proposed is that
+everywhere a "Delivery Service" object is represented, the current "active"
+field be re-typed to the above-described type. If there are representations
+where this property is not expressed, it ought to be added for consistency's
+sake.
+
+## Impacted Components
+While a relatively small change, this has some far-reaching repercussions. The
+components affected are Traffic Portal (in time), Traffic Router, Traffic
+Monitor, Traffic Ops, and <abbr title="Operational Readiness Test">ORT</abbr>.
 
 ### Traffic Portal Impact
-<!--
-*How* will this impact Traffic Portal?
-What new UI changes will be required?
-Will entirely new pages/views be necessary?
-Will a new field be added to an existing form?
-How will the user interact with the new UI changes?
--->
+None as yet, but when TP is made to use API version 3, it will need to account
+for the new type of this field everywhere it parses Delivery Service objects
+from Traffic Ops API responses, and/or sends requests.
+
+Furthermore, once that is done, Traffic Portal's Delivery Service-based forms
+will need to change from exposing the old boolean concept of "active" versus
+"not active" to expressing the new enumerated values. Likewise all affected
+tables will need to update to reflect the new values.
 
 ### Traffic Ops Impact
-<!--
-*How* will this impact Traffic Ops (at a high level)?
--->
 
-#### REST API Impact
-<!--
-*How* will this impact the Traffic Ops REST API?
+#### Database Impact
+A new type must be declared as an enumeration of the above-described values.
+The type of the `deliveryservices` table's `active` column will need to change
+from `boolean` to the new enumerated type. The existing types must be coalesced
+such that values which are currently `TRUE` become `'ACTIVE'`, and values which
+are currently `FALSE` become `'PRIMED'`, thus preserving the existing behavior.
 
-What new endpoints will be required?
-How will existing endpoints be changed?
-What will the requests and responses look like?
-What fields are required or optional?
-What are the defaults for optional fields?
-What are the validation constraints?
--->
+#### API Impact
+The affected endpoints will be:
+
+##### `/cdns/{{CDN Name}}/configs/monitoring`
+Currently the Delivery Service information returned by this endpoint gives back
+Delivery Services filtered such that - among other criteria - only those
+that have `Active` values of `true` are returned. This must instead change to
+all those that are **NOT** `INACTIVE` and an `active` field must be added to
+the representations containing their "Activity State" value.
 
 #### Client Impact
 <!--
