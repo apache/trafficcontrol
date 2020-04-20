@@ -220,7 +220,7 @@ func (job *InvalidationJob) Read() ([]interface{}, error, error, int) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting accessible tenants for user - %v", err), http.StatusInternalServerError
 	}
-	if len(where) == 0 {
+	if len(where) > 0 {
 		where += " AND ds.tenant_id = ANY(:tenants) "
 	} else {
 		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) "
