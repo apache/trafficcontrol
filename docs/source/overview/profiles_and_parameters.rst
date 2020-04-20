@@ -515,12 +515,23 @@ This Config File is meant to be on Parameters assigned to either Traffic Monitor
 
 .. seealso:: :ref:`health-proto`
 
+.. _param-health-polling-format:
+
+health.polling.format
+	The Value_ of this Parameter should be the name of a parsing format supported by Traffic Monitor, used to decode statistics when polling for health and statistics. If this Parameter does not exist on a :term:`cache server`'s :ref:`Profile <Profiles>`, the default format (``astats``) will be used. The only supported values are
+
+	- ``astats`` parses the statistics output from the `astats_over_http plugin <https://github.com/apache/trafficcontrol/tree/master/traffic_server/plugins/astats_over_http/README.md>`_.
+	- ``stats_over_http`` parses the statistics output from the `stats_over_http plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/stats_over_http.en.html>`_.
+	- ``noop`` no statistics are parsed; the :term:`cache servers` using this Value_ will always be considered healthy, but statistics will never be gathered for them.
+
+	For more information on Traffic Monitor plug-ins that can expand the parsed formats, refer to :ref:`admin-tm-extensions`.
+
 .. _param-health-polling-url:
 
 health.polling.url
 	The Value_ of this Parameter sets the URL requested when Traffic Monitor polls cache servers that have this Parameter in their Profiles_. Specifically, the Value_ is interpreted as a template - in a format reminiscent of variable interpolation in double-quoted strings in Bash -, that offers the following substitutions:
 
-	- ``${hostname}`` Replaced by the *IP Address* of the :term:`cache server` being polled, and **not** its (short) hostname. The IP address used will be its IPv4 service address if it has one, otherwise its IPv6 service address. IPv6 addresses are properly formatted when inserted into the template, so the template need not include "square brackets" (:kbd:`[` and :kbd:`]`) around ``${hostname}``s even when they anticipate they will be IPv6 addresses.
+	- ``${hostname}`` Replaced by the *IP Address* of the :term:`cache server` being polled, and **not** its (short) hostname. The IP address used will be its IPv4 service address if it has one, otherwise its IPv6 service address. IPv6 addresses are properly formatted when inserted into the template, so the template need not include "square brackets" (:kbd:`[` and :kbd:`]`) around ``${hostname}``\ s even when they anticipate they will be IPv6 addresses.
 	- ``${interface_name}`` Replaced by the name of the network interface that contains the :term:`cache server`'s service address(es). For most cache servers (specifically those using the ``stats_over_http`` :abbr:`ATS (Apache Traffic Server)` plugin to report their health and statistics) using this in a template won't be necessary.
 
 	If the template doesn't include a specific port number, the :term:`cache server`'s TCP port will be inserted if the URL uses the HTTP scheme, or its HTTPS Port if the :term:`cache server` uses the the HTTPS scheme.

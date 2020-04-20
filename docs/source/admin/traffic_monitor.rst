@@ -82,6 +82,8 @@ Troubleshooting and Log Files
 =============================
 Traffic Monitor log files are in :file:`/opt/traffic_monitor/var/log/`.
 
+.. _admin-tm-extensions:
+
 Extensions
 ==========
 Traffic Monitor allows extensions to its parsers for the statistics returned by :term:`cache servers` and/or their plugins. The formats supported by Traffic Monitor by default are ``astats``, ``astats-dsnames`` (which is an odd variant of ``astats`` that probably shouldn't be used), and ``stats_over_http``. The format of a :term:`cache server`'s health and statistics reporting payloads must be declared on its :term:`Profile` as the :ref:`param-health-polling-format` :term:`Parameter`, or the default format (``astats``) will be assumed.
