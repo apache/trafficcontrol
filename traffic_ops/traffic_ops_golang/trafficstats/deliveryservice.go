@@ -186,9 +186,9 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inf.Version.Major > 1 {
-		handleLegacyRequest(w, r, client, c, inf)
-	} else {
 		handleRequest(w, r, client, c, inf)
+	} else {
+		handleLegacyRequest(w, r, client, c, inf)
 	}
 }
 
