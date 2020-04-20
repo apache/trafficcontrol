@@ -129,7 +129,7 @@ SELECT
 				) AS digits)
 		END
 	),
-	NULLIF(regexp_replace(server.ip_gateway, '/\d+$', '')::inet,
+	NULLIF(regexp_replace(server.ip_gateway, '/\d+$', ''), '')::inet,
 	server.interface_name,
 	server.id,
 	server.ip_address_is_service
