@@ -119,7 +119,7 @@ func (coordinate TOCoordinate) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (coord *TOCoordinate) Create() (error, error, int)              { return api.GenericCreate(coord) }
+func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
 func (coord *TOCoordinate) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	ims := h["If-Modified-Since"]
 	var modifiedSince time.Time
@@ -134,10 +134,10 @@ func (coord *TOCoordinate) Read(h map[string][]string) ([]interface{}, error, er
 		modifiedSince = t
 	}
 	results, e1, e2, code := api.GenericRead(coord)
-	if e1 != nil || e2 != nil || len(results) == 0{
+	if e1 != nil || e2 != nil || len(results) == 0 {
 		return results, e1, e2, code
 	}
-	for _,r := range results {
+	for _, r := range results {
 		obj := r.(*tc.CoordinateNullable)
 		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code
@@ -145,8 +145,8 @@ func (coord *TOCoordinate) Read(h map[string][]string) ([]interface{}, error, er
 	}
 	return res, e1, e2, http.StatusNotModified
 }
-func (coord *TOCoordinate) Update() (error, error, int)              { return api.GenericUpdate(coord) }
-func (coord *TOCoordinate) Delete() (error, error, int)              { return api.GenericDelete(coord) }
+func (coord *TOCoordinate) Update() (error, error, int) { return api.GenericUpdate(coord) }
+func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 
 func selectQuery() string {
 	query := `SELECT

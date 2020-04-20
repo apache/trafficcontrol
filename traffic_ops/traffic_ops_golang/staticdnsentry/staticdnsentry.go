@@ -131,10 +131,10 @@ func (en *TOStaticDNSEntry) Read(h map[string][]string) ([]interface{}, error, e
 		modifiedSince = t
 	}
 	results, e1, e2, code := api.GenericRead(en)
-	if e1 != nil || e2 != nil || len(results) == 0{
+	if e1 != nil || e2 != nil || len(results) == 0 {
 		return results, e1, e2, code
 	}
-	for _,r := range results {
+	for _, r := range results {
 		obj := r.(*tc.StaticDNSEntryNullable)
 		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code
@@ -142,9 +142,9 @@ func (en *TOStaticDNSEntry) Read(h map[string][]string) ([]interface{}, error, e
 	}
 	return res, e1, e2, http.StatusNotModified
 }
-func (en *TOStaticDNSEntry) Create() (error, error, int)              { return api.GenericCreate(en) }
-func (en *TOStaticDNSEntry) Update() (error, error, int)              { return api.GenericUpdate(en) }
-func (en *TOStaticDNSEntry) Delete() (error, error, int)              { return api.GenericDelete(en) }
+func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
+func (en *TOStaticDNSEntry) Update() (error, error, int) { return api.GenericUpdate(en) }
+func (en *TOStaticDNSEntry) Delete() (error, error, int) { return api.GenericDelete(en) }
 
 func insertQuery() string {
 	query := `INSERT INTO staticdnsentry (

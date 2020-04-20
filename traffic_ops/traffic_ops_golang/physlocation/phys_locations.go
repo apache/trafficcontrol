@@ -117,10 +117,10 @@ func (pl *TOPhysLocation) Read(h map[string][]string) ([]interface{}, error, err
 		modifiedSince = t
 	}
 	results, e1, e2, code := api.GenericRead(pl)
-	if e1 != nil || e2 != nil || len(results) == 0{
+	if e1 != nil || e2 != nil || len(results) == 0 {
 		return results, e1, e2, code
 	}
-	for _,r := range results {
+	for _, r := range results {
 		obj := r.(*tc.PhysLocationNullable)
 		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code

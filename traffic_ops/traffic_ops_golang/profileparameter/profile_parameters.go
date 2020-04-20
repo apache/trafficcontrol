@@ -169,10 +169,10 @@ func (pp *TOProfileParameter) Read(h map[string][]string) ([]interface{}, error,
 		modifiedSince = t
 	}
 	results, e1, e2, code := api.GenericRead(pp)
-	if e1 != nil || e2 != nil || len(results) == 0{
+	if e1 != nil || e2 != nil || len(results) == 0 {
 		return results, e1, e2, code
 	}
-	for _,r := range results {
+	for _, r := range results {
 		obj := r.(*tc.ProfileParameterNullable)
 		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code
@@ -180,7 +180,7 @@ func (pp *TOProfileParameter) Read(h map[string][]string) ([]interface{}, error,
 	}
 	return res, e1, e2, http.StatusNotModified
 }
-func (pp *TOProfileParameter) Delete() (error, error, int)              { return api.GenericDelete(pp) }
+func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
 
 func selectQuery() string {
 

@@ -105,10 +105,10 @@ func (rg *TORegion) Read(h map[string][]string) ([]interface{}, error, error, in
 		modifiedSince = t
 	}
 	results, e1, e2, code := api.GenericRead(rg)
-	if e1 != nil || e2 != nil || len(results) == 0{
+	if e1 != nil || e2 != nil || len(results) == 0 {
 		return results, e1, e2, code
 	}
-	for _,r := range results {
+	for _, r := range results {
 		obj := r.(*tc.Region)
 		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code
@@ -117,9 +117,9 @@ func (rg *TORegion) Read(h map[string][]string) ([]interface{}, error, error, in
 	return res, e1, e2, http.StatusNotModified
 }
 
-func (rg *TORegion) Update() (error, error, int)              { return api.GenericUpdate(rg) }
-func (rg *TORegion) Create() (error, error, int)              { return api.GenericCreate(rg) }
-func (rg *TORegion) Delete() (error, error, int)              { return api.GenericDelete(rg) }
+func (rg *TORegion) Update() (error, error, int) { return api.GenericUpdate(rg) }
+func (rg *TORegion) Create() (error, error, int) { return api.GenericCreate(rg) }
+func (rg *TORegion) Delete() (error, error, int) { return api.GenericDelete(rg) }
 
 // OptionsDelete deletes a resource identified either as a route parameter or as a query string parameter.
 func (rg *TORegion) OptionsDelete() (error, error, int) { return api.GenericOptionsDelete(rg) }

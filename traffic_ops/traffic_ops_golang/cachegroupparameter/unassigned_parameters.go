@@ -104,8 +104,6 @@ func (cgunparam *TOCacheGroupUnassignedParameter) Read(h map[string][]string) ([
 		if p.Secure != nil && *p.Secure && cgunparam.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
 			p.Value = &parameter.HiddenField
 		}
-		fmt.Println("LU is ", p.LastUpdated)
-		fmt.Println("Modified since is ", modifiedSince)
 		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
 		// we send back the entire array of results
 		if !p.LastUpdated.Before(modifiedSince) {
@@ -117,7 +115,7 @@ func (cgunparam *TOCacheGroupUnassignedParameter) Read(h map[string][]string) ([
 	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
 	// we send back a 304, with an empty response
 	if modified == false {
-		code =  http.StatusNotModified
+		code = http.StatusNotModified
 		params = []interface{}{}
 	}
 	return params, nil, nil, code

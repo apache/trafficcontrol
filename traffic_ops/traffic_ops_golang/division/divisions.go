@@ -111,10 +111,10 @@ func (dv *TODivision) Read(h map[string][]string) ([]interface{}, error, error, 
 		modifiedSince = t
 	}
 	results, e1, e2, code := api.GenericRead(dv)
-	if e1 != nil || e2 != nil || len(results) == 0{
+	if e1 != nil || e2 != nil || len(results) == 0 {
 		return results, e1, e2, code
 	}
-	for _,r := range results {
+	for _, r := range results {
 		obj := r.(*tc.DivisionNullable)
 		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code

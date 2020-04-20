@@ -161,7 +161,7 @@ func (origin *TOOrigin) Read(h map[string][]string) ([]interface{}, error, error
 	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
 	// we send back a 304, with an empty response
 	if modified == false {
-		code =  http.StatusNotModified
+		code = http.StatusNotModified
 		returnable = []interface{}{}
 	}
 	return returnable, nil, nil, code

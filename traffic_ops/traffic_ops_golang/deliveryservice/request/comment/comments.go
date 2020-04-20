@@ -113,10 +113,10 @@ func (comment *TODeliveryServiceRequestComment) Read(h map[string][]string) ([]i
 		modifiedSince = t
 	}
 	results, e1, e2, code := api.GenericRead(comment)
-	if e1 != nil || e2 != nil || len(results) == 0{
+	if e1 != nil || e2 != nil || len(results) == 0 {
 		return results, e1, e2, code
 	}
-	for _,r := range results {
+	for _, r := range results {
 		obj := r.(*tc.DeliveryServiceRequestCommentNullable)
 		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code

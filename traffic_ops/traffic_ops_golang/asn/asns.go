@@ -99,7 +99,7 @@ func (asn TOASNV11) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (as *TOASNV11) Create() (error, error, int)              { return api.GenericCreate(as) }
+func (as *TOASNV11) Create() (error, error, int) { return api.GenericCreate(as) }
 func (as *TOASNV11) Read(h map[string][]string) ([]interface{}, error, error, int) {
 	ims := h["If-Modified-Since"]
 	var modifiedSince time.Time
@@ -114,10 +114,10 @@ func (as *TOASNV11) Read(h map[string][]string) ([]interface{}, error, error, in
 		modifiedSince = t
 	}
 	results, e1, e2, code := api.GenericRead(as)
-	if e1 != nil || e2 != nil || len(results) == 0{
+	if e1 != nil || e2 != nil || len(results) == 0 {
 		return results, e1, e2, code
 	}
-	for _,r := range results {
+	for _, r := range results {
 		obj := r.(*tc.ASNNullable)
 		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code
@@ -126,8 +126,8 @@ func (as *TOASNV11) Read(h map[string][]string) ([]interface{}, error, error, in
 	return res, e1, e2, http.StatusNotModified
 	return api.GenericRead(as)
 }
-func (as *TOASNV11) Update() (error, error, int)              { return api.GenericUpdate(as) }
-func (as *TOASNV11) Delete() (error, error, int)              { return api.GenericDelete(as) }
+func (as *TOASNV11) Update() (error, error, int) { return api.GenericUpdate(as) }
+func (as *TOASNV11) Delete() (error, error, int) { return api.GenericDelete(as) }
 
 // V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
 func V11ReadAll(w http.ResponseWriter, r *http.Request) {

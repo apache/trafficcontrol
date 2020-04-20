@@ -34,7 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -163,10 +163,13 @@ func (prof *TOProfile) Read(h map[string][]string) ([]interface{}, error, error,
 			if err != nil {
 				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError
 			}
-		}
-		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
-		// we send back the entire array of results
-		if !profile.LastUpdated.Before(modifiedSince) {
+			// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
+			// we send back the entire array of results
+			if !profile.LastUpdated.Before(modifiedSince) {
+				modified = true
+			}
+		} else {
+			// If the value is not found, send back the original return code
 			modified = true
 		}
 		profileInterfaces = append(profileInterfaces, profile)
@@ -175,7 +178,7 @@ func (prof *TOProfile) Read(h map[string][]string) ([]interface{}, error, error,
 	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
 	// we send back a 304, with an empty response
 	if modified == false {
-		code =  http.StatusNotModified
+		code = http.StatusNotModified
 		profileInterfaces = []interface{}{}
 	}
 	return profileInterfaces, nil, nil, code

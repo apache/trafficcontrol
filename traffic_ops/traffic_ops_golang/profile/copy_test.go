@@ -62,6 +62,7 @@ func TestCopyProfileInvalidExistingProfile(t *testing.T) {
 			},
 			existingProfile: tc.ProfileNullable{
 				ID:              util.IntPtr(1),
+				LastUpdated:     &tc.TimeNoMod{Time: time.Now()},
 				Name:            util.StrPtr("existingProfile"),
 				Description:     util.StrPtr("desc1"),
 				CDNID:           util.IntPtr(1),

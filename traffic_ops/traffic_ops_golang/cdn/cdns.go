@@ -139,10 +139,10 @@ func (cdn *TOCDN) Read(h map[string][]string) ([]interface{}, error, error, int)
 		modifiedSince = t
 	}
 	results, e1, e2, code := api.GenericRead(cdn)
-	if e1 != nil || e2 != nil || len(results) == 0{
+	if e1 != nil || e2 != nil || len(results) == 0 {
 		return results, e1, e2, code
 	}
-	for _,r := range results {
+	for _, r := range results {
 		obj := r.(*tc.CDNNullable)
 		if !obj.LastUpdated.Before(modifiedSince) {
 			return results, e1, e2, code

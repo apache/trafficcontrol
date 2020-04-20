@@ -98,7 +98,7 @@ func TestReadCacheGroupParameters(t *testing.T) {
 			cgParams:             []tc.CacheGroupParameterNullable{},
 			cgExists:             true,
 			cgExistsStorageError: nil,
-			expectedReturnCode:   http.StatusOK,
+			expectedReturnCode:   http.StatusNotModified,
 		},
 		{
 			description:       "Failure: Storage Error reading Cache Group Parameters",
@@ -200,7 +200,6 @@ func TestReadCacheGroupParameters(t *testing.T) {
 				headers := make(map[string][]string)
 				headers["If-Modified-Since"] = []string{"Tue, 02 Jan 0001 00:00:00 +0000 UTC"}
 				parameters, userErr, sysErr, returnCode := toParameterReader.Read(headers)
-
 				if testCase.storageError != nil {
 					if sysErr == nil {
 						t.Errorf("Read error expected: received no sysErr")

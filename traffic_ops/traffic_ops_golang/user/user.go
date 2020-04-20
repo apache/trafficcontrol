@@ -223,11 +223,10 @@ func (this *TOUser) Read(h map[string][]string) ([]interface{}, error, error, in
 		users = append(users, *user)
 	}
 
-
 	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
 	// we send back a 304, with an empty response
 	if modified == false {
-		code =  http.StatusNotModified
+		code = http.StatusNotModified
 		users = []interface{}{}
 	}
 	return users, nil, nil, code
