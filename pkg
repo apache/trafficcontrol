@@ -84,7 +84,7 @@ fi
 
 # Parse command line arguments
 verbose=0
-while getopts :lvq? opt; do
+while getopts :qvld? opt; do
 	case $opt in
 		\?)
 			PROJECTS=`$SELF -l | sed "s/^/		- /"`
@@ -92,6 +92,7 @@ while getopts :lvq? opt; do
 			echo "	-q	Quiet mode. Supresses output."
 			echo "	-v	Verbose mode. Lists all build output."
 			echo "	-l	List available projects."
+			echo "	-d	Disable compiler optimizations for debugging."
 			echo
 			echo "	If no projects are listed, all projects will be packaged."
 			echo "	Valid projects:"
@@ -107,6 +108,12 @@ while getopts :lvq? opt; do
 		l)
 			"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services
 			exit $?
+			;;
+		d)
+			echo '-d is set! Disabling all compiler optimizations for debugging...';
+			# If DEBUG_BUILD is true, then Golang binaries will remain unoptimized and
+			# RPM packaging will not strip binaries.
+			RUN_OPTIONS+=(-e 'DEBUG_BUILD=true');
 			;;
 	esac
 done
@@ -128,7 +135,7 @@ while (( "$#" )); do
 			exec >/dev/null 2>&1
 		fi
 		"${COMPOSECMD[@]}" -f $COMPOSE_FILE build $1 || exit 1
-		"${COMPOSECMD[@]}" -f $COMPOSE_FILE run --rm $1 || exit 1
+		"${COMPOSECMD[@]}" -f $COMPOSE_FILE run "${RUN_OPTIONS[@]}" --rm $1 || exit 1
 	) || {
 		# Don't totally bail out, but make note of the failures.
 		failure=1

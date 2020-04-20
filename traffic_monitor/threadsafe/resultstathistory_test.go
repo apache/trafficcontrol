@@ -67,7 +67,6 @@ func randResultStatVal() cache.ResultStatVal {
 }
 
 func randResultInfoHistory() cache.ResultInfoHistory {
-	// type ResultInfoHistory map[tc.CacheName][]ResultInfo
 	hist := cache.ResultInfoHistory{}
 
 	num := 5
@@ -83,7 +82,7 @@ func randResultInfoHistory() cache.ResultInfoHistory {
 
 func randResultInfo() cache.ResultInfo {
 	return cache.ResultInfo{
-		ID:          tc.CacheName(randStr()),
+		ID:          randStr(),
 		Error:       fmt.Errorf(randStr()),
 		Time:        time.Now(),
 		RequestTime: time.Millisecond * time.Duration(rand.Int()),
@@ -96,8 +95,8 @@ func randResultInfo() cache.ResultInfo {
 func randVitals() cache.Vitals {
 	return cache.Vitals{
 		LoadAvg:    rand.Float64(),
-		BytesOut:   rand.Int63(),
-		BytesIn:    rand.Int63(),
+		BytesOut:   rand.Uint64(),
+		BytesIn:    rand.Uint64(),
 		KbpsOut:    rand.Int63(),
 		MaxKbpsOut: rand.Int63(),
 	}

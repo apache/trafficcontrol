@@ -165,7 +165,7 @@ func processHealthResult(
 	for i, healthResult := range results {
 		fetchCount.Inc()
 		var prevResult cache.Result
-		healthResultHistory := healthHistoryCopy[healthResult.ID]
+		healthResultHistory := healthHistoryCopy[tc.CacheName(healthResult.ID)]
 		if len(healthResultHistory) != 0 {
 			prevResult = healthResultHistory[len(healthResultHistory)-1]
 		}
@@ -181,7 +181,7 @@ func processHealthResult(
 			maxHistory = 1
 		}
 
-		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
+		healthHistoryCopy[tc.CacheName(healthResult.ID)] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[tc.CacheName(healthResult.ID)]...), maxHistory)
 	}
 
 	pollerName := "health"
@@ -193,11 +193,11 @@ func processHealthResult(
 
 	lastHealthDurations := threadsafe.CopyDurationMap(lastHealthDurationsThreadsafe.Get())
 	for _, healthResult := range results {
-		if lastHealthStart, ok := lastHealthEndTimes[healthResult.ID]; ok {
+		if lastHealthStart, ok := lastHealthEndTimes[tc.CacheName(healthResult.ID)]; ok {
 			d := time.Since(lastHealthStart)
-			lastHealthDurations[healthResult.ID] = d
+			lastHealthDurations[tc.CacheName(healthResult.ID)] = d
 		}
-		lastHealthEndTimes[healthResult.ID] = time.Now()
+		lastHealthEndTimes[tc.CacheName(healthResult.ID)] = time.Now()
 	}
 	lastHealthDurationsThreadsafe.Set(lastHealthDurations)
 }

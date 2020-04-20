@@ -22,6 +22,8 @@ The Traffic Monitor URLs below allow certain query parameters for use in control
 
 .. note:: Unlike :ref:`Traffic Ops API endpoints <to-api>`\ , no authentication is required for any of these, and as such there can be no special role requirements for a user.
 
+.. _tm-publish-EventLog:
+
 ``/publish/EventLog``
 =====================
 Gets a log of recent changes in the availability of polled caches.

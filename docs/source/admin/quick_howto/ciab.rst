@@ -433,3 +433,8 @@ There are some *scripted dashboards* can show beautiful charts. You can display 
 * ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``. The query parameter `which` in this particular URL should be the **cachegroup**. Take CIAB as an example, it can be filled in with **CDN_in_a_Box_Edge** or **CDN_in_a_Box_Edge**.
 * ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``. The query parameter `which` in this particular URL should be the **xml_id** of the desired Delivery Service.
 * ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``. The query parameter `which` in this particular URL should be the **hostname** (not **FQDN**). It can be filled in with **edge** or **mid** in CIAB.
+
+Debugging
+---------
+
+See :ref:`dev-debugging-ciab`.

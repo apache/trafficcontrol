@@ -27,6 +27,7 @@ type TrafficControl struct {
 	CacheGroupParameterRequests          []tc.CacheGroupParameterRequest         `json:"cachegroupParameters"`
 	Capabilities                         []tc.Capability                         `json:"capability"`
 	Coordinates                          []tc.Coordinate                         `json:"coordinates"`
+	DeliveryServicesRegexes              []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
 	DeliveryServiceRequests              []tc.DeliveryServiceRequest             `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments       []tc.DeliveryServiceRequestComment      `json:"deliveryServiceRequestComments"`
 	DeliveryServices                     []tc.DeliveryService                    `json:"deliveryservices"`

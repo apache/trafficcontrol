@@ -14,38 +14,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 ############################################################
-# Dockerfile to build Traffic Monitor container images
-# Based on CentOS
+# Dockerfile to build Traffic Ops container images
+# Based on CentOS 7.2
 ############################################################
 
-FROM centos/systemd
+FROM trafficops-perl
 
-# Default values for RPM -- override with `docker build --build-arg RPM=...'
-ARG RPM=traffic_monitor/traffic_monitor.rpm
-ADD $RPM /
-
-RUN yum install -y epel-release && \
-    yum install -y \
-        jq \
-        nmap-ncat \
-        iproute \
-        net-tools \
-        gettext \
-        bind-utils \
-        openssl \
-        initscripts && \
-    yum install -y  /$(basename $RPM) && \
-    rm /$(basename $RPM) && \
-    yum clean all
-
-RUN mkdir -p /opt/traffic_monitor/conf
-ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/traffic_monitor.cfg.template
-
-ADD enroller/server_template.json \
-    traffic_ops/to-access.sh \
-    /
-
-EXPOSE 80
-ADD traffic_monitor/run.sh /
-CMD /run.sh
+RUN cpanm \
+        Test::More \
+        Devel::Camelcadedb && \
+    rm -r /root/.cpanm

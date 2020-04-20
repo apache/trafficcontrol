@@ -277,7 +277,8 @@ func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db strin
 
 	value := float64(s.Count*60) * s.Average
 	if conf.MetricType == "kbps" {
-		value /= 1000
+		// TotalBytes is actually in units of kB....
+		value /= 8
 		s.TotalBytes = &value
 	} else {
 		s.TotalTransactions = &value
