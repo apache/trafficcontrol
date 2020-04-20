@@ -384,6 +384,7 @@ func (cg *TOCacheGroup) Read(h map[string][]string) ([]interface{}, error, error
 	ims := h["If-Modified-Since"]
 	var modifiedSince time.Time
 	modified := false
+	found := false
 	code := http.StatusOK
 
 	if ims != nil && len(ims) != 0 {
@@ -413,6 +414,7 @@ func (cg *TOCacheGroup) Read(h map[string][]string) ([]interface{}, error, error
 
 	cacheGroups := []interface{}{}
 	for rows.Next() {
+		found = true
 		var s TOCacheGroup
 		lms := make([]tc.LocalizationMethod, 0)
 		cgfs := make([]string, 0)
@@ -446,7 +448,7 @@ func (cg *TOCacheGroup) Read(h map[string][]string) ([]interface{}, error, error
 	}
 	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
 	// we send back a 304, with an empty response
-	if modified == false {
+	if modified == false && found == true {
 		code = http.StatusNotModified
 		cacheGroups = []interface{}{}
 	}

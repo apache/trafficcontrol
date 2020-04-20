@@ -98,7 +98,7 @@ func TestReadCacheGroupParameters(t *testing.T) {
 			cgParams:             []tc.CacheGroupParameterNullable{},
 			cgExists:             true,
 			cgExistsStorageError: nil,
-			expectedReturnCode:   http.StatusNotModified,
+			expectedReturnCode:   http.StatusOK,
 		},
 		{
 			description:       "Failure: Storage Error reading Cache Group Parameters",

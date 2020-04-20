@@ -142,6 +142,7 @@ func (en *TOStaticDNSEntry) Read(h map[string][]string) ([]interface{}, error, e
 	}
 	return res, e1, e2, http.StatusNotModified
 }
+
 func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
 func (en *TOStaticDNSEntry) Update() (error, error, int) { return api.GenericUpdate(en) }
 func (en *TOStaticDNSEntry) Delete() (error, error, int) { return api.GenericDelete(en) }

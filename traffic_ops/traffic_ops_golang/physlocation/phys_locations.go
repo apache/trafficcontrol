@@ -128,6 +128,7 @@ func (pl *TOPhysLocation) Read(h map[string][]string) ([]interface{}, error, err
 	}
 	return res, e1, e2, http.StatusNotModified
 }
+
 func (pl *TOPhysLocation) Update() (error, error, int) { return api.GenericUpdate(pl) }
 func (pl *TOPhysLocation) Create() (error, error, int) { return api.GenericCreate(pl) }
 func (pl *TOPhysLocation) Delete() (error, error, int) { return api.GenericDelete(pl) }

@@ -180,6 +180,7 @@ func (pp *TOProfileParameter) Read(h map[string][]string) ([]interface{}, error,
 	}
 	return res, e1, e2, http.StatusNotModified
 }
+
 func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
 
 func selectQuery() string {

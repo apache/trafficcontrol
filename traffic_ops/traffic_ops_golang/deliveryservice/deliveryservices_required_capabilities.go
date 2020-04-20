@@ -171,6 +171,7 @@ func (rc *RequiredCapability) Read(h map[string][]string) ([]interface{}, error,
 	ims := h["If-Modified-Since"]
 	var modifiedSince time.Time
 	modified := false
+	found := false
 	code := http.StatusOK
 
 	if ims != nil && len(ims) != 0 {
@@ -190,6 +191,7 @@ func (rc *RequiredCapability) Read(h map[string][]string) ([]interface{}, error,
 
 	results := []interface{}{}
 	for _, capability := range capabilities {
+		found = true
 		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
 		// we send back the entire array of results
 		if !capability.LastUpdated.Before(modifiedSince) {
@@ -199,7 +201,7 @@ func (rc *RequiredCapability) Read(h map[string][]string) ([]interface{}, error,
 	}
 	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
 	// we send back a 304, with an empty response
-	if modified == false {
+	if modified == false && found == true {
 		code = http.StatusNotModified
 		results = []interface{}{}
 	}

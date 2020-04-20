@@ -32,7 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation"
 )
 
 const (
@@ -126,6 +126,7 @@ func (param *TOParameter) Read(h map[string][]string) ([]interface{}, error, err
 	ims := h["If-Modified-Since"]
 	var modifiedSince time.Time
 	modified := false
+	found := false
 	code := http.StatusOK
 
 	if ims != nil && len(ims) != 0 {
@@ -149,6 +150,7 @@ func (param *TOParameter) Read(h map[string][]string) ([]interface{}, error, err
 
 	params := []interface{}{}
 	for rows.Next() {
+		found = true
 		var p tc.ParameterNullable
 		if err = rows.StructScan(&p); err != nil {
 			return nil, nil, errors.New("scanning " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError
@@ -166,7 +168,7 @@ func (param *TOParameter) Read(h map[string][]string) ([]interface{}, error, err
 
 	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
 	// we send back a 304, with an empty response
-	if modified == false {
+	if modified == false && found == true {
 		code = http.StatusNotModified
 		params = []interface{}{}
 	}

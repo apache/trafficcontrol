@@ -127,6 +127,7 @@ func (ten *TOTenant) Read(h map[string][]string) ([]interface{}, error, error, i
 	ims := h["If-Modified-Since"]
 	var modifiedSince time.Time
 	modified := false
+	found := false
 	code := http.StatusOK
 
 	if ims != nil && len(ims) != 0 {
@@ -154,6 +155,7 @@ func (ten *TOTenant) Read(h map[string][]string) ([]interface{}, error, error, i
 			// root tenant has no parent
 			continue
 		}
+		found = true
 		p := *tenantNames[*t.ParentID]
 		// In case of a bulk read, even if one of the items has a "lastUpdated" time that is after whats supplied in the request,
 		// we send back the entire array of results
@@ -164,7 +166,7 @@ func (ten *TOTenant) Read(h map[string][]string) ([]interface{}, error, error, i
 	}
 	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
 	// we send back a 304, with an empty response
-	if modified == false {
+	if modified == false && found == true {
 		code = http.StatusNotModified
 		tenants = []interface{}{}
 	}

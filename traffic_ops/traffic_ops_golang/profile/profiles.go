@@ -106,6 +106,7 @@ func (prof *TOProfile) Read(h map[string][]string) ([]interface{}, error, error,
 	ims := h["If-Modified-Since"]
 	var modifiedSince time.Time
 	modified := false
+	found := false
 	code := http.StatusOK
 
 	if ims != nil && len(ims) != 0 {
@@ -148,6 +149,7 @@ func (prof *TOProfile) Read(h map[string][]string) ([]interface{}, error, error,
 	profiles := []tc.ProfileNullable{}
 
 	for rows.Next() {
+		found = true
 		var p tc.ProfileNullable
 		if err = rows.StructScan(&p); err != nil {
 			return nil, nil, errors.New("profile read scanning: " + err.Error()), http.StatusInternalServerError
@@ -177,7 +179,7 @@ func (prof *TOProfile) Read(h map[string][]string) ([]interface{}, error, error,
 
 	// If the modified flag stayed false throughout (meaning that all the items' "lastUpdated" time is before whats supplied in the request),
 	// we send back a 304, with an empty response
-	if modified == false {
+	if modified == false && found == true {
 		code = http.StatusNotModified
 		profileInterfaces = []interface{}{}
 	}
