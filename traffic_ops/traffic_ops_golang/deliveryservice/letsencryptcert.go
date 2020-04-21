@@ -407,23 +407,13 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 func getStoredLetsEncryptInfo(tx *sql.Tx, email string) (*LEInfo, error) {
 	leInfo := LEInfo{}
 	selectQuery := `SELECT email, private_key, uri FROM lets_encrypt_account WHERE email = $1 LIMIT 1`
-	rows, err := tx.Query(selectQuery, email)
-	if err != nil {
-		return nil, errors.New("getting dns challenge records: " + err.Error())
-	}
-	defer rows.Close()
-
-	rowCount := 0
-	for rows.Next() {
-		if err := rows.Scan(&leInfo.Email, &leInfo.Key, &leInfo.URI); err != nil {
-			return nil, errors.New("scanning : lets_encrypt_account " + err.Error())
+	if err := tx.QueryRow(selectQuery, email).Scan(&leInfo.Email, &leInfo.Key, &leInfo.URI); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
 		}
-		rowCount++
+		return nil, errors.New("getting lets encrypt account record: " + err.Error())
 	}
 
-	if rowCount == 0 {
-		return nil, nil
-	}
 	decodedKeyBlock, _ := pem.Decode([]byte(leInfo.Key))
 	decodedKey, err := x509.ParsePKCS1PrivateKey(decodedKeyBlock.Bytes)
 	if err != nil {
