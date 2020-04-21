@@ -68,3 +68,6 @@ services:
     ports:
       - "9353:53/tcp"
       - "9353:53/udp"
+  mail:
+    ports:
+      - "4443:443"

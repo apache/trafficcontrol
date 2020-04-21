@@ -289,6 +289,20 @@ services:
       - shared:/shared
     hostname: dns
     domainname: infra.ciab.test
+  mail:
+    build:
+      context: .
+      dockerfile: mail/Dockerfile
+    hostname: mail
+    depends_on:
+      - dns
+    env_file:
+      - variables.env
+    volumes:
+      - shared:/shared
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
+    domainname: infra.ciab.test
 
 volumes:
   schemas:
