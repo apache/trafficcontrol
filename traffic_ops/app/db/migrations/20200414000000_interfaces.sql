@@ -41,6 +41,9 @@ CREATE TABLE ip_address (
 	FOREIGN KEY (interface, server) REFERENCES interface(name, server) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+CREATE TYPE server_ip_address AS (address inet, gateway inet, service_address boolean);
+CREATE TYPE server_interface AS (ip_addresses server_ip_address ARRAY, max_bandwidth bigint, monitor boolean, mtu bigint, name text);
+
 INSERT INTO interface(
 	max_bandwidth,
 	monitor,
