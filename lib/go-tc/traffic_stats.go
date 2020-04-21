@@ -163,7 +163,10 @@ func (c *TrafficStatsConfig) OffsetString() string {
 // deliveryservice_stats "Traffic Stats" endpoints.
 // It contains the deprecated, legacy fields "Source" and "Version"
 type TrafficDSStatsResponseV1 struct {
-	TrafficDSStatsResponse
+	// Series holds the actual data - it is NOT in general the same as a github.com/influxdata/influxdb1-client/models.Row
+	Series *TrafficStatsSeries `json:"series,omitempty"`
+	// Summary contains summary statistics of the data in Series
+	Summary *LegacyTrafficDSStatsSummary `json:"summary,omitempty"`
 	// Source has an unknown purpose. I believe this is supposed to name the "plugin" that provided
 	// the data - kept for compatibility with the Perl version(s) of the "Traffic Stats endpoints".
 	Source string `json:"source"`
@@ -204,13 +207,26 @@ type TrafficStatsSummary struct {
 	NinetyFifthPercentile  float64 `json:"ninetyFifthPercentile"`
 }
 
-// TrafficDSStatsSummary contains summary statistics for a data series for deliveryservice stats.
-type TrafficDSStatsSummary struct {
+type LegacyTrafficDSStatsSummary struct {
 	TrafficStatsSummary
-	// TotalBytes is the total number of bytes served when the "metric type" requested is "kbps"
+	// TotalBytes is the total number of kilobytes served when the "metric type" requested is "kbps"
 	// (or actually just contains "kbps"). If this is not nil, TotalTransactions *should* always be
 	// nil.
 	TotalBytes *float64 `json:"totalBytes"`
+	// Totaltransactions is the total number of transactions within the requested window. Whenever
+	// the requested metric doesn't contain "kbps", it assumed to be some kind of transactions
+	// measurement. In that case, this will not be nil - otherwise it will be nil. If this not nil,
+	// TotalBytes *should* always be nil.
+	TotalTransactions *float64 `json:"totalTransactions"`
+}
+
+// TrafficDSStatsSummary contains summary statistics for a data series for deliveryservice stats.
+type TrafficDSStatsSummary struct {
+	TrafficStatsSummary
+	// TotalKiloBytes is the total number of kilobytes served when the "metric type" requested is "kbps"
+	// (or actually just contains "kbps"). If this is not nil, TotalTransactions *should* always be
+	// nil.
+	TotalKiloBytes *float64 `json:"totalKiloBytes"`
 	// Totaltransactions is the total number of transactions within the requested window. Whenever
 	// the requested metric doesn't contain "kbps", it assumed to be some kind of transactions
 	// measurement. In that case, this will not be nil - otherwise it will be nil. If this not nil,
