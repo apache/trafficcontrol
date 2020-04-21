@@ -27,13 +27,14 @@ func TestJobs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		CreateTestJobs(t)
 		CreateTestInvalidationJobs(t)
+		GetTestJobsQueryParams(t)
 		GetTestJobs(t)
 		GetTestInvalidationJobs(t)
 	})
 }
 
 func CreateTestJobs(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServices()
+	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
@@ -61,13 +62,13 @@ func CreateTestJobs(t *testing.T) {
 }
 
 func CreateTestInvalidationJobs(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServices()
+	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
 	}
 	dsNameIDs := map[string]int64{}
 	for _, ds := range toDSes {
-		dsNameIDs[ds.XMLID] = int64(ds.ID)
+		dsNameIDs[*ds.XMLID] = int64(*ds.ID)
 	}
 
 	for _, job := range testData.InvalidationJobs {
@@ -81,13 +82,34 @@ func CreateTestInvalidationJobs(t *testing.T) {
 	}
 }
 
+func GetTestJobsQueryParams(t *testing.T) {
+	var xmlId interface{} = "ds2"
+	toJobs, _, err := TOSession.GetInvalidationJobs(&xmlId, nil)
+	if err != nil {
+		t.Fatalf("error getting jobs: %v", err)
+	}
+	foundOne := false
+	for _, j := range toJobs {
+		if j.DeliveryService == nil {
+			t.Error("expected: non-nil DeliveryService pointer, actual: nil")
+		} else if *j.DeliveryService != "ds2" {
+			t.Errorf("expected: DeliveryService == ds2, actual: DeliveryService == %s", *j.DeliveryService)
+		} else {
+			foundOne = true
+		}
+	}
+	if !foundOne {
+		t.Error("expected: to find at least one job with deliveryService == ds2, actual: found none")
+	}
+}
+
 func GetTestJobs(t *testing.T) {
 	toJobs, _, err := TOSession.GetInvalidationJobs(nil, nil)
 	if err != nil {
 		t.Fatalf("error getting jobs: %v", err)
 	}
 
-	toDSes, _, err := TOSession.GetDeliveryServices()
+	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
@@ -136,13 +158,13 @@ func GetTestInvalidationJobs(t *testing.T) {
 		t.Fatalf("error getting invalidation jobs: %v", err)
 	}
 
-	toDSes, _, err := TOSession.GetDeliveryServices()
+	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
 
 	for _, ds := range toDSes {
-		if ds.ID <= 0 {
+		if *ds.ID <= 0 {
 			t.Fatalf("Erroneous Delivery Service - has invalid ID: %+v", ds)
 		}
 	}
