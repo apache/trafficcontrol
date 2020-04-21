@@ -289,11 +289,11 @@ services:
       - shared:/shared
     hostname: dns
     domainname: infra.ciab.test
-  mail:
+  smtp:
     build:
       context: .
-      dockerfile: mail/Dockerfile
-    hostname: mail
+      dockerfile: smtp/Dockerfile
+    hostname: smtp
     depends_on:
       - dns
     env_file:

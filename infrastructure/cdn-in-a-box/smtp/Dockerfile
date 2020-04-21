@@ -23,7 +23,7 @@ RUN apk add --no-cache \
 		bind-tools
 
 COPY traffic_ops/to-access.sh /
-COPY mail/run.sh /usr/bin/
+COPY smtp/run.sh /usr/bin/
 
 # Unset entrypoint
 ENTRYPOINT []
