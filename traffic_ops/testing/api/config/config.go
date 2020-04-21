@@ -109,8 +109,9 @@ type TrafficOpsDB struct {
 
 // Default - config section
 type Default struct {
-	Session Session   `json:"session"`
-	Log     Locations `json:"logLocations"`
+	Session            Session   `json:"session"`
+	Log                Locations `json:"logLocations"`
+	IncludeSystemTests bool      `json:"includeSystemTests"`
 }
 
 // Session - config section

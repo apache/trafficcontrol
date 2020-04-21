@@ -39,7 +39,9 @@ func TestUsers(t *testing.T) {
 		GetTestUsers(t)
 		GetTestUserCurrent(t)
 		UserTenancyTest(t)
-		UserRegistrationTest(t)
+		if includeSystemTests {
+			UserRegistrationTest(t)
+		}
 	})
 }
 
