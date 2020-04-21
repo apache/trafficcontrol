@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
 - Fixed Traffic Portal regenerating CDN DNSSEC keys with the wrong effective date
+- Fixed issue #4583: POST /users/register internal server error caused by failing DB query
 - Type mutation through the api is now restricted to only those types that apply to the "server" table
 - Updated The Traffic Ops Python, Go and Java clients to use API version 2.0 (when possible)
 - Updated CDN-in-a-Box scripts and enroller to use TO API version 2.0

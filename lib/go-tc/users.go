@@ -99,7 +99,11 @@ type User struct {
 	RegistrationSent     *TimeNoMod `json:"registrationSent" db:"registration_sent"`
 	LocalPassword        *string    `json:"localPasswd,omitempty" db:"local_passwd"`
 	ConfirmLocalPassword *string    `json:"confirmLocalPasswd,omitempty" db:"confirm_local_passwd"`
-	RoleName             *string    `json:"roleName,omitempty" db:"-"`
+	// NOTE: RoleName db:"-" tag is required due to clashing with the DB query here:
+	// https://github.com/apache/trafficcontrol/blob/3b5dd406bf1a0bb456c062b0f6a465ec0617d8ef/traffic_ops/traffic_ops_golang/user/user.go#L197
+	// It's done that way in order to maintain "rolename" vs "roleName" JSON field capitalization for the different users APIs.
+	// TODO: make the breaking API change to make all user APIs use "roleName" consistently.
+	RoleName *string `json:"roleName,omitempty" db:"-"`
 	commonUserFields
 }
 
