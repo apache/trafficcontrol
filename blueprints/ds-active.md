@@ -104,6 +104,47 @@ that have `Active` values of `true` are returned. This must instead change to
 all those that are **NOT** `INACTIVE` and an `active` field must be added to
 the representations containing their "Activity State" value.
 
+##### `/cdns/{{CDN Name}}/snapshot/new`
+The Delivery Service representations returned by this endpoint are filtered
+such that - among other criteria - only those that have `Active` values of
+`true` are returned. This must instead change to all those that have `Active`
+values of "ACTIVE".
+
+No structural changes to the response payloads are strictly necessary, though
+this author would strongly encourage whoever implements the changes add the
+`active` field to the Delivery Service representations returned by this
+endpoint to help move us toward a single, unified representations of objects,
+and because it's a relatively small change to sneak in.
+
+##### `/snapshot`
+This endpoint currently creates Snapshots by selecting Delivery Services that
+are filtered such that - among other criteria - only those that have `Active`
+values of `true` are put into the newly created Snapshot. This must instead
+change to all those that have `Active` values of "Active".
+
+No structural changes to the response payloads are strictly necessary, though
+this author would suggest that whoever implements the changes take this
+opportunity to change the payload structure to conform to the API Guidelines
+(success messages belong in `success`-level Alerts, not as response objects).
+
+##### `/deliveryservices`
+The `active` property of objects returned by this endpoints methods is
+currently a boolean, and it must change to reflect the new enumerated string
+constant type described above.
+
+Furthermore, input objects must be parsed in accordance with the new type of
+the `active` property. If an input is given with any value that is not one of
+the enumerated string constants described above, the endpoint MUST respond with
+a 400 Bad Request error response, accompanied by an `error`-level Alert that
+explains why the request was rejected.
+
+##### `/deliveryservices/{{ID}}`
+Requires the same changes as `/deliveryservices`.
+
+##### `/deliveryservices/{{ID}}/safe`
+Requires the same changes as `/deliveryservices`, except that no changes are
+necessary to the processing of its inputs.
+
 #### Client Impact
 <!--
 *How* will this impact Traffic Ops REST API clients (Go, Python, Java)?
