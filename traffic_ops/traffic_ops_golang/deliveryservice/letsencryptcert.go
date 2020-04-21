@@ -243,7 +243,7 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return err
 	}
-	if storedLEInfo == nil {
+	if storedLEInfo == nil || cfg.ConfigLetsEncrypt.Email == "" {
 
 		myUser = MyUser{
 			key:   userPrivateKey,
@@ -252,10 +252,10 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	} else {
 		foundPreviousAccount = true
 		myUser = MyUser{
-			key:   storedLEInfo.PrivateKey,
+			key:   &storedLEInfo.PrivateKey,
 			Email: cfg.ConfigLetsEncrypt.Email,
 			Registration: &registration.Resource{
-				URI: *storedLEInfo.URI,
+				URI: storedLEInfo.URI,
 			},
 		}
 	}
@@ -374,26 +374,29 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	tx2.Commit()
 
-	if !foundPreviousAccount {
-		userKeyDer := x509.MarshalPKCS1PrivateKey(userPrivateKey)
-		if userKeyDer == nil {
-			log.Errorf("marshalling private key: nil der")
-			api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
-			return errors.New("marshalling private key: nil der")
-		}
-		userKeyBuf := bytes.Buffer{}
-		if err := pem.Encode(&userKeyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: userKeyDer}); err != nil {
-			log.Errorf("pem-encoding private key: " + err.Error())
-			api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
-			return errors.New("pem-encoding private key: " + err.Error())
-		}
-		userKeyPem := userKeyBuf.Bytes()
-		err = storeLEAccountInfo(userTx, myUser.Email, string(userKeyPem), myUser.Registration.URI)
-		if err != nil {
-			log.Errorf("storing user account info: " + err.Error())
-			api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
-			return errors.New("storing user account info: " + err.Error())
-		}
+	if foundPreviousAccount {
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: Added SSL keys with Lets Encrypt", currentUser, logTx)
+		return nil
+	}
+
+	userKeyDer := x509.MarshalPKCS1PrivateKey(userPrivateKey)
+	if userKeyDer == nil {
+		log.Errorf("marshalling private key: nil der")
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return errors.New("marshalling private key: nil der")
+	}
+	userKeyBuf := bytes.Buffer{}
+	if err := pem.Encode(&userKeyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: userKeyDer}); err != nil {
+		log.Errorf("pem-encoding private key: " + err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return errors.New("pem-encoding private key: " + err.Error())
+	}
+	userKeyPem := userKeyBuf.Bytes()
+	err = storeLEAccountInfo(userTx, myUser.Email, string(userKeyPem), myUser.Registration.URI)
+	if err != nil {
+		log.Errorf("storing user account info: " + err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return errors.New("storing user account info: " + err.Error())
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: Added SSL keys with Lets Encrypt", currentUser, logTx)
@@ -402,36 +405,33 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 }
 
 func getStoredLetsEncryptInfo(tx *sql.Tx, email string) (*LEInfo, error) {
-	leInfoList := []LEInfo{}
-	selectQuery := `SELECT email, private_key, uri FROM lets_encrypt_account WHERE email = $1`
+	leInfo := LEInfo{}
+	selectQuery := `SELECT email, private_key, uri FROM lets_encrypt_account WHERE email = $1 LIMIT 1`
 	rows, err := tx.Query(selectQuery, email)
 	if err != nil {
 		return nil, errors.New("getting dns challenge records: " + err.Error())
 	}
 	defer rows.Close()
 
+	rowCount := 0
 	for rows.Next() {
-		leInfo := LEInfo{}
 		if err := rows.Scan(&leInfo.Email, &leInfo.Key, &leInfo.URI); err != nil {
 			return nil, errors.New("scanning : lets_encrypt_account " + err.Error())
 		}
-
-		leInfoList = append(leInfoList, leInfo)
+		rowCount++
 	}
 
-	if len(leInfoList) == 0 {
+	if rowCount == 0 {
 		return nil, nil
 	}
-
-	firstInfo := leInfoList[0]
-	decodedKeyBlock, _ := pem.Decode([]byte(*firstInfo.Key))
+	decodedKeyBlock, _ := pem.Decode([]byte(leInfo.Key))
 	decodedKey, err := x509.ParsePKCS1PrivateKey(decodedKeyBlock.Bytes)
 	if err != nil {
 		return nil, errors.New("decoding private key for user account")
 	}
-	firstInfo.PrivateKey = decodedKey
+	leInfo.PrivateKey = *decodedKey
 
-	return &firstInfo, nil
+	return &leInfo, nil
 }
 
 func storeLEAccountInfo(tx *sql.Tx, email string, privateKey string, uri string) error {
@@ -439,21 +439,22 @@ func storeLEAccountInfo(tx *sql.Tx, email string, privateKey string, uri string)
 	response, err := tx.Exec(q, email, privateKey, uri)
 	if err != nil {
 		return err
-	} else {
-		rows, err := response.RowsAffected()
-		if err != nil {
-			return err
-		}
-		if rows == 0 {
-			return errors.New("zero rows affected when inserting Let's Encrypt account information")
-		}
 	}
+
+	rows, err := response.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return errors.New("zero rows affected when inserting Let's Encrypt account information")
+	}
+
 	return nil
 }
 
 type LEInfo struct {
-	Email      *string `db:"email"`
-	Key        *string `db:"private_key"`
-	URI        *string `db:"uri"`
-	PrivateKey *rsa.PrivateKey
+	Email      string `db:"email"`
+	Key        string `db:"private_key"`
+	URI        string `db:"uri"`
+	PrivateKey rsa.PrivateKey
 }

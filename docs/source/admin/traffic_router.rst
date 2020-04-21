@@ -715,20 +715,20 @@ Let's Encrypt can be set up through :ref:`cdn.conf` by updating the following fi
 
 .. table:: Fields to update for Let's Encrypt under `lets_encrypt`
 
-	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| Name                         | Type    | Description                                                                                                                                                            |
-	+==============================+=========+========================================================================================================================================================================+
-	| user_email                   | string  | Required. Email to create account with Let's Encrypt or to receive expiration updates.                                                                                 |
-	|                              |         | If this is not included then `rate limits <https://letsencrypt.org/docs/rate-limits>`_ may apply for the number of certificates.                                       |
-	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| send_expiration_email        | boolean | Option to send email summarizing certificate expiration status                                                                                                         |
-	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| convert_self_signed          | boolean | Option to convert self signed to Let's Encrypt certificates as they expire. Only works for certificates labeled as Self Signed in the Certificate Source field.        |
-	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| renew_days_before_expiration | int     | Number of days before expiration date to renew certificates                                                                                                            |
-	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| environment                  | string  | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'                                                                     |
-	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name                         | Type    | Required | Description                                                                                                                                                            |
+	+==============================+=========+==========+========================================================================================================================================================================+
+	| user_email                   | string  | Yes      | Email to create account with Let's Encrypt or to receive expiration updates.                                                                                           |
+	|                              |         |          | If this is not included then `rate limits <https://letsencrypt.org/docs/rate-limits>`_ may apply for the number of certificates.                                       |
+	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| send_expiration_email        | boolean | No       | Option to send email summarizing certificate expiration status                                                                                                         |
+	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| convert_self_signed          | boolean | No       | Option to convert self signed to Let's Encrypt certificates as they expire. Only works for certificates labeled as Self Signed in the Certificate Source field.        |
+	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| renew_days_before_expiration | int     | No       | Number of days before expiration date to renew certificates                                                                                                            |
+	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| environment                  | string  | No       | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'                                                                     |
+	+------------------------------+---------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. table:: Fields to update for sending emails under `smtp`
 
