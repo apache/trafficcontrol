@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -63,33 +62,7 @@ WHERE federation_deliveryservice.deliveryservice IN (
 )
 `
 
-const getUserByEmailQuery = `
-SELECT u.id,
-       u.username,
-       u.public_ssh_key,
-       u.role,
-       r.name as rolename,
-       u.company,
-       u.email,
-       u.full_name,
-       u.new_user,
-       u.address_line1,
-       u.address_line2,
-       u.city,
-       u.state_or_province,
-       u.phone_number,
-       u.postal_code,
-       u.country,
-       u.registration_sent,
-       u.tenant_id,
-       t.name as tenant,
-       u.last_updated
-FROM tm_user u
-LEFT JOIN tenant t ON u.tenant_id = t.id
-LEFT JOIN role r ON u.role = r.id
-WHERE u.email=$1
-`
-const getUserByIDQuery = `
+const getUserBaseQuery = `
 SELECT tm_user.address_line1,
        tm_user.address_line2,
        tm_user.city,
@@ -99,6 +72,7 @@ SELECT tm_user.address_line1,
        tm_user.full_name,
        tm_user.gid,
        tm_user.id,
+       tm_user.last_updated,
        tm_user.new_user,
        tm_user.phone_number,
        tm_user.postal_code,
@@ -115,7 +89,13 @@ SELECT tm_user.address_line1,
 FROM tm_user
 LEFT OUTER JOIN role ON role.id = tm_user.role
 LEFT OUTER JOIN tenant ON tenant.id = tm_user.tenant_id
+`
+const getUserByIDQuery = getUserBaseQuery + `
 WHERE tm_user.id = $1
+`
+
+const getUserByEmailQuery = getUserBaseQuery + `
+WHERE tm_user.email = $1
 `
 
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
@@ -711,19 +691,6 @@ func GetFederationIDForUserIDByXMLID(tx *sql.Tx, userID int, xmlid string) (uint
 	return id, true, nil
 }
 
-// GetUserByEmail retrieves the user with the given email. If no such user exists, the boolean
-// returned will be 'false', while the error indicates unexpected errors that occurred when querying.
-func GetUserByEmail(tx *sqlx.Tx, email string) (tc.User, bool, error) {
-	var u tc.User
-	if err := tx.QueryRowx(getUserByEmailQuery, email).StructScan(&u); err != nil {
-		if err == sql.ErrNoRows {
-			return u, false, nil
-		}
-		return u, false, err
-	}
-	return u, true, nil
-}
-
 // UsernameExists reports whether or not the the given username exists as a user in the database to
 // which the passed transaction refers. If anything goes wrong when checking the existence of said
 // user, the error is directly returned to the caller. Note that in that case, no real meaning
@@ -747,11 +714,22 @@ func GetTypeIDByName(t string, tx *sql.Tx) (int, bool, error) {
 	return id, true, nil
 }
 
+// GetUserByEmail retrieves the user with the given email. If no such user exists, the boolean
+// returned will be 'false', while the error indicates unexpected errors that occurred when querying.
+func GetUserByEmail(email string, tx *sql.Tx) (tc.User, bool, error) {
+	row := tx.QueryRow(getUserByEmailQuery, email)
+	return scanUserRow(row)
+}
+
 // GetUserByID returns the user with the requested ID if one exists. The second return value is a
 // boolean indicating whether said user actually did exist, and the third contains any error
 // encountered along the way.
 func GetUserByID(id int, tx *sql.Tx) (tc.User, bool, error) {
 	row := tx.QueryRow(getUserByIDQuery, id)
+	return scanUserRow(row)
+}
+
+func scanUserRow(row *sql.Row) (tc.User, bool, error) {
 	var u tc.User
 	err := row.Scan(&u.AddressLine1,
 		&u.AddressLine2,
@@ -762,6 +740,7 @@ func GetUserByID(id int, tx *sql.Tx) (tc.User, bool, error) {
 		&u.FullName,
 		&u.GID,
 		&u.ID,
+		&u.LastUpdated,
 		&u.NewUser,
 		&u.PhoneNumber,
 		&u.PostalCode,
