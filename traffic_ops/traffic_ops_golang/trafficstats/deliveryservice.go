@@ -185,44 +185,52 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := tc.TrafficDSStatsResponseV1{
-		Source:  tc.TRAFFIC_STATS_SOURCE,
-		Version: tc.TRAFFIC_STATS_VERSION,
+	if inf.Version.Major > 1 {
+		handleRequest(w, r, client, c, inf)
+	} else {
+		handleLegacyRequest(w, r, client, c, inf)
 	}
+}
 
+func handleRequest(w http.ResponseWriter, r *http.Request, client *influx.Client, cfg tc.TrafficDSStatsConfig, inf *api.APIInfo) {
 	// TODO: as above, this could be done on TO itself, thus sending only one synchronous request
 	// per hit on this endpoint, rather than the current two. Not sure if that's worth it for large
 	// data sets, though.
-	if !c.ExcludeSummary {
-		summary, err := getDSSummary(client, &c, inf.Config.ConfigInflux.DSDBName)
+	var resp tc.TrafficDSStatsResponse
+	if !cfg.ExcludeSummary {
+		summary, kBs, txns, err := getDSSummary(client, &cfg, inf.Config.ConfigInflux.DSDBName)
 
 		if err != nil {
-			sysErr = fmt.Errorf("Getting summary response from Influx: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			sysErr := fmt.Errorf("Getting summary response from Influx: %v", err)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 
 		// match Perl implementation and set summary to zero values if no data
 		if summary != nil {
-			resp.Summary = summary
+			resp.Summary = &tc.TrafficDSStatsSummary{
+				TrafficStatsSummary: *summary,
+				TotalKiloBytes: kBs,
+				TotalTransactions: txns,
+			}
 		} else {
 			resp.Summary = &tc.TrafficDSStatsSummary{}
 		}
 
 	}
 
-	if !c.ExcludeSeries {
-		series, err := getDSSeries(client, &c, inf.Config.ConfigInflux.DSDBName)
+	if !cfg.ExcludeSeries {
+		series, err := getDSSeries(client, &cfg, inf.Config.ConfigInflux.DSDBName)
 
 		if err != nil {
-			sysErr = fmt.Errorf("Getting summary response from Influx: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			sysErr := fmt.Errorf("Getting summary response from Influx: %v", err)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 
 		// match Perl implementation and omit series if no data
 		if series != nil {
-			if !c.Unix {
+			if !cfg.Unix {
 				series.FormatTimestamps()
 			}
 
@@ -233,21 +241,17 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	var respObj struct {
 		Response interface{} `json:"response"`
 	}
-	if inf.Version.Major > 1 {
-		respObj.Response = resp.TrafficDSStatsResponse
-	} else {
-		respObj.Response = resp
-	}
+	respObj.Response = resp
 
 	respBts, err := json.Marshal(respObj)
 	if err != nil {
-		sysErr = fmt.Errorf("Marshalling response: %v", err)
-		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		sysErr := fmt.Errorf("Marshalling response: %v", err)
+		errCode := http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
 		return
 	}
 
-	if c.Unix {
+	if cfg.Unix {
 		w.Header().Set(rfc.ContentType, jsonWithUnixTimestamps.String())
 	} else {
 		w.Header().Set(rfc.ContentType, jsonWithRFCTimestamps.String())
@@ -256,8 +260,75 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	w.Write(append(respBts, '\n'))
 }
 
-func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db string) (*tc.TrafficDSStatsSummary, error) {
-	s := tc.TrafficDSStatsSummary{}
+func handleLegacyRequest(w http.ResponseWriter, r *http.Request, client *influx.Client, cfg tc.TrafficDSStatsConfig, inf *api.APIInfo) {
+	// TODO: as above, this could be done on TO itself, thus sending only one synchronous request
+	// per hit on this endpoint, rather than the current two. Not sure if that's worth it for large
+	// data sets, though.
+	var resp tc.TrafficDSStatsResponseV1
+	if !cfg.ExcludeSummary {
+		summary, kBs, txns, err := getDSSummary(client, &cfg, inf.Config.ConfigInflux.DSDBName)
+
+		if err != nil {
+			sysErr := fmt.Errorf("Getting summary response from Influx: %v", err)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+
+		// match Perl implementation and set summary to zero values if no data
+		if summary != nil {
+			resp.Summary = &tc.LegacyTrafficDSStatsSummary{
+				TrafficStatsSummary: *summary,
+				TotalBytes: kBs,
+				TotalTransactions: txns,
+			}
+		} else {
+			resp.Summary = &tc.LegacyTrafficDSStatsSummary{}
+		}
+
+	}
+
+	if !cfg.ExcludeSeries {
+		series, err := getDSSeries(client, &cfg, inf.Config.ConfigInflux.DSDBName)
+
+		if err != nil {
+			sysErr := fmt.Errorf("Getting summary response from Influx: %v", err)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+
+		// match Perl implementation and omit series if no data
+		if series != nil {
+			if !cfg.Unix {
+				series.FormatTimestamps()
+			}
+
+			resp.Series = series
+		}
+	}
+
+	var respObj struct {
+		Response interface{} `json:"response"`
+	}
+	respObj.Response = resp
+
+	respBts, err := json.Marshal(respObj)
+	if err != nil {
+		sysErr := fmt.Errorf("Marshalling response: %v", err)
+		errCode := http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	}
+
+	if cfg.Unix {
+		w.Header().Set(rfc.ContentType, jsonWithUnixTimestamps.String())
+	} else {
+		w.Header().Set(rfc.ContentType, jsonWithRFCTimestamps.String())
+	}
+	w.Header().Set(http.CanonicalHeaderKey("vary"), http.CanonicalHeaderKey("Accept"))
+	w.Write(append(respBts, '\n'))
+}
+
+func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db string) (*tc.TrafficStatsSummary, *float64, *float64, error) {
 	qStr := fmt.Sprintf(dsSummaryQuery, db, conf.MetricType)
 	q := influx.NewQueryWithParameters(qStr,
 		db,
@@ -270,21 +341,21 @@ func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db strin
 		})
 	ts, err := getSummary(db, q, client)
 	if err != nil || ts == nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
-	s.TrafficStatsSummary = *ts
-
-	value := float64(s.Count*60) * s.Average
+	var totalKB *float64
+	var totalTXN *float64
+	value := float64(ts.Count*60) * ts.Average
 	if conf.MetricType == "kbps" {
 		// TotalBytes is actually in units of kB....
 		value /= 8
-		s.TotalBytes = &value
+		totalKB = &value
 	} else {
-		s.TotalTransactions = &value
+		totalTXN = &value
 	}
 
-	return &s, nil
+	return ts, totalKB, totalTXN, nil
 }
 
 func dsTenantIDFromXMLID(xmlid string, tx *sql.Tx) (bool, uint, error) {

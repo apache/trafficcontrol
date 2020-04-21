@@ -21,6 +21,8 @@
 *************************
 .. versionadded:: 1.2
 
+.. danger:: The output of this endpoint can be confusing and/or misleading. Specifically, the response field ``totalBytes`` does **not** contain an amount in units of Bytes. See the field description for more information, or use :ref:`to-api-v2-deliveryservice_stats` for more intuitive response objects.
+
 ``GET``
 =======
 Retrieves time-aggregated statistics on a specific :term:`Delivery Service`.
