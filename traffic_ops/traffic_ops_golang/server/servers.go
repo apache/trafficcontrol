@@ -335,14 +335,11 @@ func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullabl
 	edgeIDs := strings.Join(ids, ",")
 	// TODO: include secondary parent?
 	q := selectQuery() + `
-WHERE s.id IN (
-	SELECT mid.id FROM server mid
-	JOIN cachegroup cg ON cg.id IN (
-		SELECT cg.parent_cachegroup_id
-		FROM server s
-		JOIN cachegroup cg ON cg.id = s.cachegroup
-		WHERE s.id IN (` + edgeIDs + `))
-	JOIN type t ON mid.type = (SELECT id FROM type WHERE name = 'MID'))
+WHERE t.name = 'MID' AND s.cachegroup IN (
+SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
+WHERE cg.id IN (
+SELECT s.cachegroup FROM server AS s
+WHERE s.id IN (` + edgeIDs + `)))
 `
 	rows, err := tx.Queryx(q)
 	if err != nil {
