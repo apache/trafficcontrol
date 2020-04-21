@@ -214,9 +214,6 @@ func updateParams(tx *sql.Tx, dsIDs []int) error {
 	if err := updateDSParam(tx, dsIDs, "hdr_rw_", "edge_header_rewrite"); err != nil {
 		return err
 	}
-	if err := updateDSParam(tx, dsIDs, "cacheurl_", "cacheurl"); err != nil {
-		return err
-	}
 	if err := updateDSParam(tx, dsIDs, "regex_remap_", "regex_remap"); err != nil {
 		return err
 	}
