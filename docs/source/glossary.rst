@@ -79,8 +79,8 @@ Glossary
 		.. code-block:: json
 			:caption: Example Deep Coverage Zone File
 
-			{ "coverageZones": {
-				"cache-group-01": {
+			{ "deepCoverageZones": {
+				"location-01": {
 					"network6": [
 						"1234:5678::/64",
 						"1234:5679::/64"
