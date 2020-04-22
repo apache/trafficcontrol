@@ -30,8 +30,12 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.servers'
 							deliveryService: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
-							servers: function($stateParams, serverService) {
-								return serverService.getDeliveryServiceServers($stateParams.deliveryServiceId);
+							servers: function(deliveryService, $stateParams, serverService) {
+								if (deliveryService.topology) {
+									return serverService.getTopologyServers(deliveryService.topology);
+								} else {
+									return serverService.getDeliveryServiceServers($stateParams.deliveryServiceId);
+								}
 							}
 						}
 					}
