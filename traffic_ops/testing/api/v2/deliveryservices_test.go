@@ -31,7 +31,6 @@ import (
 
 func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
-		AsdfTest(t)
 		GetAccessibleToTest(t)
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
@@ -41,12 +40,6 @@ func TestDeliveryServices(t *testing.T) {
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
 	})
-}
-
-func AsdfTest(t *testing.T) {
-	ds := testData.DeliveryServices[0]
-	t.Log(ds)
-
 }
 
 func CreateTestDeliveryServices(t *testing.T) {
