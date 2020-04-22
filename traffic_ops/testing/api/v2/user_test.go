@@ -40,6 +40,7 @@ func TestUsers(t *testing.T) {
 		GetTestUserCurrent(t)
 		UserTenancyTest(t)
 		if includeSystemTests {
+			// UserRegistrationTest deletes test users before registering new users, so it must come after the other user tests.
 			UserRegistrationTest(t)
 		}
 	})
