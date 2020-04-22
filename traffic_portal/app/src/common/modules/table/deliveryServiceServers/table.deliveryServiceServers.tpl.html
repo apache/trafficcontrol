@@ -127,7 +127,7 @@ under the License.
                         <i title="Updates Applied" ng-show="!s.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
                     </td>
                     <td style="text-align: right;">
-                        <a class="link action-link" title="Unlink Server from Delivery Service" ng-click="confirmRemoveServer(s, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
+                        <a ng-if="isEdge(s) || isOrigin(s)" class="link action-link" title="Unlink Server from Delivery Service" ng-click="confirmRemoveServer(s, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
                     </td>
                 </tr>
             </tbody>

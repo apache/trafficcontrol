@@ -140,7 +140,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getDeliveryServiceServers = function(dsId) {
-        return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/servers').then(
+        return $http.get(ENV.api['root'] + 'servers?dsId=' + dsId).then(
             function (result) {
                 return result.data.response;
             }
