@@ -65,6 +65,7 @@ services:
     depends_on:
       - db
       - enroller
+      - smtp
       - trafficops-perl
     domainname: infra.ciab.test
     env_file:
