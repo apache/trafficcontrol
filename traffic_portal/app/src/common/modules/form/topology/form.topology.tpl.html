@@ -59,22 +59,6 @@ under the License.
                 <button type="button" class="btn btn-success" ng-disabled="topologyForm.$invalid" ng-click="save(topology.name, topology.description, topologyTree)">{{settings.saveLabel}}</button>
             </div>
         </form>
-
-        <div class="row">
-            <div class="col-md-6 col-sm-6 col-xs-12">
-                <p>this will update after save and its purely for debugging purposes</p>
-                <div class="info">
-                    {{info}}
-                </div>
-                <pre class="code">{{ topology.nodes | json }}</pre>
-            </div>
-            <div ng-show="false" class="col-md-6 col-sm-6 col-xs-12">
-                <div class="info">
-                    {{info}}
-                </div>
-                <pre class="code">{{ topologyTree | json }}</pre>
-            </div>
-        </div>
     </div>
 </div>
 
