@@ -31,6 +31,7 @@ import (
 
 func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+		AsdfTest(t)
 		GetAccessibleToTest(t)
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
@@ -40,6 +41,12 @@ func TestDeliveryServices(t *testing.T) {
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
 	})
+}
+
+func AsdfTest(t *testing.T) {
+	ds := testData.DeliveryServices[0]
+	t.Log(ds)
+
 }
 
 func CreateTestDeliveryServices(t *testing.T) {
@@ -53,31 +60,31 @@ func CreateTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot create parameter: %v", err)
 	}
 	for _, ds := range testData.DeliveryServices {
-		_, err = TOSession.CreateDeliveryService(&ds)
+		_, err = TOSession.CreateDeliveryServiceNullable(&ds)
 		if err != nil {
-			t.Errorf("could not CREATE delivery service '%s': %v", ds.XMLID, err)
+			t.Errorf("could not CREATE delivery service '%s': %v", *ds.XMLID, err)
 		}
 	}
 }
 
 func GetTestDeliveryServices(t *testing.T) {
-	actualDSes, _, err := TOSession.GetDeliveryServices()
+	actualDSes, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
 	}
-	actualDSMap := map[string]tc.DeliveryService{}
+	actualDSMap := map[string]tc.DeliveryServiceNullable{}
 	for _, ds := range actualDSes {
-		actualDSMap[ds.XMLID] = ds
+		actualDSMap[*ds.XMLID] = ds
 	}
 	cnt := 0
 	for _, ds := range testData.DeliveryServices {
-		if _, ok := actualDSMap[ds.XMLID]; !ok {
+		if _, ok := actualDSMap[*ds.XMLID]; !ok {
 			t.Errorf("GET DeliveryService missing: %v", ds.XMLID)
 		}
 		// exactly one ds should have exactly 3 query params. the rest should have none
 		if c := len(ds.ConsistentHashQueryParams); c > 0 {
 			if c != 3 {
-				t.Errorf("deliveryservice %s has %d query params; expected %d or %d", ds.XMLID, c, 3, 0)
+				t.Errorf("deliveryservice %s has %d query params; expected %d or %d", *ds.XMLID, c, 3, 0)
 			}
 			cnt++
 		}
@@ -90,15 +97,15 @@ func GetTestDeliveryServices(t *testing.T) {
 func UpdateTestDeliveryServices(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 
-	dses, _, err := TOSession.GetDeliveryServices()
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Errorf("cannot GET Delivery Services: %v", err)
 	}
 
-	remoteDS := tc.DeliveryService{}
+	remoteDS := tc.DeliveryServiceNullable{}
 	found := false
 	for _, ds := range dses {
-		if ds.XMLID == firstDS.XMLID {
+		if *ds.XMLID == *firstDS.XMLID {
 			found = true
 			remoteDS = ds
 			break
@@ -111,17 +118,17 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	updatedLongDesc := "something different"
 	updatedMaxDNSAnswers := 164598
 	updatedMaxOriginConnections := 100
-	remoteDS.LongDesc = updatedLongDesc
-	remoteDS.MaxDNSAnswers = updatedMaxDNSAnswers
-	remoteDS.MaxOriginConnections = updatedMaxOriginConnections
+	remoteDS.LongDesc = &updatedLongDesc
+	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
+	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
 	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
 
-	if updateResp, err := TOSession.UpdateDeliveryService(strconv.Itoa(remoteDS.ID), &remoteDS); err != nil {
+	if updateResp, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS); err != nil {
 		t.Errorf("cannot UPDATE DeliveryService by ID: %v - %v", err, updateResp)
 	}
 
 	// Retrieve the server to check rack and interfaceName values were updated
-	resp, _, err := TOSession.GetDeliveryService(strconv.Itoa(remoteDS.ID))
+	resp, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID))
 	if err != nil {
 		t.Errorf("cannot GET Delivery Service by ID: %v - %v", remoteDS.XMLID, err)
 	}
@@ -129,8 +136,8 @@ func UpdateTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET Delivery Service by ID: %v - nil", remoteDS.XMLID)
 	}
 
-	if resp.LongDesc != updatedLongDesc || resp.MaxDNSAnswers != updatedMaxDNSAnswers || resp.MaxOriginConnections != updatedMaxOriginConnections {
-		t.Errorf("results do not match actual: %s, expected: %s", resp.LongDesc, updatedLongDesc)
+	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers || *resp.MaxOriginConnections != updatedMaxOriginConnections {
+		t.Errorf("results do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
 		t.Errorf("results do not match actual: %v, expected: %v", resp.MaxDNSAnswers, updatedMaxDNSAnswers)
 		t.Errorf("results do not match actual: %v, expected: %v", resp.MaxOriginConnections, updatedMaxOriginConnections)
 	}
@@ -150,7 +157,7 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 		if ds.XMLID == nil || ds.ID == nil {
 			continue
 		}
-		if *ds.XMLID == firstDS.XMLID {
+		if *ds.XMLID == *firstDS.XMLID {
 			found = true
 			remoteDS = ds
 			break
@@ -204,7 +211,7 @@ func UpdateDeliveryServiceWithInvalidRemapText(t *testing.T) {
 		if ds.XMLID == nil || ds.ID == nil {
 			continue
 		}
-		if *ds.XMLID == firstDS.XMLID {
+		if *ds.XMLID == *firstDS.XMLID {
 			found = true
 			remoteDS = ds
 			break
@@ -228,7 +235,7 @@ func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
 	var dsXML *string
 	for _, ds := range testData.DeliveryServices {
 		if ds.Type.IsDNS() || ds.Type.IsHTTP() {
-			dsXML = &ds.XMLID
+			dsXML = ds.XMLID
 			break
 		}
 	}
@@ -352,15 +359,15 @@ func getByTenants(tenantID int, expectedCount int) error {
 }
 
 func DeleteTestDeliveryServices(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices()
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Errorf("cannot GET deliveryservices: %v", err)
 	}
 	for _, testDS := range testData.DeliveryServices {
-		ds := tc.DeliveryService{}
+		ds := tc.DeliveryServiceNullable{}
 		found := false
 		for _, realDS := range dses {
-			if realDS.XMLID == testDS.XMLID {
+			if *realDS.XMLID == *testDS.XMLID {
 				ds = realDS
 				found = true
 				break
@@ -370,15 +377,15 @@ func DeleteTestDeliveryServices(t *testing.T) {
 			t.Errorf("DeliveryService not found in Traffic Ops: %v", ds.XMLID)
 		}
 
-		delResp, err := TOSession.DeleteDeliveryService(strconv.Itoa(ds.ID))
+		delResp, err := TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
 		if err != nil {
 			t.Errorf("cannot DELETE DeliveryService by ID: %v - %v", err, delResp)
 		}
 
 		// Retrieve the Server to see if it got deleted
-		foundDS, _, err := TOSession.GetDeliveryService(strconv.Itoa(ds.ID))
+		foundDS, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*ds.ID))
 		if err == nil && foundDS != nil {
-			t.Errorf("expected Delivery Service: %s to be deleted", ds.XMLID)
+			t.Errorf("expected Delivery Service: %s to be deleted", *ds.XMLID)
 		}
 	}
 
@@ -394,8 +401,8 @@ func DeleteTestDeliveryServices(t *testing.T) {
 
 func DeliveryServiceMinorVersionsTest(t *testing.T) {
 	testDS := testData.DeliveryServices[4]
-	if testDS.XMLID != "ds-test-minor-versions" {
-		t.Errorf("expected XMLID: ds-test-minor-versions, actual: %s", testDS.XMLID)
+	if *testDS.XMLID != "ds-test-minor-versions" {
+		t.Errorf("expected XMLID: ds-test-minor-versions, actual: %s", *testDS.XMLID)
 	}
 
 	dses, _, err := TOSession.GetDeliveryServicesNullable()
@@ -404,7 +411,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 	}
 	ds := tc.DeliveryServiceNullable{}
 	for _, d := range dses {
-		if *d.XMLID == testDS.XMLID {
+		if *d.XMLID == *testDS.XMLID {
 			ds = d
 			break
 		}
@@ -412,38 +419,38 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 	// GET latest, verify expected values for 1.3 and 1.4 fields
 	if ds.DeepCachingType == nil {
 		t.Errorf("expected DeepCachingType: %s, actual: nil", testDS.DeepCachingType.String())
-	} else if *ds.DeepCachingType != testDS.DeepCachingType {
+	} else if *ds.DeepCachingType != *testDS.DeepCachingType {
 		t.Errorf("expected DeepCachingType: %s, actual: %s", testDS.DeepCachingType.String(), ds.DeepCachingType.String())
 	}
 	if ds.FQPacingRate == nil {
 		t.Errorf("expected FQPacingRate: %d, actual: nil", testDS.FQPacingRate)
-	} else if *ds.FQPacingRate != testDS.FQPacingRate {
+	} else if *ds.FQPacingRate != *testDS.FQPacingRate {
 		t.Errorf("expected FQPacingRate: %d, actual: %d", testDS.FQPacingRate, *ds.FQPacingRate)
 	}
 	if ds.SigningAlgorithm == nil {
-		t.Errorf("expected SigningAlgorithm: %s, actual: nil", testDS.SigningAlgorithm)
-	} else if *ds.SigningAlgorithm != testDS.SigningAlgorithm {
-		t.Errorf("expected SigningAlgorithm: %s, actual: %s", testDS.SigningAlgorithm, *ds.SigningAlgorithm)
+		t.Errorf("expected SigningAlgorithm: %s, actual: nil", *testDS.SigningAlgorithm)
+	} else if *ds.SigningAlgorithm != *testDS.SigningAlgorithm {
+		t.Errorf("expected SigningAlgorithm: %s, actual: %s", *testDS.SigningAlgorithm, *ds.SigningAlgorithm)
 	}
 	if ds.Tenant == nil {
-		t.Errorf("expected Tenant: %s, actual: nil", testDS.Tenant)
-	} else if *ds.Tenant != testDS.Tenant {
-		t.Errorf("expected Tenant: %s, actual: %s", testDS.Tenant, *ds.Tenant)
+		t.Errorf("expected Tenant: %s, actual: nil", *testDS.Tenant)
+	} else if *ds.Tenant != *testDS.Tenant {
+		t.Errorf("expected Tenant: %s, actual: %s", *testDS.Tenant, *ds.Tenant)
 	}
 	if ds.TRRequestHeaders == nil {
-		t.Errorf("expected TRRequestHeaders: %s, actual: nil", testDS.TRRequestHeaders)
-	} else if *ds.TRRequestHeaders != testDS.TRRequestHeaders {
-		t.Errorf("expected TRRequestHeaders: %s, actual: %s", testDS.TRRequestHeaders, *ds.TRRequestHeaders)
+		t.Errorf("expected TRRequestHeaders: %s, actual: nil", *testDS.TRRequestHeaders)
+	} else if *ds.TRRequestHeaders != *testDS.TRRequestHeaders {
+		t.Errorf("expected TRRequestHeaders: %s, actual: %s", *testDS.TRRequestHeaders, *ds.TRRequestHeaders)
 	}
 	if ds.TRResponseHeaders == nil {
-		t.Errorf("expected TRResponseHeaders: %s, actual: nil", testDS.TRResponseHeaders)
-	} else if *ds.TRResponseHeaders != testDS.TRResponseHeaders {
-		t.Errorf("expected TRResponseHeaders: %s, actual: %s", testDS.TRResponseHeaders, *ds.TRResponseHeaders)
+		t.Errorf("expected TRResponseHeaders: %s, actual: nil", *testDS.TRResponseHeaders)
+	} else if *ds.TRResponseHeaders != *testDS.TRResponseHeaders {
+		t.Errorf("expected TRResponseHeaders: %s, actual: %s", *testDS.TRResponseHeaders, *ds.TRResponseHeaders)
 	}
 	if ds.ConsistentHashRegex == nil {
-		t.Errorf("expected ConsistentHashRegex: %s, actual: nil", testDS.ConsistentHashRegex)
-	} else if *ds.ConsistentHashRegex != testDS.ConsistentHashRegex {
-		t.Errorf("expected ConsistentHashRegex: %s, actual: %s", testDS.ConsistentHashRegex, *ds.ConsistentHashRegex)
+		t.Errorf("expected ConsistentHashRegex: %s, actual: nil", *testDS.ConsistentHashRegex)
+	} else if *ds.ConsistentHashRegex != *testDS.ConsistentHashRegex {
+		t.Errorf("expected ConsistentHashRegex: %s, actual: %s", *testDS.ConsistentHashRegex, *ds.ConsistentHashRegex)
 	}
 	if ds.ConsistentHashQueryParams == nil {
 		t.Errorf("expected ConsistentHashQueryParams: %v, actual: nil", testDS.ConsistentHashQueryParams)
@@ -452,7 +459,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 	}
 	if ds.MaxOriginConnections == nil {
 		t.Errorf("expected MaxOriginConnections: %d, actual: nil", testDS.MaxOriginConnections)
-	} else if *ds.MaxOriginConnections != testDS.MaxOriginConnections {
+	} else if *ds.MaxOriginConnections != *testDS.MaxOriginConnections {
 		t.Errorf("expected MaxOriginConnections: %d, actual: %d", testDS.MaxOriginConnections, *ds.MaxOriginConnections)
 	}
 

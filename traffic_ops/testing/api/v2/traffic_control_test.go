@@ -30,7 +30,7 @@ type TrafficControl struct {
 	DeliveryServicesRegexes              []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
 	DeliveryServiceRequests              []tc.DeliveryServiceRequest             `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments       []tc.DeliveryServiceRequestComment      `json:"deliveryServiceRequestComments"`
-	DeliveryServices                     []tc.DeliveryService                    `json:"deliveryservices"`
+	DeliveryServices                     []tc.DeliveryServiceNullable            `json:"deliveryservices"`
 	DeliveryServicesRequiredCapabilities []tc.DeliveryServicesRequiredCapability `json:"deliveryservicesRequiredCapabilities"`
 	Divisions                            []tc.Division                           `json:"divisions"`
 	Federations                          []tc.CDNFederation                      `json:"federations"`
@@ -54,11 +54,5 @@ type TrafficControl struct {
 	SteeringTargets                      []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                         []tc.ServercheckRequestNullable         `json:"serverchecks"`
 	Users                                []tc.User                               `json:"users"`
-	Jobs                                 []JobRequest                            `json:"jobs"`
 	InvalidationJobs                     []tc.InvalidationJobInput               `json:"invalidationJobs"`
-}
-
-type JobRequest struct {
-	DSName  string        `json:"dsName"`
-	Request tc.JobRequest `json:"request"`
 }

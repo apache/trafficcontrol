@@ -87,7 +87,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Assign server to DS and then attempt to update to a different type
-	dses, _, err := TOSession.GetDeliveryServices()
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
 	}
@@ -110,7 +110,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Assign server to DS
-	_, err = TOSession.CreateDeliveryServiceServers(dses[0].ID, []int{remoteServer.ID}, true)
+	_, err = TOSession.CreateDeliveryServiceServers(*dses[0].ID, []int{remoteServer.ID}, true)
 	if err != nil {
 		t.Fatalf("POST delivery service servers: %v", err)
 	}
