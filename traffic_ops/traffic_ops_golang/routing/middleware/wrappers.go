@@ -110,12 +110,14 @@ func TimeOutWrapper(timeout time.Duration) Middleware {
 //  - Adds default CORS headers to the response.
 //  - Adds the Whole-Content-SHA512 checksum header to the response.
 //  - Gzips the response and sets the Content-Encoding header, if the client sent an Accept-Encoding: gzip header.
+//  - Adds the Vary: Accept-Encoding header to the response
 func WrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie")
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set(rfc.Vary, rfc.AcceptEncoding)
 		w.Header().Set("X-Server-Name", ServerName)
 		iw := &util.BodyInterceptor{W: w}
 		h(iw, r)
