@@ -16,8 +16,8 @@ package v1
 */
 
 import (
-	"testing"
 	"sort"
+	"testing"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
