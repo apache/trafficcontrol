@@ -46,7 +46,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 
 	let decorateCacheGroups = function() {
 		$scope.cacheGroups = cacheGroups.map(function(cg) {
-			let isUsed = usedCacheGroupNames.find(function(usedCacheGroupName) { return usedCacheGroupName === cg.name });
+			const isUsed = usedCacheGroupNames.find(function(usedCacheGroupName) { return usedCacheGroupName === cg.name });
 			if (isUsed) {
 				cg['selected'] = true;
 				cg['used'] = true;
@@ -71,7 +71,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	});
 
 	$scope.selectAll = function($event) {
-		let checkbox = $event.target;
+		const checkbox = $event.target;
 		if (checkbox.checked) {
 			addAll();
 		} else {

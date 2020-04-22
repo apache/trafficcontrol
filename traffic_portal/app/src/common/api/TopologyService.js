@@ -43,7 +43,7 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 	};
 
 	this.updateTopology = function(topology) {
-		return $http.put(ENV.api['root'] + 'topologies?name=' + topology.name, topology).then(
+		return $http.put(ENV.api['root'] + 'topologies', topology, { params: { name: topology.name } }).then(
 			function(result) {
 				return result;
 			},
@@ -55,7 +55,7 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 	};
 
 	this.deleteTopology = function(topology) {
-		return $http.delete(ENV.api['root'] + "topologies?name=" + topology.name).then(
+		return $http.delete(ENV.api['root'] + "topologies", { params: { name: topology.name } }).then(
 			function(result) {
 				return result;
 			},

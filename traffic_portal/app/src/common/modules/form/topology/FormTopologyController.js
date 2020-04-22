@@ -104,8 +104,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
 	$scope.nodeLabel = function(node) {
-		if (!node.cachegroup) return 'TOPOLOGY';
-		return node.cachegroup;
+		return node.cachegroup || 'TOPOLOGY';
 	};
 
 	$scope.editSecParent = function(node) {

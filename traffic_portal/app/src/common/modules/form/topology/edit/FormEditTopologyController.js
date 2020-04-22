@@ -62,8 +62,6 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 		});
 		modalInstance.result.then(function() {
 			deleteTopology(topology);
-		}, function () {
-			// do nothing
 		});
 	};
 
