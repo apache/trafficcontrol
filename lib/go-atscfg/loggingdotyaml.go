@@ -81,6 +81,7 @@ func MakeLoggingDotYAML(
 		}
 	}
 
+	var firstObject = true
 	for i := 0; i < maxLogObjects; i++ {
 		logObjectField := "LogObject"
 		if i > 0 {
@@ -99,7 +100,10 @@ func MakeLoggingDotYAML(
 			logObjectRollingSizeMb := paramData[logObjectField+".RollingSizeMb"]
 			logObjectFilters := paramData[logObjectField+".Filters"]
 
-			text += "\nlogs:\n"
+			if firstObject {
+				text += "\nlogs:\n"
+				firstObject = false
+			}
 			text += "- mode: " + logObjectType + "\n"
 			text += "  filename: " + logObjectFilename + "\n"
 			text += "  format: " + logObjectFormat + "\n"
