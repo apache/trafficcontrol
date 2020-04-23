@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"io/ioutil"
 	"reflect"
 	"runtime"
@@ -32,9 +34,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/basho/riak-go-client"
 )
@@ -48,16 +47,22 @@ const (
 )
 
 var (
-	clusterServers []ServerAddr
-	sharedCluster  *riak.Cluster
-	clusterMutex   sync.Mutex
-
+	clusterServers      []ServerAddr
+	sharedCluster       *riak.Cluster
+	clusterMutex        sync.Mutex
+	tlsOptions          *TLSOptions
 	healthCheckInterval time.Duration
 )
 
 type AuthOptions struct {
 	riak.AuthOptions
-	MaxTLSVersion *string
+	TLSVersions []string
+}
+
+type TLSOptions struct {
+	*tls.Config
+	TLSVersions  []uint16
+	VersionIndex int
 }
 
 // StorageCluster ...
@@ -87,26 +92,56 @@ func (ri RiakStorageCluster) Execute(command riak.Command) error {
 	return ri.Cluster.Execute(command)
 }
 
-func setMaxTLSVersion(riakConfig *AuthOptions) error {
-	if riakConfig.MaxTLSVersion == nil {
-		if riakConfig.TlsConfig.MaxVersion == 0 {
-			riakConfig.TlsConfig.MaxVersion = tls.VersionTLS11
+func rotateTLSVersion() {
+	length := len(tlsOptions.TLSVersions)
+	if length == 0 {
+		return
+	}
+	tlsOptions.VersionIndex += length - 1 // Adding the size of the array to guarantee positive values
+	tlsOptions.VersionIndex %= length
+	oldVersion := tlsOptions.MaxVersion
+	newVersion := tlsOptions.TLSVersions[tlsOptions.VersionIndex]
+	tlsOptions.MinVersion = newVersion
+	tlsOptions.MaxVersion = newVersion
+	log.Warnf(`Changed TLS version to %v from %v`, newVersion, oldVersion)
+}
+
+func setTLSVersion(riakConfig *AuthOptions) error {
+	enabledVersions := map[uint16]bool{}
+	for _, version := range []uint16{riakConfig.TlsConfig.MinVersion, riakConfig.TlsConfig.MaxVersion} {
+		if version >= tls.VersionTLS10 && version <= tls.VersionTLS13 {
+			enabledVersions[version] = true
 		}
-		return nil
 	}
-	tlsVersions := map[string]uint16{
-		"1.0": tls.VersionTLS10,
-		"1.1": tls.VersionTLS11,
-		"1.2": tls.VersionTLS12,
-		"1.3": tls.VersionTLS13,
+	if riakConfig.TLSVersions != nil && len(riakConfig.TLSVersions) != 0 {
+		availableVersions := map[string]uint16{
+			"1.0": tls.VersionTLS10,
+			"1.1": tls.VersionTLS11,
+			"1.2": tls.VersionTLS12,
+			"1.3": tls.VersionTLS13,
+		}
+		for _, version := range riakConfig.TLSVersions {
+			if version, exists := availableVersions[version]; exists {
+				enabledVersions[version] = true
+			} else {
+				return fmt.Errorf("%v is not a valid TLS version", version)
+			}
+		}
+	} else if len(enabledVersions) == 0 {
+		// Default TLS versions if none given
+		enabledVersions[tls.VersionTLS11] = true
+		enabledVersions[tls.VersionTLS10] = true
 	}
-	var err error
-	if version, exists := tlsVersions[*riakConfig.MaxTLSVersion]; exists {
-		riakConfig.TlsConfig.MaxVersion = version
-	} else {
-		err = fmt.Errorf("%v is not a valid TLS version", riakConfig.MaxTLSVersion)
+	// We initialize tlsOptions here
+	tlsOptions = &TLSOptions{Config: riakConfig.AuthOptions.TlsConfig, TLSVersions: make([]uint16, len(enabledVersions))}
+	index := 0
+	for version, _ := range enabledVersions {
+		tlsOptions.TLSVersions[index] = version
+		index++
 	}
-	return err
+	tlsOptions.VersionIndex = -1
+	rotateTLSVersion()
+	return nil
 }
 
 func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
@@ -123,7 +158,7 @@ func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
 	if err != nil {
 		return false, nil, fmt.Errorf("Unmarshaling riak conf '%v': %v", riakConfigFile, err)
 	}
-	setMaxTLSVersion(rconf)
+	setTLSVersion(rconf)
 
 	type config struct {
 		Hci string `json:"HealthCheckInterval"`
@@ -404,7 +439,9 @@ func Search(cluster StorageCluster, index string, query string, filterQuery stri
 	if err != nil {
 		return nil, errors.New("building Riak command: " + err.Error())
 	}
+
 	if err = cluster.Execute(iCmd); err != nil {
+		rotateTLSVersion()
 		return nil, errors.New("executing Riak command index '" + index + "' query '" + query + "': " + err.Error())
 	}
 	cmd, ok := iCmd.(*riak.SearchCommand)
