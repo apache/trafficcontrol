@@ -78,7 +78,7 @@ func checkForLeafMids(nodes *[]*tc.TopologyNode, cacheGroups *[]*tc.CacheGroupNu
 			isLeafMid[index] = false
 		}
 		for _, parentIndex := range (*node).Parents {
-			if ! isLeafMid[parentIndex] {
+			if !isLeafMid[parentIndex] {
 				continue
 			}
 			isLeafMid[parentIndex] = false

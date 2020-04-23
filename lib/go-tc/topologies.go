@@ -20,10 +20,10 @@ package tc
  */
 
 type Topology struct {
-	Description string         `json:"description" db:"description"`
-	Name        string         `json:"name" db:"name"`
+	Description string           `json:"description" db:"description"`
+	Name        string           `json:"name" db:"name"`
 	Nodes       *[]*TopologyNode `json:"nodes"`
-	LastUpdated *TimeNoMod     `json:"lastUpdated" db:"last_updated"`
+	LastUpdated *TimeNoMod       `json:"lastUpdated" db:"last_updated"`
 }
 
 type TopologyNode struct {
