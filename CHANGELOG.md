@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added ability to create multiple objects from generic API Create with a single POST.
 - Added debugging functionality to CDN-in-a-Box.
 - Added an SMTP server to CDN-in-a-Box.
+- Added the `"TLSVersions"` config option to Traffic Ops's `riak.conf` to optionally specify exactly which TLS versions should be used for communicating with Riak
 - Traffic Ops Golang Endpoints
   - /api/2.0 for all of the most recent route versions
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
