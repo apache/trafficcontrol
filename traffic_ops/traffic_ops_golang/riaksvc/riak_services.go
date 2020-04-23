@@ -55,7 +55,7 @@ var (
 	healthCheckInterval time.Duration
 )
 
-type TOAuthOptions struct {
+type AuthOptions struct {
 	riak.AuthOptions
 	MaxTLSVersion *string
 }
@@ -87,7 +87,7 @@ func (ri RiakStorageCluster) Execute(command riak.Command) error {
 	return ri.Cluster.Execute(command)
 }
 
-func setMaxTLSVersion(riakConfig *TOAuthOptions) error {
+func setMaxTLSVersion(riakConfig *AuthOptions) error {
 	if riakConfig.MaxTLSVersion == nil {
 		if riakConfig.TlsConfig.MaxVersion == 0 {
 			riakConfig.TlsConfig.MaxVersion = tls.VersionTLS11
@@ -117,7 +117,7 @@ func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
 
 	riakConfBytes := []byte(riakConfString)
 
-	rconf := &TOAuthOptions{}
+	rconf := &AuthOptions{}
 	rconf.TlsConfig = &tls.Config{}
 	err = json.Unmarshal(riakConfBytes, &rconf)
 	if err != nil {

@@ -250,7 +250,7 @@ func TestLoadConfig(t *testing.T) {
 		t.Error("expected blockStartup to be false but it was ", blockStartup)
 	}
 
-	expectedRiak := riaksvc.TOAuthOptions{AuthOptions: riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true, MaxVersion: tls.VersionTLS11}}}
+	expectedRiak := riaksvc.AuthOptions{AuthOptions: riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true, MaxVersion: tls.VersionTLS11}}}
 
 	if cfg.RiakAuthOptions.User != expectedRiak.User || cfg.RiakAuthOptions.Password != expectedRiak.Password || !reflect.DeepEqual(cfg.RiakAuthOptions.TlsConfig, expectedRiak.TlsConfig) {
 		t.Error(fmt.Printf("Error parsing riak conf expected: %++v but got: %++v\n", expectedRiak, cfg.RiakAuthOptions))

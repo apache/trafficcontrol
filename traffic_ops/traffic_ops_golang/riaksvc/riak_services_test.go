@@ -140,7 +140,7 @@ func TestDeleteObject(t *testing.T) {
 }
 
 func TestSetTLSVersion(t *testing.T) {
-	riakConfig := &TOAuthOptions{
+	riakConfig := &AuthOptions{
 		AuthOptions:   riak.AuthOptions{TlsConfig: &tls.Config{}},
 		MaxTLSVersion: nil,
 	}
