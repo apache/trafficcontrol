@@ -39,7 +39,22 @@ func TestDeliveryServices(t *testing.T) {
 		GetTestDeliveryServices(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
+		PostDeliveryServiceTest(t)
 	})
+}
+
+func PostDeliveryServiceTest(t *testing.T) {
+	ds := testData.DeliveryServices[0]
+	ds.XMLID = util.StrPtr("")
+	_, err := TOSession.CreateDeliveryServiceNullable(&ds)
+	if err == nil {
+		t.Fatal("Expected error with empty xmlid")
+	}
+	ds.XMLID = nil
+	_, err = TOSession.CreateDeliveryServiceNullable(&ds)
+	if err == nil {
+		t.Fatal("Expected error with nil xmlid")
+	}
 }
 
 func CreateTestDeliveryServices(t *testing.T) {

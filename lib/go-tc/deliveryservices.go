@@ -446,8 +446,11 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
 		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
 		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
-		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
+		"xmlId":               validation.Validate(ds.XMLID, validation.NotNil, noSpaces, noPeriods, validation.Length(1, 48)),
 	})
+	if ds.XMLID != nil && *ds.XMLID == "" {
+		errs = append(errs, errors.New("xmlId cannot be blank"))
+	}
 	if err := ds.validateTypeFields(tx); err != nil {
 		errs = append(errs, errors.New("type fields: "+err.Error()))
 	}
