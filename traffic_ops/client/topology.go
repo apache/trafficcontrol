@@ -103,7 +103,7 @@ func (to *Session) UpdateTopologyByID(id int, pl tc.Topology) (tc.Alerts, ReqInf
 	defer resp.Body.Close()
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
 
 // DeleteTopology deletes the given topology by name.
