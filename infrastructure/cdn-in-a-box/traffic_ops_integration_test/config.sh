@@ -45,7 +45,8 @@ cat <<-EOF >/opt/integration/app/traffic-ops-test.conf
         },
         "session": {
             "timeoutInSecs": 60
-        }
+        },
+        "includeSystemTests": true
     },
     "trafficOps": {
         "URL": "https://$TO_HOST:$TO_PORT",

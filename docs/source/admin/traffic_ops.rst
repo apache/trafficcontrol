@@ -341,7 +341,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	.. versionadded:: 4.1
 
-	:user_email: An optional email address to create an account with Let's Encrypt or to receive expiration updates
+	:user_email: A required email address to create an account with Let's Encrypt or to receive expiration updates. If this is not included then `rate limits <https://letsencrypt.org/docs/rate-limits>`_ may apply for the number of certificates.
 	:send_expiration_email: A boolean option to send email summarizing certificate expiration status
 	:convert_self_signed: A boolean option to convert self signed to Let's Encrypt certificates as they expire. This only works for certificates labeled as Self Signed in the Certificate Source field.
 	:renew_days_before_expiration: Set the number of days before expiration date to renew certificates.

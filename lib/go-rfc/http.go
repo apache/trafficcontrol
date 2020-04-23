@@ -35,6 +35,7 @@ const (
 	AcceptEncoding         = "Accept-Encoding"          // RFC7231§5.3.4
 	ContentDisposition     = "Content-Disposition"      // RFC6266
 	ApplicationOctetStream = "application/octet-stream" // RFC2046§4.5.2
+	Vary                   = "Vary"                     // RFC7231§7.1.4
 )
 
 // AcceptsGzip returns whether r accepts gzip encoding, per RFC7231§5.3.4.

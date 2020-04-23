@@ -59,6 +59,21 @@ while ! nc "$TO_PERL_FQDN" $TO_PERL_PORT </dev/null 2>/dev/null; do
         sleep 3
 done
 
+(
+maxtries=10
+for ((tries = 0; tries < maxtries; tries++)); do
+        if nc -zvw2 "$SMTP_FQDN" "$SMTP_PORT"; then
+          echo "${SMTP_FQDN}:${SMTP_PORT} was found."
+          break;
+        fi;
+        echo "waiting for ${SMTP_FQDN}:${SMTP_PORT}"
+        sleep 3
+done
+if (( tries == maxtries )); then
+  echo "SMTP service was not found at ${SMTP_FQDN}:${SMTP_PORT} after ${maxtries} tries. Skipping..."
+fi
+)
+
 cd /opt/traffic_ops/app
 
 CDNCONF=/opt/traffic_ops/app/conf/cdn.conf

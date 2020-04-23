@@ -17,7 +17,9 @@ package v2
 import (
 	"bytes"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"net/mail"
 	"strings"
 	"testing"
 	"time"
@@ -37,6 +39,10 @@ func TestUsers(t *testing.T) {
 		GetTestUsers(t)
 		GetTestUserCurrent(t)
 		UserTenancyTest(t)
+		if includeSystemTests {
+			// UserRegistrationTest deletes test users before registering new users, so it must come after the other user tests.
+			UserRegistrationTest(t)
+		}
 	})
 }
 
@@ -133,6 +139,33 @@ func OpsUpdateAdminTest(t *testing.T) {
 	_, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
 	if err == nil {
 		t.Error("ops user incorrectly updated an admin")
+	}
+}
+
+func UserRegistrationTest(t *testing.T) {
+	ForceDeleteTestUsers(t)
+	var emails []string
+	for _, user := range testData.Users {
+		tenant, _, err := TOSession.TenantByName(*user.Tenant)
+		if err != nil {
+			t.Fatalf("could not get tenant %v: %v", *user.Tenant, err)
+		}
+		resp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), uint(*user.Role), rfc.EmailAddress{mail.Address{Address: *user.Email}})
+		if err != nil {
+			t.Fatalf("could not register user: %v", err)
+		}
+		t.Log("Response: ", resp.Alerts)
+		emails = append(emails, fmt.Sprintf(`'%v'`, *user.Email))
+	}
+
+	db, err := OpenConnection()
+	if err != nil {
+		t.Error("cannot open db")
+	}
+	defer db.Close()
+	q := `DELETE FROM tm_user WHERE email IN (` + strings.Join(emails, ",") + `)`
+	if err := execSQL(db, q, "tm_user"); err != nil {
+		t.Errorf("cannot execute SQL to delete registered users: %s; SQL is %s", err.Error(), q)
 	}
 }
 

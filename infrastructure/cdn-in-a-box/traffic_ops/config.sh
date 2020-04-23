@@ -136,10 +136,10 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     },
     "inactivity_timeout" : 60,
     "smtp" : {
-        "enabled" : false,
+        "enabled" : true,
         "user" : "",
         "password" : "",
-        "address" : ""
+        "address" : "${SMTP_FQDN}:${SMTP_PORT}"
     },
     "InfluxEnabled": true,
     "influxdb_conf_path": "/opt/traffic_ops/app/conf/production/influx.conf",
