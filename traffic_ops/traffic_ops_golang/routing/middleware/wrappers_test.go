@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 
@@ -62,11 +63,12 @@ func TestWrapHeaders(t *testing.T) {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
 
-	expected := map[string]http.Header{
+	expected := map[string][]string{
 		"Access-Control-Allow-Credentials": nil,
 		"Access-Control-Allow-Headers":     nil,
 		"Access-Control-Allow-Methods":     nil,
 		"Access-Control-Allow-Origin":      nil,
+		rfc.Vary:                           {rfc.AcceptEncoding},
 		"Content-Type":                     nil,
 		"Whole-Content-Sha512":             nil,
 		"X-Server-Name":                    nil,
@@ -79,6 +81,8 @@ func TestWrapHeaders(t *testing.T) {
 	for k := range expected {
 		if _, ok := m[k]; !ok {
 			t.Error("Expected header", k, "not found")
+		} else if len(expected[k]) > 0 && !reflect.DeepEqual(expected[k], m[k]) {
+			t.Errorf("expected: %v, actual: %v", expected[k], m[k])
 		}
 	}
 }
