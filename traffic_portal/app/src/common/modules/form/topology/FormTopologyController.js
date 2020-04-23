@@ -103,6 +103,10 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
+	$scope.viewDeliveryServices = function() {
+		$location.path('/topologies/delivery-services');
+	};
+
 	$scope.nodeLabel = function(node) {
 		return node.cachegroup || 'TOPOLOGY';
 	};

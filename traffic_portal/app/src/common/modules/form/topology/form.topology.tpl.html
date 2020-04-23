@@ -23,6 +23,9 @@ under the License.
             <li><a ng-click="navigateToPath('/topologies')">Topologies</a></li>
             <li class="active">{{topologyName}}</li>
         </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-primary" title="View Delivery Services" ng-click="viewDeliveryServices(topology)">View Delivery Services</button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
