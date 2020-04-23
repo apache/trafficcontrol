@@ -86,11 +86,11 @@ Traffic Monitor log files are in :file:`/opt/traffic_monitor/var/log/`.
 
 Extensions
 ==========
-Traffic Monitor allows extensions to its parsers for the statistics returned by :term:`cache servers` and/or their plugins. The formats supported by Traffic Monitor by default are ``astats``, ``astats-dsnames`` (which is an odd variant of ``astats`` that probably shouldn't be used), and ``stats_over_http``. The format of a :term:`cache server`'s health and statistics reporting payloads must be declared on its :term:`Profile` as the :ref:`param-health-polling-format` :term:`Parameter`, or the default format (``astats``) will be assumed.
+Traffic Monitor allows extensions to its parsers for the statistics returned by :term:`cache servers` and/or their plugins. The formats supported by Traffic Monitor by default are ``astats``, ``astats-dsnames`` (which is an odd variant of ``astats`` that probably shouldn't be used), and ``stats_over_http``. The format of a :term:`cache server`'s health and statistics reporting payloads must be declared on its :term:`Profile` as the :ref:`health.polling.format <param-health-polling-format>` :term:`Parameter`, or the default format (``astats``) will be assumed.
 
 For instructions on how to develop a parsing extension, refer to the :atc-godoc:`traffic_monitor/cache` package's documentation.
 
-Importantly, though, a statistics provider *must* respond to HTTP GET requests over either plain HTTP or HTTPS (which is used will be controlled by the :ref:`param-health-polling-url` :term:`Parameter`), and it *must* provide the following statistics, or enough information to calculate them:
+Importantly, though, a statistics provider *must* respond to HTTP GET requests over either plain HTTP or HTTPS (which is used will be controlled by the :ref:`health.polling.url <param-health-polling-url>` :term:`Parameter`), and it *must* provide the following statistics, or enough information to calculate them:
 
 - System "loadavg" (only requires the one-minute value)
 
