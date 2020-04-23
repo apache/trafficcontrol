@@ -518,7 +518,7 @@ This file sets authentication options for connections to Traffic Vault. `traffic
 
 :password:      The password to use when authenticating with Traffic Vault
 :user:          The username to use when authenticating with Traffic Vault
-:MaxTLSVersion: Optional. This is the highest TLS version that Traffic Ops is allowed to use to connect to Traffic Vault. Valid values are "1.0", "1.1", "1.2", and "1.3". The default is "1.1".
+:TLSVersions:   Optional. This is an array of TLS versions that Traffic Ops will use to try to connect to Traffic Vault. If querying Traffic Vault fails using one version, it will try the next listed version next time (starting at the beginning of the list if it hits the end). Valid versions are ``"1.0"``, ``"1.1"``, ``"1.2"``, and ``"1.3"``.
 
 .. note:: Enabling TLS 1.1 in Traffic Vault itself is required for Traffic Ops to communicate with Traffic Vault. See :ref:`Enabling TLS 1.1 <tv-admin-enable-tlsv1.1>` for details.
 
