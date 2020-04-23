@@ -23,6 +23,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -139,31 +140,56 @@ func TestDeleteObject(t *testing.T) {
 	}
 }
 
-func TestSetTLSVersion(t *testing.T) {
+func TestRotateTLSVersion(t *testing.T) {
 	riakConfig := &AuthOptions{
-		AuthOptions:   riak.AuthOptions{TlsConfig: &tls.Config{}},
-		MaxTLSVersion: nil,
+		AuthOptions: riak.AuthOptions{TlsConfig: &tls.Config{}},
+		TLSVersions: []string{},
 	}
-	validVersion := "1.1"
-	riakConfig.MaxTLSVersion = &validVersion
-	if err := setMaxTLSVersion(riakConfig); err != nil {
+	expected := []uint16{tls.VersionTLS11, tls.VersionTLS10}
+	if err := setTLSVersion(riakConfig); err != nil {
 		t.Error("expected nil but got ", err)
 	}
-	if riakConfig.TlsConfig.MaxVersion != tls.VersionTLS11 {
-		t.Errorf("expected the TlsConfig's max version to be set to %v, but instead got %v.", tls.VersionTLS11, riakConfig.TlsConfig.MaxVersion)
+	if !reflect.DeepEqual(expected, tlsOptions.TLSVersions) {
+		t.Errorf("Expected the default enabled TLS versions to be %v, instead got %v", expected, tlsOptions.TLSVersions)
+	}
+
+	rotateTLSVersion()
+	if riakConfig.TlsConfig.MaxVersion != tls.VersionTLS10 || riakConfig.TlsConfig.MinVersion != tls.VersionTLS10 {
+		t.Errorf("after TLS version rotation, expected the TlsConfig's max and min versions to be set to %v, but instead got %v and %v.", tls.VersionTLS10, riakConfig.TlsConfig.MaxVersion, riakConfig.TlsConfig.MinVersion)
+	}
+	rotateTLSVersion()
+	if riakConfig.TlsConfig.MaxVersion != tls.VersionTLS11 || riakConfig.TlsConfig.MinVersion != tls.VersionTLS11 {
+		t.Errorf("after 2 rotations on a TLS versions array of size 2, expected the TlsConfig's max and min versions to be set to %v, but instead got %v and %v.", tls.VersionTLS11, riakConfig.TlsConfig.MaxVersion, riakConfig.TlsConfig.MinVersion)
+	}
+}
+
+func TestSetTLSVersion(t *testing.T) {
+	validVersion := "1.1"
+	riakConfig := &AuthOptions{
+		AuthOptions: riak.AuthOptions{TlsConfig: &tls.Config{}},
+		TLSVersions: []string{validVersion},
+	}
+	if err := setTLSVersion(riakConfig); err != nil {
+		t.Error("expected nil err when setting the TLS version using a valid version but got ", err)
+	}
+	if riakConfig.TlsConfig.MaxVersion != tls.VersionTLS11 || riakConfig.TlsConfig.MinVersion != tls.VersionTLS11 {
+		t.Errorf("expected the TlsConfig's max and min versions to be set to %v, but instead got %v and %v.", tls.VersionTLS11, riakConfig.TlsConfig.MaxVersion, riakConfig.TlsConfig.MinVersion)
 	}
 
 	invalidVersion := "1.a"
-	riakConfig.MaxTLSVersion = &invalidVersion
-	if err := setMaxTLSVersion(riakConfig); err == nil {
+	riakConfig.TLSVersions = []string{validVersion, invalidVersion}
+	if err := setTLSVersion(riakConfig); err == nil {
 		t.Error("expected error due to an invalid TLS version but got no error.")
 	}
 
 	riakConfig.TlsConfig.MaxVersion = 0
-	riakConfig.MaxTLSVersion = nil
-	_ = setMaxTLSVersion(riakConfig)
-	if riakConfig.TlsConfig.MaxVersion != tls.VersionTLS11 {
-		t.Errorf("by default, expected the TlsConfig's max version to be set to %v, but instead got %v.", tls.VersionTLS11, riakConfig.TlsConfig.MaxVersion)
+	riakConfig.TlsConfig.MinVersion = 0
+	riakConfig.TLSVersions = nil
+	if err := setTLSVersion(riakConfig); err != nil {
+		t.Error("expected nil err when setting the TLS version using an empty TLS versions array but got ", err)
+	}
+	if riakConfig.TlsConfig.MaxVersion != tls.VersionTLS11 || riakConfig.TlsConfig.MinVersion != tls.VersionTLS11 {
+		t.Errorf("expected the TlsConfig's max and min versions to be set to %v by default, but instead got %v and %v.", tls.VersionTLS11, riakConfig.TlsConfig.MaxVersion, riakConfig.TlsConfig.MinVersion)
 	}
 
 }

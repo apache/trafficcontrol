@@ -23,7 +23,6 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
 	"io/ioutil"
 	"os"
@@ -162,12 +161,14 @@ const (
 	   {
 	       "user": "riakuser",
 	       "password": "password",
-	       "MaxTLSVersion": "1.1",
+	       "TLSVersions": [
+	            "1.1",
+	            "1.0"
+	       ],
 	       "tlsConfig": {
 	           "insecureSkipVerify": true
 	       }
-	   }
-	   	`
+	   }`
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -250,9 +251,13 @@ func TestLoadConfig(t *testing.T) {
 		t.Error("expected blockStartup to be false but it was ", blockStartup)
 	}
 
-	expectedRiak := riaksvc.AuthOptions{AuthOptions: riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true, MaxVersion: tls.VersionTLS11}}}
+	expectedRiak := riak.AuthOptions{
+		User:      "riakuser",
+		Password:  "password",
+		TlsConfig: &tls.Config{InsecureSkipVerify: true, MaxVersion: tls.VersionTLS11, MinVersion: tls.VersionTLS11},
+	}
 
-	if cfg.RiakAuthOptions.User != expectedRiak.User || cfg.RiakAuthOptions.Password != expectedRiak.Password || !reflect.DeepEqual(cfg.RiakAuthOptions.TlsConfig, expectedRiak.TlsConfig) {
+	if cfg.RiakAuthOptions.User != expectedRiak.User || cfg.RiakAuthOptions.Password != expectedRiak.Password || !reflect.DeepEqual(expectedRiak.TlsConfig, cfg.RiakAuthOptions.TlsConfig) {
 		t.Error(fmt.Printf("Error parsing riak conf expected: %++v but got: %++v\n", expectedRiak, cfg.RiakAuthOptions))
 	}
 
