@@ -90,7 +90,7 @@ Traffic Monitor allows extensions to its parsers for the statistics returned by 
 
 For instructions on how to develop a parsing extension, refer to the :atc-godoc:`traffic_monitor/cache` package's documentation.
 
-Importantly, though, a statistics provider *must* respond to HTTP GET requests over either plain HTTP or HTTPS (which is used will be controlled by the :ref:`health.polling.url <param-health-polling-url>` :term:`Parameter`), and it *must* provide the following statistics, or enough information to calculate them:
+Importantly, though, a statistics provider *must* respond to HTTP GET requests over either plain HTTP or HTTPS (which is controlled by the :ref:`health.polling.url <param-health-polling-url>` :term:`Parameter`), and it *must* provide the following statistics, or enough information to calculate them:
 
 - System "loadavg" (only requires the one-minute value)
 
