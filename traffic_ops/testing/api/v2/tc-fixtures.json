@@ -2572,6 +2572,32 @@
             "type": "STEERING_WEIGHT"
         }
     ],
+    "jobs": [
+        {
+            "dsName": "ds1",
+            "request": {
+                "startTime": "2019-01-01 00:00:00",
+                "ttl": 80,
+                "regex": "/foo"
+            }
+        },
+        {
+            "dsName": "ds2",
+            "request": {
+                "startTime": "2019-01-01 00:00:00",
+                "ttl": 80,
+                "regex": "/bar"
+            }
+        },
+        {
+            "dsName": "ds1",
+            "request": {
+                "startTime": "2019-01-01 00:00:00",
+                "ttl": 80,
+                "regex": "/foo"
+            }
+        }
+    ],
     "servercheck_extensions": [
         {
             "name": "ILO_PING",
