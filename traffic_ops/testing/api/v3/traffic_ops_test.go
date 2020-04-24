@@ -1,5 +1,5 @@
 // Package v2 provides tests for the Traffic Ops API.
-package v2
+package v3
 
 /*
 

@@ -13,7 +13,7 @@
    limitations under the License.
 */
 
-package v2
+package v3
 
 import (
 	"strings"
