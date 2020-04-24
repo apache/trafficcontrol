@@ -30,7 +30,7 @@ my $usage = "\n"
 	. "\nFlags:   \n\n"
 	. "--gpg-key          - Your gpg-key id. ie: 774ACED1\n"
 	. "--release-no       - The release-no name you want to cut. ie: 1.1.0\n"
-	. "--git-hash         - (optional) The git hash that will be used to reference the release. ie: da4aab57d \n"
+	. "--git-short-hash   - (optional) The git hash that will be used to reference the release. ie: da4aab57d \n"
 	. "--git-remote-url   - (optional) Overrides the git repo URL where the release will be pulled and sent (mostly for testing). ie: git\@github.com:yourrepo/trafficcontrol.git \n"
 	. "--dry-run          - (optional) Simulation mode which will NOT apply any changes. \n"
 	. "--debug            - (optional) Show debug output\n"
@@ -251,14 +251,14 @@ sub add_official_remote {
 
 sub cut_new_release {
 
-	publish_version_file( "master", $next_version );
-
 	print "Creating new branch\n";
 	my $cmd = "git checkout -b " . $new_branch;
 	my $rc  = run_command($cmd);
 	if ( $rc > 0 ) {
 		print "Failed to checkout new branch" . $cmd . "\n";
 	}
+
+	publish_version_file( "master", $next_version );
 
 }
 
