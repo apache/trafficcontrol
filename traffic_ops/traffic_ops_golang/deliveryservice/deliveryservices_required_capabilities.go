@@ -49,6 +49,11 @@ type RequiredCapability struct {
 	tc.DeliveryServicesRequiredCapability
 }
 
+func (v *RequiredCapability) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                            //{ return selectMaxLastUpdatedQuery() }
+func (v *RequiredCapability) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+
 // SetLastUpdated implements the api.GenericCreator interfaces and
 // sets the timestamp on insert.
 func (rc *RequiredCapability) SetLastUpdated(t tc.TimeNoMod) { rc.LastUpdated = &t }
@@ -166,7 +171,7 @@ func (rc *RequiredCapability) Update() (error, error, int) {
 }
 
 // Read implements the api.CRUDer interface.
-func (rc *RequiredCapability) Read() ([]interface{}, error, error, int) {
+func (rc *RequiredCapability) Read(http.Header) ([]interface{}, error, error, int) {
 	tenantIDs, err := rc.getTenantIDs()
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError

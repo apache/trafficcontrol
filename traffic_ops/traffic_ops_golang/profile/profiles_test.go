@@ -103,7 +103,7 @@ func TestGetProfiles(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.ProfileNullable{},
 	}
-	profiles, userErr, sysErr, _ := obj.Read()
+	profiles, userErr, sysErr, _ := obj.Read(nil)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}

@@ -125,10 +125,13 @@ func (ssc *TOServerServerCapability) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 
-func (ssc *TOServerServerCapability) Read() ([]interface{}, error, error, int) {
-	return api.GenericRead(ssc)
+func (ssc *TOServerServerCapability) Read(http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(nil, ssc)
 }
-
+func (v *TOServerServerCapability) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                                  //{ return selectMaxLastUpdatedQuery() }
+func (v *TOServerServerCapability) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {
 	// Ensure that the user is not removing a server capability from the server
 	// that is required by the delivery services the server is assigned to (if applicable)

@@ -20,14 +20,23 @@ package api
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
+
+type LatestTimestamp struct {
+	//ID          *int       `json:"id" db:"id"`
+	LatestTime *tc.TimeNoMod `json:"latestTime" db:"max"`
+}
 
 type GenericCreator interface {
 	GetType() string
@@ -43,6 +52,7 @@ type GenericReader interface {
 	ParamColumns() map[string]dbhelpers.WhereColumnInfo
 	NewReadObj() interface{}
 	SelectQuery() string
+	SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, where2 string, orderBy2 string, pagination2 string) string
 }
 
 type GenericUpdater interface {
@@ -56,6 +66,7 @@ type GenericDeleter interface {
 	GetType() string
 	APIInfo() *APIInfo
 	DeleteQuery() string
+	InsertIntoDeletedQuery() string
 }
 
 // GenericOptionsDeleter can use any key listed in DeleteKeyOptions() to delete a resource.
@@ -117,13 +128,86 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 	val.SetLastUpdated(lastUpdated)
 	return nil, nil, http.StatusOK
 }
+func SrijeetParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"name":       dbhelpers.WhereColumnInfo{"dtyp.name", nil},
+		"id":         dbhelpers.WhereColumnInfo{"dtyp.id", IsInt},
+		"useInTable": dbhelpers.WhereColumnInfo{"dtyp.use_in_table", nil},
+	}
+}
 
-func GenericRead(val GenericReader) ([]interface{}, error, error, int) {
+func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orderBy string, pagination string, queryValues map[string]interface{}) bool {
+	ims := []string{}
+	runSecond := true
+	if h == nil {
+		return runSecond
+	}
+	ims = h[rfc.IfModifiedSince]
+	if ims == nil || len(ims) == 0 {
+		return runSecond
+	}
+	if l, ok := web.ParseHTTPDate(ims[0]); !ok {
+		return runSecond
+	} else {
+		query := ""
+		where2, orderBy2, pagination2, queryValues2, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, SrijeetParamColumns())
+		query = val.SelectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2)
+		for k, v := range queryValues2 {
+			queryValues[k] = v
+		}
+		if len(errs) > 0 {
+			return runSecond
+		}
+		//query =
+		//	`SELECT max(t) from (
+		//		SELECT max(last_updated) as t from type typ ` + where + orderBy + pagination +
+		//		` UNION ALL
+		//	select max(deleted_time) as t from deleted_type dtyp ` + where2 + orderBy2 + pagination2 +
+		//		` ) as res`
+
+		rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
+		if err != nil {
+			log.Warnf("Couldn't get the max last updated time: %v", err)
+			return runSecond
+		}
+		if err == sql.ErrNoRows {
+			runSecond = false
+			return runSecond
+		}
+
+		// This should only ever contain one row
+		if rows.Next() {
+			v := &LatestTimestamp{}
+			if err = rows.StructScan(v); err != nil || v == nil {
+				log.Warnf("Failed to parse the max time stamp into a struct %v", err)
+				return runSecond
+			}
+			// The request IMS time is later than the max of (lastUpdated, deleted_time)
+			if l.After(v.LatestTime.Time) {
+				runSecond = false
+				return runSecond
+			}
+		} else {
+			runSecond = false
+		}
+		defer rows.Close()
+	}
+	return runSecond
+}
+
+func GenericRead(h http.Header, val GenericReader) ([]interface{}, error, error, int) {
+	vals := []interface{}{}
+	code := http.StatusOK
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
-
+	runSecond := MakeFirstQuery(val, h, where, orderBy, pagination, queryValues)
+	if !runSecond {
+		code = http.StatusNotModified
+		return vals, nil, nil, code
+	}
+	// Case where we need to run the second query
 	query := val.SelectQuery() + where + orderBy + pagination
 	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
@@ -131,7 +215,6 @@ func GenericRead(val GenericReader) ([]interface{}, error, error, int) {
 	}
 	defer rows.Close()
 
-	vals := []interface{}{}
 	for rows.Next() {
 		v := val.NewReadObj()
 		if err = rows.StructScan(v); err != nil {
@@ -139,7 +222,7 @@ func GenericRead(val GenericReader) ([]interface{}, error, error, int) {
 		}
 		vals = append(vals, v)
 	}
-	return vals, nil, nil, http.StatusOK
+	return vals, nil, nil, code
 }
 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.
@@ -191,6 +274,15 @@ func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+func InsertInDeletedTable(val GenericDeleter) (error, error, int) {
+	_, err := val.APIInfo().Tx.NamedExec(val.InsertIntoDeletedQuery(), val)
+	if err != nil {
+		fmt.Println("DB ERROR!!! ", err)
+		return ParseDBError(err)
+	}
+	return nil, nil, http.StatusOK
+}
+
 // GenericDelete does a Delete (DELETE) for the given GenericDeleter object and type. This exists as a generic function, for the common use case of a simple delete with query parameters defined in the sqlx struct tags.
 func GenericDelete(val GenericDeleter) (error, error, int) {
 	result, err := val.APIInfo().Tx.NamedExec(val.DeleteQuery(), val)
@@ -205,5 +297,5 @@ func GenericDelete(val GenericDeleter) (error, error, int) {
 	} else if rowsAffected > 1 {
 		return nil, fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
 	}
-	return nil, nil, http.StatusOK
+	return InsertInDeletedTable(val)
 }

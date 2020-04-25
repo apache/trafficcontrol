@@ -42,9 +42,11 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
-func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TODeliveryServiceRequest) InsertQuery() string           { return insertRequestQuery() }
-func (v *TODeliveryServiceRequest) UpdateQuery() string           { return updateRequestQuery() }
+func (v *TODeliveryServiceRequest) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
+func (v *TODeliveryServiceRequest) InsertIntoDeletedQuery() string    { return "" } //{return insertIntoDeletedQuery()}
+func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod)     { v.LastUpdated = &t }
+func (v *TODeliveryServiceRequest) InsertQuery() string               { return insertRequestQuery() }
+func (v *TODeliveryServiceRequest) UpdateQuery() string               { return updateRequestQuery() }
 func (v *TODeliveryServiceRequest) DeleteQuery() string {
 	return `DELETE FROM deliveryservice_request WHERE id = :id`
 }
@@ -76,7 +78,7 @@ func (req TODeliveryServiceRequest) GetType() string {
 }
 
 // Read implements the api.Reader interface
-func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
+func (req *TODeliveryServiceRequest) Read(http.Header) ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
 		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},

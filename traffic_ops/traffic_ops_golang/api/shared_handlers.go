@@ -152,11 +152,12 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		results, userErr, sysErr, errCode := obj.Read(r.Header)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
+		w.WriteHeader(errCode)
 		WriteResp(w, r, results)
 	}
 }
@@ -187,7 +188,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		results, userErr, sysErr, errCode := obj.Read(r.Header)
 		if userErr != nil || sysErr != nil {
 			userErr = LogErr(r, http.StatusInternalServerError, userErr, sysErr)
 			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))

@@ -51,7 +51,7 @@ func (cgunparam *TOCacheGroupUnassignedParameter) GetType() string {
 	return "cachegroup_unassigned_params"
 }
 
-func (cgunparam *TOCacheGroupUnassignedParameter) Read() ([]interface{}, error, error, int) {
+func (cgunparam *TOCacheGroupUnassignedParameter) Read(http.Header) ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := cgunparam.ParamColumns()
 	parameters := cgunparam.APIInfo().Params
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)

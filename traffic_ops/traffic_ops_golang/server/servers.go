@@ -50,10 +50,12 @@ type TOServer struct {
 	tc.ServerNullable
 }
 
-func (s *TOServer) SetLastUpdated(t tc.TimeNoMod) { s.LastUpdated = &t }
-func (*TOServer) InsertQuery() string             { return insertQuery() }
-func (*TOServer) UpdateQuery() string             { return updateQuery() }
-func (*TOServer) DeleteQuery() string             { return deleteQuery() }
+func (v *TOServer) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
+func (v *TOServer) InsertIntoDeletedQuery() string    { return "" } //{return insertIntoDeletedQuery()}
+func (s *TOServer) SetLastUpdated(t tc.TimeNoMod)     { s.LastUpdated = &t }
+func (*TOServer) InsertQuery() string                 { return insertQuery() }
+func (*TOServer) UpdateQuery() string                 { return updateQuery() }
+func (*TOServer) DeleteQuery() string                 { return deleteQuery() }
 
 func (TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
@@ -197,7 +199,7 @@ func (s TOServer) ChangeLogMessage(action string) (string, error) {
 	return message, nil
 }
 
-func (s *TOServer) Read() ([]interface{}, error, error, int) {
+func (s *TOServer) Read(http.Header) ([]interface{}, error, error, int) {
 	version := s.APIInfo().Version
 	if version == nil {
 		return nil, nil, errors.New("TOServer.Read called with nil API version"), http.StatusInternalServerError

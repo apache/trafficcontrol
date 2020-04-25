@@ -56,8 +56,12 @@ type TOParameter struct {
 func (v *TOParameter) AllowMultipleCreates() bool    { return true }
 func (v *TOParameter) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOParameter) InsertQuery() string           { return insertQuery() }
-func (v *TOParameter) NewReadObj() interface{}       { return &tc.ParameterNullable{} }
-func (v *TOParameter) SelectQuery() string           { return selectQuery() }
+func (v *TOParameter) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                     //{ return selectMaxLastUpdatedQuery() }
+func (v *TOParameter) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOParameter) NewReadObj() interface{}        { return &tc.ParameterNullable{} }
+func (v *TOParameter) SelectQuery() string            { return selectQuery() }
 func (v *TOParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		ConfigFileQueryParam: dbhelpers.WhereColumnInfo{"p.config_file", nil},
@@ -121,7 +125,7 @@ func (pa *TOParameter) Create() (error, error, int) {
 	return api.GenericCreate(pa)
 }
 
-func (param *TOParameter) Read() ([]interface{}, error, error, int) {
+func (param *TOParameter) Read(http.Header) ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := param.ParamColumns()
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(param.APIInfo().Params, queryParamsToQueryCols)
 	if len(errs) > 0 {

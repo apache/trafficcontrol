@@ -49,6 +49,8 @@ type TODeliveryService struct {
 	tc.DeliveryServiceNullable
 }
 
+func (v *TODeliveryService) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
+func (v *TODeliveryService) InsertIntoDeletedQuery() string    { return "" } //{return insertIntoDeletedQuery()}
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ds.DeliveryServiceNullable)
 }
@@ -403,7 +405,7 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 	return c, nil
 }
 
-func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
+func (ds *TODeliveryService) Read(http.Header) ([]interface{}, error, error, int) {
 	version := ds.APIInfo().Version
 	if version == nil {
 		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError

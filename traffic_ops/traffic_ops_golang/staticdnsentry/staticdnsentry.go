@@ -20,6 +20,7 @@ package staticdnsentry
  */
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -115,11 +116,16 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (en *TOStaticDNSEntry) Read() ([]interface{}, error, error, int) { return api.GenericRead(en) }
-func (en *TOStaticDNSEntry) Create() (error, error, int)              { return api.GenericCreate(en) }
-func (en *TOStaticDNSEntry) Update() (error, error, int)              { return api.GenericUpdate(en) }
-func (en *TOStaticDNSEntry) Delete() (error, error, int)              { return api.GenericDelete(en) }
-
+func (en *TOStaticDNSEntry) Read(http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(nil, en)
+}
+func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
+func (en *TOStaticDNSEntry) Update() (error, error, int) { return api.GenericUpdate(en) }
+func (en *TOStaticDNSEntry) Delete() (error, error, int) { return api.GenericDelete(en) }
+func (v *TOStaticDNSEntry) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                          //{ return selectMaxLastUpdatedQuery() }
+func (v *TOStaticDNSEntry) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
 func insertQuery() string {
 	query := `INSERT INTO staticdnsentry (
 address,

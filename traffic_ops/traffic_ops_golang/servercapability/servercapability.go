@@ -25,6 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -100,6 +101,12 @@ func (v *TOServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (v *TOServerCapability) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
-func (v *TOServerCapability) Create() (error, error, int)              { return api.GenericCreateNameBasedID(v) }
-func (v *TOServerCapability) Delete() (error, error, int)              { return api.GenericDelete(v) }
+func (v *TOServerCapability) Read(http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(nil, v)
+}
+func (v *TOServerCapability) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                            //{ return selectMaxLastUpdatedQuery() }
+func (v *TOServerCapability) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOServerCapability) Create() (error, error, int)    { return api.GenericCreateNameBasedID(v) }
+func (v *TOServerCapability) Delete() (error, error, int)    { return api.GenericDelete(v) }

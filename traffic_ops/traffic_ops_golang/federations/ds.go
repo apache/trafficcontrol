@@ -122,8 +122,12 @@ type TOFedDSes struct {
 	tc.FederationDeliveryServiceNullable
 }
 
-func (v *TOFedDSes) NewReadObj() interface{} { return &tc.FederationDeliveryServiceNullable{} }
-func (v *TOFedDSes) SelectQuery() string     { return selectQuery() }
+func (v *TOFedDSes) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                   //{ return selectMaxLastUpdatedQuery() }
+func (v *TOFedDSes) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOFedDSes) NewReadObj() interface{}        { return &tc.FederationDeliveryServiceNullable{} }
+func (v *TOFedDSes) SelectQuery() string            { return selectQuery() }
 func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"id":   dbhelpers.WhereColumnInfo{"fds.federation", api.IsInt},
@@ -159,7 +163,9 @@ func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	}
 }
 
-func (v *TOFedDSes) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
+func (v *TOFedDSes) Read(http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(nil, v)
+}
 
 func (v *TOFedDSes) Delete() (error, error, int) {
 	dsIDStr, ok := v.APIInfo().Params["dsID"]

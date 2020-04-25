@@ -45,6 +45,10 @@ func (v *TOType) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOType) InsertQuery() string           { return insertQuery() }
 func (v *TOType) NewReadObj() interface{}       { return &tc.TypeNullable{} }
 func (v *TOType) SelectQuery() string           { return selectQuery() }
+func (v *TOType) SelectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2 string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2)
+}
+func (v *TOType) InsertIntoDeletedQuery() string { return insertIntoDeletedQuery() }
 func (v *TOType) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":       dbhelpers.WhereColumnInfo{"typ.name", nil},
@@ -98,7 +102,9 @@ func (typ *TOType) Validate() error {
 	return nil
 }
 
-func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
+func (tp *TOType) Read(h http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(h, tp)
+}
 
 func (tp *TOType) Update() (error, error, int) {
 	if !tp.AllowMutation(false) {
@@ -156,6 +162,32 @@ func (tp *TOType) loadUseInTable() (error, error, string) {
 	}
 
 	return nil, nil, useInTable
+}
+
+func selectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2 string) string {
+	//	return `SELECT max(t) from (
+	//SELECT max(last_updated) as t from type typ
+	//UNION ALL
+	//select max(deleted_time) as t from deleted_type dtyp
+	//) as res`
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from type typ ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(deleted_time) as t from deleted_type dtyp ` + where2 + orderBy2 + pagination2 +
+		` ) as res`
+}
+
+func insertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_type (
+id,
+name,
+description,
+use_in_table) VALUES (
+:id,
+:name,
+:description,
+:use_in_table) RETURNING deleted_time`
+	return query
 }
 
 func selectQuery() string {

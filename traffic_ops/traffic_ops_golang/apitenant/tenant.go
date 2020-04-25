@@ -48,7 +48,11 @@ type TOTenant struct {
 
 func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOTenant) InsertQuery() string           { return insertQuery() }
-func (v *TOTenant) NewReadObj() interface{}       { return &tc.TenantNullable{} }
+func (v *TOTenant) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                  //{ return selectMaxLastUpdatedQuery() }
+func (v *TOTenant) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOTenant) NewReadObj() interface{}        { return &tc.TenantNullable{} }
 func (v *TOTenant) SelectQuery() string {
 	return selectQuery(v.APIInfo().User.TenantID)
 }
@@ -122,12 +126,12 @@ func (ten TOTenant) Validate() error {
 
 func (tn *TOTenant) Create() (error, error, int) { return api.GenericCreate(tn) }
 
-func (ten *TOTenant) Read() ([]interface{}, error, error, int) {
+func (ten *TOTenant) Read(http.Header) ([]interface{}, error, error, int) {
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
 		return nil, nil, nil, http.StatusOK
 	}
 
-	tenants, userErr, sysErr, errCode := api.GenericRead(ten)
+	tenants, userErr, sysErr, errCode := api.GenericRead(nil, ten)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}

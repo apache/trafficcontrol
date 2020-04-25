@@ -86,7 +86,7 @@ func TestReadCDNs(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.CDNNullable{},
 	}
-	cdns, userErr, sysErr, _ := obj.Read()
+	cdns, userErr, sysErr, _ := obj.Read(nil)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}

@@ -52,6 +52,8 @@ type TOCacheGroupParameter struct {
 	CacheGroupID int `json:"-" db:"cachegroup_id"`
 }
 
+func (v *TOCacheGroupParameter) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
+func (v *TOCacheGroupParameter) InsertIntoDeletedQuery() string    { return "" } //{return insertIntoDeletedQuery()}
 func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		CacheGroupIDQueryParam: dbhelpers.WhereColumnInfo{"cgp.cachegroup", api.IsInt},
@@ -63,7 +65,7 @@ func (cgparam *TOCacheGroupParameter) GetType() string {
 	return "cachegroup parameter"
 }
 
-func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) {
+func (cgparam *TOCacheGroupParameter) Read(http.Header) ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := cgparam.ParamColumns()
 	parameters := cgparam.APIInfo().Params
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)

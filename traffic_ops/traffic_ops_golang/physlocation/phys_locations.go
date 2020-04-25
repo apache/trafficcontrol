@@ -20,6 +20,7 @@ package physlocation
  */
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -98,15 +99,19 @@ func (pl *TOPhysLocation) Validate() error {
 	return nil
 }
 
-func (pl *TOPhysLocation) Read() ([]interface{}, error, error, int) {
+func (pl *TOPhysLocation) Read(http.Header) ([]interface{}, error, error, int) {
 	if _, ok := pl.APIInfo().Params["orderby"]; !ok {
 		pl.APIInfo().Params["orderby"] = "name"
 	}
-	return api.GenericRead(pl)
+	return api.GenericRead(nil, pl)
 }
-func (pl *TOPhysLocation) Update() (error, error, int) { return api.GenericUpdate(pl) }
-func (pl *TOPhysLocation) Create() (error, error, int) { return api.GenericCreate(pl) }
-func (pl *TOPhysLocation) Delete() (error, error, int) { return api.GenericDelete(pl) }
+func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                        //{ return selectMaxLastUpdatedQuery() }
+func (v *TOPhysLocation) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (pl *TOPhysLocation) Update() (error, error, int)   { return api.GenericUpdate(pl) }
+func (pl *TOPhysLocation) Create() (error, error, int)   { return api.GenericCreate(pl) }
+func (pl *TOPhysLocation) Delete() (error, error, int)   { return api.GenericDelete(pl) }
 
 func selectQuery() string {
 	return `

@@ -46,7 +46,11 @@ type TOUsers struct {
 	tc.FederationUser
 }
 
-func (v *TOUsers) NewReadObj() interface{} { return &tc.FederationUser{} }
+func (v *TOUsers) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                 //{ return selectMaxLastUpdatedQuery() }
+func (v *TOUsers) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOUsers) NewReadObj() interface{}        { return &tc.FederationUser{} }
 
 func (v *TOUsers) DeleteQuery() string {
 	return `
@@ -117,7 +121,7 @@ func (v *TOUsers) GetType() string {
 	return fedUserType
 }
 
-func (v *TOUsers) Read() ([]interface{}, error, error, int) {
+func (v *TOUsers) Read(http.Header) ([]interface{}, error, error, int) {
 	fedIDStr := v.APIInfo().Params["id"]
 	fedID, err := strconv.Atoi(fedIDStr)
 	if err != nil {
@@ -129,7 +133,7 @@ func (v *TOUsers) Read() ([]interface{}, error, error, int) {
 	} else if !exists {
 		return nil, fmt.Errorf("federation %v not found", fedID), nil, http.StatusNotFound
 	}
-	return api.GenericRead(v)
+	return api.GenericRead(nil, v)
 }
 
 func (v *TOUsers) Delete() (error, error, int) { return api.GenericDelete(v) }

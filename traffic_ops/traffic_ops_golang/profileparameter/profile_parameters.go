@@ -154,8 +154,14 @@ parameter) VALUES (
 func (pp *TOProfileParameter) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
-func (pp *TOProfileParameter) Read() ([]interface{}, error, error, int) { return api.GenericRead(pp) }
-func (pp *TOProfileParameter) Delete() (error, error, int)              { return api.GenericDelete(pp) }
+func (pp *TOProfileParameter) Read(http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(nil, pp)
+}
+func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
+func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                            //{ return selectMaxLastUpdatedQuery() }
+func (v *TOProfileParameter) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
 
 func selectQuery() string {
 

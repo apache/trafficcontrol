@@ -101,7 +101,7 @@ func (prof *TOProfile) Validate() error {
 	return nil
 }
 
-func (prof *TOProfile) Read() ([]interface{}, error, error, int) {
+func (prof *TOProfile) Read(http.Header) ([]interface{}, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -220,10 +220,11 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func (pr *TOProfile) Update() (error, error, int) { return api.GenericUpdate(pr) }
-func (pr *TOProfile) Create() (error, error, int) { return api.GenericCreate(pr) }
-func (pr *TOProfile) Delete() (error, error, int) { return api.GenericDelete(pr) }
-
+func (pr *TOProfile) Update() (error, error, int)      { return api.GenericUpdate(pr) }
+func (pr *TOProfile) Create() (error, error, int)      { return api.GenericCreate(pr) }
+func (pr *TOProfile) Delete() (error, error, int)      { return api.GenericDelete(pr) }
+func (v *TOProfile) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
+func (v *TOProfile) InsertIntoDeletedQuery() string    { return "" } //{return insertIntoDeletedQuery()}
 func updateQuery() string {
 	query := `UPDATE
 profile SET

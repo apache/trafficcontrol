@@ -98,10 +98,16 @@ func (asn TOASNV11) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (as *TOASNV11) Create() (error, error, int)              { return api.GenericCreate(as) }
-func (as *TOASNV11) Read() ([]interface{}, error, error, int) { return api.GenericRead(as) }
-func (as *TOASNV11) Update() (error, error, int)              { return api.GenericUpdate(as) }
-func (as *TOASNV11) Delete() (error, error, int)              { return api.GenericDelete(as) }
+func (as *TOASNV11) Create() (error, error, int) { return api.GenericCreate(as) }
+func (as *TOASNV11) Read(http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(nil, as)
+}
+func (v *TOASNV11) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                  //{ return selectMaxLastUpdatedQuery() }
+func (v *TOASNV11) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (as *TOASNV11) Update() (error, error, int)   { return api.GenericUpdate(as) }
+func (as *TOASNV11) Delete() (error, error, int)   { return api.GenericDelete(as) }
 
 // V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
 func V11ReadAll(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +120,7 @@ func V11ReadAll(w http.ResponseWriter, r *http.Request) {
 
 	asn := &TOASNV11{}
 	asn.SetInfo(inf)
-	asns, userErr, sysErr, errCode := api.GenericRead(asn)
+	asns, userErr, sysErr, errCode := api.GenericRead(nil, asn)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

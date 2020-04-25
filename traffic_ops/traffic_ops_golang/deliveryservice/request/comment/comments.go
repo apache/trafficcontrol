@@ -41,6 +41,10 @@ type TODeliveryServiceRequestComment struct {
 
 func (v *TODeliveryServiceRequestComment) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODeliveryServiceRequestComment) InsertQuery() string           { return insertQuery() }
+func (v *TODeliveryServiceRequestComment) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
+	return ""
+}                                                                         //{ return selectMaxLastUpdatedQuery() }
+func (v *TODeliveryServiceRequestComment) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
 func (v *TODeliveryServiceRequestComment) NewReadObj() interface{} {
 	return &tc.DeliveryServiceRequestCommentNullable{}
 }
@@ -98,8 +102,8 @@ func (comment *TODeliveryServiceRequestComment) Create() (error, error, int) {
 	return api.GenericCreate(comment)
 }
 
-func (comment *TODeliveryServiceRequestComment) Read() ([]interface{}, error, error, int) {
-	return api.GenericRead(comment)
+func (comment *TODeliveryServiceRequestComment) Read(http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(nil, comment)
 }
 
 func (comment *TODeliveryServiceRequestComment) Update() (error, error, int) {

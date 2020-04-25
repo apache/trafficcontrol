@@ -83,7 +83,7 @@ func TestReadStatuses(t *testing.T) {
 		tc.StatusNullable{},
 		sql.NullString{},
 	}
-	statuses, userErr, sysErr, _ := obj.Read()
+	statuses, userErr, sysErr, _ := obj.Read(nil)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
