@@ -26,6 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/grove/web"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -33,8 +34,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
+// LatestTimestamp to keep track of the max of "last updated" times in tables
 type LatestTimestamp struct {
-	//ID          *int       `json:"id" db:"id"`
 	LatestTime *tc.TimeNoMod `json:"latestTime" db:"max"`
 }
 
@@ -53,6 +54,7 @@ type GenericReader interface {
 	NewReadObj() interface{}
 	SelectQuery() string
 	SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, where2 string, orderBy2 string, pagination2 string) string
+	DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo
 }
 
 type GenericUpdater interface {
@@ -66,7 +68,9 @@ type GenericDeleter interface {
 	GetType() string
 	APIInfo() *APIInfo
 	DeleteQuery() string
-	InsertIntoDeletedQuery() string
+	InsertIntoDeletedQuery(v interface{}, tx *sqlx.Tx) error
+	SelectBeforeDeleteQuery() string
+	NewDeleteObj() interface{}
 }
 
 // GenericOptionsDeleter can use any key listed in DeleteKeyOptions() to delete a resource.
@@ -128,13 +132,6 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 	val.SetLastUpdated(lastUpdated)
 	return nil, nil, http.StatusOK
 }
-func SrijeetParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	return map[string]dbhelpers.WhereColumnInfo{
-		"name":       dbhelpers.WhereColumnInfo{"dtyp.name", nil},
-		"id":         dbhelpers.WhereColumnInfo{"dtyp.id", IsInt},
-		"useInTable": dbhelpers.WhereColumnInfo{"dtyp.use_in_table", nil},
-	}
-}
 
 func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orderBy string, pagination string, queryValues map[string]interface{}) bool {
 	ims := []string{}
@@ -150,7 +147,7 @@ func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orde
 		return runSecond
 	} else {
 		query := ""
-		where2, orderBy2, pagination2, queryValues2, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, SrijeetParamColumns())
+		where2, orderBy2, pagination2, queryValues2, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.DeletedParamColumns())
 		query = val.SelectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2)
 		for k, v := range queryValues2 {
 			queryValues[k] = v
@@ -274,10 +271,9 @@ func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func InsertInDeletedTable(val GenericDeleter) (error, error, int) {
-	_, err := val.APIInfo().Tx.NamedExec(val.InsertIntoDeletedQuery(), val)
+func InsertInDeletedTable(val GenericDeleter, v interface{}) (error, error, int) {
+	err := val.InsertIntoDeletedQuery(v, val.APIInfo().Tx)
 	if err != nil {
-		fmt.Println("DB ERROR!!! ", err)
 		return ParseDBError(err)
 	}
 	return nil, nil, http.StatusOK
@@ -285,6 +281,18 @@ func InsertInDeletedTable(val GenericDeleter) (error, error, int) {
 
 // GenericDelete does a Delete (DELETE) for the given GenericDeleter object and type. This exists as a generic function, for the common use case of a simple delete with query parameters defined in the sqlx struct tags.
 func GenericDelete(val GenericDeleter) (error, error, int) {
+	var v interface{}
+	res, err := val.APIInfo().Tx.NamedQuery(val.SelectBeforeDeleteQuery(), val)
+	if err != nil {
+		fmt.Println("Couldnt get before select ", err)
+	}
+	defer res.Close()
+	for res.Next() {
+		v = val.NewDeleteObj()
+		if err = res.StructScan(v); err != nil {
+			return nil, errors.New("scanning " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		}
+	}
 	result, err := val.APIInfo().Tx.NamedExec(val.DeleteQuery(), val)
 	if err != nil {
 		return ParseDBError(err)
@@ -297,5 +305,5 @@ func GenericDelete(val GenericDeleter) (error, error, int) {
 	} else if rowsAffected > 1 {
 		return nil, fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
 	}
-	return InsertInDeletedTable(val)
+	return InsertInDeletedTable(val, v)
 }

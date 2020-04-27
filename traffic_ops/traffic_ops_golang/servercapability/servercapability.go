@@ -25,6 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -35,9 +36,13 @@ type TOServerCapability struct {
 	tc.ServerCapability
 }
 
+func (v *TOServerCapability) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 func (v *TOServerCapability) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOServerCapability) NewReadObj() interface{}       { return &tc.ServerCapability{} }
-
+func (v *TOServerCapability) NewDeleteObj() interface{}       { return &tc.ServerCapability{} }
 func (v *TOServerCapability) InsertQuery() string {
 	return `
 INSERT INTO server_capability (
@@ -101,12 +106,13 @@ func (v *TOServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (v *TOServerCapability) Read(http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(nil, v)
+func (v *TOServerCapability) Read(h http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(h, v)
 }
 func (v *TOServerCapability) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
-}                                                            //{ return selectMaxLastUpdatedQuery() }
-func (v *TOServerCapability) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+}
+func (v *TOServerCapability) SelectBeforeDeleteQuery() string { return "" }
+func (v *TOServerCapability) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOServerCapability) Create() (error, error, int)    { return api.GenericCreateNameBasedID(v) }
 func (v *TOServerCapability) Delete() (error, error, int)    { return api.GenericDelete(v) }

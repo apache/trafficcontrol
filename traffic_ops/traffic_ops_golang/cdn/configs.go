@@ -23,12 +23,17 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 )
 
 // TOCDNConf used as a type alias to define functions on to satisfy shared API REST interfaces.
 type TOCDNConf struct {
 	api.APIInfoImpl `json:"-"`
+}
+
+func (v *TOCDNConf) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
 }
 
 func (v *TOCDNConf) NewReadObj() interface{} { return &tc.CDNConfig{} }
@@ -44,13 +49,13 @@ id
 FROM cdn`
 }
 
-func (v *TOCDNConf) Read(http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(nil, v)
+func (v *TOCDNConf) Read(h http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(h, v)
 }
 func (v *TOCDNConf) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                   //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCDNConf) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOCDNConf) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v TOCDNConf) GetType() string {
 	return "cdn_configs"
 }

@@ -20,6 +20,7 @@ package asn
  */
 
 import (
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -41,9 +42,14 @@ type TOASNV11 struct {
 	tc.ASNNullable
 }
 
+func (v *TOASNV11) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 func (v *TOASNV11) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOASNV11) InsertQuery() string           { return insertQuery() }
 func (v *TOASNV11) NewReadObj() interface{}       { return &tc.ASNNullable{} }
+func (v *TOASNV11) NewDeleteObj() interface{}       { return &tc.ASNNullable{} }
 func (v *TOASNV11) SelectQuery() string           { return selectQuery() }
 func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
@@ -55,6 +61,7 @@ func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOASNV11) UpdateQuery() string { return updateQuery() }
 func (v *TOASNV11) DeleteQuery() string { return deleteQuery() }
+func (v *TOASNV11) SelectBeforeDeleteQuery() string { return "" }
 
 func (asn TOASNV11) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
@@ -105,7 +112,7 @@ func (as *TOASNV11) Read(http.Header) ([]interface{}, error, error, int) {
 func (v *TOASNV11) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TOASNV11) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOASNV11) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (as *TOASNV11) Update() (error, error, int)   { return api.GenericUpdate(as) }
 func (as *TOASNV11) Delete() (error, error, int)   { return api.GenericDelete(as) }
 
@@ -120,7 +127,7 @@ func V11ReadAll(w http.ResponseWriter, r *http.Request) {
 
 	asn := &TOASNV11{}
 	asn.SetInfo(inf)
-	asns, userErr, sysErr, errCode := api.GenericRead(nil, asn)
+	asns, userErr, sysErr, errCode := api.GenericRead(r.Header, asn)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

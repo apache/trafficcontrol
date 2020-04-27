@@ -44,14 +44,20 @@ type TORole struct {
 	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
 }
 
+func (v *TORole) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 func (v *TORole) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                //{ return selectMaxLastUpdatedQuery() }
-func (v *TORole) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TORole) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TORole) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TORole) InsertQuery() string            { return insertQuery() }
 func (v *TORole) NewReadObj() interface{}        { return &TORole{} }
+func (v *TORole) NewDeleteObj() interface{}        { return &TORole{} }
 func (v *TORole) SelectQuery() string            { return selectQuery() }
+func (v *TORole) SelectBeforeDeleteQuery() string { return "" }
 func (v *TORole) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":      dbhelpers.WhereColumnInfo{"name", nil},
@@ -162,9 +168,9 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 	return nil, nil, http.StatusOK
 }
 
-func (role *TORole) Read(http.Header) ([]interface{}, error, error, int) {
+func (role *TORole) Read(h http.Header) ([]interface{}, error, error, int) {
 	version := role.APIInfo().Version
-	vals, userErr, sysErr, errCode := api.GenericRead(nil, role)
+	vals, userErr, sysErr, errCode := api.GenericRead(h, role)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}

@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -46,12 +47,17 @@ type TOUsers struct {
 	tc.FederationUser
 }
 
+func (v *TOUsers) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 func (v *TOUsers) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                 //{ return selectMaxLastUpdatedQuery() }
-func (v *TOUsers) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOUsers) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOUsers) NewReadObj() interface{}        { return &tc.FederationUser{} }
-
+func (v *TOUsers) NewDeleteObj() interface{}        { return &tc.FederationUser{} }
+func (v *TOUsers) SelectBeforeDeleteQuery() string { return "" }
 func (v *TOUsers) DeleteQuery() string {
 	return `
 DELETE FROM federation_tmuser
@@ -121,7 +127,7 @@ func (v *TOUsers) GetType() string {
 	return fedUserType
 }
 
-func (v *TOUsers) Read(http.Header) ([]interface{}, error, error, int) {
+func (v *TOUsers) Read(h http.Header) ([]interface{}, error, error, int) {
 	fedIDStr := v.APIInfo().Params["id"]
 	fedID, err := strconv.Atoi(fedIDStr)
 	if err != nil {
@@ -133,7 +139,7 @@ func (v *TOUsers) Read(http.Header) ([]interface{}, error, error, int) {
 	} else if !exists {
 		return nil, fmt.Errorf("federation %v not found", fedID), nil, http.StatusNotFound
 	}
-	return api.GenericRead(nil, v)
+	return api.GenericRead(h, v)
 }
 
 func (v *TOUsers) Delete() (error, error, int) { return api.GenericDelete(v) }

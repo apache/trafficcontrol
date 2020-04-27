@@ -50,8 +50,16 @@ type TOServer struct {
 	tc.ServerNullable
 }
 
+func (v *TOServer) SelectBeforeDeleteQuery() string {
+	panic("implement me")
+}
+
+func (v *TOServer) NewDeleteObj() interface{} {
+	panic("implement me")
+}
+
 func (v *TOServer) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
-func (v *TOServer) InsertIntoDeletedQuery() string    { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOServer) InsertIntoDeletedQuery (interface {}, *sqlx.Tx) error    { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (s *TOServer) SetLastUpdated(t tc.TimeNoMod)     { s.LastUpdated = &t }
 func (*TOServer) InsertQuery() string                 { return insertQuery() }
 func (*TOServer) UpdateQuery() string                 { return updateQuery() }

@@ -20,6 +20,7 @@ package cdn
  */
 
 import (
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -40,14 +41,20 @@ type TOCDN struct {
 	tc.CDNNullable
 }
 
+func (v *TOCDN) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 func (v *TOCDN) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                               //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCDN) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOCDN) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TOCDN) InsertQuery() string            { return insertQuery() }
 func (v *TOCDN) NewReadObj() interface{}        { return &tc.CDNNullable{} }
+func (v *TOCDN) NewDeleteObj() interface{}        { return &tc.CDNNullable{} }
 func (v *TOCDN) SelectQuery() string            { return selectQuery() }
+func (v *TOCDN) SelectBeforeDeleteQuery() string { return "" }
 func (v *TOCDN) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"domainName":    dbhelpers.WhereColumnInfo{"domain_name", nil},
@@ -128,8 +135,8 @@ func (cdn *TOCDN) Create() (error, error, int) {
 	return api.GenericCreate(cdn)
 }
 
-func (cdn *TOCDN) Read(http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(nil, cdn)
+func (cdn *TOCDN) Read(h http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(h, cdn)
 }
 
 func (cdn *TOCDN) Update() (error, error, int) {

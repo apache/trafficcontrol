@@ -21,6 +21,7 @@ package comment
 
 import (
 	"errors"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -39,13 +40,21 @@ type TODeliveryServiceRequestComment struct {
 	tc.DeliveryServiceRequestCommentNullable
 }
 
+func (v *TODeliveryServiceRequestComment) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 func (v *TODeliveryServiceRequestComment) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODeliveryServiceRequestComment) InsertQuery() string           { return insertQuery() }
 func (v *TODeliveryServiceRequestComment) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
-}                                                                         //{ return selectMaxLastUpdatedQuery() }
-func (v *TODeliveryServiceRequestComment) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+}
+func (v *TODeliveryServiceRequestComment) SelectBeforeDeleteQuery() string           { return "" }//{ return selectMaxLastUpdatedQuery() }
+func (v *TODeliveryServiceRequestComment) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TODeliveryServiceRequestComment) NewReadObj() interface{} {
+	return &tc.DeliveryServiceRequestCommentNullable{}
+}
+func (v *TODeliveryServiceRequestComment) NewDeleteObj() interface{} {
 	return &tc.DeliveryServiceRequestCommentNullable{}
 }
 func (v *TODeliveryServiceRequestComment) SelectQuery() string { return selectQuery() }
@@ -102,8 +111,8 @@ func (comment *TODeliveryServiceRequestComment) Create() (error, error, int) {
 	return api.GenericCreate(comment)
 }
 
-func (comment *TODeliveryServiceRequestComment) Read(http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(nil, comment)
+func (comment *TODeliveryServiceRequestComment) Read(h http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(h, comment)
 }
 
 func (comment *TODeliveryServiceRequestComment) Update() (error, error, int) {

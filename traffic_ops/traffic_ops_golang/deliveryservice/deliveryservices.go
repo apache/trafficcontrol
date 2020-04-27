@@ -49,8 +49,10 @@ type TODeliveryService struct {
 	tc.DeliveryServiceNullable
 }
 
+func (v *TODeliveryService) SelectBeforeDeleteQuery() string           { return "" }
 func (v *TODeliveryService) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
-func (v *TODeliveryService) InsertIntoDeletedQuery() string    { return "" } //{return insertIntoDeletedQuery()}
+func (v *TODeliveryService) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TODeliveryService) NewDeleteObj() interface{}       { return &tc.DeliveryServiceNullable{} }
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ds.DeliveryServiceNullable)
 }

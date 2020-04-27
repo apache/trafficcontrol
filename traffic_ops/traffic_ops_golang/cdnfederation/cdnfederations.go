@@ -22,6 +22,7 @@ package cdnfederation
 import (
 	"database/sql"
 	"errors"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -43,19 +44,25 @@ type TOCDNFederation struct {
 	TenantID *int `json:"-" db:"tenant_id"`
 }
 
+func (v *TOCDNFederation) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
 func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                         //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCDNFederation) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOCDNFederation) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOCDNFederation) NewReadObj() interface{}        { return &TOCDNFederation{} }
+func (v *TOCDNFederation) NewDeleteObj() interface{}        { return &TOCDNFederation{} }
 func (v *TOCDNFederation) SelectQuery() string {
 	if v.ID != nil {
 		return selectByID()
 	}
 	return selectByCDNName()
 }
+func (v *TOCDNFederation) SelectBeforeDeleteQuery() string           { return "" }
 func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	cols := map[string]dbhelpers.WhereColumnInfo{
 		"id": dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
@@ -147,7 +154,7 @@ func checkTenancy(tenantID *int, tenantIDs []int) bool {
 	return false
 }
 
-func (fed *TOCDNFederation) Read(http.Header) ([]interface{}, error, error, int) {
+func (fed *TOCDNFederation) Read(h http.Header) ([]interface{}, error, error, int) {
 	if idstr, ok := fed.APIInfo().Params["id"]; ok {
 		id, err := strconv.Atoi(idstr)
 		if err != nil {
@@ -161,7 +168,7 @@ func (fed *TOCDNFederation) Read(http.Header) ([]interface{}, error, error, int)
 		return nil, nil, errors.New("getting tenant list for user: " + err.Error()), http.StatusInternalServerError
 	}
 
-	federations, userErr, sysErr, errCode := api.GenericRead(nil, fed)
+	federations, userErr, sysErr, errCode := api.GenericRead(h, fed)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}

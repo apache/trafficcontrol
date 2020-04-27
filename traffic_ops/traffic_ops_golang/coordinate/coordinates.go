@@ -20,6 +20,7 @@ package coordinate
  */
 
 import (
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,6 +40,10 @@ type TOCoordinate struct {
 	tc.CoordinateNullable
 }
 
+func (v *TOCoordinate) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 func (v *TOCoordinate) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCoordinate) InsertQuery() string           { return insertQuery() }
 func (v *TOCoordinate) NewReadObj() interface{}       { return &tc.CoordinateNullable{} }
@@ -50,7 +55,9 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
+func (v *TOCoordinate) NewDeleteObj() interface{}       { return &tc.CoordinateNullable{} }
 func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
+func (v *TOCoordinate) SelectBeforeDeleteQuery() string { return "" }
 
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
@@ -119,13 +126,13 @@ func (coordinate TOCoordinate) Validate() error {
 }
 
 func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
-func (coord *TOCoordinate) Read(http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(nil, coord)
+func (coord *TOCoordinate) Read(h http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(h, coord)
 }
 func (v *TOCoordinate) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                       //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCoordinate) InsertIntoDeletedQuery() string  { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOCoordinate) InsertIntoDeletedQuery (interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (coord *TOCoordinate) Update() (error, error, int) { return api.GenericUpdate(coord) }
 func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 

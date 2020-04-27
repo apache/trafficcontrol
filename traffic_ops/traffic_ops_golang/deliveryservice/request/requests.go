@@ -42,8 +42,16 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
+func (v *TODeliveryServiceRequest) SelectBeforeDeleteQuery() string {
+	panic("implement me")
+}
+
+func (v *TODeliveryServiceRequest) NewDeleteObj() interface{} {
+	panic("implement me")
+}
+
 func (v *TODeliveryServiceRequest) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
-func (v *TODeliveryServiceRequest) InsertIntoDeletedQuery() string    { return "" } //{return insertIntoDeletedQuery()}
+func (v *TODeliveryServiceRequest) InsertIntoDeletedQuery (interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod)     { v.LastUpdated = &t }
 func (v *TODeliveryServiceRequest) InsertQuery() string               { return insertRequestQuery() }
 func (v *TODeliveryServiceRequest) UpdateQuery() string               { return updateRequestQuery() }

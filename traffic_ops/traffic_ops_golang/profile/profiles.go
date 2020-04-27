@@ -52,6 +52,10 @@ type TOProfile struct {
 	tc.ProfileNullable
 }
 
+func (v *TOProfile) SelectBeforeDeleteQuery() string {
+	panic("implement me")
+}
+
 func (v *TOProfile) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOProfile) InsertQuery() string           { return insertQuery() }
 func (v *TOProfile) UpdateQuery() string           { return updateQuery() }
@@ -223,8 +227,9 @@ WHERE pp.profile = :profile_id`
 func (pr *TOProfile) Update() (error, error, int)      { return api.GenericUpdate(pr) }
 func (pr *TOProfile) Create() (error, error, int)      { return api.GenericCreate(pr) }
 func (pr *TOProfile) Delete() (error, error, int)      { return api.GenericDelete(pr) }
+func (v *TOProfile) NewDeleteObj() interface{} { return &tc.ProfileNullable{} }
 func (v *TOProfile) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
-func (v *TOProfile) InsertIntoDeletedQuery() string    { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOProfile) InsertIntoDeletedQuery (interface {}, *sqlx.Tx) error    { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func updateQuery() string {
 	query := `UPDATE
 profile SET

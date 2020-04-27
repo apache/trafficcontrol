@@ -20,6 +20,7 @@ package physlocation
  */
 
 import (
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -38,9 +39,18 @@ type TOPhysLocation struct {
 	tc.PhysLocationNullable
 }
 
+func (v *TOPhysLocation) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
+func (v *TOPhysLocation) SelectBeforeDeleteQuery() string {
+	panic("implement me")
+}
+
 func (v *TOPhysLocation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOPhysLocation) InsertQuery() string           { return insertQuery() }
 func (v *TOPhysLocation) NewReadObj() interface{}       { return &tc.PhysLocationNullable{} }
+func (v *TOPhysLocation) NewDeleteObj() interface{}       { return &tc.PhysLocationNullable{} }
 func (v *TOPhysLocation) SelectQuery() string           { return selectQuery() }
 func (v *TOPhysLocation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
@@ -99,16 +109,16 @@ func (pl *TOPhysLocation) Validate() error {
 	return nil
 }
 
-func (pl *TOPhysLocation) Read(http.Header) ([]interface{}, error, error, int) {
+func (pl *TOPhysLocation) Read(h http.Header) ([]interface{}, error, error, int) {
 	if _, ok := pl.APIInfo().Params["orderby"]; !ok {
 		pl.APIInfo().Params["orderby"] = "name"
 	}
-	return api.GenericRead(nil, pl)
+	return api.GenericRead(h, pl)
 }
 func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                        //{ return selectMaxLastUpdatedQuery() }
-func (v *TOPhysLocation) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOPhysLocation) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (pl *TOPhysLocation) Update() (error, error, int)   { return api.GenericUpdate(pl) }
 func (pl *TOPhysLocation) Create() (error, error, int)   { return api.GenericCreate(pl) }
 func (pl *TOPhysLocation) Delete() (error, error, int)   { return api.GenericDelete(pl) }

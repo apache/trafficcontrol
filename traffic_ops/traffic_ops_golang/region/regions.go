@@ -21,6 +21,7 @@ package region
 
 import (
 	"errors"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -34,9 +35,18 @@ type TORegion struct {
 	tc.Region
 }
 
+func (v *TORegion) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
+func (v *TORegion) SelectBeforeDeleteQuery() string {
+	panic("implement me")
+}
+
 func (v *TORegion) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = t }
 func (v *TORegion) InsertQuery() string           { return insertQuery() }
 func (v *TORegion) NewReadObj() interface{}       { return &tc.Region{} }
+func (v *TORegion) NewDeleteObj() interface{}       { return &tc.Region{} }
 func (v *TORegion) SelectQuery() string           { return selectQuery() }
 func (v *TORegion) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
@@ -90,13 +100,13 @@ func (region *TORegion) Validate() error {
 	return nil
 }
 
-func (rg *TORegion) Read(http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(nil, rg)
+func (rg *TORegion) Read(h http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(h, rg)
 }
 func (v *TORegion) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TORegion) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TORegion) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (rg *TORegion) Update() (error, error, int)   { return api.GenericUpdate(rg) }
 func (rg *TORegion) Create() (error, error, int)   { return api.GenericCreate(rg) }
 func (rg *TORegion) Delete() (error, error, int)   { return api.GenericDelete(rg) }

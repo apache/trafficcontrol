@@ -21,6 +21,7 @@ package profileparameter
 
 import (
 	"errors"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -44,10 +45,16 @@ type TOProfileParameter struct {
 	tc.ProfileParameterNullable
 }
 
+func (v *TOProfileParameter) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 // AllowMultipleCreates indicates whether an array can be POSTed using the shared Create handler
 func (v *TOProfileParameter) AllowMultipleCreates() bool { return true }
 func (v *TOProfileParameter) NewReadObj() interface{}    { return &tc.ProfileParametersNullable{} }
+func (v *TOProfileParameter) NewDeleteObj() interface{}    { return &tc.ProfileParametersNullable{} }
 func (v *TOProfileParameter) SelectQuery() string        { return selectQuery() }
+func (v *TOProfileParameter) SelectBeforeDeleteQuery() string { return "" }
 func (v *TOProfileParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"profileId":   dbhelpers.WhereColumnInfo{"pp.profile", nil},
@@ -154,14 +161,14 @@ parameter) VALUES (
 func (pp *TOProfileParameter) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
-func (pp *TOProfileParameter) Read(http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(nil, pp)
+func (pp *TOProfileParameter) Read(h http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(h, pp)
 }
 func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
 func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                            //{ return selectMaxLastUpdatedQuery() }
-func (v *TOProfileParameter) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOProfileParameter) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 
 func selectQuery() string {
 

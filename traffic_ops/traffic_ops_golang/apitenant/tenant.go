@@ -25,6 +25,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -46,12 +47,16 @@ type TOTenant struct {
 	tc.TenantNullable
 }
 
+func (v *TOTenant) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	panic("implement me")
+}
+
 func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOTenant) InsertQuery() string           { return insertQuery() }
 func (v *TOTenant) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TOTenant) InsertIntoDeletedQuery() string { return "" } //{return insertIntoDeletedQuery()}
+func (v *TOTenant) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOTenant) NewReadObj() interface{}        { return &tc.TenantNullable{} }
 func (v *TOTenant) SelectQuery() string {
 	return selectQuery(v.APIInfo().User.TenantID)
@@ -126,12 +131,12 @@ func (ten TOTenant) Validate() error {
 
 func (tn *TOTenant) Create() (error, error, int) { return api.GenericCreate(tn) }
 
-func (ten *TOTenant) Read(http.Header) ([]interface{}, error, error, int) {
+func (ten *TOTenant) Read(h http.Header) ([]interface{}, error, error, int) {
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
 		return nil, nil, nil, http.StatusOK
 	}
 
-	tenants, userErr, sysErr, errCode := api.GenericRead(nil, ten)
+	tenants, userErr, sysErr, errCode := api.GenericRead(h, ten)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
