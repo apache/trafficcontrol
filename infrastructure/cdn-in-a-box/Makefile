@@ -41,8 +41,10 @@ SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).$(RHEL_VERSION).x86_64.rpm
 SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-$(BUILD_NUMBER).$(RHEL_VERSION).x86_64.rpm
 
 TO_SOURCE := $(wildcard ../../traffic_ops/**/*)
-ORT_SOURCE:= $(wildcard ../../traffic_ops/bin/*)
 TO_SOURCE += $(wildcard ../../traffic_ops_db/**/*)
+ORT_SOURCE:= $(wildcard ../../traffic_ops/ort/atstccfg/**/*.go)
+ORT_SOURCE+= $(wildcard ../../traffic_ops/client/*.go)
+ORT_SOURCE+= $(wildcard ../../lib/**/*.go)
 TM_SOURCE := $(wildcard ../../traffic_monitor/**/*)
 TP_SOURCE := $(wildcard ../../traffic_portal/**/*)
 TR_SOURCE := $(wildcard ../../traffic_router/**/*)
@@ -73,6 +75,8 @@ traffic_router/tomcat.rpm: ../../dist/tomcat-$(SPECIAL_SEASONING)
 	cp -f $? $@
 traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
 	cp -f $? $@
+cache/atstccfg: $(ORT_SOURCE)
+	go build -o $@ ../../traffic_ops/ort/atstccfg
 
 # Dist rpms
 ../../dist/traffic_monitor-$(SPECIAL_SAUCE): $(TM_SOURCE)
