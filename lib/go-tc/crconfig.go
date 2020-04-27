@@ -30,6 +30,7 @@ type CRConfig struct {
 	RouterLocations  map[string]CRConfigLatitudeLongitude `json:"trafficRouterLocations,omitempty"`
 	Monitors         map[string]CRConfigMonitor           `json:"monitors,omitempty"`
 	Stats            CRConfigStats                        `json:"stats,omitempty"`
+	Topologies       map[string]CRConfigTopology          `json:"topologies,omitempty"`
 }
 
 // CRConfigConfig used to be the type of CRConfig's Config field, though
@@ -133,6 +134,10 @@ type CRConfigDeliveryService struct {
 	Topology                  *string                               `json:"topology,omitempty"`
 	TTL                       *int                                  `json:"ttl,omitempty"`
 	TTLs                      *CRConfigTTL                          `json:"ttls,omitempty"`
+}
+
+type CRConfigTopology struct {
+	Nodes []string `json:"nodes"`
 }
 
 type CRConfigGeoEnabled struct {

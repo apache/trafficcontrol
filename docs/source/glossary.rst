@@ -123,6 +123,7 @@ Glossary
 
 	Edge
 	Edge-tier
+	Edge-Tier
 	Edge-tier cache
 	Edge-tier caches
 	Edge-tier cache server
@@ -230,6 +231,7 @@ Glossary
 
 	Mid
 	Mid-tier
+	Mid-Tier
 	Mid-tier cache
 	Mid-tier caches
 	Mid-tier cache server
