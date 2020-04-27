@@ -56,7 +56,7 @@
       no_log: true
 
     - name: Run Traffic Ops Postinstall
-      command: "{{ to_install_bin_installdir }}/postinstall -a -cfile {{ to_install_bin_installdir }}/configuration_file.json"
+      shell: "(env | sort > /tmp/postinstall.debugenv.txt) && {{ to_install_bin_installdir }}/postinstall -a -cfile {{ to_install_bin_installdir }}/configuration_file.json 2>&1 | tee /tmp/postinstall.debug.txt"
       notify: Restart Traffic Ops
       environment:
         GOPATH: /opt/traffic_ops/go
@@ -66,7 +66,8 @@
       failed_when:
         (Postinstall_output.stdout.find("Success! Postinstall complete.") == -1) or
         (Postinstall_output.rc != 0) or
-        (Postinstall_output.stderr.find("Installing modules failed") != -1)
+        (Postinstall_output.stderr.find("Installing modules failed") != -1) or
+        (Postinstall_output.stdout.find("Installing modules failed") != -1)
 
     - name: Mark Postinstall was successful
       file:
@@ -114,7 +115,7 @@
   notify: Restart Traffic Ops
 
 - name: Upgrade TODB
-  command: ./db/admin -env=production upgrade
+  shell: (env | sort > /tmp/goose.debug.txt) && ./db/admin -env=production upgrade
   args:
     chdir: "{{ to_app_installdir }}"
   environment:
