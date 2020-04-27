@@ -446,7 +446,7 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
 		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
 		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
-		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
+		"xmlId":               validation.Validate(ds.XMLID, validation.Required, noSpaces, noPeriods, validation.Length(1, 48)),
 	})
 	if err := ds.validateTypeFields(tx); err != nil {
 		errs = append(errs, errors.New("type fields: "+err.Error()))

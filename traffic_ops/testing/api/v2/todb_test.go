@@ -125,7 +125,7 @@ INSERT INTO role (name, description, priv_level) VALUES ('portal','Portal User',
 INSERT INTO role (name, description, priv_level) VALUES ('steering','Steering User', 15) ON CONFLICT DO NOTHING;
 INSERT INTO role (name, description, priv_level) VALUES ('federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
 `
-	err := execSQL(db, sqlStmt, "role")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -141,7 +141,7 @@ INSERT INTO capability (name, description) VALUES ('asns-read', 'Read ASNs') ON 
 INSERT INTO capability (name, description) VALUES ('asns-write', 'Write ASNs') ON CONFLICT DO NOTHING;
 INSERT INTO capability (name, description) VALUES ('cache-groups-read', 'Read CGs') ON CONFLICT DO NOTHING;
 `
-	err := execSQL(db, sqlStmt, "capability")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -155,7 +155,7 @@ INSERT INTO api_capability (http_method, route, capability) VALUES ('POST', '/as
 INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', '/cachegroups', 'cache-groups-read') ON CONFLICT DO NOTHING;
 `
 
-	err := execSQL(db, sqlStmt, "api_capability")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -167,7 +167,7 @@ func SetupRoleCapabilities(db *sql.DB) error {
 INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-write') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-read') ON CONFLICT DO NOTHING;
 `
-	err := execSQL(db, sqlStmt, "role_capability")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -193,7 +193,7 @@ INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Confi
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `', 6, 1);
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Extension + `','` + encryptedPassword + `', 3, 1);
 `
-	err = execSQL(db, sqlStmt, "tm_user")
+	err = execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -209,7 +209,7 @@ func SetupTenants(db *sql.DB) error {
 INSERT INTO tenant (name, active, parent_id, last_updated) VALUES ('root', true, null, '2018-01-19 19:01:21.327262');
 INSERT INTO tenant (name, active, parent_id, last_updated) VALUES ('badtenant', true, 1, '2018-01-19 19:01:21.327262');
 `
-	err := execSQL(db, sqlStmt, "tenant")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -222,7 +222,7 @@ func SetupDeliveryServiceTmUsers(db *sql.DB) error {
 	sqlStmt := `
 INSERT INTO deliveryservice_tmuser (deliveryservice, tm_user_id, last_updated) VALUES (100, (SELECT id FROM tm_user where username = 'admin') , '2018-01-19 21:19:32.372969');
 `
-	err := execSQL(db, sqlStmt, "deliveryservice_tmuser")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -235,7 +235,7 @@ func SetupJobStatuses(db *sql.DB) error {
 	sqlStmt := `
 INSERT INTO job_status (id, name, description, last_updated) VALUES (1, 'PENDING', 'Job is queued, but has not been picked up by any agents yet', '2018-01-19 21:19:32.444857');
 `
-	err := execSQL(db, sqlStmt, "job_status")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -248,7 +248,7 @@ func SetupJobAgents(db *sql.DB) error {
 	sqlStmt := `
 INSERT INTO job_agent (id, name, description, active, last_updated) VALUES (1, 'agent1', 'Test Agent1', 0, '2018-01-19 21:19:32.448076');
 `
-	err := execSQL(db, sqlStmt, "job_agent")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -263,7 +263,7 @@ INSERT INTO job (id, agent, object_type, object_name, keyword, parameters, asset
 INSERT INTO job (id, agent, object_type, object_name, keyword, parameters, asset_url, asset_type, status, start_time, entered_time, job_user, last_updated, job_deliveryservice) VALUES (200, 1, null, null, 'PURGE', 'TTL:48h', 'http://cdn2.edge/job2/.*', 'file', 1, '2018-01-19 21:09:34.000000', '2018-01-19 21:09:34.000000', (SELECT id FROM tm_user where username = 'admin'), '2018-01-19 21:19:32.450915', 200);
 INSERT INTO job (id, agent, object_type, object_name, keyword, parameters, asset_url, asset_type, status, start_time, entered_time, job_user, last_updated, job_deliveryservice) VALUES (300, 1, null, null, 'PURGE', 'TTL:48h', 'http://cdn2.edge/job3/.*', 'file', 1, '2018-01-19 21:14:34.000000', '2018-01-19 21:14:34.000000', (SELECT id FROM tm_user where username = 'admin'), '2018-01-19 21:19:32.460870', 100);
 `
-	err := execSQL(db, sqlStmt, "job")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -278,7 +278,7 @@ INSERT INTO type (name, description, use_in_table) VALUES ('CHECK_EXTENSION_BOOL
 INSERT INTO type (name, description, use_in_table) VALUES ('CHECK_EXTENSION_NUM', 'Extension for int value in Server Check', 'to_extension');
 INSERT INTO type (name, description, use_in_table) VALUES ('CHECK_EXTENSION_OPEN_SLOT', 'Open slot for check in Server Status', 'to_extension');
 `
-	err := execSQL(db, sqlStmt, "type")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -292,7 +292,7 @@ func SetupToExtensions(db *sql.DB) error {
 INSERT INTO to_extension (name, version, info_url, isactive, script_file, servercheck_column_name, type) VALUES ('OPEN', '1.0.0', '-', false, '', 'aa', (SELECT id FROM type WHERE name = 'CHECK_EXTENSION_OPEN_SLOT'));
 INSERT INTO to_extension (name, version, info_url, isactive, script_file, servercheck_column_name, type) VALUES ('OPEN', '1.0.0', '-', false, '', 'ab', (SELECT id FROM type WHERE name = 'CHECK_EXTENSION_OPEN_SLOT'));
 	`
-	err := execSQL(db, sqlStmt, "to_extension")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -341,7 +341,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM tenant;
 	ALTER SEQUENCE tenant_id_seq RESTART WITH 1;
 `
-	err := execSQL(db, sqlStmt, "Tearing down")
+	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
@@ -349,9 +349,7 @@ func Teardown(db *sql.DB) error {
 }
 
 // execSQL ...
-func execSQL(db *sql.DB, sqlStmt string, dbTable string) error {
-
-	log.Debugln(dbTable + " data")
+func execSQL(db *sql.DB, sqlStmt string) error {
 	var err error
 
 	tx, err := db.Begin()
