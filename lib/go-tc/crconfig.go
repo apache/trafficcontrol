@@ -105,31 +105,31 @@ type CRConfigTrafficOpsServer struct {
 //TODO: drichardson - reconcile this with the DeliveryService struct in deliveryservices.go
 type CRConfigDeliveryService struct {
 	AnonymousBlockingEnabled  *string                               `json:"anonymousBlockingEnabled,omitempty"`
+	BypassDestination         map[string]*CRConfigBypassDestination `json:"bypassDestination,omitempty"`
 	ConsistentHashQueryParams []string                              `json:"consistentHashQueryParams,omitempty"`
 	ConsistentHashRegex       *string                               `json:"consistentHashRegex,omitempty"`
 	CoverageZoneOnly          bool                                  `json:"coverageZoneOnly,string"`
+	DeepCachingType           *DeepCachingType                      `json:"deepCachingType"`
 	Dispersion                *CRConfigDispersion                   `json:"dispersion,omitempty"`
 	Domains                   []string                              `json:"domains,omitempty"`
+	EcsEnabled                *bool                                 `json:"ecsEnabled,string,omitempty"`
+	GeoEnabled                []CRConfigGeoEnabled                  `json:"geoEnabled,omitempty"`
+	GeoLimitRedirectURL       *string                               `json:"geoLimitRedirectURL,omitempty"`
 	GeoLocationProvider       *string                               `json:"geolocationProvider,omitempty"`
+	IP6RoutingEnabled         *bool                                 `json:"ip6RoutingEnabled,string,omitempty"`
 	MatchSets                 []*MatchSet                           `json:"matchsets,omitempty"`
+	MaxDNSIPsForLocation      *int                                  `json:"maxDnsIpsForLocation,omitempty"`
 	MissLocation              *CRConfigLatitudeLongitudeShort       `json:"missLocation,omitempty"`
 	Protocol                  *CRConfigDeliveryServiceProtocol      `json:"protocol,omitempty"`
 	RegionalGeoBlocking       *string                               `json:"regionalGeoBlocking,omitempty"`
-	ResponseHeaders           map[string]string                     `json:"responseHeaders,omitempty"`
 	RequestHeaders            []string                              `json:"requestHeaders,omitempty"`
+	ResponseHeaders           map[string]string                     `json:"responseHeaders,omitempty"`
+	RoutingName               *string                               `json:"routingName,omitempty"`
 	Soa                       *SOA                                  `json:"soa,omitempty"`
 	SSLEnabled                bool                                  `json:"sslEnabled,string"`
+	StaticDNSEntries          []CRConfigStaticDNSEntry              `json:"staticDnsEntries,omitempty"`
 	TTL                       *int                                  `json:"ttl,omitempty"`
 	TTLs                      *CRConfigTTL                          `json:"ttls,omitempty"`
-	MaxDNSIPsForLocation      *int                                  `json:"maxDnsIpsForLocation,omitempty"`
-	IP6RoutingEnabled         *bool                                 `json:"ip6RoutingEnabled,string,omitempty"`
-	EcsEnabled                *bool                                 `json:"ecsEnabled,string,omitempty"`
-	RoutingName               *string                               `json:"routingName,omitempty"`
-	BypassDestination         map[string]*CRConfigBypassDestination `json:"bypassDestination,omitempty"`
-	DeepCachingType           *DeepCachingType                      `json:"deepCachingType"`
-	GeoEnabled                []CRConfigGeoEnabled                  `json:"geoEnabled,omitempty"`
-	GeoLimitRedirectURL       *string                               `json:"geoLimitRedirectURL,omitempty"`
-	StaticDNSEntries          []CRConfigStaticDNSEntry              `json:"staticDnsEntries,omitempty"`
 }
 
 type CRConfigGeoEnabled struct {
