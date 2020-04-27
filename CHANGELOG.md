@@ -12,10 +12,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed ORT config generation not using the coalesce_number_v6 Parameter.
 
 ### Changed
+- Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
 
 ### Deprecated
+- Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
 
 ### Removed
+- Removed deprecated Traffic Ops Go Client methods.
 
 ## [4.1.0] - 2020-04-23
 ### Added

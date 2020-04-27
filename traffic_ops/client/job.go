@@ -109,8 +109,6 @@ func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc
 				path += "dsId=" + strconv.FormatInt(int64(d.(int)), 10)
 			case string:
 				path += "deliveryService=" + d.(string)
-			case tc.DeliveryService:
-				path += "deliveryService=" + d.(tc.DeliveryService).XMLID
 			case tc.DeliveryServiceNullable:
 				if d.(tc.DeliveryServiceNullable).XMLID != nil {
 					path += "deliveryService=" + *d.(tc.DeliveryServiceNullable).XMLID
