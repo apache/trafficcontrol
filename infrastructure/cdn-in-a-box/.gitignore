@@ -18,3 +18,4 @@
 *.rpm
 traffic_ops/ca
 optional/vpn/vpnca
+cache/atstccfg
