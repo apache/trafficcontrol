@@ -86,6 +86,7 @@ type CRConfigServerStatus string
 
 type CRConfigTrafficOpsServer struct {
 	CacheGroup       *string               `json:"cacheGroup,omitempty"`
+	Capabilities     []string              `json:"capabilities,omitempty"`
 	Fqdn             *string               `json:"fqdn,omitempty"`
 	HashCount        *int                  `json:"hashCount,omitempty"`
 	HashId           *string               `json:"hashId,omitempty"`

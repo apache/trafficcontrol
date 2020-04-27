@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/lib/pq"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -102,7 +104,7 @@ type ServerUnion struct {
 
 type ServerAndHost struct {
 	Server ServerUnion
-	Host string
+	Host   string
 }
 
 const DefaultWeightMultiplier = 1000.0
@@ -127,7 +129,10 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 		p.name AS profile_name,
 		cast(p.routing_disabled AS int),
 		st.name AS status,
-		t.name AS type
+		t.name AS type,
+		(SELECT ARRAY_AGG(server_capability ORDER BY server_capability)
+			FROM server_server_capability
+			WHERE server = s.id) AS capabilities
 	FROM server AS s
 	INNER JOIN cachegroup AS cg ON cg.id = s.cachegroup
 	INNER JOIN type AS t on t.id = s.type
@@ -153,7 +158,7 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 
 		var status string
 		var id int
-		if err := rows.Scan(&id, &s.Host, &s.Server.CacheGroup, &s.Server.Fqdn, &hashId, &httpsPort, &port, &s.Server.Profile, &s.Server.RoutingDisabled, &status, &s.Server.ServerType); err != nil {
+		if err := rows.Scan(&id, &s.Host, &s.Server.CacheGroup, &s.Server.Fqdn, &hashId, &httpsPort, &port, &s.Server.Profile, &s.Server.RoutingDisabled, &status, &s.Server.ServerType, pq.Array(&s.Server.Capabilities)); err != nil {
 			return nil, errors.New("Error scanning server: " + err.Error())
 		}
 
@@ -300,7 +305,8 @@ func getServerDSes(cdn string, tx *sql.Tx, domain string) (map[tc.CacheName]map[
 	}
 
 	q := `
-select ds.xml_id as ds, dt.name as ds_type, ds.routing_name, r.pattern as pattern
+select ds.xml_id as ds, dt.name as ds_type, ds.routing_name, r.pattern as pattern,
+ds.topology IS NOT NULL as has_topology
 from regex as r
 inner join type as rt on r.type = rt.id
 inner join deliveryservice_regex as dsr on dsr.regex = r.id
@@ -326,9 +332,14 @@ order by dsr.set_number asc
 		dsType := ""
 		dsPattern := ""
 		dsRoutingName := ""
+		var hasTopology bool
 		inf := DSRouteInfo{}
-		if err := rows.Scan(&ds, &dsType, &dsRoutingName, &dsPattern); err != nil {
+		if err := rows.Scan(&ds, &dsType, &dsRoutingName, &dsPattern, &hasTopology); err != nil {
 			return nil, errors.New("Error scanning server deliveryservices: " + err.Error())
+		}
+		// Topology-based delivery services do not use the contentServers.deliveryServices field
+		if hasTopology {
+			continue
 		}
 		inf.IsDNS = strings.HasPrefix(dsType, "DNS")
 		inf.IsRaw = !strings.Contains(dsPattern, `.*`)

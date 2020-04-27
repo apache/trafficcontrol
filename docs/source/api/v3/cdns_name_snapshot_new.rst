@@ -118,6 +118,7 @@ Response Structure
 :contentServers: An object containing keys which are the (short) hostnames of the :term:`Edge-tier cache servers` in the CDN; the values corresponding to those keys are routing information for said servers
 
 	:cacheGroup:       A string that is the :ref:`cache-group-name` of the :term:`Cache Group` to which the server belongs
+	:capabilities:     An array of this Cache Group's :term:`Server Capabilities`. If the Cache Group has no Server Capabilities, this field is omitted.
 	:deliveryServices: An object containing keys which are the names of :term:`Delivery Services` to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of :abbr:`FQDNs (Fully Qualified Domain Names)` that resolve to this :term:`cache server`
 
 		.. note:: Only :term:`Edge-tier cache servers` can be assigned to a :term:`Delivery Service`, and therefore this field will only be present when ``type`` is ``"EDGE"``.
