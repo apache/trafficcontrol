@@ -124,11 +124,13 @@ type CRConfigDeliveryService struct {
 	Protocol                  *CRConfigDeliveryServiceProtocol      `json:"protocol,omitempty"`
 	RegionalGeoBlocking       *string                               `json:"regionalGeoBlocking,omitempty"`
 	RequestHeaders            []string                              `json:"requestHeaders,omitempty"`
+	RequiredCapabilities      []string                              `json:"requiredCapabilities,omitempty"`
 	ResponseHeaders           map[string]string                     `json:"responseHeaders,omitempty"`
 	RoutingName               *string                               `json:"routingName,omitempty"`
 	Soa                       *SOA                                  `json:"soa,omitempty"`
 	SSLEnabled                bool                                  `json:"sslEnabled,string"`
 	StaticDNSEntries          []CRConfigStaticDNSEntry              `json:"staticDnsEntries,omitempty"`
+	Topology                  *string                               `json:"topology,omitempty"`
 	TTL                       *int                                  `json:"ttl,omitempty"`
 	TTLs                      *CRConfigTTL                          `json:"ttls,omitempty"`
 }

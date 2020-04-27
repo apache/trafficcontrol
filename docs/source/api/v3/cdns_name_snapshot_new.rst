@@ -247,6 +247,7 @@ Response Structure
 
 		.. seealso:: :ref:`regionalgeo-qht`
 
+	:requiredCapabilities: An array of this Delivery Service's :term:`required capabilities <Delivery Service required capabilities>`. If there are no required capabilities, this field is omitted.
 	:routingName: A string that is this :ref:`Delivery Service's Routing Name <ds-routing-name>`
 	:soa:         An object defining the :abbr:`SOA (Start of Authority)` record for the :term:`Delivery Service`'s :abbr:`TLDs (Top-Level Domains)` (defined in ``domains``)
 
@@ -272,6 +273,7 @@ Response Structure
 
 		.. seealso:: :ref:`ds-protocol`
 
+	:topology: The name of the :term:`Topology` that this :term:`Delivery Service` is assigned to. If the Delivery Service is not assigned to a topology, this field is omitted.
 	:ttls: An object that contains keys which are types of DNS records that have values which are strings containing integers that specify the time for which a response to the specific type of record request should remain valid
 
 		.. note:: This overrides ``config.ttls``.
