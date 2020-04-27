@@ -70,6 +70,10 @@ Arguments and Flags
 
 	Print version information and exit
 
+.. option:: -t, --timeout
+
+	Sets the timeout in milliseconds for connections to Traffic Ops.
+
 .. option:: -k, --insecure
 
 	An optional flag which, when used, disables the checking of SSL certificates for validity
@@ -484,6 +488,10 @@ def main() -> int:
 	                    help="Skip verification of SSL certificates for Traffic Ops connections. "\
 	                         "DON'T use this in production!",
 	                    action="store_true")
+	parser.add_argument("-t", "--timeout",
+	                    help="Sets the timeout in milliseconds for requests made to Traffic Ops.",
+	                    type=int,
+	                    default=None)
 	parser.add_argument("-v", "--version",
 	                    action="version",
 	                    version="%(prog)s v"+__version__,

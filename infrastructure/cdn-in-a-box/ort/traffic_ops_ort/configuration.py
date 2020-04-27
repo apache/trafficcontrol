@@ -112,6 +112,7 @@ class Configuration():
 		self.retries = args.retries if args.retries > 0 else 0
 		self.rev_proxy_disable = args.rev_proxy_disable
 		self.verify = not args.insecure
+		self.timeout = args.timeout
 
 		setLogLevel(args.log_level)
 
