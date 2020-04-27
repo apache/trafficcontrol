@@ -20,9 +20,10 @@ This module contains functionality for dealing with the Traffic Ops ReST API.
 It extends the class provided by the official Apache Traffic Control Client.
 """
 
-import typing
 import logging
 import re
+import subprocess
+import typing
 
 from munch import Munch
 from requests.compat import urljoin
@@ -70,6 +71,23 @@ class API(TOSession):
 			raise LoginError("Failed to log in to Traffic Ops, retries exceeded.")
 
 		self.hostname = conf.shortHostname
+
+		self.atstccfgCmd = [
+			"atstccfg",
+			"--traffic-ops-url=http{}://{}:{}".format("s" if conf.useSSL else "", conf.toHost, conf.toPort),
+			"--cache-host-name={}".format(conf.hostname),
+			"--traffic-ops-user={}".format(conf.username),
+			"--traffic-ops-password={}".format(conf.password),
+			"--log-location-error=stderr",
+			"--log-location-warning=stderr",
+			"--log-location-info=stderr"
+		]
+
+		if conf.timeout is not None and conf.timeout >= 0:
+			self.atstccfgCmd.append("--traffic-ops-timeout-milliseconds={}".format(conf.timeout))
+		if conf.rev_proxy_disable:
+			self.atstccfgCmd.append("--traffic-ops-disable-proxy")
+
 
 	def __enter__(self):
 		"""
@@ -199,22 +217,18 @@ class API(TOSession):
 		if mode is Configuration.Modes.REPORT:
 			return
 
-		payload = {"updated": False, "reval_updated": False}
-
+		atstccfgCmd = self.atstccfgCmd + ["--set-queue-status=false", "--set-reval-status=false"]
 		for _ in range(self.retries):
 			try:
-				response = self._session.post('/'.join((self._server_url.rstrip('/'),
-				                                        "update",
-				                                        self.hostname)
-				                             ), data=payload)
-				break
+				proc = subprocess.run(atstccfgCmd, capture_output=True, text=True)
+				logging.info(proc.stdout)
+				logging.error(proc.stderr)
+				if proc.returncode == 0:
+					break
 			except (LoginError, InvalidJSONError, OperationError, RequestException) as e:
-				logging.debug("TO update failure: %r", e, exc_info=True, stack_info=True)
+				logging.error("TO update failure: %r", e, exc_info=True, stack_info=True)
 		else:
 			raise ConnectionError("Failed to update Traffic Ops - connection was lost")
-
-		if response.text:
-			logging.info("Traffic Ops response: %s", response.text)
 
 	def getMyChkconfig(self) -> typing.List[dict]:
 		"""
