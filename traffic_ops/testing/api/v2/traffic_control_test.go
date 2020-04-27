@@ -54,5 +54,11 @@ type TrafficControl struct {
 	SteeringTargets                      []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                         []tc.ServercheckRequestNullable         `json:"serverchecks"`
 	Users                                []tc.User                               `json:"users"`
+	Jobs                                 []JobRequest                            `json:"jobs"`
 	InvalidationJobs                     []tc.InvalidationJobInput               `json:"invalidationJobs"`
+}
+
+type JobRequest struct {
+	DSName  string        `json:"dsName"`
+	Request tc.JobRequest `json:"request"`
 }
