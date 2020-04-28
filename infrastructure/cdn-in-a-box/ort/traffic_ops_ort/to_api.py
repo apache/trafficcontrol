@@ -272,11 +272,11 @@ class API(TOSession):
 		logging.info("Fetching update status from Traffic Ops")
 		for _ in range(self.retries):
 			try:
-				# The API function decorator confuses pylint into thinking this doesn't return
-				#pylint: disable=E1111
-				r = self.get_server_update_status(server_name=self.hostname)
-				#pylint: enable=E1111
-				break
+				proc = subprocess.run(self.atstccfgCmd + ["--get-data=update-status"])
+				logging.info(proc.stdout)
+				logging.error(proc.stderr)
+				if proc.returncode == 0:
+					break;
 			except (InvalidJSONError, LoginError, OperationError, RequestException) as e:
 				logging.debug("update status fetch failure: %r", e, exc_info=True, stack_info=True)
 		else:
