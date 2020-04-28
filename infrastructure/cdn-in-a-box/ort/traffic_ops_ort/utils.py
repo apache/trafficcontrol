@@ -107,7 +107,7 @@ def parse_multipart(raw: str) -> typing.List[typing.Tuple[str, str]]:
 	:raises: ValueError if the raw payload cannot be parsed as a multipart/mixed-type message.
 
 	>>> testdata = '''MIME-Version: 1.0\\r
-	... Content-Type: multipart/mixed; boundary=test\\r
+	... Content-Type: multipart/mixed; boundary="test"\\r
 	... \\r
 	... --test\\r
 	... Content-Type: text/plain; charset=us-ascii\\r
@@ -155,7 +155,7 @@ def parse_multipart(raw: str) -> typing.List[typing.Tuple[str, str]]:
 	except (IndexError, ValueError) as e:
 		raise ValueError("Invalid or corrupt 'Content-Type' header") from e
 
-	boundary = params.get("boundary")
+	boundary = params.get("boundary", "").strip('"\'')
 	if not boundary:
 		raise ValueError("'Content-Type' header missing 'boundary' parameter")
 
