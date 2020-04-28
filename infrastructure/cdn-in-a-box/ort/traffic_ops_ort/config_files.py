@@ -73,22 +73,23 @@ class ConfigFile():
 
 		>>> a = ConfigFile({"fnameOnDisk": "test",
 		...                 "location": "/path/to",
-		...                 "apiURI":"/test",
-		...                 "scope": servers}, "http://example.com/")
+		...                 "apiUri":"/test",
+		...                 "scope": "servers"}, "http://example.com/")
 		>>> a
 		ConfigFile(path='/path/to/test', URI='http://example.com/test', scope='servers')
 		>>> a.SSLdir
-		"/etc/trafficserver/ssl"
-		>>> ConfigFile(contents='testquest\n', path='/path/to/test')
-		ConfigFile(path='/path/to/test', URI='', scope='')
+		'/etc/trafficserver/ssl'
+		>>> ConfigFile(contents='testquest', path='/path/to/test')
+		ConfigFile(path='/path/to/test', URI=None, scope=None)
 		"""
 		self.SSLdir = os.path.join(tsroot, "etc", "trafficserver", "ssl")
 
 		if contents is not None:
 			if path is None:
 				raise ValueError("cannot construct from direct contents without setting path")
-			self.fname, self.location = os.path.split(path)
+			self.location, self.fname = os.path.split(path)
 			self.contents = contents
+			self.scope = None
 			return
 		if raw is not None:
 			try:
@@ -109,7 +110,7 @@ class ConfigFile():
 
 		>>> repr(ConfigFile({"fnameOnDisk": "test",
 		...                  "location": "/path/to",
-		...                  "apiURI": "http://test",
+		...                  "apiUri": "test",
 		...                  "scope": "servers"}, "http://example.com/"))
 		"ConfigFile(path='/path/to/test', URI='http://example.com/test', scope='servers')"
 		"""
