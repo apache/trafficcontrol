@@ -20,6 +20,7 @@ This module contains functionality for dealing with the Traffic Ops ReST API.
 It extends the class provided by the official Apache Traffic Control Client.
 """
 
+import json
 import logging
 import re
 import subprocess
@@ -87,6 +88,8 @@ class API(TOSession):
 			self.atstccfgCmd.append("--traffic-ops-timeout-milliseconds={}".format(conf.timeout))
 		if conf.rev_proxy_disable:
 			self.atstccfgCmd.append("--traffic-ops-disable-proxy")
+		if not conf.verify:
+			self.atstccfgCmd.append("--traffic-ops-insecure")
 
 
 	def __enter__(self):
@@ -238,29 +241,23 @@ class API(TOSession):
 		:raises ConnectionError: when something goes wrong communicating with Traffic Ops
 		"""
 
+		logging.info("Fetching chkconfig")
 
-		# Ah, read-only properties that gut functionality, my favorite.
-		tmp = self.api_base_url
-		self._api_base_url = urljoin(self._server_url, '/').rstrip('/') + '/'
-
-		uri = "ort/%s/chkconfig" % self.hostname
-		logging.info("Fetching chkconfig from %s", uri)
-
+		ret = None
 		for _ in range(self.retries):
 			try:
-				r = self.get(uri)
-				break
-			except (InvalidJSONError, OperationError, LoginError, RequestException) as e:
+				proc = subprocess.run(self.atstccfgCmd + ["--get-data=chkconfig"])
+				logging.debug("Raw response: %s", proc.stdout)
+				logging.error(proc.stderr)
+				if proc.returncode == 0:
+					ret = json.loads(proc.stdout)
+					break
+			except (json.JSONDecodeError, InvalidJSONError, OperationError, LoginError, RequestException) as e:
 				logging.debug("chkconfig fetch failure: %r", e, exc_info=True, stack_info=True)
 		else:
-			self._api_base_url = tmp
 			raise ConnectionError("Failed to fetch 'chkconfig' from Traffic Ops - connection lost")
 
-		self._api_base_url = tmp
-
-		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
-
-		return r[0]
+		return ret
 
 	def getMyUpdateStatus(self) -> dict:
 		"""
