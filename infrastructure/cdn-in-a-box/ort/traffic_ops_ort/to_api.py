@@ -41,13 +41,11 @@ class API(TOSession):
 	"""
 	This class extends :class:`trafficops.tosession.TOSession` to provide some ease-of-use
 	functionality for getting things needed by :term:`ORT`.
-
-	TODO: update to 2.0 if/when atstccfg support is integrated.
 	"""
 
 	#: This should always be the latest API version supported - note this breaks compatability with
 	#: older ATC versions. Go figure.
-	VERSION = "1.4"
+	VERSION = "2.0"
 
 	def __init__(self, conf:Configuration):
 		"""
@@ -144,7 +142,6 @@ class API(TOSession):
 			except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
 				logging.error("status fetch failure: %s", e)
 		raise ConnectionError("Failed to fetch statuses from atstccfg")
-
 
 	def getMyPackages(self) -> typing.List[packaging.Package]:
 		"""
