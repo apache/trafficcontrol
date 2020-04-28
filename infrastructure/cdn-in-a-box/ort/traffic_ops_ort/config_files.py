@@ -186,7 +186,7 @@ class ConfigFile():
 		if not self.contents:
 			self.fetchContents(conf.api)
 			finalContents = sanitizeContents(self.contents, conf)
-		else if self.URI:
+		elif self.URI:
 			finalContents = self.contents
 		else:
 			finalContents = sanitizeContents(self.contents, conf)
