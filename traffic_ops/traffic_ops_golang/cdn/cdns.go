@@ -20,7 +20,6 @@ package cdn
  */
 
 import (
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -48,13 +47,11 @@ func (v *TOCDN) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
 func (v *TOCDN) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                               //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCDN) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOCDN) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TOCDN) InsertQuery() string            { return insertQuery() }
 func (v *TOCDN) NewReadObj() interface{}        { return &tc.CDNNullable{} }
-func (v *TOCDN) NewDeleteObj() interface{}        { return &tc.CDNNullable{} }
 func (v *TOCDN) SelectQuery() string            { return selectQuery() }
-func (v *TOCDN) SelectBeforeDeleteQuery() string { return "" }
 func (v *TOCDN) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"domainName":    dbhelpers.WhereColumnInfo{"domain_name", nil},

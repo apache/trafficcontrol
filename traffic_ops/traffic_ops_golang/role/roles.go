@@ -51,13 +51,11 @@ func (v *TORole) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
 func (v *TORole) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                //{ return selectMaxLastUpdatedQuery() }
-func (v *TORole) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TORole) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TORole) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TORole) InsertQuery() string            { return insertQuery() }
 func (v *TORole) NewReadObj() interface{}        { return &TORole{} }
-func (v *TORole) NewDeleteObj() interface{}        { return &TORole{} }
 func (v *TORole) SelectQuery() string            { return selectQuery() }
-func (v *TORole) SelectBeforeDeleteQuery() string { return "" }
 func (v *TORole) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":      dbhelpers.WhereColumnInfo{"name", nil},

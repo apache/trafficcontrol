@@ -21,7 +21,6 @@ package parameter
 
 import (
 	"errors"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -60,11 +59,9 @@ func (v *TOParameter) InsertQuery() string           { return insertQuery() }
 func (v *TOParameter) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                     //{ return selectMaxLastUpdatedQuery() }
-func (v *TOParameter) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOParameter) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOParameter) NewReadObj() interface{}        { return &tc.ParameterNullable{} }
-func (v *TOParameter) NewDeleteObj() interface{}        { return &tc.ParameterNullable{} }
 func (v *TOParameter) SelectQuery() string            { return selectQuery() }
-func (v *TOParameter) SelectBeforeDeleteQuery() string           { return "" }
 func (v *TOParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		ConfigFileQueryParam: dbhelpers.WhereColumnInfo{"p.config_file", nil},

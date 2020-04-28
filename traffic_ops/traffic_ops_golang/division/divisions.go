@@ -20,7 +20,6 @@ package division
  */
 
 import (
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -49,11 +48,9 @@ func (v *TODivision) InsertQuery() string           { return insertQuery() }
 func (v *TODivision) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                    //{ return selectMaxLastUpdatedQuery() }
-func (v *TODivision) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TODivision) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TODivision) NewReadObj() interface{}        { return &tc.Division{} }
-func (v *TODivision) NewDeleteObj() interface{}        { return &tc.Division{} }
 func (v *TODivision) SelectQuery() string            { return selectQuery() }
-func (v *TODivision) SelectBeforeDeleteQuery() string           { return "" }
 func (v *TODivision) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},

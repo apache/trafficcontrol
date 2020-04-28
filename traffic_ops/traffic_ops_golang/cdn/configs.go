@@ -54,8 +54,8 @@ func (v *TOCDNConf) Read(h http.Header) ([]interface{}, error, error, int) {
 }
 func (v *TOCDNConf) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
-}                                                   //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCDNConf) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+}                                                                       //{ return selectMaxLastUpdatedQuery() }
+func (v *TOCDNConf) InsertIntoDeletedQuery(interface{}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v TOCDNConf) GetType() string {
 	return "cdn_configs"
 }

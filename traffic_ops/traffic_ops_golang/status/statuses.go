@@ -22,7 +22,6 @@ package status
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -49,11 +48,10 @@ func (v *TOStatus) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
 func (v *TOStatus) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TOStatus) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOStatus) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOStatus) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TOStatus) InsertQuery() string            { return insertQuery() }
 func (v *TOStatus) NewReadObj() interface{}        { return &TOStatus{} }
-func (v *TOStatus) NewDeleteObj() interface{}        { return &TOStatus{} }
 func (v *TOStatus) SelectQuery() string            { return selectQuery() }
 func (v *TOStatus) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
@@ -123,7 +121,6 @@ func (st *TOStatus) Read(h http.Header) ([]interface{}, error, error, int) {
 func (st *TOStatus) Update() (error, error, int) { return api.GenericUpdate(st) }
 func (st *TOStatus) Create() (error, error, int) { return api.GenericCreate(st) }
 func (st *TOStatus) Delete() (error, error, int) { return api.GenericDelete(st) }
-func (v *TOStatus) SelectBeforeDeleteQuery() string           { return "" }
 
 func selectQuery() string {
 	return `

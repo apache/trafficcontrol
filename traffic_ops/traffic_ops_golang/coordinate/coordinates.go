@@ -20,7 +20,6 @@ package coordinate
  */
 
 import (
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -55,9 +54,7 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
-func (v *TOCoordinate) NewDeleteObj() interface{}       { return &tc.CoordinateNullable{} }
 func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
-func (v *TOCoordinate) SelectBeforeDeleteQuery() string { return "" }
 
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
@@ -132,7 +129,7 @@ func (coord *TOCoordinate) Read(h http.Header) ([]interface{}, error, error, int
 func (v *TOCoordinate) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                       //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCoordinate) InsertIntoDeletedQuery (interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOCoordinate) InsertIntoDeletedQuery() string  { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (coord *TOCoordinate) Update() (error, error, int) { return api.GenericUpdate(coord) }
 func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 

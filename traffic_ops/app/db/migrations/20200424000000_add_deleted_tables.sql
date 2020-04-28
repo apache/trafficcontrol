@@ -7,8 +7,7 @@ CREATE TABLE IF NOT EXISTS deleted_type (
     name text,
     description text,
     use_in_table text,
-    last_updated timestamp with time zone DEFAULT now(),
-    deleted_time timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone DEFAULT now()
 );
 
 -- +goose Down

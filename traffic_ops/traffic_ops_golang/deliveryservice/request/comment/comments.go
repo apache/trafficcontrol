@@ -21,7 +21,6 @@ package comment
 
 import (
 	"errors"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -49,12 +48,8 @@ func (v *TODeliveryServiceRequestComment) InsertQuery() string           { retur
 func (v *TODeliveryServiceRequestComment) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }
-func (v *TODeliveryServiceRequestComment) SelectBeforeDeleteQuery() string           { return "" }//{ return selectMaxLastUpdatedQuery() }
-func (v *TODeliveryServiceRequestComment) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TODeliveryServiceRequestComment) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TODeliveryServiceRequestComment) NewReadObj() interface{} {
-	return &tc.DeliveryServiceRequestCommentNullable{}
-}
-func (v *TODeliveryServiceRequestComment) NewDeleteObj() interface{} {
 	return &tc.DeliveryServiceRequestCommentNullable{}
 }
 func (v *TODeliveryServiceRequestComment) SelectQuery() string { return selectQuery() }

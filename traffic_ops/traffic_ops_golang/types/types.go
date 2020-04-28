@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -45,13 +44,11 @@ type TOType struct {
 func (v *TOType) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOType) InsertQuery() string           { return insertQuery() }
 func (v *TOType) NewReadObj() interface{}       { return &tc.TypeNullable{} }
-func (v *TOType) NewDeleteObj() interface{}       { return &tc.TypeNullable{} }
 func (v *TOType) SelectQuery() string           { return selectQuery() }
-func (v *TOType) SelectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2 string) string {
-	return selectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2)
+func (v *TOType) SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, where2 string, orderBy2 string, pagination2 string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination)
 }
-func (v *TOType) SelectBeforeDeleteQuery() string           { return selectBeforeDeleteQuery() }
-func (v *TOType) InsertIntoDeletedQuery(t interface{}, tx *sqlx.Tx) error { return insertIntoDeletedQuery(t, tx) }
+func (v *TOType) InsertIntoDeletedQuery() string { return insertIntoDeletedQuery() }
 func (v *TOType) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":       dbhelpers.WhereColumnInfo{"typ.name", nil},
@@ -174,32 +171,24 @@ func (tp *TOType) loadUseInTable() (error, error, string) {
 	return nil, nil, useInTable
 }
 
+//Srijeet change here
+// GetType
 func selectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2 string) string {
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from type typ ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(deleted_time) as t from deleted_type dtyp ` + where2 + orderBy2 + pagination2 +
+	select max(last_updated) as t from deleted_type dtyp ` + where2 + orderBy2 + pagination2 +
 		` ) as res`
 }
 
-func insertIntoDeletedQuery(t interface{}, tx *sqlx.Tx) error {
-	if ty, ok := t.(*tc.TypeNullable); !ok {
-		return errors.New("Type casting to a concrete type failed!")
-	} else {
-		_, err := tx.Exec(
-			`INSERT INTO deleted_type (
-			id,
-			name,
-			description,
-			use_in_table
-		) VALUES ($1, $2, $3, $4)`,
-			ty.ID,
-			ty.Name,
-			ty.Description,
-			ty.UseInTable,
-		)
-		return err
-	}
+func insertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_type (
+id,
+name,
+description,
+use_in_table
+) (SELECT id, name, description, use_in_table FROM type WHERE id=:id)`
+	return query
 }
 
 func selectQuery() string {
@@ -239,14 +228,14 @@ WHERE id=:id`
 	return query
 }
 
-func selectBeforeDeleteQuery() string {
-	query := `SELECT
-id,
-name,
-description,
-use_in_table,
-last_updated
-FROM type typ
-WHERE id=:id`
-return query
-}
+//func selectBeforeDeleteQuery() string {
+//	query := `SELECT
+//id,
+//name,
+//description,
+//use_in_table,
+//last_updated
+//FROM type typ
+//WHERE id=:id`
+//	return query
+//}

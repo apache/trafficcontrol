@@ -52,16 +52,8 @@ type TOCacheGroupParameter struct {
 	CacheGroupID int `json:"-" db:"cachegroup_id"`
 }
 
-func (v *TOCacheGroupParameter) SelectBeforeDeleteQuery() string {
-	panic("implement me")
-}
-
-func (v *TOCacheGroupParameter) NewDeleteObj() interface{} {
-	panic("implement me")
-}
-
 func (v *TOCacheGroupParameter) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCacheGroupParameter) InsertIntoDeletedQuery (interface {}, *sqlx.Tx) error    { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOCacheGroupParameter) InsertIntoDeletedQuery() string    { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		CacheGroupIDQueryParam: dbhelpers.WhereColumnInfo{"cgp.cachegroup", api.IsInt},

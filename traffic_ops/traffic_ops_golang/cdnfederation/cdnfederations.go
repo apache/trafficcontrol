@@ -22,7 +22,6 @@ package cdnfederation
 import (
 	"database/sql"
 	"errors"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -53,16 +52,14 @@ func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() 
 func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                         //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCDNFederation) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOCDNFederation) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOCDNFederation) NewReadObj() interface{}        { return &TOCDNFederation{} }
-func (v *TOCDNFederation) NewDeleteObj() interface{}        { return &TOCDNFederation{} }
 func (v *TOCDNFederation) SelectQuery() string {
 	if v.ID != nil {
 		return selectByID()
 	}
 	return selectByCDNName()
 }
-func (v *TOCDNFederation) SelectBeforeDeleteQuery() string           { return "" }
 func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	cols := map[string]dbhelpers.WhereColumnInfo{
 		"id": dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},

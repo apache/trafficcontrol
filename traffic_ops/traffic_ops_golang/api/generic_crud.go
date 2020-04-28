@@ -26,7 +26,6 @@ import (
 	"github.com/apache/trafficcontrol/grove/web"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -68,9 +67,7 @@ type GenericDeleter interface {
 	GetType() string
 	APIInfo() *APIInfo
 	DeleteQuery() string
-	InsertIntoDeletedQuery(v interface{}, tx *sqlx.Tx) error
-	SelectBeforeDeleteQuery() string
-	NewDeleteObj() interface{}
+	InsertIntoDeletedQuery() string
 }
 
 // GenericOptionsDeleter can use any key listed in DeleteKeyOptions() to delete a resource.
@@ -79,6 +76,7 @@ type GenericOptionsDeleter interface {
 	APIInfo() *APIInfo
 	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 	DeleteQueryBase() string
+	//InsertIntoDeletedQueryBase() string
 }
 
 // GenericCreate does a Create (POST) for the given GenericCreator object and type. This exists as a generic function, for the common use case of a single "id" key and a lastUpdated field.
@@ -153,16 +151,11 @@ func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orde
 			queryValues[k] = v
 		}
 		if len(errs) > 0 {
+			log.Warnf("Got errors while forming the query clause %v", errs)
 			return runSecond
 		}
-		//query =
-		//	`SELECT max(t) from (
-		//		SELECT max(last_updated) as t from type typ ` + where + orderBy + pagination +
-		//		` UNION ALL
-		//	select max(deleted_time) as t from deleted_type dtyp ` + where2 + orderBy2 + pagination2 +
-		//		` ) as res`
-
 		rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
+		defer rows.Close()
 		if err != nil {
 			log.Warnf("Couldn't get the max last updated time: %v", err)
 			return runSecond
@@ -171,7 +164,6 @@ func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orde
 			runSecond = false
 			return runSecond
 		}
-
 		// This should only ever contain one row
 		if rows.Next() {
 			v := &LatestTimestamp{}
@@ -187,7 +179,6 @@ func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orde
 		} else {
 			runSecond = false
 		}
-		defer rows.Close()
 	}
 	return runSecond
 }
@@ -271,27 +262,28 @@ func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func InsertInDeletedTable(val GenericDeleter, v interface{}) (error, error, int) {
-	err := val.InsertIntoDeletedQuery(v, val.APIInfo().Tx)
+func InsertInDeletedTable(val GenericDeleter) (error, error, int) {
+	query := val.InsertIntoDeletedQuery()
+	result, err := val.APIInfo().Tx.NamedExec(query, val)
 	if err != nil {
 		return ParseDBError(err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err, nil, http.StatusInternalServerError
+	}
+	if rowsAffected != 1 {
+		return nil, errors.New("More than one insertions happended in the deleted table"), http.StatusInternalServerError
 	}
 	return nil, nil, http.StatusOK
 }
 
 // GenericDelete does a Delete (DELETE) for the given GenericDeleter object and type. This exists as a generic function, for the common use case of a simple delete with query parameters defined in the sqlx struct tags.
 func GenericDelete(val GenericDeleter) (error, error, int) {
-	var v interface{}
-	res, err := val.APIInfo().Tx.NamedQuery(val.SelectBeforeDeleteQuery(), val)
-	if err != nil {
-		fmt.Println("Couldnt get before select ", err)
-	}
-	defer res.Close()
-	for res.Next() {
-		v = val.NewDeleteObj()
-		if err = res.StructScan(v); err != nil {
-			return nil, errors.New("scanning " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
-		}
+	code := http.StatusOK
+	e1, e2, code := InsertInDeletedTable(val)
+	if e1 != nil || e2 != nil {
+		return e1, e2, code
 	}
 	result, err := val.APIInfo().Tx.NamedExec(val.DeleteQuery(), val)
 	if err != nil {
@@ -305,5 +297,5 @@ func GenericDelete(val GenericDeleter) (error, error, int) {
 	} else if rowsAffected > 1 {
 		return nil, fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
 	}
-	return InsertInDeletedTable(val, v)
+	return nil, nil, code
 }

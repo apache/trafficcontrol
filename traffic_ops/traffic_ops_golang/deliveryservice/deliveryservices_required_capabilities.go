@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -53,18 +52,13 @@ type RequiredCapability struct {
 func (v *RequiredCapability) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                            //{ return selectMaxLastUpdatedQuery() }
-func (v *RequiredCapability) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
-func (v *RequiredCapability) SelectBeforeDeleteQuery() string           { return "" }
+func (v *RequiredCapability) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 // SetLastUpdated implements the api.GenericCreator interfaces and
 // sets the timestamp on insert.
 func (rc *RequiredCapability) SetLastUpdated(t tc.TimeNoMod) { rc.LastUpdated = &t }
 
 // NewReadObj implements the api.GenericReader interfaces.
 func (rc *RequiredCapability) NewReadObj() interface{} {
-	return &tc.DeliveryServicesRequiredCapability{}
-}
-
-func (rc *RequiredCapability) NewDeleteObj() interface{} {
 	return &tc.DeliveryServicesRequiredCapability{}
 }
 

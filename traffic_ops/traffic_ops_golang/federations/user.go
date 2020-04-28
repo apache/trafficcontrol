@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -54,10 +53,8 @@ func (v *TOUsers) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
 func (v *TOUsers) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                 //{ return selectMaxLastUpdatedQuery() }
-func (v *TOUsers) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOUsers) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (v *TOUsers) NewReadObj() interface{}        { return &tc.FederationUser{} }
-func (v *TOUsers) NewDeleteObj() interface{}        { return &tc.FederationUser{} }
-func (v *TOUsers) SelectBeforeDeleteQuery() string { return "" }
 func (v *TOUsers) DeleteQuery() string {
 	return `
 DELETE FROM federation_tmuser

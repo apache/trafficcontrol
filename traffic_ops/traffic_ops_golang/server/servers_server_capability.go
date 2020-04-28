@@ -64,9 +64,6 @@ func (ssc *TOServerServerCapability) SetLastUpdated(t tc.TimeNoMod) { ssc.LastUp
 func (ssc *TOServerServerCapability) NewReadObj() interface{} {
 	return &tc.ServerServerCapability{}
 }
-func (ssc *TOServerServerCapability) NewDeleteObj() interface{} {
-	return &tc.ServerServerCapability{}
-}
 func (ssc *TOServerServerCapability) SelectQuery() string { return scSelectQuery() }
 func (ssc *TOServerServerCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
@@ -77,8 +74,6 @@ func (ssc *TOServerServerCapability) ParamColumns() map[string]dbhelpers.WhereCo
 
 }
 func (ssc *TOServerServerCapability) DeleteQuery() string { return scDeleteQuery() }
-func (v *TOServerServerCapability) SelectBeforeDeleteQuery() string { return "" }
-
 func (ssc TOServerServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{
 		{ServerQueryParam, api.GetIntKey},
@@ -139,7 +134,7 @@ func (ssc *TOServerServerCapability) Read(h http.Header) ([]interface{}, error, 
 func (v *TOServerServerCapability) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
 }                                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TOServerServerCapability) InsertIntoDeletedQuery (interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOServerServerCapability) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {
 	// Ensure that the user is not removing a server capability from the server
 	// that is required by the delivery services the server is assigned to (if applicable)

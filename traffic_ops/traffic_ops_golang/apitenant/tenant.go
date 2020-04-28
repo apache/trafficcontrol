@@ -55,9 +55,9 @@ func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOTenant) InsertQuery() string           { return insertQuery() }
 func (v *TOTenant) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
-}                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TOTenant) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
-func (v *TOTenant) NewReadObj() interface{}        { return &tc.TenantNullable{} }
+}                                                                      //{ return selectMaxLastUpdatedQuery() }
+func (v *TOTenant) InsertIntoDeletedQuery(interface{}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOTenant) NewReadObj() interface{}                            { return &tc.TenantNullable{} }
 func (v *TOTenant) SelectQuery() string {
 	return selectQuery(v.APIInfo().User.TenantID)
 }

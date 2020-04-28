@@ -129,10 +129,10 @@ func (v *TOFedDSes) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
 
 func (v *TOFedDSes) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
 	return ""
-}                                                   //{ return selectMaxLastUpdatedQuery() }
-func (v *TOFedDSes) InsertIntoDeletedQuery(interface {}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
-func (v *TOFedDSes) NewReadObj() interface{}        { return &tc.FederationDeliveryServiceNullable{} }
-func (v *TOFedDSes) SelectQuery() string            { return selectQuery() }
+}                                                                       //{ return selectMaxLastUpdatedQuery() }
+func (v *TOFedDSes) InsertIntoDeletedQuery(interface{}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOFedDSes) NewReadObj() interface{}                            { return &tc.FederationDeliveryServiceNullable{} }
+func (v *TOFedDSes) SelectQuery() string                                { return selectQuery() }
 func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"id":   dbhelpers.WhereColumnInfo{"fds.federation", api.IsInt},
