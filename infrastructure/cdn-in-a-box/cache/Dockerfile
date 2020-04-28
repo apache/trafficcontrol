@@ -48,11 +48,12 @@ RUN mkdir -p /var/trafficserver /opt/ort && \
 
 RUN setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_server && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_manager && setcap CAP_NET_BIND_SERVICE=+eip /bin/trafficserver && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_cop
 
-ADD infrastructure/cdn-in-a-box/ort /opt/ort/
-
 WORKDIR /opt
 
-RUN touch /var/log/ort.log && pip3 install Apache-TrafficControl==1.1.3 && pip3 install ./ort && cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template && mkdir -p /opt/init.d && cp ort/traffic_ops_ort.logrotate /etc/logrotate.d/ort
+ADD infrastructure/cdn-in-a-box/ort /opt/ort/
+ADD traffic_control/clients/python /opt/Apache-TrafficControl/
+
+RUN touch /var/log/ort.log && pip3 install ./Apache-TrafficControl && pip3 install ./ort && cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template && mkdir -p /opt/init.d && cp ort/traffic_ops_ort.logrotate /etc/logrotate.d/ort
 
 ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
 ADD infrastructure/cdn-in-a-box/cache/atstccfg /bin/
