@@ -77,4 +77,4 @@ chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_
 crond -im off
 
 touch /var/log/trafficserver/diags.log
-tail -Fn +1 /var/log/trafficserver/diags.log
+tail -Fn +1 /var/log/trafficserver/diags.log /var/log/ort.log

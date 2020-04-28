@@ -87,4 +87,4 @@ until grep -q demo1 /etc/trafficserver/remap.config; do
 done
 
 touch /var/log/trafficserver/diags.log
-tail -Fn +1 /var/log/trafficserver/diags.log
+tail -Fn +1 /var/log/trafficserver/diags.log /var/log/ort.log
