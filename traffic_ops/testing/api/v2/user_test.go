@@ -164,7 +164,7 @@ func UserRegistrationTest(t *testing.T) {
 	}
 	defer db.Close()
 	q := `DELETE FROM tm_user WHERE email IN (` + strings.Join(emails, ",") + `)`
-	if err := execSQL(db, q, "tm_user"); err != nil {
+	if err := execSQL(db, q); err != nil {
 		t.Errorf("cannot execute SQL to delete registered users: %s; SQL is %s", err.Error(), q)
 	}
 }
