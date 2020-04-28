@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
+trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+set -o errexit -o nounset
+
 for arg in "$@"; do
 	case $arg in
 		-h*) action=bypass
