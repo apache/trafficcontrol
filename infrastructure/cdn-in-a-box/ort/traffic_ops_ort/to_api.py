@@ -133,7 +133,7 @@ class API(TOSession):
 		"""
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfgCmd + ["--get-data=statuses"])
+				proc = subprocess.run(self.atstccfgCmd + ["--get-data=statuses"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 				logging.debug("Raw response: %s", proc.stdout)
 				if proc.stderr:
 					logging.error(proc.stderr)
@@ -155,7 +155,7 @@ class API(TOSession):
 		atstccfg_cmd = self.atstccfg_cmd + ["--get-data=packages"]
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(atstccfg_cmd)
+				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 				logging.debug("Raw output: %s", proc.stdout)
 				if proc.stderr:
 					logging.error("proc.stderr")
@@ -184,7 +184,7 @@ class API(TOSession):
 			atstccfg_cmd = self.atstccfg_cmd + ["--revalidate-only"]
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(atstccfg_cmd)
+				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 				logging.debug("Raw response: %s", proc.stdout)
 				if proc.stderr:
 					logging.error(proc.stderr)
@@ -226,7 +226,7 @@ class API(TOSession):
 		atstccfgCmd = self.atstccfgCmd + ["--set-queue-status=false", "--set-reval-status=false"]
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(atstccfgCmd, capture_output=True, text=True)
+				proc = subprocess.run(atstccfgCmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 				logging.info(proc.stdout)
 				logging.error(proc.stderr)
 				if proc.returncode == 0:
@@ -248,7 +248,7 @@ class API(TOSession):
 
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfgCmd + ["--get-data=chkconfig"])
+				proc = subprocess.run(self.atstccfgCmd + ["--get-data=chkconfig"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 				logging.debug("Raw response: %s", proc.stdout)
 				logging.error(proc.stderr)
 				if proc.returncode == 0:
@@ -268,7 +268,7 @@ class API(TOSession):
 		logging.info("Fetching update status from Traffic Ops")
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfgCmd + ["--get-data=update-status"])
+				proc = subprocess.run(self.atstccfgCmd + ["--get-data=update-status"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 				logging.debug("Raw response: %s", proc.stdout)
 				logging.error(proc.stderr)
 				if proc.returncode == 0:

@@ -339,6 +339,7 @@ __author__  = "Brennan Fieck"
 
 import argparse
 import datetime
+from distutils.spawn import find_executable
 import logging
 import os
 import random
@@ -538,5 +539,8 @@ def main() -> int:
 			print("(Hint: use -h/--help for usage)", file=sys.stderr)
 			return 1
 
+	if not find_executable("atstccfg"):
+		print("Could not find atstccfg executable - this is required to run ORT!", file=sys.stderr)
+		return 1
 
 	return doMain(args)
