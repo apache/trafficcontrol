@@ -133,12 +133,12 @@ class API(TOSession):
 		"""
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=statuses"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-				logging.debug("Raw response: %s", proc.stdout)
-				if proc.stderr:
-					logging.error(proc.stderr)
+				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=statuses"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw response: %s", proc.stdout.decode())
+				if proc.stderr.decode():
+					logging.error(proc.stderr.decode())
 				if proc.returncode == 0:
-					return json.loads(proc.stdout)
+					return json.loads(proc.stdout.decode())
 			except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
 				logging.error("status fetch failure: %s", e)
 		raise ConnectionError("Failed to fetch statuses from atstccfg")
@@ -155,12 +155,12 @@ class API(TOSession):
 		atstccfg_cmd = self.atstccfg_cmd + ["--get-data=packages"]
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-				logging.debug("Raw output: %s", proc.stdout)
-				if proc.stderr:
-					logging.error("proc.stderr")
+				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw output: %s", proc.stdout.decode())
+				if proc.stderr.decode():
+					logging.error("proc.stderr.decode()")
 				if proc.returncode == 0:
-					return [Package(p) for p in json.loads(proc.stdout)]
+					return [Package(p) for p in json.loads(proc.stdout.decode())]
 			except (ValueError, IndexError, json.JSONDecodeError, OSError, subprocess.SubprocessError) as e:
 				logging.debug("package fetch failure: %r", e, stack_info=True, exc_info=True)
 
@@ -184,12 +184,12 @@ class API(TOSession):
 			atstccfg_cmd = self.atstccfg_cmd + ["--revalidate-only"]
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-				logging.debug("Raw response: %s", proc.stdout)
-				if proc.stderr:
-					logging.error(proc.stderr)
+				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw response: %s", proc.stdout.decode())
+				if proc.stderr.decode():
+					logging.error(proc.stderr.decode())
 				if proc.returncode == 0:
-					return [ConfigFile(tsroot=conf.tsroot, contents=x[0], path=x[1]) for x in utils.parse_multipart(proc.stdout)]
+					return [ConfigFile(tsroot=conf.tsroot, contents=x[0], path=x[1]) for x in utils.parse_multipart(proc.stdout.decode())]
 			except (subprocess.SubprocessError, ValueError, OSError) as e:
 				logging.debug("config file fetch failure: %r", e, exc_info=True, stack_info=True)
 
@@ -226,9 +226,9 @@ class API(TOSession):
 		atstccfgCmd = self.atstccfg_cmd + ["--set-queue-status=false", "--set-reval-status=false"]
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(atstccfgCmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-				logging.info(proc.stdout)
-				logging.error(proc.stderr)
+				proc = subprocess.run(atstccfgCmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.info(proc.stdout.decode())
+				logging.error(proc.stderr.decode())
 				if proc.returncode == 0:
 					break
 			except (LoginError, InvalidJSONError, OperationError, RequestException) as e:
@@ -248,11 +248,11 @@ class API(TOSession):
 
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=chkconfig"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-				logging.debug("Raw response: %s", proc.stdout)
-				logging.error(proc.stderr)
+				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=chkconfig"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw response: %s", proc.stdout.decode())
+				logging.error(proc.stderr.decode())
 				if proc.returncode == 0:
-					return json.loads(proc.stdout)
+					return json.loads(proc.stdout.decode())
 			except (json.JSONDecodeError, OSError, subprocess.SubprocessError) as e:
 				logging.debug("chkconfig fetch failure: %r", e, exc_info=True, stack_info=True)
 
@@ -268,11 +268,11 @@ class API(TOSession):
 		logging.info("Fetching update status from Traffic Ops")
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=update-status"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-				logging.debug("Raw response: %s", proc.stdout)
-				logging.error(proc.stderr)
+				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=update-status"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw response: %s", proc.stdout.decode())
+				logging.error(proc.stderr.decode())
 				if proc.returncode == 0:
-					return json.loads(proc.stdout)
+					return json.loads(proc.stdout.decode())
 			except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
 				logging.debug("update status fetch failure: %r", e, exc_info=True, stack_info=True)
 
