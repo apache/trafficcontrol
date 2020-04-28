@@ -263,10 +263,10 @@ class ConfigFile():
 		"""
 		global SSL_KEY_REGEX
 
-		logging.info("Doing advanced SSL key processing for CDN '%s'", conf.serverInfo.cdnName)
+		logging.info("Doing advanced SSL key processing for CDN '%s'", conf.ServerInfo.cdnName)
 
 		try:
-			r = conf.api.get_cdn_ssl_keys(cdn_name=conf.serverInfo.cdnName)
+			r = conf.api.get_cdn_ssl_keys(cdn_name=conf.ServerInfo.cdnName)
 
 			if r[1].status_code != 200 and r[1].status_code != 204:
 				raise OSError("Bad response code: %d - raw response: %s" %
@@ -324,7 +324,7 @@ class ConfigFile():
 					break
 			else:
 				logging.critical("Failed to find SSL key in %s for '%s' or by wildcard '%s'!",
-				                         conf.serverInfo.cdnName,  full,            wildcard)
+				                         conf.ServerInfo.cdnName,  full,            wildcard)
 				raise OSError("No cert/key pair for ssl_multicert.config line '%s'" % l)
 
 		# If even one key was written, we need to make ATS aware of the configuration changes
@@ -365,7 +365,7 @@ def sanitizeContents(raw:str, conf:Configuration) -> str:
 	"""
 	out = []
 
-	lines = (conf.servicerInfo.sanitize(raw, conf.hostname) if conf.servicerInfo else raw).splitlines()
+	lines = (conf.ServerInfo.sanitize(raw, conf.hostname) if conf.ServerInfo else raw).splitlines()
 	for line in lines:
 		tmp=(" ".join(line.split())).strip() #squeezes spaces and trims leading and trailing spaces
 		tmp=tmp.replace("&amp;", '&') #decodes HTML-encoded ampersands
