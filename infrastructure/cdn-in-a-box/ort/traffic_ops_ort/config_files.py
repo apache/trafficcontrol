@@ -60,13 +60,15 @@ class ConfigFile():
 	contents = "" #: The full contents of the file - as configured in TO, not the on-disk contents
 	sanitizedContents = "" #: Will store the contents after sanitization
 
-	def __init__(self, raw:dict = None, toURL:str = "", tsroot:str = "/"):
+	def __init__(self, raw:dict = None, toURL:str = "", tsroot:str = "/", *unused_args, contents: str = None, path: str = None):
 		"""
 		Constructs a :class:`ConfigFile` object from a raw API response
 
 		:param raw: A raw config file from an API response
 		:param toURL: The URL of a valid Traffic Ops host
 		:param tsroot: The absolute path to the root of an Apache Traffic Server installation
+		:param contents: Directly constructs a ConfigFile from the passed contents. Must be used with path, and causes raw to be ignored.
+		:param path: Sets the full path to the file when constructing ConfigFiles directly from contents.
 		:raises ValueError: if ``raw`` does not faithfully represent a configuration file
 
 		>>> a = ConfigFile({"fnameOnDisk": "test",
@@ -77,7 +79,17 @@ class ConfigFile():
 		ConfigFile(path='/path/to/test', URI='http://example.com/test', scope='servers')
 		>>> a.SSLdir
 		"/etc/trafficserver/ssl"
+		>>> ConfigFile(contents='testquest\n', path='/path/to/test')
+		ConfigFile(path='/path/to/test', URI='', scope='')
 		"""
+		self.SSLdir = os.path.join(tsroot, "etc", "trafficserver", "ssl")
+
+		if contents is not None:
+			if path is None:
+				raise ValueError("cannot construct from direct contents without setting path")
+			self.fname, self.location = os.path.split(path)
+			self.contents = contents
+			return
 		if raw is not None:
 			try:
 				self.fname = raw["fnameOnDisk"]
@@ -90,7 +102,6 @@ class ConfigFile():
 			except (KeyError, TypeError, IndexError) as e:
 				raise ValueError from e
 
-		self.SSLdir = os.path.join(tsroot, "etc", "trafficserver", "ssl")
 
 	def __repr__(self) -> str:
 		"""
@@ -175,8 +186,10 @@ class ConfigFile():
 		if not self.contents:
 			self.fetchContents(conf.api)
 			finalContents = sanitizeContents(self.contents, conf)
-		else:
+		else if self.URI:
 			finalContents = self.contents
+		else:
+			finalContents = sanitizeContents(self.contents, conf)
 
 		# Ensure POSIX-compliant files
 		if not finalContents.endswith('\n'):
@@ -351,11 +364,8 @@ def sanitizeContents(raw:str, conf:Configuration) -> str:
 	"""
 	out = []
 
-	# These double curly braces escape the behaviour of Python's `str.format` method to attempt
-	# to use curly brace-enclosed text as a key into a dictonary of its arguments. They'll be
-	# rendered into single braces in the output of `.format`, leaving the string ultimately
-	# unchanged in that respect.
-	for line in conf.serverInfo.sanitize(raw, conf.hostname).splitlines():
+	lines = (conf.servicerInfo.sanitize(raw, conf.hostname) if conf.servicerInfo else raw).splitlines()
+	for line in lines:
 		tmp=(" ".join(line.split())).strip() #squeezes spaces and trims leading and trailing spaces
 		tmp=tmp.replace("&amp;", '&') #decodes HTML-encoded ampersands
 		tmp=tmp.replace("&gt;", '>') #decodes HTML-encoded greater-than symbols
