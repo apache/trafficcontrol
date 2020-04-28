@@ -25,7 +25,7 @@ source to-access.sh
 set-dns.sh
 insert-self-into-dns.sh
 
-while ! to-ping 2>/dev/null; do
+while ! to-ping; do
     echo waiting for trafficops
     sleep 3
 done
@@ -33,25 +33,25 @@ done
 while true; do
     sleep 3
     exampleURLs=($(to-get /api/${TO_API_VERSION}/deliveryservices | jq -r '.response[].exampleURLs[]' || true))
-    if [[ "${#exampleURLs[@]}" -eq 0 ]]; then
+    if ! exampeURLs=($(to-get "/api/${TO_API_VERSION}/deliveryservices" | jq -r '.response[].exampleURLs[]')) \
+            || [[ "${#exampleURLs[@]}" -eq 0 ]]; then
         echo waiting for delivery service example URLs
         continue
     fi
-    echo "example URLs: '${exampleURLs[@]}'"
+    echo "example URLs: '${exampleURLs[*]}'"
 
     success="true"
     for u in "${exampleURLs[@]}"; do
-        status=$(curl -Lkvs --connect-timeout 2 -m5 -o /dev/null -w "%{http_code}" "$u" || true)
-        if [[ "$status" -ne 200 ]]; then
+        if ! status=$(curl -Lkvs --connect-timeout 2 -m5 -o /dev/null -w "%{http_code}" "$u") \
+                || [[ "$status" -ne 200 ]]; then
             echo "failed to curl delivery service example URL '$u' got status code '$status'"
             success="false"
             break
-        else
-            echo "successfully curled delivery service example URL '$u'"
         fi
+        echo "successfully curled delivery service example URL '$u'"
     done
     if [[ "$success" == "true" ]]; then
-        echo "successfully curled all delivery service example URLs '${exampleURLs[@]}'"
+        echo "successfully curled all delivery service example URLs '${exampleURLs[*]}'"
         break
     fi
 done
