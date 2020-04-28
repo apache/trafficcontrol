@@ -169,12 +169,6 @@ class API(TOSession):
 
 		raise ConnectionError("Failed to get a response for packages")
 
-	def setConfigFileAPIVersion(self, files: Munch) -> None:
-		match_api_base = re.compile(r'^(/api/)\d+\.\d+(/)')
-		api_base_replacement = r'\g<1>%s\2' % API.VERSION
-		for configFile in files.configFiles:
-			configFile.apiUri = match_api_base.sub(api_base_replacement, configFile.apiUri)
-
 	def getMyConfigFiles(self, conf:Configuration) -> typing.List[ConfigFile]:
 		"""
 		Fetches configuration files constructed by Traffic Ops for this server
