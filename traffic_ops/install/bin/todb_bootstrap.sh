@@ -22,6 +22,10 @@
 #
 #    $ TODB_USERNAME_PASSWORD=<yourpassword> ./todb_bootstrap.sh
 #
+
+trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+set -o errexit -o nounset
+
 TODB_USERNAME=traffic_ops
 TODB_NAME=traffic_ops
 
