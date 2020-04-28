@@ -78,7 +78,7 @@ def revalidateState(conf:Configuration) -> bool:
 	"""
 	logging.info("starting revalidation state fetch")
 
-	updateStatus = conf.api.getMyUpdateStatus()[0]
+	updateStatus = conf.api.getMyUpdateStatus()
 
 	logging.debug("Retrieved raw revalidation status: %r", updateStatus)
 	if (conf.wait_for_parents and
