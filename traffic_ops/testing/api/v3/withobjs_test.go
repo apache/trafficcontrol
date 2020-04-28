@@ -43,6 +43,7 @@ const (
 	CDNFederations
 	Coordinates
 	DeliveryServices
+	DeliveryServicesRegexes
 	DeliveryServiceRequests
 	DeliveryServiceRequestComments
 	DeliveryServicesRequiredCapabilities
@@ -82,6 +83,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	CDNFederations:                       {CreateTestCDNFederations, DeleteTestCDNFederations},
 	Coordinates:                          {CreateTestCoordinates, DeleteTestCoordinates},
 	DeliveryServices:                     {CreateTestDeliveryServices, DeleteTestDeliveryServices},
+	DeliveryServicesRegexes:              {CreateTestDeliveryServicesRegexes, DeleteTestDeliveryServicesRegexes},
 	DeliveryServiceRequests:              {CreateTestDeliveryServiceRequests, DeleteTestDeliveryServiceRequests},
 	DeliveryServiceRequestComments:       {CreateTestDeliveryServiceRequestComments, DeleteTestDeliveryServiceRequestComments},
 	DeliveryServicesRequiredCapabilities: {CreateTestDeliveryServicesRequiredCapabilities, DeleteTestDeliveryServicesRequiredCapabilities},

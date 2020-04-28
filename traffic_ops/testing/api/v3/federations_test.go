@@ -82,13 +82,13 @@ func GetTestFederations(t *testing.T) {
 	}
 }
 
-func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryService, tc.DeliveryService, error) {
-	dses, _, err := TOSession.GetDeliveryServices()
+func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceNullable, tc.DeliveryServiceNullable, error) {
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
-		return -1, tc.DeliveryService{}, tc.DeliveryService{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
+		return -1, tc.DeliveryServiceNullable{}, tc.DeliveryServiceNullable{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 	if len(dses) == 0 {
-		return -1, tc.DeliveryService{}, tc.DeliveryService{}, errors.New("no delivery services, must have at least 1 ds to test federations deliveryservices")
+		return -1, tc.DeliveryServiceNullable{}, tc.DeliveryServiceNullable{}, errors.New("no delivery services, must have at least 1 ds to test federations deliveryservices")
 	}
 	ds := dses[0]
 	ds1 := dses[1]
@@ -98,7 +98,7 @@ func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryService, tc
 	}
 	fedID := fedIDs[0]
 
-	_, err = TOSession.CreateFederationDeliveryServices(fedID, []int{ds.ID, ds1.ID}, true)
+	_, err = TOSession.CreateFederationDeliveryServices(fedID, []int{*ds.ID, *ds1.ID}, true)
 	if err != nil {
 		err = fmt.Errorf("creating federations delivery services: %v", err)
 	}
@@ -123,7 +123,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	}
 
 	// Delete one of the Delivery Services from the Federation
-	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, ds.ID)
+	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, *ds.ID)
 	if err != nil {
 		t.Fatalf("cannot Delete Federation %v DeliveryService %v: %v", fedID, ds.ID, err)
 	}
@@ -140,7 +140,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	}
 
 	// Attempt to delete the last one which should fail as you cannot remove the last
-	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, ds1.ID)
+	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, *ds1.ID)
 	if err == nil {
 		t.Fatal("expected to receive error from attempting to delete last Delivery Service from a Federation")
 	}
@@ -194,14 +194,14 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 
 	mappings := tc.DeliveryServiceFederationResolverMappingRequest{
 		tc.DeliveryServiceFederationResolverMapping{
-			DeliveryService: ds.XMLID,
+			DeliveryService: *ds.XMLID,
 			Mappings: tc.ResolverMapping{
 				Resolve4: []string{"0.0.0.0"},
 				Resolve6: []string{"::1"},
 			},
 		},
 		tc.DeliveryServiceFederationResolverMapping{
-			DeliveryService: ds1.XMLID,
+			DeliveryService: *ds1.XMLID,
 			Mappings: tc.ResolverMapping{
 				Resolve4: []string{"1.2.3.4/28"},
 				Resolve6: []string{"1234::/110"},

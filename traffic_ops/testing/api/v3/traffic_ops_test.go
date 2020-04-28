@@ -30,13 +30,15 @@ import (
 )
 
 var (
-	Config   config.Config
-	testData TrafficControl
+	Config             config.Config
+	testData           TrafficControl
+	includeSystemTests bool
 )
 
 func TestMain(m *testing.M) {
 	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
 	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
+	cliIncludeSystemTests := *flag.Bool("includeSystemTests", false, "Whether to enable tests that have environment dependencies beyond a database")
 	flag.Parse()
 
 	// Skip loading configuration when run with `go test -list=<pat>`. The -list
@@ -55,6 +57,9 @@ func TestMain(m *testing.M) {
 		fmt.Printf("Error Loading Config: %v\n", err)
 		os.Exit(1)
 	}
+
+	// CLI option overrides config
+	includeSystemTests = Config.Default.IncludeSystemTests || cliIncludeSystemTests
 
 	if err = log.InitCfg(Config); err != nil {
 		fmt.Printf("Error initializing loggers: %v\n", err)
