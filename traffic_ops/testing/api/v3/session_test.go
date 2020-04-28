@@ -31,15 +31,15 @@ func SetupSession(toReqTimeout time.Duration, toURL string, toUser string, toPas
 	var err error
 
 	toReqTimeout = time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	NoAuthTOSession = client.NewNoAuthSession(toURL, true, "to-api-v2-client-tests", true, toReqTimeout)
-	TOSession, _, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v2-client-tests", true, toReqTimeout)
+	NoAuthTOSession = client.NewNoAuthSession(toURL, true, "to-api-v3-client-tests", true, toReqTimeout)
+	TOSession, _, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v3-client-tests", true, toReqTimeout)
 	return err
 }
 
 func TeardownSession(toReqTimeout time.Duration, toURL string, toUser string, toPass string) error {
 	var err error
 	toReqTimeout = time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	TOSession, _, err = client.LogoutWithAgent(toURL, toUser, toPass, true, "to-api-v2-client-tests", true, toReqTimeout)
+	TOSession, _, err = client.LogoutWithAgent(toURL, toUser, toPass, true, "to-api-v3-client-tests", true, toReqTimeout)
 
 	return err
 }

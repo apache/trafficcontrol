@@ -26,7 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 func TestUsers(t *testing.T) {
@@ -120,7 +120,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 
 func OpsUpdateAdminTest(t *testing.T) {
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v2-client-tests/opsuser", true, toReqTimeout)
+	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v3-client-tests/opsuser", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
 	}
@@ -171,7 +171,7 @@ func UserRegistrationTest(t *testing.T) {
 
 func UserSelfUpdateTest(t *testing.T) {
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v2-client-tests/opsuser", true, toReqTimeout)
+	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v3-client-tests/opsuser", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
 	}
@@ -364,7 +364,7 @@ func UserTenancyTest(t *testing.T) {
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v2-client-tests/tenant4user", true, toReqTimeout)
+	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v3-client-tests/tenant4user", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
 	}

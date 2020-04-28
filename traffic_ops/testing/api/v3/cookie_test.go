@@ -32,7 +32,7 @@ func TestCookies(t *testing.T) {
 }
 
 func CookiesTest(t *testing.T) {
-	s, _, err := toclient.LoginWithAgent(Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, true, "to-api-v2-client-tests", false, toReqTimeout)
+	s, _, err := toclient.LoginWithAgent(Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, true, "to-api-v3-client-tests", false, toReqTimeout)
 	credentials := tc.UserCredentials{
 		Username: Config.TrafficOps.Users.Admin,
 		Password: Config.TrafficOps.UserPassword,

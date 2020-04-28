@@ -40,7 +40,7 @@ func TestLoginFail(t *testing.T) {
 func PostTestLoginFail(t *testing.T) {
 	// This specifically tests a previous bug: auth failure returning a 200, causing the client to think the request succeeded, and deserialize no matching fields successfully, and return an empty object.
 
-	userAgent := "to-api-v2-client-tests-loginfailtest"
+	userAgent := "to-api-v3-client-tests-loginfailtest"
 	uninitializedTOClient, err := getUninitializedTOClient(Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.URL, userAgent, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
 	if err != nil {
 		t.Fatalf("getting uninitialized client: %+v", err)
@@ -64,7 +64,7 @@ func PostTestLoginFail(t *testing.T) {
 }
 
 func LoginWithEmptyCredentialsTest(t *testing.T) {
-	userAgent := "to-api-v2-client-tests-loginfailtest"
+	userAgent := "to-api-v3-client-tests-loginfailtest"
 	_, _, err := toclient.LoginWithAgent(Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, "", true, userAgent, false, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
 	if err == nil {
 		t.Fatal("expected error when logging in with empty credentials, actual nil")
@@ -88,7 +88,7 @@ func LoginWithTokenTest(t *testing.T) {
 		t.Fatalf("Failed to set disallowed token: %v", err)
 	}
 
-	userAgent := "to-api-v2-client-tests-loginfailtest"
+	userAgent := "to-api-v3-client-tests-loginfailtest"
 	s, _, err := toclient.LoginWithToken(Config.TrafficOps.URL, allowedToken, true, userAgent, false, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
 	if err != nil {
 		t.Errorf("unexpected error when logging in with a token: %v", err)

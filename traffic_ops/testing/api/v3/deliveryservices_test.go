@@ -26,7 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 func TestDeliveryServices(t *testing.T) {
@@ -497,7 +497,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v2-client-tests/tenant4user", true, toReqTimeout)
+	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v3-client-tests/tenant4user", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
 	}
