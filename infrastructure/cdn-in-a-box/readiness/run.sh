@@ -32,7 +32,7 @@ done
 
 while true; do
     sleep 3
-    exampleURLs=($(to-get /api/${TO_API_VERSION}/deliveryservices | jq -r '.response[].exampleURLs[]'))
+    exampleURLs=($(to-get /api/${TO_API_VERSION}/deliveryservices | jq -r '.response[].exampleURLs[]' || true))
     if [[ "${#exampleURLs[@]}" -eq 0 ]]; then
         echo waiting for delivery service example URLs
         continue
@@ -41,7 +41,7 @@ while true; do
 
     success="true"
     for u in "${exampleURLs[@]}"; do
-        status=$(curl -Lkvs --connect-timeout 2 -m5 -o /dev/null -w "%{http_code}" "$u")
+        status=$(curl -Lkvs --connect-timeout 2 -m5 -o /dev/null -w "%{http_code}" "$u" || true)
         if [[ "$status" -ne 200 ]]; then
             echo "failed to curl delivery service example URL '$u' got status code '$status'"
             success="false"
