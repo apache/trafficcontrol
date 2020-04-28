@@ -75,7 +75,7 @@ class API(TOSession):
 		self.atstccfgCmd = [
 			"atstccfg",
 			"--traffic-ops-url=http{}://{}:{}".format("s" if conf.useSSL else "", conf.toHost, conf.toPort),
-			"--cache-host-name={}".format(conf.hostname),
+			"--cache-host-name={}".format(self.hostname),
 			"--traffic-ops-user={}".format(conf.username),
 			"--traffic-ops-password={}".format(conf.password),
 			"--log-location-error=stderr",
