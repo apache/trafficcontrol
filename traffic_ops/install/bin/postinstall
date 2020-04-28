@@ -28,7 +28,7 @@ done
 
 # above options don't require any of the extra processing -- just kick off the script with
 # options intact.
-if [[ $action == "bypass" ]]; then
+if [[ -v action && "$action" == "bypass" ]]; then
 	/opt/traffic_ops/install/bin/_postinstall "$@"
 	exit
 fi
