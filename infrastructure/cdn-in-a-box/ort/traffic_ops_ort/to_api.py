@@ -263,21 +263,17 @@ class API(TOSession):
 
 		logging.info("Fetching chkconfig")
 
-		ret = None
 		for _ in range(self.retries):
 			try:
 				proc = subprocess.run(self.atstccfgCmd + ["--get-data=chkconfig"])
 				logging.debug("Raw response: %s", proc.stdout)
 				logging.error(proc.stderr)
 				if proc.returncode == 0:
-					ret = json.loads(proc.stdout)
-					break
-			except (json.JSONDecodeError, InvalidJSONError, OperationError, LoginError, RequestException) as e:
+					return json.loads(proc.stdout)
+			except (json.JSONDecodeError, OSError, subprocess.SubprocessError) as e:
 				logging.debug("chkconfig fetch failure: %r", e, exc_info=True, stack_info=True)
-		else:
-			raise ConnectionError("Failed to fetch 'chkconfig' from Traffic Ops - connection lost")
 
-		return ret
+		raise ConnectionError("Failed to fetch 'chkconfig' from Traffic Ops - connection lost")
 
 	def getMyUpdateStatus(self) -> dict:
 		"""
