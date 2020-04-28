@@ -171,7 +171,7 @@ func (tp *TOType) loadUseInTable() (error, error, string) {
 	return nil, nil, useInTable
 }
 
-//Srijeet change here
+//ToDo: change here
 // GetType
 func selectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2 string) string {
 	return `SELECT max(t) from (
