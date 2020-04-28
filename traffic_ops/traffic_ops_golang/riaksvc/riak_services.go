@@ -130,7 +130,6 @@ func setTLSVersion(riakConfig *AuthOptions) error {
 	} else if len(enabledVersions) == 0 {
 		// Default TLS versions if none given
 		enabledVersions[tls.VersionTLS11] = true
-		enabledVersions[tls.VersionTLS10] = true
 	}
 	// We initialize tlsOptions here
 	tlsOptions = &TLSOptions{Config: riakConfig.AuthOptions.TlsConfig, TLSVersions: make([]uint16, len(enabledVersions))}

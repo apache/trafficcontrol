@@ -143,14 +143,14 @@ func TestDeleteObject(t *testing.T) {
 func TestRotateTLSVersion(t *testing.T) {
 	riakConfig := &AuthOptions{
 		AuthOptions: riak.AuthOptions{TlsConfig: &tls.Config{}},
-		TLSVersions: []string{},
+		TLSVersions: []string{"1.1", "1.0"},
 	}
 	expected := []uint16{tls.VersionTLS11, tls.VersionTLS10}
 	if err := setTLSVersion(riakConfig); err != nil {
 		t.Error("expected nil but got ", err)
 	}
 	if !reflect.DeepEqual(expected, tlsOptions.TLSVersions) {
-		t.Errorf("Expected the default enabled TLS versions to be %v, instead got %v", expected, tlsOptions.TLSVersions)
+		t.Errorf("Expected the enabled TLS versions to be %v, instead got %v", expected, tlsOptions.TLSVersions)
 	}
 
 	rotateTLSVersion()

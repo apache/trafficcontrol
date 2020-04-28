@@ -182,8 +182,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/production/riak.conf
 {     "user": "$TV_RIAK_USER",
   "password": "$TV_RIAK_PASSWORD",
   "TLSVersions": [
-    "1.1",
-    "1.0"
+    "1.1"
   ]
 }
 EOF
