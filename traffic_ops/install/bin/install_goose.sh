@@ -20,7 +20,7 @@ echo "Now installing goose"
 export GOPATH=/opt/traffic_ops/go
 mkdir -p $GOPATH
 
-go get bitbucket.org/liamstask/goose/cmd/goose
-go get github.com/lib/pq
+go get -v bitbucket.org/liamstask/goose/cmd/goose
+go get -v github.com/lib/pq
 
 echo "Successfully installed goose to $GOPATH/bin/goose"
