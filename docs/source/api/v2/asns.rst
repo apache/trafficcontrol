@@ -14,7 +14,7 @@
 ..
 
 
-.. _to-api-asns:
+.. _to-api-v2-asns:
 
 ********
 ``asns``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-sslkeys-generate:
+.. _to-api-v2-deliveryservices-sslkeys-generate:
 
 *************************************
 ``deliveryservices/sslkeys/generate``
