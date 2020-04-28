@@ -29,6 +29,7 @@
 
 - name: Get the state of of the GOPATH before TO Install
   shell: find /opt/traffic_ops/go/ > /tmp/gopath.preinstall.txt
+  ignore_errors: true
 
 - name: Install Traffic Ops
   yum:
@@ -42,6 +43,7 @@
 
 - name: Get the state of of the GOPATH after TO Install
   shell: find /opt/traffic_ops/go/ > /tmp/gopath.prepostinstall.txt
+  ignore_errors: true
 
 - name: Check if Postinstall has already been run
   stat:
@@ -78,6 +80,7 @@
 
     - name: Get the state of of the GOPATH after Postinstall
       shell: find /opt/traffic_ops/go/ > /tmp/gopath.postpostinstall.txt
+      ignore_errors: true
 
     - name: Mark Postinstall was successful
       file:
