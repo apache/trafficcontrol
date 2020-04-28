@@ -48,7 +48,7 @@ cpanm Carton
 cd /opt/traffic_ops/app
 
 export POSTGRES_HOME=${POSTGRES_HOME:-/usr/pgsql-9.6}
-/usr/local/bin/carton
+perl -MCarton::CLI -e'Carton::CLI->new->run(@ARGV)'
 
 # Install go and goose
 /opt/traffic_ops/install/bin/install_goose.sh
