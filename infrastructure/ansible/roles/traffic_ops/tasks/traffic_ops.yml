@@ -27,6 +27,9 @@
     dest: /etc/profile.d/postgres96-bin.sh
     content: PATH=$PATH:/usr/pgsql-9.6/bin
 
+- name: Get the state of of the GOPATH before TO Install
+  shell: find /opt/traffic_ops/go/ > /tmp/gopath.preinstall.txt
+
 - name: Install Traffic Ops
   yum:
     name: "{{ to_pkg_name }}"
@@ -36,6 +39,9 @@
   notify: Restart Traffic Ops
   retries: 5
   delay: 5
+
+- name: Get the state of of the GOPATH after TO Install
+  shell: find /opt/traffic_ops/go/ > /tmp/gopath.prepostinstall.txt
 
 - name: Check if Postinstall has already been run
   stat:
@@ -67,7 +73,11 @@
         (Postinstall_output.stdout.find("Success! Postinstall complete.") == -1) or
         (Postinstall_output.rc != 0) or
         (Postinstall_output.stderr.find("Installing modules failed") != -1) or
-        (Postinstall_output.stdout.find("Installing modules failed") != -1)
+        (Postinstall_output.stdout.find("Installing modules failed") != -1) or
+        (Postinstall_output.stdout.find("Database migrate failed") != -1)
+
+    - name: Get the state of of the GOPATH after Postinstall
+      shell: find /opt/traffic_ops/go/ > /tmp/gopath.postpostinstall.txt
 
     - name: Mark Postinstall was successful
       file:
@@ -115,7 +125,7 @@
   notify: Restart Traffic Ops
 
 - name: Upgrade TODB
-  shell: (env | sort > /tmp/goose.debug.txt) && ./db/admin -env=production upgrade
+  shell: (env | sort > /tmp/goose.debug.txt) && ((which goose > /tmp/whichgoose.debug.txt) || true) && ./db/admin -env=production upgrade
   args:
     chdir: "{{ to_app_installdir }}"
   environment:
