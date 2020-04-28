@@ -33,7 +33,8 @@ from requests.exceptions import RequestException
 from trafficops.tosession import TOSession
 from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 
-from . import packaging
+from . import packaging, utils
+from .config_files import ConfigFile
 from .configuration import Configuration
 
 class API(TOSession):
@@ -184,7 +185,7 @@ class API(TOSession):
 		for configFile in files.configFiles:
 			configFile.apiUri = match_api_base.sub(api_base_replacement, configFile.apiUri)
 
-	def getMyConfigFiles(self, conf:Configuration) -> typing.List[dict]:
+	def getMyConfigFiles(self, conf:Configuration) -> typing.List[ConfigFile]:
 		"""
 		Fetches configuration files constructed by Traffic Ops for this server
 
@@ -197,31 +198,32 @@ class API(TOSession):
 		:raises ConnectionError: when something goes wrong communicating with Traffic Ops
 		"""
 		logging.info("Fetching list of configuration files from Traffic Ops")
+		atstccfg_cmd = self.atstccfgCmd
+		if conf.mode is Configuration.Modes.REVALIDATE:
+			atstccfg_cmd = self.atstccfg_cmd + ["--revalidate-only"]
 		for _ in range(self.retries):
 			try:
-				# The API function decorator confuses pylint into thinking this doesn't return
-				#pylint: disable=E1111
-				myFiles = self.get_server_config_files(host_name=self.hostname)
-				#pylint: enable=E1111
-				break
-			except (InvalidJSONError, LoginError, OperationError, RequestException) as e:
+				proc = subprocess.run(atstccfg_cmd)
+				logging.debug("Raw response: %s", proc.stdout)
+				if proc.stderr:
+					logging.error(proc.stderr)
+				if proc.returncode == 0:
+					return [ConfigFile(tsroot=conf.tsroot, contents=x[0], path=x[1]) for x in utils.parse_multipart(proc.stdout)]
+			except (subprocess.SubprocessError, ValueError, OSError) as e:
 				logging.debug("config file fetch failure: %r", e, exc_info=True, stack_info=True)
-		else:
-			raise ConnectionError("Failed to fetch configuration files from Traffic Ops")
 
-		logging.debug("Raw response from Traffic Ops: %s", myFiles[1].text)
-		myFiles = myFiles[0]
-		self.setConfigFileAPIVersion(myFiles)
+		raise ConnectionError("Failed to fetch configuration files from Traffic Ops")
 
-		try:
-			conf.serverInfo = ServerInfo(myFiles.info)
-			# if there's a reverse proxy, switch urls.
-			if conf.serverInfo.toRevProxyUrl and not conf.rev_proxy_disable:
-				self._server_url = conf.serverInfo.toRevProxyUrl
-				self._api_base_url = urljoin(self._server_url, '/api/%s' % self.VERSION).rstrip('/') + '/'
-			return myFiles.configFiles
-		except (KeyError, AttributeError, ValueError) as e:
-			raise ConnectionError("Malformed response from Traffic Ops to update status request!") from e
+		# Server-info sanitization is now done by atstccfg
+		# try:
+		# 	conf.serverInfo = ServerInfo(myFiles.info)
+		# 	# if there's a reverse proxy, switch urls.
+		# 	if conf.serverInfo.toRevProxyUrl and not conf.rev_proxy_disable:
+		# 		self._server_url = conf.serverInfo.toRevProxyUrl
+		# 		self._api_base_url = urljoin(self._server_url, '/api/%s' % self.VERSION).rstrip('/') + '/'
+		# 	return myFiles.configFiles
+		# except (KeyError, AttributeError, ValueError) as e:
+		# 	raise ConnectionError("Malformed response from Traffic Ops to update status request!") from e
 
 	def updateTrafficOps(self, mode:Configuration.Modes):
 		"""
