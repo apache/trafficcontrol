@@ -102,11 +102,11 @@ def deleteOldStatusFiles(myStatus:str, conf:Configuration):
 
 	doDeleteFiles = conf.mode is not Configuration.Modes.REPORT
 
-	for status in conf.api.get_statuses()[0]:
+	for status in conf.api.get_statuses():
 
 		# Only the status name matters
 		try:
-			status = status.name
+			status = status["name"]
 		except KeyError as e:
 			logging.debug("Bad status object: %r", status)
 			raise ConnectionError from e

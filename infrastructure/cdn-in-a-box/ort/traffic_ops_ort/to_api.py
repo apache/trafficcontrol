@@ -125,6 +125,26 @@ class API(TOSession):
 
 		return r.text
 
+	def get_statuses(self) -> typing.List[dict]:
+		"""
+		Retrieves all statuses from the Traffic Ops instance - using atstccfg.
+
+		:returns: Representations of status objects
+		:raises: ConnectionError if fetching the statuses fails for any reason
+		"""
+		for _ in range(self.retries):
+			try:
+				proc = subprocess.run(self.atstccfgCmd + ["--get-data=statuses"])
+				logging.debug("Raw response: %s", proc.stdout)
+				if proc.stderr:
+					logging.error(proc.stderr)
+				if proc.returncode == 0:
+					return json.loads(proc.stdout)
+			except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
+				logging.error("status fetch failure: %s", e)
+		raise ConnectionError("Failed to fetch statuses from atstccfg")
+
+
 	def getMyPackages(self) -> typing.List[packaging.Package]:
 		"""
 		Fetches a list of the packages specified by Traffic Ops that should exist on this server.
