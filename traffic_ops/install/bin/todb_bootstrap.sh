@@ -42,7 +42,7 @@ if [[ -z $TODB_USERNAME_PASSWORD ]]; then
     [ "$password" = "$password_confirm" ] && break
     echo "Passwords do not match, please try again"
    done
-   TODB_USERNAME_PASSWORD=$password
+   TODB_USERNAME_PASSWORD="$password"
 else
     echo "Using environment database password"
 fi
