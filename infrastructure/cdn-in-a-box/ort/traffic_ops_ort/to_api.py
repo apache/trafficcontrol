@@ -72,7 +72,7 @@ class API(TOSession):
 
 		self.hostname = conf.shortHostname
 
-		self.atstccfgCmd = [
+		self.atstccfg_cmd = [
 			"atstccfg",
 			"--traffic-ops-url=http{}://{}:{}".format("s" if conf.useSSL else "", conf.toHost, conf.toPort),
 			"--cache-host-name={}".format(self.hostname),
@@ -84,11 +84,11 @@ class API(TOSession):
 		]
 
 		if conf.timeout is not None and conf.timeout >= 0:
-			self.atstccfgCmd.append("--traffic-ops-timeout-milliseconds={}".format(conf.timeout))
+			self.atstccfg_cmd.append("--traffic-ops-timeout-milliseconds={}".format(conf.timeout))
 		if conf.rev_proxy_disable:
-			self.atstccfgCmd.append("--traffic-ops-disable-proxy")
+			self.atstccfg_cmd.append("--traffic-ops-disable-proxy")
 		if not conf.verify:
-			self.atstccfgCmd.append("--traffic-ops-insecure")
+			self.atstccfg_cmd.append("--traffic-ops-insecure")
 
 
 	def __enter__(self):
@@ -133,7 +133,7 @@ class API(TOSession):
 		"""
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfgCmd + ["--get-data=statuses"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=statuses"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 				logging.debug("Raw response: %s", proc.stdout)
 				if proc.stderr:
 					logging.error(proc.stderr)
@@ -179,7 +179,7 @@ class API(TOSession):
 		:raises ConnectionError: when something goes wrong communicating with Traffic Ops
 		"""
 		logging.info("Fetching list of configuration files from Traffic Ops")
-		atstccfg_cmd = self.atstccfgCmd
+		atstccfg_cmd = self.atstccfg_cmd
 		if conf.mode is Configuration.Modes.REVALIDATE:
 			atstccfg_cmd = self.atstccfg_cmd + ["--revalidate-only"]
 		for _ in range(self.retries):
@@ -223,7 +223,7 @@ class API(TOSession):
 		if mode is Configuration.Modes.REPORT:
 			return
 
-		atstccfgCmd = self.atstccfgCmd + ["--set-queue-status=false", "--set-reval-status=false"]
+		atstccfgCmd = self.atstccfg_cmd + ["--set-queue-status=false", "--set-reval-status=false"]
 		for _ in range(self.retries):
 			try:
 				proc = subprocess.run(atstccfgCmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
@@ -248,7 +248,7 @@ class API(TOSession):
 
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfgCmd + ["--get-data=chkconfig"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=chkconfig"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 				logging.debug("Raw response: %s", proc.stdout)
 				logging.error(proc.stderr)
 				if proc.returncode == 0:
@@ -268,7 +268,7 @@ class API(TOSession):
 		logging.info("Fetching update status from Traffic Ops")
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfgCmd + ["--get-data=update-status"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=update-status"], stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 				logging.debug("Raw response: %s", proc.stdout)
 				logging.error(proc.stderr)
 				if proc.returncode == 0:
