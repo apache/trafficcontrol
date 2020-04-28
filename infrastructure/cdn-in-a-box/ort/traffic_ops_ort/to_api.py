@@ -290,18 +290,14 @@ class API(TOSession):
 		for _ in range(self.retries):
 			try:
 				proc = subprocess.run(self.atstccfgCmd + ["--get-data=update-status"])
-				logging.info(proc.stdout)
+				logging.debug("Raw response: %s", proc.stdout)
 				logging.error(proc.stderr)
 				if proc.returncode == 0:
-					break;
-			except (InvalidJSONError, LoginError, OperationError, RequestException) as e:
+					return json.loads(proc.stdout)
+			except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
 				logging.debug("update status fetch failure: %r", e, exc_info=True, stack_info=True)
-		else:
-			raise ConnectionError("Failed to fetch update status - connection was lost")
 
-		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
-
-		return r[0]
+		raise ConnectionError("Failed to fetch update status - connection was lost")
 
 	def getMyStatus(self) -> str:
 		"""

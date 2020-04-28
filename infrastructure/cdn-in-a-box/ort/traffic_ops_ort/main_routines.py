@@ -46,7 +46,7 @@ def syncDSState(conf:Configuration) -> bool:
 	"""
 	logging.info("starting syncDS state fetch")
 
-	updateStatus = conf.api.getMyUpdateStatus()[0]
+	updateStatus = conf.api.getMyUpdateStatus()
 
 	logging.debug("Retrieved raw update status: %r", updateStatus)
 
