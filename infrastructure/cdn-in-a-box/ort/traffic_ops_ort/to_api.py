@@ -155,29 +155,19 @@ class API(TOSession):
 		"""
 		logging.info("Fetching this server's package list from Traffic Ops")
 
-		# Ah, read-only properties that gut functionality, my favorite.
-		tmp = self.api_base_url
-		self._api_base_url = urljoin(self._server_url, '/').rstrip('/') + '/'
-
-		packagesPath = '/'.join(("ort", self.hostname, "packages"))
+		atstccfg_cmd = self.atstccfg_cmd + ["--get-data=packages"]
 		for _ in range(self.retries):
 			try:
-				myPackages = self.get(packagesPath)
-				break
-			except (LoginError, OperationError, InvalidJSONError, RequestException) as e:
+				proc = subprocess.run(atstccfg_cmd)
+				logging.debug("Raw output: %s", proc.stdout)
+				if proc.stderr:
+					logging.error("proc.stderr")
+				if proc.returncode == 0:
+					return [Package(p) for p in json.loads(proc.stdout)]
+			except (ValueError, IndexError, json.JSONDecodeError, OSError, subprocess.SubprocessError) as e:
 				logging.debug("package fetch failure: %r", e, stack_info=True, exc_info=True)
-		else:
-			self._api_base_url = tmp
-			raise ConnectionError("Failed to get a response for packages")
 
-		self._api_base_url = tmp
-
-		logging.debug("Raw package response: %s", myPackages[1].text)
-
-		try:
-			return [packaging.Package(p) for p in myPackages[0]]
-		except ValueError:
-			raise ConnectionError
+		raise ConnectionError("Failed to get a response for packages")
 
 	def setConfigFileAPIVersion(self, files: Munch) -> None:
 		match_api_base = re.compile(r'^(/api/)\d+\.\d+(/)')
