@@ -113,17 +113,18 @@ def parse_multipart(raw: str) -> typing.List[typing.Tuple[str, str]]:
 	... Content-Type: text/plain; charset=us-ascii\\r
 	... Path: /path/to/ats/root/directory/etc/trafficserver/fname\\r
 	... \\r
-	... # A fake testing file that wasn't generated at all on some date\\r
-	... CONFIG proxy.config.way.too.many.period.separated.words INT 1\\r
-	... \\r
+	... # A fake testing file that wasn't generated at all on some date
+	... CONFIG proxy.config.way.too.many.period.separated.words INT 1
+	...
 	... --test\\r
-	... Content-Type: text/plain; charset=utf8
+	... Content-Type: text/plain; charset=utf8\\r
 	... Path: /path/to/ats/root/directory/etc/trafficserver/othername\\r
 	... \\r
-	... # The same header again\\r
-	... CONFIG proxy.config.the.same.insane.chain.of.words.again.but.the.last.one.is.different INT 0\\r
-	... \\r
-	... --test--'''
+	... # The same header again
+	... CONFIG proxy.config.the.same.insane.chain.of.words.again.but.the.last.one.is.different INT 0
+	...
+	... --test--\\r
+	... '''
 	>>> output = parse_multipart(testdata)
 	>>> print(output[0][0])
 	# A fake testing file that wasn't generated at all on some date
