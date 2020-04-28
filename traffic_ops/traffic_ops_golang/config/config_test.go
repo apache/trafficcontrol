@@ -162,8 +162,7 @@ const (
 	       "user": "riakuser",
 	       "password": "password",
 	       "TLSVersions": [
-	            "1.1",
-	            "1.0"
+	            "1.1"
 	       ],
 	       "tlsConfig": {
 	           "insecureSkipVerify": true
