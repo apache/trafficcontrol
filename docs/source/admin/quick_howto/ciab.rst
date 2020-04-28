@@ -94,6 +94,16 @@ While the components may be interacted with by the host using these ports, the t
 
 When the CDN is to be shut down, it is often best to do so using ``sudo docker-compose down -v`` due to the use of shared volumes in the system which might interfere with a proper initialization upon the next run.
 
+Readiness Check
+"""""""""""""""
+
+In order to check the "readiness" of your CDN, you can optionally start the Readiness Container, which will continually :manpage:`curl(1)` the :term:`Delivery Services` in your CDN until they all return successful responses before exiting successfully.
+
+.. code-block:: shell
+	:caption: Example Command to Run the Readiness Container
+
+	sudo docker-compose -f docker-compose.readiness.yml up
+
 variables.env
 """""""""""""
 .. literalinclude:: ../../../../infrastructure/cdn-in-a-box/variables.env

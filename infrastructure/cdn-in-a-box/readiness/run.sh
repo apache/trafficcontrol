@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+set -eu
+
 start_time=$(date +%s)
 
 source to-access.sh
@@ -24,8 +26,8 @@ set-dns.sh
 insert-self-into-dns.sh
 
 while ! to-ping 2>/dev/null; do
-   echo waiting for trafficops
-   sleep 3
+    echo waiting for trafficops
+    sleep 3
 done
 
 while true; do
@@ -34,23 +36,23 @@ while true; do
     if [[ "${#exampleURLs[@]}" -eq 0 ]]; then
         echo waiting for delivery service example URLs
         continue
-    else
-        echo "example URLs: '${exampleURLs[@]}'"
-        success="true"
-        for u in "${exampleURLs[@]}"; do
-            status=$(curl -Lkvs --connect-timeout 2 -m5 -o /dev/null -w "%{http_code}" "$u")
-            if [[ "$status" -ne 200 ]]; then
-                echo "failed to curl delivery service example URL '$u' got status code '$status'"
-                success="false"
-                break
-            else
-                echo "successfully curled delivery service example URL '$u'"
-            fi
-        done
-        if [[ "$success" == "true" ]]; then
-            echo "successfully curled all delivery service example URLs '${exampleURLs[@]}'"
+    fi
+    echo "example URLs: '${exampleURLs[@]}'"
+
+    success="true"
+    for u in "${exampleURLs[@]}"; do
+        status=$(curl -Lkvs --connect-timeout 2 -m5 -o /dev/null -w "%{http_code}" "$u")
+        if [[ "$status" -ne 200 ]]; then
+            echo "failed to curl delivery service example URL '$u' got status code '$status'"
+            success="false"
             break
+        else
+            echo "successfully curled delivery service example URL '$u'"
         fi
+    done
+    if [[ "$success" == "true" ]]; then
+        echo "successfully curled all delivery service example URLs '${exampleURLs[@]}'"
+        break
     fi
 done
 
