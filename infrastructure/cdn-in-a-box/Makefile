@@ -76,19 +76,19 @@ traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
 
 # Dist rpms
 ../../dist/traffic_monitor-$(SPECIAL_SAUCE): $(TM_SOURCE)
-	sudo ../../pkg $(PKG_FLAGS) traffic_monitor_build
+	../../pkg $(PKG_FLAGS) traffic_monitor_build
 
 ../../dist/traffic_ops-$(SPECIAL_SAUCE): $(TO_SOURCE)
-	sudo ../../pkg $(PKG_FLAGS) traffic_ops_build
+	../../pkg $(PKG_FLAGS) traffic_ops_build
 
 ../../dist/traffic_portal-$(SPECIAL_SAUCE): $(TP_SOURCE)
-	sudo ../../pkg $(PKG_FLAGS) traffic_portal_build
+	../../pkg $(PKG_FLAGS) traffic_portal_build
 
 ../../dist/traffic_rou%er-$(SPECIAL_SAUCE) ../../dist/tomca%-$(SPECIAL_SEASONING): $(TR_SOURCE)
-	sudo ../../pkg $(PKG_FLAGS) traffic_router_build
+	../../pkg $(PKG_FLAGS) traffic_router_build
 
 ../../dist/traffic_stats-$(SPECIAL_SAUCE): $(TS_SOURCE)
-	sudo ../../pkg $(PKG_FLAGS) traffic_stats_build
+	../../pkg $(PKG_FLAGS) traffic_stats_build
 
 clean:
 	$(RM) traffic_monitor/traffic_monitor.rpm traffic_ops/traffic_ops.rpm traffic_portal/traffic_portal.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm edge/traffic_ops_ort.rpm mid/traffic_ops_ort.rpm traffic_stats/traffic_stats.rpm
