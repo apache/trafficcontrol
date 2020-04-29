@@ -249,7 +249,8 @@ class ConfigFile():
 				logging.info("File doesn't differ from disk; nothing to do")
 
 		# Now we need to do some advanced processing to a couple specific filenames... unfortunately
-		if self.fname == "ssl_multicert.config":
+		# But ONLY if the object wasn't directly constructed.
+		if self.fname == "ssl_multicert.config" and self.URI:
 			return self.advancedSSLProcessing(conf) or written
 
 		return written
