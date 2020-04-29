@@ -18,4 +18,4 @@
 
 set -e
 
-exec sh ./pkg -v
+exec ./pkg -v
