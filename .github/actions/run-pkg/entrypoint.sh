@@ -18,4 +18,12 @@
 
 set -e
 
+echo "$PWD"
+
+ls -l
+
+echo
+
+ls ./infrastructure/docker/build
+
 exec ./pkg -v
