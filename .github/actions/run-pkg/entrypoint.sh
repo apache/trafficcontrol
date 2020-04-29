@@ -18,6 +18,6 @@
 
 set -e
 
-./pkg -l
+./pkg -l || true
 
 bash -ex ./pkg -v traffic_ops_build traffic_monitor_build traffic_router_build traffic_portal_build traffic_stats_build grove_build docs 2>&1

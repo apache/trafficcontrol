@@ -15,7 +15,7 @@
 # Files are relative to this script directory.
 SELF="${BASH_SOURCE[0]}"
 cd "$( dirname "${BASH_SOURCE[0]}" )"
-COMPOSE_FILE=./infrastructure/docker/build/docker-compose.yml
+COMPOSE_FILE=infrastructure/docker/build/docker-compose.yml
 
 # Check for dependencies
 if ! which docker >/dev/null 2>&1; then
