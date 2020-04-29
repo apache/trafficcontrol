@@ -120,8 +120,7 @@ func (topology *TOTopology) Create() (error, error, int) {
 	tx := topology.APIInfo().Tx.Tx
 	err := tx.QueryRow(insertQuery(), topology.Name, topology.Description).Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		return userErr, sysErr, errCode
+		return api.ParseDBError(err)
 	}
 
 	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
