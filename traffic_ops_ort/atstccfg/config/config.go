@@ -89,7 +89,7 @@ func GetCfg() (Cfg, error) {
 	logLocationWarnPtr := flag.StringP("log-location-warning", "w", "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null.")
 	logLocationInfoPtr := flag.StringP("log-location-info", "i", "stderr", "Where to log information messages. May be a file path, stdout, stderr, or null.")
 	toInsecurePtr := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
-	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 30000, "Timeout in seconds for Traffic Ops requests.")
+	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 30000, "Timeout in milliseconds for Traffic Ops requests.")
 	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
 	listPluginsPtr := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
 	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")
