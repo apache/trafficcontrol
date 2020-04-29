@@ -43,16 +43,25 @@ type TOCDNFederation struct {
 	TenantID *int `json:"-" db:"tenant_id"`
 }
 
-func (v *TOCDNFederation) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
-func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                         //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCDNFederation) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from `+ tableName + ` c ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_`+ tableName + ` c ` + where + orderBy + pagination +
+		` ) as res`
+}
+func (v *TOCDNFederation) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_federation (
+id, cname,
+	 	ttl,
+	 	description
+) (SELECT id, cname,
+	 	ttl,
+	 	description FROM federation WHERE id=:id)`
+	return query
+}
 func (v *TOCDNFederation) NewReadObj() interface{}        { return &TOCDNFederation{} }
 func (v *TOCDNFederation) SelectQuery() string {
 	if v.ID != nil {

@@ -39,10 +39,6 @@ type TOCoordinate struct {
 	tc.CoordinateNullable
 }
 
-func (v *TOCoordinate) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TOCoordinate) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCoordinate) InsertQuery() string           { return insertQuery() }
 func (v *TOCoordinate) NewReadObj() interface{}       { return &tc.CoordinateNullable{} }
@@ -126,10 +122,24 @@ func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCrea
 func (coord *TOCoordinate) Read(h http.Header) ([]interface{}, error, error, int) {
 	return api.GenericRead(h, coord)
 }
-func (v *TOCoordinate) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                       //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCoordinate) InsertIntoDeletedQuery() string  { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from `+ tableName + ` c ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_`+ tableName + ` c ` + where + orderBy + pagination +
+		` ) as res`
+}
+func (v *TOCoordinate) InsertIntoDeletedQuery() string  {
+	query := `INSERT INTO deleted_coordinate (
+id,
+latitude,
+	 	longitude,
+	 	name
+) (SELECT id, latitude,
+	 	longitude,
+	 	name FROM coordinate WHERE id=:id)`
+	return query
+}
 func (coord *TOCoordinate) Update() (error, error, int) { return api.GenericUpdate(coord) }
 func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 

@@ -40,14 +40,23 @@ type TOCDN struct {
 	tc.CDNNullable
 }
 
-func (v *TOCDN) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
+func (v *TOCDN) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from `+ tableName + ` c ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_`+ tableName + ` c ` + where + orderBy + pagination +
+		` ) as res`
 }
-
-func (v *TOCDN) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                               //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCDN) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOCDN) InsertIntoDeletedQuery() string {
+	return `INSERT INTO deleted_cdn
+	(id, dnssec_enabled,
+domain_name,
+name) (SELECT id, dnssec_enabled,
+domain_name,
+name FROM cdn
+WHERE id = :id)
+`
+}
 func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TOCDN) InsertQuery() string            { return insertQuery() }
 func (v *TOCDN) NewReadObj() interface{}        { return &tc.CDNNullable{} }

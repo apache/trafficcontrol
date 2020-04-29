@@ -172,8 +172,7 @@ func (user *TOUser) Create() (error, error, int) {
 }
 
 // This is not using GenericRead because of this tenancy check. Maybe we can add tenancy functionality to the generic case?
-func (this *TOUser) Read(http.Header) ([]interface{}, error, error, int) {
-
+func (this *TOUser) Read(h http.Header) ([]interface{}, error, error, int) {
 	inf := this.APIInfo()
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, this.ParamColumns())
 	if len(errs) > 0 {

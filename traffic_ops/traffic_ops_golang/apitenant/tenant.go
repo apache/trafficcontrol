@@ -25,7 +25,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 
@@ -47,16 +46,15 @@ type TOTenant struct {
 	tc.TenantNullable
 }
 
-func (v *TOTenant) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOTenant) InsertQuery() string           { return insertQuery() }
-func (v *TOTenant) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                                      //{ return selectMaxLastUpdatedQuery() }
-func (v *TOTenant) InsertIntoDeletedQuery(interface{}, *sqlx.Tx) error { return nil } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOTenant) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from `+ tableName + ` q ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_`+ tableName + ` q ` + where + orderBy + pagination +
+		` ) as res`
+}
 func (v *TOTenant) NewReadObj() interface{}                            { return &tc.TenantNullable{} }
 func (v *TOTenant) SelectQuery() string {
 	return selectQuery(v.APIInfo().User.TenantID)

@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -52,8 +53,12 @@ type TOCacheGroupParameter struct {
 	CacheGroupID int `json:"-" db:"cachegroup_id"`
 }
 
-func (v *TOCacheGroupParameter) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
-func (v *TOCacheGroupParameter) InsertIntoDeletedQuery() string    { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOCacheGroupParameter) InsertIntoDeletedQuery() string    {
+	return `INSERT INTO deleted_cachegroup_parameter
+	(cachegroup, parameter) (SELECT cachegroup, parameter FROM cachegroup_parameter
+WHERE cachegroup = :cachegroup_id AND parameter = :id)`
+}
+
 func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		CacheGroupIDQueryParam: dbhelpers.WhereColumnInfo{"cgp.cachegroup", api.IsInt},
@@ -65,14 +70,13 @@ func (cgparam *TOCacheGroupParameter) GetType() string {
 	return "cachegroup parameter"
 }
 
-func (cgparam *TOCacheGroupParameter) Read(http.Header) ([]interface{}, error, error, int) {
+func (cgparam *TOCacheGroupParameter) Read(h http.Header) ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := cgparam.ParamColumns()
 	parameters := cgparam.APIInfo().Params
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
-
 	cgID, err := strconv.Atoi(parameters[CacheGroupIDQueryParam])
 	if err != nil {
 		return nil, errors.New("cache group id must be an integer"), nil, http.StatusBadRequest
@@ -85,6 +89,11 @@ func (cgparam *TOCacheGroupParameter) Read(http.Header) ([]interface{}, error, e
 		return nil, errors.New("cachegroup does not exist"), nil, http.StatusNotFound
 	}
 
+	params := []interface{}{}
+	runSecond := ims.MakeFirstQuery(cgparam.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if !runSecond {
+		return params, nil, nil, http.StatusNotModified
+	}
 	query := selectQuery() + where + orderBy + pagination
 	rows, err := cgparam.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
@@ -92,7 +101,6 @@ func (cgparam *TOCacheGroupParameter) Read(http.Header) ([]interface{}, error, e
 	}
 	defer rows.Close()
 
-	params := []interface{}{}
 	for rows.Next() {
 		var p tc.CacheGroupParameterNullable
 		if err = rows.StructScan(&p); err != nil {
@@ -105,6 +113,16 @@ func (cgparam *TOCacheGroupParameter) Read(http.Header) ([]interface{}, error, e
 	}
 
 	return params, nil, nil, http.StatusOK
+}
+
+func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t FROM parameter p
+LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t FROM deleted_parameter p
+LEFT JOIN deleted_cachegroup_parameter cgp ON cgp.parameter = p.id ` + where + orderBy + pagination +
+		` ) as res`
 }
 
 func selectQuery() string {

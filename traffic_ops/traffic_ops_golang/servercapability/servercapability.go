@@ -35,10 +35,6 @@ type TOServerCapability struct {
 	tc.ServerCapability
 }
 
-func (v *TOServerCapability) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TOServerCapability) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOServerCapability) NewReadObj() interface{}       { return &tc.ServerCapability{} }
 func (v *TOServerCapability) InsertQuery() string {
@@ -107,9 +103,18 @@ func (v *TOServerCapability) Validate() error {
 func (v *TOServerCapability) Read(h http.Header) ([]interface{}, error, error, int) {
 	return api.GenericRead(h, v)
 }
-func (v *TOServerCapability) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
+func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from server_capability sc ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_server_capability sc ` + where + orderBy + pagination +
+		` ) as res`
 }
-func (v *TOServerCapability) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOServerCapability) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_server_capability (
+  name
+) (SELECT name from server_capability WHERE name=:name)`
+	return query
+}
 func (v *TOServerCapability) Create() (error, error, int)    { return api.GenericCreateNameBasedID(v) }
 func (v *TOServerCapability) Delete() (error, error, int)    { return api.GenericDelete(v) }

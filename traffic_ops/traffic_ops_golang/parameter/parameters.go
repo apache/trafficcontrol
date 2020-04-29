@@ -56,10 +56,31 @@ type TOParameter struct {
 func (v *TOParameter) AllowMultipleCreates() bool    { return true }
 func (v *TOParameter) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOParameter) InsertQuery() string           { return insertQuery() }
-func (v *TOParameter) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                     //{ return selectMaxLastUpdatedQuery() }
-func (v *TOParameter) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t FROM parameter p
+LEFT JOIN profile_parameter pp ON p.id = pp.parameter
+LEFT JOIN profile pr ON pp.profile = pr.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t FROM deleted_parameter p
+LEFT JOIN deleted_profile_parameter pp ON p.id = pp.parameter
+LEFT JOIN deleted_profile pr ON pp.profile = pr.id`+ tableName + ` typ ` + where + orderBy + pagination +
+		` ) as res`
+}
+func (v *TOParameter) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_parameter (
+id,
+name,
+config_file,
+value,
+secure
+) (SELECT 
+id,
+name,
+config_file,
+value,
+secure FROM parameter WHERE id=:id)`
+	return query }
 func (v *TOParameter) NewReadObj() interface{}        { return &tc.ParameterNullable{} }
 func (v *TOParameter) SelectQuery() string            { return selectQuery() }
 func (v *TOParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
@@ -125,7 +146,7 @@ func (pa *TOParameter) Create() (error, error, int) {
 	return api.GenericCreate(pa)
 }
 
-func (param *TOParameter) Read(http.Header) ([]interface{}, error, error, int) {
+func (param *TOParameter) Read(h http.Header) ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := param.ParamColumns()
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(param.APIInfo().Params, queryParamsToQueryCols)
 	if len(errs) > 0 {

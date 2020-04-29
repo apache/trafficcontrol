@@ -74,7 +74,7 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dses, userErr, sysErr, errCode := readGetDeliveryServices(inf.Params, inf.Tx, inf.User)
+	dses, userErr, sysErr, errCode := readGetDeliveryServices(nil, inf.Params, inf.Tx, inf.User)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

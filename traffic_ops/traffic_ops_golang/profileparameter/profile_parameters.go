@@ -44,10 +44,6 @@ type TOProfileParameter struct {
 	tc.ProfileParameterNullable
 }
 
-func (v *TOProfileParameter) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 // AllowMultipleCreates indicates whether an array can be POSTed using the shared Create handler
 func (v *TOProfileParameter) AllowMultipleCreates() bool { return true }
 func (v *TOProfileParameter) NewReadObj() interface{}    { return &tc.ProfileParametersNullable{} }
@@ -162,10 +158,23 @@ func (pp *TOProfileParameter) Read(h http.Header) ([]interface{}, error, error, 
 	return api.GenericRead(h, pp)
 }
 func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
-func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                            //{ return selectMaxLastUpdatedQuery() }
-func (v *TOProfileParameter) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t FROM profile_parameter pp
+JOIN profile prof ON prof.id = pp.profile
+JOIN parameter param ON param.id = pp.parameter ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t FROM deleted_profile_parameter pp
+JOIN deleted_profile prof ON prof.id = pp.profile
+JOIN deleted_parameter param ON param.id = pp.parameter ` + where + orderBy + pagination +
+		` ) as res`
+}
+func (v *TOProfileParameter) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_profile_parameter (
+profile,
+parameter) (SELECT profile, parameter FROM profile_parameter
+WHERE profile=:profile_id and parameter=:parameter_id)`
+	return query }
 
 func selectQuery() string {
 

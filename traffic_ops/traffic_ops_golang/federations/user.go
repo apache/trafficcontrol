@@ -46,14 +46,22 @@ type TOUsers struct {
 	tc.FederationUser
 }
 
-func (v *TOUsers) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
+func (v *TOUsers) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t FROM federation_tmuser fedu
+RIGHT JOIN tm_user u ON fedu.tm_user = u.id
+JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t FROM deleted_federation_tmuser fedu
+RIGHT JOIN deleted_tm_user u ON fedu.tm_user = u.id
+JOIN deleted_role r ON u.role = r.id ` + where + orderBy + pagination +
+		` ) as res`
 }
-
-func (v *TOUsers) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                 //{ return selectMaxLastUpdatedQuery() }
-func (v *TOUsers) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOUsers) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_federation_tmuser (federation, tm_user)
+(SELECT federation, tm_user FROM federation_tmuser WHERE federation = :federation AND tm_user = :id)`
+	return query
+}
 func (v *TOUsers) NewReadObj() interface{}        { return &tc.FederationUser{} }
 func (v *TOUsers) DeleteQuery() string {
 	return `
@@ -185,8 +193,17 @@ func PostUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteFedUsers(tx *sql.Tx, fedID int) error {
+	qry1 := `INSERT INTO deleted_federation_tmuser (
+federation,
+tm_user,
+role
+) (SELECT federation, tm_user, role FROM deleted_federation_tmuser WHERE federation = $1)`
+	_, err := tx.Exec(qry1, fedID)
+	if err != nil {
+		return err
+	}
 	qry := `DELETE FROM federation_tmuser WHERE federation = $1`
-	_, err := tx.Exec(qry, fedID)
+	_, err = tx.Exec(qry, fedID)
 	return err
 }
 

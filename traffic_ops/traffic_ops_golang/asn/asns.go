@@ -41,10 +41,6 @@ type TOASNV11 struct {
 	tc.ASNNullable
 }
 
-func (v *TOASNV11) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TOASNV11) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOASNV11) InsertQuery() string           { return insertQuery() }
 func (v *TOASNV11) NewReadObj() interface{}       { return &tc.ASNNullable{} }
@@ -102,13 +98,28 @@ func (asn TOASNV11) Validate() error {
 }
 
 func (as *TOASNV11) Create() (error, error, int) { return api.GenericCreate(as) }
-func (as *TOASNV11) Read(http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(nil, as)
+func (as *TOASNV11) Read(h http.Header) ([]interface{}, error, error, int) {
+	return api.GenericRead(h, as)
 }
-func (v *TOASNV11) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TOASNV11) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOASNV11) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from asn a
+JOIN
+  cachegroup c ON a.cachegroup = c.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_asn a
+JOIN
+  deleted_cachegroup c ON a.cachegroup = c.id`+ where + orderBy + pagination +
+		` ) as res`
+}
+func (v *TOASNV11) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_asn (
+id,
+asn,
+cachegroup
+) (SELECT id, asn, cachegroup FROM asn WHERE id=:id)`
+	return query
+}
 func (as *TOASNV11) Update() (error, error, int)   { return api.GenericUpdate(as) }
 func (as *TOASNV11) Delete() (error, error, int)   { return api.GenericDelete(as) }
 

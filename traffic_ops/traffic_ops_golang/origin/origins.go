@@ -129,7 +129,7 @@ func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 	return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx.Tx)
 }
 
-func (origin *TOOrigin) Read(http.Header) ([]interface{}, error, error, int) {
+func (origin *TOOrigin) Read(h http.Header) ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 
 	origins, userErr, sysErr, errCode := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User)

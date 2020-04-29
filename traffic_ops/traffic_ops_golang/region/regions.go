@@ -34,10 +34,6 @@ type TORegion struct {
 	tc.Region
 }
 
-func (v *TORegion) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TORegion) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = t }
 func (v *TORegion) InsertQuery() string           { return insertQuery() }
 func (v *TORegion) NewReadObj() interface{}       { return &tc.Region{} }
@@ -97,10 +93,22 @@ func (region *TORegion) Validate() error {
 func (rg *TORegion) Read(h http.Header) ([]interface{}, error, error, int) {
 	return api.GenericRead(h, rg)
 }
-func (v *TORegion) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TORegion) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TORegion) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t FROM region r
+JOIN division d ON r.division = d.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from FROM deleted_region r
+JOIN deleted_division d ON r.division = d.id ` + where + orderBy + pagination +
+		` ) as res`
+}
+func (v *TORegion) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_region (
+id,
+division,
+name) (SELECT id, division, name from region WHERE id=:id)`
+	return query
+}
 func (rg *TORegion) Update() (error, error, int)   { return api.GenericUpdate(rg) }
 func (rg *TORegion) Create() (error, error, int)   { return api.GenericCreate(rg) }
 func (rg *TORegion) Delete() (error, error, int)   { return api.GenericDelete(rg) }

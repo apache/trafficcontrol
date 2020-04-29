@@ -45,8 +45,8 @@ func (v *TOType) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOType) InsertQuery() string           { return insertQuery() }
 func (v *TOType) NewReadObj() interface{}       { return &tc.TypeNullable{} }
 func (v *TOType) SelectQuery() string           { return selectQuery() }
-func (v *TOType) SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, where2 string, orderBy2 string, pagination2 string) string {
-	return selectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination)
+func (v *TOType) SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName)
 }
 func (v *TOType) InsertIntoDeletedQuery() string { return insertIntoDeletedQuery() }
 func (v *TOType) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
@@ -54,13 +54,6 @@ func (v *TOType) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 		"name":       dbhelpers.WhereColumnInfo{"typ.name", nil},
 		"id":         dbhelpers.WhereColumnInfo{"typ.id", api.IsInt},
 		"useInTable": dbhelpers.WhereColumnInfo{"typ.use_in_table", nil},
-	}
-}
-func (v *TOType) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	return map[string]dbhelpers.WhereColumnInfo{
-		"name":       dbhelpers.WhereColumnInfo{"dtyp.name", nil},
-		"id":         dbhelpers.WhereColumnInfo{"dtyp.id", api.IsInt},
-		"useInTable": dbhelpers.WhereColumnInfo{"dtyp.use_in_table", nil},
 	}
 }
 func (v *TOType) UpdateQuery() string { return updateQuery() }
@@ -171,13 +164,11 @@ func (tp *TOType) loadUseInTable() (error, error, string) {
 	return nil, nil, useInTable
 }
 
-//ToDo: change here
-// GetType
-func selectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2 string) string {
+func selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from type typ ` + where + orderBy + pagination +
+		SELECT max(last_updated) as t from `+ tableName + ` typ ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_type dtyp ` + where2 + orderBy2 + pagination2 +
+	select max(last_updated) as t from deleted_`+ tableName + ` typ ` + where + orderBy + pagination +
 		` ) as res`
 }
 
@@ -227,15 +218,3 @@ func deleteQuery() string {
 WHERE id=:id`
 	return query
 }
-
-//func selectBeforeDeleteQuery() string {
-//	query := `SELECT
-//id,
-//name,
-//description,
-//use_in_table,
-//last_updated
-//FROM type typ
-//WHERE id=:id`
-//	return query
-//}

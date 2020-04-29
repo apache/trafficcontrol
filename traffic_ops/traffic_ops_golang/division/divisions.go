@@ -39,16 +39,18 @@ type TODivision struct {
 	tc.DivisionNullable
 }
 
-func (v *TODivision) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TODivision) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODivision) InsertQuery() string           { return insertQuery() }
-func (v *TODivision) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                    //{ return selectMaxLastUpdatedQuery() }
-func (v *TODivision) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TODivision) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from `+ tableName + ` d ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_`+ tableName + ` d ` + where + orderBy + pagination +
+		` ) as res`
+}
+func (v *TODivision) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_division (id, name) (SELECT id, name FROM division WHERE id=:id)`
+	return query }
 func (v *TODivision) NewReadObj() interface{}        { return &tc.Division{} }
 func (v *TODivision) SelectQuery() string            { return selectQuery() }
 func (v *TODivision) ParamColumns() map[string]dbhelpers.WhereColumnInfo {

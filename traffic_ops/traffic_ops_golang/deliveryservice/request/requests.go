@@ -22,6 +22,7 @@ package request
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 
@@ -42,8 +43,25 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
-func (v *TODeliveryServiceRequest) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
-func (v *TODeliveryServiceRequest) InsertIntoDeletedQuery() string    { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TODeliveryServiceRequest) InsertIntoDeletedQuery() string    {
+	query := `INSERT INTO deleted_deliveryservice_request (
+id,
+assignee_id,
+author_id,
+change_type,
+last_edited_by_id,
+deliveryservice,
+status
+) (SELECT 
+id,
+assignee_id,
+author_id,
+change_type,
+last_edited_by_id,
+deliveryservice,
+status FROM deliveryservice_request WHERE id = :id)`
+	return query
+}
 func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod)     { v.LastUpdated = &t }
 func (v *TODeliveryServiceRequest) InsertQuery() string               { return insertRequestQuery() }
 func (v *TODeliveryServiceRequest) UpdateQuery() string               { return updateRequestQuery() }
@@ -78,7 +96,8 @@ func (req TODeliveryServiceRequest) GetType() string {
 }
 
 // Read implements the api.Reader interface
-func (req *TODeliveryServiceRequest) Read(http.Header) ([]interface{}, error, error, int) {
+func (req *TODeliveryServiceRequest) Read(h http.Header) ([]interface{}, error, error, int) {
+	deliveryServiceRequests := []interface{}{}
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
 		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},
@@ -109,7 +128,10 @@ func (req *TODeliveryServiceRequest) Read(http.Header) ([]interface{}, error, er
 		return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
-
+	runSecond := ims.MakeFirstQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if !runSecond {
+		return deliveryServiceRequests, nil, nil, http.StatusNotModified
+	}
 	query := selectDeliveryServiceRequestsQuery() + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
@@ -119,7 +141,6 @@ func (req *TODeliveryServiceRequest) Read(http.Header) ([]interface{}, error, er
 	}
 	defer rows.Close()
 
-	deliveryServiceRequests := []interface{}{}
 	for rows.Next() {
 		var s TODeliveryServiceRequest
 		if err = rows.StructScan(&s); err != nil {
@@ -129,6 +150,20 @@ func (req *TODeliveryServiceRequest) Read(http.Header) ([]interface{}, error, er
 	}
 
 	return deliveryServiceRequests, nil, nil, http.StatusOK
+}
+
+func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t FROM deliveryservice_request r
+	JOIN tm_user a ON r.author_id = a.id
+	LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
+	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t FROM deleted_deliveryservice_request r
+	JOIN deleted_tm_user a ON r.author_id = a.id
+	LEFT OUTER JOIN deleted_tm_user s ON r.assignee_id = s.id
+	LEFT OUTER JOIN deleted_tm_user e ON r.last_edited_by_id = e.id ` + where + orderBy + pagination +
+		` ) as res`
 }
 
 func selectDeliveryServiceRequestsQuery() string {

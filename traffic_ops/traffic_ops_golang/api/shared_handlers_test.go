@@ -81,7 +81,7 @@ func (i *tester) Create() (error, error, int) {
 }
 
 //Reader interface functions
-func (i *tester) Read(http.Header) ([]interface{}, error, error, int) {
+func (i *tester) Read(h http.Header) ([]interface{}, error, error, int) {
 	return []interface{}{tester{ID: 1}}, nil, nil, http.StatusOK
 }
 

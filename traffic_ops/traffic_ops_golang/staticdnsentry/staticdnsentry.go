@@ -37,10 +37,6 @@ type TOStaticDNSEntry struct {
 	tc.StaticDNSEntryNullable
 }
 
-func (v *TOStaticDNSEntry) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TOStaticDNSEntry) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOStaticDNSEntry) InsertQuery() string           { return insertQuery() }
 func (v *TOStaticDNSEntry) NewReadObj() interface{}       { return &tc.StaticDNSEntryNullable{} }
@@ -126,10 +122,39 @@ func (en *TOStaticDNSEntry) Read(h http.Header) ([]interface{}, error, error, in
 func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
 func (en *TOStaticDNSEntry) Update() (error, error, int) { return api.GenericUpdate(en) }
 func (en *TOStaticDNSEntry) Delete() (error, error, int) { return api.GenericDelete(en) }
-func (v *TOStaticDNSEntry) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                          //{ return selectMaxLastUpdatedQuery() }
-func (v *TOStaticDNSEntry) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOStaticDNSEntry) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t FROM staticdnsentry as sde
+JOIN type as tp on sde.type = tp.id
+LEFT JOIN cachegroup as cg ON sde.cachegroup = cg.id
+JOIN deliveryservice as ds on sde.deliveryservice = ds.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t FROM deleted_staticdnsentry as sde
+JOIN deleted_type as tp on sde.type = tp.id
+LEFT JOIN deleted_cachegroup as cg ON sde.cachegroup = cg.id
+JOIN deleted_deliveryservice as ds on sde.deliveryservice = ds.id ` + where + orderBy + pagination +
+		` ) as res`
+}
+
+func (v *TOStaticDNSEntry) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_staticdnsentry (
+id,
+address,
+deliveryservice,
+cachegroup,
+host,
+type,
+ttl) (SELECT 
+id,
+address,
+deliveryservice,
+cachegroup,
+host,
+type,
+ttl FROM staticdnsentry WHERE id=:id)`
+	return query
+}
+
 func insertQuery() string {
 	query := `INSERT INTO staticdnsentry (
 address,

@@ -39,16 +39,31 @@ type TODeliveryServiceRequestComment struct {
 	tc.DeliveryServiceRequestCommentNullable
 }
 
-func (v *TODeliveryServiceRequestComment) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TODeliveryServiceRequestComment) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODeliveryServiceRequestComment) InsertQuery() string           { return insertQuery() }
-func (v *TODeliveryServiceRequestComment) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
+func (v *TODeliveryServiceRequestComment) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from deliveryservice_request_comment dsrc
+JOIN tm_user a ON dsrc.author_id = a.id
+JOIN deliveryservice_request dsr ON dsrc.deliveryservice_request_id = dsr.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_deliveryservice_request_comment dsrc
+JOIN deleted_tm_user a ON dsrc.author_id = a.id
+JOIN deleted_deliveryservice_request dsr ON dsrc.deliveryservice_request_id = dsr.id ` + where + orderBy + pagination +
+		` ) as res`
 }
-func (v *TODeliveryServiceRequestComment) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TODeliveryServiceRequestComment) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_deliveryservice_request_comment (
+id,
+author_id,
+deliveryservice_request_id,
+value) SELECT 
+id,
+author_id,
+deliveryservice_request_id,
+value FROM deliveryservice_request_comment WHERE id=:id`
+	return query
+}
 func (v *TODeliveryServiceRequestComment) NewReadObj() interface{} {
 	return &tc.DeliveryServiceRequestCommentNullable{}
 }

@@ -38,10 +38,6 @@ type TOPhysLocation struct {
 	tc.PhysLocationNullable
 }
 
-func (v *TOPhysLocation) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (v *TOPhysLocation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOPhysLocation) InsertQuery() string           { return insertQuery() }
 func (v *TOPhysLocation) NewReadObj() interface{}       { return &tc.PhysLocationNullable{} }
@@ -109,10 +105,43 @@ func (pl *TOPhysLocation) Read(h http.Header) ([]interface{}, error, error, int)
 	}
 	return api.GenericRead(h, pl)
 }
-func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                        //{ return selectMaxLastUpdatedQuery() }
-func (v *TOPhysLocation) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t FROM phys_location pl
+JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t FROM deleted_phys_location pl
+JOIN deleted_region r ON pl.region = r.id ` + where + orderBy + pagination +
+		` ) as res`
+}
+func (v *TOPhysLocation) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_phys_location (
+id,
+address,
+city,
+comments,
+email,
+name,
+phone,
+poc,
+region,
+short_name,
+state,
+zip) (SELECT
+id,
+address,
+city,
+comments,
+email,
+name,
+phone,
+poc,
+region,
+short_name,
+state,
+zip FROM phys_location WHERE id=:id)`
+	return query
+}
 func (pl *TOPhysLocation) Update() (error, error, int)   { return api.GenericUpdate(pl) }
 func (pl *TOPhysLocation) Create() (error, error, int)   { return api.GenericCreate(pl) }
 func (pl *TOPhysLocation) Delete() (error, error, int)   { return api.GenericDelete(pl) }

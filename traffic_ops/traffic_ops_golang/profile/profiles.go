@@ -101,7 +101,7 @@ func (prof *TOProfile) Validate() error {
 	return nil
 }
 
-func (prof *TOProfile) Read(http.Header) ([]interface{}, error, error, int) {
+func (prof *TOProfile) Read(h http.Header) ([]interface{}, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -223,7 +223,22 @@ WHERE pp.profile = :profile_id`
 func (pr *TOProfile) Update() (error, error, int)   { return api.GenericUpdate(pr) }
 func (pr *TOProfile) Create() (error, error, int)   { return api.GenericCreate(pr) }
 func (pr *TOProfile) Delete() (error, error, int)   { return api.GenericDelete(pr) }
-func (v *TOProfile) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOProfile) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_profile (
+id,
+cdn,
+description,
+name,
+routing_disabled,
+type) (SELECT
+id,
+cdn,
+description,
+name,
+routing_disabled,
+type FROM profile WHERE id=:id)`
+	return query
+}
 func updateQuery() string {
 	query := `UPDATE
 profile SET

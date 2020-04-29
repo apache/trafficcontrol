@@ -44,14 +44,26 @@ type TORole struct {
 	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
 }
 
-func (v *TORole) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
+func (v *TORole) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` r ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_` + tableName + ` r ` + where + orderBy + pagination +
+		` ) as res`
 }
-
-func (v *TORole) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                //{ return selectMaxLastUpdatedQuery() }
-func (v *TORole) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TORole) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_role (
+id,
+name,
+description,
+priv_level
+) (SELECT
+id,
+name,
+description,
+priv_level FROM role WHERE id=:id)`
+	return query
+}
 func (v *TORole) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TORole) InsertQuery() string            { return insertQuery() }
 func (v *TORole) NewReadObj() interface{}        { return &TORole{} }

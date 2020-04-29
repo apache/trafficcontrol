@@ -41,14 +41,21 @@ type TOStatus struct {
 	SQLDescription sql.NullString `json:"-" db:"description"`
 }
 
-func (v *TOStatus) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
+func (v *TOStatus) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from `+ tableName + ` s ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_`+ tableName + ` s ` + where + orderBy + pagination +
+		` ) as res`
 }
-
-func (v *TOStatus) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TOStatus) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOStatus) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_status (
+id,
+name,
+description
+) (SELECT id,name, description FROM status WHERE id=:id)`
+	return query
+}
 func (v *TOStatus) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TOStatus) InsertQuery() string            { return insertQuery() }
 func (v *TOStatus) NewReadObj() interface{}        { return &TOStatus{} }

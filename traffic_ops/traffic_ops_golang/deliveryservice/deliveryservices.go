@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
@@ -49,8 +50,113 @@ type TODeliveryService struct {
 	tc.DeliveryServiceNullable
 }
 
-func (v *TODeliveryService) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
-func (v *TODeliveryService) InsertIntoDeletedQuery() string    { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TODeliveryService) InsertIntoDeletedQuery() string    {
+	return `INSERT INTO deleted_deliveryservice (
+id,
+active,
+anonymous_blocking_enabled,
+cacheurl,
+ccr_dns_ttl,
+cdn_id,
+check_path,
+deep_caching_type,
+display_name,
+dns_bypass_cname,
+dns_bypass_ip,
+dns_bypass_ip6,
+dns_bypass_ttl,
+dscp,
+edge_header_rewrite,
+geolimit_redirect_url,
+geo_limit,
+geo_limit_countries,
+geo_provider,
+global_max_mbps,
+global_max_tps,
+fq_pacing_rate,
+http_bypass_fqdn,
+info_url,
+initial_dispersion,
+ipv6_routing_enabled,
+logs_enabled,
+long_desc,
+long_desc_1,
+long_desc_2,
+max_dns_answers,
+mid_header_rewrite,
+miss_lat,
+miss_long,
+multi_site_origin,
+origin_shield,
+profile,
+protocol,
+qstring_ignore,
+range_request_handling,
+regex_remap,
+regional_geo_blocking,
+remap_text,
+routing_name,
+signing_algorithm,
+ssl_key_version,
+tenant_id,
+tr_request_headers,
+tr_response_headers,
+type,
+xml_id
+) (SELECT
+id,
+active,
+anonymous_blocking_enabled,
+cacheurl,
+ccr_dns_ttl,
+cdn_id,
+check_path,
+deep_caching_type,
+display_name,
+dns_bypass_cname,
+dns_bypass_ip,
+dns_bypass_ip6,
+dns_bypass_ttl,
+dscp,
+edge_header_rewrite,
+geolimit_redirect_url,
+geo_limit,
+geo_limit_countries,
+geo_provider,
+global_max_mbps,
+global_max_tps,
+fq_pacing_rate,
+http_bypass_fqdn,
+info_url,
+initial_dispersion,
+ipv6_routing_enabled,
+logs_enabled,
+long_desc,
+long_desc_1,
+long_desc_2,
+max_dns_answers,
+mid_header_rewrite,
+miss_lat,
+miss_long,
+multi_site_origin,
+origin_shield,
+profile,
+protocol,
+qstring_ignore,
+range_request_handling,
+regex_remap,
+regional_geo_blocking,
+remap_text,
+routing_name,
+signing_algorithm,
+ssl_key_version,
+tenant_id,
+tr_request_headers,
+tr_response_headers,
+type,
+xml_id
+FROM deliveryservice WHERE id = :id)`
+}
 func (ds TODeliveryService) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ds.DeliveryServiceNullable)
 }
@@ -405,7 +511,7 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 	return c, nil
 }
 
-func (ds *TODeliveryService) Read(http.Header) ([]interface{}, error, error, int) {
+func (ds *TODeliveryService) Read(h http.Header) ([]interface{}, error, error, int) {
 	version := ds.APIInfo().Version
 	if version == nil {
 		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError
@@ -415,7 +521,7 @@ func (ds *TODeliveryService) Read(http.Header) ([]interface{}, error, error, int
 	}
 
 	returnable := []interface{}{}
-	dses, userErr, sysErr, errCode := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
+	dses, userErr, sysErr, errCode := readGetDeliveryServices(h, ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
 
 	if sysErr != nil {
 		sysErr = errors.New("reading dses: " + sysErr.Error())
@@ -440,7 +546,7 @@ func (ds *TODeliveryService) Read(http.Header) ([]interface{}, error, error, int
 			return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
 		}
 	}
-	return returnable, nil, nil, http.StatusOK
+	return returnable, nil, nil, errCode
 }
 
 func UpdateV12(w http.ResponseWriter, r *http.Request) {
@@ -888,7 +994,7 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
-func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, error, error, int) {
+func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, error, error, int) {
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
 	}
@@ -938,13 +1044,32 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
 		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
 	}
-
+	runSecond := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if !runSecond {
+		return []tc.DeliveryServiceNullable{}, nil, nil, http.StatusNotModified
+	}
 	query := selectQuery() + where + orderBy + pagination
 
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
 	return GetDeliveryServices(query, queryValues, tx)
+}
+
+func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from deliveryservice as ds
+	JOIN type ON ds.type = type.id
+	JOIN cdn ON ds.cdn_id = cdn.id
+	LEFT JOIN profile ON ds.profile = profile.id
+	LEFT JOIN tenant ON ds.tenant_id = tenant.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_deliveryservice as ds
+		JOIN deleted_type ON ds.type = deleted_type.id
+		JOIN deleted_cdn ON ds.cdn_id = deleted_cdn.id
+		LEFT JOIN deleted_profile ON ds.profile = deleted_profile.id
+		LEFT JOIN deleted_tenant ON ds.tenant_id = deleted_tenant.id ` + where + orderBy + pagination +
+		` ) as res`
 }
 
 func getOldHostName(id int, tx *sql.Tx) (string, error) {

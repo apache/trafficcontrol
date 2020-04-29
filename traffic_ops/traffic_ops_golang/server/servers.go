@@ -25,6 +25,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,8 +51,78 @@ type TOServer struct {
 	tc.ServerNullable
 }
 
-func (v *TOServer) SelectMaxLastUpdatedQuery() string { return "" } //{ return selectMaxLastUpdatedQuery() }
-func (v *TOServer) InsertIntoDeletedQuery() string    { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOServer) InsertIntoDeletedQuery() string    {
+	query := `INSERT INTO deleted_server (
+id,
+cachegroup,
+cdn_id,
+domain_name,
+host_name,
+https_port,
+ilo_ip_address,
+ilo_ip_netmask,
+ilo_ip_gateway,
+ilo_username,
+ilo_password,
+interface_mtu,
+interface_name,
+ip6_address,
+ip6_gateway,
+ip_address,
+ip_netmask,
+ip_gateway,
+mgmt_ip_address,
+mgmt_ip_netmask,
+mgmt_ip_gateway,
+offline_reason,
+phys_location,
+profile,
+rack,
+router_host_name,
+router_port_name,
+status,
+tcp_port,
+type,
+upd_pending,
+xmpp_id,
+xmpp_passwd
+) (SELECT
+id,
+cachegroup,
+cdn_id,
+domain_name,
+host_name,
+https_port,
+ilo_ip_address,
+ilo_ip_netmask,
+ilo_ip_gateway,
+ilo_username,
+ilo_password,
+interface_mtu,
+interface_name,
+ip6_address,
+ip6_gateway,
+ip_address,
+ip_netmask,
+ip_gateway,
+mgmt_ip_address,
+mgmt_ip_netmask,
+mgmt_ip_gateway,
+offline_reason,
+phys_location,
+profile,
+rack,
+router_host_name,
+router_port_name,
+status,
+tcp_port,
+type,
+upd_pending,
+xmpp_id,
+xmpp_passwd
+FROM server WHERE id=:id)`
+	return query
+}
 func (s *TOServer) SetLastUpdated(t tc.TimeNoMod)     { s.LastUpdated = &t }
 func (*TOServer) InsertQuery() string                 { return insertQuery() }
 func (*TOServer) UpdateQuery() string                 { return updateQuery() }
@@ -199,7 +270,7 @@ func (s TOServer) ChangeLogMessage(action string) (string, error) {
 	return message, nil
 }
 
-func (s *TOServer) Read(http.Header) ([]interface{}, error, error, int) {
+func (s *TOServer) Read(h http.Header) ([]interface{}, error, error, int) {
 	version := s.APIInfo().Version
 	if version == nil {
 		return nil, nil, errors.New("TOServer.Read called with nil API version"), http.StatusInternalServerError
@@ -207,7 +278,7 @@ func (s *TOServer) Read(http.Header) ([]interface{}, error, error, int) {
 
 	returnable := []interface{}{}
 
-	servers, userErr, sysErr, errCode := getServers(s.ReqInfo.Params, s.ReqInfo.Tx, s.ReqInfo.User)
+	servers, userErr, sysErr, errCode := getServers(h, s.ReqInfo.Params, s.ReqInfo.Tx, s.ReqInfo.User)
 
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
@@ -225,10 +296,28 @@ func (s *TOServer) Read(http.Header) ([]interface{}, error, error, int) {
 		}
 	}
 
-	return returnable, nil, nil, http.StatusOK
+	return returnable, nil, nil, errCode
 }
 
-func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, error, error, int) {
+func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from server s JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_server s JOIN deleted_cachegroup cg ON s.cachegroup = cg.id
+JOIN deleted_cdn cdn ON s.cdn_id = cdn.id
+JOIN deleted_phys_location pl ON s.phys_location = pl.id
+JOIN deleted_profile p ON s.profile = p.id
+JOIN deleted_status st ON s.status = st.id
+JOIN deleted_type t ON s.type = t.id ` + where + orderBy + pagination +
+		` ) as res`
+}
+
+func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -276,7 +365,12 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
-
+	servers := []tc.ServerNullable{}
+	runSecond := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if !runSecond {
+		return servers, nil, nil, http.StatusNotModified
+	}
+	// Case where we need to run the second query
 	query := selectQuery() + queryAddition + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
@@ -285,8 +379,6 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 		return nil, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
-
-	servers := []tc.ServerNullable{}
 
 	HiddenField := "********"
 

@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
@@ -49,10 +50,15 @@ type RequiredCapability struct {
 	tc.DeliveryServicesRequiredCapability
 }
 
-func (v *RequiredCapability) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                            //{ return selectMaxLastUpdatedQuery() }
-func (v *RequiredCapability) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *RequiredCapability) InsertIntoDeletedQuery() string {
+	return `INSERT INTO deleted_deliveryservices_required_capability (
+required_capability,
+deliveryservice_id) 
+(SELECT required_capability,
+deliveryservice_id 
+from deliveryservices_required_capability
+WHERE deliveryservice_id = :deliveryservice_id AND required_capability = :required_capability)  `
+}
 // SetLastUpdated implements the api.GenericCreator interfaces and
 // sets the timestamp on insert.
 func (rc *RequiredCapability) SetLastUpdated(t tc.TimeNoMod) { rc.LastUpdated = &t }
@@ -170,13 +176,13 @@ func (rc *RequiredCapability) Update() (error, error, int) {
 }
 
 // Read implements the api.CRUDer interface.
-func (rc *RequiredCapability) Read(http.Header) ([]interface{}, error, error, int) {
+func (rc *RequiredCapability) Read(h http.Header) ([]interface{}, error, error, int) {
 	tenantIDs, err := rc.getTenantIDs()
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError
 	}
 
-	capabilities, userErr, sysErr, errCode := rc.getCapabilities(tenantIDs)
+	capabilities, userErr, sysErr, errCode := rc.getCapabilities(h, tenantIDs)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
@@ -186,7 +192,7 @@ func (rc *RequiredCapability) Read(http.Header) ([]interface{}, error, error, in
 		results = append(results, capability)
 	}
 
-	return results, nil, nil, http.StatusOK
+	return results, nil, nil, errCode
 }
 
 func (rc *RequiredCapability) getTenantIDs() ([]int, error) {
@@ -197,13 +203,18 @@ func (rc *RequiredCapability) getTenantIDs() ([]int, error) {
 	return tenantIDs, nil
 }
 
-func (rc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliveryServicesRequiredCapability, error, error, int) {
+func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int) ([]tc.DeliveryServicesRequiredCapability, error, error, int) {
+	var results []tc.DeliveryServicesRequiredCapability
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
+	runSecond := ims.MakeFirstQuery(rc.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQueryRC(where, orderBy, pagination))
+	if !runSecond {
+		return results, nil, nil, http.StatusNotModified
+	}
 	query := rc.SelectQuery() + where + orderBy + pagination
 
 	rows, err := rc.APIInfo().Tx.NamedQuery(query, queryValues)
@@ -212,7 +223,6 @@ func (rc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliverySer
 	}
 	defer rows.Close()
 
-	var results []tc.DeliveryServicesRequiredCapability
 	for rows.Next() {
 		var result tc.DeliveryServicesRequiredCapability
 		if err := rows.StructScan(&result); err != nil {
@@ -221,7 +231,17 @@ func (rc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliverySer
 		results = append(results, result)
 	}
 
-	return results, nil, nil, 0
+	return results, nil, nil, http.StatusOK
+}
+
+func selectMaxLastUpdatedQueryRC(where string, orderBy string, pagination string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t FROM deliveryservices_required_capability rc
+	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t FROM deleted_deliveryservices_required_capability rc
+	JOIN deleted_deliveryservice ds ON ds.id = rc.deliveryservice_id ` + where + orderBy + pagination +
+		` ) as res`
 }
 
 // Delete implements the api.CRUDer interface.

@@ -94,7 +94,7 @@ func (st TOSteeringTargetV11) Validate() error {
 	return st.SteeringTargetNullable.Validate(st.ReqInfo.Tx.Tx)
 }
 
-func (st *TOSteeringTargetV11) Read(http.Header) ([]interface{}, error, error, int) {
+func (st *TOSteeringTargetV11) Read(h http.Header) ([]interface{}, error, error, int) {
 	steeringTargets, userErr, sysErr, errCode := read(st.ReqInfo.Tx, st.ReqInfo.Params, st.ReqInfo.User)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode

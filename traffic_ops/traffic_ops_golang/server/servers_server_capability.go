@@ -56,10 +56,6 @@ type (
 	}
 )
 
-func (ssc *TOServerServerCapability) DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	panic("implement me")
-}
-
 func (ssc *TOServerServerCapability) SetLastUpdated(t tc.TimeNoMod) { ssc.LastUpdated = &t }
 func (ssc *TOServerServerCapability) NewReadObj() interface{} {
 	return &tc.ServerServerCapability{}
@@ -131,10 +127,21 @@ func (ssc *TOServerServerCapability) Update() (error, error, int) {
 func (ssc *TOServerServerCapability) Read(h http.Header) ([]interface{}, error, error, int) {
 	return api.GenericRead(h, ssc)
 }
-func (v *TOServerServerCapability) SelectMaxLastUpdatedQuery(string, string, string, string, string, string) string {
-	return ""
-}                                                                  //{ return selectMaxLastUpdatedQuery() }
-func (v *TOServerServerCapability) InsertIntoDeletedQuery() string { return "" } //{return InsertIntoDeletedQuery (interface {}, *sqlx.Tx)}
+func (v *TOServerServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from server_server_capability sc
+JOIN server s ON sc.server = s.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from deleted_server_server_capability sc
+JOIN deleted_server s ON sc.server = s.id` + where + orderBy + pagination +
+		` ) as res`
+}
+func (v *TOServerServerCapability) InsertIntoDeletedQuery() string {
+	query := `INSERT INTO deleted_server_server_capability (
+server_capability,
+server) (SELECT server_capability, server FROM server_server_capability WHERE server = :server AND server_capability = :server_capability)`
+	return query
+}
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {
 	// Ensure that the user is not removing a server capability from the server
 	// that is required by the delivery services the server is assigned to (if applicable)

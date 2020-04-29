@@ -26,17 +26,13 @@ import (
 	"github.com/apache/trafficcontrol/grove/web"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	ims2 "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
-
-// LatestTimestamp to keep track of the max of "last updated" times in tables
-type LatestTimestamp struct {
-	LatestTime *tc.TimeNoMod `json:"latestTime" db:"max"`
-}
 
 type GenericCreator interface {
 	GetType() string
@@ -52,8 +48,7 @@ type GenericReader interface {
 	ParamColumns() map[string]dbhelpers.WhereColumnInfo
 	NewReadObj() interface{}
 	SelectQuery() string
-	SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, where2 string, orderBy2 string, pagination2 string) string
-	DeletedParamColumns() map[string]dbhelpers.WhereColumnInfo
+	SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string
 }
 
 type GenericUpdater interface {
@@ -144,16 +139,7 @@ func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orde
 	if l, ok := web.ParseHTTPDate(ims[0]); !ok {
 		return runSecond
 	} else {
-		query := ""
-		where2, orderBy2, pagination2, queryValues2, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.DeletedParamColumns())
-		query = val.SelectMaxLastUpdatedQuery(where, orderBy, pagination, where2, orderBy2, pagination2)
-		for k, v := range queryValues2 {
-			queryValues[k] = v
-		}
-		if len(errs) > 0 {
-			log.Warnf("Got errors while forming the query clause %v", errs)
-			return runSecond
-		}
+		query := val.SelectMaxLastUpdatedQuery(where, orderBy, pagination, val.GetType())
 		rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
 		defer rows.Close()
 		if err != nil {
@@ -166,7 +152,7 @@ func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orde
 		}
 		// This should only ever contain one row
 		if rows.Next() {
-			v := &LatestTimestamp{}
+			v := &ims2.LatestTimestamp{}
 			if err = rows.StructScan(v); err != nil || v == nil {
 				log.Warnf("Failed to parse the max time stamp into a struct %v", err)
 				return runSecond
@@ -264,8 +250,10 @@ func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
 
 func InsertInDeletedTable(val GenericDeleter) (error, error, int) {
 	query := val.InsertIntoDeletedQuery()
+	log.Debugf("InsertInDeletedTable query is %v", query)
 	result, err := val.APIInfo().Tx.NamedExec(query, val)
 	if err != nil {
+		log.Warnf("DB error while inserting into deleted table %v", err)
 		return ParseDBError(err)
 	}
 	rowsAffected, err := result.RowsAffected()
@@ -273,7 +261,7 @@ func InsertInDeletedTable(val GenericDeleter) (error, error, int) {
 		return err, nil, http.StatusInternalServerError
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("More than one insertions happended in the deleted table"), http.StatusInternalServerError
+		log.Warnf("Warning: %v rows were affected by this operation, expected was 1", rowsAffected)
 	}
 	return nil, nil, http.StatusOK
 }

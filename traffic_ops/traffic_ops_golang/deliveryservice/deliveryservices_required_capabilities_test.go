@@ -244,6 +244,7 @@ func TestDeleteDeliveryServicesRequiredCapability(t *testing.T) {
 	mock.ExpectBegin()
 	mockTenantID(t, mock, 1)
 
+	mock.ExpectExec("INSERT").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("DELETE").WillReturnResult(sqlmock.NewResult(1, 1))
 
 	rc := RequiredCapability{

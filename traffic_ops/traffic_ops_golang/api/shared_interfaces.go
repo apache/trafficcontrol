@@ -27,7 +27,7 @@ import (
 
 type CRUDer interface {
 	Create() (error, error, int)
-	Read(http.Header) ([]interface{}, error, error, int)
+	Read(h http.Header) ([]interface{}, error, error, int)
 	Update() (error, error, int)
 	Delete() (error, error, int)
 	APIInfoer
