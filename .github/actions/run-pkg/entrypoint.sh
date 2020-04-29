@@ -18,4 +18,6 @@
 
 set -e
 
-./pkg -v 2>&1
+./pkg -v 2>&1 | tee tmp 1>&2
+cat tmp
+rm tmp
