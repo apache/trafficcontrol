@@ -15,25 +15,25 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM ubuntu:latest
+FROM docker:stable
 
 VOLUME /var/run/docker.sock:/var/run/docker.sock
 
-RUN apt-get update && \
-	apt-get install -y \
-		apt-transport-https \
-		ca-certificates \
-		curl \
-		gnupg-agent \
-		software-properties-common \
-		lsb-release &&\
-	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &&\
-	apt-add-repository \
-		"deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-		$(lsb_release -cs) \
-		stable" &&\
-	apt-get update &&\
-	apt-get install docker-ce docker-ce-cli containerd.io
+# RUN apt-get update && \
+# 	apt-get install -y \
+# 		apt-transport-https \
+# 		ca-certificates \
+# 		curl \
+# 		gnupg-agent \
+# 		software-properties-common \
+# 		lsb-release &&\
+# 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &&\
+# 	apt-add-repository \
+# 		"deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+# 		$(lsb_release -cs) \
+# 		stable" &&\
+# 	apt-get update &&\
+# 	apt-get install docker-ce docker-ce-cli containerd.io
 
 COPY entrypoint.sh /
 
