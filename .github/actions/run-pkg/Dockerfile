@@ -36,5 +36,6 @@ VOLUME /var/run/docker.sock:/var/run/docker.sock
 # 	apt-get install docker-ce docker-ce-cli containerd.io
 
 COPY entrypoint.sh /
+RUN chmod a+x /entrypoint.sh
 
 ENTRYPOINT /entrypoint.sh

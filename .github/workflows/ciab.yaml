@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Traffic Ops Push CI
+name: CDN-in-a-Box CI
 
 on: push
 
