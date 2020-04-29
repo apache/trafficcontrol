@@ -26,7 +26,7 @@ DROP TRIGGER IF EXISTS on_update_current_timestamp ON topology;
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON topology FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 CREATE TABLE topology_cachegroup (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     topology text NOT NULL,
     cachegroup text NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
