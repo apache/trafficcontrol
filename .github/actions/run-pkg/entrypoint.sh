@@ -18,6 +18,13 @@
 
 set -e
 
+echo "$PATH"
+mkdir bin
+curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o ./bin/docker-compose
+chmod a+x ./bin/docker-compose
+ls -l ./bin
+export PATH="$PATH:$PWD/bin"
+docker-compose --version
 ./pkg -l || true
 
 bash -ex ./pkg -v traffic_ops_build traffic_monitor_build traffic_router_build traffic_portal_build traffic_stats_build grove_build docs 2>&1
