@@ -18,6 +18,7 @@
 FROM docker:stable
 
 VOLUME /var/run/docker.sock:/var/run/docker.sock
+RUN apk add bash
 
 # RUN apt-get update && \
 # 	apt-get install -y \
