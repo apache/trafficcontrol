@@ -86,7 +86,7 @@ func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
 	return nil, reqInf, fmt.Errorf("expected one topology in response, instead got: %+v", data.Response)
 }
 
-// Update a Topology by ID
+// UpdateTopologyByID updates a Topology by ID.
 func (to *Session) UpdateTopologyByID(id int, pl tc.Topology) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
