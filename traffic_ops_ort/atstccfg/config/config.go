@@ -140,6 +140,9 @@ func GetCfg() (Cfg, error) {
 	if toPass == "" {
 		toPass = os.Getenv("TO_PASS")
 	}
+	if toPass == "" {
+		toPass = os.Getenv("TO_PASSWORD")
+	}
 
 	usageStr := "Usage: ./" + AppName + " --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
 	if strings.TrimSpace(toURL) == "" {
