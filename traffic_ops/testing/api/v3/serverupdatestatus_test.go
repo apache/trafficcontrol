@@ -224,7 +224,7 @@ func TestServerQueueUpdate(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to encode request body: %v", err)
 			}
-			path := fmt.Sprintf("/api/2.0/servers/%d/queue_update", s.ID)
+			path := fmt.Sprintf(TestAPIBase+"/servers/%d/queue_update", s.ID)
 			httpResp, _, err := TOSession.RawRequest(http.MethodPost, path, req)
 			if err != nil {
 				t.Fatalf("POST request failed: %v", err)
