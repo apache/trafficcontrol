@@ -24,7 +24,12 @@ atstccfg is a tool for generating configuration files server-side on ATC cache s
 
 ## Usage
 ```
-atstccfg [-u TO_URL] [-U TO_USER] [-P TO_PASSWORD] [-n] [-r N] [-e ERROR_LOCATION] [-w WARNING_LOCATION] [-i INFO_LOCATION] [-g] [-s] [-t TIMEOUT] [-a REVAL_STATUS] [-l]
+atstccfg -h
+atstccfg -v
+atstccfg -l
+atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [-y] -n CACHE_NAME
+atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] -n CACHE_NAME -d DATA
+atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] -n CACHE_NAME -a REVAL_STATUS -q QUEUE_STATUS
 ```
 The available options are:
 ```
@@ -93,9 +98,9 @@ The available options are:
 -y, --revalidate-only
     When given, atstccfg will only emit files relevant for updating content
     invalidation jobs. For Apache Traffic Server implementations, this limits
-    the output to be only files named 'regex_revalidate.config'.
+    the output to be only files named 'regex_revalidate.config'. Has no effect
+    if --get-data or --set-queue-status/--set-reval-status is/are used.
 ```
-atstccfg caches generated files in /tmp/atstccfg_cache/ for re-use.
 
 # Development
 
