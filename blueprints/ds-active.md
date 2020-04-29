@@ -283,3 +283,14 @@ before then clients using Cache Servers for ongoing content delivery will be
 unaffected by the change. This allows operators to "drain" a Delivery Service
 for a while before setting it to "INACTIVE" and removing it from Cache Server
 configuration, thus minimizing client impact.
+
+Another that has been brought up is changing the name of the current `active`
+field to be `active-routed`, which would mean that Delivery Service will be
+routed, and adding another field called `active-cached` which would mean that
+the Delivery Service's configuration would be disseminated to the cache
+servers. Thus the same amount of flexibility could be achieved without making a
+breaking API change.
+
+The trade-off is that it would allow Delivery Services to be in a state where
+Traffic Router will direct clients to cache servers which are incapable of
+properly serving them content.
