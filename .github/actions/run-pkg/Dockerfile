@@ -25,7 +25,8 @@ RUN apt-get update && \
 		ca-certificates \
 		curl \
 		gnupg-agent \
-		software-properties-common &&\
+		software-properties-common \
+		lsb-release &&\
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &&\
 	apt-add-repository \
 		"deb [arch=amd64] https://download.docker.com/linux/ubuntu \
