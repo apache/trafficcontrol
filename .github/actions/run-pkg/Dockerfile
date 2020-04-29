@@ -18,7 +18,7 @@
 FROM docker:stable
 
 VOLUME /var/run/docker.sock:/var/run/docker.sock
-RUN apk add curl bash py-pip python-dev libffi-dev openssl-dev gcc libc-dev make docker-compose
+RUN apk add bash docker-compose
 
 # RUN apt-get update && \
 # 	apt-get install -y \
