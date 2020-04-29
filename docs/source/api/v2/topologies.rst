@@ -53,6 +53,7 @@ Response Structure
 :lastUpdated:           The date and time at which this :term:`Topology` was last updated, in ISO-like format
 :name:                  The name of the topology. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the topology
+
 	:cachegroup:            The name of a topology
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
@@ -158,6 +159,7 @@ Request Structure
 :description:           A short sentence that describes the topology.
 :name:                  The name of the topology. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the topology
+
 	:cachegroup:            The name of a topology
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
@@ -246,6 +248,7 @@ Response Structure
 :lastUpdated:           The date and time at which this :term:`Topology` was last updated, in ISO-like format
 :name:                  The name of the topology. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the topology
+
 	:cachegroup:            The name of a topology
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
@@ -359,6 +362,7 @@ Request Structure
 :description:           A short sentence that describes the topology.
 :name:                  The name of the topology. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the topology
+
 	:cachegroup:            The name of a topology
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
@@ -439,6 +443,7 @@ Response Structure
 :lastUpdated:           The date and time at which this :term:`Topology` was last updated, in ISO-like format
 :name:                  The name of the topology. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the topology
+
 	:cachegroup:            The name of a topology
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
