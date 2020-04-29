@@ -15,12 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM docker:stable
-
-VOLUME /var/run/docker.sock:/var/run/docker.sock
-RUN apk add bash docker-compose
-
-COPY entrypoint.sh /
-RUN chmod a+x /entrypoint.sh
-
-ENTRYPOINT /entrypoint.sh
+name: 'run-ciab'
+description: 'Runs CDN-in-a-Box'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

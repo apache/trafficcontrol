@@ -1,3 +1,4 @@
+#!/bin/sh -l
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,12 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM docker:stable
+set -ex
 
-VOLUME /var/run/docker.sock:/var/run/docker.sock
-RUN apk add bash docker-compose
-
-COPY entrypoint.sh /
-RUN chmod a+x /entrypoint.sh
-
-ENTRYPOINT /entrypoint.sh
+docker-compose --version
+pushd infrastructure/cdn-in-a-box
+make
+popd
+docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml up --build
+sleep 300
+docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml down -v
