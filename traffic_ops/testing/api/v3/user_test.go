@@ -17,13 +17,13 @@ package v3
 import (
 	"bytes"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/mail"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
@@ -90,7 +90,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 	}`, *roles[0].ID, tenants[0].ID)
 
 	reader := strings.NewReader(blob)
-	request, err := http.NewRequest("POST", fmt.Sprintf("%v/api/2.0/users", TOSession.URL), reader)
+	request, err := http.NewRequest("POST", fmt.Sprintf("%v%s/users", TOSession.URL, TestAPIBase), reader)
 	if err != nil {
 		t.Errorf("could not make new request: %v", err)
 	}
@@ -106,7 +106,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 		t.Error("incorrect json was returned for POST")
 	}
 
-	request, err = http.NewRequest("GET", fmt.Sprintf("%v/api/2.0/users?username=test_user", TOSession.URL), nil)
+	request, err = http.NewRequest("GET", fmt.Sprintf("%v%s/users?username=test_user", TOSession.URL, TestAPIBase), nil)
 	resp, err = TOSession.Client.Do(request)
 
 	buf = new(bytes.Buffer)

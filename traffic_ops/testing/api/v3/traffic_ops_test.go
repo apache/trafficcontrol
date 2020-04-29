@@ -1,4 +1,4 @@
-// Package v2 provides tests for the Traffic Ops API.
+// Package v3 provides tests for the Traffic Ops API.
 package v3
 
 /*
@@ -34,6 +34,8 @@ var (
 	testData           TrafficControl
 	includeSystemTests bool
 )
+
+const TestAPIBase = "/api/3.0"
 
 func TestMain(m *testing.M) {
 	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
