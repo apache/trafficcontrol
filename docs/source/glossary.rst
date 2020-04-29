@@ -392,7 +392,7 @@ Glossary
 
 	Topology
 	Topologies
-		A structure composed of :term:`Cache Groups` and parent relationships, which is assignable to one or more :term:`Delivery Services`
+		A structure composed of :term:`Cache Groups` and parent relationships, which is assignable to one or more :term:`Delivery Services`.
 
 	Type
 	Types
