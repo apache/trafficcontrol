@@ -28,8 +28,9 @@ COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/inf
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
-COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
 COPY ./traffic_ops/v1-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v1-client/
+COPY ./traffic_ops/v2-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v2-client/
+COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
 COPY ./traffic_ops/testing/api /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 COPY ./traffic_ops/traffic_ops_golang /go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 
@@ -37,6 +38,7 @@ COPY ./traffic_ops/traffic_ops_golang /go/src/github.com/apache/trafficcontrol/t
 WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 RUN CGO_ENABLED=0 go test -c ./v1* -ldflags="-w -s" -o traffic_ops_v1_integration_test
 RUN CGO_ENABLED=0 go test -c ./v2* -ldflags="-w -s" -o traffic_ops_v2_integration_test
+RUN CGO_ENABLED=0 go test -c ./v3* -ldflags="-w -s" -o traffic_ops_v3_integration_test
 
 FROM alpine:3.11
 
@@ -59,11 +61,15 @@ COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/integration/app/
 COPY ./traffic_ops/testing/api/v1/tc-fixtures.json /opt/integration/app/tc-fixtures-v1.json
 COPY ./traffic_ops/testing/api/v2/tc-fixtures.json /opt/integration/app/tc-fixtures-v2.json
+COPY ./traffic_ops/testing/api/v3/tc-fixtures.json /opt/integration/app/tc-fixtures-v3.json
 COPY --from=integration-builder \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v1_integration_test \
     /opt/integration/app/
 COPY --from=integration-builder \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v2_integration_test \
+    /opt/integration/app/
+COPY --from=integration-builder \
+    /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v3_integration_test \
     /opt/integration/app/
 
 COPY --from=integration-builder \

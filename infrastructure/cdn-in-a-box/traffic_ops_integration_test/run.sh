@@ -43,10 +43,13 @@ source config.sh
 export v1=$?
 ./traffic_ops_v2_integration_test -test.v -cfg=traffic-ops-test.conf -fixtures=tc-fixtures-v2.json 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v2 --set-exit-code > /junit/golang.test.toapi.v2.xml && find /junit -type 'f' | xargs chmod 664
 export v2=$?
+./traffic_ops_v3_integration_test -test.v -cfg=traffic-ops-test.conf -fixtures=tc-fixtures-v3.json 2>&1 | ./go-junit-report --package-name=golang.test.toapi.v3 --set-exit-code > /junit/golang.test.toapi.v3.xml && find /junit -type 'f' | xargs chmod 664
+export v3=$?
 
-cat /junit/golang.test.toapi.v1.xml /junit/golang.test.toapi.v2.xml
+cat /junit/golang.test.toapi.v1.xml /junit/golang.test.toapi.v2.xml /junit/golang.test.toapi.v3.xml
 
-if [ $v1 -eq 0 ] && [ $v2 -eq 0 ]
+
+if [ $v1 -eq 0 ] && [ $v2 -eq 0 ] && [ $v3 -eq 0 ]
 then
   echo "TO API tests success"
 else
