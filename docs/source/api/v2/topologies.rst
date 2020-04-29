@@ -377,6 +377,7 @@ Request Structure
 	Connection: keep-alive
 	Cookie: mojolicious=...
 	Content-Length: 853
+	Content-Type: application/json
 
 	{
 		"name": "my-topology",
