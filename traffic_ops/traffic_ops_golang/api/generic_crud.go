@@ -71,7 +71,6 @@ type GenericOptionsDeleter interface {
 	APIInfo() *APIInfo
 	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 	DeleteQueryBase() string
-	//InsertIntoDeletedQueryBase() string
 }
 
 // GenericCreate does a Create (POST) for the given GenericCreator object and type. This exists as a generic function, for the common use case of a single "id" key and a lastUpdated field.
