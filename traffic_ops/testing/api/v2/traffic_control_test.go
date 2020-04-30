@@ -45,7 +45,6 @@ type TrafficControl struct {
 	Servers                              []tc.Server                             `json:"servers"`
 	ServerServerCapabilities             []tc.ServerServerCapability             `json:"serverServerCapabilities"`
 	ServerCapabilities                   []tc.ServerCapability                   `json:"serverCapabilities"`
-	ServiceCategories                    []tc.ServiceCategory                    `json:"serviceCategories"`
 	Statuses                             []tc.StatusNullable                     `json:"statuses"`
 	StaticDNSEntries                     []tc.StaticDNSEntry                     `json:"staticdnsentries"`
 	StatsSummaries                       []tc.StatsSummary                       `json:"statsSummaries"`
