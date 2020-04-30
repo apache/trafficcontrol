@@ -117,8 +117,12 @@ class Configuration():
 
 		logging.info("Distribution detected as: '%s'", DISTRO)
 
-		self.hostname = (platform.node().split('.')[0], platform.node())
-		logging.info("Hostname detected as: '%s'", self.fullHostname)
+		if not args.hostname:
+			self.hostname = (platform.node().split('.')[0], platform.node())
+			logging.info("Hostname detected as: '%s'", self.fullHostname)
+		else:
+			self.hostname = (args.hostname, args.hostname)
+			logging.info("Hostname set to: '%s'", self.fullHostname)
 
 		try:
 			self.mode = Configuration.Modes[args.Mode.upper()]

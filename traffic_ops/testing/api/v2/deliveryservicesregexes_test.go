@@ -48,7 +48,7 @@ func CreateTestDeliveryServicesRegexes(t *testing.T) {
 	for i, regex := range testData.DeliveryServicesRegexes {
 		loadDSRegexIDs(t, &regex)
 
-		err = execSQL(db, fmt.Sprintf(dbRegexInsertTemplate, regex.Pattern, regex.Type), "regex")
+		err = execSQL(db, fmt.Sprintf(dbRegexInsertTemplate, regex.Pattern, regex.Type))
 		if err != nil {
 			t.Fatalf("unable to create regex: %v", err)
 		}
@@ -59,7 +59,7 @@ func CreateTestDeliveryServicesRegexes(t *testing.T) {
 			t.Fatalf("unable to query regex: %v", err)
 		}
 
-		err = execSQL(db, fmt.Sprintf(dbDSRegexInsertTemplate, regex.DSID, regex.ID, regex.SetNumber), "deliveryservice_regex")
+		err = execSQL(db, fmt.Sprintf(dbDSRegexInsertTemplate, regex.DSID, regex.ID, regex.SetNumber))
 		if err != nil {
 			t.Fatalf("unable to create ds regex %v", err)
 		}
@@ -81,12 +81,12 @@ func DeleteTestDeliveryServicesRegexes(t *testing.T) {
 	}()
 
 	for _, regex := range testData.DeliveryServicesRegexes {
-		err = execSQL(db, fmt.Sprintf("DELETE FROM deliveryservice_regex WHERE deliveryservice = '%v' and regex ='%v';", regex.DSID, regex.ID), "regex")
+		err = execSQL(db, fmt.Sprintf("DELETE FROM deliveryservice_regex WHERE deliveryservice = '%v' and regex ='%v';", regex.DSID, regex.ID))
 		if err != nil {
 			t.Fatalf("unable to delete deliveryservice_regex by regex %v and ds %v: %v", regex.ID, regex.DSID, err)
 		}
 
-		err := execSQL(db, fmt.Sprintf("DELETE FROM regex WHERE Id = '%v';", regex.ID), "regex")
+		err := execSQL(db, fmt.Sprintf("DELETE FROM regex WHERE Id = '%v';", regex.ID))
 		if err != nil {
 			t.Fatalf("unable to delete regex %v: %v", regex.ID, err)
 		}

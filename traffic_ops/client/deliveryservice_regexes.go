@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	// See: https://traffic-control-cdn.readthedocs.io/en/latest/api/v2/deliveryservices_id_regexes.html
+	// See: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_regexes.html
 	API_DS_REGEXES = apiBase + "/deliveryservices/%v/regexes"
 )
 

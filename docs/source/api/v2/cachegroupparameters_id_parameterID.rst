@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroupparameters-id-parameterID:
+.. _to-api-v2-cachegroupparameters-id-parameterID:
 
 ***********************************************
 ``cachegroupparameters/{{ID}}/{{parameterID}}``

@@ -34,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -206,14 +207,7 @@ func (job *InvalidationJob) Read(h http.Header) ([]interface{}, error, error, in
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(job.APIInfo().Params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		var b strings.Builder
-		b.WriteString("Reading jobs:")
-		for _, err := range errs {
-			b.WriteString("\n\t")
-			b.WriteString(err.Error())
-		}
-
-		return nil, nil, errors.New(b.String()), http.StatusInternalServerError
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(job.APIInfo().Tx.Tx, job.APIInfo().User.TenantID)
