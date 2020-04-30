@@ -18,4 +18,5 @@
 
 set -ex
 
+export PATH="$PATH:/usr/local/go/bin"
 ./traffic_ops/build/build_rpm.sh
