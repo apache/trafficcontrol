@@ -73,13 +73,22 @@ Response Structure
 	:iloIpNetmask:		The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
 	:iloPassword:		The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
 	:iloUsername:		The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-	:interfaceMtu:		The :abbr:`MTU (Maximum Transmission Unit)` to configured on ``interfaceName``
-	:interfaceName:		The name of the primary network interface used by the server
-	:ip6Address:		The IPv6 address and subnet mask of ``interfaceName``
-	:ip6Gateway:		The IPv6 address of the gateway used by ``interfaceName``
-	:ipAddress:		The IPv4 address of ``interfaceName``
-	:ipGateway:		The IPv4 address of the gateway used by ``interfaceName``
-	:ipNetmask:		The IPv4 subnet mask used by ``interfaceName``
+	:interfaces:     An array of interface and IP address information
+
+		:max_bandwidth:  The maximum allowed bandwidth for this interface to be considered "healthy" by Traffic Monitor. This has no effect if `monitor` is not true. Values are in kb/s. The value `0` means "no limit".
+		:monitor:        A boolean indicating if Traffic Monitor should monitor this interface
+		:mtu:            The :abbr:`MTU (Maximum Transmission Unit)` to configure for ``interfaceName``
+
+			.. seealso:: `The Wikipedia article on Maximum Transmission Unit <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
+
+		:name:           The network interface name used by the server. A value of 'mgmt' indicates a management port.
+
+		:ipAddresses:    An array of the IP address information for the interface
+
+			:ip6Address:       The IPv4 or IPv6 address and subnet mask of the server - applicable for the interface ``name``
+			:ip6Gateway:       The IPv4 or IPv6 gateway address of the server - applicable for the interface ``name``
+			:service_address:  A boolean determining if content will be routed to the IP address
+
 	:offlineReason:		A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 	:physLocation:		The name of the physical location where the server resides
 	:profile:		The :ref:`profile-name` of the :term:`Profile` used by this server
@@ -138,16 +147,6 @@ Response Structure
 				"iloIpNetmask": "",
 				"iloPassword": "",
 				"iloUsername": "",
-				"interfaceMtu": 1500,
-				"interfaceName": "eth0",
-				"ip6Address": "fc01:9400:1000:8::3",
-				"ip6Gateway": "fc01:9400:1000:8::1",
-				"ipAddress": "172.16.239.3",
-				"ipGateway": "172.16.239.1",
-				"ipNetmask": "255.255.255.0",
-				"mgmtIpAddress": "",
-				"mgmtIpGateway": "",
-				"mgmtIpNetmask": "",
 				"offlineReason": "",
 				"physLocation": "Apachecon North America 2018",
 				"profile": "ATS_EDGE_TIER_CACHE",
@@ -159,7 +158,37 @@ Response Structure
 				"tcpPort": 80,
 				"type": "EDGE",
 				"xmppId": "edge",
-				"xmppPasswd": ""
+				"xmppPasswd": "",
+				"interfaces": [{
+					"ipAddresses": [
+						{
+							"address": "172.16.239.101",
+							"gateway": "",
+							"service_address": false
+						}
+					],
+						"max_bandwidth": 0,
+						"monitor": false,
+						"mtu": 9000,
+						"name": "mgmt"
+					},
+					{ "ipAddresses": [
+						{
+							"address": "172.16.239.100",
+							"gateway": "172.16.239.1",
+							"service_address": true
+						},
+						{
+							"address": "fc01:9400:1000:8::100",
+							"gateway": "fc01:9400:1000:8::1",
+							"service_address": true
+						}
+					],
+					"max_bandwidth": 0,
+					"monitor": true,
+					"mtu": 1500,
+					"name": "eth0"
+				}]
 			}
 		],
 		"size": 1

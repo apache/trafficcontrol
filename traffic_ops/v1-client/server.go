@@ -29,6 +29,7 @@ import (
 
 const (
 	API_v13_Servers                        = "/api/1.3/servers"
+	API_SERVERS_DETAILS                    = apiBase + "/servers/details"
 	API_v14_Server_Assign_DeliveryServices = "/api/1.4/servers/%d/deliveryservices?replace=%t"
 	API_v14_Server_DeliveryServices        = "/api/1.4/servers/%d/deliveryservices"
 )
@@ -180,6 +181,24 @@ func (to *Session) GetServerByHostName(hostName string) ([]tc.ServerV1, ReqInf, 
 	defer resp.Body.Close()
 
 	var data tc.ServersV1Response
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GetServerDetailsByHostName GETs Servers by the Server hostname.
+func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetailV11, ReqInf, error) {
+	url := fmt.Sprintf("%s?hostName=%s", API_SERVERS_DETAILS, hostName)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ServersV1DetailResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
