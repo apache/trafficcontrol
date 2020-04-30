@@ -34,7 +34,6 @@ exports.config = {
 	jasmineNodeOpts: {defaultTimeoutInterval: 600000},
 
 	suites: {
-		loginTests: 'login/login-spec.js',
 		allTests: [
 			'login/login-spec.js',
 			'CDNs/cdns-spec.js',
