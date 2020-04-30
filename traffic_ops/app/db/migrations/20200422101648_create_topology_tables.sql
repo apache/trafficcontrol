@@ -30,8 +30,8 @@ CREATE TABLE topology_cachegroup (
     topology text NOT NULL,
     cachegroup text NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT topology_cachegroup_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup(name) ON UPDATE CASCADE ON DELETE RESTRICT,
-	CONSTRAINT topology_cachegroup_topology_fkey FOREIGN KEY (topology) REFERENCES topology(name) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT topology_cachegroup_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup(name) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT topology_cachegroup_topology_fkey FOREIGN KEY (topology) REFERENCES topology(name) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT unique_topology_cachegroup UNIQUE (topology, cachegroup)
 );
 CREATE INDEX topology_cachegroup_cachegroup_fkey ON topology_cachegroup USING btree (cachegroup);
@@ -45,8 +45,8 @@ CREATE TABLE topology_cachegroup_parents (
     rank integer NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT topology_cachegroup_parents_rank_check CHECK (rank = 1 OR rank = 2),
-	CONSTRAINT topology_cachegroup_parents_child_fkey FOREIGN KEY (child) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE,
-	CONSTRAINT topology_cachegroup_parents_parent_fkey FOREIGN KEY (parent) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT topology_cachegroup_parents_child_fkey FOREIGN KEY (child) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT topology_cachegroup_parents_parent_fkey FOREIGN KEY (parent) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT unique_child_parent_rank UNIQUE (child, parent, rank)
 );
 CREATE INDEX topology_cachegroup_parents_child_fkey ON topology_cachegroup_parents USING btree (child);
