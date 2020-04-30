@@ -49,12 +49,12 @@ Request Structure
 
 Response Structure
 ------------------
-:description:           A short sentence that describes the topology.
+:description:           A short sentence that describes the :term:`Topology`.
 :lastUpdated:           The date and time at which this :term:`Topology` was last updated, in ISO-like format
-:name:                  The name of the topology. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the topology
+:name:                  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
+:nodes:                 An array of nodes in the :term:`Topology`
 
-	:cachegroup:            The name of a topology
+	:cachegroup:            The name of a :term:`Topology`
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
@@ -158,9 +158,9 @@ Request Structure
 -----------------
 :description:           A short sentence that describes the topology.
 :name:                  The name of the topology. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the topology
+:nodes:                 An array of nodes in the :term:`Topology`
 
-	:cachegroup:            The name of a topology
+	:cachegroup:            The name of a :term:`Topology`
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
@@ -248,9 +248,9 @@ Response Structure
 :description:           A short sentence that describes the topology.
 :lastUpdated:           The date and time at which this :term:`Topology` was last updated, in ISO-like format
 :name:                  The name of the topology. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the topology
+:nodes:                 An array of nodes in the :term:`Topology`
 
-	:cachegroup:            The name of a topology
+	:cachegroup:            The name of a :term:`Topology`
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
@@ -360,11 +360,11 @@ Request Structure
 	| name | yes      | The name of the :term:`Topology` to be updated          |
 	+------+----------+---------------------------------------------------------+
 
-:description:           A short sentence that describes the topology.
-:name:                  The name of the topology. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the topology
+:description:           A short sentence that describes the :term:`Topology`.
+:name:                  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
+:nodes:                 An array of nodes in the :term:`Topology`
 
-	:cachegroup:            The name of a topology
+	:cachegroup:            The name of a :term:`Topology`
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
@@ -441,12 +441,12 @@ Request Structure
 
 Response Structure
 ------------------
-:description:           A short sentence that describes the topology.
+:description:           A short sentence that describes the :term:`Topology`.
 :lastUpdated:           The date and time at which this :term:`Topology` was last updated, in ISO-like format
-:name:                  The name of the topology. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the topology
+:name:                  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
+:nodes:                 An array of nodes in the :term:`Topology`
 
-	:cachegroup:            The name of a topology
+	:cachegroup:            The name of a :term:`Topology`
 	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
