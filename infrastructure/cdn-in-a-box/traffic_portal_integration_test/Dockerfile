@@ -47,7 +47,6 @@ RUN npm install --save-dev jasmine-reporters@^2.0.0
 RUN ls -lah /lang/traffic_portal/test/end_to_end
 
 RUN sed -i "s/baseUrl: 'https:\/\/localhost:4443/baseUrl: 'https:\/\/trafficportal.infra.ciab.test:443/" /lang/traffic_portal/test/end_to_end/conf.js
-RUN sed -i "s/baseUrl: 'https:\/\/localhost:4443/baseUrl: 'https:\/\/trafficportal.infra.ciab.test:443/" /lang/traffic_portal/test/end_to_end/login/conf.js
 
 RUN export junit_conf_jasmine="\n\
 	onPrepare: function() {\n\
