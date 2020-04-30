@@ -18,7 +18,7 @@
 FROM docker:stable
 
 VOLUME /var/run/docker.sock:/var/run/docker.sock
-RUN apk add bash docker-compose
+RUN apk add bash rpm
 
 COPY entrypoint.sh /
 RUN chmod a+x /entrypoint.sh

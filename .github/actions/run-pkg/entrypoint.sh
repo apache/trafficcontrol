@@ -16,9 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -e
+set -ex
 
-docker-compose --version
-./pkg -l
-
-bash -ex ./pkg -v traffic_ops_build traffic_monitor_build traffic_router_build traffic_portal_build traffic_stats_build grove_build docs 2>&1
+./traffic_ops/build/build_rpm.sh
