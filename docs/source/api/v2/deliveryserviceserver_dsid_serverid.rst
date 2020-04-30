@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryserviceserver-dsid-serverid:
+.. _to-api-v2-deliveryserviceserver-dsid-serverid:
 
 ***********************************************
 ``deliveryserviceserver/{{DSID}}/{{serverID}}``

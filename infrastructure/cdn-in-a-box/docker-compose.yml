@@ -290,6 +290,7 @@ services:
       - shared:/shared
     hostname: dns
     domainname: infra.ciab.test
+
   smtp:
     build:
       context: .

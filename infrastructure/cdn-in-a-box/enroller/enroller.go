@@ -33,7 +33,7 @@ import (
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	client "github.com/apache/trafficcontrol/traffic_ops/client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/fsnotify.v1"
 )
@@ -560,8 +560,11 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			}
 		}
 		profiles, _, err = toSession.GetProfileByName(profile.Name)
-		if err != nil || len(profiles) == 0 {
+		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
+		}
+		if len(profiles) == 0 {
+			log.Infof("no results returned for getting profile ID from %+v", profile)
 		}
 		profile = profiles[0]
 		action = "creating"
