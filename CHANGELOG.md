@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/snapshot `PUT`
 
 ### Changed
+- Add null check in astats plugin before calling strtok to find ip mask values in the config file
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
 - Fixed Traffic Portal regenerating CDN DNSSEC keys with the wrong effective date
 - Fixed issue #4583: POST /users/register internal server error caused by failing DB query

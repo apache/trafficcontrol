@@ -599,7 +599,11 @@ static void parseIps(config_t* config, char* ipStr) {
 			TSDebug(PLUGIN_TAG, "%d) skipping: %s", i+1,tok1);
 			continue;
 		}
-		tok2 = strtok_r(tok1, "/", &tok1);
+
+		if (tok1 != NULL) {
+			tok2 = strtok_r(tok1, "/", &tok1);
+		}
+
 		if(!tok2) {
 			mask = 32;
 		} else {
@@ -646,7 +650,11 @@ static void parseIps6(config_t* config, char* ipStr) {
 			TSDebug(PLUGIN_TAG, "%d) skipping: %s", i+1,tok1);
 			continue;
 		}
-		tok2 = strtok_r(tok1, "/", &tok1);
+
+		if (tok1 != NULL) {
+			tok2 = strtok_r(tok1, "/", &tok1);
+		}
+
 		if(!tok2) {
 			mask = 128;
 		} else {
