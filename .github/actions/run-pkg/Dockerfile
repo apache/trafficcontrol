@@ -21,6 +21,6 @@ VOLUME /var/run/docker.sock:/var/run/docker.sock
 RUN apk add bash rpm git
 
 COPY entrypoint.sh /
-RUN chmod a+x /entrypoint.sh && go --version
+RUN chmod a+x /entrypoint.sh
 
 ENTRYPOINT /entrypoint.sh
