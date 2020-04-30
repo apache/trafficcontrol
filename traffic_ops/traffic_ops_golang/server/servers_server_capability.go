@@ -129,11 +129,11 @@ func (ssc *TOServerServerCapability) Read(h http.Header) ([]interface{}, error, 
 }
 func (v *TOServerServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from server_server_capability sc
+		SELECT max(sc.last_updated) as t from server_server_capability sc
 JOIN server s ON sc.server = s.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_server_server_capability sc
-JOIN deleted_server s ON sc.server = s.id` + where + orderBy + pagination +
+	select max(sc.last_updated) as t from deleted_server_server_capability sc
+JOIN server s ON sc.server = s.id` + where + orderBy + pagination +
 		` ) as res`
 }
 func (v *TOServerServerCapability) InsertIntoDeletedQuery() string {

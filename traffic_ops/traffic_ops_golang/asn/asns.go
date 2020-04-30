@@ -103,13 +103,13 @@ func (as *TOASNV11) Read(h http.Header) ([]interface{}, error, error, int) {
 }
 func (v *TOASNV11) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from asn a
+		SELECT max(a.last_updated) as t from asn a
 JOIN
   cachegroup c ON a.cachegroup = c.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_asn a
+	select max(a.last_updated) as t from deleted_asn a
 JOIN
-  deleted_cachegroup c ON a.cachegroup = c.id`+ where + orderBy + pagination +
+  cachegroup c ON a.cachegroup = c.id`+ where + orderBy + pagination +
 		` ) as res`
 }
 func (v *TOASNV11) InsertIntoDeletedQuery() string {

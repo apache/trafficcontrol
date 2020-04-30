@@ -1020,7 +1020,10 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
-
+	runSecond := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, "", pagination))
+	if !runSecond {
+		return []tc.DeliveryServiceNullable{}, nil, nil, http.StatusNotModified
+	}
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 
 	if err != nil {
@@ -1044,10 +1047,6 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
 		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
 	}
-	runSecond := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
-	if !runSecond {
-		return []tc.DeliveryServiceNullable{}, nil, nil, http.StatusNotModified
-	}
 	query := selectQuery() + where + orderBy + pagination
 
 	log.Debugln("generated deliveryServices query: " + query)
@@ -1058,17 +1057,17 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 
 func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from deliveryservice as ds
+		SELECT max(ds.last_updated) as t from deliveryservice as ds
 	JOIN type ON ds.type = type.id
 	JOIN cdn ON ds.cdn_id = cdn.id
 	LEFT JOIN profile ON ds.profile = profile.id
 	LEFT JOIN tenant ON ds.tenant_id = tenant.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_deliveryservice as ds
-		JOIN deleted_type ON ds.type = deleted_type.id
-		JOIN deleted_cdn ON ds.cdn_id = deleted_cdn.id
-		LEFT JOIN deleted_profile ON ds.profile = deleted_profile.id
-		LEFT JOIN deleted_tenant ON ds.tenant_id = deleted_tenant.id ` + where + orderBy + pagination +
+	select max(ds.last_updated) as t from deleted_deliveryservice as ds
+		JOIN type ON ds.type = type.id
+		JOIN cdn ON ds.cdn_id = cdn.id
+		LEFT JOIN profile ON ds.profile = profile.id
+		LEFT JOIN tenant ON ds.tenant_id = tenant.id ` + where + orderBy + pagination +
 		` ) as res`
 }
 

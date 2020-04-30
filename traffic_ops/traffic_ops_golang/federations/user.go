@@ -48,13 +48,13 @@ type TOUsers struct {
 
 func (v *TOUsers) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM federation_tmuser fedu
+		SELECT max(fedu.last_updated) as t FROM federation_tmuser fedu
 RIGHT JOIN tm_user u ON fedu.tm_user = u.id
 JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t FROM deleted_federation_tmuser fedu
-RIGHT JOIN deleted_tm_user u ON fedu.tm_user = u.id
-JOIN deleted_role r ON u.role = r.id ` + where + orderBy + pagination +
+	select max(fedu.last_updated) as t FROM deleted_federation_tmuser fedu
+RIGHT JOIN tm_user u ON fedu.tm_user = u.id
+JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
 		` ) as res`
 }
 func (v *TOUsers) InsertIntoDeletedQuery() string {

@@ -236,11 +236,11 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int) ([
 
 func selectMaxLastUpdatedQueryRC(where string, orderBy string, pagination string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM deliveryservices_required_capability rc
+		SELECT max(rc.last_updated) as t FROM deliveryservices_required_capability rc
 	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t FROM deleted_deliveryservices_required_capability rc
-	JOIN deleted_deliveryservice ds ON ds.id = rc.deliveryservice_id ` + where + orderBy + pagination +
+	select max(rc.last_updated) as t FROM deleted_deliveryservices_required_capability rc
+	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id ` + where + orderBy + pagination +
 		` ) as res`
 }
 

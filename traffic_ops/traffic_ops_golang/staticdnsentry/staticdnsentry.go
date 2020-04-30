@@ -124,15 +124,15 @@ func (en *TOStaticDNSEntry) Update() (error, error, int) { return api.GenericUpd
 func (en *TOStaticDNSEntry) Delete() (error, error, int) { return api.GenericDelete(en) }
 func (v *TOStaticDNSEntry) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM staticdnsentry as sde
+		SELECT max(sde.last_updated) as t FROM staticdnsentry as sde
 JOIN type as tp on sde.type = tp.id
 LEFT JOIN cachegroup as cg ON sde.cachegroup = cg.id
 JOIN deliveryservice as ds on sde.deliveryservice = ds.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t FROM deleted_staticdnsentry as sde
-JOIN deleted_type as tp on sde.type = tp.id
-LEFT JOIN deleted_cachegroup as cg ON sde.cachegroup = cg.id
-JOIN deleted_deliveryservice as ds on sde.deliveryservice = ds.id ` + where + orderBy + pagination +
+	select max(sde.last_updated) as t FROM deleted_staticdnsentry as sde
+JOIN type as tp on sde.type = tp.id
+LEFT JOIN cachegroup as cg ON sde.cachegroup = cg.id
+JOIN deliveryservice as ds on sde.deliveryservice = ds.id ` + where + orderBy + pagination +
 		` ) as res`
 }
 

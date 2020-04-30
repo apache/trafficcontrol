@@ -124,17 +124,17 @@ type TOFedDSes struct {
 
 func (v *TOFedDSes) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM federation_deliveryservice fds
+		SELECT max(fds.last_updated) as t FROM federation_deliveryservice fds
 RIGHT JOIN deliveryservice ds ON fds.deliveryservice = ds.id
 JOIN cdn c ON ds.cdn_id = c.id
 JOIN type t ON ds.type = t.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t FROM deleted_federation_deliveryservice fds
-RIGHT JOIN deleted_deliveryservice ds ON fds.deliveryservice = ds.id
-JOIN deleted_cdn c ON ds.cdn_id = c.id
-JOIN deleted_type t ON ds.type = t.id ` + where + orderBy + pagination +
+	select max(fds.last_updated) as t FROM deleted_federation_deliveryservice fds
+RIGHT JOIN deliveryservice ds ON fds.deliveryservice = ds.id
+JOIN cdn c ON ds.cdn_id = c.id
+JOIN type t ON ds.type = t.id ` + where + orderBy + pagination +
 		` ) as res`
-}                                                                       //{ return selectMaxLastUpdatedQuery() }
+}
 func (v *TOFedDSes) NewReadObj() interface{}                            { return &tc.FederationDeliveryServiceNullable{} }
 func (v *TOFedDSes) SelectQuery() string                                { return selectQuery() }
 func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {

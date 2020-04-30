@@ -160,13 +160,13 @@ func (pp *TOProfileParameter) Read(h http.Header) ([]interface{}, error, error, 
 func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
 func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM profile_parameter pp
+		SELECT max(pp.last_updated) as t FROM profile_parameter pp
 JOIN profile prof ON prof.id = pp.profile
 JOIN parameter param ON param.id = pp.parameter ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t FROM deleted_profile_parameter pp
-JOIN deleted_profile prof ON prof.id = pp.profile
-JOIN deleted_parameter param ON param.id = pp.parameter ` + where + orderBy + pagination +
+	select max(pp.last_updated) as t FROM deleted_profile_parameter pp
+JOIN profile prof ON prof.id = pp.profile
+JOIN parameter param ON param.id = pp.parameter ` + where + orderBy + pagination +
 		` ) as res`
 }
 func (v *TOProfileParameter) InsertIntoDeletedQuery() string {

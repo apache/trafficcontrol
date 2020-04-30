@@ -58,13 +58,13 @@ func (v *TOParameter) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOParameter) InsertQuery() string           { return insertQuery() }
 func (v *TOParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM parameter p
+		SELECT max(p.last_updated) as t FROM parameter p
 LEFT JOIN profile_parameter pp ON p.id = pp.parameter
 LEFT JOIN profile pr ON pp.profile = pr.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t FROM deleted_parameter p
-LEFT JOIN deleted_profile_parameter pp ON p.id = pp.parameter
-LEFT JOIN deleted_profile pr ON pp.profile = pr.id`+ tableName + ` typ ` + where + orderBy + pagination +
+	select max(p.last_updated) as t FROM deleted_parameter p
+LEFT JOIN profile_parameter pp ON p.id = pp.parameter
+LEFT JOIN profile pr ON pp.profile = pr.id`+ tableName + ` typ ` + where + orderBy + pagination +
 		` ) as res`
 }
 func (v *TOParameter) InsertIntoDeletedQuery() string {

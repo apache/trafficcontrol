@@ -154,15 +154,15 @@ func (req *TODeliveryServiceRequest) Read(h http.Header) ([]interface{}, error, 
 
 func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM deliveryservice_request r
+		SELECT max(r.last_updated) as t FROM deliveryservice_request r
 	JOIN tm_user a ON r.author_id = a.id
 	LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
 	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t FROM deleted_deliveryservice_request r
-	JOIN deleted_tm_user a ON r.author_id = a.id
-	LEFT OUTER JOIN deleted_tm_user s ON r.assignee_id = s.id
-	LEFT OUTER JOIN deleted_tm_user e ON r.last_edited_by_id = e.id ` + where + orderBy + pagination +
+	select max(r.last_updated) as t FROM deleted_deliveryservice_request r
+	JOIN tm_user a ON r.author_id = a.id
+	LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
+	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where + orderBy + pagination +
 		` ) as res`
 }
 

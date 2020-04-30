@@ -301,19 +301,20 @@ func (s *TOServer) Read(h http.Header) ([]interface{}, error, error, int) {
 
 func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from server s JOIN cachegroup cg ON s.cachegroup = cg.id
+		SELECT max(s.last_updated) as t from server s JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_server s JOIN deleted_cachegroup cg ON s.cachegroup = cg.id
-JOIN deleted_cdn cdn ON s.cdn_id = cdn.id
-JOIN deleted_phys_location pl ON s.phys_location = pl.id
-JOIN deleted_profile p ON s.profile = p.id
-JOIN deleted_status st ON s.status = st.id
-JOIN deleted_type t ON s.type = t.id ` + where + orderBy + pagination +
+	select max(s.last_updated) as t from deleted_server s 
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id ` + where + orderBy + pagination +
 		` ) as res`
 }
 

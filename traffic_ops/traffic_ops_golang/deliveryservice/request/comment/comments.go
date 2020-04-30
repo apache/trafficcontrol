@@ -43,13 +43,13 @@ func (v *TODeliveryServiceRequestComment) SetLastUpdated(t tc.TimeNoMod) { v.Las
 func (v *TODeliveryServiceRequestComment) InsertQuery() string           { return insertQuery() }
 func (v *TODeliveryServiceRequestComment) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from deliveryservice_request_comment dsrc
+		SELECT max(dsrc.last_updated) as t from deliveryservice_request_comment dsrc
 JOIN tm_user a ON dsrc.author_id = a.id
 JOIN deliveryservice_request dsr ON dsrc.deliveryservice_request_id = dsr.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_deliveryservice_request_comment dsrc
-JOIN deleted_tm_user a ON dsrc.author_id = a.id
-JOIN deleted_deliveryservice_request dsr ON dsrc.deliveryservice_request_id = dsr.id ` + where + orderBy + pagination +
+	select max(dsrc.last_updated) as t from deleted_deliveryservice_request_comment dsrc
+JOIN tm_user a ON dsrc.author_id = a.id
+JOIN deliveryservice_request dsr ON dsrc.deliveryservice_request_id = dsr.id ` + where + orderBy + pagination +
 		` ) as res`
 }
 func (v *TODeliveryServiceRequestComment) InsertIntoDeletedQuery() string {

@@ -48,7 +48,9 @@ func MakeFirstQuery(tx *sqlx.Tx, h map[string][]string, queryValues map[string]i
 		return runSecond
 	} else {
 		rows, err := tx.NamedQuery(query, queryValues)
-		defer rows.Close()
+		if rows != nil {
+			defer rows.Close()
+		}
 		if err != nil {
 			log.Warnf("Couldn't get the max last updated time: %v", err)
 			return runSecond
@@ -65,7 +67,7 @@ func MakeFirstQuery(tx *sqlx.Tx, h map[string][]string, queryValues map[string]i
 				return runSecond
 			}
 			// The request IMS time is later than the max of (lastUpdated, deleted_time)
-			if l.After(v.LatestTime.Time) {
+			if v.LatestTime != nil && l.After(v.LatestTime.Time) {
 				runSecond = false
 				return runSecond
 			}

@@ -107,11 +107,11 @@ func (pl *TOPhysLocation) Read(h http.Header) ([]interface{}, error, error, int)
 }
 func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM phys_location pl
+		SELECT max(pl.last_updated) as t FROM phys_location pl
 JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t FROM deleted_phys_location pl
-JOIN deleted_region r ON pl.region = r.id ` + where + orderBy + pagination +
+	select max(pl.last_updated) as t FROM deleted_phys_location pl
+JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
 		` ) as res`
 }
 func (v *TOPhysLocation) InsertIntoDeletedQuery() string {

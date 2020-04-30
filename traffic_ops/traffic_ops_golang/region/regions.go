@@ -95,11 +95,11 @@ func (rg *TORegion) Read(h http.Header) ([]interface{}, error, error, int) {
 }
 func (v *TORegion) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM region r
+		SELECT max(r.last_updated) as t FROM region r
 JOIN division d ON r.division = d.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from FROM deleted_region r
-JOIN deleted_division d ON r.division = d.id ` + where + orderBy + pagination +
+	select max(r.last_updated) as t from FROM deleted_region r
+JOIN division d ON r.division = d.id ` + where + orderBy + pagination +
 		` ) as res`
 }
 func (v *TORegion) InsertIntoDeletedQuery() string {

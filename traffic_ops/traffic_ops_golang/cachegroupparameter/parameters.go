@@ -117,11 +117,11 @@ func (cgparam *TOCacheGroupParameter) Read(h http.Header) ([]interface{}, error,
 
 func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t FROM parameter p
+		SELECT max(p.last_updated) as t FROM parameter p
 LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t FROM deleted_parameter p
-LEFT JOIN deleted_cachegroup_parameter cgp ON cgp.parameter = p.id ` + where + orderBy + pagination +
+	select max(p.last_updated) as t FROM deleted_parameter p
+LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id ` + where + orderBy + pagination +
 		` ) as res`
 }
 
