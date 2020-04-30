@@ -33,15 +33,19 @@ import (
 	"net/http"
 )
 
+// TOTopology is a type alias on which we can define functions.
 type TOTopology struct {
 	api.APIInfoImpl `json:"-"`
 	tc.Topology
 }
 
+// DeleteQueryBase holds a delete query with no WHERE clause and is a
+// requirement of the api.GenericOptionsDeleter interface.
 func (topology *TOTopology) DeleteQueryBase() string {
 	return deleteQueryBase()
 }
 
+// ParamColumns maps query parameters to their respective database columns.
 func (topology *TOTopology) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":        dbhelpers.WhereColumnInfo{"t.name", nil},
@@ -50,20 +54,25 @@ func (topology *TOTopology) ParamColumns() map[string]dbhelpers.WhereColumnInfo 
 	}
 }
 
+// GenericOptionsDeleter is required by the api.GenericOptionsDeleter interface
+// and is called by api.GenericOptionsDelete().
 func (topology *TOTopology) DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo {
 	return topology.ParamColumns()
 }
 
 func (topology *TOTopology) SetLastUpdated(time tc.TimeNoMod) { topology.LastUpdated = &time }
 
+// GetKeyFieldsInfo is a requirement of the api.Updater interface.
 func (topology TOTopology) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"name", api.GetStringKey}}
 }
 
+// GetType returns the human-readable type of TOTopology as a string.
 func (topology *TOTopology) GetType() string {
 	return "topology"
 }
 
+// Validate is a requirement of the api.Validator interface.
 func (topology *TOTopology) Validate() error {
 	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters.")
 	rules := validation.Errors{}
@@ -108,14 +117,18 @@ func (topology TOTopology) GetKeys() (map[string]interface{}, bool) {
 	return map[string]interface{}{"name": topology.Name}, true
 }
 
+// SetKeys is a requirement of the api.Updater interface and is called by
+// api.UpdateHandler().
 func (topology *TOTopology) SetKeys(keys map[string]interface{}) {
 	topology.Name, _ = keys["name"].(string)
 }
 
+// GetAuditName is a requirement of the api.Identifier interface.
 func (topology *TOTopology) GetAuditName() string {
 	return topology.Name
 }
 
+// Create is a requirement of the api.Creator interface.
 func (topology *TOTopology) Create() (error, error, int) {
 	tx := topology.APIInfo().Tx.Tx
 	err := tx.QueryRow(insertQuery(), topology.Name, topology.Description).Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
@@ -134,6 +147,7 @@ func (topology *TOTopology) Create() (error, error, int) {
 	return nil, nil, 0
 }
 
+// Read is a requirement of the api.Reader interface and is called by api.ReadHandler().
 func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(t.ReqInfo.Params, t.ParamColumns())
 	if len(errs) > 0 {
@@ -293,6 +307,7 @@ func (topology *TOTopology) setDescription() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+// Update is a requirement of the api.Updater interface.
 func (newTopology *TOTopology) Update() (error, error, int) {
 	topologies, userErr, sysErr, errCode := newTopology.Read()
 	if userErr != nil || sysErr != nil {
@@ -358,6 +373,7 @@ func (topology *TOTopology) Delete() (error, error, int) {
 	return nil, nil, 0
 }
 
+// OptionsDelete is a requirement of the OptionsDeleter interface.
 func (topology *TOTopology) OptionsDelete() (error, error, int) {
 	topologies, userErr, sysErr, errCode := topology.Read()
 	if userErr != nil || sysErr != nil {

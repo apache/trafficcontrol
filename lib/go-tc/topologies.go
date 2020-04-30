@@ -19,6 +19,7 @@ package tc
  * under the License.
  */
 
+// Topology holds the name and set of TopologyNodes that comprise a flexible topology.
 type Topology struct {
 	Description string           `json:"description" db:"description"`
 	Name        string           `json:"name" db:"name"`
@@ -26,6 +27,8 @@ type Topology struct {
 	LastUpdated *TimeNoMod       `json:"lastUpdated" db:"last_updated"`
 }
 
+// TopologyNode holds a reference to a cachegroup and the indices of up to 2 parent
+// nodes in the same topology's array of nodes.
 type TopologyNode struct {
 	Id          int        `json:"-" db:"id"`
 	Cachegroup  string     `json:"cachegroup" db:"cachegroup"`
@@ -33,11 +36,13 @@ type TopologyNode struct {
 	LastUpdated *TimeNoMod `json:"-" db:"last_updated"`
 }
 
+// TopologiesResponse models the JSON object returned for a list of topologies in a response.
 type TopologyResponse struct {
 	Response Topology `json:"response"`
 	Alerts
 }
 
+// TopologiesResponse models the JSON object returned for a single topology in a response.
 type TopologiesResponse struct {
 	Response []Topology `json:"response"`
 	Alerts
