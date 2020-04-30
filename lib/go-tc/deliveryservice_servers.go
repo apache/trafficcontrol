@@ -63,10 +63,6 @@ const (
 	Eligible
 )
 
-type DSServersAttrResponse struct {
-	Response []DSServer `json:"response"`
-}
-
 type DSServer struct {
 	Cachegroup                  *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID                *int                 `json:"cachegroupId" db:"cachegroup_id"`
@@ -85,17 +81,7 @@ type DSServer struct {
 	ILOIPNetmask                *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
 	ILOPassword                 *string              `json:"iloPassword" db:"ilo_password"`
 	ILOUsername                 *string              `json:"iloUsername" db:"ilo_username"`
-	InterfaceMtu                *int                 `json:"interfaceMtu" db:"interface_mtu"`
-	InterfaceName               *string              `json:"interfaceName" db:"interface_name"`
-	IP6Address                  *string              `json:"ip6Address" db:"ip6_address"`
-	IP6Gateway                  *string              `json:"ip6Gateway" db:"ip6_gateway"`
-	IPAddress                   *string              `json:"ipAddress" db:"ip_address"`
-	IPGateway                   *string              `json:"ipGateway" db:"ip_gateway"`
-	IPNetmask                   *string              `json:"ipNetmask" db:"ip_netmask"`
 	LastUpdated                 *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
-	MgmtIPAddress               *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway               *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIPNetmask               *string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
 	OfflineReason               *string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation                *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID              *int                 `json:"physLocationId" db:"phys_location_id"`
@@ -113,4 +99,14 @@ type DSServer struct {
 	UpdPending                  *bool                `json:"updPending" db:"upd_pending"`
 	ServerCapabilities          []string             `json:"-" db:"server_capabilities"`
 	DeliveryServiceCapabilities []string             `json:"-" db:"deliveryservice_capabilities"`
+}
+
+type DSServerV11 struct {
+	DSServer
+	LegacyInterfaceDetails
+}
+
+type DSServerV30 struct {
+	DSServer
+	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
 }

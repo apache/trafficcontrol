@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -63,12 +62,32 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting eligible servers: "+err.Error()))
 		return
 	}
+
+	if inf.Version.Major < 3 {
+		v11ServerList := []tc.DSServerV11{}
+		for _, srv := range servers {
+			v11server := tc.DSServerV11{}
+			v11server.DSServer = srv.DSServer
+
+			interfaces := *srv.ServerInterfaces
+			legacyInterface, err := tc.ConvertInterfaceInfotoV11(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				return
+			}
+			v11server.LegacyInterfaceDetails = legacyInterface
+
+			v11ServerList = append(v11ServerList, v11server)
+		}
+		api.WriteResp(w, r, v11ServerList)
+		return
+	}
 	api.WriteResp(w, r, servers)
 }
 
 const JumboFrameBPS = 9000
 
-func getEligibleServers(tx *sql.Tx, dsID int) ([]tc.DSServer, error) {
+func getEligibleServers(tx *sql.Tx, dsID int) ([]tc.DSServerV30, error) {
 	q := `
 WITH ds_id as (SELECT $1::bigint as v)
 SELECT
@@ -86,17 +105,27 @@ s.ilo_ip_gateway,
 s.ilo_ip_netmask,
 s.ilo_password,
 s.ilo_username,
-COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-s.interface_name,
-s.ip6_address,
-s.ip6_gateway,
-s.ip_address,
-s.ip_gateway,
-s.ip_netmask,
+	ARRAY (
+SELECT ( json_build_object (
+'ipAddresses', ARRAY (
+SELECT ( json_build_object (
+'address', ip_address.address,
+'gateway', ip_address.gateway,
+'service_address', ip_address.service_address
+))
+FROM ip_address
+WHERE ip_address.interface = interface.name
+AND ip_address.server = s.id
+),
+'max_bandwidth', interface.max_bandwidth,
+'monitor', interface.monitor,
+'mtu', COALESCE (interface.mtu, 9000),
+'name', interface.name
+))
+FROM interface
+WHERE interface.server = s.id
+) AS interfaces,
 s.last_updated,
-s.mgmt_ip_address,
-s.mgmt_ip_gateway,
-s.mgmt_ip_netmask,
 s.offline_reason,
 pl.name as phys_location,
 s.phys_location as phys_location_id,
@@ -130,9 +159,10 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 	}
 	defer rows.Close()
 
-	servers := []tc.DSServer{}
+	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
+	servers := []tc.DSServerV30{}
 	for rows.Next() {
-		s := tc.DSServer{}
+		s := tc.DSServerV30{}
 		err := rows.Scan(
 			&s.Cachegroup,
 			&s.CachegroupID,
@@ -148,17 +178,8 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 			&s.ILOIPNetmask,
 			&s.ILOPassword,
 			&s.ILOUsername,
-			&s.InterfaceMtu,
-			&s.InterfaceName,
-			&s.IP6Address,
-			&s.IP6Gateway,
-			&s.IPAddress,
-			&s.IPGateway,
-			&s.IPNetmask,
+			pq.Array(&serverInterfaceInfo),
 			&s.LastUpdated,
-			&s.MgmtIPAddress,
-			&s.MgmtIPGateway,
-			&s.MgmtIPNetmask,
 			&s.OfflineReason,
 			&s.PhysLocation,
 			&s.PhysLocationID,
@@ -180,6 +201,8 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 		if err != nil {
 			return nil, errors.New("scanning delivery service eligible servers: " + err.Error())
 		}
+		s.ServerInterfaces = &serverInterfaceInfo
+
 		eligible := true
 
 		if !strings.HasPrefix(s.Type, "ORG") {
