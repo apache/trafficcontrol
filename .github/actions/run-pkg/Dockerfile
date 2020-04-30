@@ -18,9 +18,9 @@
 FROM golang:1.14-alpine
 
 VOLUME /var/run/docker.sock:/var/run/docker.sock
-RUN apk add bash rpm
+RUN apk add bash rpm git
 
 COPY entrypoint.sh /
-RUN chmod a+x /entrypoint.sh
+RUN chmod a+x /entrypoint.sh && go --version
 
 ENTRYPOINT /entrypoint.sh
