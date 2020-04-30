@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM docker:stable
+FROM golang:1.14-alpine
 
 VOLUME /var/run/docker.sock:/var/run/docker.sock
 RUN apk add bash rpm
