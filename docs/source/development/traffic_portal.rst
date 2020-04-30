@@ -27,7 +27,7 @@ To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly us
 
 	* `Ruby Devel 2.0.x or above <https://www.rpmfind.net/linux/rpm2html/search.php?query=ruby-devel>`_
 	* `Compass 1.0.x or above <http://compass-style.org/>`_
-	* `Node.js 6.0.x or above <https://nodejs.org/en/>`_
+	* `Node.js 12.0.x or above <https://nodejs.org/en/>`_
 	* `Bower 1.7.9 or above <https://www.npmjs.com/package/bower>`_
 	* `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
 	* Access to a working instance of Traffic Ops
