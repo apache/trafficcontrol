@@ -60,7 +60,7 @@ RUN export junit_conf_jasmine="\n\
 
 RUN export junit_conf_chrome="\
 		chromeOptions: {\n\
-			args: ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors', '--disable-extensions', '--whitelisted-ips'] \n\
+			args: ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors', '--disable-extensions', '--whitelisted-ips=\"\"'] \n\
 		},\n\
 " && perl -p -i -e 'BEGIN{ ($e=$ENV{junit_conf_chrome}) =~ s/\\n/\n/g } if (/\bbrowserName\b/../}/) {print $e; $e=""}' conf.js
 
