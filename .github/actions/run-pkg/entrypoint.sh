@@ -19,4 +19,12 @@
 set -ex
 
 export PATH="$PATH:/usr/local/go/bin"
+
+# GOPATH magic
+export GOPATH="$(mktemp -d)"
+SRCDIR="$GOPATH/src/github.com/apache"
+mkdir -p "$SRCDIR"
+ln -s "$PWD" "$SRCDIR/trafficcontrol"
+cd "$SRCDIR/trafficcontrol"
+
 ./traffic_ops/build/build_rpm.sh
