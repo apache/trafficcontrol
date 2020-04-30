@@ -24,7 +24,8 @@ exports.config = {
 	getPageTimeout: 30000,
 
 	capabilities: {
-		'browserName': 'chrome'
+		'browserName': 'chrome',
+		'acceptInsecureCerts' : true
 	},
 	params: {
 		adminUser: 'admin',
