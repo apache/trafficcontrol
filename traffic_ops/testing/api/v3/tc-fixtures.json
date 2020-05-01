@@ -2222,6 +2222,48 @@
             "parentName": "root"
         }
     ],
+    "topologies": [
+        {
+            "name": "my-topology",
+            "description": "a topology",
+            "nodes": [
+                {
+                  "cachegroup": "parentCachegroup",
+                  "parents": []
+                },
+                {
+                    "cachegroup": "secondaryCachegroup",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "cachegroup1",
+                    "parents": [0, 1]
+                }
+            ]
+        },
+        {
+            "name": "another-topology",
+            "description": "another topology",
+            "nodes": [
+                {
+                  "cachegroup": "parentCachegroup",
+                  "parents": []
+                },
+                {
+                    "cachegroup": "cachegroup1",
+                    "parents": [0]
+                },
+                {
+                    "cachegroup": "secondaryCachegroup",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "cachegroup2",
+                    "parents": [2]
+                }
+            ]
+        }
+    ],
     "types": [
         {
             "description": "Host header regular expression",

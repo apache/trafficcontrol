@@ -1871,7 +1871,7 @@ class TOSession(RestApiSession):
 	#
 	# Topologies
 	#
-	@api_request('post', 'topologies', ('2.0',))
+	@api_request('post', 'topologies', ('3.0',))
 	def create_topology(self, data: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
 		"""
 		:ref:`to-api-topologies`
@@ -1881,7 +1881,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('get', 'topologies', ('2.0',))
+	@api_request('get', 'topologies', ('3.0',))
 	def create_topology(self, data: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
 		"""
 		:ref:`to-api-topologies`
@@ -1891,7 +1891,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('put', 'topologies', ('2.0',))
+	@api_request('put', 'topologies', ('3.0',))
 	def update_topologies(self, data: Dict[str, Any]=None, query_params: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
 		"""
 		Update a Topology
@@ -1904,7 +1904,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'topologies', ('2.0',))
+	@api_request('delete', 'topologies', ('3.0',))
 	def delete_topology(self, query_params: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
 		"""
 		Delete a Topology

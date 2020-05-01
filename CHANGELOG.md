@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 - Traffic Ops API v3
 - Added an optional readiness check service to cdn-in-a-box that exits successfully when it is able to get a `200 OK` from all delivery services
+- Added an API 3.0 endpoint, /api/3.0/topologies, to create, read, update and delete flexible topologies.
 
 ### Changed
 
@@ -48,7 +49,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/servers/:name-or-id/update `POST`
   - /api/2.0/plugins `(GET)`
   - /api/2.0/snapshot `PUT`
-- Added an API 2.0 endpoint, /api/2.0/topologies, to create, read, update and delete flexible topologies.
 
 ### Changed
 - Add null check in astats plugin before calling strtok to find ip mask values in the config file
