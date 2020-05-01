@@ -29,7 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func TestWriteConfigs(t *testing.T) {

@@ -26,7 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 var scopeConfigFileFuncs = map[string]func(toData *config.TOData, fileName string) (string, string, string, error){

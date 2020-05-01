@@ -38,7 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/torequtil"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/torequtil"
 )
 
 type TOClient struct {

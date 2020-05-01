@@ -54,12 +54,12 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/cfgfile"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/getdata"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/plugin"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreqnew"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/cfgfile"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/getdata"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/plugin"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreqnew"
 )
 
 func main() {

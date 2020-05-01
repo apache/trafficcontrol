@@ -58,18 +58,18 @@ func main() {
 }
 
 func usageStr() string {
-	return `usage: go run update-to-client.go /path/to/traffic_ops/ort/atstccfg branch-to-vendor
+	return `usage: go run update-to-client.go /path/to/traffic_ops_ort/atstccfg branch-to-vendor
 
 Example: go run update-to-client/update-to-client.go . 5.0.x
 
-This script updates traffic_ops/ort/atstccfg after a Traffic Ops release is made.
+This script updates traffic_ops_ort/atstccfg after a Traffic Ops release is made.
 
 Be aware! It can and will modify all .go files in the given directory! Back up any uncommitted changes!
 
 Also be aware! This is very specific to the current code. If symbols or patterns are changed around how the master vs vendored client are used, this script will have to be updated.
 
 Expecations:
-- atstccfg is at github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg
+- atstccfg is at github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg
 - The master TO client is at github.com/apache/trafficcontrol/traffic_ops/client
 - The previous major version client is vendored at atstccfg/toreq/vendor
 - The master client wrapper for atstccfg is at atstccfg/toreqnew
@@ -82,7 +82,7 @@ Expecations:
 
 The arguments are the atstccfg directory, and the name of the branch to vendor from.
 
-This script should always be called from trafficcontrol/traffic_ops/ort/atstccfg.
+This script should always be called from trafficcontrol/traffic_ops_ort/atstccfg.
 
 It copies the traffic_ops/client from that branch into toreq/vendor,
 and then updates all references to cfg.TOClientNew to cfg.TOClient.

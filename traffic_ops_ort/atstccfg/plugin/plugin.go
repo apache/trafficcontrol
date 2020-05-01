@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 // List returns the list of plugins compiled into the calling executable.

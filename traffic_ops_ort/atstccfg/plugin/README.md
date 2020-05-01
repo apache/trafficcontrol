@@ -19,7 +19,7 @@
 
 # Adding a Plugin
 
-To add a plugin, create a new `.go` file in the `traffic_ops/ort/atstccfg/plugin` directory. This file should have a unique name, to avoid conflicts. Consider prefixing it with your company name, website, or a UUID.
+To add a plugin, create a new `.go` file in the `traffic_ops_ort/atstccfg/plugin` directory. This file should have a unique name, to avoid conflicts. Consider prefixing it with your company name, website, or a UUID.
 
 The filename, sans `.go`, is the name of your plugin, and will be the key used for configuration in the remap file. For example, if your file is `f49e54fc-fd17-4e1c-92c6-67028fde8504-hello-world.go`, the name of your plugin is `f49e54fc-fd17-4e1c-92c6-67028fde8504-hello-world`.
 

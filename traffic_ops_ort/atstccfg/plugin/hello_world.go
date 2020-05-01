@@ -15,7 +15,7 @@ package plugin
 */
 
 import (
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
 func init() {

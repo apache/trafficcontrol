@@ -30,8 +30,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreq"
-	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/toreqnew"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreqnew"
 
 	flag "github.com/ogier/pflag"
 )
