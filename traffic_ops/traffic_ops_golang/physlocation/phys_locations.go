@@ -110,9 +110,7 @@ func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, t
 		SELECT max(pl.last_updated) as t FROM phys_location pl
 JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(pl.last_updated) as t FROM deleted_phys_location pl
-JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='phys_location') as res`
 }
 func (v *TOPhysLocation) InsertIntoDeletedQuery() string {
 	query := `INSERT INTO deleted_phys_location (

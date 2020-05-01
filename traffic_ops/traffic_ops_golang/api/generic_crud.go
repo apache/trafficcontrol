@@ -268,10 +268,10 @@ func InsertInDeletedTable(val GenericDeleter) (error, error, int) {
 // GenericDelete does a Delete (DELETE) for the given GenericDeleter object and type. This exists as a generic function, for the common use case of a simple delete with query parameters defined in the sqlx struct tags.
 func GenericDelete(val GenericDeleter) (error, error, int) {
 	code := http.StatusOK
-	e1, e2, code := InsertInDeletedTable(val)
-	if e1 != nil || e2 != nil {
-		return e1, e2, code
-	}
+	//e1, e2, code := InsertInDeletedTable(val)
+	//if e1 != nil || e2 != nil {
+	//	return e1, e2, code
+	//}
 	result, err := val.APIInfo().Tx.NamedExec(val.DeleteQuery(), val)
 	if err != nil {
 		return ParseDBError(err)

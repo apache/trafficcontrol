@@ -45,8 +45,7 @@ func (v *TODivision) SelectMaxLastUpdatedQuery(where, orderBy, pagination, table
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from `+ tableName + ` d ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_`+ tableName + ` d ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
 }
 func (v *TODivision) InsertIntoDeletedQuery() string {
 	query := `INSERT INTO deleted_division (id, name) (SELECT id, name FROM division WHERE id=:id)`

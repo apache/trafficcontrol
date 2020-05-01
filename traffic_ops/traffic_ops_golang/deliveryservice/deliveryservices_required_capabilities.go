@@ -239,9 +239,7 @@ func selectMaxLastUpdatedQueryRC(where string, orderBy string, pagination string
 		SELECT max(rc.last_updated) as t FROM deliveryservices_required_capability rc
 	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(rc.last_updated) as t FROM deleted_deliveryservices_required_capability rc
-	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservices_required_capability') as res`
 }
 
 // Delete implements the api.CRUDer interface.

@@ -107,8 +107,7 @@ func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, paginatio
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from server_capability sc ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_server_capability sc ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='server_capability') as res`
 }
 func (v *TOServerCapability) InsertIntoDeletedQuery() string {
 	query := `INSERT INTO deleted_server_capability (

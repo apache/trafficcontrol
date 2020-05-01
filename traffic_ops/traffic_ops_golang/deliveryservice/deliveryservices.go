@@ -1063,12 +1063,7 @@ func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) 
 	LEFT JOIN profile ON ds.profile = profile.id
 	LEFT JOIN tenant ON ds.tenant_id = tenant.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(ds.last_updated) as t from deleted_deliveryservice as ds
-		JOIN type ON ds.type = type.id
-		JOIN cdn ON ds.cdn_id = cdn.id
-		LEFT JOIN profile ON ds.profile = profile.id
-		LEFT JOIN tenant ON ds.tenant_id = tenant.id ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservice') as res`
 }
 
 func getOldHostName(id int, tx *sql.Tx) (string, error) {

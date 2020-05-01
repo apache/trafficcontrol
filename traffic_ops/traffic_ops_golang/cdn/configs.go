@@ -51,8 +51,7 @@ func (v *TOCDNConf) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableN
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from federation ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_federation ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='federation') as res`
 }
 func (v TOCDNConf) GetType() string {
 	return "cdn_configs"

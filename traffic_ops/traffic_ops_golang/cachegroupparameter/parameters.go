@@ -120,9 +120,7 @@ func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) 
 		SELECT max(p.last_updated) as t FROM parameter p
 LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(p.last_updated) as t FROM deleted_parameter p
-LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='parameter') as res`
 }
 
 func selectQuery() string {

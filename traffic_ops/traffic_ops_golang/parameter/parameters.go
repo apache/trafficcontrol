@@ -62,10 +62,7 @@ func (v *TOParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tabl
 LEFT JOIN profile_parameter pp ON p.id = pp.parameter
 LEFT JOIN profile pr ON pp.profile = pr.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(p.last_updated) as t FROM deleted_parameter p
-LEFT JOIN profile_parameter pp ON p.id = pp.parameter
-LEFT JOIN profile pr ON pp.profile = pr.id`+ tableName + ` typ ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
 }
 func (v *TOParameter) InsertIntoDeletedQuery() string {
 	query := `INSERT INTO deleted_parameter (

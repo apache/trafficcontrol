@@ -52,10 +52,7 @@ func (v *TOUsers) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableNam
 RIGHT JOIN tm_user u ON fedu.tm_user = u.id
 JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(fedu.last_updated) as t FROM deleted_federation_tmuser fedu
-RIGHT JOIN tm_user u ON fedu.tm_user = u.id
-JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='federation_tmuser') as res`
 }
 func (v *TOUsers) InsertIntoDeletedQuery() string {
 	query := `INSERT INTO deleted_federation_tmuser (federation, tm_user)
@@ -193,17 +190,8 @@ func PostUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteFedUsers(tx *sql.Tx, fedID int) error {
-	qry1 := `INSERT INTO deleted_federation_tmuser (
-federation,
-tm_user,
-role
-) (SELECT federation, tm_user, role FROM deleted_federation_tmuser WHERE federation = $1)`
-	_, err := tx.Exec(qry1, fedID)
-	if err != nil {
-		return err
-	}
 	qry := `DELETE FROM federation_tmuser WHERE federation = $1`
-	_, err = tx.Exec(qry, fedID)
+	_, err := tx.Exec(qry, fedID)
 	return err
 }
 

@@ -48,8 +48,7 @@ func (v *TORole) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from ` + tableName + ` r ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_` + tableName + ` r ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
 }
 func (v *TORole) InsertIntoDeletedQuery() string {
 	query := `INSERT INTO deleted_role (

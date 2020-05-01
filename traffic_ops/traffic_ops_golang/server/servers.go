@@ -308,14 +308,7 @@ JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(s.last_updated) as t from deleted_server s 
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='server') as res`
 }
 
 func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, error, error, int) {

@@ -168,8 +168,7 @@ func selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) str
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from `+ tableName + ` typ ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from deleted_`+ tableName + ` typ ` + where + orderBy + pagination +
-		` ) as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='type') as res`
 }
 
 func insertIntoDeletedQuery() string {
