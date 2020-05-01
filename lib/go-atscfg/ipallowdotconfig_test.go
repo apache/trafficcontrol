@@ -202,3 +202,90 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
+	serverName := tc.CacheName("server0")
+	serverType := tc.CacheTypeMid
+	toToolName := "to0"
+	toURL := "trafficops.example.net"
+	params := map[string][]string{
+		"purge_allow_ip":       []string{"192.168.2.99"},
+		ParamCoalesceMaskLenV4: []string{"24"},
+		ParamCoalesceNumberV4:  []string{"3"},
+		ParamCoalesceMaskLenV6: []string{"48"},
+		ParamCoalesceNumberV6:  []string{"100"},
+	}
+	childServers := map[tc.CacheName]IPAllowServer{
+		"child0": IPAllowServer{
+			IPAddress:  "192.168.2.1",
+			IP6Address: "2001:DB8:1::1/64",
+		},
+		"child1": IPAllowServer{
+			IPAddress:  "192.168.2.100/30",
+			IP6Address: "2001:DB8:2::1/64",
+		},
+		"child2": IPAllowServer{
+			IPAddress: "192.168.2.150",
+		},
+		"child3": IPAllowServer{
+			IP6Address: "2001:DB8:2::2/64",
+		},
+		"child4": IPAllowServer{
+			IPAddress: "192.168.2.155/32",
+		},
+		"child5": IPAllowServer{
+			IP6Address: "2001:DB8:3::1",
+		},
+		"child6": IPAllowServer{
+			IP6Address: "2001:DB8:2::3",
+		},
+		"child7": IPAllowServer{
+			IP6Address: "2001:DB8:2::4",
+		},
+		"child8": IPAllowServer{
+			IP6Address: "2001:DB8:2::5/64",
+		},
+	}
+
+	expecteds := []string{
+		"127.0.0.1",
+		"::1",
+		"0.0.0.0-255.255.255.255",
+		"::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+		"172.16.0.0-172.31.255.255",
+		"10.0.0.0-10.255.255.255",
+		"2001:db8:3::1",
+		"192.168.2.0-192.168.2.255",
+		"192.168.2.99",
+		"2001:db8:2::3",
+		"2001:db8:2::4",
+	}
+
+	txt := MakeIPAllowDotConfig(serverName, serverType, toToolName, toURL, params, childServers)
+
+	lines := strings.Split(txt, "\n")
+
+	if len(lines) == 0 {
+		t.Fatalf("expected: lines actual: no lines\n")
+	}
+
+	commentLine := lines[0]
+	commentLine = strings.TrimSpace(commentLine)
+	if !strings.HasPrefix(commentLine, "#") {
+		t.Errorf("expected: comment line starting with '#', actual: '%v'\n", commentLine)
+	}
+	if !strings.Contains(commentLine, toToolName) {
+		t.Errorf("expected: comment line containing toolName '%v', actual: '%v'\n", toToolName, commentLine)
+	}
+	if !strings.Contains(commentLine, toURL) {
+		t.Errorf("expected: comment line containing toURL '%v', actual: '%v'\n", toURL, commentLine)
+	}
+
+	lines = lines[1:] // remove comment line
+
+	for _, expected := range expecteds {
+		if !strings.Contains(txt, expected) {
+			t.Errorf("expected %+v actual '%v'\n", expected, txt)
+		}
+	}
+}

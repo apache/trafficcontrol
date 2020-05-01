@@ -124,7 +124,7 @@ func MakeIPAllowDotConfig(
 			case ParamCoalesceNumberV6:
 				if vi, err := strconv.Atoi(val); err != nil {
 					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
-				} else if coalesceNumberV6 != DefaultCoalesceMaskLenV6 {
+				} else if coalesceNumberV6 != DefaultCoalesceNumberV6 {
 					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
 				} else {
 					coalesceNumberV6 = vi
