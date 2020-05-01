@@ -61,5 +61,5 @@ local.tar.gz
 # built local binaries
 ./traffic_ops_golang
 # Created by TP/TO docker integration tests
-juint/
+junit/
 
