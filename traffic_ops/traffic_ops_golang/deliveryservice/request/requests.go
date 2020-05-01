@@ -43,9 +43,9 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
-func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod)     { v.LastUpdated = &t }
-func (v *TODeliveryServiceRequest) InsertQuery() string               { return insertRequestQuery() }
-func (v *TODeliveryServiceRequest) UpdateQuery() string               { return updateRequestQuery() }
+func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TODeliveryServiceRequest) InsertQuery() string           { return insertRequestQuery() }
+func (v *TODeliveryServiceRequest) UpdateQuery() string           { return updateRequestQuery() }
 func (v *TODeliveryServiceRequest) DeleteQuery() string {
 	return `DELETE FROM deliveryservice_request WHERE id = :id`
 }

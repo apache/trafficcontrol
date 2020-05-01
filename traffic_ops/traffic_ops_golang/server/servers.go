@@ -51,10 +51,10 @@ type TOServer struct {
 	tc.ServerNullable
 }
 
-func (s *TOServer) SetLastUpdated(t tc.TimeNoMod)     { s.LastUpdated = &t }
-func (*TOServer) InsertQuery() string                 { return insertQuery() }
-func (*TOServer) UpdateQuery() string                 { return updateQuery() }
-func (*TOServer) DeleteQuery() string                 { return deleteQuery() }
+func (s *TOServer) SetLastUpdated(t tc.TimeNoMod) { s.LastUpdated = &t }
+func (*TOServer) InsertQuery() string             { return insertQuery() }
+func (*TOServer) UpdateQuery() string             { return updateQuery() }
+func (*TOServer) DeleteQuery() string             { return deleteQuery() }
 
 func (TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

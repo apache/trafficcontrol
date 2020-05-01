@@ -62,11 +62,11 @@ func (v *TOParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tabl
 LEFT JOIN profile_parameter pp ON p.id = pp.parameter
 LEFT JOIN profile pr ON pp.profile = pr.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='` + tableName + `') as res`
 }
 
-func (v *TOParameter) NewReadObj() interface{}        { return &tc.ParameterNullable{} }
-func (v *TOParameter) SelectQuery() string            { return selectQuery() }
+func (v *TOParameter) NewReadObj() interface{} { return &tc.ParameterNullable{} }
+func (v *TOParameter) SelectQuery() string     { return selectQuery() }
 func (v *TOParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		ConfigFileQueryParam: dbhelpers.WhereColumnInfo{"p.config_file", nil},

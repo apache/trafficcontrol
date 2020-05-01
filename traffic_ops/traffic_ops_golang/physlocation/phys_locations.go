@@ -113,9 +113,9 @@ JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
 	select max(last_updated) as t from last_deleted l where l.tab_name='phys_location') as res`
 }
 
-func (pl *TOPhysLocation) Update() (error, error, int)   { return api.GenericUpdate(pl) }
-func (pl *TOPhysLocation) Create() (error, error, int)   { return api.GenericCreate(pl) }
-func (pl *TOPhysLocation) Delete() (error, error, int)   { return api.GenericDelete(pl) }
+func (pl *TOPhysLocation) Update() (error, error, int) { return api.GenericUpdate(pl) }
+func (pl *TOPhysLocation) Create() (error, error, int) { return api.GenericCreate(pl) }
+func (pl *TOPhysLocation) Delete() (error, error, int) { return api.GenericDelete(pl) }
 
 func selectQuery() string {
 	return `

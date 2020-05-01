@@ -43,15 +43,15 @@ type TOStatus struct {
 
 func (v *TOStatus) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from `+ tableName + ` s ` + where + orderBy + pagination +
+		SELECT max(last_updated) as t from ` + tableName + ` s ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='` + tableName + `') as res`
 }
 
-func (v *TOStatus) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
-func (v *TOStatus) InsertQuery() string            { return insertQuery() }
-func (v *TOStatus) NewReadObj() interface{}        { return &TOStatus{} }
-func (v *TOStatus) SelectQuery() string            { return selectQuery() }
+func (v *TOStatus) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOStatus) InsertQuery() string           { return insertQuery() }
+func (v *TOStatus) NewReadObj() interface{}       { return &TOStatus{} }
+func (v *TOStatus) SelectQuery() string           { return selectQuery() }
 func (v *TOStatus) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"id":          dbhelpers.WhereColumnInfo{"id", api.IsInt},

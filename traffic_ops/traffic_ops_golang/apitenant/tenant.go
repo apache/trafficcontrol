@@ -50,11 +50,11 @@ func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOTenant) InsertQuery() string           { return insertQuery() }
 func (v *TOTenant) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from `+ tableName + ` q ` + where + orderBy + pagination +
+		SELECT max(last_updated) as t from ` + tableName + ` q ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='` + tableName + `') as res`
 }
-func (v *TOTenant) NewReadObj() interface{}                            { return &tc.TenantNullable{} }
+func (v *TOTenant) NewReadObj() interface{} { return &tc.TenantNullable{} }
 func (v *TOTenant) SelectQuery() string {
 	return selectQuery(v.APIInfo().User.TenantID)
 }

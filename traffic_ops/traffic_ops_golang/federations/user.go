@@ -55,7 +55,7 @@ JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
 	select max(last_updated) as t from last_deleted l where l.tab_name='federation_tmuser') as res`
 }
 
-func (v *TOUsers) NewReadObj() interface{}        { return &tc.FederationUser{} }
+func (v *TOUsers) NewReadObj() interface{} { return &tc.FederationUser{} }
 func (v *TOUsers) DeleteQuery() string {
 	return `
 DELETE FROM federation_tmuser

@@ -47,12 +47,12 @@ func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
 func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from `+ tableName + ` c ` + where + orderBy + pagination +
+		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='` + tableName + `') as res`
 }
 
-func (v *TOCDNFederation) NewReadObj() interface{}        { return &TOCDNFederation{} }
+func (v *TOCDNFederation) NewReadObj() interface{} { return &TOCDNFederation{} }
 func (v *TOCDNFederation) SelectQuery() string {
 	if v.ID != nil {
 		return selectByID()

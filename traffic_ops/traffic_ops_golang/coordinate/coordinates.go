@@ -124,9 +124,9 @@ func (coord *TOCoordinate) Read(h http.Header) ([]interface{}, error, error, int
 }
 func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from `+ tableName + ` c ` + where + orderBy + pagination +
+		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='` + tableName + `') as res`
 }
 
 func (coord *TOCoordinate) Update() (error, error, int) { return api.GenericUpdate(coord) }

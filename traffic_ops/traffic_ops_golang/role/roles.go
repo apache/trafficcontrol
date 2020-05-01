@@ -48,13 +48,13 @@ func (v *TORole) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from ` + tableName + ` r ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='` + tableName + `') as res`
 }
 
-func (v *TORole) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
-func (v *TORole) InsertQuery() string            { return insertQuery() }
-func (v *TORole) NewReadObj() interface{}        { return &TORole{} }
-func (v *TORole) SelectQuery() string            { return selectQuery() }
+func (v *TORole) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TORole) InsertQuery() string           { return insertQuery() }
+func (v *TORole) NewReadObj() interface{}       { return &TORole{} }
+func (v *TORole) SelectQuery() string           { return selectQuery() }
 func (v *TORole) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":      dbhelpers.WhereColumnInfo{"name", nil},

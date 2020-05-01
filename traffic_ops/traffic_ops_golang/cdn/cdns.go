@@ -42,15 +42,15 @@ type TOCDN struct {
 
 func (v *TOCDN) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from `+ tableName + ` c ` + where + orderBy + pagination +
+		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='` + tableName + `') as res`
 }
 
-func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
-func (v *TOCDN) InsertQuery() string            { return insertQuery() }
-func (v *TOCDN) NewReadObj() interface{}        { return &tc.CDNNullable{} }
-func (v *TOCDN) SelectQuery() string            { return selectQuery() }
+func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOCDN) InsertQuery() string           { return insertQuery() }
+func (v *TOCDN) NewReadObj() interface{}       { return &tc.CDNNullable{} }
+func (v *TOCDN) SelectQuery() string           { return selectQuery() }
 func (v *TOCDN) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"domainName":    dbhelpers.WhereColumnInfo{"domain_name", nil},

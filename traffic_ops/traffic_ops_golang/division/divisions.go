@@ -43,13 +43,13 @@ func (v *TODivision) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODivision) InsertQuery() string           { return insertQuery() }
 func (v *TODivision) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from `+ tableName + ` d ` + where + orderBy + pagination +
+		SELECT max(last_updated) as t from ` + tableName + ` d ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
+	select max(last_updated) as t from last_deleted l where l.tab_name='` + tableName + `') as res`
 }
 
-func (v *TODivision) NewReadObj() interface{}        { return &tc.Division{} }
-func (v *TODivision) SelectQuery() string            { return selectQuery() }
+func (v *TODivision) NewReadObj() interface{} { return &tc.Division{} }
+func (v *TODivision) SelectQuery() string     { return selectQuery() }
 func (v *TODivision) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},

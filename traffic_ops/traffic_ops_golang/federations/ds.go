@@ -131,8 +131,8 @@ JOIN type t ON ds.type = t.id ` + where + orderBy + pagination +
 		` UNION ALL
 select max(last_updated) as t from last_deleted l where l.tab_name='federation_deliveryservice') as res`
 }
-func (v *TOFedDSes) NewReadObj() interface{}                            { return &tc.FederationDeliveryServiceNullable{} }
-func (v *TOFedDSes) SelectQuery() string                                { return selectQuery() }
+func (v *TOFedDSes) NewReadObj() interface{} { return &tc.FederationDeliveryServiceNullable{} }
+func (v *TOFedDSes) SelectQuery() string     { return selectQuery() }
 func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"id":   dbhelpers.WhereColumnInfo{"fds.federation", api.IsInt},
