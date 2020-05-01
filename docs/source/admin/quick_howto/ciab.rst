@@ -104,6 +104,21 @@ In order to check the "readiness" of your CDN, you can optionally start the Read
 
 	sudo docker-compose -f docker-compose.readiness.yml up
 
+Integration Tests
+"""""""""""""""""
+
+There also exists TP and TO integration tests containers. Both of these containers assume that CDN in a Box is already running on the local system.
+
+.. code-block:: shell
+	:caption: Running TP Integration Tests
+
+	sudo docker-compose -f docker-compose.traffic-portal-test.yml up
+
+.. code-block:: shell
+	:caption: Running TO Integration Tests
+
+	sudo docker-compose -f docker-compose.traffic-ops-test.yml up
+
 variables.env
 """""""""""""
 .. literalinclude:: ../../../../infrastructure/cdn-in-a-box/variables.env
