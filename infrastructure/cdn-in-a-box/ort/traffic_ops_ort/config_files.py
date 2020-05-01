@@ -103,7 +103,6 @@ class ConfigFile():
 			except (KeyError, TypeError, IndexError) as e:
 				raise ValueError from e
 
-
 	def __repr__(self) -> str:
 		"""
 		Implements ``repr(self)``
