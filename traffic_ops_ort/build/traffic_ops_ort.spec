@@ -25,7 +25,7 @@ Group:		Applications/Communications
 Source0:	traffic_ops_ort-%{version}.tgz
 URL:		https://github.com/apache/trafficcontrol/
 Vendor:		Apache Software Foundation
-Packager:	daniel_kirkwood at Cable dot Comcast dot com
+Packager:	dev at trafficcontrol dot Apache dot org
 %{?el6:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-Digest-SHA}
 %{?el7:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-LWP-Protocol-https, perl-Digest-SHA}
 
@@ -39,10 +39,10 @@ tar xvf %{SOURCE0} -C $RPM_SOURCE_DIR
 
 %build
 # copy atstccfg binary
-godir=src/github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg
+godir=src/github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg
 ( mkdir -p "$godir" && \
   cd "$godir" && \
-  cp "$TC_DIR"/traffic_ops/ort/atstccfg/atstccfg .
+  cp "$TC_DIR"/traffic_ops_ort/atstccfg/atstccfg .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 
@@ -51,7 +51,7 @@ mkdir -p ${RPM_BUILD_ROOT}/opt/ort
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/opt/ort
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/opt/ort
 
-src=src/github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg
+src=src/github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg
 cp -p "$src"/atstccfg ${RPM_BUILD_ROOT}/opt/ort
 
 %clean
