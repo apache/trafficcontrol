@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Ops API v3
+- Added an optional readiness check service to cdn-in-a-box that exits successfully when it is able to get a `200 OK` from all delivery services
 
 ### Changed
 
@@ -24,6 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added ability to create multiple objects from generic API Create with a single POST.
 - Added debugging functionality to CDN-in-a-Box.
 - Added an SMTP server to CDN-in-a-Box.
+- Cached builder Docker images on Docker Hub to speed up build time
 - Added functionality in the GET endpoints to support the "If-Modified-Since" header in the incoming requests.
 - Traffic Ops Golang Endpoints
   - /api/2.0 for all of the most recent route versions
