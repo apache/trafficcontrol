@@ -134,12 +134,7 @@ JOIN server s ON sc.server = s.id ` + where + orderBy + pagination +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='server_server_capability') as res`
 }
-func (v *TOServerServerCapability) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_server_server_capability (
-server_capability,
-server) (SELECT server_capability, server FROM server_server_capability WHERE server = :server AND server_capability = :server_capability)`
-	return query
-}
+
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {
 	// Ensure that the user is not removing a server capability from the server
 	// that is required by the delivery services the server is assigned to (if applicable)

@@ -46,16 +46,7 @@ func (v *TOCDN) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName 
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
 }
-func (v *TOCDN) InsertIntoDeletedQuery() string {
-	return `INSERT INTO deleted_cdn
-	(id, dnssec_enabled,
-domain_name,
-name) (SELECT id, dnssec_enabled,
-domain_name,
-name FROM cdn
-WHERE id = :id)
-`
-}
+
 func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TOCDN) InsertQuery() string            { return insertQuery() }
 func (v *TOCDN) NewReadObj() interface{}        { return &tc.CDNNullable{} }

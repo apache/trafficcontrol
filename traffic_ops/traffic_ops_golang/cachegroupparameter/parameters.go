@@ -53,12 +53,6 @@ type TOCacheGroupParameter struct {
 	CacheGroupID int `json:"-" db:"cachegroup_id"`
 }
 
-func (v *TOCacheGroupParameter) InsertIntoDeletedQuery() string    {
-	return `INSERT INTO deleted_cachegroup_parameter
-	(cachegroup, parameter) (SELECT cachegroup, parameter FROM cachegroup_parameter
-WHERE cachegroup = :cachegroup_id AND parameter = :id)`
-}
-
 func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		CacheGroupIDQueryParam: dbhelpers.WhereColumnInfo{"cgp.cachegroup", api.IsInt},

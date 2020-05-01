@@ -166,12 +166,6 @@ JOIN parameter param ON param.id = pp.parameter ` + where + orderBy + pagination
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='profile_parameter') as res`
 }
-func (v *TOProfileParameter) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_profile_parameter (
-profile,
-parameter) (SELECT profile, parameter FROM profile_parameter
-WHERE profile=:profile_id and parameter=:parameter_id)`
-	return query }
 
 func selectQuery() string {
 

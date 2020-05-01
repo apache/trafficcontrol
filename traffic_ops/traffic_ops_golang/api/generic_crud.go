@@ -62,7 +62,6 @@ type GenericDeleter interface {
 	GetType() string
 	APIInfo() *APIInfo
 	DeleteQuery() string
-	InsertIntoDeletedQuery() string
 }
 
 // GenericOptionsDeleter can use any key listed in DeleteKeyOptions() to delete a resource.
@@ -247,31 +246,8 @@ func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func InsertInDeletedTable(val GenericDeleter) (error, error, int) {
-	query := val.InsertIntoDeletedQuery()
-	log.Debugf("InsertInDeletedTable query is %v", query)
-	result, err := val.APIInfo().Tx.NamedExec(query, val)
-	if err != nil {
-		log.Warnf("DB error while inserting into deleted table %v", err)
-		return ParseDBError(err)
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err, nil, http.StatusInternalServerError
-	}
-	if rowsAffected != 1 {
-		log.Warnf("Warning: %v rows were affected by this operation, expected was 1", rowsAffected)
-	}
-	return nil, nil, http.StatusOK
-}
-
 // GenericDelete does a Delete (DELETE) for the given GenericDeleter object and type. This exists as a generic function, for the common use case of a simple delete with query parameters defined in the sqlx struct tags.
 func GenericDelete(val GenericDeleter) (error, error, int) {
-	code := http.StatusOK
-	//e1, e2, code := InsertInDeletedTable(val)
-	//if e1 != nil || e2 != nil {
-	//	return e1, e2, code
-	//}
 	result, err := val.APIInfo().Tx.NamedExec(val.DeleteQuery(), val)
 	if err != nil {
 		return ParseDBError(err)
@@ -284,5 +260,5 @@ func GenericDelete(val GenericDeleter) (error, error, int) {
 	} else if rowsAffected > 1 {
 		return nil, fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
 	}
-	return nil, nil, code
+	return nil, nil, http.StatusOK
 }

@@ -48,7 +48,6 @@ func (v *TOType) SelectQuery() string           { return selectQuery() }
 func (v *TOType) SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string {
 	return selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName)
 }
-func (v *TOType) InsertIntoDeletedQuery() string { return insertIntoDeletedQuery() }
 func (v *TOType) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":       dbhelpers.WhereColumnInfo{"typ.name", nil},
@@ -169,16 +168,6 @@ func selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) str
 		SELECT max(last_updated) as t from `+ tableName + ` typ ` + where + orderBy + pagination +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='type') as res`
-}
-
-func insertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_type (
-id,
-name,
-description,
-use_in_table
-) (SELECT id, name, description, use_in_table FROM type WHERE id=:id)`
-	return query
 }
 
 func selectQuery() string {

@@ -43,25 +43,6 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
-func (v *TODeliveryServiceRequest) InsertIntoDeletedQuery() string    {
-	query := `INSERT INTO deleted_deliveryservice_request (
-id,
-assignee_id,
-author_id,
-change_type,
-last_edited_by_id,
-deliveryservice,
-status
-) (SELECT 
-id,
-assignee_id,
-author_id,
-change_type,
-last_edited_by_id,
-deliveryservice,
-status FROM deliveryservice_request WHERE id = :id)`
-	return query
-}
 func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod)     { v.LastUpdated = &t }
 func (v *TODeliveryServiceRequest) InsertQuery() string               { return insertRequestQuery() }
 func (v *TODeliveryServiceRequest) UpdateQuery() string               { return updateRequestQuery() }

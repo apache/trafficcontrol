@@ -132,25 +132,6 @@ JOIN deliveryservice as ds on sde.deliveryservice = ds.id ` + where + orderBy + 
 	select max(last_updated) as t from last_deleted l where l.tab_name='staticdnsentry') as res`
 }
 
-func (v *TOStaticDNSEntry) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_staticdnsentry (
-id,
-address,
-deliveryservice,
-cachegroup,
-host,
-type,
-ttl) (SELECT 
-id,
-address,
-deliveryservice,
-cachegroup,
-host,
-type,
-ttl FROM staticdnsentry WHERE id=:id)`
-	return query
-}
-
 func insertQuery() string {
 	query := `INSERT INTO staticdnsentry (
 address,

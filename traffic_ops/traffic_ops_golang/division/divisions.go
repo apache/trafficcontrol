@@ -47,9 +47,7 @@ func (v *TODivision) SelectMaxLastUpdatedQuery(where, orderBy, pagination, table
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
 }
-func (v *TODivision) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_division (id, name) (SELECT id, name FROM division WHERE id=:id)`
-	return query }
+
 func (v *TODivision) NewReadObj() interface{}        { return &tc.Division{} }
 func (v *TODivision) SelectQuery() string            { return selectQuery() }
 func (v *TODivision) ParamColumns() map[string]dbhelpers.WhereColumnInfo {

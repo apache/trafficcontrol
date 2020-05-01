@@ -49,18 +49,7 @@ JOIN deliveryservice_request dsr ON dsrc.deliveryservice_request_id = dsr.id ` +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservice_request_comment') as res`
 }
-func (v *TODeliveryServiceRequestComment) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_deliveryservice_request_comment (
-id,
-author_id,
-deliveryservice_request_id,
-value) SELECT 
-id,
-author_id,
-deliveryservice_request_id,
-value FROM deliveryservice_request_comment WHERE id=:id`
-	return query
-}
+
 func (v *TODeliveryServiceRequestComment) NewReadObj() interface{} {
 	return &tc.DeliveryServiceRequestCommentNullable{}
 }

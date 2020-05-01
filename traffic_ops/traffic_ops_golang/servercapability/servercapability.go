@@ -109,11 +109,6 @@ func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, paginatio
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='server_capability') as res`
 }
-func (v *TOServerCapability) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_server_capability (
-  name
-) (SELECT name from server_capability WHERE name=:name)`
-	return query
-}
+
 func (v *TOServerCapability) Create() (error, error, int)    { return api.GenericCreateNameBasedID(v) }
 func (v *TOServerCapability) Delete() (error, error, int)    { return api.GenericDelete(v) }

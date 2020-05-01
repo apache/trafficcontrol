@@ -51,16 +51,7 @@ func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, 
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
 }
-func (v *TOCDNFederation) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_federation (
-id, cname,
-	 	ttl,
-	 	description
-) (SELECT id, cname,
-	 	ttl,
-	 	description FROM federation WHERE id=:id)`
-	return query
-}
+
 func (v *TOCDNFederation) NewReadObj() interface{}        { return &TOCDNFederation{} }
 func (v *TOCDNFederation) SelectQuery() string {
 	if v.ID != nil {

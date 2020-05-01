@@ -50,15 +50,6 @@ type RequiredCapability struct {
 	tc.DeliveryServicesRequiredCapability
 }
 
-func (v *RequiredCapability) InsertIntoDeletedQuery() string {
-	return `INSERT INTO deleted_deliveryservices_required_capability (
-required_capability,
-deliveryservice_id) 
-(SELECT required_capability,
-deliveryservice_id 
-from deliveryservices_required_capability
-WHERE deliveryservice_id = :deliveryservice_id AND required_capability = :required_capability)  `
-}
 // SetLastUpdated implements the api.GenericCreator interfaces and
 // sets the timestamp on insert.
 func (rc *RequiredCapability) SetLastUpdated(t tc.TimeNoMod) { rc.LastUpdated = &t }

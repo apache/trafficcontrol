@@ -47,14 +47,7 @@ func (v *TOStatus) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableNa
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
 }
-func (v *TOStatus) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_status (
-id,
-name,
-description
-) (SELECT id,name, description FROM status WHERE id=:id)`
-	return query
-}
+
 func (v *TOStatus) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TOStatus) InsertQuery() string            { return insertQuery() }
 func (v *TOStatus) NewReadObj() interface{}        { return &TOStatus{} }

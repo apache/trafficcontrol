@@ -109,14 +109,7 @@ JOIN
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='asn') as res`
 }
-func (v *TOASNV11) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_asn (
-id,
-asn,
-cachegroup
-) (SELECT id, asn, cachegroup FROM asn WHERE id=:id)`
-	return query
-}
+
 func (as *TOASNV11) Update() (error, error, int)   { return api.GenericUpdate(as) }
 func (as *TOASNV11) Delete() (error, error, int)   { return api.GenericDelete(as) }
 

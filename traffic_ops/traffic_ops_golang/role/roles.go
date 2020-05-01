@@ -50,19 +50,7 @@ func (v *TORole) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
 }
-func (v *TORole) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_role (
-id,
-name,
-description,
-priv_level
-) (SELECT
-id,
-name,
-description,
-priv_level FROM role WHERE id=:id)`
-	return query
-}
+
 func (v *TORole) SetLastUpdated(t tc.TimeNoMod)  { v.LastUpdated = &t }
 func (v *TORole) InsertQuery() string            { return insertQuery() }
 func (v *TORole) NewReadObj() interface{}        { return &TORole{} }

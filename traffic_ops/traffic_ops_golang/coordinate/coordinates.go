@@ -128,17 +128,7 @@ func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tab
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='`+ tableName +`') as res`
 }
-func (v *TOCoordinate) InsertIntoDeletedQuery() string  {
-	query := `INSERT INTO deleted_coordinate (
-id,
-latitude,
-	 	longitude,
-	 	name
-) (SELECT id, latitude,
-	 	longitude,
-	 	name FROM coordinate WHERE id=:id)`
-	return query
-}
+
 func (coord *TOCoordinate) Update() (error, error, int) { return api.GenericUpdate(coord) }
 func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 

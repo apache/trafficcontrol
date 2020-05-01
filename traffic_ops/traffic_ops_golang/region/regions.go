@@ -100,13 +100,7 @@ JOIN division d ON r.division = d.id ` + where + orderBy + pagination +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.tab_name='region') as res`
 }
-func (v *TORegion) InsertIntoDeletedQuery() string {
-	query := `INSERT INTO deleted_region (
-id,
-division,
-name) (SELECT id, division, name from region WHERE id=:id)`
-	return query
-}
+
 func (rg *TORegion) Update() (error, error, int)   { return api.GenericUpdate(rg) }
 func (rg *TORegion) Create() (error, error, int)   { return api.GenericCreate(rg) }
 func (rg *TORegion) Delete() (error, error, int)   { return api.GenericDelete(rg) }
