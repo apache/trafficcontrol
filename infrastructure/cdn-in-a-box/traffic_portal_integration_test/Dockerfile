@@ -65,7 +65,6 @@ RUN export junit_conf_chrome="\
 
 # debug
 RUN cat conf.js
-RUN cat login/conf.js
 
 RUN webdriver-manager clean
 RUN webdriver-manager update
