@@ -159,7 +159,7 @@ def parse_multipart(raw: str) -> typing.List[typing.Tuple[str, str]]:
 	if not boundary:
 		raise ValueError("'Content-Type' header missing 'boundary' parameter")
 
-	chunks = raw.split(f"--{boundary}")[1:] #ignore prologue
+	chunks = raw.split(f"--{boundary}")[1:] # ignore prologue
 	if chunks[-1].strip() != "--":
 		logging.warning("Final chunk appears invalid - possible bad message payload")
 	else:
