@@ -160,7 +160,7 @@ class API(TOSession):
 				if proc.stderr.decode():
 					logging.error("proc.stderr.decode()")
 				if proc.returncode == 0:
-					return [Package(p) for p in json.loads(proc.stdout.decode())]
+					return [packaging.Package(p) for p in json.loads(proc.stdout.decode())]
 			except (ValueError, IndexError, json.JSONDecodeError, OSError, subprocess.SubprocessError) as e:
 				logging.debug("package fetch failure: %r", e, stack_info=True, exc_info=True)
 
