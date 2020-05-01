@@ -28,4 +28,5 @@ ln -s "$PWD" "$SRCDIR/trafficcontrol"
 cd "$SRCDIR/trafficcontrol"
 
 /usr/local/go/bin/go get ./traffic_ops/traffic_ops_golang/...
+/usr/local/go/bin/go build github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 ./traffic_ops/build/build_rpm.sh
