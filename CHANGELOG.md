@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Ops API v3
+- Added an optional readiness check service to cdn-in-a-box that exits successfully when it is able to get a `200 OK` from all delivery services
+
+### Changed
+
+### Deprecated/Removed
+
+## [4.1.0] - 2020-04-23
+### Added
 - Added support for use of ATS Slice plugin as an additonal option to range request handling on HTTP/DNS DSes.
 - Added a boolean to delivery service in Traffic Portal and Traffic Ops to enable EDNS0 client subnet at the delivery service level and include it in the cr-config.
 - Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
@@ -17,6 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added ability to create multiple objects from generic API Create with a single POST.
 - Added debugging functionality to CDN-in-a-Box.
 - Added an SMTP server to CDN-in-a-Box.
+- Cached builder Docker images on Docker Hub to speed up build time
 - Traffic Ops Golang Endpoints
   - /api/2.0 for all of the most recent route versions
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
@@ -41,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an API 2.0 endpoint, /api/2.0/topologies, to create, read, update and delete flexible topologies.
 
 ### Changed
+- Add null check in astats plugin before calling strtok to find ip mask values in the config file
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
 - Fixed Traffic Portal regenerating CDN DNSSEC keys with the wrong effective date
 - Fixed issue #4583: POST /users/register internal server error caused by failing DB query
@@ -58,6 +69,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Existing installations **must** enable TLSv1.1 for Traffic Vault in order for Traffic Ops to reach it. See [Enabling TLS 1.1](https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_vault.html#tv-admin-enable-tlsv1-1) in the Traffic Vault administrator's guide for instructions.
 - Changed the `totalBytes` property of responses to GET requests to `/deliveryservice_stats` to the more appropriate `totalKiloBytes` in API 2.x
 - Fix to traffic_ops_ort to generate logging.yaml files correctly.
+- Fixed issue #4650: add the "Vary: Accept-Encoding" header to all responses from Traffic Ops
 
 ### Deprecated/Removed
 - The Traffic Ops `db/admin.pl` script has now been removed. Please use the `db/admin` binary instead.
@@ -319,7 +331,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[Unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...HEAD
+[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.1.0...HEAD
+[4.1.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...RELEASE-4.1.0
 [4.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...RELEASE-4.0.0
 [3.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.2.0...RELEASE-3.0.0
 [2.2.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.1.0...RELEASE-2.2.0

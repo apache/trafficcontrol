@@ -31,7 +31,6 @@ Documents all API version 1 routes.
 
 	v1/*
 
-
 API V2 Routes
 =============
 Documents all API version 2 routes.
@@ -42,6 +41,17 @@ Documents all API version 2 routes.
 	:glob:
 
 	v2/*
+
+API V3 Routes
+=============
+Documents all API version 3 routes.
+
+.. toctree::
+	:maxdepth: 4
+	:hidden:
+	:glob:
+
+	v3/*
 
 How to Read this Documentation
 ==============================

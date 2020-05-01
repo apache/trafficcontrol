@@ -66,29 +66,6 @@ As mentioned in the :ref:`health-proto` section of the :ref:`tm-overview` overvi
 
 To enable the optimistic quorum feature, the ``peer_optimistic_quorum_min`` property in ``traffic_monitor.cfg`` should be configured with a value greater than zero that specifies the minimum number of peers that must be available in order to participate in the optimistic health protocol. If at any time the number of available peers falls below this threshold, the local Traffic Monitor will serve 503s whenever the aggregated, optimistic health protocol enabled view of the CDN's health is requested. Traffic Monitor will continue serving 503s and logging errors in ``traffic_monitor.log`` until the minimum number of peers are available. Once the mininimum number of peers are available, the local Traffic Monitor can resume participation in the optimisic health protocol. This prevents negative states caused by network isolation of a Traffic Monitor from propagating to downstream components such as Traffic Router.
 
-
-Cache Polling URL
------------------------------------
-
-The :term:`cache servers` are polled at the URL specified in the ``health.polling.url`` :term:`parameter`, on the :term:`cache server`'s :term:`profile`.
-
-This :term:`parameter` must have the config file ``rascal.properties``.
-
-The value is a template with the text ``${hostname}`` being replaced with the :term:`cache server`'s Network IP (IPv4, IPv6, or alternating between IPv4 and IPv6 depending on the cache polling protocol described in `Configuration Overview`_), and ``${interface_name}`` being replaced with the :term:`cache server`'s network Interface Name. For example, ``http://${hostname}/_astats?application=&inf.name=${interface_name}``.
-.. Note:: When an IPv6 address is used, it must be surrounded by square brackets ``[`` and ``]``.  This is done when the text ``${hostname}`` is replaced and should not be done in the server configuration itself.
-
-If the template contains a port, that port will be used, and the :term:`cache server`'s HTTPS and TCP Ports will not be added.
-
-If the template does not contain a port, then if the template starts with ``https`` the :term:`cache server`'s HTTPS Port will be added, and if the template doesn't start with ``https`` the :term:`cache server`'s TCP Port will be added.
-
-Examples:
-
-Template ``http://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://192.0.2.42:8080/_astats?application=&inf.name=${interface_name}``.
-Template ``http://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``2001:DB8:0:0:1::1`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://[2001:DB8:0:0:1::1]/_astats?application=&inf.name=${interface_name}``.
-Template ``https://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``https://192.0.2.42:8443/_astats?application=&inf.name=${interface_name}``.
-Template ``http://${hostname}:1234/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://192.0.2.42:1234/_astats?application=&inf.name=${interface_name}``.
-Template ``https://${hostname}:1234/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``https://192.0.2.42:1234/_astats?application=&inf.name=${interface_name}``.
-
 Stat and Health Flush Configuration
 -----------------------------------
 The Monitor has a health flush interval, a stat flush interval, and a stat buffer interval. Recall that the monitor polls both stats and health. The health poll is so small and fast, a buffer is largely unnecessary. However, in a large CDN, the stat poll may involve thousands of :term:`cache servers` with thousands of stats each, or more, and CPU may be a bottleneck.
@@ -104,3 +81,21 @@ It is not recommended to set either flush interval to 0, regardless of the stat 
 Troubleshooting and Log Files
 =============================
 Traffic Monitor log files are in :file:`/opt/traffic_monitor/var/log/`.
+
+.. _admin-tm-extensions:
+
+Extensions
+==========
+Traffic Monitor allows extensions to its parsers for the statistics returned by :term:`cache servers` and/or their plugins. The formats supported by Traffic Monitor by default are ``astats``, ``astats-dsnames`` (which is an odd variant of ``astats`` that probably shouldn't be used), and ``stats_over_http``. The format of a :term:`cache server`'s health and statistics reporting payloads must be declared on its :term:`Profile` as the :ref:`health.polling.format <param-health-polling-format>` :term:`Parameter`, or the default format (``astats``) will be assumed.
+
+For instructions on how to develop a parsing extension, refer to the :atc-godoc:`traffic_monitor/cache` package's documentation.
+
+Importantly, though, a statistics provider *must* respond to HTTP GET requests over either plain HTTP or HTTPS (which is controlled by the :ref:`health.polling.url <param-health-polling-url>` :term:`Parameter`), and it *must* provide the following statistics, or enough information to calculate them:
+
+- System "loadavg" (only requires the one-minute value)
+
+	.. seealso:: For more information on what "loadavg" is, refer to the :manpage:`proc(5)` manual page.
+
+- Input bytes, output bytes, and speeds for all monitored network interfaces
+
+There are other optional and/or :term:`Delivery Service`-related statistics that may cause Traffic Stats to not have the right information if not provided, but the above are essential for implementing :ref:`health-proto`.

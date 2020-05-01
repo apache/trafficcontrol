@@ -29,7 +29,7 @@ import (
 // API_CDN_MONITORING_CONFIG is the API path on which Traffic Ops serves the CDN monitoring
 // configuration information. It is meant to be used with fmt.Sprintf to insert the necessary
 // path parameters (namely the Name of the CDN of interest).
-// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v2/cdns_name_configs_monitoring.html
+// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/cdns_name_configs_monitoring.html
 const API_CDN_MONITORING_CONFIG = apiBase + "/cdns/%s/configs/monitoring"
 
 // GetTrafficMonitorConfigMap is functionally identical to GetTrafficMonitorConfig, except that it

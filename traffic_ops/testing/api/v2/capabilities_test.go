@@ -22,9 +22,9 @@ package v2
 import (
 	"fmt"
 	"testing"
-)
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
 
 // These capabilities are defined during the setup process in todb.go.
 // ANY TIME THOSE ARE CHANGED THIS MUST BE UPDATED.
@@ -69,7 +69,7 @@ func CreateTestCapabilities(t *testing.T) {
 	dbInsertTemplate := `INSERT INTO capability (name, description) VALUES ('%v', '%v');`
 
 	for _, c := range testData.Capabilities {
-		err = execSQL(db, fmt.Sprintf(dbInsertTemplate, c.Name, c.Description), "capability")
+		err = execSQL(db, fmt.Sprintf(dbInsertTemplate, c.Name, c.Description))
 		if err != nil {
 			t.Errorf("could not create capability: %v", err)
 		}

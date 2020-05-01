@@ -480,16 +480,16 @@ VALUES (:id, :server )`
 
 // GetReadAssigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
 func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
-	getRead(w, r, false)
+	getRead(w, r, false, tc.Alerts{})
 }
 
 // GetReadUnassigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
 func GetReadUnassigned(w http.ResponseWriter, r *http.Request) {
-	getRead(w, r, true)
+	alerts := api.CreateDeprecationAlerts(nil)
+	getRead(w, r, true, alerts)
 }
 
-func getRead(w http.ResponseWriter, r *http.Request, unassigned bool) {
-	alerts := api.CreateDeprecationAlerts(nil)
+func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.Alerts) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)

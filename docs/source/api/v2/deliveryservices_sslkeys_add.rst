@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-sslkeys-add:
+.. _to-api-v2-deliveryservices-sslkeys-add:
 
 ********************************
 ``deliveryservices/sslkeys/add``
