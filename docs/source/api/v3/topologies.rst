@@ -40,7 +40,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/2.0/topologies HTTP/1.1
+	GET /api/3.0/topologies HTTP/1.1
 	User-Agent: python-requests/2.23.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -166,7 +166,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/2.0/topologies HTTP/1.1
+	POST /api/3.0/topologies HTTP/1.1
 	User-Agent: python-requests/2.23.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -370,7 +370,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/2.0/topologies?name=my-topology HTTP/1.1
+	PUT /api/3.0/topologies?name=my-topology HTTP/1.1
 	User-Agent: python-requests/2.23.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -556,7 +556,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/2.0/topologies?name=my-topology HTTP/1.1
+	DELETE /api/3.0/topologies?name=my-topology HTTP/1.1
 	User-Agent: python-requests/2.23.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
