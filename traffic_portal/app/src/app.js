@@ -203,6 +203,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/tenants/users').name,
         require('./modules/private/types').name,
         require('./modules/private/topologies').name,
+        require('./modules/private/topologies/cacheGroups').name,
         require('./modules/private/topologies/deliveryServices').name,
         require('./modules/private/topologies/edit').name,
         require('./modules/private/topologies/list').name,
