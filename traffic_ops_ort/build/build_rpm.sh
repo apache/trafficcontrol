@@ -22,7 +22,7 @@ function importFunctions() {
 	local script=$(readlink -f "$0");
 	local scriptdir=$(dirname "$script");
 	export ORT_DIR=$(dirname "$scriptdir");
-	export TC_DIR=$(dirname "$TO_DIR");
+	export TC_DIR=$(dirname "$ORT_DIR");
 	functions_sh="$TC_DIR/build/functions.sh";
 	if [[ ! -r $functions_sh ]]; then
 		echo "error: can't find $functions_sh" >&2;
