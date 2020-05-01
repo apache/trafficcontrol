@@ -22,7 +22,7 @@
 
 FROM centos/systemd
 
-RUN curl -sL https://rpm.nodesource.com/setup_6.x | bash -
+RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash -
 
 ARG RPM=traffic_portal.rpm
 ADD $RPM /
