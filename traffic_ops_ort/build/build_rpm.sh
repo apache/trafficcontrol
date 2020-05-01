@@ -53,6 +53,10 @@ function initBuildArea() {
 		GFLAGS+=(--gcflags 'all=-N -l');
 	fi;
 
+	pushd atstccfg;
+	"${GC[@]}" "${GCFLAGS[@]}" -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=${TC_VERSION}";
+	popd;
+
 	cp -p traffic_ops_ort.pl "$dest";
 	cp -p supermicro_udev_mapper.pl "$dest";
 	mkdir -p "${dest}/atstccfg";
