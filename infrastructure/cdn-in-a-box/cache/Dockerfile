@@ -53,7 +53,12 @@ WORKDIR /opt
 ADD infrastructure/cdn-in-a-box/ort /opt/ort/
 ADD traffic_control/clients/python /opt/Apache-TrafficControl/
 
-RUN touch /var/log/ort.log && pip3 install ./Apache-TrafficControl && pip3 install ./ort && cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template && mkdir -p /opt/init.d && cp ort/traffic_ops_ort.logrotate /etc/logrotate.d/ort
+RUN touch /var/log/ort.log && \
+	pip3 install ./Apache-TrafficControl && \
+	pip3 install ./ort && \
+	cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template && \
+	mkdir -p /opt/init.d && \
+	cp ort/traffic_ops_ort.logrotate /etc/logrotate.d/ort
 
 ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
 ADD traffic_ops/ort/atstccfg/atstccfg /bin/
