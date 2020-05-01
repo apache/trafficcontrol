@@ -29,4 +29,4 @@ cd "$SRCDIR/trafficcontrol"
 
 /usr/local/go/bin/go get ./traffic_ops/traffic_ops_golang/...
 /usr/local/go/bin/go build github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
-./traffic_ops/build/build_rpm.sh
+NO_FOLLOW_LINKS=true ./traffic_ops/build/build_rpm.sh
