@@ -195,17 +195,6 @@ class API(TOSession):
 
 		raise ConnectionError("Failed to fetch configuration files from Traffic Ops")
 
-		# Server-info sanitization is now done by atstccfg
-		# try:
-		# 	conf.serverInfo = ServerInfo(myFiles.info)
-		# 	# if there's a reverse proxy, switch urls.
-		# 	if conf.serverInfo.toRevProxyUrl and not conf.rev_proxy_disable:
-		# 		self._server_url = conf.serverInfo.toRevProxyUrl
-		# 		self._api_base_url = urljoin(self._server_url, '/api/%s' % self.VERSION).rstrip('/') + '/'
-		# 	return myFiles.configFiles
-		# except (KeyError, AttributeError, ValueError) as e:
-		# 	raise ConnectionError("Malformed response from Traffic Ops to update status request!") from e
-
 	def updateTrafficOps(self, mode:Configuration.Modes):
 		"""
 		Updates Traffic Ops's knowledge of this server's update status.
