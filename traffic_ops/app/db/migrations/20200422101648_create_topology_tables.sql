@@ -47,7 +47,8 @@ CREATE TABLE topology_cachegroup_parents (
     CONSTRAINT topology_cachegroup_parents_rank_check CHECK (rank = 1 OR rank = 2),
     CONSTRAINT topology_cachegroup_parents_child_fkey FOREIGN KEY (child) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT topology_cachegroup_parents_parent_fkey FOREIGN KEY (parent) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT unique_child_parent_rank UNIQUE (child, parent, rank)
+    CONSTRAINT unique_child_rank UNIQUE (child, rank),
+    CONSTRAINT unique_child_parent UNIQUE (child, parent)
 );
 CREATE INDEX topology_cachegroup_parents_child_fkey ON topology_cachegroup_parents USING btree (child);
 CREATE INDEX topology_cachegroup_parents_parents_fkey ON topology_cachegroup_parents USING btree (parent);
