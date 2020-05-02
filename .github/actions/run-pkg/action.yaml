@@ -18,5 +18,5 @@
 name: 'run-pkg'
 description: 'Runs pkg'
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'node12'
+  main: 'main.js'
