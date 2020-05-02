@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -165,11 +166,11 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 	return nil, nil, http.StatusOK
 }
 
-func (role *TORole) Read(h http.Header) ([]interface{}, error, error, int) {
+func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	version := role.APIInfo().Version
-	vals, userErr, sysErr, errCode := api.GenericRead(h, role)
+	vals, userErr, sysErr, errCode, maxTime := api.GenericRead(h, role, useIMS)
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return nil, userErr, sysErr, errCode, maxTime
 	}
 
 	returnable := []interface{}{}
@@ -184,7 +185,7 @@ func (role *TORole) Read(h http.Header) ([]interface{}, error, error, int) {
 			returnable = append(returnable, rl.RoleV11)
 		}
 	}
-	return returnable, nil, nil, http.StatusOK
+	return returnable, nil, nil, http.StatusOK, maxTime
 }
 
 func (role *TORole) Update() (error, error, int) {

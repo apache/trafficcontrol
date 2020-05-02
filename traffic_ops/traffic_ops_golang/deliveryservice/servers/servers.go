@@ -24,9 +24,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -114,10 +117,19 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 
 	dss := TODeliveryServiceServer{}
 	dss.SetInfo(inf)
-	results, err := dss.readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil)
+	results, err, maxTime := dss.readDSS(nil, inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil, false)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
+	}
+	if maxTime != nil {
+		// RFC1123
+		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+		w.Header().Add(rfc.LastModified, date)
+	}
+	// statusnotmodified
+	if err == nil && results == nil {
+		w.WriteHeader(http.StatusNotModified)
 	}
 	api.WriteRespRaw(w, r, results)
 }
@@ -163,15 +175,32 @@ func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
 
 	dss := TODeliveryServiceServer{}
 	dss.SetInfo(inf)
-	results, err := dss.readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams, dsIDs, serverIDs)
+	cfg, e := api.GetConfig(r.Context())
+	useIMS := false
+	if e == nil && cfg != nil {
+		useIMS = cfg.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+
+	results, err, maxTime := dss.readDSS(r.Header, inf.Tx, inf.User, inf.Params, inf.IntParams, dsIDs, serverIDs, useIMS)
+	if maxTime != nil {
+		// RFC1123
+		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+		w.Header().Add(rfc.LastModified, date)
+	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
+	// statusnotmodified
+	if err == nil && results == nil {
+		w.WriteHeader(http.StatusNotModified)
+	}
 	api.WriteRespRaw(w, r, results)
 }
 
-func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int, dsIDs []int64, serverIDs []int64) (*tc.DeliveryServiceServerResponse, error) {
+func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int, dsIDs []int64, serverIDs []int64, useIMS bool) (*tc.DeliveryServiceServerResponse, error, *time.Time) {
 	orderby := params["orderby"]
 	limit := 20
 	offset := 0
@@ -194,43 +223,60 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 	if err != nil {
-		return nil, errors.New("getting user tenant ID list: " + err.Error())
+		return nil, errors.New("getting user tenant ID list: " + err.Error()), nil
 	}
 	for _, id := range tenantIDs {
 		dss.TenantIDs = append(dss.TenantIDs, int64(id))
 	}
 	dss.ServerIDs = serverIDs
 	dss.DeliveryServiceIDs = dsIDs
-
-	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs)
+	query1, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs, true)
 	if err != nil {
-		return nil, errors.New("creating query for DeliveryserviceServers: " + err.Error())
+		log.Warnf("Error getting the max last updated query %v", err)
+	}
+	runSecond, maxTime := ims.MakeFirstQuery(tx, h, map[string]interface{}{}, query1)
+	if useIMS {
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return nil, nil, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs, false)
+	if err != nil {
+		return nil, errors.New("creating query for DeliveryserviceServers: " + err.Error()), nil
 	}
 	log.Debugln("Query is ", query)
 
 	rows, err := tx.NamedQuery(query, dss)
 	if err != nil {
-		return nil, errors.New("Error querying DeliveryserviceServers: " + err.Error())
+		return nil, errors.New("Error querying DeliveryserviceServers: " + err.Error()), nil
 	}
 	defer rows.Close()
 	servers := []tc.DeliveryServiceServer{}
 	for rows.Next() {
 		s := tc.DeliveryServiceServer{}
 		if err = rows.StructScan(&s); err != nil {
-			return nil, errors.New("error parsing dss rows: " + err.Error())
+			return nil, errors.New("error parsing dss rows: " + err.Error()), nil
 		}
 		servers = append(servers, s)
 	}
-	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, nil
+	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, nil, &maxTime
 }
 
-func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, serverIDs []int64) (string, error) {
+func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, serverIDs []int64, getMaxQuery bool) (string, error) {
 	selectStmt := `SELECT
 	s.deliveryService,
 	s.server,
 	s.last_updated
 	FROM deliveryservice_server s`
 
+	if getMaxQuery {
+		selectStmt = `SELECT max(t) from (
+		SELECT max(s.last_updated) as t FROM deliveryservice_server s`
+	}
 	allowedOrderByCols := map[string]string{
 		"":                "",
 		"deliveryservice": "s.deliveryService",
@@ -266,6 +312,10 @@ AND s.server = ANY(:serverids)
 	}
 
 	selectStmt += ` LIMIT ` + limit + ` OFFSET ` + offset + ` ROWS`
+	if getMaxQuery {
+		return selectStmt + `UNION ALL
+		select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservice_server') as res`, nil
+	}
 	return selectStmt, nil
 }
 
@@ -597,14 +647,14 @@ type TODSSDeliveryService struct {
 }
 
 // Read shows all of the delivery services associated with the specified server.
-func (dss *TODSSDeliveryService) Read(h http.Header) ([]interface{}, error, error, int) {
+func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	returnable := []interface{}{}
 	params := dss.APIInfo().Params
 	tx := dss.APIInfo().Tx.Tx
 	user := dss.APIInfo().User
 
 	if err := api.IsInt(params["id"]); err != nil {
-		return nil, err, nil, http.StatusBadRequest
+		return nil, err, nil, http.StatusBadRequest, nil
 	}
 
 	if _, ok := params["orderby"]; !ok {
@@ -619,7 +669,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header) ([]interface{}, error, erro
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
+		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError, nil
 	}
 
 	if where != "" {
@@ -632,12 +682,22 @@ func (dss *TODSSDeliveryService) Read(h http.Header) ([]interface{}, error, erro
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, nil, err, http.StatusInternalServerError
+		return nil, nil, err, http.StatusInternalServerError, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
-
 	query := deliveryservice.GetDSSelectQuery() + where + orderBy + pagination
 	queryValues["server"] = dss.APIInfo().Params["id"]
+
+	runSecond, maxTime := ims.MakeFirstQuery(dss.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if useIMS {
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return returnable, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
@@ -646,13 +706,20 @@ func (dss *TODSSDeliveryService) Read(h http.Header) ([]interface{}, error, erro
 		sysErr = fmt.Errorf("reading server dses: %v ", sysErr)
 	}
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, http.StatusInternalServerError
+		return nil, userErr, sysErr, http.StatusInternalServerError, nil
 	}
 
 	for _, ds := range dses {
 		returnable = append(returnable, ds)
 	}
-	return returnable, nil, nil, http.StatusOK
+	return returnable, nil, nil, http.StatusOK, &maxTime
+}
+
+func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+	return `SELECT max(t) from (
+		SELECT max(dss.last_updated) as t from deliveryservice_server dss ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservice_server') as res`
 }
 
 type DSInfo struct {

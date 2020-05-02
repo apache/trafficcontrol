@@ -24,11 +24,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -64,41 +66,49 @@ func (cgparam *TOCacheGroupParameter) GetType() string {
 	return "cachegroup parameter"
 }
 
-func (cgparam *TOCacheGroupParameter) Read(h http.Header) ([]interface{}, error, error, int) {
+func (cgparam *TOCacheGroupParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
 	queryParamsToQueryCols := cgparam.ParamColumns()
 	parameters := cgparam.APIInfo().Params
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	cgID, err := strconv.Atoi(parameters[CacheGroupIDQueryParam])
 	if err != nil {
-		return nil, errors.New("cache group id must be an integer"), nil, http.StatusBadRequest
+		return nil, errors.New("cache group id must be an integer"), nil, http.StatusBadRequest, nil
 	}
 
 	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgparam.ReqInfo.Tx.Tx, int64(cgID))
 	if err != nil {
-		return nil, nil, err, http.StatusInternalServerError
+		return nil, nil, err, http.StatusInternalServerError, nil
 	} else if !ok {
-		return nil, errors.New("cachegroup does not exist"), nil, http.StatusNotFound
+		return nil, errors.New("cachegroup does not exist"), nil, http.StatusNotFound, nil
 	}
 
 	params := []interface{}{}
-	runSecond := ims.MakeFirstQuery(cgparam.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
-	if !runSecond {
-		return params, nil, nil, http.StatusNotModified
+	runSecond, maxTime := ims.MakeFirstQuery(cgparam.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if useIMS {
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return params, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
+
 	query := selectQuery() + where + orderBy + pagination
 	rows, err := cgparam.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("querying " + cgparam.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("querying " + cgparam.GetType() + ": " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var p tc.CacheGroupParameterNullable
 		if err = rows.StructScan(&p); err != nil {
-			return nil, nil, errors.New("scanning " + cgparam.GetType() + ": " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("scanning " + cgparam.GetType() + ": " + err.Error()), http.StatusInternalServerError, nil
 		}
 		if p.Secure != nil && *p.Secure && cgparam.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
 			p.Value = &parameter.HiddenField
@@ -106,7 +116,7 @@ func (cgparam *TOCacheGroupParameter) Read(h http.Header) ([]interface{}, error,
 		params = append(params, p)
 	}
 
-	return params, nil, nil, http.StatusOK
+	return params, nil, nil, http.StatusOK, &maxTime
 }
 
 func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {

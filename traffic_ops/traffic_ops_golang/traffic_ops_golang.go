@@ -59,6 +59,7 @@ func main() {
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
+	useIMS := flag.Bool("use_ims", false, "Use If-Modified-Since requests")
 	flag.Parse()
 
 	if *showVersion {
@@ -98,6 +99,9 @@ func main() {
 	}
 
 	cfg, errsToLog, blockStart := config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, version)
+	if *useIMS {
+		cfg.UseIMS = true
+	}
 	for _, err := range errsToLog {
 		fmt.Fprintf(os.Stderr, "Loading Config: %v\n", err)
 	}

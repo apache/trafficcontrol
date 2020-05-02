@@ -22,6 +22,7 @@ package staticdnsentry
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -116,8 +117,8 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (en *TOStaticDNSEntry) Read(h http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(h, en)
+func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, en, useIMS)
 }
 func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
 func (en *TOStaticDNSEntry) Update() (error, error, int) { return api.GenericUpdate(en) }

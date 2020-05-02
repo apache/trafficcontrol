@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
@@ -192,9 +193,18 @@ type apiResponse struct {
 	Response tc.InvalidationJob `json:"response,omitempty"`
 }
 
+func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
+	return `SELECT max(t) from (
+		SELECT max(job.last_updated) as t FROM job
+	JOIN tm_user u ON job.job_user = u.id
+	JOIN deliveryservice ds  ON job.job_deliveryservice = ds.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.tab_name='job') as res`
+}
+
 // Used by GET requests to `/jobs`, simply returns a filtered list of
 // content invalidation jobs according to the provided query parameters.
-func (job *InvalidationJob) Read(h http.Header) ([]interface{}, error, error, int) {
+func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
 		"id":              dbhelpers.WhereColumnInfo{"job.id", api.IsInt},
 		"keyword":         dbhelpers.WhereColumnInfo{"job.keyword", nil},
@@ -207,12 +217,12 @@ func (job *InvalidationJob) Read(h http.Header) ([]interface{}, error, error, in
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(job.APIInfo().Params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(job.APIInfo().Tx.Tx, job.APIInfo().User.TenantID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("getting accessible tenants for user - %v", err), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("getting accessible tenants for user - %v", err), http.StatusInternalServerError, nil
 	}
 	if len(where) > 0 {
 		where += " AND ds.tenant_id = ANY(:tenants) "
@@ -221,6 +231,17 @@ func (job *InvalidationJob) Read(h http.Header) ([]interface{}, error, error, in
 	}
 	queryValues["tenants"] = pq.Array(accessibleTenants)
 
+	runSecond, maxTime := ims.MakeFirstQuery(job.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if useIMS {
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
 	query := readQuery + where + orderBy + pagination
 	log.Debugln("generated job query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
@@ -228,7 +249,7 @@ func (job *InvalidationJob) Read(h http.Header) ([]interface{}, error, error, in
 	returnable := []interface{}{}
 	rows, err := job.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -242,17 +263,17 @@ func (job *InvalidationJob) Read(h http.Header) ([]interface{}, error, error, in
 			&j.CreatedBy,
 			&j.DeliveryService)
 		if err != nil {
-			return nil, nil, fmt.Errorf("parsing db response: %v", err), http.StatusInternalServerError
+			return nil, nil, fmt.Errorf("parsing db response: %v", err), http.StatusInternalServerError, nil
 		}
 
 		returnable = append(returnable, j)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, nil, fmt.Errorf("Parsing db responses: %v", err), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("Parsing db responses: %v", err), http.StatusInternalServerError, nil
 	}
 
-	return returnable, nil, nil, http.StatusOK
+	return returnable, nil, nil, http.StatusOK, &maxTime
 }
 
 // Used by POST requests to `/jobs`, creates a new content invalidation job

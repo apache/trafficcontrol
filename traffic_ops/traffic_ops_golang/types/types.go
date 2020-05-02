@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -101,8 +102,8 @@ func (typ *TOType) Validate() error {
 	return nil
 }
 
-func (tp *TOType) Read(h http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(h, tp)
+func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, tp, useIMS)
 }
 
 func (tp *TOType) Update() (error, error, int) {

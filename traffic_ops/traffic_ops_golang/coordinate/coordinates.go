@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -119,8 +120,8 @@ func (coordinate TOCoordinate) Validate() error {
 }
 
 func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
-func (coord *TOCoordinate) Read(h http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(h, coord)
+func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, coord, useIMS)
 }
 func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (

@@ -22,6 +22,7 @@ package asn
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -98,8 +99,8 @@ func (asn TOASNV11) Validate() error {
 }
 
 func (as *TOASNV11) Create() (error, error, int) { return api.GenericCreate(as) }
-func (as *TOASNV11) Read(h http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(h, as)
+func (as *TOASNV11) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, as, useIMS)
 }
 func (v *TOASNV11) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
@@ -124,7 +125,7 @@ func V11ReadAll(w http.ResponseWriter, r *http.Request) {
 
 	asn := &TOASNV11{}
 	asn.SetInfo(inf)
-	asns, userErr, sysErr, errCode := api.GenericRead(r.Header, asn)
+	asns, userErr, sysErr, errCode, _ := api.GenericRead(r.Header, asn, false)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

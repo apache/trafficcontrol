@@ -22,6 +22,7 @@ package deliveryservice
 import (
 	"database/sql"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -73,8 +74,14 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusNotFound, userErr, nil)
 		return
 	}
-
-	dses, userErr, sysErr, errCode := readGetDeliveryServices(nil, inf.Params, inf.Tx, inf.User)
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+	dses, userErr, sysErr, errCode, _ := readGetDeliveryServices(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	ims2 "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -124,77 +125,86 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orderBy string, pagination string, queryValues map[string]interface{}) bool {
+func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orderBy string, pagination string, queryValues map[string]interface{}) (bool, time.Time) {
+	var max time.Time
 	ims := []string{}
 	runSecond := true
 	if h == nil {
-		return runSecond
+		return runSecond, max
 	}
 	ims = h[rfc.IfModifiedSince]
-	if ims == nil || len(ims) == 0 {
-		return runSecond
+	if len(ims) == 0 {
+		return runSecond, max
 	}
 	if l, ok := web.ParseHTTPDate(ims[0]); !ok {
-		return runSecond
+		log.Warnf("Date not parsable %v", ims[0])
+		return runSecond, max
 	} else {
 		query := val.SelectMaxLastUpdatedQuery(where, orderBy, pagination, val.GetType())
 		rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
 		defer rows.Close()
 		if err != nil {
 			log.Warnf("Couldn't get the max last updated time: %v", err)
-			return runSecond
+			return runSecond, max
 		}
 		if err == sql.ErrNoRows {
 			runSecond = false
-			return runSecond
+			return runSecond, max
 		}
 		// This should only ever contain one row
 		if rows.Next() {
 			v := &ims2.LatestTimestamp{}
 			if err = rows.StructScan(v); err != nil || v == nil {
 				log.Warnf("Failed to parse the max time stamp into a struct %v", err)
-				return runSecond
+				return runSecond, max
 			}
+			max = v.LatestTime.Time
 			// The request IMS time is later than the max of (lastUpdated, deleted_time)
 			if l.After(v.LatestTime.Time) {
 				runSecond = false
-				return runSecond
+				return runSecond, max
 			}
 		} else {
 			runSecond = false
 		}
 	}
-	return runSecond
+	return runSecond, max
 }
 
-func GenericRead(h http.Header, val GenericReader) ([]interface{}, error, error, int) {
+func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	vals := []interface{}{}
 	code := http.StatusOK
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	runSecond := MakeFirstQuery(val, h, where, orderBy, pagination, queryValues)
-	if !runSecond {
-		code = http.StatusNotModified
-		return vals, nil, nil, code
+	runSecond, maxTime := MakeFirstQuery(val, h, where, orderBy, pagination, queryValues)
+	if useIMS {
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			code = http.StatusNotModified
+			return vals, nil, nil, code, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 	// Case where we need to run the second query
 	query := val.SelectQuery() + where + orderBy + pagination
 	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("querying " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("querying " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError, &maxTime
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		v := val.NewReadObj()
 		if err = rows.StructScan(v); err != nil {
-			return nil, nil, errors.New("scanning " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("scanning " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError, &maxTime
 		}
 		vals = append(vals, v)
 	}
-	return vals, nil, nil, code
+	return vals, nil, nil, code, &maxTime
 }
 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.

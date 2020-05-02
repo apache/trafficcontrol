@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -404,24 +405,24 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 	return c, nil
 }
 
-func (ds *TODeliveryService) Read(h http.Header) ([]interface{}, error, error, int) {
+func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	version := ds.APIInfo().Version
 	if version == nil {
-		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError
+		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError, nil
 	}
 	if version.Major == 1 && version.Minor < 1 {
-		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
 	}
 
 	returnable := []interface{}{}
-	dses, userErr, sysErr, errCode := readGetDeliveryServices(h, ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
+	dses, userErr, sysErr, errCode, maxTime := readGetDeliveryServices(h, ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User, useIMS)
 
 	if sysErr != nil {
 		sysErr = errors.New("reading dses: " + sysErr.Error())
 		errCode = http.StatusInternalServerError
 	}
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return nil, userErr, sysErr, errCode, nil
 	}
 
 	for _, ds := range dses {
@@ -436,10 +437,10 @@ func (ds *TODeliveryService) Read(h http.Header) ([]interface{}, error, error, i
 		case version.Minor >= 1:
 			returnable = append(returnable, ds.DeliveryServiceNullableV12)
 		default:
-			return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+			return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
 		}
 	}
-	return returnable, nil, nil, errCode
+	return returnable, nil, nil, errCode, maxTime
 }
 
 func UpdateV12(w http.ResponseWriter, r *http.Request) {
@@ -887,7 +888,7 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
-func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, error, error, int) {
+func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceNullable, error, error, int, *time.Time) {
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
 	}
@@ -911,17 +912,23 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	runSecond := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, "", pagination))
-	if !runSecond {
-		return []tc.DeliveryServiceNullable{}, nil, nil, http.StatusNotModified
+	runSecond, maxTime := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, "", pagination))
+	if useIMS {
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []tc.DeliveryServiceNullable{}, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, nil, tc.DBError, http.StatusInternalServerError
+		return nil, nil, tc.DBError, http.StatusInternalServerError, &maxTime
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
@@ -929,13 +936,13 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	if accessibleTo, ok := params["accessibleTo"]; ok {
 		if err := api.IsInt(accessibleTo); err != nil {
 			log.Errorln("unknown parameter value: " + err.Error())
-			return nil, errors.New("accessibleTo must be an integer"), nil, http.StatusBadRequest
+			return nil, errors.New("accessibleTo must be an integer"), nil, http.StatusBadRequest, &maxTime
 		}
 		accessibleTo, _ := strconv.Atoi(accessibleTo)
 		accessibleTenants, err := tenant.GetUserTenantIDListTx(tx.Tx, accessibleTo)
 		if err != nil {
 			log.Errorln("unable to get tenants: " + err.Error())
-			return nil, nil, tc.DBError, http.StatusInternalServerError
+			return nil, nil, tc.DBError, http.StatusInternalServerError, &maxTime
 		}
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
 		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
@@ -945,7 +952,8 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
-	return GetDeliveryServices(query, queryValues, tx)
+	r, e1, e2, code := GetDeliveryServices(query, queryValues, tx)
+	return r, e1, e2, code, &maxTime
 }
 
 func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {

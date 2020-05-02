@@ -141,7 +141,7 @@ func TestReadCacheGroups(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.CacheGroupNullable{},
 	}
-	cachegroups, userErr, sysErr, _ := obj.Read(nil)
+	cachegroups, userErr, sysErr, _, _ := obj.Read(nil, false)
 
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)

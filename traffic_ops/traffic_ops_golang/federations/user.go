@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -125,19 +126,19 @@ func (v *TOUsers) GetType() string {
 	return fedUserType
 }
 
-func (v *TOUsers) Read(h http.Header) ([]interface{}, error, error, int) {
+func (v *TOUsers) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	fedIDStr := v.APIInfo().Params["id"]
 	fedID, err := strconv.Atoi(fedIDStr)
 	if err != nil {
-		return nil, errors.New("federation id must be an integer"), nil, http.StatusBadRequest
+		return nil, errors.New("federation id must be an integer"), nil, http.StatusBadRequest, nil
 	}
 	_, exists, err := getFedNameByID(v.APIInfo().Tx.Tx, fedID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("getting federation cname from ID %v: %v", fedID, err), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("getting federation cname from ID %v: %v", fedID, err), http.StatusInternalServerError, nil
 	} else if !exists {
-		return nil, fmt.Errorf("federation %v not found", fedID), nil, http.StatusNotFound
+		return nil, fmt.Errorf("federation %v not found", fedID), nil, http.StatusNotFound, nil
 	}
-	return api.GenericRead(h, v)
+	return api.GenericRead(h, v, useIMS)
 }
 
 func (v *TOUsers) Delete() (error, error, int) { return api.GenericDelete(v) }

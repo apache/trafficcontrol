@@ -22,6 +22,7 @@ package region
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -90,8 +91,8 @@ func (region *TORegion) Validate() error {
 	return nil
 }
 
-func (rg *TORegion) Read(h http.Header) ([]interface{}, error, error, int) {
-	return api.GenericRead(h, rg)
+func (rg *TORegion) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, rg, useIMS)
 }
 func (v *TORegion) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (

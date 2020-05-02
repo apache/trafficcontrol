@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -198,18 +199,18 @@ func (s TOServer) ChangeLogMessage(action string) (string, error) {
 	return message, nil
 }
 
-func (s *TOServer) Read(h http.Header) ([]interface{}, error, error, int) {
+func (s *TOServer) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	version := s.APIInfo().Version
 	if version == nil {
-		return nil, nil, errors.New("TOServer.Read called with nil API version"), http.StatusInternalServerError
+		return nil, nil, errors.New("TOServer.Read called with nil API version"), http.StatusInternalServerError, nil
 	}
 
 	returnable := []interface{}{}
 
-	servers, userErr, sysErr, errCode := getServers(h, s.ReqInfo.Params, s.ReqInfo.Tx, s.ReqInfo.User)
+	servers, userErr, sysErr, errCode, maxTime := getServers(h, s.ReqInfo.Params, s.ReqInfo.Tx, s.ReqInfo.User, useIMS)
 
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return nil, userErr, sysErr, errCode, nil
 	}
 
 	for _, server := range servers {
@@ -220,11 +221,11 @@ func (s *TOServer) Read(h http.Header) ([]interface{}, error, error, int) {
 		case version.Major == 1 && version.Minor >= 1:
 			returnable = append(returnable, server.ServerNullableV11)
 		default:
-			return nil, nil, fmt.Errorf("TOServer.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+			return nil, nil, fmt.Errorf("TOServer.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
 		}
 	}
 
-	return returnable, nil, nil, errCode
+	return returnable, nil, nil, errCode, maxTime
 }
 
 func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
@@ -239,7 +240,7 @@ JOIN type t ON s.type = t.id ` + where + orderBy + pagination +
 	select max(last_updated) as t from last_deleted l where l.tab_name='server') as res`
 }
 
-func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, error, error, int) {
+func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.ServerNullable, error, error, int, *time.Time) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -261,11 +262,11 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
 		if err != nil {
-			return nil, errors.New("dsId must be an integer"), nil, http.StatusNotFound
+			return nil, errors.New("dsId must be an integer"), nil, http.StatusNotFound, nil
 		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
-			return nil, errors.New("Forbidden"), sysErr, http.StatusForbidden
+			return nil, errors.New("Forbidden"), sysErr, http.StatusForbidden, nil
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
 		queryAddition = `
@@ -274,10 +275,10 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 		// depending on ds type, also need to add mids
 		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
-			return nil, nil, err, http.StatusInternalServerError
+			return nil, nil, err, http.StatusInternalServerError, nil
 		}
 		if !exists {
-			return nil, fmt.Errorf("a deliveryservice with id %v was not found", dsID), nil, http.StatusBadRequest
+			return nil, fmt.Errorf("a deliveryservice with id %v was not found", dsID), nil, http.StatusBadRequest, nil
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
@@ -285,12 +286,18 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	servers := []tc.ServerNullable{}
-	runSecond := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
-	if !runSecond {
-		return servers, nil, nil, http.StatusNotModified
+	runSecond, maxTime := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if useIMS {
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return servers, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 	// Case where we need to run the second query
 	query := selectQuery() + queryAddition + where + orderBy + pagination
@@ -298,7 +305,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -307,7 +314,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err = rows.StructScan(&s); err != nil {
-			return nil, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		if user.PrivLevel < auth.PrivLevelOperations {
 			s.ILOPassword = &HiddenField
@@ -323,12 +330,12 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
 		if userErr != nil || sysErr != nil {
-			return nil, userErr, sysErr, errCode
+			return nil, userErr, sysErr, errCode, nil
 		}
 		servers = append(servers, mids...)
 	}
 
-	return servers, nil, nil, http.StatusOK
+	return servers, nil, nil, http.StatusOK, &maxTime
 }
 
 // getMidServers gets the mids used by the servers in this DS.

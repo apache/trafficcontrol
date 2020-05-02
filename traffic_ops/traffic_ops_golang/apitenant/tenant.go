@@ -25,9 +25,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -36,8 +33,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	validation "github.com/go-ozzo/ozzo-validation"
-
 	"github.com/lib/pq"
+	"net/http"
+	"strconv"
+	"time"
 )
 
 // TOTenant provides a local type against which to define methods
@@ -128,14 +127,14 @@ func (ten TOTenant) Validate() error {
 
 func (tn *TOTenant) Create() (error, error, int) { return api.GenericCreate(tn) }
 
-func (ten *TOTenant) Read(h http.Header) ([]interface{}, error, error, int) {
+func (ten *TOTenant) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
-		return nil, nil, nil, http.StatusOK
+		return nil, nil, nil, http.StatusOK, nil
 	}
 
-	tenants, userErr, sysErr, errCode := api.GenericRead(h, ten)
+	tenants, userErr, sysErr, errCode, maxTime := api.GenericRead(h, ten, useIMS)
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return nil, userErr, sysErr, errCode, nil
 	}
 
 	tenantNames := map[int]*string{}
@@ -152,7 +151,7 @@ func (ten *TOTenant) Read(h http.Header) ([]interface{}, error, error, int) {
 		p := *tenantNames[*t.ParentID]
 		t.ParentName = &p // copy
 	}
-	return tenants, nil, nil, http.StatusOK
+	return tenants, nil, nil, errCode, maxTime
 }
 
 // IsTenantAuthorized implements the Tenantable interface for TOTenant

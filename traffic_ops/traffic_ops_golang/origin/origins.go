@@ -23,8 +23,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -129,22 +131,21 @@ func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 	return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx.Tx)
 }
 
-func (origin *TOOrigin) Read(h http.Header) ([]interface{}, error, error, int) {
+func (origin *TOOrigin) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	returnable := []interface{}{}
-
-	origins, userErr, sysErr, errCode := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User)
+	origins, userErr, sysErr, errCode, maxTime := getOrigins(h, origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User, useIMS)
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return nil, userErr, sysErr, errCode, nil
 	}
 
 	for _, origin := range origins {
 		returnable = append(returnable, origin)
 	}
 
-	return returnable, nil, nil, http.StatusOK
+	return returnable, nil, nil, http.StatusOK, maxTime
 }
 
-func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.Origin, error, error, int) {
+func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.Origin, error, error, int, *time.Time) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -163,13 +164,23 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	}
+	runSecond, maxTime := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if useIMS {
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []tc.Origin{}, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, nil, tc.DBError, http.StatusInternalServerError
+		return nil, nil, tc.DBError, http.StatusInternalServerError, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "o.tenant", tenantIDs)
 
@@ -178,7 +189,7 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 
 	rows, err = tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -187,11 +198,23 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 	for rows.Next() {
 		var s tc.Origin
 		if err = rows.StructScan(&s); err != nil {
-			return nil, nil, fmt.Errorf("getting origins: %v", err), http.StatusInternalServerError
+			return nil, nil, fmt.Errorf("getting origins: %v", err), http.StatusInternalServerError, nil
 		}
 		origins = append(origins, s)
 	}
-	return origins, nil, nil, http.StatusOK
+	return origins, nil, nil, http.StatusOK, &maxTime
+}
+
+func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
+	return `SELECT max(t) from (
+		SELECT max(o.last_updated) as t from origin as o
+	JOIN deliveryservice d ON o.deliveryservice = d.id
+LEFT JOIN cachegroup cg ON o.cachegroup = cg.id
+LEFT JOIN coordinate c ON o.coordinate = c.id
+LEFT JOIN profile p ON o.profile = p.id
+LEFT JOIN tenant t ON o.tenant = t.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.tab_name='origin') as res`
 }
 
 func selectQuery() string {

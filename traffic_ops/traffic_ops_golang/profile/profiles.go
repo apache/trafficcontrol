@@ -21,8 +21,10 @@ package profile
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -101,7 +103,7 @@ func (prof *TOProfile) Validate() error {
 	return nil
 }
 
-func (prof *TOProfile) Read(h http.Header) ([]interface{}, error, error, int) {
+func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -122,7 +124,18 @@ func (prof *TOProfile) Read(h http.Header) ([]interface{}, error, error, int) {
 	}
 
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	}
+
+	runSecond, maxTime := ims.MakeFirstQuery(prof.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	if useIMS {
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 
 	query := selectProfilesQuery() + where + orderBy + pagination
@@ -130,7 +143,7 @@ func (prof *TOProfile) Read(h http.Header) ([]interface{}, error, error, int) {
 
 	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("profile read querying: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("profile read querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -139,7 +152,7 @@ func (prof *TOProfile) Read(h http.Header) ([]interface{}, error, error, int) {
 	for rows.Next() {
 		var p tc.ProfileNullable
 		if err = rows.StructScan(&p); err != nil {
-			return nil, nil, errors.New("profile read scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("profile read scanning: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		profiles = append(profiles, p)
 	}
@@ -150,14 +163,22 @@ func (prof *TOProfile) Read(h http.Header) ([]interface{}, error, error, int) {
 		if _, ok := prof.APIInfo().Params[IDQueryParam]; ok {
 			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.APIInfo().Params, prof.ReqInfo.User, profile)
 			if err != nil {
-				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError
+				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError, nil
 			}
 		}
 		profileInterfaces = append(profileInterfaces, profile)
 	}
 
-	return profileInterfaces, nil, nil, http.StatusOK
+	return profileInterfaces, nil, nil, http.StatusOK, &maxTime
 
+}
+
+func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+	return `SELECT max(t) from (
+		SELECT max(prof.last_updated) as t FROM profile prof
+LEFT JOIN cdn c ON prof.cdn = c.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.tab_name='profile') as res`
 }
 
 func selectProfilesQuery() string {

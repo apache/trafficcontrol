@@ -7,6 +7,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
+	"time"
 )
 
 /*
@@ -34,18 +35,19 @@ type LatestTimestamp struct {
 }
 
 // MakeFirstQuery for components that DO NOT implement the CRUDER interface
-func MakeFirstQuery(tx *sqlx.Tx, h map[string][]string, queryValues map[string]interface{}, query string) bool {
+func MakeFirstQuery(tx *sqlx.Tx, h map[string][]string, queryValues map[string]interface{}, query string) (bool, time.Time) {
+	var maxTime time.Time
 	ims := []string{}
 	runSecond := true
 	if h == nil {
-		return runSecond
+		return runSecond, maxTime
 	}
 	ims = h[rfc.IfModifiedSince]
 	if ims == nil || len(ims) == 0 {
-		return runSecond
+		return runSecond, maxTime
 	}
 	if l, ok := web.ParseHTTPDate(ims[0]); !ok {
-		return runSecond
+		return runSecond, maxTime
 	} else {
 		rows, err := tx.NamedQuery(query, queryValues)
 		if rows != nil {
@@ -53,27 +55,28 @@ func MakeFirstQuery(tx *sqlx.Tx, h map[string][]string, queryValues map[string]i
 		}
 		if err != nil {
 			log.Warnf("Couldn't get the max last updated time: %v", err)
-			return runSecond
+			return runSecond, maxTime
 		}
 		if err == sql.ErrNoRows {
 			runSecond = false
-			return runSecond
+			return runSecond, maxTime
 		}
 		// This should only ever contain one row
 		if rows.Next() {
 			v := &LatestTimestamp{}
 			if err = rows.StructScan(v); err != nil || v == nil {
 				log.Warnf("Failed to parse the max time stamp into a struct %v", err)
-				return runSecond
+				return runSecond, maxTime
 			}
+			maxTime = v.LatestTime.Time
 			// The request IMS time is later than the max of (lastUpdated, deleted_time)
 			if v.LatestTime != nil && l.After(v.LatestTime.Time) {
 				runSecond = false
-				return runSecond
+				return runSecond, maxTime
 			}
 		} else {
 			runSecond = false
 		}
 	}
-	return runSecond
+	return runSecond, maxTime
 }
