@@ -8,9 +8,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops API v3
 - Added an optional readiness check service to cdn-in-a-box that exits successfully when it is able to get a `200 OK` from all delivery services
 
+### Fixed
+- Fixed ORT config generation not using the coalesce_number_v6 Parameter.
+
 ### Changed
 
-### Deprecated/Removed
+### Deprecated
+
+### Removed
 
 ## [4.1.0] - 2020-04-23
 ### Added
@@ -51,6 +56,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/snapshot `PUT`
 
 ### Changed
+- Add null check in astats plugin before calling strtok to find ip mask values in the config file
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
 - Fixed Traffic Portal regenerating CDN DNSSEC keys with the wrong effective date
 - Fixed issue #4583: POST /users/register internal server error caused by failing DB query

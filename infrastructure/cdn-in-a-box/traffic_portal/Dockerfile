@@ -22,7 +22,7 @@
 
 FROM centos:7
 
-RUN curl -sL https://rpm.nodesource.com/setup_6.x | bash -
+RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash -
 
 # Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
 ARG TRAFFIC_PORTAL_RPM=traffic_portal/traffic_portal.rpm
