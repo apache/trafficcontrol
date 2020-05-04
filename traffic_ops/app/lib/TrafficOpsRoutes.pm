@@ -660,8 +660,8 @@ sub api_routes {
 	$r->post("/api/$version/isos")->over( authenticated => 1, not_ldap => 1 )->to( 'Iso#generate', namespace => $namespace );
 
 	# -- JOBS (CURRENTLY LIMITED TO INVALIDATE CONTENT (PURGE) JOBS)
-	# $r->get("/api/$version/jobs")->over( authenticated => 1, not_ldap => 1 )->to( 'Job#index', namespace => $namespace );
-	# $r->get("/api/$version/jobs/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Job#show', namespace => $namespace );
+	$r->get("/api/$version/jobs")->over( authenticated => 1, not_ldap => 1 )->to( 'Job#index', namespace => $namespace );
+	$r->get("/api/$version/jobs/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Job#show', namespace => $namespace );
 
 	# -- JOBS: CURRENT USER (CURRENTLY LIMITED TO INVALIDATE CONTENT (PURGE) JOBS)
 	$r->get("/api/$version/user/current/jobs")->over( authenticated => 1, not_ldap => 1 )->to( 'Job#get_current_user_jobs', namespace => $namespace );
