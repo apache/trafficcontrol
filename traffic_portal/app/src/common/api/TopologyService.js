@@ -20,7 +20,7 @@
 var TopologyService = function($http, ENV, locationUtils, messageModel) {
 
 	this.getTopologies = function(queryParams) {
-		return $http.get(ENV.api['root'] + 'topologies', { params: queryParams }).then(
+		return $http.get(ENV.api['latest'] + 'topologies', { params: queryParams }).then(
 			function(result) {
 				return result.data.response;
 			},
@@ -31,7 +31,7 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 	};
 
 	this.createTopology = function(topology) {
-		return $http.post(ENV.api['root'] + 'topologies', topology).then(
+		return $http.post(ENV.api['latest'] + 'topologies', topology).then(
 			function(result) {
 				return result;
 			},
@@ -43,7 +43,7 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 	};
 
 	this.updateTopology = function(topology) {
-		return $http.put(ENV.api['root'] + 'topologies', topology, { params: { name: topology.name } }).then(
+		return $http.put(ENV.api['latest'] + 'topologies', topology, { params: { name: topology.name } }).then(
 			function(result) {
 				return result;
 			},
@@ -55,7 +55,7 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 	};
 
 	this.deleteTopology = function(topology) {
-		return $http.delete(ENV.api['root'] + "topologies", { params: { name: topology.name } }).then(
+		return $http.delete(ENV.api['latest'] + "topologies", { params: { name: topology.name } }).then(
 			function(result) {
 				return result;
 			},
