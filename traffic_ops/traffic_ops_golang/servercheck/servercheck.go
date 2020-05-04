@@ -149,9 +149,9 @@ func CreateUpdateServercheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	successMsg := "Server Check was successfully updated"
-	api.CreateChangeLogRawTx(api.ApiChange, successMsg, inf.User, inf.Tx.Tx)
-	api.WriteRespAlert(w, r, tc.SuccessLevel, successMsg)
+	// NOTE: this endpoint does not create an audit log entry in order to prevent
+	//       spamming the audit log with thousands of entries every minute
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Server Check was successfully updated")
 }
 
 func getServerID(id *int, hostname *string, tx *sql.Tx) (int, bool, error) {
