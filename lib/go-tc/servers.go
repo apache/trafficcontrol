@@ -316,15 +316,6 @@ type ServerQueueUpdate struct {
 	Action   string          `json:"action"`
 }
 
-// ServerInterface is the data associated with an interface
-type ServerInterface struct {
-	MaxBandwidth int64  `json:"max_bandwidth" db:"max_bandwidth"`
-	Monitor      bool   `json:"monitor" db:"monitor"`
-	Mtu          int64  `json:"mtu" db:"mtu"`
-	Name         string `json:"name" db:"name"`
-	Server       int    `json:"server" db:"server"`
-}
-
 // ServerIpAddress is the data associated with an IP address
 type ServerIpAddress struct {
 	Address        string `json:"address" db:"address"`

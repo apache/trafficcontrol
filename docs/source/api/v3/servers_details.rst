@@ -159,36 +159,37 @@ Response Structure
 				"type": "EDGE",
 				"xmppId": "edge",
 				"xmppPasswd": "",
-				"interfaces": [{
-					"ipAddresses": [
-						{
-							"address": "172.16.239.101",
-							"gateway": "",
-							"service_address": false
-						}
-					],
+				"interfaces": [
+					{ "ipAddresses": [
+							{
+								"address": "172.16.239.101",
+								"gateway": "",
+								"service_address": false
+							}
+						],
 						"max_bandwidth": 0,
 						"monitor": false,
 						"mtu": 9000,
 						"name": "mgmt"
 					},
 					{ "ipAddresses": [
-						{
-							"address": "172.16.239.100",
-							"gateway": "172.16.239.1",
-							"service_address": true
-						},
-						{
-							"address": "fc01:9400:1000:8::100",
-							"gateway": "fc01:9400:1000:8::1",
-							"service_address": true
-						}
-					],
-					"max_bandwidth": 0,
-					"monitor": true,
-					"mtu": 1500,
-					"name": "eth0"
-				}]
+							{
+								"address": "172.16.239.100",
+								"gateway": "172.16.239.1",
+								"service_address": true
+							},
+							{
+								"address": "fc01:9400:1000:8::100",
+								"gateway": "fc01:9400:1000:8::1",
+								"service_address": true
+							}
+						],
+						"max_bandwidth": 0,
+						"monitor": true,
+						"mtu": 1500,
+						"name": "eth0"
+					}
+				]
 			}
 		],
 		"size": 1

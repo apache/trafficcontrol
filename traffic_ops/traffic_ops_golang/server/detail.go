@@ -51,29 +51,24 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, &alt)
 		return
 	}
-
+	server := servers[0]
 	if inf.Version.Major < 3 {
-		v11ServerList := []tc.ServerDetailV11{}
-		for _, server := range servers {
-			v11server := tc.ServerDetailV11{}
-			v11server.ServerDetail = server.ServerDetail
+		v11server := tc.ServerDetailV11{}
+		v11server.ServerDetail = server.ServerDetail
 
-			interfaces := *server.ServerInterfaces
-			legacyInterface, err := tc.ConvertInterfaceInfotoV11(interfaces)
-			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
-				return
-			}
-			v11server.LegacyInterfaceDetails = legacyInterface
-
-			v11ServerList = append(v11ServerList, v11server)
+		interfaces := *server.ServerInterfaces
+		legacyInterface, err := tc.ConvertInterfaceInfotoV11(interfaces)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+			return
 		}
-		server := v11ServerList[0]
+		v11server.LegacyInterfaceDetails = legacyInterface
+
+		server := v11server
 		alerts := api.CreateDeprecationAlerts(&alt)
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 		return
 	}
-	server := servers[0]
 	alerts := api.CreateDeprecationAlerts(&alt)
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 }
