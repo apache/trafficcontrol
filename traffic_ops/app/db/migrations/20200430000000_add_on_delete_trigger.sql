@@ -1,16 +1,22 @@
+-- +goose Up
+-- +goose StatementBegin
 -- SQL in section 'Up' is executed when this migration is applied
-CREATE OR REPLACE FUNCTION on_delete_current_timestamp_last_updated() RETURNS trigger
-    LANGUAGE plpgsql
-    AS
-    $$
+--
+-- Name: on_delete_current_timestamp_last_updated(); Type: FUNCTION; Schema: public; Owner: traffic_ops
+--
+CREATE OR REPLACE FUNCTION on_delete_current_timestamp_last_updated()
+    RETURNS trigger
+    AS $$
 BEGIN
-  update last_deleted set last_updated = now() where tab_name = %(TD['args'][0]);
+  update last_deleted set last_updated = now() where tab_name = (TD['args'][0]);
   RETURN NEW;
 END;
-$$;
+$$
+LANGUAGE plpgsql;
+-- +goose StatementEnd
 
--- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
+ALTER FUNCTION public.on_delete_current_timestamp_last_updated() OWNER TO traffic_ops;
+
 CREATE TRIGGER on_delete_current_timestamp
 AFTER DELETE
 ON api_capability
