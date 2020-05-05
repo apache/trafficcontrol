@@ -19,6 +19,10 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
+import org.powermock.reflect.Whitebox;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -59,7 +63,7 @@ public class DeliveryServiceTest {
     public void itExtractsQueryParams() throws Exception {
         final JsonNode json = (new ObjectMapper()).readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\"]}");
         final HTTPRequest r = new HTTPRequest();
-		r.setPath("/path1234/some_stream_name1234/some_other_info.m3u8");
+        r.setPath("/path1234/some_stream_name1234/some_other_info.m3u8");
         r.setQueryString("test=value&foo=fizz&quest=oth%20ervalue&bar=buzz");
         assert (new DeliveryService("test", json)).extractSignificantQueryParams(r).equals("quest=oth ervaluetest=value");
     }
@@ -75,4 +79,12 @@ public class DeliveryServiceTest {
         assertThat(deliveryService.getRequestHeaders(), containsInAnyOrder("Cache-Control", "Cookie", "Content-Type", "If-Modified-Since"));
     }
 
+    @Test
+    public void itAddsRequiredCapabilities() throws Exception {
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode jsonConfiguration = mapper.readTree("{\"requiredCapabilities\":[\"all-read\",\"all-write\",\"cdn-read\"],\"routingName\":\"edge\",\"coverageZoneOnly\":false}");
+        final DeliveryService deliveryService = new DeliveryService("has-required-capabilities", jsonConfiguration);
+
+        assertThat(Whitebox.getInternalState(deliveryService, "requiredCapabilities"), containsInAnyOrder("all-read", "all-write", "cdn-read"));
+    }
 }

@@ -83,6 +83,7 @@ public class DeliveryService {
 	private final JsonNode props;
 	private boolean isDns;
 	private final String routingName;
+	private final Set<String> requiredCapabilities;
 	private final boolean shouldAppendQueryString;
 	private final Geolocation missLocation;
 	private final Dispersion dispersion;
@@ -132,6 +133,21 @@ public class DeliveryService {
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
 		this.ecsEnabled = JsonUtils.optBoolean(dsJo, "ecsEnabled");
+
+		this.requiredCapabilities = new HashSet<>();
+		if (dsJo.has("requiredCapabilities")) {
+			final JsonNode requiredCapabilitiesNode = dsJo.get("requiredCapabilities");
+			if (!requiredCapabilitiesNode.isArray()) {
+				LOGGER.error("Delivery Service '" + id + "' has malformed requiredCapabilities. Disregarding.");
+			} else {
+				requiredCapabilitiesNode.forEach((requiredCapabilityNode) -> {
+					final String requiredCapability = requiredCapabilityNode.asText();
+					if (!requiredCapability.isEmpty()) {
+						this.requiredCapabilities.add(requiredCapability);
+					}
+				});
+			}
+		}
 
 		this.consistentHashQueryParams = new HashSet<String>();
 		if (dsJo.has("consistentHashQueryParams")) {
@@ -589,6 +605,10 @@ public class DeliveryService {
 
 	public String getRoutingName() {
 		return routingName;
+	}
+
+	public boolean hasRequiredCapabilities(final Set<String> capabilities) {
+		return this.requiredCapabilities.containsAll(capabilities);
 	}
 
 	public Dispersion getDispersion() {
