@@ -21,8 +21,8 @@ set -ex
 docker-compose --version;
 STARTING_POINT="$PWD";
 cd infrastructure/cdn-in-a-box;
-make;
+make traffic_ops/traffic_ops.rpm traffic_stats/traffic_stats.rpm traffic_monitor/traffic_monitor.rpm traffic_router/tomcat.rpm traffic_router/traffic_router.rpm;
 cd "$STARTING_POINT"
-docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml up --build
+docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml -f infrastructure/cdn-in-a-box/docker-compose.readiness.yml up -d --build edge mid origin readiness trafficops trafficops-perl dns enroller trafficrouter trafficstats trafficvault trafficmonitor
 sleep 300
-docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml down -v
+docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml -f infrastructure/cdn-in-a-box/docker-compose.readiness.yml down -v
