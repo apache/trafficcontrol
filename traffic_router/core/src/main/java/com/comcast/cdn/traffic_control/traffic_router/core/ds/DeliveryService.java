@@ -83,6 +83,7 @@ public class DeliveryService {
 	private final JsonNode props;
 	private boolean isDns;
 	private final String routingName;
+	private String topology;
 	private final Set<String> requiredCapabilities;
 	private final boolean shouldAppendQueryString;
 	private final Geolocation missLocation;
@@ -134,6 +135,9 @@ public class DeliveryService {
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
 		this.ecsEnabled = JsonUtils.optBoolean(dsJo, "ecsEnabled");
 
+		if (dsJo.has("topology")) {
+			this.topology = JsonUtils.optString(dsJo, "topology");
+		}
 		this.requiredCapabilities = new HashSet<>();
 		if (dsJo.has("requiredCapabilities")) {
 			final JsonNode requiredCapabilitiesNode = dsJo.get("requiredCapabilities");
@@ -605,6 +609,10 @@ public class DeliveryService {
 
 	public String getRoutingName() {
 		return routingName;
+	}
+
+	public String getTopology() {
+		return topology;
 	}
 
 	public boolean hasRequiredCapabilities(final Set<String> capabilities) {
