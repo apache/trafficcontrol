@@ -105,22 +105,10 @@ const (
 	API_DELIVERY_SERVICE_SERVER = apiBase + "/deliveryserviceserver"
 )
 
-// GetDeliveryServices returns a slice of Delivery Services.
-// Deprecated: Use GetDeliveryServicesNullable instead.
-func (to *Session) GetDeliveryServices() ([]tc.DeliveryService, ReqInf, error) {
-	var data tc.DeliveryServicesResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICES, &data)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
 // GetDeliveryServicesByServer returns all of the (tenant-visible) Delivery Services assigned to
 // the server identified by the integral, unique identifier 'id'.
-func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, ReqInf, error) {
-	var data tc.DeliveryServicesResponse
+func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	var data tc.DeliveryServicesNullableResponse
 
 	reqInf, err := get(to, fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), &data)
 	if err != nil {
@@ -128,21 +116,6 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, Re
 	}
 
 	return data.Response, reqInf, nil
-}
-
-// GetDeliveryService returns the Delivery Service identified by the integral, unique identifier
-// 'id' (which must be passed as a string).
-// Deprecated: Use GetDeliveryServiceNullable instead.
-func (to *Session) GetDeliveryService(id string) (*tc.DeliveryService, ReqInf, error) {
-	var data tc.DeliveryServicesResponse
-	reqInf, err := get(to, API_DELIVERY_SERVICES+"?id="+id, &data)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	if len(data.Response) == 0 {
-		return nil, reqInf, nil
-	}
-	return &data.Response[0], reqInf, nil
 }
 
 // GetDeliveryServicesNullable returns a slice of Delivery Services.
@@ -197,63 +170,6 @@ func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.Deliver
 	}
 
 	return data.Response, reqInf, nil
-}
-
-// CreateDeliveryService creates the DeliveryService it's passed.
-// Deprecated: Use CreateDeliveryServiceNullable instead.
-func (to *Session) CreateDeliveryService(ds *tc.DeliveryService) (*tc.CreateDeliveryServiceResponse, error) {
-	if ds.TypeID == 0 && ds.Type.String() != "" {
-		ty, _, err := to.GetTypeByName(ds.Type.String())
-		if err != nil {
-			return nil, err
-		}
-		if len(ty) == 0 {
-			return nil, errors.New("no type named " + ds.Type.String())
-		}
-		ds.TypeID = ty[0].ID
-	}
-
-	if ds.CDNID == 0 && ds.CDNName != "" {
-		cdns, _, err := to.GetCDNByName(ds.CDNName)
-		if err != nil {
-			return nil, err
-		}
-		if len(cdns) == 0 {
-			return nil, errors.New("no CDN named " + ds.CDNName)
-		}
-		ds.CDNID = cdns[0].ID
-	}
-
-	if ds.ProfileID == 0 && ds.ProfileName != "" {
-		profiles, _, err := to.GetProfileByName(ds.ProfileName)
-		if err != nil {
-			return nil, err
-		}
-		if len(profiles) == 0 {
-			return nil, errors.New("no Profile named " + ds.ProfileName)
-		}
-		ds.ProfileID = profiles[0].ID
-	}
-
-	if ds.TenantID == 0 && ds.Tenant != "" {
-		ten, _, err := to.TenantByName(ds.Tenant)
-		if err != nil {
-			return nil, err
-		}
-		ds.TenantID = ten.ID
-	}
-
-	var data tc.CreateDeliveryServiceResponse
-	jsonReq, err := json.Marshal(ds)
-	if err != nil {
-		return nil, err
-	}
-	_, err = post(to, API_DELIVERY_SERVICES, jsonReq, &data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &data, nil
 }
 
 // CreateDeliveryServiceNullable creates the DeliveryService it's passed.
@@ -312,27 +228,10 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	return &data, nil
 }
 
-// UpdateDeliveryService updates the DeliveryService matching the ID it's passed with
-// the DeliveryService it is passed.
-// Deprecated: Use UpdateDeliveryServiceNullable instead.
-func (to *Session) UpdateDeliveryService(id string, ds *tc.DeliveryService) (*tc.UpdateDeliveryServiceResponse, error) {
-	var data tc.UpdateDeliveryServiceResponse
-	jsonReq, err := json.Marshal(ds)
-	if err != nil {
-		return nil, err
-	}
-	_, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), jsonReq, &data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &data, nil
-}
-
 // UpdateDeliveryServiceNullable updates the DeliveryService matching the ID it's
 // passed with the DeliveryService it is passed.
-func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable) (*tc.UpdateDeliveryServiceResponse, error) {
-	var data tc.UpdateDeliveryServiceResponse
+func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable) (*tc.UpdateDeliveryServiceNullableResponse, error) {
+	var data tc.UpdateDeliveryServiceNullableResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err
@@ -475,10 +374,10 @@ func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUp
 	return resp.Response, reqInf, err
 }
 
-// GetAccessibleDeliveryServicesByTenant gets all delivery services associated with the given tenant, and all of
-// it's children.
-func (to *Session) GetAccessibleDeliveryServicesByTenant(tenantId int) ([]tc.DeliveryService, ReqInf, error) {
-	data := tc.DeliveryServicesResponse{}
+// GetAccessibleDeliveryServicesByTenant gets all delivery services associated with the given tenant and all of
+// its children.
+func (to *Session) GetAccessibleDeliveryServicesByTenant(tenantId int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	data := tc.DeliveryServicesNullableResponse{}
 	reqInf, err := get(to, fmt.Sprintf("%v?accessibleTo=%v", API_DELIVERY_SERVICES, tenantId), &data)
 	return data.Response, reqInf, err
 }

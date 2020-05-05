@@ -432,14 +432,14 @@ func enrollRegion(toSession *session, r io.Reader) error {
 
 func enrollStatus(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.Status
+	var s tc.StatusNullable
 	err := dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Infof("error decoding Status: %s\n", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateStatus(s)
+	alerts, _, err := toSession.CreateStatusNullable(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("status %s already exists\n", s.Name)

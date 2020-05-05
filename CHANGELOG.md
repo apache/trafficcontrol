@@ -14,10 +14,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Removed audit logging from the `POST /api/x/serverchecks` Traffic Ops API endpoint in order to reduce audit log spam
 
 ### Changed
+- Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
 
 ### Deprecated
+- Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
 
 ### Removed
+- Removed deprecated Traffic Ops Go Client methods.
 
 ## [4.1.0] - 2020-04-23
 ### Added
