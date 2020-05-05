@@ -18,19 +18,11 @@ package com.comcast.cdn.traffic_control.traffic_router.core.config;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher;
@@ -76,6 +68,7 @@ public class ConfigHandler {
 	private static long lastSnapshotTimestamp = 0;
 	private static Object configSync = new Object();
 	public static String deliveryServicesKey = "deliveryServices";
+	public static String topologiesKey = "topologies";
 
 	private TrafficRouterManager trafficRouterManager;
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
@@ -227,6 +220,9 @@ public class ConfigHandler {
 
 				parseEdgeTrafficRouterLocations(jo, cacheRegister);
 				parseCacheConfig(JsonUtils.getJsonNode(jo, "contentServers"), cacheRegister);
+				if (jo.has(topologiesKey)) {
+					parseTopologyConfig(JsonUtils.getJsonNode(jo, topologiesKey), deliveryServiceMap, cacheRegister);
+				}
 				parseMonitorConfig(JsonUtils.getJsonNode(jo, "monitors"));
 
 				federationsWatcher.configure(config);
@@ -300,7 +296,7 @@ public class ConfigHandler {
 	public void setAnonymousIpConfigUpdater(final AnonymousIpConfigUpdater anonymousIpConfigUpdater) {
 		this.anonymousIpConfigUpdater = anonymousIpConfigUpdater;
 	}
-	
+
 	public void setAnonymousIpDatabaseUpdater(final AnonymousIpDatabaseUpdater anonymousIpDatabaseUpdater) {
 		this.anonymousIpDatabaseUpdater = anonymousIpDatabaseUpdater;
 	}
@@ -475,6 +471,31 @@ public class ConfigHandler {
 		return deliveryServiceMap;
 	}
 
+	private void parseTopologyConfig(final JsonNode allTopologies, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) {
+		final Map<String, List<String>> topologyMap = new HashMap<>();
+		allTopologies.fieldNames().forEachRemaining((String topologyName) -> {
+			final List<String> nodes = new ArrayList<>();
+			allTopologies.get(topologyName).get("nodes").forEach((JsonNode cache) -> nodes.add(cache.textValue()));
+			topologyMap.put(topologyName, nodes);
+		});
+
+		deliveryServiceMap.forEach((xmlId, ds) -> {
+			final List<DeliveryServiceReference> dsReferences = new ArrayList<>();
+			try {
+				dsReferences.add(new DeliveryServiceReference(ds.getId(), ds.getDomain()));
+			} catch (ParseException e) {
+				LOGGER.error("Unable to create a DeliveryServiceReference from DeliveryService '" + ds.getId() + "'", e);
+				return;
+			}
+			Stream.of(ds.getTopology())
+					.filter((topologyName) -> !Objects.isNull(topologyName) && topologyMap.containsKey(topologyName))
+					.flatMap((topologyName) -> topologyMap.get(topologyName).stream())
+					.flatMap((node) -> cacheRegister.getCacheLocation(node).getCaches().stream())
+					.filter((cache) -> ds.hasRequiredCapabilities(cache.getCapabilities()))
+					.forEach((cache) -> cache.setDeliveryServices(dsReferences));
+		});
+	}
+
 	private void parseDeliveryServiceMatchSets(final JsonNode allDeliveryServices, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) throws JsonUtilsException {
 		final TreeSet<DeliveryServiceMatcher> deliveryServiceMatchers = new TreeSet<>();
 		final JsonNode config = cacheRegister.getConfig();
@@ -557,7 +578,7 @@ public class ConfigHandler {
 	/**
 	 * Parses the geolocation database configuration and updates the database if the URL has
 	 * changed.
-	 * 
+	 *
 	 * @param config
 	 *            the {@link TrafficRouterConfiguration}
 	 * @throws JsonUtilsException
@@ -609,7 +630,7 @@ public class ConfigHandler {
 			AnonymousIp.getCurrentConfig().enabled = false;
 			return;
 		}
-		
+
 		if (databaseUrl == null) {
 			LOGGER.info(anonymousPollingUrl + " not configured; stopping service updater and disabling feature");
 			getAnonymousIpDatabaseUpdater().stopServiceUpdater();

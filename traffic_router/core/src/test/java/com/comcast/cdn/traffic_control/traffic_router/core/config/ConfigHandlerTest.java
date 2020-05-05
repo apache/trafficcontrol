@@ -15,12 +15,11 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
@@ -246,6 +245,48 @@ public class ConfigHandlerTest {
         Whitebox.invokeMethod(handler, "initGeoFailedRedirect", dsMap, register);
         assertThat(urlType[0], equalTo("DS_URL"));
         assertThat(typeUrl[0], equalTo(path));
+    }
+
+    @Test
+    public void itParsesTheTopologiesConfig() throws Exception {
+        /* Make the CacheLocation, add a Cache, and add the CacheLocation to the CacheRegister */
+        final String cacheId = "edge";
+        final Cache cache = new Cache(cacheId, cacheId, 0);
+        final String location = "CDN_in_a_Box_Edge";
+        final CacheLocation cacheLocation = new CacheLocation(location, new Geolocation(38.897663, 38.897663));
+        cacheLocation.addCache(cache);
+        final Set<CacheLocation> locations = new HashSet<>();
+        locations.add(cacheLocation);
+        final CacheRegister register = new CacheRegister();
+        register.setConfiguredLocations(locations);
+
+        /* Add a capability to the Cache */
+        final String capability = "a-capability";
+        final Set<String> capabilities = new HashSet<>();
+        capabilities.add(capability);
+        cache.addCapabilities(capabilities);
+
+        /* Mock a DeliveryService and add it to our DeliveryService Map */
+        final String dsId = "top-ds";
+        final String domain = "ds.cdn.com";
+        final String topology = "foo";
+        final DeliveryService ds = mock(DeliveryService.class);
+        when(ds.getId()).thenReturn(dsId);
+        when(ds.getDomain()).thenReturn(domain);
+        when(ds.getTopology()).thenReturn(topology);
+        when(ds.hasRequiredCapabilities(capabilities)).thenReturn(true);
+        final Map<String, DeliveryService> dsMap = new HashMap<>();
+        dsMap.put(dsId, ds);
+
+        /* Parse the Topologies config JSON */
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode allTopologiesJson = mapper.readTree("{\"" + topology + "\":{\"nodes\":[\"" + location + "\"]}}");
+        Whitebox.invokeMethod(handler, "parseTopologyConfig", allTopologiesJson, dsMap, register);
+
+        /* Assert that the DeliveryService was assigned to the Cache */
+        Collection<Cache.DeliveryServiceReference> dsReferences = cache.getDeliveryServices();
+        assertThat(dsReferences.size(), equalTo(1));
+        assertThat(dsReferences.iterator().next().getDeliveryServiceId(), equalTo(dsId));
     }
 
     @Test
