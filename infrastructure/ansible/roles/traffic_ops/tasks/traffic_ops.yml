@@ -28,7 +28,7 @@
     content: PATH=$PATH:/usr/pgsql-9.6/bin
 
 - name: Get the state of of the GOPATH before TO Install
-  shell: find /opt/traffic_ops/go/ > /tmp/gopath.preinstall.txt
+  shell: find /opt/traffic_ops/go/ 2>&1 > /tmp/gopath.preinstall.$(date +%s%N).txt
   ignore_errors: true
 
 - name: Install Traffic Ops
@@ -42,7 +42,7 @@
   delay: 5
 
 - name: Get the state of of the GOPATH after TO Install
-  shell: find /opt/traffic_ops/go/ > /tmp/gopath.prepostinstall.txt
+  shell: find /opt/traffic_ops/go/ 2>&1 > /tmp/gopath.prepostinstall.$(date +%s%N).txt
   ignore_errors: true
 
 - name: Check if Postinstall has already been run
@@ -63,8 +63,29 @@
         to_pi_openssl_generate_certificate: "no"
       no_log: true
 
+    - name: Inject some debugging of postinstall before goose
+      lineinfile:
+        path: "{{ to_install_bin_installdir }}/postinstall"
+        insertbefore: '\/opt\/traffic_ops\/install\/bin\/install_goose\.sh'
+        regex: '.*pregooseinstall.*'
+        line: find /opt/traffic_ops/go/ 2>&1 > /tmp/gopath.pregooseinstall.$(date +%s%N).txt
+
+    - name: Inject some debugging of postinstall after goose
+      lineinfile:
+        path: "{{ to_install_bin_installdir }}/postinstall"
+        insertafter: '\/opt\/traffic_ops\/install\/bin\/install_goose\.sh'
+        regex: '.*postgooseinstall.*'
+        line: find /opt/traffic_ops/go/ 2>&1 > /tmp/gopath.postgooseinstall.$(date +%s%N).txt
+
+    - name: Inject some debugging into the goose installer script
+      lineinfile:
+        path: "{{ to_install_bin_installdir }}/install_goose.sh"
+        insertbefore: 'echo "Now installing goose"'
+        regex: 'set -ex'
+        line: set -ex
+
     - name: Run Traffic Ops Postinstall
-      shell: "(env | sort > /tmp/postinstall.debugenv.txt) && {{ to_install_bin_installdir }}/postinstall -a -cfile {{ to_install_bin_installdir }}/configuration_file.json 2>&1 | tee /tmp/postinstall.debug.txt"
+      shell: "(env | sort 2>&1 > /tmp/postinstall.debugenv.$(date +%s%N).txt) && {{ to_install_bin_installdir }}/postinstall -a -cfile {{ to_install_bin_installdir }}/configuration_file.json 2>&1 | tee /tmp/postinstall.debug.txt"
       notify: Restart Traffic Ops
       environment:
         GOPATH: /opt/traffic_ops/go
@@ -79,7 +100,7 @@
         (Postinstall_output.stdout.find("Database migrate failed") != -1)
 
     - name: Get the state of of the GOPATH after Postinstall
-      shell: find /opt/traffic_ops/go/ > /tmp/gopath.postpostinstall.txt
+      shell: find /opt/traffic_ops/go/ 2>&1 > /tmp/gopath.postpostinstall.$(date +%s%N).txt
       ignore_errors: true
 
     - name: Mark Postinstall was successful
@@ -128,7 +149,7 @@
   notify: Restart Traffic Ops
 
 - name: Upgrade TODB
-  shell: (env | sort > /tmp/goose.debug.txt) && ((which goose > /tmp/whichgoose.debug.txt) || true) && ./db/admin -env=production upgrade
+  shell: (env | sort 2>&1 > /tmp/goose.debug.$(date +%s%N).txt) && ((which goose 2>&1 > /tmp/whichgoose.debug.$(date +%s%N).txt) || true) && ./db/admin -env=production upgrade
   args:
     chdir: "{{ to_app_installdir }}"
   environment:
