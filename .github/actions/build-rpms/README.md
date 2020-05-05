@@ -17,9 +17,9 @@
     under the License.
 -->
 
-# run-pkg Docker action
+# build-rpms Docker action
 
-This action runs the `pkg` script.
+This action runs the builds RPMs for the various Traffic Control components.
 
 ## Inputs
 None
@@ -27,9 +27,9 @@ None
 ## Outputs
 ### `exit-code`
 
-Exit code of the `pkg` command
+0 on success, non-zero otherwise
 
 ## Example usage
 ```yaml
-uses: actions/run-pkg@v1
+uses: actions/build-rpms@v1
 ```

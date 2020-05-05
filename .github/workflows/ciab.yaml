@@ -27,6 +27,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
     - name: Build RPMs
-      uses: ./.github/actions/run-pkg
+      uses: ./.github/actions/build-rpms
     - name: Start CDN-in-a-Box
       uses: ./.github/actions/run-ciab
