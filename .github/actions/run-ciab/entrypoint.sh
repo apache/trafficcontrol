@@ -22,7 +22,17 @@ docker-compose --version;
 STARTING_POINT="$PWD";
 cd infrastructure/cdn-in-a-box;
 make traffic_ops/traffic_ops.rpm traffic_stats/traffic_stats.rpm traffic_monitor/traffic_monitor.rpm traffic_router/tomcat.rpm traffic_router/traffic_router.rpm;
-cd "$STARTING_POINT"
-docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml -f infrastructure/cdn-in-a-box/docker-compose.readiness.yml up -d --build edge mid origin readiness trafficops trafficops-perl dns enroller trafficrouter trafficstats trafficvault trafficmonitor
-sleep 300
-docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml -f infrastructure/cdn-in-a-box/docker-compose.readiness.yml down -v
+
+time docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml -f ./docker-compose.traffic-ops-test.yml build integration edge mid origin readiness trafficops trafficops-perl dns enroller trafficrouter trafficstats trafficvault trafficmonitor;
+time docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml up -d edge mid origin readiness trafficops trafficops-perl dns enroller trafficrouter trafficstats trafficvault trafficmonitor;
+
+ret=$(timeout 10m docker wait cdn-in-a-box_readiness_1)
+if [[ "$ret" -ne 0 ]]; then
+	echo "CDN in a Box didn't become ready for 10 minutes - exiting" >&2;
+	docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml down -v --remove-orphans;
+	exit "$ret";
+fi
+
+docker-compose -f ./docker-compose.traffic-ops-test.yml up;
+ls junit || echo "JUnit dir not found";
+docker-compose -f ./docker-compose.yml -f ./docker-compose.readiness.yml -f ./docker-compose.traffic-ops-test.yml down -v --remove-orphans;
