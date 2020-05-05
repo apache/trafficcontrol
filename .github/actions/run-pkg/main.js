@@ -33,7 +33,10 @@ const dockerArgs = [
 
 const spawnArgs = {stdio: "inherit"};
 
+const timers = new Map();
+
 for (const component of components) {
+	const then = new Date();
 	const proc = child_process.spawnSync(
 		"docker",
 		dockerArgs.concat([
@@ -43,11 +46,21 @@ for (const component of components) {
 		]),
 		spawnArgs
 	);
+	const diff = new Date() - then;
+
+	console.log(`Finished build for ${component} in ${diff}ms total`);
 
 	if (proc.status !== 0) {
 		console.error(`Build for ${component} failed; exiting.`);
 		process.exit(proc.status);
 	}
+
+	timers.set(component, diff);
+}
+
+console.log(`Finished building RPMS`)
+for (const [component, time] of timers) {
+	console.log(`Built ${component} in ${time}ms`);
 }
 
 process.exit(0);
