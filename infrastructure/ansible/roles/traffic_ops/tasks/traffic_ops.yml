@@ -68,14 +68,14 @@
         path: "{{ to_install_bin_installdir }}/postinstall"
         insertbefore: '\/opt\/traffic_ops\/install\/bin\/install_goose\.sh'
         regex: '.*pregooseinstall.*'
-        line: find /opt/traffic_ops/go/ 2>&1 > /tmp/gopath.pregooseinstall.$(date +%s%N).txt
+        line: find /opt/traffic_ops/go/ 2>&1 > /tmp/gopath.pregooseinstall.$(date +%s%N).txt || true
 
     - name: Inject some debugging of postinstall after goose
       lineinfile:
         path: "{{ to_install_bin_installdir }}/postinstall"
         insertafter: '\/opt\/traffic_ops\/install\/bin\/install_goose\.sh'
         regex: '.*postgooseinstall.*'
-        line: find /opt/traffic_ops/go/ 2>&1 > /tmp/gopath.postgooseinstall.$(date +%s%N).txt
+        line: find /opt/traffic_ops/go/ 2>&1 > /tmp/gopath.postgooseinstall.$(date +%s%N).txt || true
 
     - name: Inject some debugging into the goose installer script
       lineinfile:
