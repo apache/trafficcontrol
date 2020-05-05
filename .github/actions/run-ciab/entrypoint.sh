@@ -18,10 +18,11 @@
 
 set -ex
 
-docker-compose --version
-pushd infrastructure/cdn-in-a-box
-make
-popd
+docker-compose --version;
+STARTING_POINT="$PWD";
+cd infrastructure/cdn-in-a-box;
+make;
+cd "$STARTING_POINT"
 docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml up --build
 sleep 300
 docker-compose -f infrastructure/cdn-in-a-box/docker-compose.yml down -v
