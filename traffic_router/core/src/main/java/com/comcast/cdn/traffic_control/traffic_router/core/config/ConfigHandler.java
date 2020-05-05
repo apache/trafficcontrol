@@ -357,6 +357,22 @@ public class ConfigHandler {
 				cache.setFqdn(JsonUtils.getString(jo, "fqdn"));
 				cache.setPort(JsonUtils.getInt(jo, "port"));
 
+				if (jo.has("capabilities")) {
+					final Set<String> capabilities = new HashSet<>();
+					final JsonNode capabilitiesNode = jo.get("capabilities");
+					if (!capabilitiesNode.isArray()) {
+						LOGGER.error("Server '" + hashId + "' has malformed capabilities. Disregarding.");
+					} else {
+						capabilitiesNode.forEach((capabilityNode) -> {
+							final String capability = capabilityNode.asText();
+							if (!capability.isEmpty()) {
+								capabilities.add(capability);
+							}
+						});
+					}
+					cache.addCapabilities(capabilities);
+				}
+
 				final String ip = JsonUtils.getString(jo, "ip");
 				final String ip6 = JsonUtils.optString(jo, "ip6");
 

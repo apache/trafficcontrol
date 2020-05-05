@@ -19,7 +19,12 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,6 +46,10 @@ public class Node extends DefaultHashable {
 	private List<InetRecord> ipAddresses;
 	private List<InetRecord> unavailableIpAddresses;
 	private int port;
+	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
+	private final Set<String> capabilities = new HashSet<>();
+	private final Geolocation geolocation;
+	private final Hashable hashable = new DefaultHashable();
 	private int httpsPort = 443;
 
 	public Node(final String id) {
@@ -117,6 +126,24 @@ public class Node extends DefaultHashable {
 		return new HashCodeBuilder(1, 31)
 		.append(getId())
 		.toHashCode();
+	}
+
+	public void addCapabilities(final Set<String> capabilities) {
+		this.capabilities.addAll(capabilities);
+	}
+
+	public Set<String> getCapabilities() {
+		return this.capabilities;
+	}
+
+	public void setDeliveryServices(final Collection<DeliveryServiceReference> deliveryServices) {
+		for (final DeliveryServiceReference deliveryServiceReference : deliveryServices) {
+			this.deliveryServices.put(deliveryServiceReference.getDeliveryServiceId(), deliveryServiceReference);
+		}
+	}
+
+	public boolean hasDeliveryService(final String deliveryServiceId) {
+		return deliveryServices.containsKey(deliveryServiceId);
 	}
 
 	public void setFqdn(final String fqdn) {
