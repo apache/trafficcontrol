@@ -1,7 +1,7 @@
 const child_process = require("child_process");
 
 const GOPATH = "/go";
-const srcDir = `${GOPATH}/src/github.com/apache/trafficcontrol`,
+const srcDir = `${GOPATH}/src/github.com/apache/trafficcontrol`;
 const components = [
 	"traffic_monitor",
 	"traffic_ops",
