@@ -85,7 +85,7 @@
         line: set -ex
 
     - name: Run Traffic Ops Postinstall
-      shell: "(env | sort 2>&1 > /tmp/postinstall.debugenv.$(date +%s%N).txt) && {{ to_install_bin_installdir }}/postinstall -a -cfile {{ to_install_bin_installdir }}/configuration_file.json 2>&1 | tee /tmp/postinstall.debug.txt"
+      shell: "(env | sort 2>&1 > /tmp/postinstall.debugenv.$(date +%s%N).txt) && {{ to_install_bin_installdir }}/postinstall -a -cfile {{ to_install_bin_installdir }}/configuration_file.json 2>&1 | tee /tmp/postinstall.debug.$(date +%s%N).txt"
       notify: Restart Traffic Ops
       environment:
         GOPATH: /opt/traffic_ops/go
