@@ -32,6 +32,8 @@ gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub \n\
 
 RUN yum update -y
 RUN yum install -y java-1.8.0-openjdk git google-chrome-stable bind-utils net-tools
+
+RUN curl -LO https://nodejs.org/dist/v12.16.3/node-v12.16.3-linux-x64.tar.xz
 # Use bsdtar, because regular tar doesn't work with Docker
 RUN yum install -y bsdtar
 RUN bsdtar --strip-components 1 -xzvf node-v* -C /usr/local

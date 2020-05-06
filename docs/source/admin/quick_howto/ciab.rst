@@ -107,7 +107,7 @@ In order to check the "readiness" of your CDN, you can optionally start the Read
 Integration Tests
 """""""""""""""""
 
-There also exists TP and TO integration tests containers. Both of these containers assume that CDN in a Box is already running on the local system.
+There also exist TP and TO integration tests containers. Both of these containers assume that CDN in a Box is already running on the local system.
 
 .. code-block:: shell
 	:caption: Running TP Integration Tests
