@@ -61,7 +61,7 @@ Response Structure
 :iloUsername:    The user name for lights-out-management\ [#ilowikipedia]_
 :interfaces:     An array of interface and IP address information
 
-	:max_bandwidth:  The maximum allowed bandwidth for this interface to be considered "healthy" by Traffic Monitor. This has no effect if `monitor` is not true. Values are in kb/s. The value `0` means "no limit".
+	:max_bandwidth:  The maximum allowed bandwidth for this interface to be considered "healthy" by Traffic Monitor. This has no effect if `monitor` is not true. Values are in kb/s. The value `null` means "no limit".
 	:monitor:        A boolean indicating if Traffic Monitor should monitor this interface
 	:mtu:            The :abbr:`MTU (Maximum Transmission Unit)` to configure for ``interfaceName``
 

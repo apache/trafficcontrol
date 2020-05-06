@@ -528,7 +528,7 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.
 		v11ServerList := []tc.DSServerV11{}
 		for _, srv := range servers {
 			v11server := tc.DSServerV11{}
-			v11server.DSServer = srv.DSServer
+			v11server.DSServerBase = srv.DSServerBase
 
 			interfaces := *srv.ServerInterfaces
 			legacyInterface, err := tc.ConvertInterfaceInfotoV11(interfaces)
@@ -547,7 +547,7 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, servers)
 }
 
-func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServerV30, error) {
+func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServer, error) {
 	where := `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
 	if unassigned {
 		where = `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
@@ -561,9 +561,9 @@ func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.
 	defer rows.Close()
 
 	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
-	servers := []tc.DSServerV30{}
+	servers := []tc.DSServer{}
 	for rows.Next() {
-		s := tc.DSServerV30{}
+		s := tc.DSServer{}
 		err := rows.Scan(
 			&s.Cachegroup,
 			&s.CachegroupID,

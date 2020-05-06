@@ -484,9 +484,9 @@ type ServerDetail struct {
 	XMPPPasswd         *string           `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-// LegacyInterfaceDetails is the details for interfaces on servers for API v1 and v2
+// LegacyInterfaceDetails is the details for interfaces on servers for API v1 and v2.
 type LegacyInterfaceDetails struct {
-	InterfaceMTU  *int    `json:"interfaceMtu" db:"interface_mtu"`
+	InterfaceMTU  *uint   `json:"interfaceMtu" db:"interface_mtu"`
 	InterfaceName *string `json:"interfaceName" db:"interface_name"`
 	IP6Address    *string `json:"ip6Address" db:"ip6_address"`
 	IP6Gateway    *string `json:"ip6Gateway" db:"ip6_gateway"`
@@ -518,16 +518,7 @@ type ServerQueueUpdate struct {
 	Action   string          `json:"action"`
 }
 
-// ServerInterface is the data associated with an interface
-type ServerInterface struct {
-	MaxBandwidth int64  `json:"max_bandwidth" db:"max_bandwidth"`
-	Monitor      bool   `json:"monitor" db:"monitor"`
-	Mtu          int64  `json:"mtu" db:"mtu"`
-	Name         string `json:"name" db:"name"`
-	Server       int    `json:"server" db:"server"`
-}
-
-// ServerIpAddress is the data associated with an IP address
+// ServerIpAddress is the data associated with an IP address.
 type ServerIpAddress struct {
 	Address        string `json:"address" db:"address"`
 	Gateway        string `json:"gateway" db:"gateway"`
@@ -536,24 +527,24 @@ type ServerIpAddress struct {
 	ServiceAddress bool   `json:"service_address" db:"service_address"`
 }
 
-// ServerInterfaceInfo is the combined data from both IP address information and interface information
+// ServerInterfaceInfo is the combined data from both IP address information and interface information.
 type ServerInterfaceInfo struct {
 	IpAddresses  []ServerIpAddress `json:"ipAddresses" db:"ipAddresses"`
 	MaxBandwidth int64             `json:"max_bandwidth" db:"max_bandwidth"`
 	Monitor      bool              `json:"monitor" db:"monitor"`
-	Mtu          int               `json:"mtu" db:"mtu"`
+	Mtu          uint              `json:"mtu" db:"mtu"`
 	Name         string            `json:"name" db:"name"`
 }
 
-// Value implements the driver.Valuer interface
-// marshals struct to json to pass back as a json.RawMessage
+// Value implements the driver.Valuer interface and
+// marshals the struct to json to pass back as a json.RawMessage.
 func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
 	b, err := json.Marshal(sii)
 	return b, err
 }
 
-// Scan implements the sql.Scanner interface
-// expects json.RawMessage and unmarshals to a deliveryservice struct
+// Scan implements the sql.Scanner interface.
+// Scan expects a json.RawMessage and unmarshals it to a ServerInterfaceInfo struct.
 func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
@@ -563,7 +554,7 @@ func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
 	return json.Unmarshal([]byte(b), sii)
 }
 
-// ConvertInterfaceInfotoV11 converts ServerInterfaceInfo to LegacyInterfaceDetails for v1 and v2 compatibility
+// ConvertInterfaceInfotoV11 converts ServerInterfaceInfo to LegacyInterfaceDetails for v1 and v2 compatibility.
 func ConvertInterfaceInfotoV11(serverInterfaces []ServerInterfaceInfo) (LegacyInterfaceDetails, error) {
 	legacyDetails := LegacyInterfaceDetails{}
 	for _, intFace := range serverInterfaces {

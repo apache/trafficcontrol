@@ -67,7 +67,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		v11ServerList := []tc.DSServerV11{}
 		for _, srv := range servers {
 			v11server := tc.DSServerV11{}
-			v11server.DSServer = srv.DSServer
+			v11server.DSServerBase = srv.DSServerBase
 
 			interfaces := *srv.ServerInterfaces
 			legacyInterface, err := tc.ConvertInterfaceInfotoV11(interfaces)
@@ -87,7 +87,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 
 const JumboFrameBPS = 9000
 
-func getEligibleServers(tx *sql.Tx, dsID int) ([]tc.DSServerV30, error) {
+func getEligibleServers(tx *sql.Tx, dsID int) ([]tc.DSServer, error) {
 	q := `
 WITH ds_id as (SELECT $1::bigint as v)
 SELECT
@@ -160,9 +160,9 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 	defer rows.Close()
 
 	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
-	servers := []tc.DSServerV30{}
+	servers := []tc.DSServer{}
 	for rows.Next() {
-		s := tc.DSServerV30{}
+		s := tc.DSServer{}
 		err := rows.Scan(
 			&s.Cachegroup,
 			&s.CachegroupID,

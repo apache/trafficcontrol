@@ -63,7 +63,8 @@ const (
 	Eligible
 )
 
-type DSServer struct {
+// DSServerBase contains the base information for a Delivery Service Server.
+type DSServerBase struct {
 	Cachegroup                  *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID                *int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID                       *int                 `json:"cdnId" db:"cdn_id"`
@@ -101,12 +102,14 @@ type DSServer struct {
 	DeliveryServiceCapabilities []string             `json:"-" db:"deliveryservice_capabilities"`
 }
 
+// DSServerV11 contains the legacy format for a Delivery Service Server.
 type DSServerV11 struct {
-	DSServer
+	DSServerBase
 	LegacyInterfaceDetails
 }
 
-type DSServerV30 struct {
-	DSServer
+// DSServer contains information for a Delivery Service Server.
+type DSServer struct {
+	DSServerBase
 	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
 }
