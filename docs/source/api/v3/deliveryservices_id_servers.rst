@@ -66,8 +66,8 @@ Response Structure
 
 	:ipAddresses:    An array of the IP address information for the interface
 
-		:ip6Address:       The IPv4 or IPv6 address and subnet mask of the server - applicable for the interface ``name``
-		:ip6Gateway:       The IPv4 or IPv6 gateway address of the server - applicable for the interface ``name``
+		:address:       The IPv4 or IPv6 address and subnet mask of the server - applicable for the interface ``name``
+		:gateway:       The IPv4 or IPv6 gateway address of the server - applicable for the interface ``name``
 		:service_address:  A boolean determining if content will be routed to the IP address
 
 :lastUpdated:    The time and date at which this server was last updated, in an ISO-like format
