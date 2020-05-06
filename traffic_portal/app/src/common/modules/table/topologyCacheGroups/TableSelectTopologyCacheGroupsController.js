@@ -22,22 +22,19 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	let selectedCacheGroups = [],
 		usedCacheGroupCount = 0;
 
-	let addAll = function() {
-		markVisibleCacheGroups(true);
-	};
-
-	let removeAll = function() {
-		markVisibleCacheGroups(false);
-	};
-
 	let markVisibleCacheGroups = function(selected) {
 		let visibleCacheGroupIds = $('#availableCacheGroupsTable tr.cg-row').map(
 			function() {
 				return parseInt($(this).attr('id'));
 			}).get();
 		$scope.cacheGroups = cacheGroups.map(function(cg) {
-			if (visibleCacheGroupIds.includes(cg.id)) {
-				cg['selected'] = selected;
+			if (cg['used'] === true) {
+				return cg;
+			}
+			if (selected && visibleCacheGroupIds.includes(cg.id)) {
+				cg['selected'] = true;
+			} else {
+				cg['selected'] = false;
 			}
 			return cg;
 		});
@@ -57,7 +54,12 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	let updateSelectedCount = function() {
-		selectedCacheGroups = $scope.cacheGroups.filter(function(cg) { return cg['selected'] == true && !cg['used'] } );
+		let visibleCacheGroupIds = $('#availableCacheGroupsTable tr.cg-row').map(
+			function() {
+				return parseInt($(this).attr('id'));
+			}).get();
+
+		selectedCacheGroups = $scope.cacheGroups.filter(function(cg) { return visibleCacheGroupIds.includes(cg.id) && cg['selected'] === true && !cg['used'] } );
 		$('div.selected-count').html('<strong><span class="text-success">' + selectedCacheGroups.length + ' selected</span><span> | ' + usedCacheGroupCount + ' already used in topology</span></strong>');
 	};
 
@@ -73,9 +75,9 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	$scope.selectAll = function($event) {
 		const checkbox = $event.target;
 		if (checkbox.checked) {
-			addAll();
+			markVisibleCacheGroups(true);
 		} else {
-			removeAll();
+			markVisibleCacheGroups(false);
 		}
 	};
 
@@ -170,11 +172,16 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	angular.element(document).ready(function () {
-		let availableCacheGroupsTable = $('#availableCacheGroupsTable').DataTable({
+		decorateCacheGroups();
+
+		$('#availableCacheGroupsTable').DataTable({
 			"scrollY": "60vh",
 			"paging": false,
 			"order": [[ 1, 'asc' ]],
 			"dom": '<"selected-count">frtip',
+			"drawCallback": function() {
+				updateSelectedCount();
+			},
 			"columnDefs": [
 				{ 'orderable': false, 'targets': [0,5] },
 				{ "width": "5%", "targets": [ 0 ] },
@@ -183,11 +190,6 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 			],
 			"stateSave": false
 		});
-		availableCacheGroupsTable.on( 'search.dt', function () {
-			$("#selectAllCB").removeAttr("checked"); // uncheck the all box when filtering
-		} );
-		decorateCacheGroups();
-		updateSelectedCount();
 	});
 
 };
