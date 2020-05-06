@@ -60,4 +60,6 @@ local.tar.gz
 *.iml
 # built local binaries
 ./traffic_ops_golang
+# Created by TP/TO docker integration tests
+junit/
 
