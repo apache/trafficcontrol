@@ -135,7 +135,7 @@ func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
 		return nil, fmt.Errorf("error getting deliveryservices: %v", err)
 	}
 
-	config, err := getConfig(tx)
+	config, err := getConfig(tx, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting config: %v", err)
 	}
@@ -375,15 +375,17 @@ AND ds.active = true
 	return dses, nil
 }
 
-func getConfig(tx *sql.Tx) (map[string]interface{}, error) {
+func getConfig(tx *sql.Tx, cdnName string) (map[string]interface{}, error) {
 	// TODO remove 'like' in query? Slow?
 	query := fmt.Sprintf(`
 SELECT pr.name, pr.value
 FROM parameter pr
 JOIN profile p ON p.name LIKE '%s%%'
 JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
+JOIN cdn c ON c.id=p.cdn
 WHERE pr.config_file = '%s'
-`, tc.MonitorProfilePrefix, MonitorConfigFile)
+AND c.name='%s'
+`, tc.MonitorProfilePrefix, MonitorConfigFile, cdnName)
 
 	rows, err := tx.Query(query)
 	if err != nil {
