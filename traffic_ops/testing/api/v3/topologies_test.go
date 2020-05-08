@@ -42,30 +42,30 @@ func CreateTestTopologies(t *testing.T) {
 
 func ValidationTestTopologies(t *testing.T) {
 	invalidTopologies := []tc.Topology{
-		{Name: "empty-top", Description: "Invalid because there are no nodes", Nodes: &[]*tc.TopologyNode{}},
-		{Name: "self-parent", Description: "Invalid because a node lists itself as a parent", Nodes: &[]*tc.TopologyNode{
+		{Name: "empty-top", Description: "Invalid because there are no nodes", Nodes: []tc.TopologyNode{}},
+		{Name: "self-parent", Description: "Invalid because a node lists itself as a parent", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1}},
 			{Cachegroup: "parentCachegroup", Parents: []int{1}},
 		}},
-		{Name: "duplicate-parents", Description: "Invalid because a node lists the same parent twice", Nodes: &[]*tc.TopologyNode{
+		{Name: "duplicate-parents", Description: "Invalid because a node lists the same parent twice", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1, 1}},
 			{Cachegroup: "parentCachegroup", Parents: []int{}},
 		}},
-		{Name: "too-many-parents", Description: "Invalid because a node has more than 2 parents", Nodes: &[]*tc.TopologyNode{
+		{Name: "too-many-parents", Description: "Invalid because a node has more than 2 parents", Nodes: []tc.TopologyNode{
 			{Cachegroup: "parentCachegroup", Parents: []int{}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{}},
 			{Cachegroup: "parentCachegroup2", Parents: []int{}},
 			{Cachegroup: "cachegroup1", Parents: []int{0, 1, 2}},
 		}},
-		{Name: "parent-edge", Description: "Invalid because an edge is a parent", Nodes: &[]*tc.TopologyNode{
+		{Name: "parent-edge", Description: "Invalid because an edge is a parent", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1}},
 			{Cachegroup: "cachegroup2", Parents: []int{}},
 		}},
-		{Name: "leaf-mid", Description: "Invalid because a mid is a leaf node", Nodes: &[]*tc.TopologyNode{
+		{Name: "leaf-mid", Description: "Invalid because a mid is a leaf node", Nodes: []tc.TopologyNode{
 			{Cachegroup: "parentCachegroup", Parents: []int{1}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{}},
 		}},
-		{Name: "cyclical-nodes", Description: "Invalid because it contains cycles", Nodes: &[]*tc.TopologyNode{
+		{Name: "cyclical-nodes", Description: "Invalid because it contains cycles", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1, 2}},
 			{Cachegroup: "parentCachegroup", Parents: []int{2}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{1}},

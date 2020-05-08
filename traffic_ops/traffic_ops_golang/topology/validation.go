@@ -25,28 +25,27 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-func checkUniqueCacheGroupNames(nodes *[]*tc.TopologyNode) error {
-	nodeCount := len(*nodes)
+func checkUniqueCacheGroupNames(nodes []tc.TopologyNode) error {
 	cacheGroupNames := map[string]bool{}
-	for index := 0; index < nodeCount; index++ {
-		if _, exists := cacheGroupNames[(*nodes)[index].Cachegroup]; exists {
-			return fmt.Errorf("cachegroup %v cannot be used more than once in the topology.", (*nodes)[index].Cachegroup)
+	for _, node := range nodes {
+		if _, exists := cacheGroupNames[node.Cachegroup]; exists {
+			return fmt.Errorf("cachegroup %v cannot be used more than once in the topology", node.Cachegroup)
 		}
-		cacheGroupNames[(*nodes)[index].Cachegroup] = true
+		cacheGroupNames[node.Cachegroup] = true
 	}
 	return nil
 }
 
-func checkForDuplicateParents(nodes *[]*tc.TopologyNode, index int) error {
-	parents := (*nodes)[index].Parents
+func checkForDuplicateParents(nodes []tc.TopologyNode, index int) error {
+	parents := nodes[index].Parents
 	if len(parents) != 2 || parents[0] != parents[1] {
 		return nil
 	}
-	return fmt.Errorf("cachegroup %v cannot be both a primary and secondary parent of cachegroup %v.", (*nodes)[parents[0]].Cachegroup, (*nodes)[index].Cachegroup)
+	return fmt.Errorf("cachegroup %v cannot be both a primary and secondary parent of cachegroup %v", nodes[parents[0]].Cachegroup, nodes[index].Cachegroup)
 }
 
-func checkForSelfParents(nodes *[]*tc.TopologyNode, index int) error {
-	for _, parentIndex := range (*nodes)[index].Parents {
+func checkForSelfParents(nodes []tc.TopologyNode, index int) error {
+	for _, parentIndex := range nodes[index].Parents {
 		if index == parentIndex {
 			return fmt.Errorf("cachegroup %v cannot be a parent of itself.", index)
 		}
@@ -54,30 +53,28 @@ func checkForSelfParents(nodes *[]*tc.TopologyNode, index int) error {
 	return nil
 }
 
-func checkForEdgeParents(nodes *[]*tc.TopologyNode, cachegroups *[]*tc.CacheGroupNullable, nodeIndex int) error {
-	node := &(*nodes)[nodeIndex]
-	parentsLength := len((*node).Parents)
-	errs := make([]error, parentsLength)
-	for parentIndex := 0; parentIndex < parentsLength; parentIndex++ {
-		cacheGroupType := (*cachegroups)[(*node).Parents[parentIndex]].Type
+func checkForEdgeParents(nodes []tc.TopologyNode, cachegroups *[]*tc.CacheGroupNullable, nodeIndex int) error {
+	node := nodes[nodeIndex]
+	errs := make([]error, len(node.Parents))
+	for parentIndex := range node.Parents {
+		cacheGroupType := (*cachegroups)[node.Parents[parentIndex]].Type
 		if *cacheGroupType == tc.EdgeCacheGroupType {
-			errs[parentIndex] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a parent of %v.", (*nodes)[parentIndex].Cachegroup, tc.EdgeCacheGroupType, (*node).Cachegroup)
+			errs[parentIndex] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a parent of %v.", nodes[parentIndex].Cachegroup, tc.EdgeCacheGroupType, (*node).Cachegroup)
 		}
 	}
 	return util.JoinErrs(errs)
 }
 
-func checkForLeafMids(nodes *[]*tc.TopologyNode, cacheGroups *[]*tc.CacheGroupNullable) *[]*tc.TopologyNode {
-	length := len(*nodes)
-	isLeafMid := make([]bool, length)
+func checkForLeafMids(nodes []tc.TopologyNode, cacheGroups *[]*tc.CacheGroupNullable) []tc.TopologyNode {
+	isLeafMid := make([]bool, len(nodes))
 	for index := range isLeafMid {
 		isLeafMid[index] = true
 	}
-	for index, node := range *nodes {
+	for index, node := range nodes {
 		if *(*cacheGroups)[index].Type == tc.EdgeCacheGroupType {
 			isLeafMid[index] = false
 		}
-		for _, parentIndex := range (*node).Parents {
+		for _, parentIndex := range node.Parents {
 			if !isLeafMid[parentIndex] {
 				continue
 			}
@@ -85,27 +82,27 @@ func checkForLeafMids(nodes *[]*tc.TopologyNode, cacheGroups *[]*tc.CacheGroupNu
 		}
 	}
 
-	leafMids := &[]*tc.TopologyNode{}
-	for index, node := range *nodes {
+	var leafMids []tc.TopologyNode
+	for index, node := range nodes {
 		if isLeafMid[index] {
-			*leafMids = append(*leafMids, node)
+			leafMids = append(leafMids, node)
 		}
 	}
 	return leafMids
 }
 
-func checkForCycles(nodes *[]*tc.TopologyNode) error {
+func checkForCycles(nodes []tc.TopologyNode) error {
 	components := tarjan(nodes)
 	errs := []error{}
-	for _, component := range *components {
-		if len(*component) > 1 {
+	for _, component := range components {
+		if len(component) > 1 {
 			errString := "cycle detected between cachegroups "
-			var node *tc.TopologyNode
-			for _, node = range *component {
-				errString += (*node).Cachegroup + ", "
+			var node tc.TopologyNode
+			for _, node = range component {
+				errString += node.Cachegroup + ", "
 			}
 			length := len(errString)
-			cachegroupNameLength := len((*node).Cachegroup)
+			cachegroupNameLength := len(node.Cachegroup)
 			errString = errString[0:length-2-cachegroupNameLength-2] + " and " + errString[length-2-cachegroupNameLength:length-2]
 			errs = append(errs, fmt.Errorf(errString))
 		}

@@ -21,10 +21,10 @@ package tc
 
 // Topology holds the name and set of TopologyNodes that comprise a flexible topology.
 type Topology struct {
-	Description string           `json:"description" db:"description"`
-	Name        string           `json:"name" db:"name"`
-	Nodes       *[]*TopologyNode `json:"nodes"`
-	LastUpdated *TimeNoMod       `json:"lastUpdated" db:"last_updated"`
+	Description string         `json:"description" db:"description"`
+	Name        string         `json:"name" db:"name"`
+	Nodes       []TopologyNode `json:"nodes"`
+	LastUpdated *TimeNoMod     `json:"lastUpdated" db:"last_updated"`
 }
 
 // TopologyNode holds a reference to a cachegroup and the indices of up to 2 parent

@@ -25,7 +25,7 @@ import (
 )
 
 type TarjanNode struct {
-	*tc.TopologyNode
+	tc.TopologyNode
 	Index   *int
 	LowLink *int
 	OnStack *bool
@@ -33,17 +33,17 @@ type TarjanNode struct {
 
 type NodeStack []*TarjanNode
 type Graph []*TarjanNode
-type Component []*tc.TopologyNode
+type Component []tc.TopologyNode
 
 type Tarjan struct {
 	Graph      *Graph
 	Stack      *NodeStack
-	Components *[]*Component
+	Components []Component
 	Index      int
 }
 
 func (stack *NodeStack) push(node *TarjanNode) {
-	*stack = append(append([]*TarjanNode{}, (*stack)...), node)
+	*stack = append(append([]*TarjanNode{}, *stack...), node)
 }
 
 func (stack *NodeStack) pop() *TarjanNode {
@@ -53,14 +53,14 @@ func (stack *NodeStack) pop() *TarjanNode {
 	return node
 }
 
-func tarjan(nodes *[]*tc.TopologyNode) *[]*[]*tc.TopologyNode {
+func tarjan(nodes []tc.TopologyNode) [][]tc.TopologyNode {
 	structs := Tarjan{
 		Graph:      &Graph{},
 		Stack:      &NodeStack{},
-		Components: &[]*Component{},
+		Components: []Component{},
 		Index:      0,
 	}
-	for _, node := range *nodes {
+	for _, node := range nodes {
 		tarjanNode := TarjanNode{TopologyNode: node, LowLink: new(int)}
 		*tarjanNode.LowLink = 500
 		*structs.Graph = append(*structs.Graph, &tarjanNode)
@@ -72,21 +72,22 @@ func tarjan(nodes *[]*tc.TopologyNode) *[]*[]*tc.TopologyNode {
 			structs.strongConnect(vertex)
 		}
 	}
-	components := &[]*[]*tc.TopologyNode{}
-	for _, component := range *structs.Components {
-		componentArray := new([]*tc.TopologyNode)
-		for _, node := range *component {
-			*componentArray = append(*componentArray, node)
+	var components [][]tc.TopologyNode
+	for _, component := range structs.Components {
+		var componentArray []tc.TopologyNode
+		for _, node := range component {
+			componentArray = append(componentArray, node)
 		}
-		*components = append(*components, componentArray)
+		components = append(components, componentArray)
 	}
 	return components
 }
 
-func (structs *Tarjan) nextComponent() *Component {
-	component := &Component{}
-	*structs.Components = append(*structs.Components, component)
-	return component
+func (structs *Tarjan) nextComponent() (Component, int) {
+	var component = Component{}
+	index := len(structs.Components)
+	structs.Components = append(structs.Components, component)
+	return component, index
 }
 
 func (structs *Tarjan) strongConnect(node *TarjanNode) {
@@ -111,12 +112,13 @@ func (structs *Tarjan) strongConnect(node *TarjanNode) {
 	}
 
 	if *node.LowLink == *node.Index {
-		component := structs.nextComponent()
-		var otherNode *TarjanNode = nil
+		component, index := structs.nextComponent()
+		var otherNode *TarjanNode
 		for node != otherNode {
 			otherNode = stack.pop()
 			*otherNode.OnStack = false
-			*component = append(*component, otherNode.TopologyNode)
+			component = append(component, otherNode.TopologyNode)
 		}
+		structs.Components[index] = component
 	}
 }
