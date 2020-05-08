@@ -62,7 +62,7 @@ Response Structure
 
 		.. seealso:: `The Wikipedia article on Maximum Transmission Unit <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
 
-	:name:           The network interface name used by the server. A value of 'mgmt' indicates a management port.
+	:name:           The network interface name used by the server.
 
 	:ipAddresses:    An array of the IP address information for the interface
 
