@@ -7,9 +7,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/go-ozzo/ozzo-validation"
-
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
@@ -50,6 +47,17 @@ type ServersV1Response struct {
 	Alerts
 }
 
+type ServerDetailV11 struct {
+	ServerDetail
+	LegacyInterfaceDetails
+}
+
+// ServerDetailV30 is the details for a server for API v3
+type ServerDetailV30 struct {
+	ServerDetail
+	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces"`
+}
+
 // ServersV1DetailResponse is the JSON object returned for a single server for v1.
 type ServersV1DetailResponse struct {
 	Response []ServerDetailV11 `json:"response"`
@@ -60,6 +68,90 @@ type ServersV1DetailResponse struct {
 type ServersV3DetailResponse struct {
 	Response []ServerDetailV30 `json:"response"`
 	Alerts
+}
+
+// ServerIpAddress is the data associated with a server's interface's IP address.
+type ServerIpAddress struct {
+	Address        string  `json:"address" db:"address"`
+	Gateway        *string `json:"gateway" db:"gateway"`
+	Interface      string  `json:"interface,omitempty" db:"interface"`
+	Server         uint64  `json:"server,omitempty" db:"server"`
+	ServiceAddress bool    `json:"serviceAddress" db:"service_address"`
+}
+
+// ServerInterfaceInfo is the data associated with a server's interface.
+type ServerInterfaceInfo struct {
+	IpAddresses  []ServerIpAddress `json:"ipAddresses" db:"ipAddresses"`
+	MaxBandwidth *int64            `json:"maxBandwidth" db:"max_bandwidth"`
+	Monitor      bool              `json:"monitor" db:"monitor"`
+	MTU          *uint64           `json:"mtu" db:"mtu"`
+	Name         string            `json:"name" db:"name"`
+}
+
+// Value implements the database/sql/driver.Valuer interface.
+// marshals struct to json to pass back as a json.RawMessage
+func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
+	b, err := json.Marshal(sii)
+	return b, err
+}
+
+// Scan implements the sql.Scanner interface
+// expects json.RawMessage and unmarshals to a deliveryservice struct
+func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
+	b, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
+	}
+
+	return json.Unmarshal([]byte(b), sii)
+}
+
+// LegacyInterfaceDetails is the details for interfaces on servers for API v1 and v2.
+type LegacyInterfaceDetails struct {
+	InterfaceMtu  *int    `json:"interfaceMtu" db:"interface_mtu"`
+	InterfaceName *string `json:"interfaceName" db:"interface_name"`
+	IP6Address    *string `json:"ip6Address" db:"ip6_address"`
+	IP6Gateway    *string `json:"ip6Gateway" db:"ip6_gateway"`
+	IPAddress     *string `json:"ipAddress" db:"ip_address"`
+	IPGateway     *string `json:"ipGateway" db:"ip_gateway"`
+	IPNetmask     *string `json:"ipNetmask" db:"ip_netmask"`
+}
+
+// InterfaceInfoToLegacyInterfaces converts a ServerInterfaceInfo to an
+// equivalent LegacyInterfaceDetails structure. It does this by creating the
+// IP address fields using the "service" interface's IP addresses. All others
+// are discarded, as the legacy format is incapable of representing them.
+func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (LegacyInterfaceDetails, error) {
+	var legacyDetails LegacyInterfaceDetails
+
+	for _, intFace := range serverInterfaces {
+		if intFace.MTU != nil {
+			legacyDetails.InterfaceMtu = util.IntPtr(int(*intFace.MTU))
+		}
+
+		legacyDetails.InterfaceName = &intFace.Name
+
+		for _, addr := range intFace.IpAddresses {
+			address := addr.Address
+			gateway := addr.Gateway
+
+			parsedIp, mask, err := net.ParseCIDR(address)
+			if err != nil {
+				return legacyDetails, fmt.Errorf("Failed to parse '%s' as network or CIDR string: %v", address, err)
+			}
+
+			if parsedIp.To4() == nil {
+				legacyDetails.IP6Address = &address
+				legacyDetails.IP6Gateway = gateway
+			} else {
+				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
+				legacyDetails.IPGateway = gateway
+				legacyDetails.IPNetmask = util.StrPtr(fmt.Sprintf("%d.%d.%d.%d", mask.Mask[0], mask.Mask[1], mask.Mask[2], mask.Mask[3]))
+			}
+		}
+	}
+
+	return legacyDetails, nil
 }
 
 type Server struct {
@@ -256,6 +348,9 @@ type ServerDetail struct {
 	ILOIPNetmask       *string           `json:"iloIpNetmask" db:"ilo_ip_netmask"`
 	ILOPassword        *string           `json:"iloPassword" db:"ilo_password"`
 	ILOUsername        *string           `json:"iloUsername" db:"ilo_username"`
+	MgmtIPAddress      *string           `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway      *string           `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask      *string           `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
 	OfflineReason      *string           `json:"offlineReason" db:"offline_reason"`
 	PhysLocation       *string           `json:"physLocation" db:"phys_location"`
 	Profile            *string           `json:"profile" db:"profile"`
@@ -268,32 +363,6 @@ type ServerDetail struct {
 	Type               string            `json:"type" db:"server_type"`
 	XMPPID             *string           `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd         *string           `json:"xmppPasswd" db:"xmpp_passwd"`
-}
-
-// ServerDetailV11 is the details for a server for API v1 and v2
-type ServerDetailV11 struct {
-	ServerDetail
-	LegacyInterfaceDetails
-}
-
-// LegacyInterfaceDetails is the details for interfaces on servers for API v1 and v2
-type LegacyInterfaceDetails struct {
-	InterfaceMTU  *int    `json:"interfaceMtu" db:"interface_mtu"`
-	InterfaceName *string `json:"interfaceName" db:"interface_name"`
-	IP6Address    *string `json:"ip6Address" db:"ip6_address"`
-	IP6Gateway    *string `json:"ip6Gateway" db:"ip6_gateway"`
-	IPAddress     *string `json:"ipAddress" db:"ip_address"`
-	IPGateway     *string `json:"ipGateway" db:"ip_gateway"`
-	IPNetmask     *string `json:"ipNetmask" db:"ip_netmask"`
-	MgmtIPAddress *string `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway *string `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIPNetmask *string `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-}
-
-// ServerDetailV30 is the details for a server for API v3
-type ServerDetailV30 struct {
-	ServerDetail
-	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces"`
 }
 
 // ServerQueueUpdateRequest encodes the request data for the POST
@@ -314,80 +383,4 @@ type ServerQueueUpdateResponse struct {
 type ServerQueueUpdate struct {
 	ServerID util.JSONIntStr `json:"serverId"`
 	Action   string          `json:"action"`
-}
-
-// ServerIpAddress is the data associated with an IP address
-type ServerIpAddress struct {
-	Address        string `json:"address" db:"address"`
-	Gateway        string `json:"gateway" db:"gateway"`
-	Interface      string `json:"interface,omitempty" db:"interface"`
-	Server         int    `json:"server,omitempty" db:"server"`
-	ServiceAddress bool   `json:"service_address" db:"service_address"`
-}
-
-// ServerInterfaceInfo is the combined data from both IP address information and interface information
-type ServerInterfaceInfo struct {
-	IpAddresses  []ServerIpAddress `json:"ipAddresses" db:"ipAddresses"`
-	MaxBandwidth int64             `json:"max_bandwidth" db:"max_bandwidth"`
-	Monitor      bool              `json:"monitor" db:"monitor"`
-	Mtu          int               `json:"mtu" db:"mtu"`
-	Name         string            `json:"name" db:"name"`
-}
-
-// Value implements the driver.Valuer interface
-// marshals struct to json to pass back as a json.RawMessage
-func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
-	b, err := json.Marshal(sii)
-	return b, err
-}
-
-// Scan implements the sql.Scanner interface
-// expects json.RawMessage and unmarshals to a deliveryservice struct
-func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
-	b, ok := src.([]byte)
-	if !ok {
-		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
-	}
-
-	return json.Unmarshal([]byte(b), sii)
-}
-
-// ConvertInterfaceInfotoV11 converts ServerInterfaceInfo to LegacyInterfaceDetails for v1 and v2 compatibility
-func ConvertInterfaceInfotoV11(serverInterfaces []ServerInterfaceInfo) (LegacyInterfaceDetails, error) {
-	legacyDetails := LegacyInterfaceDetails{}
-	for _, intFace := range serverInterfaces {
-		legacyDetails.InterfaceMTU = &intFace.Mtu
-		legacyDetails.InterfaceName = &intFace.Name
-
-		for _, addr := range intFace.IpAddresses {
-			address := addr.Address
-			gateway := addr.Gateway
-
-			parsedIp, netmask, err := net.ParseCIDR(address)
-			netmaskString := ""
-			if err == nil {
-				mask := netmask.Mask
-				netmaskString = fmt.Sprintf("%d.%d.%d.%d", mask[0], mask[1], mask[2], mask[3])
-			}
-
-			if intFace.Name == "mgmt" {
-				legacyDetails.MgmtIPAddress = &address
-				legacyDetails.MgmtIPGateway = &gateway
-				legacyDetails.MgmtIPNetmask = &netmaskString
-				continue
-			}
-
-			if err = validation.Validate(&addr.Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress)); err != nil {
-				ip := parsedIp.String()
-				legacyDetails.IPAddress = &ip
-				legacyDetails.IPGateway = &gateway
-				legacyDetails.IPNetmask = &netmaskString
-			} else {
-				legacyDetails.IP6Address = &address
-				legacyDetails.IP6Gateway = &gateway
-			}
-		}
-	}
-
-	return legacyDetails, nil
 }

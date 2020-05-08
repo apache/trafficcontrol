@@ -57,7 +57,7 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 		v11server.ServerDetail = server.ServerDetail
 
 		interfaces := *server.ServerInterfaces
-		legacyInterface, err := tc.ConvertInterfaceInfotoV11(interfaces)
+		legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
 			return
@@ -123,7 +123,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			v11server.ServerDetail = server.ServerDetail
 
 			interfaces := *server.ServerInterfaces
-			legacyInterface, err := tc.ConvertInterfaceInfotoV11(interfaces)
+			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
 			if err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
 				return
@@ -216,6 +216,9 @@ AND ip_address.server = s.id
 FROM interface
 WHERE interface.server = s.id
 ) AS interfaces,
+	s.mgmt_ip_address,
+	s.mgmt_ip_gateway,
+	s.mgmt_ip_netmask,
 	s.offline_reason,
 	pl.name as phys_location,
 	p.name as profile,
@@ -268,7 +271,7 @@ JOIN type t ON s.type = t.id
 	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 	for rows.Next() {
 		s := tc.ServerDetailV30{}
-		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
 

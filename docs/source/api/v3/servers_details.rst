@@ -81,7 +81,7 @@ Response Structure
 
 			.. seealso:: `The Wikipedia article on Maximum Transmission Unit <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
 
-		:name:           The network interface name used by the server. A value of 'mgmt' indicates a management port.
+		:name:           The network interface name used by the server.
 
 		:ipAddresses:    An array of the IP address information for the interface
 
@@ -89,6 +89,9 @@ Response Structure
 			:gateway:          The IPv4 or IPv6 gateway address of the server - applicable for the interface ``name``
 			:service_address:  A boolean determining if content will be routed to the IP address
 
+	:mgmtIpAddress:  The IPv4 address of the server's management port
+	:mgmtIpGateway:  The IPv4 gateway of the server's management port
+	:mgmtIpNetmask:  The IPv4 subnet mask of the server's management port
 	:offlineReason:		A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 	:physLocation:		The name of the physical location where the server resides
 	:profile:		The :ref:`profile-name` of the :term:`Profile` used by this server
@@ -147,6 +150,9 @@ Response Structure
 				"iloIpNetmask": "",
 				"iloPassword": "",
 				"iloUsername": "",
+				"mgmtIpAddress": "",
+				"mgmtIpGateway": "",
+				"mgmtIpNetmask": "",
 				"offlineReason": "",
 				"physLocation": "Apachecon North America 2018",
 				"profile": "ATS_EDGE_TIER_CACHE",
@@ -160,18 +166,6 @@ Response Structure
 				"xmppId": "edge",
 				"xmppPasswd": "",
 				"interfaces": [
-					{ "ipAddresses": [
-							{
-								"address": "172.16.239.101",
-								"gateway": "",
-								"service_address": false
-							}
-						],
-						"max_bandwidth": 0,
-						"monitor": false,
-						"mtu": 9000,
-						"name": "mgmt"
-					},
 					{ "ipAddresses": [
 							{
 								"address": "172.16.239.100",
