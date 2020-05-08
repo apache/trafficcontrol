@@ -74,7 +74,7 @@ type ServersV3DetailResponse struct {
 type ServerIpAddress struct {
 	Address        string  `json:"address" db:"address"`
 	Gateway        *string `json:"gateway" db:"gateway"`
-	ServiceAddress bool    `json:"service_address" db:"service_address"`
+	ServiceAddress bool    `json:"serviceAddress" db:"service_address"`
 }
 
 // ServerInterfaceInfo is the data associated with a server's interface.

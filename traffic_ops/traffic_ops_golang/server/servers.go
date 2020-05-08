@@ -510,54 +510,54 @@ FROM
 
 func selectQuery() string {
 	const JumboFrameBPS = 9000
-	return `SELECT
-cg.name as cachegroup,
-s.cachegroup as cachegroup_id,
-s.cdn_id,
-cdn.name as cdn_name,
-s.domain_name,
-s.guid,
-s.host_name,
-s.https_port,
-s.id,
-s.ilo_ip_address,
-s.ilo_ip_gateway,
-s.ilo_ip_netmask,
-s.ilo_password,
-s.ilo_username,
-COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-s.interface_name,
-s.ip6_address,
-s.ip6_address_is_service,
-s.ip6_gateway,
-s.ip_address,
-s.ip_address_is_service,
-s.ip_gateway,
-s.ip_netmask,
-s.last_updated,
-s.mgmt_ip_address,
-s.mgmt_ip_gateway,
-s.mgmt_ip_netmask,
-s.offline_reason,
-pl.name as phys_location,
-s.phys_location as phys_location_id,
-p.name as profile,
-p.description as profile_desc,
-s.profile as profile_id,
-s.rack,
-s.reval_pending,
-s.router_host_name,
-s.router_port_name,
-st.name as status,
-s.status as status_id,
-s.tcp_port,
-t.name as server_type,
-s.type as server_type_id,
-s.upd_pending as upd_pending,
-s.xmpp_id,
-s.xmpp_passwd
-FROM
-  server s
+	return `
+SELECT
+	cg.name AS cachegroup,
+	cdn.name AS cdn_name,
+	ARRAY(select deliveryservice from deliveryservice_server where server = s.id),
+	s.domain_name,
+	s.guid,
+	s.host_name,
+	s.https_port,
+	s.id,
+	s.ilo_ip_address,
+	s.ilo_ip_gateway,
+	s.ilo_ip_netmask,
+	s.ilo_password,
+	s.ilo_username,
+	ARRAY (
+SELECT ( json_build_object (
+'ipAddresses', ARRAY (
+SELECT ( json_build_object (
+'address', ip_address.address,
+'gateway', ip_address.gateway,
+'service_address', ip_address.service_address
+))
+FROM ip_address
+WHERE ip_address.interface = interface.name
+AND ip_address.server = s.id
+),
+'max_bandwidth', interface.max_bandwidth,
+'monitor', interface.monitor,
+'mtu', COALESCE (interface.mtu, 9000),
+'name', interface.name
+))
+FROM interface
+WHERE interface.server = s.id
+) AS interfaces,
+	s.offline_reason,
+	pl.name as phys_location,
+	p.name as profile,
+	p.description as profile_desc,
+	s.rack,
+	s.router_host_name,
+	s.router_port_name,
+	st.name as status,
+	s.tcp_port,
+	t.name as server_type,
+	s.xmpp_id,
+	s.xmpp_passwd
+FROM server AS s
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
