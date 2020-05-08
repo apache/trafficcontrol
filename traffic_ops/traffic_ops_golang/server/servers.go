@@ -37,6 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
@@ -47,8 +48,13 @@ import (
 // provides methods that implement several interfaces from the api package.
 type TOServer struct {
 	api.APIInfoImpl `json:"-"`
-	tc.ServerNullable
+	tc.ServerNullableV2
 }
+
+const unfilteredServersQuery = `
+SELECT COUNT(server.id)
+FROM server
+`
 
 func (s *TOServer) SetLastUpdated(t tc.TimeNoMod) { s.LastUpdated = &t }
 func (*TOServer) InsertQuery() string             { return insertQuery() }
@@ -197,36 +203,94 @@ func (s TOServer) ChangeLogMessage(action string) (string, error) {
 	return message, nil
 }
 
-func (s *TOServer) Read() ([]interface{}, error, error, int) {
-	version := s.APIInfo().Version
+func Read(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Middleware should've already handled this, so idk why this is a pointer at all tbh
+	version := inf.Version
 	if version == nil {
-		return nil, nil, errors.New("TOServer.Read called with nil API version"), http.StatusInternalServerError
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
 	}
 
-	returnable := []interface{}{}
-
-	servers, userErr, sysErr, errCode := getServers(s.ReqInfo.Params, s.ReqInfo.Tx, s.ReqInfo.User)
+	var servers []tc.ServerNullable
+	var unfiltered uint64
+	servers, unfiltered, userErr, sysErr, errCode = getServers(inf.Params, inf.Tx, inf.User)
 
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
 
-	for _, server := range servers {
-		switch {
-		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Major >= 2:
-			returnable = append(returnable, server)
-		case version.Major == 1 && version.Minor >= 1:
-			returnable = append(returnable, server.ServerNullableV11)
-		default:
-			return nil, nil, fmt.Errorf("TOServer.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+	if version.Major >= 3 {
+		api.WriteRespWithSummary(w, r, servers, unfiltered)
+		return
+	}
+
+	if version.Major <= 1 {
+		legacyServers := make([]tc.ServerNullableV2, len(servers))
+		for _, server := range servers {
+			legacyServer, err := server.ToServerV2()
+			if err != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert servers to legacy format: %v", err))
+				return
+			}
+			legacyServers = append(legacyServers, legacyServer)
 		}
+		api.WriteResp(w, r, legacyServers)
+		return
 	}
 
-	return returnable, nil, nil, http.StatusOK
+	legacyServers := make([]tc.ServerNullableV11, len(servers))
+	for _, server := range servers {
+		legacyServer, err := server.ToServerV2()
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert servers to legacy format: %v", err))
+			return
+		}
+		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
+	}
+	api.WriteResp(w, r, legacyServers)
 }
 
-func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, error, error, int) {
+func ReadID(w http.ResponseWriter, r *http.Request) {
+	alternative := "GET /servers with query parameter id"
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, &alternative)
+		return
+	}
+	defer inf.Close()
+
+	var servers []tc.ServerNullable
+	servers, _, userErr, sysErr, errCode = getServers(inf.Params, inf.Tx, inf.User)
+
+	legacyServers := make([]tc.ServerNullableV11, len(servers))
+	for _, server := range servers {
+		legacyServer, err := server.ToServerV2()
+		if err != nil {
+			api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert servers to legacy format: %v", err), &alternative)
+			return
+		}
+		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
+	}
+	deprecationAlerts := api.CreateDeprecationAlerts(&alternative)
+	api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, legacyServers)
+}
+
+func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, uint64, error, error, int) {
+	var unfiltered uint64
+	if err := tx.QueryRow(unfilteredServersQuery).Scan(&unfiltered); err != nil {
+		return nil, 0, nil, fmt.Errorf("Failed to get servers count: %v", err), http.StatusInternalServerError
+	}
+
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -248,23 +312,21 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
 		if err != nil {
-			return nil, errors.New("dsId must be an integer"), nil, http.StatusNotFound
+			return nil, unfiltered, errors.New("dsId must be an integer"), nil, http.StatusNotFound
 		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
-			return nil, errors.New("Forbidden"), sysErr, http.StatusForbidden
+			return nil, unfiltered, errors.New("Forbidden"), sysErr, http.StatusForbidden
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
-		queryAddition = `
-FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
-`
+		queryAddition = "\nFULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id\n"
 		// depending on ds type, also need to add mids
 		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
-			return nil, nil, err, http.StatusInternalServerError
+			return nil, unfiltered, nil, err, http.StatusInternalServerError
 		}
 		if !exists {
-			return nil, fmt.Errorf("a deliveryservice with id %v was not found", dsID), nil, http.StatusBadRequest
+			return nil, unfiltered, fmt.Errorf("a deliveryservice with id %v was not found", dsID), nil, http.StatusBadRequest
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
@@ -272,7 +334,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, unfiltered, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	query := selectQuery() + queryAddition + where + orderBy + pagination
@@ -280,7 +342,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError
+		return nil, unfiltered, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -291,7 +353,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err = rows.StructScan(&s); err != nil {
-			return nil, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError
+			return nil, unfiltered, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError
 		}
 		if user.PrivLevel < auth.PrivLevelOperations {
 			s.ILOPassword = &HiddenField
@@ -307,12 +369,12 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
 		if userErr != nil || sysErr != nil {
-			return nil, userErr, sysErr, errCode
+			return nil, unfiltered, userErr, sysErr, errCode
 		}
 		servers = append(servers, mids...)
 	}
 
-	return servers, nil, nil, http.StatusOK
+	return servers, unfiltered, nil, nil, http.StatusOK
 }
 
 // getMidServers gets the mids used by the servers in this DS.
@@ -439,10 +501,10 @@ func (s *TOServer) Create() (error, error, int) {
 func (s *TOServer) Delete() (error, error, int) { return api.GenericDelete(s) }
 
 func selectV20UpdatesQuery() string {
-	return `SELECT 
-sv.ip_address_is_service, 
-sv.ip6_address_is_service 
-FROM 
+	return `SELECT
+sv.ip_address_is_service,
+sv.ip6_address_is_service
+FROM
 	server sv`
 }
 

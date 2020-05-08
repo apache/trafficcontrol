@@ -256,7 +256,9 @@ type ServerV1 struct {
 	XMPPPasswd       string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-type ServerNullableV11 struct {
+// CommonServerProperties is just the collection of properties which are
+// shared by all servers across API versions.
+type CommonServerProperties struct {
 	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
@@ -274,13 +276,6 @@ type ServerNullableV11 struct {
 	ILOIPNetmask     *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
 	ILOPassword      *string              `json:"iloPassword" db:"ilo_password"`
 	ILOUsername      *string              `json:"iloUsername" db:"ilo_username"`
-	InterfaceMtu     *int                 `json:"interfaceMtu" db:"interface_mtu"`
-	InterfaceName    *string              `json:"interfaceName" db:"interface_name"`
-	IP6Address       *string              `json:"ip6Address" db:"ip6_address"`
-	IP6Gateway       *string              `json:"ip6Gateway" db:"ip6_gateway"`
-	IPAddress        *string              `json:"ipAddress" db:"ip_address"`
-	IPGateway        *string              `json:"ipGateway" db:"ip_gateway"`
-	IPNetmask        *string              `json:"ipNetmask" db:"ip_netmask"`
 	LastUpdated      *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
 	MgmtIPAddress    *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
 	MgmtIPGateway    *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
@@ -305,10 +300,77 @@ type ServerNullableV11 struct {
 	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-type ServerNullable struct {
+// ServerNullableV11 is a server as it appeared in API version 1.1.
+type ServerNullableV11 struct {
+	LegacyInterfaceDetails
+	CommonServerProperties
+}
+
+// ServerNullableV2 is a server as it appeared in API v2.
+type ServerNullableV2 struct {
 	ServerNullableV11
 	IPIsService  *bool `json:"ipIsService" db:"ip_address_is_service"`
 	IP6IsService *bool `json:"ip6IsService" db:"ip6_address_is_service"`
+}
+
+// ServerNullable represents an ATC server, as returned by the TO API.
+type ServerNullable struct {
+	CommonServerProperties
+	Interfaces []ServerInterfaceInfo `json:"interfaces"`
+}
+
+// ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
+// if possible. If the conversion could not be performed, an error is returned.
+func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
+	legacyServer := ServerNullableV2{
+		ServerNullableV11: ServerNullableV11{
+			CommonServerProperties: CommonServerProperties{
+				Cachegroup: s.Cachegroup,
+				CachegroupID: s.CachegroupID,
+				CDNID: s.CDNID,
+				CDNName: s.CDNName,
+				DeliveryServices: s.DeliveryServices,
+				DomainName: s.DomainName,
+				FQDN: s.FQDN,
+				FqdnTime: s.FqdnTime,
+				GUID: s.GUID,
+				HostName: s.HostName,
+				HTTPSPort: s.HTTPSPort,
+				ID: s.ID,
+				ILOIPAddress: s.ILOIPAddress,
+				ILOIPGateway: s.ILOIPGateway,
+				ILOIPNetmask: s.ILOIPNetmask,
+				ILOPassword: s.ILOPassword,
+				ILOUsername: s.ILOUsername,
+				LastUpdated: s.LastUpdated,
+				MgmtIPAddress: s.MgmtIPAddress,
+				MgmtIPGateway: s.MgmtIPGateway,
+				MgmtIPNetmask: s.MgmtIPNetmask,
+				OfflineReason: s.OfflineReason,
+				PhysLocation: s.PhysLocation,
+				PhysLocationID: s.PhysLocationID,
+				Profile: s.Profile,
+				ProfileDesc: s.ProfileDesc,
+				ProfileID: s.ProfileID,
+				Rack: s.Rack,
+				RevalPending: s.RevalPending,
+				RouterHostName: s.RouterHostName,
+				RouterPortName: s.RouterPortName,
+				Status: s.Status,
+				StatusID: s.StatusID,
+				TCPPort: s.TCPPort,
+				Type: s.Type,
+				TypeID: s.TypeID,
+				UpdPending: s.UpdPending,
+				XMPPID: s.XMPPID,
+				XMPPPasswd: s.XMPPPasswd,
+			},
+		},
+	}
+
+	var err error
+	legacyServer.LegacyInterfaceDetails, err = InterfaceInfoToLegacyInterfaces(s.Interfaces)
+	return legacyServer, err
 }
 
 type ServerUpdateStatus struct {
