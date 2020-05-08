@@ -70,7 +70,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 			v11server.DSServerBase = srv.DSServerBase
 
 			interfaces := *srv.ServerInterfaces
-			legacyInterface, err := tc.ConvertInterfaceInfotoV11(interfaces)
+			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
 			if err != nil {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
 				return
@@ -126,6 +126,9 @@ FROM interface
 WHERE interface.server = s.id
 ) AS interfaces,
 s.last_updated,
+s.mgmt_ip_address,
+s.mgmt_ip_gateway,
+s.mgmt_ip_netmask,
 s.offline_reason,
 pl.name as phys_location,
 s.phys_location as phys_location_id,
@@ -180,6 +183,9 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 			&s.ILOUsername,
 			pq.Array(&serverInterfaceInfo),
 			&s.LastUpdated,
+			&s.MgmtIPAddress,
+			&s.MgmtIPGateway,
+			&s.MgmtIPNetmask,
 			&s.OfflineReason,
 			&s.PhysLocation,
 			&s.PhysLocationID,

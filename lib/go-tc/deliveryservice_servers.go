@@ -83,6 +83,9 @@ type DSServerBase struct {
 	ILOPassword                 *string              `json:"iloPassword" db:"ilo_password"`
 	ILOUsername                 *string              `json:"iloUsername" db:"ilo_username"`
 	LastUpdated                 *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
+	MgmtIPAddress               *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway               *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask               *string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
 	OfflineReason               *string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation                *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID              *int                 `json:"physLocationId" db:"phys_location_id"`

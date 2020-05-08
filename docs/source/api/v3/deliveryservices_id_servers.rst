@@ -71,6 +71,9 @@ Response Structure
 		:service_address:  A boolean determining if content will be routed to the IP address
 
 :lastUpdated:    The time and date at which this server was last updated, in an ISO-like format
+:mgmtIpAddress:  The IPv4 address of the server's management port
+:mgmtIpGateway:  The IPv4 gateway of the server's management port
+:mgmtIpNetmask:  The IPv4 subnet mask of the server's management port
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status (will be empty if not offline)
 :physLocation:   The name of the :term:`Physical Location` at which the server resides
 :physLocationId: An integral, unique identifier for the :term:`Physical Location` at which the server resides
@@ -125,6 +128,9 @@ Response Structure
 			"iloPassword": "",
 			"iloUsername": "",
 			"lastUpdated": "2018-11-14 21:08:44+00",
+			"mgmtIpAddress": "",
+			"mgmtIpGateway": "",
+			"mgmtIpNetmask": "",
 			"offlineReason": "",
 			"physLocation": "Apachecon North America 2018",
 			"physLocationId": 1,
@@ -142,18 +148,6 @@ Response Structure
 			"updPending": false,
 			"interfaces": [{
 				"ipAddresses": [
-					{
-						"address": "172.16.239.101",
-						"gateway": "",
-						"service_address": false
-					}
-				],
-					"max_bandwidth": 0,
-					"monitor": false,
-					"mtu": 9000,
-					"name": "mgmt"
-				},
-				{ "ipAddresses": [
 					{
 						"address": "172.16.239.100",
 						"gateway": "172.16.239.1",
