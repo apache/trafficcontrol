@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION on_delete_current_timestamp_last_updated()
     RETURNS trigger
     AS $$
 BEGIN
-  update last_deleted set last_updated = now() where tab_name = (TD['args'][0]);
+  update last_deleted set last_updated = now() where tab_name = TG_ARGV[0];
   RETURN NEW;
 END;
 $$
