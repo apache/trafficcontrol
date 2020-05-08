@@ -48,9 +48,9 @@ func (topology *TOTopology) DeleteQueryBase() string {
 // ParamColumns maps query parameters to their respective database columns.
 func (topology *TOTopology) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"name":        dbhelpers.WhereColumnInfo{"t.name", nil},
-		"description": dbhelpers.WhereColumnInfo{"t.description", nil},
-		"lastUpdated": dbhelpers.WhereColumnInfo{"t.last_updated", nil},
+		"name":        {Column: "t.name"},
+		"description": {Column: "t.description"},
+		"lastUpdated": {Column: "t.last_updated"},
 	}
 }
 
@@ -147,24 +147,25 @@ func (topology *TOTopology) Create() (error, error, int) {
 }
 
 // Read is a requirement of the api.Reader interface and is called by api.ReadHandler().
-func (t *TOTopology) Read() ([]interface{}, error, error, int) {
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(t.ReqInfo.Params, t.ParamColumns())
+func (topology *TOTopology) Read() ([]interface{}, error, error, int) {
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(topology.ReqInfo.Params, topology.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 	query := selectQuery() + where + orderBy + pagination
-	rows, err := t.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := topology.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("topology read: querying: " + err.Error()), http.StatusInternalServerError
 	}
-	defer rows.Close()
 
-	interfaces := []interface{}{}
+	var interfaces []interface{}
 	topologies := map[string]*tc.Topology{}
 	indices := map[int]int{}
 	for index := 0; rows.Next(); index++ {
-		var name, description string
-		var lastUpdated tc.TimeNoMod
+		var (
+			name, description string
+			lastUpdated       tc.TimeNoMod
+		)
 		topologyNode := tc.TopologyNode{}
 		topologyNode.Parents = []int{}
 		var parents pq.Int64Array
@@ -190,6 +191,10 @@ func (t *TOTopology) Read() ([]interface{}, error, error, int) {
 			topology.LastUpdated = &lastUpdated
 		}
 		topologies[name].Nodes = append(topologies[name].Nodes, topologyNode)
+	}
+	if err = rows.Close(); err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return nil, userErr, sysErr, errCode
 	}
 
 	for _, topology := range topologies {
@@ -237,23 +242,22 @@ func (topology *TOTopology) addNodes() (error, error, int) {
 		rows.Next()
 		err = rows.Scan(&node.Id, &topology.Name, &node.Cachegroup)
 		if err != nil {
-			userErr, sysErr, errCode := api.ParseDBError(err)
-			return userErr, sysErr, errCode
+			return api.ParseDBError(err)
 		}
 		topology.Nodes[index] = node
 	}
-	err = rows.Close()
-	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		return userErr, sysErr, errCode
+	if err = rows.Close(); err != nil {
+		return api.ParseDBError(err)
 	}
 	return nil, nil, http.StatusOK
 }
 
 func (topology *TOTopology) addParents() (error, error, int) {
-	children := []int{}
-	parents := []int{}
-	ranks := []int{}
+	var (
+		children []int
+		parents  []int
+		ranks    []int
+	)
 	for _, node := range topology.Nodes {
 		for rank := 1; rank <= len(node.Parents); rank++ {
 			parent := topology.Nodes[node.Parents[rank-1]]
@@ -264,8 +268,7 @@ func (topology *TOTopology) addParents() (error, error, int) {
 	}
 	rows, err := topology.ReqInfo.Tx.Query(nodeParentInsertQuery(), pq.Array(children), pq.Array(parents), pq.Array(ranks))
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		return userErr, sysErr, errCode
+		return api.ParseDBError(err)
 	}
 	for _, node := range topology.Nodes {
 		for rank := 1; rank <= len(node.Parents); rank++ {
@@ -273,15 +276,13 @@ func (topology *TOTopology) addParents() (error, error, int) {
 			parent := topology.Nodes[node.Parents[rank-1]]
 			err = rows.Scan(&node.Id, &parent.Id, &rank)
 			if err != nil {
-				userErr, sysErr, errCode := api.ParseDBError(err)
-				return userErr, sysErr, errCode
+				return api.ParseDBError(err)
 			}
 		}
 	}
 	err = rows.Close()
 	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		return userErr, sysErr, errCode
+		return api.ParseDBError(err)
 	}
 	return nil, nil, http.StatusOK
 }
@@ -294,24 +295,23 @@ func (topology *TOTopology) setDescription() (error, error, int) {
 	for rows.Next() {
 		err = rows.Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
 		if err != nil {
-			userErr, sysErr, errCode := api.ParseDBError(err)
-			return userErr, sysErr, errCode
+			return api.ParseDBError(err)
 		}
 	}
 	return nil, nil, http.StatusOK
 }
 
 // Update is a requirement of the api.Updater interface.
-func (newTopology *TOTopology) Update() (error, error, int) {
-	topologies, userErr, sysErr, errCode := newTopology.Read()
+func (topology *TOTopology) Update() (error, error, int) {
+	topologies, userErr, sysErr, errCode := topology.Read()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 	if len(topologies) != 1 {
-		return fmt.Errorf("cannot find exactly 1 topology with the query string provided."), nil, http.StatusBadRequest
+		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
-	topology := TOTopology{APIInfoImpl: newTopology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
-	if userErr, sysErr, errCode := newTopology.setDescription(); userErr != nil || sysErr != nil {
+	topology.Topology = topologies[0].(tc.Topology)
+	if userErr, sysErr, errCode := topology.setDescription(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
@@ -322,21 +322,23 @@ func (newTopology *TOTopology) Update() (error, error, int) {
 	for index, node := range topology.Nodes {
 		oldNodes[node.Cachegroup] = index
 	}
-	for index, node := range newTopology.Nodes {
+	for index, node := range topology.Nodes {
 		newNodes[node.Cachegroup] = index
 	}
-	var toRemove []string
-	var toAdd []tc.TopologyNode
+	var (
+		toRemove []string
+		toAdd    []tc.TopologyNode
+	)
 	for cachegroupName := range oldNodes {
 		if _, exists := newNodes[cachegroupName]; !exists {
 			toRemove = append(toRemove, cachegroupName)
 		} else {
-			newTopology.Nodes[newNodes[cachegroupName]].Id = topology.Nodes[oldNodes[cachegroupName]].Id
+			topology.Nodes[newNodes[cachegroupName]].Id = topology.Nodes[oldNodes[cachegroupName]].Id
 		}
 	}
 	for cachegroupName, index := range newNodes {
 		if _, exists := oldNodes[cachegroupName]; !exists {
-			toAdd = append(toAdd, newTopology.Nodes[index])
+			toAdd = append(toAdd, topology.Nodes[index])
 		}
 	}
 	if err := topology.removeNodes(&toRemove); err != nil {
@@ -348,10 +350,10 @@ func (newTopology *TOTopology) Update() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 	for _, node := range topology.Nodes {
-		newTopology.Nodes[newNodes[node.Cachegroup]] = node
+		topology.Nodes[newNodes[node.Cachegroup]] = node
 	}
 
-	if userErr, sysErr, errCode := newTopology.addParents(); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := topology.addParents(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
@@ -371,9 +373,9 @@ func (topology *TOTopology) OptionsDelete() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 	if len(topologies) != 1 {
-		return fmt.Errorf("cannot find exactly 1 topology with the query string provided."), nil, http.StatusBadRequest
+		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
-	topology = &TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
+	topology.Topology = topologies[0].(tc.Topology)
 
 	var cachegroups []string
 	for _, node := range topology.Nodes {
@@ -385,8 +387,7 @@ func (topology *TOTopology) OptionsDelete() (error, error, int) {
 	if err := topology.removeParents(); err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
-	api.GenericOptionsDelete(topology)
-	return nil, nil, http.StatusOK
+	return api.GenericOptionsDelete(topology)
 }
 
 func insertQuery() string {
@@ -466,16 +467,6 @@ UPDATE topology t SET
 description = $1
 WHERE t.name = $2
 RETURNING t.name, t.description, t.last_updated
-`
-	return query
-}
-
-func nodeUpdateQuery() string {
-	query := `
-UPDATE topology_cachegroup tc SET
-tc.topology = $1, tc.cachegroup = unnest($2::text[])
-WHERE tc.id = unnest($3::int[])
-RETURNING tc.id, tc.topology, tc.cachegroup
 `
 	return query
 }

@@ -47,7 +47,7 @@ func checkForDuplicateParents(nodes []tc.TopologyNode, index int) error {
 func checkForSelfParents(nodes []tc.TopologyNode, index int) error {
 	for _, parentIndex := range nodes[index].Parents {
 		if index == parentIndex {
-			return fmt.Errorf("cachegroup %v cannot be a parent of itself.", index)
+			return fmt.Errorf("cachegroup %v cannot be a parent of itself", index)
 		}
 	}
 	return nil
@@ -59,7 +59,7 @@ func checkForEdgeParents(nodes []tc.TopologyNode, cachegroups *[]*tc.CacheGroupN
 	for parentIndex := range node.Parents {
 		cacheGroupType := (*cachegroups)[node.Parents[parentIndex]].Type
 		if *cacheGroupType == tc.EdgeCacheGroupType {
-			errs[parentIndex] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a parent of %v.", nodes[parentIndex].Cachegroup, tc.EdgeCacheGroupType, (*node).Cachegroup)
+			errs[parentIndex] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a parent of %v", nodes[parentIndex].Cachegroup, tc.EdgeCacheGroupType, node.Cachegroup)
 		}
 	}
 	return util.JoinErrs(errs)
@@ -93,7 +93,7 @@ func checkForLeafMids(nodes []tc.TopologyNode, cacheGroups *[]*tc.CacheGroupNull
 
 func checkForCycles(nodes []tc.TopologyNode) error {
 	components := tarjan(nodes)
-	errs := []error{}
+	var errs []error
 	for _, component := range components {
 		if len(component) > 1 {
 			errString := "cycle detected between cachegroups "

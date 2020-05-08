@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_TOPOLOGIES = apiBase + "/topologies"
+	ApiTopologies = apiBase + "/topologies"
 )
 
 // CreateTopology creates a topology and returns the response.
@@ -36,7 +36,7 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 	if err != nil {
 		return nil, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_TOPOLOGIES, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, ApiTopologies, reqBody)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -50,7 +50,7 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 
 // GetTopologies returns all topologies.
 func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_TOPOLOGIES, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, ApiTopologies, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -67,7 +67,7 @@ func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
 
 // GetTopology returns the given topology by name.
 func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", API_TOPOLOGIES, url.QueryEscape(name))
+	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -95,7 +95,7 @@ func (to *Session) UpdateTopologyByID(id int, pl tc.Topology) (tc.Alerts, ReqInf
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_TOPOLOGIES, id)
+	route := fmt.Sprintf("%s/%d", ApiTopologies, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -108,7 +108,7 @@ func (to *Session) UpdateTopologyByID(id int, pl tc.Topology) (tc.Alerts, ReqInf
 
 // DeleteTopology deletes the given topology by name.
 func (to *Session) DeleteTopology(name string) (tc.Alerts, ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", API_TOPOLOGIES, url.QueryEscape(name))
+	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodDelete, reqUrl, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
