@@ -87,7 +87,7 @@ func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
 }
 
 // UpdateTopologyByID updates a Topology by ID.
-func (to *Session) UpdateTopologyByID(id int, pl tc.Topology) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateTopology(id int, pl tc.Topology) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pl)
