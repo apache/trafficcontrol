@@ -24,6 +24,11 @@ import (
 	"testing"
 )
 
+type topologyTestCase struct {
+	reasonToFail string
+	tc.Topology
+}
+
 func TestTopologies(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, Topologies}, func() {
 		ValidationTestTopologies(t)
@@ -41,48 +46,40 @@ func CreateTestTopologies(t *testing.T) {
 }
 
 func ValidationTestTopologies(t *testing.T) {
-	invalidTopologies := []tc.Topology{
-		{Name: "empty-top", Description: "Invalid because there are no nodes", Nodes: []tc.TopologyNode{}},
-		{Name: "self-parent", Description: "Invalid because a node lists itself as a parent", Nodes: []tc.TopologyNode{
+	invalidTopologyTestCases := []topologyTestCase{
+		{reasonToFail: "no nodes", Topology: tc.Topology{Name: "empty-top", Description: "Invalid because there are no nodes", Nodes: []tc.TopologyNode{}}},
+		{reasonToFail: "a node listing itself as a parent", Topology: tc.Topology{Name: "self-parent", Description: "Invalid because a node lists itself as a parent", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1}},
 			{Cachegroup: "parentCachegroup", Parents: []int{1}},
-		}},
-		{Name: "duplicate-parents", Description: "Invalid because a node lists the same parent twice", Nodes: []tc.TopologyNode{
+		}}},
+		{reasonToFail: "duplicate parents", Topology: tc.Topology{}},
+		{reasonToFail: "too many parents", Topology: tc.Topology{Name: "duplicate-parents", Description: "Invalid because a node lists the same parent twice", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1, 1}},
 			{Cachegroup: "parentCachegroup", Parents: []int{}},
-		}},
-		{Name: "too-many-parents", Description: "Invalid because a node has more than 2 parents", Nodes: []tc.TopologyNode{
+		}}},
+		{reasonToFail: "too many parents", Topology: tc.Topology{Name: "too-many-parents", Description: "Invalid because a node has more than 2 parents", Nodes: []tc.TopologyNode{
 			{Cachegroup: "parentCachegroup", Parents: []int{}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{}},
 			{Cachegroup: "parentCachegroup2", Parents: []int{}},
 			{Cachegroup: "cachegroup1", Parents: []int{0, 1, 2}},
-		}},
-		{Name: "parent-edge", Description: "Invalid because an edge is a parent", Nodes: []tc.TopologyNode{
+		}}},
+		{reasonToFail: "a parent edge", Topology: tc.Topology{Name: "parent-edge", Description: "Invalid because an edge is a parent", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1}},
 			{Cachegroup: "cachegroup2", Parents: []int{}},
-		}},
-		{Name: "leaf-mid", Description: "Invalid because a mid is a leaf node", Nodes: []tc.TopologyNode{
+		}}},
+		{reasonToFail: "a leaf mid", Topology: tc.Topology{Name: "leaf-mid", Description: "Invalid because a mid is a leaf node", Nodes: []tc.TopologyNode{
 			{Cachegroup: "parentCachegroup", Parents: []int{1}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{}},
-		}},
-		{Name: "cyclical-nodes", Description: "Invalid because it contains cycles", Nodes: []tc.TopologyNode{
+		}}},
+		{reasonToFail: "cyclical nodes", Topology: tc.Topology{Name: "cyclical-nodes", Description: "Invalid because it contains cycles", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{1, 2}},
 			{Cachegroup: "parentCachegroup", Parents: []int{2}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{1}},
-		}},
+		}}},
 	}
-	expectations := []string{
-		"no nodes",
-		"a node listing itself as a parent",
-		"duplicate parents",
-		"too many parents",
-		"a parent edge",
-		"a leaf mid",
-		"cyclical nodes",
-	}
-	for index, invalidTopology := range invalidTopologies {
-		if _, _, err := TOSession.CreateTopology(invalidTopology); err == nil {
-			t.Errorf("expected POST with %v to return an error, actual: nil", expectations[index])
+	for _, testCase := range invalidTopologyTestCases {
+		if _, _, err := TOSession.CreateTopology(testCase.Topology); err == nil {
+			t.Errorf("expected POST with %v to return an error, actual: nil", testCase.reasonToFail)
 		}
 	}
 }
