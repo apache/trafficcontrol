@@ -229,22 +229,27 @@ func (topology *TOTopology) removeNodes(cachegroups *[]string) error {
 }
 
 func (topology *TOTopology) addNodes() (error, error, int) {
-	cachegroups := make([]string, len(topology.Nodes))
+	var cachegroupsToInsert []string
+	var indices = make([]int, 0)
 	for index, node := range topology.Nodes {
-		cachegroups[index] = node.Cachegroup
+		if node.Id == 0 {
+			cachegroupsToInsert = append(cachegroupsToInsert, node.Cachegroup)
+			indices = append(indices, index)
+		}
 	}
-
-	rows, err := topology.ReqInfo.Tx.Query(nodeInsertQuery(), topology.Name, pq.Array(cachegroups))
+	if len(cachegroupsToInsert) == 0 {
+		return nil, nil, http.StatusOK
+	}
+	rows, err := topology.ReqInfo.Tx.Query(nodeInsertQuery(), topology.Name, pq.Array(cachegroupsToInsert))
 	if err != nil {
 		return nil, errors.New("error adding nodes: " + err.Error()), http.StatusInternalServerError
 	}
-	for index, node := range topology.Nodes {
+	for _, index := range indices {
 		rows.Next()
-		err = rows.Scan(&node.Id, &topology.Name, &node.Cachegroup)
+		err = rows.Scan(&topology.Nodes[index].Id, &topology.Name, &topology.Nodes[index].Cachegroup)
 		if err != nil {
 			return api.ParseDBError(err)
 		}
-		topology.Nodes[index] = node
 	}
 	if err = rows.Close(); err != nil {
 		return api.ParseDBError(err)
@@ -310,49 +315,37 @@ func (topology *TOTopology) Update() (error, error, int) {
 	if len(topologies) != 1 {
 		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
-	topology.Topology = topologies[0].(tc.Topology)
+	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
 	if userErr, sysErr, errCode := topology.setDescription(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
-	if err := topology.removeParents(); err != nil {
+	if err := oldTopology.removeParents(); err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
 	var oldNodes, newNodes = map[string]int{}, map[string]int{}
-	for index, node := range topology.Nodes {
+	for index, node := range oldTopology.Nodes {
 		oldNodes[node.Cachegroup] = index
 	}
 	for index, node := range topology.Nodes {
 		newNodes[node.Cachegroup] = index
 	}
-	var (
-		toRemove []string
-		toAdd    []tc.TopologyNode
-	)
+	var toRemove []string
 	for cachegroupName := range oldNodes {
 		if _, exists := newNodes[cachegroupName]; !exists {
 			toRemove = append(toRemove, cachegroupName)
 		} else {
-			topology.Nodes[newNodes[cachegroupName]].Id = topology.Nodes[oldNodes[cachegroupName]].Id
+			topology.Nodes[newNodes[cachegroupName]].Id = oldTopology.Nodes[oldNodes[cachegroupName]].Id
 		}
 	}
-	for cachegroupName, index := range newNodes {
-		if _, exists := oldNodes[cachegroupName]; !exists {
-			toAdd = append(toAdd, topology.Nodes[index])
+	if len(toRemove) > 0 {
+		if err := oldTopology.removeNodes(&toRemove); err != nil {
+			return nil, err, http.StatusInternalServerError
 		}
 	}
-	if err := topology.removeNodes(&toRemove); err != nil {
-		return nil, err, http.StatusInternalServerError
-	}
-
-	topology.Nodes = toAdd
 	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-	for _, node := range topology.Nodes {
-		topology.Nodes[newNodes[node.Cachegroup]] = node
-	}
-
 	if userErr, sysErr, errCode := topology.addParents(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
