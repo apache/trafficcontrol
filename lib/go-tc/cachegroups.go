@@ -96,7 +96,3 @@ type CachegroupQueueUpdatesRequest struct {
 	CDNID  *util.JSONIntStr `json:"cdnId"`
 }
 
-const (
-	EdgeCacheGroupType = "EDGE_LOC"
-	MidCacheGroupType  = "MID_LOC"
-)

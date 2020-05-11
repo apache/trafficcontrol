@@ -76,7 +76,11 @@ const MidTypePrefix = "MID"
 
 const OriginTypeName = "ORG"
 
-const CacheGroupOriginTypeName = "ORG_LOC"
+const (
+	CacheGroupEdgeTypeName   = "EDGE_LOC"
+	CacheGroupMidTypeName    = "MID_LOC"
+	CacheGroupOriginTypeName = "ORG_LOC"
+)
 
 const GlobalProfileName = "GLOBAL"
 

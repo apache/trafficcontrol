@@ -58,8 +58,8 @@ func checkForEdgeParents(nodes []tc.TopologyNode, cachegroups []tc.CacheGroupNul
 	errs := make([]error, len(node.Parents))
 	for parentIndex := range node.Parents {
 		cacheGroupType := cachegroups[node.Parents[parentIndex]].Type
-		if *cacheGroupType == tc.EdgeCacheGroupType {
-			errs[parentIndex] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a parent of %v", nodes[parentIndex].Cachegroup, tc.EdgeCacheGroupType, node.Cachegroup)
+		if *cacheGroupType == tc.CacheGroupEdgeTypeName {
+			errs[parentIndex] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a parent of %v", nodes[parentIndex].Cachegroup, tc.CacheGroupEdgeTypeName, node.Cachegroup)
 		}
 	}
 	return util.JoinErrs(errs)
@@ -71,7 +71,7 @@ func checkForLeafMids(nodes []tc.TopologyNode, cacheGroups []tc.CacheGroupNullab
 		isLeafMid[index] = true
 	}
 	for index, node := range nodes {
-		if *cacheGroups[index].Type == tc.EdgeCacheGroupType {
+		if *cacheGroups[index].Type == tc.CacheGroupEdgeTypeName {
 			isLeafMid[index] = false
 		}
 		for _, parentIndex := range node.Parents {
