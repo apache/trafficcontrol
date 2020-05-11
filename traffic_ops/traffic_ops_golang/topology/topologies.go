@@ -82,15 +82,35 @@ func (topology *TOTopology) Validate() error {
 	if nodeCount < 1 {
 		rules["length"] = fmt.Errorf("must provide 1 or more node, %v found", nodeCount)
 	}
-	cacheGroups := make([]*tc.CacheGroupNullable, nodeCount)
-	var err error
-	cacheGroupsExist := true
+	var (
+		cacheGroups      = make([]tc.CacheGroupNullable, nodeCount)
+		cacheGroupsExist = true
+		err              error
+		userErr          error
+		sysErr           error
+		cacheGroupMap    map[string]tc.CacheGroupNullable
+		exists           bool
+	)
+	_ = err
+	cacheGroupNames := make([]string, len(topology.Nodes))
 	for index, node := range topology.Nodes {
 		rules[fmt.Sprintf("node %v parents size", index)] = validation.Validate(node.Parents, validation.Length(0, 2))
 		rules[fmt.Sprintf("node %v duplicate parents", index)] = checkForDuplicateParents(topology.Nodes, index)
 		rules[fmt.Sprintf("node %v self parent", index)] = checkForSelfParents(topology.Nodes, index)
-		if cacheGroups[index], err = cachegroup.GetCacheGroupByName(node.Cachegroup, &topology.APIInfoImpl); err != nil {
-			rules[fmt.Sprintf("cachegroup %v not found", index)] = fmt.Errorf("error getting cachegroup %v: %v", node.Cachegroup, err.Error())
+		cacheGroupNames[index] = node.Cachegroup
+	}
+	if cacheGroupMap, userErr, sysErr, _ = cachegroup.GetCacheGroupsByName(cacheGroupNames, topology.APIInfoImpl.ReqInfo.Tx); userErr != nil || sysErr != nil {
+		var err error
+		message := "could not get cachegroups"
+		if userErr != nil {
+			err = fmt.Errorf("%s: %s", message, userErr.Error())
+		}
+		return err
+	}
+	cacheGroups = make([]tc.CacheGroupNullable, len(topology.Nodes))
+	for index, node := range topology.Nodes {
+		if cacheGroups[index], exists = cacheGroupMap[node.Cachegroup]; !exists {
+			rules[fmt.Sprintf("cachegroup %s not found", node.Cachegroup)] = fmt.Errorf("node %d references nonexistent cachegroup %s", index, node.Cachegroup)
 			cacheGroupsExist = false
 		}
 	}
@@ -98,10 +118,10 @@ func (topology *TOTopology) Validate() error {
 
 	if cacheGroupsExist {
 		for index, node := range topology.Nodes {
-			rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = checkForEdgeParents(topology.Nodes, &cacheGroups, index)
+			rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = checkForEdgeParents(topology.Nodes, cacheGroups, index)
 		}
 
-		for _, leafMid := range checkForLeafMids(topology.Nodes, &cacheGroups) {
+		for _, leafMid := range checkForLeafMids(topology.Nodes, cacheGroups) {
 			rules[fmt.Sprintf("node %v leaf mid", leafMid.Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 child)", leafMid.Cachegroup, tc.MidCacheGroupType)
 		}
 	}

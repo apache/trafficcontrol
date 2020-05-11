@@ -379,21 +379,43 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 	return nil
 }
 
-func GetCacheGroupByName(name string, apiInfo *api.APIInfoImpl) (*tc.CacheGroupNullable, error) {
-	originalParams := apiInfo.ReqInfo.Params
-	apiInfo.ReqInfo.Params = map[string]string{"name": name}
-	cacheGroup := TOCacheGroup{APIInfoImpl: *apiInfo}
-	result, userErr, sysErr, _ := cacheGroup.Read()
-	apiInfo.ReqInfo.Params = originalParams
-	if userErr != nil || sysErr != nil {
-		return nil, util.JoinErrs([]error{userErr, sysErr})
+func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroupNullable, error, error, int) {
+	query := SelectQuery() + multipleCacheGroupsWhere()
+	namesPqArray := pq.Array(names)
+	rows, err := Tx.Query(query, namesPqArray)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return nil, userErr, sysErr, errCode
 	}
-	if len(result) == 0 {
-		return nil, fmt.Errorf("No cache group exists by the name of %v", name)
+	cacheGroupMap := map[string]tc.CacheGroupNullable{}
+	for rows.Next() {
+		var s tc.CacheGroupNullable
+		lms := make([]tc.LocalizationMethod, 0)
+		cgfs := make([]string, 0)
+		if err = rows.Scan(
+			&s.ID,
+			&s.Name,
+			&s.ShortName,
+			&s.Latitude,
+			&s.Longitude,
+			pq.Array(&lms),
+			&s.ParentCachegroupID,
+			&s.ParentName,
+			&s.SecondaryParentCachegroupID,
+			&s.SecondaryParentName,
+			&s.Type,
+			&s.TypeID,
+			&s.LastUpdated,
+			pq.Array(&cgfs),
+			&s.FallbackToClosest,
+		); err != nil {
+			return nil, nil, errors.New("cachegroup read: scanning: " + err.Error()), http.StatusInternalServerError
+		}
+		s.LocalizationMethods = &lms
+		s.Fallbacks = &cgfs
+		cacheGroupMap[*s.Name] = s
 	}
-
-	cacheGroup = result[0].(TOCacheGroup)
-	return &cacheGroup.CacheGroupNullable, nil
+	return cacheGroupMap, nil, nil, http.StatusOK
 }
 
 func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
@@ -636,6 +658,13 @@ LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
+}
+
+func multipleCacheGroupsWhere() string {
+	return `
+WHERE
+cachegroup.name = ANY ($1)
+`
 }
 
 func UpdateQuery() string {
