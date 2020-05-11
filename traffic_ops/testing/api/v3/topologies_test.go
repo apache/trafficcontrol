@@ -39,7 +39,7 @@ func CreateTestTopologies(t *testing.T) {
 	for _, top := range testData.Topologies {
 		resp, _, err := TOSession.CreateTopology(top)
 		if err != nil {
-			t.Errorf("could not CREATE topology: %v", err)
+			t.Fatalf("could not CREATE topology: %v", err)
 		}
 		t.Log("Response: ", resp)
 	}
@@ -79,7 +79,7 @@ func ValidationTestTopologies(t *testing.T) {
 	}
 	for _, testCase := range invalidTopologyTestCases {
 		if _, _, err := TOSession.CreateTopology(testCase.Topology); err == nil {
-			t.Errorf("expected POST with %v to return an error, actual: nil", testCase.reasonToFail)
+			t.Fatalf("expected POST with %v to return an error, actual: nil", testCase.reasonToFail)
 		}
 	}
 }
@@ -88,15 +88,15 @@ func DeleteTestTopologies(t *testing.T) {
 	for _, top := range testData.Topologies {
 		delResp, _, err := TOSession.DeleteTopology(top.Name)
 		if err != nil {
-			t.Errorf("cannot DELETE topology: %v - %v", err, delResp)
+			t.Fatalf("cannot DELETE topology: %v - %v", err, delResp)
 		}
 
 		topology, _, err := TOSession.GetTopology(top.Name)
 		if err == nil {
-			t.Errorf("expected error trying to GET deleted topology: %s, actual: nil", top.Name)
+			t.Fatalf("expected error trying to GET deleted topology: %s, actual: nil", top.Name)
 		}
 		if topology != nil {
-			t.Errorf("expected nil trying to GET deleted topology: %s, actual: non-nil", top.Name)
+			t.Fatalf("expected nil trying to GET deleted topology: %s, actual: non-nil", top.Name)
 		}
 	}
 }
