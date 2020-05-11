@@ -1,13 +1,19 @@
 package tc
 
 import (
+	// "bytes"
 	"database/sql/driver"
 	"encoding/json"
+	// "errors"
 	"fmt"
 	"net"
+	// "strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/lib/go-log"
+
+	// "github.com/lib/pq"
 )
 
 /*
@@ -86,7 +92,7 @@ type ServerInterfaceInfo struct {
 	Name         string            `json:"name" db:"name"`
 }
 
-// Value implements the database/sql/driver.Valuer interface.
+// Value implements the driver.Valuer interface
 // marshals struct to json to pass back as a json.RawMessage
 func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
 	b, err := json.Marshal(sii)
@@ -101,8 +107,79 @@ func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
 	}
 
+	log.Debugf(string(b))
+
 	return json.Unmarshal([]byte(b), sii)
 }
+
+// Scan implements the sql.Scanner interface
+// expects json.RawMessage and unmarshals to a deliveryservice struct
+// func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
+// 	b, ok := src.([]byte)
+// 	if !ok {
+// 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
+// 	}
+// 	log.Debugf(string(b))
+// 	log.Debugf(fmt.Sprintf("%v", b))
+
+// 	start := bytes.Index(b, []byte("\""))
+// 	if start < 0 {
+// 		return errors.New("expected a '\"' to indicate beginning of array")
+// 	}
+// 	end := bytes.LastIndex(b, []byte("\""))
+// 	if end < 0 {
+// 		return errors.New("expected a '\"' to indicate end of array")
+// 	}
+// 	if start >= end {
+// 		return errors.New("expected a '\"' at the beginning and end of the array")
+// 	}
+
+// 	log.Debugf("start=%d, end=%d", start, end)
+
+// 	var ips []ServerIpAddress
+// 	if err := pq.Array(&ips).Scan(b[start+1:end]); err != nil {
+// 		return fmt.Errorf("Scanning IP address array: %v", err)
+// 	}
+
+// 	sii.IpAddresses = ips
+
+// 	rest := bytes.Split(b[end+1:], []byte(","))
+// 	if len(rest) != 4 {
+// 		return fmt.Errorf("Expected 4 values to parse after ips, got %d (%v)", len(rest), rest)
+// 	}
+
+// 	if len(rest[0]) == 0 {
+// 		sii.MaxBandwidth = nil
+// 	} else if mb, err := strconv.ParseInt(string(rest[0]), 10, 64); err != nil {
+// 		return fmt.Errorf("Parsing max bandwidth: %v", err)
+// 	} else {
+// 		sii.MaxBandwidth = &mb
+// 	}
+
+// 	if len(rest[1]) != 1 {
+// 		return fmt.Errorf("Unknown boolean value encountered parsing 'monitor': %v", rest[1])
+// 	}
+// 	if rest[1][0] == []byte("t")[0] {
+// 		sii.Monitor = true
+// 	} else if rest[1][0] == []byte("f")[0] {
+// 		sii.Monitor = false
+// 	} else {
+// 		return fmt.Errorf("Unknown boolean value encountered parsing 'monitor': %v", rest[1])
+// 	}
+
+// 	if len(rest[2]) == 0 {
+// 		sii.MTU = nil
+// 	} else if mtu, err := strconv.ParseUint(string(rest[2]), 10, 64); err != nil {
+// 		return fmt.Errorf("Parsing MTU: %v", err)
+// 	} else {
+// 		sii.MTU = &mtu
+// 	}
+
+// 	sii.Name = string(bytes.TrimRight(rest[3], ")"))
+
+// 	// return json.Unmarshal([]byte(b), sii)
+// 	return nil
+// }
 
 // LegacyInterfaceDetails is the details for interfaces on servers for API v1 and v2.
 type LegacyInterfaceDetails struct {
@@ -137,18 +214,27 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 			address := addr.Address
 			gateway := addr.Gateway
 
-			parsedIp, mask, err := net.ParseCIDR(address)
+			var parsedIp net.IP
+			var mask *net.IPNet
+			var err error
+			parsedIp, mask, err = net.ParseCIDR(address)
 			if err != nil {
-				return legacyDetails, fmt.Errorf("Failed to parse '%s' as network or CIDR string: %v", address, err)
+				parsedIp = net.ParseIP(address)
+				if parsedIp == nil {
+					return legacyDetails, fmt.Errorf("Failed to parse '%s' as network or CIDR string: %v", address, err)
+				}
 			}
 
 			if parsedIp.To4() == nil {
 				legacyDetails.IP6Address = &address
 				legacyDetails.IP6Gateway = gateway
-			} else {
+			} else if mask != nil {
 				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
 				legacyDetails.IPGateway = gateway
 				legacyDetails.IPNetmask = util.StrPtr(fmt.Sprintf("%d.%d.%d.%d", mask.Mask[0], mask.Mask[1], mask.Mask[2], mask.Mask[3]))
+			} else {
+				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
+				legacyDetails.IPGateway = gateway
 			}
 		}
 	}
@@ -316,7 +402,7 @@ type ServerNullableV2 struct {
 // ServerNullable represents an ATC server, as returned by the TO API.
 type ServerNullable struct {
 	CommonServerProperties
-	Interfaces []ServerInterfaceInfo `json:"interfaces"`
+	Interfaces []ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
 }
 
 // ToServerV2 converts the server to an equivalent ServerNullableV2 structure,

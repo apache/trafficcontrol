@@ -23,6 +23,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -33,12 +34,14 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
-	validation "github.com/go-ozzo/ozzo-validation"
+
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -56,9 +59,190 @@ SELECT COUNT(server.id)
 FROM server
 `
 
+const selectQuery = `
+SELECT
+	cg.name AS cachegroup,
+	cdn.name AS cdn_name,
+	s.domain_name,
+	s.guid,
+	s.host_name,
+	s.https_port,
+	s.id,
+	s.ilo_ip_address,
+	s.ilo_ip_gateway,
+	s.ilo_ip_netmask,
+	s.ilo_password,
+	s.ilo_username,
+	s.offline_reason,
+	pl.name as phys_location,
+	p.name as profile,
+	p.description as profile_desc,
+	s.rack,
+	s.router_host_name,
+	s.router_port_name,
+	st.name as status,
+	s.tcp_port,
+	t.name as server_type,
+	s.xmpp_id,
+	s.xmpp_passwd
+FROM server AS s
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id
+`
+
+const selectInterfacesQuery = `
+SELECT (
+	ARRAY ( SELECT (
+		json_build_object (
+			'ipAddresses',
+			ARRAY (
+				SELECT (
+					json_build_object (
+						'address', ip_address.address,
+						'gateway', ip_address.gateway,
+						'service_address', ip_address.service_address
+					)
+				)
+				FROM ip_address
+				WHERE ip_address.interface = interface.name
+				AND ip_address.server = server.id
+			),
+			'max_bandwidth', interface.max_bandwidth,
+			'monitor', interface.monitor,
+			'mtu', interface.mtu,
+			'name', interface.name
+		)
+	)
+	FROM interface
+	WHERE interface.server = server.id
+)) AS interfaces,
+server.id
+FROM server
+WHERE server.id = ANY ($1)
+`
+
+const insertQuery = `
+INSERT INTO server (
+	cachegroup,
+	cdn_id,
+	domain_name,
+	host_name,
+	https_port,
+	ilo_ip_address,
+	ilo_ip_netmask,
+	ilo_ip_gateway,
+	ilo_username,
+	ilo_password,
+	mgmt_ip_address,
+	mgmt_ip_netmask,
+	mgmt_ip_gateway,
+	offline_reason,
+	phys_location,
+	profile,
+	rack,
+	router_host_name,
+	router_port_name,
+	status,
+	tcp_port,
+	type,
+	upd_pending,
+	xmpp_id,
+	xmpp_passwd
+) VALUES (
+	:cachegroup_id,
+	:cdn_id,
+	:domain_name,
+	:host_name,
+	:https_port,
+	:ilo_ip_address,
+	:ilo_ip_netmask,
+	:ilo_ip_gateway,
+	:ilo_username,
+	:ilo_password,
+	:mgmt_ip_address,
+	:mgmt_ip_netmask,
+	:mgmt_ip_gateway,
+	:offline_reason,
+	:phys_location_id,
+	:profile_id,
+	:rack,
+	:router_host_name,
+	:router_port_name,
+	:status_id,
+	:tcp_port,
+	:server_type_id,
+	:upd_pending,
+	:xmpp_id,
+	:xmpp_passwd
+) RETURNING id,last_updated
+`
+
+const insertInterfacesQuery = `
+INSERT INTO interface (
+	max_bandwidth,
+	monitor,
+	mtu,
+	name,
+	server
+) VALUES (
+	$1,
+	$2,
+	$3,
+	$4,
+	$5
+)
+`
+
+const insertIPsQuery = `
+INSERT INTO ip_address (
+	address,
+	gateway,
+	interface,
+	server,
+	service_address
+) VALUES UNNEST (
+	$1
+)
+`
+
+const updateQuery = `
+UPDATE server SET
+	cachegroup=:cachegroup_id,
+	cdn_id=:cdn_id,
+	domain_name=:domain_name,
+	host_name=:host_name,
+	https_port=:https_port,
+	ilo_ip_address=:ilo_ip_address,
+	ilo_ip_netmask=:ilo_ip_netmask,
+	ilo_ip_gateway=:ilo_ip_gateway,
+	ilo_username=:ilo_username,
+	ilo_password=:ilo_password,
+	mgmt_ip_address=:mgmt_ip_address,
+	mgmt_ip_netmask=:mgmt_ip_netmask,
+	mgmt_ip_gateway=:mgmt_ip_gateway,
+	offline_reason=:offline_reason,
+	phys_location=:phys_location_id,
+	profile=:profile_id,
+	rack=:rack,
+	router_host_name=:router_host_name,
+	router_port_name=:router_port_name,
+	status=:status_id,
+	tcp_port=:tcp_port,
+	type=:server_type_id,
+	upd_pending=:upd_pending,
+	xmpp_id=:xmpp_id,
+	xmpp_passwd=:xmpp_passwd
+WHERE id=:id
+RETURNING last_updated
+`
+
 func (s *TOServer) SetLastUpdated(t tc.TimeNoMod) { s.LastUpdated = &t }
-func (*TOServer) InsertQuery() string             { return insertQuery() }
-func (*TOServer) UpdateQuery() string             { return updateQuery() }
+func (*TOServer) InsertQuery() string             { return insertQuery }
+func (*TOServer) UpdateQuery() string             { return updateQuery }
 func (*TOServer) DeleteQuery() string             { return deleteQuery() }
 
 func (TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -97,37 +281,19 @@ func (s *TOServer) Sanitize() {
 	}
 }
 
-func (s *TOServer) Validate() error {
-	s.Sanitize()
-	version := s.APIInfo().Version
+func validateCommon(s tc.CommonServerProperties, tx *sql.Tx) []error {
+	if s.XMPPID == nil || *s.XMPPID == "" {
+		hostName := *s.HostName
+		s.XMPPID = &hostName
+	}
+
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
-	errs := []error{}
-	if (s.IPAddress == nil || *s.IPAddress == "") && (s.IP6Address == nil || *s.IP6Address == "") {
-		errs = append(errs, tc.NeedsAtLeastOneIPError)
-	}
-
-	if s.IPIsService != nil && *s.IPIsService && (s.IPAddress == nil || *s.IPAddress == "") {
-		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
-	}
-
-	if s.IP6IsService != nil && *s.IP6IsService && (s.IP6Address == nil || *s.IP6Address == "") {
-		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
-	}
-
-	if version.Major >= 2 {
-		if (s.IPIsService == nil || !*s.IPIsService) && (s.IP6IsService == nil || !*s.IP6IsService) {
-			errs = append(errs, tc.NeedsAtLeastOneServiceAddressError)
-		}
-	}
-
-	validateErrs := validation.Errors{
+	errs := tovalidate.ToErrors(validation.Errors{
 		"cachegroupId":   validation.Validate(s.CachegroupID, validation.NotNil),
 		"cdnId":          validation.Validate(s.CDNID, validation.NotNil),
 		"domainName":     validation.Validate(s.DomainName, validation.NotNil, noSpaces),
 		"hostName":       validation.Validate(s.HostName, validation.NotNil, noSpaces),
-		"interfaceMtu":   validation.Validate(s.InterfaceMtu, validation.NotNil),
-		"interfaceName":  validation.Validate(s.InterfaceName, validation.NotNil),
 		"physLocationId": validation.Validate(s.PhysLocationID, validation.NotNil),
 		"profileId":      validation.Validate(s.ProfileID, validation.NotNil),
 		"statusId":       validation.Validate(s.StatusID, validation.NotNil),
@@ -135,7 +301,51 @@ func (s *TOServer) Validate() error {
 		"updPending":     validation.Validate(s.UpdPending, validation.NotNil),
 		"httpsPort":      validation.Validate(s.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
 		"tcpPort":        validation.Validate(s.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
+	})
+
+	if len(errs) > 0 {
+		return errs
 	}
+
+	if _, err := tc.ValidateTypeID(tx, s.TypeID, "server"); err != nil {
+		errs = append(errs, err)
+	}
+
+	var cdnID int
+	if err := tx.QueryRow("SELECT cdn from profile WHERE id=$1", s.ProfileID).Scan(&cdnID); err != nil {
+		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
+		if err == sql.ErrNoRows {
+			errs = append(errs, errors.New("associated profile must have a cdn associated"))
+		} else {
+			errs = append(errs, tc.DBError)
+		}
+		return errs
+	}
+
+	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
+	if cdnID != *s.CDNID {
+		errs = append(errs, fmt.Errorf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, *s.ProfileID, *s.CDNID))
+	}
+
+	return errs
+}
+
+func validateV1(s tc.ServerNullableV11, tx *sql.Tx) error {
+	if s.IP6Address != nil && len(strings.TrimSpace(*s.IP6Address)) == 0 {
+		s.IP6Address = nil
+	}
+
+
+	errs := []error{}
+	if (s.IPAddress == nil || *s.IPAddress == "") && s.IP6Address == nil {
+		errs = append(errs, tc.NeedsAtLeastOneIPError)
+	}
+
+	validateErrs := validation.Errors{
+		"interfaceMtu":   validation.Validate(s.InterfaceMtu, validation.NotNil),
+		"interfaceName":  validation.Validate(s.InterfaceName, validation.NotNil),
+	}
+
 	if s.IPAddress != nil && *s.IPAddress != "" {
 		validateErrs["ipAddress"] = validation.Validate(s.IPAddress, is.IPv4)
 		validateErrs["ipNetmask"] = validation.Validate(s.IPNetmask, validation.NotNil)
@@ -145,34 +355,34 @@ func (s *TOServer) Validate() error {
 		validateErrs["ip6Address"] = validation.Validate(s.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress))
 	}
 	errs = append(errs, tovalidate.ToErrors(validateErrs)...)
-	if len(errs) > 0 {
-		return util.JoinErrs(errs)
-	}
+	errs = append(errs, validateCommon(s.CommonServerProperties, tx)...)
 
-	if _, err := tc.ValidateTypeID(s.ReqInfo.Tx.Tx, s.TypeID, "server"); err != nil {
+	return util.JoinErrs(errs)
+}
+
+func validateV2(s tc.ServerNullableV2, tx *sql.Tx) error {
+	var errs []error
+
+	if err := validateV1(s.ServerNullableV11, tx); err != nil {
 		return err
 	}
 
-	rows, err := s.ReqInfo.Tx.Tx.Query("select cdn from profile where id=$1", s.ProfileID)
-	if err != nil {
-		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
-		errs = append(errs, tc.DBError)
-		return util.JoinErrs(errs)
+	if (s.IPIsService == nil || !*s.IPIsService) && (s.IP6IsService == nil || !*s.IP6IsService) {
+		errs = append(errs, tc.NeedsAtLeastOneServiceAddressError)
 	}
-	defer rows.Close()
-	var cdnID int
-	for rows.Next() {
-		if err := rows.Scan(&cdnID); err != nil {
-			log.Error.Printf("could not scan cdnID from profile: %s\n", err)
-			errs = append(errs, errors.New("associated profile must have a cdn associated"))
-			return util.JoinErrs(errs)
-		}
+
+	if s.IPIsService != nil && *s.IPIsService && (s.IPAddress == nil) {
+		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
-	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *s.CDNID)
-	if cdnID != *s.CDNID {
-		errs = append(errs, errors.New(fmt.Sprintf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, *s.ProfileID, *s.CDNID)))
+
+	if s.IP6IsService != nil && *s.IP6IsService && (s.IP6Address == nil) {
+		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 	return util.JoinErrs(errs)
+}
+
+func validateV3(tc.ServerNullableV2, *sql.Tx) error {
+	return nil
 }
 
 // ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
@@ -234,7 +444,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major <= 1 {
-		legacyServers := make([]tc.ServerNullableV2, len(servers))
+		legacyServers := make([]tc.ServerNullableV2, 0, len(servers))
 		for _, server := range servers {
 			legacyServer, err := server.ToServerV2()
 			if err != nil {
@@ -247,7 +457,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	legacyServers := make([]tc.ServerNullableV11, len(servers))
+	legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
+	log.Debugf("servers len=%d", len(servers))
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2()
 		if err != nil {
@@ -256,6 +467,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		}
 		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
 	}
+	log.Debugf("legacyServers len=%d", len(legacyServers))
 	api.WriteResp(w, r, legacyServers)
 }
 
@@ -337,7 +549,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		return nil, unfiltered, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
-	query := selectQuery() + queryAddition + where + orderBy + pagination
+	query := selectQuery + queryAddition + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
 	rows, err := tx.NamedQuery(query, queryValues)
@@ -346,10 +558,12 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 	}
 	defer rows.Close()
 
-	servers := []tc.ServerNullable{}
 
 	HiddenField := "********"
 
+
+	servers := make(map[int]tc.ServerNullable)
+	ids := []int{}
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err = rows.StructScan(&s); err != nil {
@@ -359,22 +573,56 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 			s.ILOPassword = &HiddenField
 			s.XMPPPasswd = &HiddenField
 		}
-		servers = append(servers, s)
+
+		if s.ID == nil {
+			return nil, unfiltered, nil, errors.New("found server with nil ID"), http.StatusInternalServerError
+		}
+		if _, ok := servers[*s.ID]; ok {
+			return nil, unfiltered, nil, fmt.Errorf("found more than one server with ID #%d", *s.ID), http.StatusInternalServerError
+		}
+		servers[*s.ID] = s
+		ids = append(ids, *s.ID)
+	}
+
+	interfaceRows, err := tx.Tx.Query(selectInterfacesQuery, pq.Array(ids))
+	if err != nil {
+		return nil, unfiltered, nil, fmt.Errorf("querying for interfaces: %v", err), http.StatusInternalServerError
+	}
+	defer interfaceRows.Close()
+
+	for interfaceRows.Next() {
+		ifaces := []tc.ServerInterfaceInfo{}
+		var id int
+		if err = interfaceRows.Scan(pq.Array(&ifaces), &id); err != nil {
+			return nil, unfiltered, nil, fmt.Errorf("getting server interfaces: %v", err), http.StatusInternalServerError
+		}
+
+		if s, ok := servers[id]; !ok {
+			log.Warnf("interfaces query returned interfaces for server #%d that was not in original query")
+		} else {
+			s.Interfaces = ifaces
+			servers[id] = s
+		}
+	}
+
+	var returnable []tc.ServerNullable
+	for _, server := range servers {
+		returnable = append(returnable, server)
 	}
 
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
-		mids, userErr, sysErr, errCode := getMidServers(servers, tx)
+		mids, userErr, sysErr, errCode := getMidServers(returnable, tx)
 
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
 		if userErr != nil || sysErr != nil {
 			return nil, unfiltered, userErr, sysErr, errCode
 		}
-		servers = append(servers, mids...)
+		returnable = append(returnable, mids...)
 	}
 
-	return servers, unfiltered, nil, nil, http.StatusOK
+	return returnable, unfiltered, nil, nil, http.StatusOK
 }
 
 // getMidServers gets the mids used by the servers in this DS.
@@ -396,7 +644,7 @@ func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullabl
 
 	edgeIDs := strings.Join(ids, ",")
 	// TODO: include secondary parent?
-	q := selectQuery() + `
+	q := selectQuery + `
 WHERE t.name = 'MID' AND s.cachegroup IN (
 SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
 WHERE cg.id IN (
@@ -421,81 +669,284 @@ WHERE s.id IN (` + edgeIDs + `)))
 	return mids, nil, nil, http.StatusOK
 }
 
-func (s *TOServer) Update() (error, error, int) {
-	if s.IP6Address != nil && len(strings.TrimSpace(*s.IP6Address)) == 0 {
-		s.IP6Address = nil
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
-	// see if type changed
-	typeID := -1
-	// see if cdn changed
-	cdnId := -1
+	defer inf.Close()
 
-	if err := s.APIInfo().Tx.QueryRow("SELECT type, cdn_id FROM server WHERE id = $1", s.ID).Scan(&typeID, &cdnId); err != nil {
+	var server tc.ServerNullableV11
+
+	tx := inf.Tx.Tx
+
+	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err := validateV1(server, tx); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	// see if cdn or type changed
+	var cdnID int
+	var typeID int
+
+	if err := inf.Tx.QueryRow("SELECT type, cdn_id FROM server WHERE id = $1", server.ID).Scan(&typeID, &cdnID); err != nil {
 		if err == sql.ErrNoRows {
-			return errors.New("no server found with this id"), nil, http.StatusNotFound
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this ID"), nil)
+			return
 		}
-		return nil, fmt.Errorf("getting current server type: %v", err), http.StatusInternalServerError
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("getting current server type: %v", err))
+		return
 	}
 
-	dsIDs := []int64{}
-	if err := s.APIInfo().Tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", s.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("getting server assigned delivery services: %v", err), http.StatusInternalServerError
+	var dsIDs []int64
+	if err := inf.Tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", server.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("getting server assigned delivery services: %v", err))
+		return
 	}
 	// Check to see if the user is trying to change the CDN of a server, which is already linked with a DS
-	if cdnId != *s.CDNID && len(dsIDs) != 0 {
-		return errors.New("server cdn can not be updated when it is currently assigned to delivery services"), nil, http.StatusConflict
+	if cdnID != *server.CDNID && len(dsIDs) != 0 {
+		api.HandleErr(w, r, tx, http.StatusConflict, errors.New("server cdn can not be updated when it is currently assigned to delivery services"), nil)
+		return
 	}
 	// If type is changing ensure it isn't assigned to any DSes.
-	if typeID != *s.TypeID {
+	if typeID != *server.TypeID {
 		if len(dsIDs) != 0 {
-			return errors.New("server type can not be updated when it is currently assigned to delivery services"), nil, http.StatusConflict
+			api.HandleErr(w, r, tx, http.StatusConflict, errors.New("server type can not be updated when it is currently assigned to Delivery Services"), nil)
+			return
 		}
 	}
 
-	current := TOServer{}
-	err := s.ReqInfo.Tx.QueryRowx(selectV20UpdatesQuery()+` WHERE sv.id=$1`, strconv.Itoa(*s.ID)).StructScan(&current)
+	// current := TOServer{}
+	// err := inf.Tx.QueryRowx(selectV20UpdatesQuery()+` WHERE sv.id=$1`, strconv.Itoa(*s.ID)).StructScan(&current)
+	// if err != nil {
+	// 	return api.ParseDBError(err)
+	// }
+	// defaultIsService := true
+	// if s.IPIsService == nil {
+	// 	if current.IPIsService != nil {
+	// 		s.IPIsService = current.IPIsService
+	// 	} else {
+	// 		s.IPIsService = &defaultIsService
+	// 	}
+	// }
+	// if s.IP6IsService == nil {
+	// 	if current.IP6IsService != nil {
+	// 		s.IP6IsService = current.IP6IsService
+	// 	} else {
+	// 		s.IP6IsService = &defaultIsService
+	// 	}
+	// }
+
+	rows, err := inf.Tx.NamedQuery(updateQuery, server)
 	if err != nil {
-		return api.ParseDBError(err)
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
-	defaultIsService := true
-	if s.IPIsService == nil {
-		if current.IPIsService != nil {
-			s.IPIsService = current.IPIsService
-		} else {
-			s.IPIsService = &defaultIsService
-		}
-	}
-	if s.IP6IsService == nil {
-		if current.IP6IsService != nil {
-			s.IP6IsService = current.IP6IsService
-		} else {
-			s.IP6IsService = &defaultIsService
-		}
-	}
+	defer rows.Close()
 
-	return api.GenericUpdate(s)
+	if !rows.Next() {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
+	}
+	var lastUpdated tc.TimeNoMod
+	if err := rows.Scan(&lastUpdated); err != nil {
+		api.HandleErr(w, r, tx, http.StatusNotFound, nil, fmt.Errorf("scanning lastUpdated from server insert: %v", err))
+		return
+	}
+	server.LastUpdated = &lastUpdated
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
 }
 
-func (s *TOServer) Create() (error, error, int) {
-	// TODO put in Validate()
-	if s.IP6Address != nil && len(strings.TrimSpace(*s.IP6Address)) == 0 {
-		s.IP6Address = nil
-	}
-	if s.XMPPID == nil || *s.XMPPID == "" {
-		hostName := *s.HostName
-		s.XMPPID = &hostName
+func createInterfaces(s tc.ServerNullableV11, tx *sql.Tx) error {
+	if err := tx.QueryRow(insertInterfacesQuery, nil, true, s.InterfaceMtu, s.InterfaceName, s.ID).Scan(); err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("Inserting interface: %v", err)
 	}
 
-	// default the is service field to true if omitted and to upgrade version < 1.4
-	defaultIsService := true
-	if s.IPIsService == nil {
-		s.IPIsService = &defaultIsService
-	}
-	if s.IP6IsService == nil {
-		s.IP6IsService = &defaultIsService
+	var ips []tc.ServerIpAddress
+	if s.IPAddress != nil && *s.IPAddress != "" {
+		ips = append(ips, tc.ServerIpAddress{*s.IPAddress, s.IPGateway, *s.InterfaceName, uint64(*s.ID), true})
 	}
 
-	return api.GenericCreate(s)
+	if s.IP6Address != nil && *s.IP6Address != "" {
+		ips = append(ips, tc.ServerIpAddress{*s.IP6Address, s.IP6Gateway, *s.InterfaceName, uint64(*s.ID), true})
+	}
+
+	if err := tx.QueryRow(insertIPsQuery, pq.Array(&ips)).Scan(); err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("Inserting IPs: %v", err)
+	}
+	return nil
+}
+
+func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+	var server tc.ServerNullableV11
+
+	tx := inf.Tx.Tx
+
+	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err := validateV1(server, tx); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer resultRows.Close()
+
+	var id int
+	var lastUpdated tc.TimeNoMod
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
+			return
+		}
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("server create: no server was inserted, no id was returned"))
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
+	}
+	server.ID = &id
+	server.LastUpdated = &lastUpdated
+
+	if err := createInterfaces(server, tx); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+}
+
+func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+	var server tc.ServerNullableV2
+
+	tx := inf.Tx.Tx
+
+	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err := validateV2(server, tx); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer resultRows.Close()
+
+
+	var id int
+	var lastUpdated tc.TimeNoMod
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
+			return
+		}
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("server create: no server was inserted, no id was returned"))
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
+	}
+	server.ID = &id
+	server.LastUpdated = &lastUpdated
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+}
+
+func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+	var server tc.ServerNullableV2
+
+	tx := inf.Tx.Tx
+
+	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err := validateV3(server, tx); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer resultRows.Close()
+
+
+	var id int
+	var lastUpdated tc.TimeNoMod
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
+			return
+		}
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("server create: no server was inserted, no id was returned"))
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
+	}
+	server.ID = &id
+	server.LastUpdated = &lastUpdated
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+}
+
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	switch {
+	case inf.Version.Major <= 1:
+		createV1(inf, w, r)
+	case inf.Version.Major == 2:
+		createV2(inf, w, r)
+	default:
+		createV3(inf, w, r)
+	}
 }
 
 func (s *TOServer) Delete() (error, error, int) { return api.GenericDelete(s) }
@@ -508,179 +959,7 @@ FROM
 	server sv`
 }
 
-func selectQuery() string {
-	const JumboFrameBPS = 9000
-	return `
-SELECT
-	cg.name AS cachegroup,
-	cdn.name AS cdn_name,
-	ARRAY(select deliveryservice from deliveryservice_server where server = s.id),
-	s.domain_name,
-	s.guid,
-	s.host_name,
-	s.https_port,
-	s.id,
-	s.ilo_ip_address,
-	s.ilo_ip_gateway,
-	s.ilo_ip_netmask,
-	s.ilo_password,
-	s.ilo_username,
-	ARRAY (
-SELECT ( json_build_object (
-'ipAddresses', ARRAY (
-SELECT ( json_build_object (
-'address', ip_address.address,
-'gateway', ip_address.gateway,
-'service_address', ip_address.service_address
-))
-FROM ip_address
-WHERE ip_address.interface = interface.name
-AND ip_address.server = s.id
-),
-'max_bandwidth', interface.max_bandwidth,
-'monitor', interface.monitor,
-'mtu', COALESCE (interface.mtu, 9000),
-'name', interface.name
-))
-FROM interface
-WHERE interface.server = s.id
-) AS interfaces,
-	s.offline_reason,
-	pl.name as phys_location,
-	p.name as profile,
-	p.description as profile_desc,
-	s.rack,
-	s.router_host_name,
-	s.router_port_name,
-	st.name as status,
-	s.tcp_port,
-	t.name as server_type,
-	s.xmpp_id,
-	s.xmpp_passwd
-FROM server AS s
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id`
-}
 
-func insertQuery() string {
-	query := `INSERT INTO server (
-cachegroup,
-cdn_id,
-domain_name,
-host_name,
-https_port,
-ilo_ip_address,
-ilo_ip_netmask,
-ilo_ip_gateway,
-ilo_username,
-ilo_password,
-interface_mtu,
-interface_name,
-ip6_address,
-ip6_address_is_service,
-ip6_gateway,
-ip_address,
-ip_address_is_service,
-ip_netmask,
-ip_gateway,
-mgmt_ip_address,
-mgmt_ip_netmask,
-mgmt_ip_gateway,
-offline_reason,
-phys_location,
-profile,
-rack,
-router_host_name,
-router_port_name,
-status,
-tcp_port,
-type,
-upd_pending,
-xmpp_id,
-xmpp_passwd
-) VALUES (
-:cachegroup_id,
-:cdn_id,
-:domain_name,
-:host_name,
-:https_port,
-:ilo_ip_address,
-:ilo_ip_netmask,
-:ilo_ip_gateway,
-:ilo_username,
-:ilo_password,
-:interface_mtu,
-:interface_name,
-:ip6_address,
-:ip6_address_is_service,
-:ip6_gateway,
-:ip_address,
-:ip_address_is_service,
-:ip_netmask,
-:ip_gateway,
-:mgmt_ip_address,
-:mgmt_ip_netmask,
-:mgmt_ip_gateway,
-:offline_reason,
-:phys_location_id,
-:profile_id,
-:rack,
-:router_host_name,
-:router_port_name,
-:status_id,
-:tcp_port,
-:server_type_id,
-:upd_pending,
-:xmpp_id,
-:xmpp_passwd
-) RETURNING id,last_updated`
-	return query
-}
-
-func updateQuery() string {
-	query := `UPDATE
-server SET
-cachegroup=:cachegroup_id,
-cdn_id=:cdn_id,
-domain_name=:domain_name,
-host_name=:host_name,
-https_port=:https_port,
-ilo_ip_address=:ilo_ip_address,
-ilo_ip_netmask=:ilo_ip_netmask,
-ilo_ip_gateway=:ilo_ip_gateway,
-ilo_username=:ilo_username,
-ilo_password=:ilo_password,
-interface_mtu=:interface_mtu,
-interface_name=:interface_name,
-ip6_address=:ip6_address,
-ip6_address_is_service=:ip6_address_is_service,
-ip6_gateway=:ip6_gateway,
-ip_address=:ip_address,
-ip_address_is_service=:ip_address_is_service,
-ip_netmask=:ip_netmask,
-ip_gateway=:ip_gateway,
-mgmt_ip_address=:mgmt_ip_address,
-mgmt_ip_netmask=:mgmt_ip_netmask,
-mgmt_ip_gateway=:mgmt_ip_gateway,
-offline_reason=:offline_reason,
-phys_location=:phys_location_id,
-profile=:profile_id,
-rack=:rack,
-router_host_name=:router_host_name,
-router_port_name=:router_port_name,
-status=:status_id,
-tcp_port=:tcp_port,
-type=:server_type_id,
-upd_pending=:upd_pending,
-xmpp_id=:xmpp_id,
-xmpp_passwd=:xmpp_passwd
-WHERE id=:id RETURNING last_updated`
-	return query
-}
 
 func deleteQuery() string {
 	return `DELETE FROM server WHERE id = :id`
