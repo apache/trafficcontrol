@@ -34,13 +34,6 @@
         {
             "latitude": 0,
             "longitude": 0,
-            "name": "parentCachegroup2",
-            "shortName": "pg2",
-            "typeName": "MID_LOC"
-        },
-        {
-            "latitude": 0,
-            "longitude": 0,
             "name": "secondaryCachegroup",
             "shortName": "sg1",
             "typeName": "MID_LOC"
