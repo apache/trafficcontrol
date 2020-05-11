@@ -36,13 +36,13 @@ type TopologyNode struct {
 	LastUpdated *TimeNoMod `json:"-" db:"last_updated"`
 }
 
-// TopologiesResponse models the JSON object returned for a list of topologies in a response.
+// TopologiesResponse models the JSON object returned for a single topology in a response.
 type TopologyResponse struct {
 	Response Topology `json:"response"`
 	Alerts
 }
 
-// TopologiesResponse models the JSON object returned for a single topology in a response.
+// TopologiesResponse models the JSON object returned for a list of topologies in a response.
 type TopologiesResponse struct {
 	Response []Topology `json:"response"`
 	Alerts
