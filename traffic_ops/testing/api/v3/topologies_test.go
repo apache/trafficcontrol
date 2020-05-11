@@ -25,7 +25,7 @@ import (
 )
 
 func TestTopologies(t *testing.T) {
-	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, Topologies}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, Topologies}, func() {
 		ValidationTestTopologies(t)
 	})
 }
