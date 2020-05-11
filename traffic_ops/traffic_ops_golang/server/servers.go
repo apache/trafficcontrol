@@ -866,7 +866,17 @@ func createInterfaces(s tc.ServerNullableV11, tx *sql.Tx, ipv4IsService, ipv6IsS
 		if s.IPGateway != nil && *s.IPGateway == "" {
 			s.IPGateway = nil
 		}
-		if err := tx.QueryRow(insertIPQuery, *s.IPAddress, s.IPGateway, *s.InterfaceName, uint64(*s.ID), ipv4IsService).Scan(); err != nil && err != sql.ErrNoRows {
+
+		ipStr := *s.IPAddress
+		if s.IPNetmask != nil && *s.IPNetmask != "" {
+			mask := net.ParseIP(*s.IPNetmask).To4()
+			if mask == nil {
+				return fmt.Errorf("Failed to parse netmask '%s'", *s.IPNetmask)
+			}
+			cidr, _ := net.IPv4Mask(mask[0], mask[1], mask[2], mask[3]).Size()
+			ipStr = fmt.Sprintf("%s/%d", ipStr, cidr)
+		}
+		if err := tx.QueryRow(insertIPQuery, ipStr, s.IPGateway, *s.InterfaceName, uint64(*s.ID), ipv4IsService).Scan(); err != nil && err != sql.ErrNoRows {
 			return fmt.Errorf("Inserting legacy IPv4 address: %v", err)
 		}
 	}
@@ -932,6 +942,9 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+
+	changeLogMsg := fmt.Sprintf("SERVER: %s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
 func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
@@ -986,6 +999,9 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+
+	changeLogMsg := fmt.Sprintf("SERVER: %s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
 func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
@@ -1108,6 +1124,9 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+
+	changeLogMsg := fmt.Sprintf("SERVER: %s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
 func Create(w http.ResponseWriter, r *http.Request) {
@@ -1175,24 +1194,22 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	server := servers[0]
 
-
-
-
 	if inf.Version.Major >= 3 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
-		return
-	}
+	} else {
 
-	serverV2, err := server.ToServerV2()
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
+		serverV2, err := server.ToServerV2()
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+			return
+		}
 
-	if inf.Version.Major <= 1 {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2.ServerNullableV11)
-		return
+		if inf.Version.Major <= 1 {
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2.ServerNullableV11)
+		} else {
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2)
+		}
 	}
-
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2)
+	changeLogMsg := fmt.Sprintf("SERVER: %s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
