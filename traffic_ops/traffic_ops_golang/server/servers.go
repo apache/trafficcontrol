@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -137,6 +138,7 @@ INSERT INTO server (
 	ilo_ip_gateway,
 	ilo_username,
 	ilo_password,
+	interface_name,
 	mgmt_ip_address,
 	mgmt_ip_netmask,
 	mgmt_ip_gateway,
@@ -163,6 +165,7 @@ INSERT INTO server (
 	:ilo_ip_gateway,
 	:ilo_username,
 	:ilo_password,
+	:interface_name,
 	:mgmt_ip_address,
 	:mgmt_ip_netmask,
 	:mgmt_ip_gateway,
@@ -178,10 +181,44 @@ INSERT INTO server (
 	:upd_pending,
 	:xmpp_id,
 	:xmpp_passwd
-) RETURNING id,last_updated
+) RETURNING
+	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
+	cachegroup AS cachegroup_id,
+	cdn_id,
+	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
+	domain_name,
+	guid,
+	host_name,
+	https_port,
+	id,
+	ilo_ip_address,
+	ilo_ip_gateway,
+	ilo_ip_netmask,
+	ilo_password,
+	ilo_username,
+	last_updated,
+	mgmt_ip_address,
+	mgmt_ip_gateway,
+	mgmt_ip_netmask,
+	offline_reason,
+	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
+	phys_location AS phys_location_id,
+	profile AS profile_id,
+	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
+	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	rack,
+	reval_pending,
+	router_host_name,
+	router_port_name,
+	(SELECT name FROM status WHERE status.id=server.status) AS status,
+	status AS status_id,
+	tcp_port,
+	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
+	type AS server_type_id,
+	upd_pending
 `
 
-const insertInterfacesQuery = `
+const insertInterfaceQuery = `
 INSERT INTO interface (
 	max_bandwidth,
 	monitor,
@@ -197,15 +234,19 @@ INSERT INTO interface (
 )
 `
 
-const insertIPsQuery = `
+const insertIPQuery = `
 INSERT INTO ip_address (
 	address,
 	gateway,
 	interface,
 	server,
 	service_address
-) VALUES UNNEST (
-	$1
+) VALUES (
+	$1,
+	$2,
+	$3,
+	$4,
+	$5
 )
 `
 
@@ -240,46 +281,66 @@ WHERE id=:id
 RETURNING last_updated
 `
 
-func (s *TOServer) SetLastUpdated(t tc.TimeNoMod) { s.LastUpdated = &t }
-func (*TOServer) InsertQuery() string             { return insertQuery }
-func (*TOServer) UpdateQuery() string             { return updateQuery }
+const deleteServerQuery = `
+DELETE FROM server
+WHERE id=$1
+RETURNING
+	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
+	cachegroup AS cachegroup_id,
+	cdn_id,
+	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
+	domain_name,
+	guid,
+	host_name,
+	https_port,
+	id,
+	ilo_ip_address,
+	ilo_ip_gateway,
+	ilo_ip_netmask,
+	ilo_password,
+	ilo_username,
+	last_updated,
+	mgmt_ip_address,
+	mgmt_ip_gateway,
+	mgmt_ip_netmask,
+	offline_reason,
+	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
+	phys_location AS phys_location_id,
+	profile AS profile_id,
+	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
+	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	rack,
+	reval_pending,
+	router_host_name,
+	router_port_name,
+	(SELECT name FROM status WHERE status.id=server.status) AS status,
+	status AS status_id,
+	tcp_port,
+	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
+	type AS server_type_id,
+	upd_pending
+`
+
+const deleteInterfacesQuery = `
+DELETE FROM interface
+WHERE server=$1
+RETURNING
+	max_bandwidth,
+	monitor,
+	mtu,
+	name
+`
+const deleteIPsQuery = `
+DELETE FROM ip_address
+WHERE server = $1
+RETURNING
+	address,
+	gateway,
+	interface,
+	serviceAddress
+`
+
 func (*TOServer) DeleteQuery() string             { return deleteQuery() }
-
-func (TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
-}
-
-func (s TOServer) GetKeys() (map[string]interface{}, bool) {
-	if s.ID == nil {
-		return map[string]interface{}{"id": 0}, false
-	}
-	return map[string]interface{}{"id": *s.ID}, true
-}
-
-func (s *TOServer) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	s.ID = &i
-}
-
-func (s *TOServer) GetAuditName() string {
-	if s.DomainName != nil {
-		return *s.DomainName
-	}
-	if s.ID != nil {
-		return strconv.Itoa(*s.ID)
-	}
-	return "unknown"
-}
-
-func (s *TOServer) GetType() string {
-	return "server"
-}
-
-func (s *TOServer) Sanitize() {
-	if s.IP6Address != nil && *s.IP6Address == "" {
-		s.IP6Address = nil
-	}
-}
 
 func validateCommon(s tc.CommonServerProperties, tx *sql.Tx) []error {
 	if s.XMPPID == nil || *s.XMPPID == "" {
@@ -360,29 +421,118 @@ func validateV1(s tc.ServerNullableV11, tx *sql.Tx) error {
 	return util.JoinErrs(errs)
 }
 
-func validateV2(s tc.ServerNullableV2, tx *sql.Tx) error {
+func validateV2(s *tc.ServerNullableV2, tx *sql.Tx) error {
 	var errs []error
 
 	if err := validateV1(s.ServerNullableV11, tx); err != nil {
 		return err
 	}
 
-	if (s.IPIsService == nil || !*s.IPIsService) && (s.IP6IsService == nil || !*s.IP6IsService) {
+	// default boolean value is false
+	if s.IPIsService == nil {
+		s.IPIsService = new(bool)
+	}
+	if s.IP6IsService == nil {
+		s.IP6IsService = new(bool)
+	}
+
+	if !*s.IPIsService && !*s.IP6IsService {
 		errs = append(errs, tc.NeedsAtLeastOneServiceAddressError)
 	}
 
-	if s.IPIsService != nil && *s.IPIsService && (s.IPAddress == nil) {
+	if *s.IPIsService && s.IPAddress == nil {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 
-	if s.IP6IsService != nil && *s.IP6IsService && (s.IP6Address == nil) {
+	if *s.IP6IsService && s.IP6Address == nil {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 	return util.JoinErrs(errs)
 }
 
-func validateV3(tc.ServerNullableV2, *sql.Tx) error {
+func validateMTU(mtu interface{}) error {
+	m := mtu.(*uint64)
+	if m == nil {
+		return nil
+	}
+
+	if *m < 1280 {
+		return errors.New("must be at least 1280")
+	}
 	return nil
+}
+
+func validateGateway(g interface{}) error {
+	if g == nil {
+		return nil
+	}
+
+	if gtwy := net.ParseIP(*g.(*string)); gtwy == nil {
+		return errors.New("gateway not a valid IP address")
+	}
+	return nil
+}
+
+func validateV3(s tc.ServerNullable, tx *sql.Tx) (string, error) {
+
+	if len(s.Interfaces) == 0 {
+		return "", errors.New("a server must have at least one interface")
+	}
+	var errs []error
+	var serviceAddrV4Found bool
+	var serviceAddrV6Found bool
+	var serviceInterface string
+	for _, iface := range s.Interfaces {
+
+		ruleName := fmt.Sprintf("interface '%s' ", iface.Name)
+		errs = append(errs, tovalidate.ToErrors(validation.Errors{
+			ruleName + "name": validation.Validate(iface.Name, validation.Required),
+			ruleName + "mtu": validation.Validate(iface.MaxBandwidth, validation.By(validateMTU)),
+			ruleName + "ipAddresses": validation.Validate(iface.IPAddresses, validation.Required),
+		})...)
+
+		for _, addr := range iface.IPAddresses {
+			ruleName += fmt.Sprintf("address '%s'", addr.Address)
+
+			var parsedIP net.IP
+			var err error
+			if parsedIP, _, err = net.ParseCIDR(addr.Address); err != nil {
+				if parsedIP = net.ParseIP(addr.Address); parsedIP == nil {
+					errs = append(errs, fmt.Errorf("%s: address: %v", ruleName, err))
+					continue
+				}
+			}
+
+			if addr.Gateway != nil {
+				if gateway := net.ParseIP(*addr.Gateway); gateway == nil {
+					errs = append(errs, fmt.Errorf("%s: gateway: %v", ruleName, err))
+				} else if (gateway.To4() == nil && parsedIP.To4() != nil) || (gateway.To4() != nil && parsedIP.To4() == nil) {
+					errs = append(errs, errors.New(ruleName + ": address family mismatch between address and gateway"))
+				}
+			}
+
+			if addr.ServiceAddress {
+				if serviceInterface != "" && serviceInterface != iface.Name {
+					errs = append(errs, fmt.Errorf("interfaces: both %s and %s interfaces contain service addresses - only one service-address-containing-interface is allowed", serviceInterface, iface.Name))
+				}
+				serviceInterface = iface.Name
+				if parsedIP.To4() != nil {
+					if serviceAddrV4Found {
+						errs = append(errs, fmt.Errorf("interfaces: address '%s' of interface '%s' is marked as a service address, but an IPv4 service address appears earlier in the list", addr.Address, iface.Name))
+					}
+					serviceAddrV4Found = true
+				} else {
+					if serviceAddrV6Found {
+						errs = append(errs, fmt.Errorf("interfaces: address '%s' of interface '%s' is marked as a service address, but an IPv6 service address appears earlier in the list", addr.Address, iface.Name))
+					}
+					serviceAddrV6Found = true
+				}
+			}
+		}
+	}
+
+	errs = append(errs, validateCommon(s.CommonServerProperties, tx)...)
+	return serviceInterface, util.JoinErrs(errs)
 }
 
 // ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
@@ -764,23 +914,29 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
 }
 
-func createInterfaces(s tc.ServerNullableV11, tx *sql.Tx) error {
-	if err := tx.QueryRow(insertInterfacesQuery, nil, true, s.InterfaceMtu, s.InterfaceName, s.ID).Scan(); err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("Inserting interface: %v", err)
+func createInterfaces(s tc.ServerNullableV11, tx *sql.Tx, ipv4IsService, ipv6IsService bool) error {
+	if err := tx.QueryRow(insertInterfaceQuery, nil, true, s.InterfaceMtu, s.InterfaceName, s.ID).Scan(); err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("Inserting legacy interface: %v", err)
 	}
 
-	var ips []tc.ServerIpAddress
 	if s.IPAddress != nil && *s.IPAddress != "" {
-		ips = append(ips, tc.ServerIpAddress{*s.IPAddress, s.IPGateway, *s.InterfaceName, uint64(*s.ID), true})
+		if s.IPGateway != nil && *s.IPGateway == "" {
+			s.IPGateway = nil
+		}
+		if err := tx.QueryRow(insertIPQuery, *s.IPAddress, s.IPGateway, *s.InterfaceName, uint64(*s.ID), ipv4IsService).Scan(); err != nil && err != sql.ErrNoRows {
+			return fmt.Errorf("Inserting legacy IPv4 address: %v", err)
+		}
 	}
 
 	if s.IP6Address != nil && *s.IP6Address != "" {
-		ips = append(ips, tc.ServerIpAddress{*s.IP6Address, s.IP6Gateway, *s.InterfaceName, uint64(*s.ID), true})
+		if s.IP6Gateway != nil && *s.IP6Gateway == "" {
+			s.IP6Gateway = nil
+		}
+		if err := tx.QueryRow(insertIPQuery, *s.IP6Address, s.IP6Gateway, *s.InterfaceName, uint64(*s.ID), ipv6IsService).Scan(); err != nil && err != sql.ErrNoRows {
+			return fmt.Errorf("Inserting legacy IPv6 address: %v", err)
+		}
 	}
 
-	if err := tx.QueryRow(insertIPsQuery, pq.Array(&ips)).Scan(); err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("Inserting IPs: %v", err)
-	}
 	return nil
 }
 
@@ -827,7 +983,7 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	server.ID = &id
 	server.LastUpdated = &lastUpdated
 
-	if err := createInterfaces(server, tx); err != nil {
+	if err := createInterfaces(server, tx, true, true); err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 	}
 
@@ -845,7 +1001,8 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateV2(server, tx); err != nil {
+
+	if err := validateV2(&server, tx); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -879,12 +1036,17 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	server.ID = &id
 	server.LastUpdated = &lastUpdated
 
+	if err := createInterfaces(server.ServerNullableV11, tx, *server.IPIsService, *server.IP6IsService); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
 }
 
 func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
-	var server tc.ServerNullableV2
+	var server tc.ServerNullable
 
 	tx := inf.Tx.Tx
 
@@ -893,12 +1055,21 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateV3(server, tx); err != nil {
+	serviceInterface, err := validateV3(server, tx)
+	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
-	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
+	v2Server, err := server.ToServerV2()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	v2Server.InterfaceName = &serviceInterface
+
+	resultRows, err := inf.Tx.NamedQuery(insertQuery, v2Server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -907,13 +1078,13 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	defer resultRows.Close()
 
 
-	var id int
-	var lastUpdated tc.TimeNoMod
+	// var id int
+	// var lastUpdated tc.TimeNoMod
 
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
 			return
 		}
@@ -924,8 +1095,73 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	} else if rowsAffected > 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
 	}
-	server.ID = &id
-	server.LastUpdated = &lastUpdated
+	// server.ID = &id
+	// server.LastUpdated = &lastUpdated
+
+	ifaceQry := `
+	INSERT INTO interface (
+		max_bandwidth,
+		monitor,
+		mtu,
+		name,
+		server
+	) VALUES
+	`
+	ipQry := `
+	INSERT INTO ip_address (
+		address,
+		gateway,
+		interface,
+		server,
+		service_address
+	) VALUES
+	`
+
+	ifaceQueryParts := make([]string, 0, len(server.Interfaces))
+	ipQueryParts := make([]string, 0, len(server.Interfaces))
+	ifaceArgs := make([]interface{}, 0, len(server.Interfaces))
+	ipArgs := make([]interface{}, 0, len(server.Interfaces))
+	for i, iface := range server.Interfaces {
+		argStart := i * 5
+		ifaceQueryParts = append(ifaceQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
+		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, server.ID)
+		for _, ip := range iface.IPAddresses {
+			argStart = len(ipArgs)
+			ipQueryParts = append(ipQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)",  argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
+			ipArgs = append(ipArgs, ip.Address, ip.Gateway, iface.Name, server.ID, ip.ServiceAddress)
+		}
+	}
+
+	ifaceQry += strings.Join(ifaceQueryParts, ",")
+	log.Debugf("Inserting interfaces for new server, query is: %s", ifaceQry)
+
+	ifaceRows, err := tx.Query(ifaceQry, ifaceArgs...)
+	if err != nil {
+		log.Debugf("iface err: %v", err)
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer ifaceRows.Close()
+	insertedIfaces := 0
+	for ifaceRows.Next() {
+		insertedIfaces++
+	}
+	log.Debugf("Inserted %d interfaces", insertedIfaces)
+
+	ipQry += strings.Join(ipQueryParts, ",")
+	log.Debugf("Inserting IP addresses for new server, query is: %s", ipQry)
+
+	ipRows, err := tx.Query(ipQry, ipArgs...)
+	if err != nil {
+		log.Debugf("ip err: %v", err)
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer ipRows.Close()
+
+	log.Debugf("%+v", server.Interfaces)
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
@@ -949,18 +1185,16 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *TOServer) Delete() (error, error, int) { return api.GenericDelete(s) }
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
 
-func selectV20UpdatesQuery() string {
-	return `SELECT
-sv.ip_address_is_service,
-sv.ip6_address_is_service
-FROM
-	server sv`
-}
+	ipRows := inf.Tx.Queryx(deleteIPsQuery, inf.IntParams["id"])
 
-
-
-func deleteQuery() string {
-	return `DELETE FROM server WHERE id = :id`
+	var csp tc.CommonServerProperties
+	if err := inf.Tx.QueryRowx(deleteIPsQuery)
 }

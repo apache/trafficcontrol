@@ -1,19 +1,13 @@
 package tc
 
 import (
-	// "bytes"
 	"database/sql/driver"
 	"encoding/json"
-	// "errors"
 	"fmt"
 	"net"
-	// "strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/lib/go-log"
-
-	// "github.com/lib/pq"
 )
 
 /*
@@ -85,8 +79,8 @@ type ServerIpAddress struct {
 
 // ServerInterfaceInfo is the data associated with a server's interface.
 type ServerInterfaceInfo struct {
-	IpAddresses  []ServerIpAddress `json:"ipAddresses" db:"ipAddresses"`
-	MaxBandwidth *int64            `json:"maxBandwidth" db:"max_bandwidth"`
+	IPAddresses  []ServerIpAddress `json:"ipAddresses" db:"ipAddresses"`
+	MaxBandwidth *uint64           `json:"maxBandwidth" db:"max_bandwidth"`
 	Monitor      bool              `json:"monitor" db:"monitor"`
 	MTU          *uint64           `json:"mtu" db:"mtu"`
 	Name         string            `json:"name" db:"name"`
@@ -106,8 +100,6 @@ func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
 	if !ok {
 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
 	}
-
-	log.Debugf(string(b))
 
 	return json.Unmarshal([]byte(b), sii)
 }
@@ -200,13 +192,8 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 	var legacyDetails LegacyInterfaceDetails
 
 	for _, intFace := range serverInterfaces {
-		if intFace.MTU != nil {
-			legacyDetails.InterfaceMtu = util.IntPtr(int(*intFace.MTU))
-		}
 
-		legacyDetails.InterfaceName = &intFace.Name
-
-		for _, addr := range intFace.IpAddresses {
+		for _, addr := range intFace.IPAddresses {
 			if !addr.ServiceAddress {
 				continue
 			}
@@ -236,6 +223,12 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
 				legacyDetails.IPGateway = gateway
 			}
+
+			if intFace.MTU != nil {
+				legacyDetails.InterfaceMtu = util.IntPtr(int(*intFace.MTU))
+			}
+
+			legacyDetails.InterfaceName = &intFace.Name
 		}
 	}
 
