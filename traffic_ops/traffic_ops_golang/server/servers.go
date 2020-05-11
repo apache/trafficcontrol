@@ -281,66 +281,9 @@ WHERE id=:id
 RETURNING last_updated
 `
 
-const deleteServerQuery = `
-DELETE FROM server
-WHERE id=$1
-RETURNING
-	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
-	cachegroup AS cachegroup_id,
-	cdn_id,
-	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
-	domain_name,
-	guid,
-	host_name,
-	https_port,
-	id,
-	ilo_ip_address,
-	ilo_ip_gateway,
-	ilo_ip_netmask,
-	ilo_password,
-	ilo_username,
-	last_updated,
-	mgmt_ip_address,
-	mgmt_ip_gateway,
-	mgmt_ip_netmask,
-	offline_reason,
-	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
-	phys_location AS phys_location_id,
-	profile AS profile_id,
-	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
-	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
-	rack,
-	reval_pending,
-	router_host_name,
-	router_port_name,
-	(SELECT name FROM status WHERE status.id=server.status) AS status,
-	status AS status_id,
-	tcp_port,
-	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
-	type AS server_type_id,
-	upd_pending
-`
-
-const deleteInterfacesQuery = `
-DELETE FROM interface
-WHERE server=$1
-RETURNING
-	max_bandwidth,
-	monitor,
-	mtu,
-	name
-`
-const deleteIPsQuery = `
-DELETE FROM ip_address
-WHERE server = $1
-RETURNING
-	address,
-	gateway,
-	interface,
-	serviceAddress
-`
-
-func (*TOServer) DeleteQuery() string             { return deleteQuery() }
+const deleteServerQuery = `DELETE FROM server WHERE id=$1`
+const deleteInterfacesQuery = `DELETE FROM interface WHERE server=$1`
+const deleteIPsQuery = `DELETE FROM ip_address WHERE server = $1`
 
 func validateCommon(s tc.CommonServerProperties, tx *sql.Tx) []error {
 	if s.XMPPID == nil || *s.XMPPID == "" {
@@ -1186,15 +1129,70 @@ func Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	ipRows := inf.Tx.Queryx(deleteIPsQuery, inf.IntParams["id"])
+	id := inf.IntParams["id"]
 
-	var csp tc.CommonServerProperties
-	if err := inf.Tx.QueryRowx(deleteIPsQuery)
+	var servers []tc.ServerNullable
+	servers, _, userErr, sysErr, errCode = getServers(map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if len(servers) < 1 {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("No server exists by id #%d", id), nil)
+		return
+	}
+	if len(servers) > 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("There are somehow two servers with id %d - cannot delete", id))
+		return
+	}
+
+	if err := tx.QueryRow(deleteIPsQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if err := tx.QueryRow(deleteInterfacesQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if err := tx.QueryRow(deleteServerQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	server := servers[0]
+
+
+
+
+	if inf.Version.Major >= 3 {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
+		return
+	}
+
+	serverV2, err := server.ToServerV2()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	if inf.Version.Major <= 1 {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2.ServerNullableV11)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2)
 }
