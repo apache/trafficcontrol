@@ -20,7 +20,9 @@ package v3
  */
 
 import (
+	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"reflect"
 	"testing"
 )
 
@@ -31,17 +33,25 @@ type topologyTestCase struct {
 
 func TestTopologies(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CacheGroups, Topologies}, func() {
+		UpdateTestTopologies(t)
 		ValidationTestTopologies(t)
 	})
 }
 
 func CreateTestTopologies(t *testing.T) {
-	for _, top := range testData.Topologies {
-		resp, _, err := TOSession.CreateTopology(top)
-		if err != nil {
+	var (
+		postResponse *tc.TopologyResponse
+		err          error
+	)
+	for _, topology := range testData.Topologies {
+		if postResponse, _, err = TOSession.CreateTopology(topology); err != nil {
 			t.Fatalf("could not CREATE topology: %v", err)
 		}
-		t.Log("Response: ", resp)
+		postResponse.Response.LastUpdated = nil
+		if !reflect.DeepEqual(topology, postResponse.Response) {
+			t.Fatalf("Topology in response should be the same as the one POSTed. expected: %v\nactual: %v", topology, postResponse.Response)
+		}
+		t.Log("Response: ", postResponse)
 	}
 }
 
@@ -80,6 +90,35 @@ func ValidationTestTopologies(t *testing.T) {
 	for _, testCase := range invalidTopologyTestCases {
 		if _, _, err := TOSession.CreateTopology(testCase.Topology); err == nil {
 			t.Fatalf("expected POST with %v to return an error, actual: nil", testCase.reasonToFail)
+		}
+	}
+}
+
+func updateSingleTopology(topology tc.Topology) error {
+	updateResponse, _, err := TOSession.UpdateTopology(topology.Name, topology)
+	if err != nil {
+		return fmt.Errorf("cannot PUT topology: %v - %v", err, updateResponse)
+	}
+	updateResponse.Response.LastUpdated = nil
+	if !reflect.DeepEqual(topology, updateResponse.Response) {
+		return fmt.Errorf("Topologies should be equal after updating. expected: %v\nactual: %v", topology, updateResponse.Response)
+	}
+	return nil
+}
+
+func UpdateTestTopologies(t *testing.T) {
+	topologiesCount := len(testData.Topologies)
+	for index, _ := range testData.Topologies {
+		topology := testData.Topologies[(index+1)%topologiesCount]
+		topology.Name = testData.Topologies[index].Name // We cannot update a topology's name
+		if err := updateSingleTopology(topology); err != nil {
+			t.Fatalf(err.Error())
+		}
+	}
+	// Revert test topologies
+	for _, topology := range testData.Topologies {
+		if err := updateSingleTopology(topology); err != nil {
+			t.Fatalf(err.Error())
 		}
 	}
 }

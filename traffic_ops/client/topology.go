@@ -86,24 +86,23 @@ func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
 	return nil, reqInf, fmt.Errorf("expected one topology in response, instead got: %+v", data.Response)
 }
 
-// UpdateTopologyByID updates a Topology by ID.
-func (to *Session) UpdateTopology(id int, pl tc.Topology) (tc.Alerts, ReqInf, error) {
-
+// UpdateTopology updates a Topology by name.
+func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyResponse, ReqInf, error) {
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(pl)
+	reqBody, err := json.Marshal(t)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return nil, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", ApiTopologies, id)
+	route := fmt.Sprintf("%s?name=%s", ApiTopologies, name)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, err
+	var response = new(tc.TopologyResponse)
+	err = json.NewDecoder(resp.Body).Decode(response)
+	return response, reqInf, err
 }
 
 // DeleteTopology deletes the given topology by name.
