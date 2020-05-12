@@ -3,6 +3,7 @@ package tc
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -104,75 +105,6 @@ func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
 	return json.Unmarshal([]byte(b), sii)
 }
 
-// Scan implements the sql.Scanner interface
-// expects json.RawMessage and unmarshals to a deliveryservice struct
-// func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
-// 	b, ok := src.([]byte)
-// 	if !ok {
-// 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
-// 	}
-// 	log.Debugf(string(b))
-// 	log.Debugf(fmt.Sprintf("%v", b))
-
-// 	start := bytes.Index(b, []byte("\""))
-// 	if start < 0 {
-// 		return errors.New("expected a '\"' to indicate beginning of array")
-// 	}
-// 	end := bytes.LastIndex(b, []byte("\""))
-// 	if end < 0 {
-// 		return errors.New("expected a '\"' to indicate end of array")
-// 	}
-// 	if start >= end {
-// 		return errors.New("expected a '\"' at the beginning and end of the array")
-// 	}
-
-// 	log.Debugf("start=%d, end=%d", start, end)
-
-// 	var ips []ServerIpAddress
-// 	if err := pq.Array(&ips).Scan(b[start+1:end]); err != nil {
-// 		return fmt.Errorf("Scanning IP address array: %v", err)
-// 	}
-
-// 	sii.IpAddresses = ips
-
-// 	rest := bytes.Split(b[end+1:], []byte(","))
-// 	if len(rest) != 4 {
-// 		return fmt.Errorf("Expected 4 values to parse after ips, got %d (%v)", len(rest), rest)
-// 	}
-
-// 	if len(rest[0]) == 0 {
-// 		sii.MaxBandwidth = nil
-// 	} else if mb, err := strconv.ParseInt(string(rest[0]), 10, 64); err != nil {
-// 		return fmt.Errorf("Parsing max bandwidth: %v", err)
-// 	} else {
-// 		sii.MaxBandwidth = &mb
-// 	}
-
-// 	if len(rest[1]) != 1 {
-// 		return fmt.Errorf("Unknown boolean value encountered parsing 'monitor': %v", rest[1])
-// 	}
-// 	if rest[1][0] == []byte("t")[0] {
-// 		sii.Monitor = true
-// 	} else if rest[1][0] == []byte("f")[0] {
-// 		sii.Monitor = false
-// 	} else {
-// 		return fmt.Errorf("Unknown boolean value encountered parsing 'monitor': %v", rest[1])
-// 	}
-
-// 	if len(rest[2]) == 0 {
-// 		sii.MTU = nil
-// 	} else if mtu, err := strconv.ParseUint(string(rest[2]), 10, 64); err != nil {
-// 		return fmt.Errorf("Parsing MTU: %v", err)
-// 	} else {
-// 		sii.MTU = &mtu
-// 	}
-
-// 	sii.Name = string(bytes.TrimRight(rest[3], ")"))
-
-// 	// return json.Unmarshal([]byte(b), sii)
-// 	return nil
-// }
-
 // LegacyInterfaceDetails is the details for interfaces on servers for API v1 and v2.
 type LegacyInterfaceDetails struct {
 	InterfaceMtu  *int    `json:"interfaceMtu" db:"interface_mtu"`
@@ -182,6 +114,57 @@ type LegacyInterfaceDetails struct {
 	IPAddress     *string `json:"ipAddress" db:"ip_address"`
 	IPGateway     *string `json:"ipGateway" db:"ip_gateway"`
 	IPNetmask     *string `json:"ipNetmask" db:"ip_netmask"`
+}
+
+func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService bool) ([]ServerInterfaceInfo, error) {
+	var iface ServerInterfaceInfo
+	if lid.InterfaceMtu == nil {
+		return nil, errors.New("interfaceMtu is null")
+	}
+	mtu := uint64(*lid.InterfaceMtu)
+	iface.MTU = &mtu
+
+	if lid.InterfaceName == nil {
+		return nil, errors.New("interfaceName is null")
+	}
+	iface.Name = *lid.InterfaceName
+
+	var ips []ServerIpAddress
+	if lid.IPAddress != nil && *lid.IPAddress != "" {
+		if lid.IPGateway != nil && *lid.IPGateway == "" {
+			lid.IPGateway = nil
+		}
+
+		ipStr := *lid.IPAddress
+		if lid.IPNetmask != nil && *lid.IPNetmask != "" {
+			mask := net.ParseIP(*lid.IPNetmask).To4()
+			if mask == nil {
+				return nil, fmt.Errorf("Failed to parse netmask '%s'", *lid.IPNetmask)
+			}
+			cidr, _ := net.IPv4Mask(mask[0], mask[1], mask[2], mask[3]).Size()
+			ipStr = fmt.Sprintf("%s/%d", ipStr, cidr)
+		}
+
+		ips = append(ips, ServerIpAddress{
+			Address: ipStr,
+			Gateway: lid.IPGateway,
+			ServiceAddress: ipv4IsService,
+		})
+	}
+
+	if lid.IP6Address != nil && *lid.IP6Address != "" {
+		if lid.IP6Gateway != nil && *lid.IP6Gateway == "" {
+			lid.IP6Gateway = nil
+		}
+		ips = append(ips, ServerIpAddress{
+			Address: *lid.IP6Address,
+			Gateway: lid.IP6Gateway,
+			ServiceAddress: ipv6IsService,
+		})
+	}
+
+	iface.IPAddresses = ips
+	return []ServerInterfaceInfo{iface}, nil
 }
 
 // InterfaceInfoToLegacyInterfaces converts a ServerInterfaceInfo to an
@@ -234,6 +217,7 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 
 	return legacyDetails, nil
 }
+
 
 type Server struct {
 	Cachegroup       string              `json:"cachegroup" db:"cachegroup"`
