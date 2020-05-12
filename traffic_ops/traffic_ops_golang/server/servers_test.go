@@ -33,8 +33,13 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestServers() []tc.Server {
-	servers := []tc.Server{}
+type ServerAndInterfaces struct {
+	Server tc.Server
+	Interfaces []tc.ServerInterfaceInfo
+}
+
+func getTestServers() []ServerAndInterfaces {
+	servers := []ServerAndInterfaces{}
 	testServer := tc.Server{
 		Cachegroup:     "Cachegroup",
 		CachegroupID:   1,
@@ -82,17 +87,37 @@ func getTestServers() []tc.Server {
 		XMPPID:         "xmppId",
 		XMPPPasswd:     "xmppPasswd",
 	}
-	servers = append(servers, testServer)
+
+	mtu := uint64(testServer.InterfaceMtu)
+
+	interfaces := []tc.ServerInterfaceInfo{
+		tc.ServerInterfaceInfo{
+			IPAddresses: []tc.ServerIpAddress{
+				tc.ServerIpAddress{
+					Address: testServer.IPAddress,
+					Gateway: &testServer.IPGateway,
+					ServiceAddress: testServer.IPIsService,
+				},
+			},
+			MaxBandwidth: nil,
+			Monitor: true,
+			MTU: &mtu,
+			Name: testServer.InterfaceName,
+		},
+	}
+	servers = append(servers, ServerAndInterfaces{Server: testServer, Interfaces: interfaces})
 
 	testServer2 := testServer
 	testServer2.Cachegroup = "cachegroup2"
 	testServer2.HostName = "server2"
-	servers = append(servers, testServer2)
+	testServer2.ID = 2
+	servers = append(servers, ServerAndInterfaces{Server: testServer2, Interfaces: interfaces})
 
 	testServer3 := testServer
 	testServer3.Cachegroup = "cachegroup3"
 	testServer3.HostName = "server3"
-	servers = append(servers, testServer2)
+	testServer3.ID = 3
+	servers = append(servers, ServerAndInterfaces{Server: testServer3, Interfaces: interfaces})
 
 	return servers
 }
@@ -167,12 +192,19 @@ func TestGetServersByCachegroup(t *testing.T) {
 	defer db.Close()
 
 	testServers := getTestServers()
-	cols := test.ColsFromStructByTag("db", tc.Server{})
+
+	unfilteredCols := []string{"count"}
+	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
+
+	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
+	interfaceCols := []string{"interfaces", "id"}
 	rows := sqlmock.NewRows(cols)
+	interfaceRows := sqlmock.NewRows(interfaceCols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
 	//                    or by CSV if types get in the way
-	for _, ts := range testServers {
+	for _, srv := range testServers {
+		ts := srv.Server
 		rows = rows.AddRow(
 			ts.Cachegroup,
 			ts.CachegroupID,
@@ -188,15 +220,6 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.ILOIPNetmask,
 			ts.ILOPassword,
 			ts.ILOUsername,
-			ts.InterfaceMtu,
-			ts.InterfaceName,
-			ts.IP6Address,
-			ts.IP6IsService,
-			ts.IP6Gateway,
-			ts.IPAddress,
-			ts.IPIsService,
-			ts.IPNetmask,
-			ts.IPGateway,
 			ts.LastUpdated,
 			ts.MgmtIPAddress,
 			ts.MgmtIPGateway,
@@ -220,14 +243,23 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.XMPPID,
 			ts.XMPPPasswd,
 		)
+		interfaceRows = interfaceRows.AddRow(
+			srv.Interfaces,
+			ts.ID,
+		)
 	}
+
+
 	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT COUNT\\(server.id\\) FROM server").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
+
 	v := map[string]string{"cachegroup": "2"}
 
 	user := auth.CurrentUser{}
 
-	servers, userErr, sysErr, errCode := getServers(v, db.MustBegin(), &user)
+	servers, _, userErr, sysErr, errCode := getServers(v, db.MustBegin(), &user)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
@@ -251,14 +283,20 @@ func TestGetMidServers(t *testing.T) {
 	testServers := getTestServers()
 	testServers = testServers[0:2]
 
-	testServers[1].Cachegroup = "parentCacheGroup"
-	testServers[1].CachegroupID = 2
-	testServers[1].Type = "MID"
+	testServers[1].Server.Cachegroup = "parentCacheGroup"
+	testServers[1].Server.CachegroupID = 2
+	testServers[1].Server.Type = "MID"
 
-	cols := test.ColsFromStructByTag("db", tc.Server{})
+	unfilteredCols := []string{"count"}
+	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
+
+	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
+	interfaceCols := []string{"interfaces", "id"}
 	rows := sqlmock.NewRows(cols)
+	interfaceRows := sqlmock.NewRows(interfaceCols)
 
-	for _, ts := range testServers {
+	for _, srv := range testServers {
+		ts := srv.Server
 		rows = rows.AddRow(
 			ts.Cachegroup,
 			ts.CachegroupID,
@@ -306,14 +344,20 @@ func TestGetMidServers(t *testing.T) {
 			ts.XMPPID,
 			ts.XMPPPasswd,
 		)
+		interfaceRows = interfaceRows.AddRow(
+			srv.Interfaces,
+			ts.ID,
+		)
 	}
 	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT COUNT\\(server.id\\) FROM server").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
 	v := map[string]string{}
 
 	user := auth.CurrentUser{}
 
-	servers, userErr, sysErr, errCode := getServers(v, db.MustBegin(), &user)
+	servers, _, userErr, sysErr, errCode := getServers(v, db.MustBegin(), &user)
 
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
@@ -381,15 +425,6 @@ func TestGetMidServers(t *testing.T) {
 		ts.ILOIPNetmask,
 		ts.ILOPassword,
 		ts.ILOUsername,
-		ts.InterfaceMtu,
-		ts.InterfaceName,
-		ts.IP6Address,
-		ts.IP6IsService,
-		ts.IP6Gateway,
-		ts.IPAddress,
-		ts.IPIsService,
-		ts.IPNetmask,
-		ts.IPGateway,
 		ts.LastUpdated,
 		ts.MgmtIPAddress,
 		ts.MgmtIPGateway,
