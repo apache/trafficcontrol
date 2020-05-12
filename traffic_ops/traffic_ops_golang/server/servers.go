@@ -48,13 +48,6 @@ import (
 	"github.com/lib/pq"
 )
 
-// TOServer combines data about a server with metadata from an API request and
-// provides methods that implement several interfaces from the api package.
-type TOServer struct {
-	api.APIInfoImpl `json:"-"`
-	tc.ServerNullableV2
-}
-
 const unfilteredServersQuery = `
 SELECT COUNT(server.id)
 FROM server
@@ -476,34 +469,6 @@ func validateV3(s tc.ServerNullable, tx *sql.Tx) (string, error) {
 
 	errs = append(errs, validateCommon(s.CommonServerProperties, tx)...)
 	return serviceInterface, util.JoinErrs(errs)
-}
-
-// ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
-func (s TOServer) ChangeLogMessage(action string) (string, error) {
-
-	var status string
-	if s.Status != nil {
-		status = *s.Status
-	}
-
-	var hostName string
-	if s.HostName != nil {
-		hostName = *s.HostName
-	}
-
-	var domainName string
-	if s.DomainName != nil {
-		domainName = *s.DomainName
-	}
-
-	var serverID string
-	if s.ID != nil {
-		serverID = strconv.Itoa(*s.ID)
-	}
-
-	message := action + ` ` + status + ` server: { "hostName":"` + hostName + `", "domainName":"` + domainName + `", id:` + serverID + ` }`
-
-	return message, nil
 }
 
 func Read(w http.ResponseWriter, r *http.Request) {
@@ -1000,13 +965,10 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 	defer resultRows.Close()
 
-	var id int
-	var lastUpdated tc.TimeNoMod
-
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
 			return
 		}
@@ -1017,15 +979,13 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	} else if rowsAffected > 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
 	}
-	server.ID = &id
-	server.LastUpdated = &lastUpdated
 
 	ifaces, err := server.LegacyInterfaceDetails.ToInterfaces(true, true)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 	}
 
-	if userErr, sysErr, errCode := createInterfaces(id, ifaces, tx); err != nil {
+	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
@@ -1061,14 +1021,10 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 	defer resultRows.Close()
 
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
 			return
 		}
@@ -1079,15 +1035,13 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	} else if rowsAffected > 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
 	}
-	server.ID = &id
-	server.LastUpdated = &lastUpdated
 
 	ifaces, err := server.LegacyInterfaceDetails.ToInterfaces(*server.IPIsService, *server.IP6IsService)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 	}
 
-	if userErr, sysErr, errCode := createInterfaces(id, ifaces, tx); err != nil {
+	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
