@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -87,27 +88,8 @@ func getTestServers() []ServerAndInterfaces {
 		XMPPPasswd:     "xmppPasswd",
 	}
 
-	// mtu := uint64(testServer.InterfaceMtu)
+	interfaces := []byte(fmt.Sprintf(`{"{\"ipAddresses\" : [{\"address\" : \"%s\", \"gateway\" : null, \"service_address\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : %d, \"name\" : \"%s\"}"}`, testServer.IPAddress, testServer.InterfaceMtu, testServer.InterfaceName))
 
-	// interfaces := []byte(fmt.Sprintf("{\"{\"ipAddresses\" : [{\"address\" : \"76.0.23.56\", \"gateway\" : null, \"service_address\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : 1500, \"name\" : \"eth0\"}\"}", testServer.IPAddress, testServer.InterfaceMtu, testServer.InterfaceName))
-
-	interfaces := []byte(`{"{\"ipAddresses\" : [{\"address\" : \"76.0.23.56\", \"gateway\" : null, \"service_address\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : 1500, \"name\" : \"eth0\"}"}`)
-
-	// interfaces := []tc.ServerInterfaceInfo{
-	// 	tc.ServerInterfaceInfo{
-	// 		IPAddresses: []tc.ServerIpAddress{
-	// 			tc.ServerIpAddress{
-	// 				Address: testServer.IPAddress,
-	// 				Gateway: &testServer.IPGateway,
-	// 				ServiceAddress: testServer.IPIsService,
-	// 			},
-	// 		},
-	// 		MaxBandwidth: nil,
-	// 		Monitor: true,
-	// 		MTU: &mtu,
-	// 		Name: testServer.InterfaceName,
-	// 	},
-	// }
 	servers = append(servers, ServerAndInterfaces{Server: testServer, Interfaces: interfaces})
 
 	testServer2 := testServer
