@@ -20,7 +20,6 @@ package server
  */
 
 import (
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"net/http"
 	"testing"
 	"time"
@@ -28,14 +27,14 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
-	"github.com/jmoiron/sqlx"
 
+	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 type ServerAndInterfaces struct {
 	Server tc.Server
-	Interfaces []tc.ServerInterfaceInfo
+	Interfaces []byte
 }
 
 func getTestServers() []ServerAndInterfaces {
@@ -88,23 +87,27 @@ func getTestServers() []ServerAndInterfaces {
 		XMPPPasswd:     "xmppPasswd",
 	}
 
-	mtu := uint64(testServer.InterfaceMtu)
+	// mtu := uint64(testServer.InterfaceMtu)
 
-	interfaces := []tc.ServerInterfaceInfo{
-		tc.ServerInterfaceInfo{
-			IPAddresses: []tc.ServerIpAddress{
-				tc.ServerIpAddress{
-					Address: testServer.IPAddress,
-					Gateway: &testServer.IPGateway,
-					ServiceAddress: testServer.IPIsService,
-				},
-			},
-			MaxBandwidth: nil,
-			Monitor: true,
-			MTU: &mtu,
-			Name: testServer.InterfaceName,
-		},
-	}
+	// interfaces := []byte(fmt.Sprintf("{\"{\"ipAddresses\" : [{\"address\" : \"76.0.23.56\", \"gateway\" : null, \"service_address\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : 1500, \"name\" : \"eth0\"}\"}", testServer.IPAddress, testServer.InterfaceMtu, testServer.InterfaceName))
+
+	interfaces := []byte(`{"{\"ipAddresses\" : [{\"address\" : \"76.0.23.56\", \"gateway\" : null, \"service_address\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : 1500, \"name\" : \"eth0\"}"}`)
+
+	// interfaces := []tc.ServerInterfaceInfo{
+	// 	tc.ServerInterfaceInfo{
+	// 		IPAddresses: []tc.ServerIpAddress{
+	// 			tc.ServerIpAddress{
+	// 				Address: testServer.IPAddress,
+	// 				Gateway: &testServer.IPGateway,
+	// 				ServiceAddress: testServer.IPIsService,
+	// 			},
+	// 		},
+	// 		MaxBandwidth: nil,
+	// 		Monitor: true,
+	// 		MTU: &mtu,
+	// 		Name: testServer.InterfaceName,
+	// 	},
+	// }
 	servers = append(servers, ServerAndInterfaces{Server: testServer, Interfaces: interfaces})
 
 	testServer2 := testServer
@@ -137,7 +140,7 @@ func TestUpdateServer(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{"type", "cdn_id"})
 	// note here that the cdnid is 5, which is not the same as the initial cdnid of the fist traffic server
-	rows.AddRow(testServers[0].TypeID, 5)
+	rows.AddRow(testServers[0].Server.TypeID, 5)
 	// Make it return a list of atleast one associated ds
 	dsrows := sqlmock.NewRows([]string{"array"})
 	dsrows.AddRow("{3}")
@@ -146,32 +149,19 @@ func TestUpdateServer(t *testing.T) {
 	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
 
 	snv := tc.ServerNullableV11{
-		CDNID:    &testServers[0].CDNID,
-		FqdnTime: time.Time{},
-		TypeID:   &testServers[0].TypeID,
+		CommonServerProperties: tc.CommonServerProperties{
+			CDNID:            &testServers[0].Server.CDNID,
+			FqdnTime:         time.Time{},
+			TypeID:           &testServers[0].Server.TypeID,
+		},
 	}
-	sn := tc.ServerNullable{
+	sn := tc.ServerNullableV2{
 		ServerNullableV11: snv,
 		IPIsService:       nil,
 		IP6IsService:      nil,
 	}
 
-	s := &TOServer{
-		APIInfoImpl: api.APIInfoImpl{
-			ReqInfo: &api.APIInfo{
-				Params:    nil,
-				IntParams: nil,
-				User:      nil,
-				ReqID:     0,
-				Version:   nil,
-				Tx:        db.MustBegin(),
-				Config:    nil,
-			},
-		},
-		ServerNullable: sn,
-	}
-
-	userErr, _, errCode := s.Update()
+	userErr, _, errCode := checkTypeChangeSafety(sn.CommonServerProperties, db.MustBegin())
 	if errCode != 409 {
 		t.Errorf("Update servers: Expected error code of %v, but got %v", 409, errCode)
 	}
@@ -312,15 +302,6 @@ func TestGetMidServers(t *testing.T) {
 			ts.ILOIPNetmask,
 			ts.ILOPassword,
 			ts.ILOUsername,
-			ts.InterfaceMtu,
-			ts.InterfaceName,
-			ts.IP6Address,
-			ts.IP6IsService,
-			ts.IP6Gateway,
-			ts.IPAddress,
-			ts.IPIsService,
-			ts.IPNetmask,
-			ts.IPGateway,
 			ts.LastUpdated,
 			ts.MgmtIPAddress,
 			ts.MgmtIPGateway,
@@ -363,7 +344,7 @@ func TestGetMidServers(t *testing.T) {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
 
-	cols2 := test.ColsFromStructByTag("db", tc.Server{})
+	cols2 := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}
