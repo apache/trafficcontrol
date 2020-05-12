@@ -522,7 +522,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var servers []tc.ServerNullable
+	servers := []tc.ServerNullable{}
 	var unfiltered uint64
 	servers, unfiltered, userErr, sysErr, errCode = getServers(inf.Params, inf.Tx, inf.User)
 
@@ -551,7 +551,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
-	log.Debugf("servers len=%d", len(servers))
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2()
 		if err != nil {
@@ -560,7 +559,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		}
 		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
 	}
-	log.Debugf("legacyServers len=%d", len(legacyServers))
 	api.WriteResp(w, r, legacyServers)
 }
 
@@ -691,7 +689,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		}
 
 		if s, ok := servers[id]; !ok {
-			log.Warnf("interfaces query returned interfaces for server #%d that was not in original query")
+			log.Warnf("interfaces query returned interfaces for server #%d that was not in original query", id)
 		} else {
 			s.Interfaces = ifaces
 			servers[id] = s
@@ -762,79 +760,182 @@ WHERE s.id IN (` + edgeIDs + `)))
 	return mids, nil, nil, http.StatusOK
 }
 
+func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error, error, int) {
+	// see if cdn or type changed
+	var cdnID int
+	var typeID int
+	if err := tx.QueryRow("SELECT type, cdn_id FROM server WHERE id = $1", server.ID).Scan(&typeID, &cdnID); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("no server found with this ID"), nil, http.StatusNotFound
+		}
+		return nil, fmt.Errorf("getting current server type: %v", err), http.StatusInternalServerError
+	}
+
+	var dsIDs []int64
+	if err := tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", server.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("getting server assigned delivery services: %v", err), http.StatusInternalServerError
+	}
+	// If type is changing ensure it isn't assigned to any DSes.
+	if typeID != *server.TypeID {
+		if len(dsIDs) != 0 {
+			return errors.New("server type can not be updated when it is currently assigned to Delivery Services"), nil, http.StatusConflict
+		}
+	}
+	// Check to see if the user is trying to change the CDN of a server, which is already linked with a DS
+	if cdnID != *server.CDNID && len(dsIDs) != 0 {
+		return errors.New("server cdn can not be updated when it is currently assigned to delivery services"), nil, http.StatusConflict
+	}
+
+	return nil, nil, http.StatusOK
+}
+
+func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (error, error, int) {
+	ifaceQry := `
+	INSERT INTO interface (
+		max_bandwidth,
+		monitor,
+		mtu,
+		name,
+		server
+	) VALUES
+	`
+	ipQry := `
+	INSERT INTO ip_address (
+		address,
+		gateway,
+		interface,
+		server,
+		service_address
+	) VALUES
+	`
+
+	ifaceQueryParts := make([]string, 0, len(interfaces))
+	ipQueryParts := make([]string, 0, len(interfaces))
+	ifaceArgs := make([]interface{}, 0, len(interfaces))
+	ipArgs := make([]interface{}, 0, len(interfaces))
+	for i, iface := range interfaces {
+		argStart := i * 5
+		ifaceQueryParts = append(ifaceQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
+		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, id)
+		for _, ip := range iface.IPAddresses {
+			argStart = len(ipArgs)
+			ipQueryParts = append(ipQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)",  argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
+			ipArgs = append(ipArgs, ip.Address, ip.Gateway, iface.Name, id, ip.ServiceAddress)
+		}
+	}
+
+	ifaceQry += strings.Join(ifaceQueryParts, ",")
+	log.Debugf("Inserting interfaces for new server, query is: %s", ifaceQry)
+
+	ifaceRows, err := tx.Query(ifaceQry, ifaceArgs...)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+	defer ifaceRows.Close()
+	insertedIfaces := 0
+	for ifaceRows.Next() {
+		insertedIfaces++
+	}
+	log.Debugf("Inserted %d interfaces", insertedIfaces)
+
+	ipQry += strings.Join(ipQueryParts, ",")
+	log.Debugf("Inserting IP addresses for new server, query is: %s", ipQry)
+
+	ipRows, err := tx.Query(ipQry, ipArgs...)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+	defer ipRows.Close()
+
+	return nil, nil, http.StatusOK
+}
+
+func deleteInterfaces(id int, tx *sql.Tx) (error, error, int) {
+	if err := tx.QueryRow(deleteIPsQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
+		return api.ParseDBError(err)
+	}
+
+	if err := tx.QueryRow(deleteInterfacesQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
+		return api.ParseDBError(err)
+	}
+
+	return nil, nil, http.StatusOK
+}
+
 func Update(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	var server tc.ServerNullableV11
 
-	tx := inf.Tx.Tx
-
-	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
-	if err := validateV1(server, tx); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
-	// see if cdn or type changed
-	var cdnID int
-	var typeID int
-
-	if err := inf.Tx.QueryRow("SELECT type, cdn_id FROM server WHERE id = $1", server.ID).Scan(&typeID, &cdnID); err != nil {
-		if err == sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this ID"), nil)
+	var server tc.ServerNullableV2
+	var interfaces []tc.ServerInterfaceInfo
+	if inf.Version.Major >= 3 {
+		var newServer tc.ServerNullable
+		if err := json.NewDecoder(r.Body).Decode(&newServer); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("getting current server type: %v", err))
-		return
-	}
-
-	var dsIDs []int64
-	if err := inf.Tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", server.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("getting server assigned delivery services: %v", err))
-		return
-	}
-	// Check to see if the user is trying to change the CDN of a server, which is already linked with a DS
-	if cdnID != *server.CDNID && len(dsIDs) != 0 {
-		api.HandleErr(w, r, tx, http.StatusConflict, errors.New("server cdn can not be updated when it is currently assigned to delivery services"), nil)
-		return
-	}
-	// If type is changing ensure it isn't assigned to any DSes.
-	if typeID != *server.TypeID {
-		if len(dsIDs) != 0 {
-			api.HandleErr(w, r, tx, http.StatusConflict, errors.New("server type can not be updated when it is currently assigned to Delivery Services"), nil)
+		serviceInterface, err := validateV3(newServer, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
+		}
+
+		server, err = newServer.ToServerV2()
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Converting v3 server to v2 for update: %v", err))
+			return
+		}
+		server.InterfaceName = util.StrPtr(serviceInterface)
+		interfaces = newServer.Interfaces
+	} else if inf.Version.Major == 2 {
+		if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+
+		err := validateV2(&server, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		interfaces, err = server.LegacyInterfaceDetails.ToInterfaces(*server.IPIsService, *server.IP6IsService)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Converting server legacy interfaces to interface array: %v", err))
+		}
+	} else {
+		var legacyServer tc.ServerNullableV11
+		if err := json.NewDecoder(r.Body).Decode(&legacyServer); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+
+		err := validateV1(legacyServer, tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+
+		interfaces, err = server.LegacyInterfaceDetails.ToInterfaces(true, true)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Converting server legacy interfaces to interface array: %v", err))
+		}
+		server = tc.ServerNullableV2{
+			ServerNullableV11: legacyServer,
+			IPIsService: util.BoolPtr(true),
+			IP6IsService: util.BoolPtr(true),
 		}
 	}
 
-	// current := TOServer{}
-	// err := inf.Tx.QueryRowx(selectV20UpdatesQuery()+` WHERE sv.id=$1`, strconv.Itoa(*s.ID)).StructScan(&current)
-	// if err != nil {
-	// 	return api.ParseDBError(err)
-	// }
-	// defaultIsService := true
-	// if s.IPIsService == nil {
-	// 	if current.IPIsService != nil {
-	// 		s.IPIsService = current.IPIsService
-	// 	} else {
-	// 		s.IPIsService = &defaultIsService
-	// 	}
-	// }
-	// if s.IP6IsService == nil {
-	// 	if current.IP6IsService != nil {
-	// 		s.IP6IsService = current.IP6IsService
-	// 	} else {
-	// 		s.IP6IsService = &defaultIsService
-	// 	}
-	// }
+	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerProperties, inf.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
 
 	rows, err := inf.Tx.NamedQuery(updateQuery, server)
 	if err != nil {
@@ -854,43 +955,26 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	server.LastUpdated = &lastUpdated
 
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
-}
-
-func createInterfaces(s tc.ServerNullableV11, tx *sql.Tx, ipv4IsService, ipv6IsService bool) error {
-	if err := tx.QueryRow(insertInterfaceQuery, nil, true, s.InterfaceMtu, s.InterfaceName, s.ID).Scan(); err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("Inserting legacy interface: %v", err)
+	if userErr, sysErr, errCode = deleteInterfaces(inf.IntParams["id"], tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
 
-	if s.IPAddress != nil && *s.IPAddress != "" {
-		if s.IPGateway != nil && *s.IPGateway == "" {
-			s.IPGateway = nil
-		}
-
-		ipStr := *s.IPAddress
-		if s.IPNetmask != nil && *s.IPNetmask != "" {
-			mask := net.ParseIP(*s.IPNetmask).To4()
-			if mask == nil {
-				return fmt.Errorf("Failed to parse netmask '%s'", *s.IPNetmask)
-			}
-			cidr, _ := net.IPv4Mask(mask[0], mask[1], mask[2], mask[3]).Size()
-			ipStr = fmt.Sprintf("%s/%d", ipStr, cidr)
-		}
-		if err := tx.QueryRow(insertIPQuery, ipStr, s.IPGateway, *s.InterfaceName, uint64(*s.ID), ipv4IsService).Scan(); err != nil && err != sql.ErrNoRows {
-			return fmt.Errorf("Inserting legacy IPv4 address: %v", err)
-		}
+	if userErr, sysErr, errCode = createInterfaces(inf.IntParams["id"], interfaces, tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
 
-	if s.IP6Address != nil && *s.IP6Address != "" {
-		if s.IP6Gateway != nil && *s.IP6Gateway == "" {
-			s.IP6Gateway = nil
-		}
-		if err := tx.QueryRow(insertIPQuery, *s.IP6Address, s.IP6Gateway, *s.InterfaceName, uint64(*s.ID), ipv6IsService).Scan(); err != nil && err != sql.ErrNoRows {
-			return fmt.Errorf("Inserting legacy IPv6 address: %v", err)
-		}
+	if inf.Version.Major >= 3 {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces})
+	} else if inf.Version.Minor <= 1 {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server.ServerNullableV11)
+	} else {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
 	}
 
-	return nil
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *server.HostName, *server.DomainName, *server.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
 func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
@@ -936,14 +1020,20 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	server.ID = &id
 	server.LastUpdated = &lastUpdated
 
-	if err := createInterfaces(server, tx, true, true); err != nil {
+	ifaces, err := server.LegacyInterfaceDetails.ToInterfaces(true, true)
+	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	}
+
+	if userErr, sysErr, errCode := createInterfaces(id, ifaces, tx); err != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
 
-	changeLogMsg := fmt.Sprintf("SERVER: %s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
@@ -992,15 +1082,20 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	server.ID = &id
 	server.LastUpdated = &lastUpdated
 
-	if err := createInterfaces(server.ServerNullableV11, tx, *server.IPIsService, *server.IP6IsService); err != nil {
+	ifaces, err := server.LegacyInterfaceDetails.ToInterfaces(*server.IPIsService, *server.IP6IsService)
+	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	}
+
+	if userErr, sysErr, errCode := createInterfaces(id, ifaces, tx); err != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
 
-	changeLogMsg := fmt.Sprintf("SERVER: %s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
@@ -1036,10 +1131,6 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	}
 	defer resultRows.Close()
 
-
-	// var id int
-	// var lastUpdated tc.TimeNoMod
-
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -1053,79 +1144,19 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	} else if rowsAffected > 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
-	}
-	// server.ID = &id
-	// server.LastUpdated = &lastUpdated
-
-	ifaceQry := `
-	INSERT INTO interface (
-		max_bandwidth,
-		monitor,
-		mtu,
-		name,
-		server
-	) VALUES
-	`
-	ipQry := `
-	INSERT INTO ip_address (
-		address,
-		gateway,
-		interface,
-		server,
-		service_address
-	) VALUES
-	`
-
-	ifaceQueryParts := make([]string, 0, len(server.Interfaces))
-	ipQueryParts := make([]string, 0, len(server.Interfaces))
-	ifaceArgs := make([]interface{}, 0, len(server.Interfaces))
-	ipArgs := make([]interface{}, 0, len(server.Interfaces))
-	for i, iface := range server.Interfaces {
-		argStart := i * 5
-		ifaceQueryParts = append(ifaceQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
-		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, server.ID)
-		for _, ip := range iface.IPAddresses {
-			argStart = len(ipArgs)
-			ipQueryParts = append(ipQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)",  argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
-			ipArgs = append(ipArgs, ip.Address, ip.Gateway, iface.Name, server.ID, ip.ServiceAddress)
-		}
+		return
 	}
 
-	ifaceQry += strings.Join(ifaceQueryParts, ",")
-	log.Debugf("Inserting interfaces for new server, query is: %s", ifaceQry)
-
-	ifaceRows, err := tx.Query(ifaceQry, ifaceArgs...)
-	if err != nil {
-		log.Debugf("iface err: %v", err)
-		userErr, sysErr, errCode := api.ParseDBError(err)
+	userErr, sysErr, errCode := createInterfaces(*server.ID, server.Interfaces, tx)
+	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	defer ifaceRows.Close()
-	insertedIfaces := 0
-	for ifaceRows.Next() {
-		insertedIfaces++
-	}
-	log.Debugf("Inserted %d interfaces", insertedIfaces)
-
-	ipQry += strings.Join(ipQueryParts, ",")
-	log.Debugf("Inserting IP addresses for new server, query is: %s", ipQry)
-
-	ipRows, err := tx.Query(ipQry, ipArgs...)
-	if err != nil {
-		log.Debugf("ip err: %v", err)
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-	defer ipRows.Close()
-
-	log.Debugf("%+v", server.Interfaces)
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
 
-	changeLogMsg := fmt.Sprintf("SERVER: %s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
@@ -1174,18 +1205,6 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tx.QueryRow(deleteIPsQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-
-	if err := tx.QueryRow(deleteInterfacesQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-
 	if err := tx.QueryRow(deleteServerQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -1210,6 +1229,6 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2)
 		}
 	}
-	changeLogMsg := fmt.Sprintf("SERVER: %s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
