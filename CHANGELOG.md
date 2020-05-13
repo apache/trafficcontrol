@@ -7,7 +7,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 - Traffic Ops API v3
 - Added an optional readiness check service to cdn-in-a-box that exits successfully when it is able to get a `200 OK` from all delivery services
-- Added an API 3.0 endpoint, /api/3.0/topologies, to create, read, update and delete flexible topologies.
+- [Flexible Topologies (in progress)](https://github.com/apache/trafficcontrol/blob/master/blueprints/flexible-topologies.md)
+    - Traffic Ops: Added an API 3.0 endpoint, /api/3.0/topologies, to create, read, update and delete flexible topologies.
+    - Traffic Portal: Added the ability to create, read, update and delete flexible topologies.
 
 ### Changed
 
