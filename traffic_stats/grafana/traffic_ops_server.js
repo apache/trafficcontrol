@@ -13,53 +13,45 @@
      limitations under the License.
 */
 
-/* global _ */
-
 /*
  * Scripted dashboard for traffic ops.
  *
  * Based on the grafana scripted.js script (which is ASF 2.0 licensed).
  */
 
-
-
-// accessible variables in this scope
-var window, document, ARGS, $, jQuery, moment, kbn;
+'use strict';
 
 // Setup some variables
 var dashboard;
 
-// All url parameters are available via the ARGS object
+// All URL parameters are available via the ARGS object
 var ARGS;
 
-// Intialize a skeleton with nothing but a rows array and service object
+// Intialize a skeleton with nothing but a rows array and service object,
+// and setting default time and refresh interval.
 dashboard = {
-  rows : [],
+  refresh: "30s",
+  rows: [],
+  // time can be overridden in the URL using from/to parameters, but this is
+  // handled automatically in grafana core during dashboard initialization
+  time: {
+    from: "now-24h",
+    to: "now"
+  }
 };
 
+let which = 'argName';
 
-// Set default time
-// time can be overriden in the url using from/to parameters, but this is
-// handled automatically in grafana core during dashboard initialization
-dashboard.time = {
-  from: "now-24h",
-  to: "now"
-};
-
-var which = 'argName';
-
-if(!_.isUndefined(ARGS.which)) {
+if (ARGS.which !== undefined) {
   which = ARGS.which;
 }
 
 // Set a title
 dashboard.title = which;
-//set refresh interval
-dashboard.refresh = "30s";
-
 
 {
-  dashboard.rows.push(    {
+  dashboard.rows.push(
+    {
       "height": "250px",
       "panels": [
         {
@@ -108,7 +100,7 @@ dashboard.refresh = "30s";
             {
               "measurement": "bandwidth.1min",
               "tags": {},
-              "query": "SELECT mean(value) FROM \"monthly\".\"bandwidth.1min\" WHERE hostname= '" + which + "' and $timeFilter GROUP BY time(60s)",
+              "query": `SELECT mean(value) FROM "monthly"."bandwidth.1min" WHERE hostname= '${which}' and $timeFilter GROUP BY time(60s)`,
               "rawQuery": true,
               "refId": "A",
               "policy": "default",
@@ -222,7 +214,7 @@ dashboard.refresh = "30s";
             {
               "measurement": "connections.1min",
               "tags": {},
-              "query": "SELECT mean(value) FROM \"monthly\".\"connections.1min\" WHERE hostname= '" + which + "' and $timeFilter GROUP BY time(60s)",
+              "query": `SELECT mean(value) FROM "monthly"."connections.1min" WHERE hostname= '${which}' and $timeFilter GROUP BY time(60s)`,
               "rawQuery": true,
               "refId": "A",
               "policy": "default",
@@ -308,9 +300,9 @@ dashboard.refresh = "30s";
               "resultFormat": "time_series",
               "tags": [
                 {
-                  "key": "host",
-                  "operator": "=~",
-                  "value": "/" + which + "/"
+                  key: "host",
+                  operator: "=",
+                  value: which
                 }
               ],
               "groupBy": [
@@ -499,9 +491,9 @@ dashboard.refresh = "30s";
               "resultFormat": "time_series",
               "tags": [
                 {
-                  "key": "host",
-                  "operator": "=~",
-                  "value": "/" + which + "/"
+                  key: "host",
+                  operator: "=",
+                  value: which
                 }
               ],
               "groupBy": [
@@ -626,9 +618,9 @@ dashboard.refresh = "30s";
               "resultFormat": "time_series",
               "tags": [
                 {
-                  "key": "host",
-                  "operator": "=~",
-                  "value": "/" + which + "/"
+                  key: "host",
+                  operator: "=",
+                  value: which
                 }
               ],
               "groupBy": [
@@ -781,9 +773,9 @@ dashboard.refresh = "30s";
               "resultFormat": "time_series",
               "tags": [
                 {
-                  "key": "host",
-                  "operator": "=~",
-                  "value": "/" + which + "/"
+                  key: "host",
+                  operator: "=",
+                  value: which
                 }
               ],
               "groupBy": [
@@ -836,9 +828,9 @@ dashboard.refresh = "30s";
               "resultFormat": "time_series",
               "tags": [
                 {
-                  "key": "host",
-                  "operator": "=~",
-                  "value": "/" + which + "/"
+                  key: "host",
+                  operator: "=",
+                  value: which
                 }
               ],
               "groupBy": [
@@ -968,10 +960,10 @@ dashboard.refresh = "30s";
               "dsType": "influxdb",
               "resultFormat": "time_series",
               "tags": [
-              {
-                  "key": "hostname",
-                  "operator": "=~",
-                  "value": "/" + which + "/"
+                {
+                  key: "hostname",
+                  operator: "=",
+                  value: which
                 }
               ],
               "groupBy": [
@@ -1106,9 +1098,9 @@ dashboard.refresh = "30s";
               "resultFormat": "time_series",
               "tags": [
                 {
-                  "key": "host",
-                  "operator": "=~",
-                  "value": "/" + which + "/"
+                  key: "host",
+                  operator: "=",
+                  value: which
                 }
               ],
               "groupBy": [
