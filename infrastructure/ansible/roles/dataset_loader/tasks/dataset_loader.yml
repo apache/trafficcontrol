@@ -580,17 +580,24 @@
       retries: 10
       until: get_all_profiles['status']|default(0) == 200
 
-    - name: Get All Parameters per Profile
-      uri:
-        url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item }}/parameters"
-        method: GET
-      vars:
-        profile_query: "response.id"
+    - name: Get all Parameters per Profile - with curl workaround
+      command: "curl -X GET -Lsk --fail -b '{{ dl_mojo_token.set_cookie }}' '{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item }}/parameters'"
+      args:
+        warn: no
       with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
-      register: get_all_parameters_by_profile
+      register: get_all_parameters_by_profile_raw
       no_log: true
       retries: 10
-      until: get_all_parameters_by_profile['status']|default(0) == 200
+
+    - name: Convert the curl workaround output to match normal URI output
+      set_fact:
+        get_all_parameters_by_profile: "{{ (get_all_parameters_by_profile | default({})) | combine(payload, recursive=True) }}"
+      with_items: "{{ get_all_parameters_by_profile_raw.results }}"
+      no_log: true
+      vars:
+        payload: "{'changed': false,'msg': 'All items completed, includes curl workaround', 'results': {{ results }} }"
+        results: "{{ ((get_all_parameters_by_profile | default({})).results | default([])) + [ new_result ] }}"
+        new_result: "{{ item | combine({'json': ( item.stdout | from_json ) }) }}"
 
     - name: Associate eligible profiles to hosts
       set_fact:
