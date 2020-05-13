@@ -18,6 +18,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net"
 	"net/http"
@@ -40,7 +41,7 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 	if err != nil {
 		return nil, reqInf, err
 	}
-	defer resp.Body.Close()
+	defer log.Close(resp.Body, "unable to close response")
 	var topResp tc.TopologyResponse
 	if err = json.NewDecoder(resp.Body).Decode(&topResp); err != nil {
 		return nil, reqInf, err
@@ -55,7 +56,7 @@ func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
 	if err != nil {
 		return nil, reqInf, err
 	}
-	defer resp.Body.Close()
+	defer log.Close(resp.Body, "unable to close response")
 
 	var data tc.TopologiesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
@@ -73,7 +74,7 @@ func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
 	if err != nil {
 		return nil, reqInf, err
 	}
-	defer resp.Body.Close()
+	defer log.Close(resp.Body, "unable to close response")
 
 	var data tc.TopologiesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
@@ -99,7 +100,7 @@ func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyRespo
 	if err != nil {
 		return nil, reqInf, err
 	}
-	defer resp.Body.Close()
+	defer log.Close(resp.Body, "unable to close response")
 	var response = new(tc.TopologyResponse)
 	err = json.NewDecoder(resp.Body).Decode(response)
 	return response, reqInf, err
@@ -113,7 +114,7 @@ func (to *Session) DeleteTopology(name string) (tc.Alerts, ReqInf, error) {
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	defer resp.Body.Close()
+	defer log.Close(resp.Body, "unable to close response")
 	var alerts tc.Alerts
 	if err = json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
 		return tc.Alerts{}, reqInf, err
