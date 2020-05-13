@@ -387,6 +387,7 @@ func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroup
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		return nil, userErr, sysErr, errCode
 	}
+	defer log.Close(rows, "unable to close DB connection")
 	cacheGroupMap := map[string]tc.CacheGroupNullable{}
 	for rows.Next() {
 		var s tc.CacheGroupNullable

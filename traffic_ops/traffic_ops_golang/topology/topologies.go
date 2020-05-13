@@ -22,6 +22,7 @@ package topology
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -177,6 +178,7 @@ func (topology *TOTopology) Read() ([]interface{}, error, error, int) {
 	if err != nil {
 		return nil, nil, errors.New("topology read: querying: " + err.Error()), http.StatusInternalServerError
 	}
+	defer log.Close(rows, "unable to close DB connection")
 
 	var interfaces []interface{}
 	topologies := map[string]*tc.Topology{}
@@ -211,10 +213,6 @@ func (topology *TOTopology) Read() ([]interface{}, error, error, int) {
 			topology.LastUpdated = &lastUpdated
 		}
 		topologies[name].Nodes = append(topologies[name].Nodes, topologyNode)
-	}
-	if err = rows.Close(); err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		return nil, userErr, sysErr, errCode
 	}
 
 	for _, topology := range topologies {
@@ -264,15 +262,13 @@ func (topology *TOTopology) addNodes() (error, error, int) {
 	if err != nil {
 		return nil, errors.New("error adding nodes: " + err.Error()), http.StatusInternalServerError
 	}
+	defer log.Close(rows, "unable to close DB connection")
 	for _, index := range indices {
 		rows.Next()
 		err = rows.Scan(&topology.Nodes[index].Id, &topology.Name, &topology.Nodes[index].Cachegroup)
 		if err != nil {
 			return api.ParseDBError(err)
 		}
-	}
-	if err = rows.Close(); err != nil {
-		return api.ParseDBError(err)
 	}
 	return nil, nil, http.StatusOK
 }
@@ -295,6 +291,7 @@ func (topology *TOTopology) addParents() (error, error, int) {
 	if err != nil {
 		return api.ParseDBError(err)
 	}
+	defer log.Close(rows, "unable to close DB connection")
 	for _, node := range topology.Nodes {
 		for rank := 1; rank <= len(node.Parents); rank++ {
 			rows.Next()
@@ -305,10 +302,6 @@ func (topology *TOTopology) addParents() (error, error, int) {
 			}
 		}
 	}
-	err = rows.Close()
-	if err != nil {
-		return api.ParseDBError(err)
-	}
 	return nil, nil, http.StatusOK
 }
 
@@ -317,6 +310,7 @@ func (topology *TOTopology) setDescription() (error, error, int) {
 	if err != nil {
 		return nil, fmt.Errorf("topology update: error setting the description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
 	}
+	defer log.Close(rows, "unable to close DB connection")
 	for rows.Next() {
 		err = rows.Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
 		if err != nil {
