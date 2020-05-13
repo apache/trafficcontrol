@@ -108,7 +108,7 @@ func updateSingleTopology(topology tc.Topology) error {
 
 func UpdateTestTopologies(t *testing.T) {
 	topologiesCount := len(testData.Topologies)
-	for index, _ := range testData.Topologies {
+	for index := range testData.Topologies {
 		topology := testData.Topologies[(index+1)%topologiesCount]
 		topology.Name = testData.Topologies[index].Name // We cannot update a topology's name
 		if err := updateSingleTopology(topology); err != nil {
