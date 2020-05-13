@@ -210,8 +210,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request, client *influx.Client
 		if summary != nil {
 			resp.Summary = &tc.TrafficDSStatsSummary{
 				TrafficStatsSummary: *summary,
-				TotalKiloBytes: kBs,
-				TotalTransactions: txns,
+				TotalKiloBytes:      kBs,
+				TotalTransactions:   txns,
 			}
 		} else {
 			resp.Summary = &tc.TrafficDSStatsSummary{}
@@ -278,8 +278,8 @@ func handleLegacyRequest(w http.ResponseWriter, r *http.Request, client *influx.
 		if summary != nil {
 			resp.Summary = &tc.LegacyTrafficDSStatsSummary{
 				TrafficStatsSummary: *summary,
-				TotalBytes: kBs,
-				TotalTransactions: txns,
+				TotalBytes:          kBs,
+				TotalTransactions:   txns,
 			}
 		} else {
 			resp.Summary = &tc.LegacyTrafficDSStatsSummary{}
