@@ -388,12 +388,6 @@ func (topology *TOTopology) OptionsDelete() (error, error, int) {
 	for _, node := range topology.Nodes {
 		cachegroups = append(cachegroups, node.Cachegroup)
 	}
-	if err := topology.removeNodes(&cachegroups); err != nil {
-		return nil, err, http.StatusInternalServerError
-	}
-	if err := topology.removeParents(); err != nil {
-		return nil, err, http.StatusInternalServerError
-	}
 	return api.GenericOptionsDelete(topology)
 }
 
