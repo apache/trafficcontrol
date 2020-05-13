@@ -105,7 +105,7 @@ func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
 }
 
 // Scan implements the sql.Scanner interface
-// expects json.RawMessage and unmarshals to a deliveryservice struct
+// expects json.RawMessage and unmarshals to a ServerInterfaceInfo struct
 func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
