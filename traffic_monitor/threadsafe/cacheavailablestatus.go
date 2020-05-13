@@ -7,7 +7,7 @@ package threadsafe
  * regarding copyright ownership.  The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * with the License.  You may obtain a copy of the License a{t
  *
  *   http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -34,7 +34,7 @@ type CacheAvailableStatus struct {
 
 // NewCacheAvailableStatus creates and returns a new CacheAvailableStatus, initializing internal pointer values.
 func NewCacheAvailableStatus() CacheAvailableStatus {
-	c := cache.AvailableStatuses(map[tc.CacheName]cache.AvailableStatus{})
+	c := cache.AvailableStatuses(map[tc.CacheName]map[string]cache.AvailableStatus{})
 	return CacheAvailableStatus{m: &sync.RWMutex{}, caches: &c}
 }
 
