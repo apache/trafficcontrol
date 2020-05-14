@@ -27,7 +27,7 @@ import (
 )
 
 func TestOrigins(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Users, DeliveryServices, Coordinates, Origins}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Users, Topologies, DeliveryServices, Coordinates, Origins}, func() {
 		UpdateTestOrigins(t)
 		GetTestOrigins(t)
 		NotFoundDeleteTest(t)

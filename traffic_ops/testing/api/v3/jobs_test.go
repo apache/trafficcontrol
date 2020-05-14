@@ -24,7 +24,7 @@ import (
 )
 
 func TestJobs(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		CreateTestJobs(t)
 		CreateTestInvalidationJobs(t)
 		GetTestJobsQueryParams(t)

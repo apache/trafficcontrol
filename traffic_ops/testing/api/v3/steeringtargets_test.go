@@ -27,7 +27,7 @@ var SteeringUserSession *client.Session
 
 func TestSteeringTargets(t *testing.T) {
 
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, Users, SteeringTargets}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, Users, SteeringTargets}, func() {
 		GetTestSteeringTargets(t)
 		UpdateTestSteeringTargets(t)
 	})
