@@ -688,7 +688,6 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 			return nil, unfiltered, nil, fmt.Errorf("found more than one server with ID #%d", *s.ID), http.StatusInternalServerError
 		}
 		servers[*s.ID] = s
-		log.Debugf("%+v", s)
 		ids = append(ids, *s.ID)
 	}
 
@@ -708,7 +707,6 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		if s, ok := servers[id]; !ok {
 			log.Warnf("interfaces query returned interfaces for server #%d that was not in original query", id)
 		} else {
-			log.Debugf("%+v", s)
 			s.Interfaces = ifaces
 			servers[id] = s
 		}
@@ -922,9 +920,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
+
 		interfaces, err = server.LegacyInterfaceDetails.ToInterfaces(*server.IPIsService, *server.IP6IsService)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Converting server legacy interfaces to interface array: %v", err))
+			return
 		}
 	} else {
 		var legacyServer tc.ServerNullableV11
@@ -939,9 +939,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		interfaces, err = server.LegacyInterfaceDetails.ToInterfaces(true, true)
+		interfaces, err = legacyServer.LegacyInterfaceDetails.ToInterfaces(true, true)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Converting server legacy interfaces to interface array: %v", err))
+			return
 		}
 		server = tc.ServerNullableV2{
 			ServerNullableV11: legacyServer,
