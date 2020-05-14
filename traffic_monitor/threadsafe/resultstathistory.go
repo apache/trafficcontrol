@@ -74,7 +74,6 @@ func (h ResultStatHistory) LoadOrStore(cache tc.CacheName) map[string]ResultStat
 	if !loaded {
 		v = map[string]ResultStatValHistory{}
 	}
-	//remove me
 	if rv, ok := v.(ResultStatValHistory); ok {
 		v = map[string]ResultStatValHistory{tc.CacheInterfacesAggregate: rv}
 	}
