@@ -515,7 +515,7 @@ func TestGetConfig(t *testing.T) {
 		rows = rows.AddRow(name, val)
 	}
 
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(tc.MonitorProfilePrefix+"%%", MonitorConfigFile, "mycdn").WillReturnRows(rows)
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
 	tx, err := db.BeginTx(dbCtx, nil)

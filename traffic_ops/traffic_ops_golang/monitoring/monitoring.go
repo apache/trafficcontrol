@@ -115,7 +115,6 @@ func Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
-	fmt.Println("SRIJEET I'm HERE")
 	monitors, caches, routers, err := getMonitoringServers(tx, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)
