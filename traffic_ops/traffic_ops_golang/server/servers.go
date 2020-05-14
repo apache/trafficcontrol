@@ -56,7 +56,9 @@ FROM server
 const selectQuery = `
 SELECT
 	cg.name AS cachegroup,
+	s.cachegroup AS cachegroup_id,
 	cdn.name AS cdn_name,
+	s.cdn_id,
 	s.domain_name,
 	s.guid,
 	s.host_name,
@@ -68,15 +70,19 @@ SELECT
 	s.ilo_password,
 	s.ilo_username,
 	s.offline_reason,
-	pl.name as phys_location,
-	p.name as profile,
-	p.description as profile_desc,
+	pl.name AS phys_location,
+	s.phys_location AS phys_location_id,
+	s.profile AS profile_id,
+	p.name AS profile,
+	p.description AS profile_desc,
 	s.rack,
 	s.router_host_name,
 	s.router_port_name,
-	st.name as status,
+	st.name AS status,
+	s.status AS status_id,
 	s.tcp_port,
-	t.name as server_type,
+	t.name AS server_type,
+	s.type AS server_type_id,
 	s.xmpp_id,
 	s.xmpp_passwd
 FROM server AS s
@@ -637,6 +643,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 			return nil, unfiltered, nil, fmt.Errorf("found more than one server with ID #%d", *s.ID), http.StatusInternalServerError
 		}
 		servers[*s.ID] = s
+		log.Debugf("%+v", s)
 		ids = append(ids, *s.ID)
 	}
 
@@ -656,6 +663,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		if s, ok := servers[id]; !ok {
 			log.Warnf("interfaces query returned interfaces for server #%d that was not in original query", id)
 		} else {
+			log.Debugf("%+v", s)
 			s.Interfaces = ifaces
 			servers[id] = s
 		}
