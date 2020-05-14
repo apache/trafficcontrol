@@ -115,6 +115,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
+	fmt.Println("SRIJEET I'm HERE")
 	monitors, caches, routers, err := getMonitoringServers(tx, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)
@@ -377,17 +378,16 @@ AND ds.active = true
 
 func getConfig(tx *sql.Tx, cdnName string) (map[string]interface{}, error) {
 	// TODO remove 'like' in query? Slow?
-	query := fmt.Sprintf(`
+	query := `
 SELECT pr.name, pr.value
 FROM parameter pr
-JOIN profile p ON p.name LIKE '%s%%'
+JOIN profile p ON p.name LIKE $1
 JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
 JOIN cdn c ON c.id=p.cdn
-WHERE pr.config_file = '%s'
-AND c.name='%s'
-`, tc.MonitorProfilePrefix, MonitorConfigFile, cdnName)
-
-	rows, err := tx.Query(query)
+WHERE pr.config_file = $2
+AND c.name = $3
+`
+	rows, err := tx.Query(query, tc.MonitorProfilePrefix+"%%", MonitorConfigFile, cdnName)
 	if err != nil {
 		return nil, err
 	}

@@ -454,7 +454,7 @@ func TestGetConfig(t *testing.T) {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlConfig, err := getConfig(tx, "")
+	sqlConfig, err := getConfig(tx, "mycdn")
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
