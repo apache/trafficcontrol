@@ -1,0 +1,93 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/topologies')">Topologies</a></li>
+            <li class="active">{{topologyName}}</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="topologyForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(topologyForm.name), 'has-feedback': hasError(topologyForm.name)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="name" type="text" class="form-control" ng-model="topology.name" ng-disabled="!settings.isNew" pattern="[A-Za-z0-9]([A-Za-z\-0-9]*[A-Za-z0-9])?" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(topologyForm.name, 'pattern')">No special characters, periods, underscores, or spaces and cannot begin or end with a hyphen</small>
+                    <span ng-show="hasError(topologyForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(topologyForm.description), 'has-feedback': hasError(topologyForm.description)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Description *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <textarea id="description" name="description" rows="3" cols="17" class="form-control" ng-model="topology.description" maxlength="256" required></textarea>
+                    <small class="input-error" ng-show="hasPropertyError(topologyForm.description, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache Groups *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <div id="tree-root" ui-tree="topologyTreeOptions" >
+                        <ol ui-tree-nodes ng-model="topologyTree">
+                            <li ng-repeat="node in topologyTree" ui-tree-node ng-include="'nodes_renderer.html'"></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(topology)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="topologyForm.$invalid" ng-click="save(topology.name, topology.description, topologyTree)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/ng-template" id="nodes_renderer.html">
+    <input name="error" ng-if="hasNodeError(node)" ng-model="error" type="hidden" required>
+    <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content"
+         ng-class="{ 'error': hasNodeError(node), 'origin': isOrigin(node), 'mid': isMid(node) }">
+        <div class="tree-node-label pull-left">
+            <a class="tree-toggle btn btn-primary btn-xs" ng-if="node.type !== 'ROOT' && hasChildren(node)" data-nodrag ng-click="toggle(this)">
+                <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
+            </a> {{nodeLabel(node)}} <small>{{node.type}}</small>
+        </div>
+        <div ng-if="hasNodeError(node)" class="error-msg">1+ child required for {{node.type}}</div>
+        <div class="pull-right">
+            <a ng-show="node.cachegroup && node.parent" title="Set Secondary Parent Cache Group for {{node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="editSecParent(node)" style="margin-right: 8px;">
+                2nd: {{(node.secParent) ? node.secParent : 'None'}}
+            </a>
+            <a ng-if="node.cachegroup" title="View Servers Assigned to {{node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="viewCacheGroupServers(node)" style="margin-right: 8px;">
+                <i class="fa fa-server"></i>
+            </a>
+            <a ng-disabled="node.type === 'EDGE_LOC'" title="{{(node.type !== 'EDGE_LOC') ? 'Add cache groups to ' + node.cachegroup : 'Cache groups cannot be added to EDGE_LOC cache groups'}}" class="btn btn-primary btn-xs" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
+                <i class="fa fa-plus"></i>
+            </a>
+            <a ng-if="node.cachegroup" title="Remove {{node.cachegroup}} Cache Group" class="btn btn-danger btn-xs" data-nodrag ng-click="deleteCacheGroup(node, this)">
+                <i class="fa fa-times"></i>
+            </a>
+        </div>
+    </div>
+    <ol ui-tree-nodes="" ng-model="node.children" ng-class="{hidden: collapsed}">
+        <li ng-repeat="node in node.children" ui-tree-node data-expand-on-hover="true" ng-include="'nodes_renderer.html'"></li>
+    </ol>
+</script>

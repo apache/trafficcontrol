@@ -361,7 +361,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Created+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, api.Created+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 // Used by PUT requests to `/jobs`, replaces an existing content invalidation job
@@ -520,7 +520,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
 	w.Write(append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+"content invalidation job: #"+strconv.FormatUint(*job.ID, 10), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" content invalidation job - ID: "+strconv.FormatUint(*job.ID, 10)+" DS: "+*job.DeliveryService+" URL: '"+*job.AssetURL+"' Params: '"+*job.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 // Used by DELETE requests to `/jobs`, deletes an existing content invalidation job
@@ -606,7 +606,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
 	w.Write(append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 func setRevalFlags(d interface{}, tx *sql.Tx) error {

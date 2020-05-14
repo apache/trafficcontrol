@@ -379,6 +379,46 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 	return nil
 }
 
+func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroupNullable, error, error, int) {
+	query := SelectQuery() + multipleCacheGroupsWhere()
+	namesPqArray := pq.Array(names)
+	rows, err := Tx.Query(query, namesPqArray)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return nil, userErr, sysErr, errCode
+	}
+	defer log.Close(rows, "unable to close DB connection")
+	cacheGroupMap := map[string]tc.CacheGroupNullable{}
+	for rows.Next() {
+		var s tc.CacheGroupNullable
+		lms := make([]tc.LocalizationMethod, 0)
+		cgfs := make([]string, 0)
+		if err = rows.Scan(
+			&s.ID,
+			&s.Name,
+			&s.ShortName,
+			&s.Latitude,
+			&s.Longitude,
+			pq.Array(&lms),
+			&s.ParentCachegroupID,
+			&s.ParentName,
+			&s.SecondaryParentCachegroupID,
+			&s.SecondaryParentName,
+			&s.Type,
+			&s.TypeID,
+			&s.LastUpdated,
+			pq.Array(&cgfs),
+			&s.FallbackToClosest,
+		); err != nil {
+			return nil, nil, errors.New("cachegroup read: scanning: " + err.Error()), http.StatusInternalServerError
+		}
+		s.LocalizationMethods = &lms
+		s.Fallbacks = &cgfs
+		cacheGroupMap[*s.Name] = s
+	}
+	return cacheGroupMap, nil, nil, http.StatusOK
+}
+
 func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
@@ -619,6 +659,13 @@ LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
+}
+
+func multipleCacheGroupsWhere() string {
+	return `
+WHERE
+cachegroup.name = ANY ($1)
+`
 }
 
 func UpdateQuery() string {
