@@ -68,6 +68,8 @@
   register: create_server_out
   failed_when: (create_server_out.status == 400 and create_server_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_server_out.status > 400 and create_server_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Assign Servers to Delivery Services - MSO
   uri:
@@ -77,6 +79,8 @@
   register: create_ds_assignment_out
   failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600 and create_ds_assignment_out.status != 500)
   no_log: true
+  retries: 10
+  delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     computed_xmlid: "{{ Target_mso_ds.1.uniqueKey }}-{{ Target_cdn_delegation | lower }}"

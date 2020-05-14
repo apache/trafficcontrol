@@ -20,6 +20,8 @@
       Content-Type: "application/x-www-form-urlencoded"
   register: dl_mojo_token
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Collect All CDN delegations assigned to Traffic Routers
   set_fact:
@@ -43,6 +45,8 @@
     method: GET
   register: get_all_cdns
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Update the Primary CDN
   uri:
@@ -58,6 +62,8 @@
   register: update_cdn_out
   failed_when: (update_cdn_out.status == 400 and update_cdn_out.json | to_json | from_json | json_query(error_query) | length != 0) or (update_cdn_out.status > 400 and update_cdn_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Create additional CDNs having delegations
   uri:
@@ -73,6 +79,8 @@
   register: create_cdns_out
   failed_when: (create_cdns_out.status == 400 and create_cdns_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cdns_out.status > 400 and create_cdns_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Get All CDNs
   uri:
@@ -123,6 +131,8 @@
   register: create_types_out
   failed_when: (create_types_out.status == 400 and create_types_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_types_out.status > 400 and create_types_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Get All Types
   uri:
@@ -163,6 +173,8 @@
     username: "{{ item.username }}"
   register: create_user_out
   no_log: true
+  retries: 10
+  delay: 10
   failed_when: (create_user_out.status == 400 and create_user_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_user_out.status > 400 and create_user_out.status < 600)
 
 - name: Create Cachegroups - Traffic Router
@@ -178,6 +190,8 @@
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Create Cachegroups - Infrastructure Tier
   uri:
@@ -192,6 +206,8 @@
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Create Cachegroups - Origin Tier
   uri:
@@ -206,6 +222,8 @@
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Get All Cachegroups - Origin Tier
   uri:
@@ -234,6 +252,8 @@
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Get All Cachegroups - Mid Tier
   uri:
@@ -262,6 +282,8 @@
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Get All Cachegroups
   uri:
@@ -315,6 +337,8 @@
   register: create_divisions_out
   failed_when: (create_divisions_out.status == 400 and create_divisions_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_divisions_out.status > 400 and create_divisions_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Get All Divisions
   uri:
@@ -350,6 +374,8 @@
   register: create_regions_out
   failed_when: (create_regions_out.status == 400 and create_regions_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_regions_out.status > 400 and create_regions_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Get All Regions
   uri:
@@ -410,6 +436,8 @@
   register: create_physlocation_out
   failed_when: (create_physlocation_out.status == 400 and create_physlocation_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_physlocation_out.status > 400 and create_physlocation_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Get All Physical Locations
   uri:
@@ -537,6 +565,8 @@
       register: unassociate_global_params
       failed_when: (unassociate_global_params.status == 400 and unassociate_global_params.json | to_json | from_json | json_query(error_query) | length != 0) or ( unassociate_global_params.status > 400 and unassociate_global_params.status < 600)
       no_log: true
+      retries: 10
+      delay: 10
 
     - name: Create Profiles - Global
       uri:
@@ -555,6 +585,8 @@
       register: create_profiles_out
       failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
       no_log: true
+      retries: 10
+      delay: 10
 
     - name: Create and Associate Parameters - Global
       uri:
@@ -570,6 +602,8 @@
       register: create_profiles_out
       failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
       no_log: true
+      retries: 10
+      delay: 10
 
     - name: Handle Profile & Parameter CDN Templates
       include_tasks: parameter_loader.yml
@@ -735,6 +769,8 @@
   register: create_server_out
   failed_when: (create_server_out.status == 400 and create_server_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_server_out.status > 400 and create_server_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 ###
 # MSO servers are not guarenteed to be idempotent
@@ -807,6 +843,8 @@
   register: create_server_out
   failed_when: (create_server_out.status == 400 and create_server_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_server_out.status > 400 and create_server_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Get All Servers
   uri:
@@ -950,6 +988,8 @@
       version: 1
   with_items: "{{ scrubbed_https_ds }}"
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Upload DS SSL Data to Traffic Ops
   uri:
@@ -970,6 +1010,8 @@
   register: create_ds_sslkeys_out
   failed_when: (create_ds_sslkeys_out.status == 400 and create_ds_sslkeys_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_sslkeys_out.status > 400 and create_ds_sslkeys_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     keypath: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.key.pem"
@@ -985,5 +1027,7 @@
   register: snapshot_out
   failed_when: (snapshot_out.status == 400 and snapshot_out.json | to_json | from_json | json_query(error_query) | length != 0) or (snapshot_out.status > 400 and snapshot_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"

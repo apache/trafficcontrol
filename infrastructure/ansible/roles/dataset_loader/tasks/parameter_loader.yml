@@ -29,6 +29,8 @@
   register: create_profiles_out
   failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Create and Associate Parameters to Non-DS Profiles - Per CDN (Non-Cache)
   uri:
@@ -46,6 +48,8 @@
   register: create_profiles_out
   failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
   no_log: true
+  retries: 10
+  delay: 10
 
 - name: Handle Profile & Parameter CDN Cache Templates
   include_tasks: cache_parameter_loader.yml
