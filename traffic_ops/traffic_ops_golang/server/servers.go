@@ -277,7 +277,41 @@ UPDATE server SET
 	xmpp_id=:xmpp_id,
 	xmpp_passwd=:xmpp_passwd
 WHERE id=:id
-RETURNING last_updated
+RETURNING
+	(SELECT name FROM cachegroup WHERE cachegroup.id=server.cachegroup) AS cachegroup,
+	cachegroup AS cachegroup_id,
+	cdn_id,
+	(SELECT name FROM cdn WHERE cdn.id=server.cdn_id) AS cdn_name,
+	domain_name,
+	guid,
+	host_name,
+	https_port,
+	id,
+	ilo_ip_address,
+	ilo_ip_gateway,
+	ilo_ip_netmask,
+	ilo_password,
+	ilo_username,
+	last_updated,
+	mgmt_ip_address,
+	mgmt_ip_gateway,
+	mgmt_ip_netmask,
+	offline_reason,
+	(SELECT name FROM phys_location WHERE phys_location.id=server.phys_location) AS phys_location,
+	phys_location AS phys_location_id,
+	profile AS profile_id,
+	(SELECT description FROM profile WHERE profile.id=server.profile) AS profile_desc,
+	(SELECT name FROM profile WHERE profile.id=server.profile) AS profile,
+	rack,
+	reval_pending,
+	router_host_name,
+	router_port_name,
+	(SELECT name FROM status WHERE status.id=server.status) AS status,
+	status AS status_id,
+	tcp_port,
+	(SELECT name FROM type WHERE type.id=server.type) AS server_type,
+	type AS server_type_id,
+	upd_pending
 `
 
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
@@ -720,12 +754,12 @@ func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullabl
 	edgeIDs := strings.Join(ids, ",")
 	// TODO: include secondary parent?
 	q := selectQuery + `
-WHERE t.name = 'MID' AND s.cachegroup IN (
-SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
-WHERE cg.id IN (
-SELECT s.cachegroup FROM server AS s
-WHERE s.id IN (` + edgeIDs + `)))
-`
+	WHERE t.name = 'MID' AND s.cachegroup IN (
+	SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
+	WHERE cg.id IN (
+	SELECT s.cachegroup FROM server AS s
+	WHERE s.id IN (` + edgeIDs + `)))
+	`
 	rows, err := tx.Queryx(q)
 	if err != nil {
 		return nil, err, nil, http.StatusBadRequest
@@ -748,7 +782,7 @@ func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error
 	// see if cdn or type changed
 	var cdnID int
 	var typeID int
-	if err := tx.QueryRow("SELECT type, cdn_id FROM server WHERE id = $1", server.ID).Scan(&typeID, &cdnID); err != nil {
+	if err := tx.QueryRow("SELECT type, cdn_id FROM server WHERE id = $1", *server.ID).Scan(&typeID, &cdnID); err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("no server found with this ID"), nil, http.StatusNotFound
 		}
@@ -916,6 +950,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	server.ID = new(int)
+	*server.ID = inf.IntParams["id"]
+
 	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerProperties, inf.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -929,15 +966,23 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
+	rowsAffected := 0
+	for rows.Next() {
+		if err := rows.StructScan(&server); err != nil {
+			api.HandleErr(w, r, tx, http.StatusNotFound, nil, fmt.Errorf("scanning lastUpdated from server insert: %v", err))
+			return
+		}
+		rowsAffected++
 	}
-	var lastUpdated tc.TimeNoMod
-	if err := rows.Scan(&lastUpdated); err != nil {
-		api.HandleErr(w, r, tx, http.StatusNotFound, nil, fmt.Errorf("scanning lastUpdated from server insert: %v", err))
+
+	if rowsAffected < 1 {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
 		return
 	}
-	server.LastUpdated = &lastUpdated
+	if rowsAffected > 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("update for server #%d affected too many rows (%d)", *server.ID, rowsAffected))
+		return
+	}
 
 	if userErr, sysErr, errCode = deleteInterfaces(inf.IntParams["id"], tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
