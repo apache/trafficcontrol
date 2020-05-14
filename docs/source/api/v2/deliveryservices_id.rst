@@ -86,7 +86,6 @@ Request Structure
 :rangeSliceBlockSize:      An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3. It can only be between (inclusive) 262144 (256KB) - 33554432 (32MB).
 :sslKeyVersion:             This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:                  The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
-:topology:                  The unique identifier of the Topology that this :term:`Delivery Service` is assigned to
 :trRequestHeaders:          If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders:         If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :typeId:                    The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
