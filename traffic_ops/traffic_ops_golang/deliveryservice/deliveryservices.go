@@ -184,6 +184,28 @@ func CreateV15(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV15{*res})
 }
 
+func CreateV30(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	ds := tc.DeliveryServiceNullableV30{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
+
+	res, status, userErr, sysErr := createV30(w, r, inf, ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV30{*res})
+}
+
 func createV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
 	dsV13 := tc.DeliveryServiceNullableV13{DeliveryServiceNullableV12: reqDS}
 	res, status, userErr, sysErr := createV13(w, r, inf, dsV13)
@@ -211,8 +233,17 @@ func createV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 	return nil, status, userErr, sysErr
 }
 
-// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
 func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
+	dsV30 := tc.DeliveryServiceNullableV30{DeliveryServiceNullableV15: reqDS}
+	res, status, userErr, sysErr := createV30(w, r, inf, dsV30)
+	if res != nil {
+		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
+	}
+	return nil, status, userErr, sysErr
+}
+
+// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
+func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
 	ds := tc.DeliveryServiceNullable(reqDS)
 	user := inf.User
 	tx := inf.Tx.Tx
@@ -372,7 +403,7 @@ func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
-	dsLatest := tc.DeliveryServiceNullableV15(ds)
+	dsLatest := tc.DeliveryServiceNullableV30(ds)
 	return &dsLatest, http.StatusOK, nil, nil
 }
 
@@ -427,8 +458,10 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	for _, ds := range dses {
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
-		case version.Major > 1 || version.Minor >= 5:
+		case version.Major > 2:
 			returnable = append(returnable, ds)
+		case version.Major > 1 || version.Minor >= 5:
+			returnable = append(returnable, ds.DeliveryServiceNullableV15)
 		case version.Minor >= 4:
 			returnable = append(returnable, ds.DeliveryServiceNullableV14)
 		case version.Minor >= 3:
@@ -542,6 +575,31 @@ func UpdateV15(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV15{*res})
 }
 
+func UpdateV30(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.IntParams["id"]
+
+	ds := tc.DeliveryServiceNullableV30{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+	ds.ID = &id
+
+	res, status, userErr, sysErr := updateV30(w, r, inf, &ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV30{*res})
+}
+
 func updateV12(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV12) (*tc.DeliveryServiceNullableV12, int, error, error) {
 	dsV13 := tc.DeliveryServiceNullableV13{DeliveryServiceNullableV12: *reqDS}
 	// query the DB for existing 1.3 fields in order to "upgrade" this 1.2 request into a 1.3 request
@@ -616,8 +674,7 @@ func updateV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	query := `
 SELECT
   ds.ecs_enabled,
-  ds.range_slice_block_size,
-  ds.topology
+  ds.range_slice_block_size
 FROM
   deliveryservice ds
 WHERE
@@ -625,7 +682,6 @@ WHERE
 	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
 		&dsV15.EcsEnabled,
 		&dsV15.RangeSliceBlockSize,
-		&dsV15.Topology,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV15.ID), nil
@@ -640,6 +696,31 @@ WHERE
 }
 
 func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV15) (*tc.DeliveryServiceNullableV15, int, error, error) {
+	dsV30 := tc.DeliveryServiceNullableV30{DeliveryServiceNullableV15: *reqDS}
+	// query the DB for existing 3.0 fields in order to "upgrade" this 1.5 request into a 3.0 request
+	query := `
+SELECT
+  ds.topology
+FROM
+  deliveryservice ds
+WHERE
+  ds.id = $1`
+	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
+		&dsV30.Topology,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV30.ID), nil
+		}
+		return nil, http.StatusInternalServerError, nil, fmt.Errorf("querying delivery service ID %d: %s", *dsV30.ID, err.Error())
+	}
+	res, status, userErr, sysErr := updateV30(w, r, inf, &dsV30)
+	if res != nil {
+		return &res.DeliveryServiceNullableV15, status, userErr, sysErr
+	}
+	return nil, status, userErr, sysErr
+}
+
+func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *tc.DeliveryServiceNullableV30) (*tc.DeliveryServiceNullableV30, int, error, error) {
 	converted := tc.DeliveryServiceNullable(*reqDS)
 	ds := &converted
 	tx := inf.Tx.Tx
@@ -840,7 +921,7 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
-	dsLatest := tc.DeliveryServiceNullableV15(*ds)
+	dsLatest := tc.DeliveryServiceNullableV30(*ds)
 	return &dsLatest, http.StatusOK, nil, nil
 }
 
