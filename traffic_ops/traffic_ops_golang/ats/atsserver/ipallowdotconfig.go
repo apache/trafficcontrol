@@ -22,6 +22,7 @@ package atsserver
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -29,6 +30,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
+
+	"github.com/lib/pq"
 )
 
 func GetIPAllowDotConfig(w http.ResponseWriter, r *http.Request) {
@@ -77,26 +80,45 @@ func GetIPAllowDotConfig(w http.ResponseWriter, r *http.Request) {
 // GetChildServers returns the child servers of the given Mid serverName. This should not be called with an Edge server.
 func GetChildServers(tx *sql.Tx, serverName tc.CacheName) (map[tc.CacheName]atscfg.IPAllowServer, error) {
 	qry := `
-SELECT
-  s.host_name,
-  s.ip_address,
-  COALESCE(s.ip6_address, '')
-FROM
-  server s
-  JOIN type tp on tp.id = s.type
-  JOIN cachegroup cg on cg.id = s.cachegroup
-WHERE
-  (tp.name = '` + tc.MonitorTypeName + `' OR ( tp.name LIKE '` + tc.EdgeTypePrefix + `%')
-  AND cg.id IN (
-    SELECT
-      cg2.id
-    FROM
-     server s2
-     JOIN cachegroup cg2 ON (cg2.parent_cachegroup_id = s2.cachegroup OR cg2.secondary_parent_cachegroup_id = s2.cachegroup)
-    WHERE
-      s2.host_name = $1 )
-  )
-`
+	SELECT
+		s.host_name,
+		ARRAY (
+			SELECT (
+				json_build_object (
+					'ipAddresses',
+					ARRAY (
+						SELECT (
+							json_build_object (
+								'address', ip_address.address,
+								'gateway', ip_address.gateway,
+								'serviceAddress', ip_address.service_address
+							)
+						)
+						FROM ip_address
+						WHERE ip_address.interface = interface.name
+						AND ip_address.server = s.id
+					),
+					'maxBandwidth', interface.max_bandwidth,
+					'monitor', interface.monitor,
+					'mtu', interface.mtu,
+					'name', interface.name
+				)
+			)
+			FROM interface
+			WHERE interface.server = s.id
+		) AS interfaces
+	FROM server s
+	JOIN type tp on tp.id = s.type
+	JOIN cachegroup cg on cg.id = s.cachegroup
+	WHERE
+		(tp.name = 'RASCAL' OR ( tp.name LIKE 'EDGE%')
+		AND cg.id IN (
+			SELECT cg2.id
+			FROM server s2
+			JOIN cachegroup cg2 ON (cg2.parent_cachegroup_id = s2.cachegroup OR cg2.secondary_parent_cachegroup_id = s2.cachegroup)
+			WHERE s2.host_name = $1
+		)
+	)`
 	rows, err := tx.Query(qry, serverName)
 	if err != nil {
 		return nil, errors.New("querying: " + err.Error())
@@ -105,12 +127,26 @@ WHERE
 
 	servers := map[tc.CacheName]atscfg.IPAllowServer{}
 	for rows.Next() {
-		svName := tc.CacheName("")
-		sv := atscfg.IPAllowServer{}
-		if err := rows.Scan(&svName, &sv.IPAddress, &sv.IP6Address); err != nil {
+		var svName string
+		var ifaces []tc.ServerInterfaceInfo
+		if err := rows.Scan(&svName, pq.Array(&ifaces)); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
-		servers[svName] = sv
+
+		var sv atscfg.IPAllowServer
+		legacyNet, err := tc.InterfaceInfoToLegacyInterfaces(ifaces)
+		if err != nil {
+			return nil, fmt.Errorf("Converting server '%s' interfaces to legacy info: %v", svName, err)
+		}
+
+		if legacyNet.IPAddress != nil {
+			sv.IPAddress = *legacyNet.IPAddress
+		}
+		if legacyNet.IP6Address != nil {
+			sv.IP6Address = *legacyNet.IP6Address
+		}
+
+		servers[tc.CacheName(svName)] = sv
 	}
 	return servers, nil
 }
