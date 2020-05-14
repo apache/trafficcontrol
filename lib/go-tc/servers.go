@@ -80,7 +80,7 @@ type ServerIpAddress struct {
 
 // ServerInterfaceInfo is the data associated with a server's interface.
 type ServerInterfaceInfo struct {
-	IPAddresses  []ServerIpAddress `json:"ipAddresses" db:"ipAddresses"`
+	IPAddresses  []ServerIpAddress `json:"ipAddresses" db:"ip_addresses"`
 	MaxBandwidth *uint64           `json:"maxBandwidth" db:"max_bandwidth"`
 	Monitor      bool              `json:"monitor" db:"monitor"`
 	MTU          *uint64           `json:"mtu" db:"mtu"`

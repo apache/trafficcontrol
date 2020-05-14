@@ -22,6 +22,7 @@ package atsserver
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,6 +32,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
+	// "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/server"
 
 	"github.com/lib/pq"
 )
@@ -54,9 +57,9 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 
 	serverInfo, ok, err := &atscfg.ServerInfo{}, false, error(nil)
 	if isHost {
-		serverInfo, ok, err = getServerInfoByHost(inf.Tx.Tx, hostName)
+		serverInfo, ok, err = ats.GetServerInfoByHost(inf.Tx.Tx, hostName)
 	} else {
-		serverInfo, ok, err = getServerInfoByID(inf.Tx.Tx, id)
+		serverInfo, ok, err = ats.GetServerInfoByID(inf.Tx.Tx, id)
 	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server info: "+err.Error()))
@@ -115,57 +118,6 @@ func (s ParentConfigDSSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s ParentConfigDSSortByName) Less(i, j int) bool {
 	// TODO make this match the Perl sort "foreach my $ds ( sort @{ $data->{dslist} } )" ?
 	return strings.Compare(string(s[i].Name), string(s[j].Name)) < 0
-}
-
-// getServerInfo returns the necessary info about the server, whether the server exists, and any error.
-func getServerInfoByID(tx *sql.Tx, id int) (*atscfg.ServerInfo, bool, error) {
-	return getServerInfo(tx, ServerInfoQuery()+`WHERE s.id = $1`, []interface{}{id})
-}
-
-// getServerInfo returns the necessary info about the server, whether the server exists, and any error.
-func getServerInfoByHost(tx *sql.Tx, host string) (*atscfg.ServerInfo, bool, error) {
-	return getServerInfo(tx, ServerInfoQuery()+` WHERE s.host_name = $1 `, []interface{}{host})
-}
-
-// getServerInfo returns the necessary info about the server, whether the server exists, and any error.
-func getServerInfo(tx *sql.Tx, qry string, qryParams []interface{}) (*atscfg.ServerInfo, bool, error) {
-	s := atscfg.ServerInfo{}
-	if err := tx.QueryRow(qry, qryParams...).Scan(&s.CDN, &s.CDNID, &s.ID, &s.HostName, &s.DomainName, &s.IP, &s.ProfileID, &s.ProfileName, &s.Port, &s.Type, &s.CacheGroupID, &s.ParentCacheGroupID, &s.SecondaryParentCacheGroupID, &s.ParentCacheGroupType, &s.SecondaryParentCacheGroupType); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, false, nil
-		}
-		return nil, false, errors.New("querying server info: " + err.Error())
-	}
-	return &s, true, nil
-}
-
-func ServerInfoQuery() string {
-	return `
-SELECT
-  c.name as cdn,
-  s.cdn_id,
-  s.id,
-  s.host_name,
-  c.domain_name,
-  s.ip_address,
-  s.profile AS profile_id,
-  p.name AS profile_name,
-  s.tcp_port,
-  t.name as type,
-  s.cachegroup,
-  COALESCE(cg.parent_cachegroup_id, ` + strconv.Itoa(atscfg.InvalidID) + `) as parent_cachegroup_id,
-  COALESCE(cg.secondary_parent_cachegroup_id, ` + strconv.Itoa(atscfg.InvalidID) + `) as secondary_parent_cachegroup_id,
-  COALESCE(parentt.name, '') as parent_cachegroup_type,
-  COALESCE(sparentt.name, '') as secondary_parent_cachegroup_type
-FROM
-  server s
-  JOIN cdn c ON s.cdn_id = c.id
-  JOIN type t ON s.type = t.id
-  JOIN profile p ON p.id = s.profile
-  JOIN cachegroup cg on s.cachegroup = cg.id
-  LEFT JOIN type parentt on parentt.id = (select type from cachegroup where id = cg.parent_cachegroup_id)
-  LEFT JOIN type sparentt on sparentt.id = (select type from cachegroup where id = cg.secondary_parent_cachegroup_id)
-`
 }
 
 // GetATSMajorVersion returns the major version of the given profile's package trafficserver parameter.
@@ -502,14 +454,14 @@ func getParentInfo(tx *sql.Tx, server *atscfg.ServerInfo) (map[atscfg.OriginHost
 }
 
 // getServerParentCacheGroupProfiles gets the profile information for servers belonging to the parent cachegroup, and secondary parent cachegroup, of the cachegroup of each server.
-func getServerParentCacheGroupProfiles(tx *sql.Tx, server *atscfg.ServerInfo) (map[atscfg.ProfileID]atscfg.ProfileCache, map[atscfg.OriginHost][]atscfg.CGServer, error) {
+func getServerParentCacheGroupProfiles(tx *sql.Tx, srv *atscfg.ServerInfo) (map[atscfg.ProfileID]atscfg.ProfileCache, map[atscfg.OriginHost][]atscfg.CGServer, error) {
 	// TODO make this more efficient - should be a single query - this was transliterated from Perl - it's extremely inefficient.
 
 	profileCaches := map[atscfg.ProfileID]atscfg.ProfileCache{}
 	originServers := map[atscfg.OriginHost][]atscfg.CGServer{} // "deliveryServices" in Perl
 
 	qry := ""
-	if server.IsTopLevelCache() {
+	if srv.IsTopLevelCache() {
 		// multisite origins take all the org groups in to account
 		qry = `
 WITH parent_cachegroup_ids AS (
@@ -538,7 +490,6 @@ parent_cachegroup_ids AS (
 SELECT
   s.id,
   s.host_name,
-  s.ip_address,
   s.tcp_port,
   s.cachegroup,
   s.status,
@@ -563,10 +514,10 @@ WHERE
 
 	// TODO move qry, qryParams to separate funcs/consts
 	qryParams := []interface{}{}
-	if server.IsTopLevelCache() {
-		qryParams = []interface{}{server.CDN}
+	if srv.IsTopLevelCache() {
+		qryParams = []interface{}{srv.CDN}
 	} else {
-		qryParams = []interface{}{server.CDN, server.ID}
+		qryParams = []interface{}{srv.CDN, srv.ID}
 	}
 
 	rows, err := tx.Query(qry, qryParams...)
@@ -576,18 +527,52 @@ WHERE
 	defer rows.Close()
 
 	cgServerIDs := []int{}
-	cgServers := []atscfg.CGServer{}
+	cgServers := map[int]atscfg.CGServer{}
 	for rows.Next() {
 		s := atscfg.CGServer{Capabilities: map[atscfg.ServerCapability]struct{}{}}
 		caps := []string{}
-		if err := rows.Scan(&s.ServerID, &s.ServerHost, &s.ServerIP, &s.ServerPort, &s.CacheGroupID, &s.Status, &s.Type, &s.ProfileID, &s.CDN, &s.TypeName, pq.Array(&caps), &s.Domain); err != nil {
+		if err := rows.Scan(&s.ServerID, &s.ServerHost, &s.ServerPort, &s.CacheGroupID, &s.Status, &s.Type, &s.ProfileID, &s.CDN, &s.TypeName, pq.Array(&caps), &s.Domain); err != nil {
 			return nil, nil, errors.New("scanning: " + err.Error())
 		}
+
+
+
 		for _, cap := range caps {
 			s.Capabilities[atscfg.ServerCapability(cap)] = struct{}{}
 		}
-		cgServers = append(cgServers, s)
+		cgServers[int(s.ServerID)] = s
 		cgServerIDs = append(cgServerIDs, int(s.ServerID))
+	}
+
+	interfaceRows, err := tx.Query(server.SelectInterfacesQuery, pq.Array(cgServerIDs))
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying for interfaces: %v", err)
+	}
+	defer interfaceRows.Close()
+
+	for interfaceRows.Next() {
+		ifaces := []tc.ServerInterfaceInfo{}
+		var id int
+		if err := interfaceRows.Scan(pq.Array(&ifaces), &id); err != nil {
+			return nil, nil, fmt.Errorf("scanning server interfaces: %v", err)
+		}
+
+		s, ok := cgServers[id];
+		if !ok {
+			log.Warnf("interfaces query returned interfaces for server #%d that was not in original query", id)
+			continue
+		}
+
+		legacyNet, err := tc.InterfaceInfoToLegacyInterfaces(ifaces)
+		if err != nil {
+			return nil, nil, fmt.Errorf("Converting interfaces for server #%d to legacy: %v", id, err)
+		}
+
+		if legacyNet.IPAddress != nil {
+			s.ServerIP = *legacyNet.IPAddress
+		}
+
+		cgServers[id] = s
 	}
 
 	serverCapabilities, err := ats.GetServerCapabilitiesByID(tx, cgServerIDs)

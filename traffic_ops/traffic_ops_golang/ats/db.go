@@ -541,7 +541,7 @@ func GetServerNameFromID(tx *sql.Tx, id int) (tc.CacheName, bool, error) {
 // GetServerNameFromNameOrID returns the server name from a parameter which may be the name or ID.
 // This also checks and verifies the existence of the given server, and returns an appropriate user error if it doesn't exist.
 // Returns the name, any user error, any system error, and any error code.
-func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (tc.CacheName, error, error, int) {
+func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (string, error, error, int) {
 	if serverID, err := strconv.Atoi(serverNameOrID); err == nil {
 		serverName, ok, err := dbhelpers.GetServerNameFromID(tx, serverID)
 		if err != nil {
@@ -549,37 +549,51 @@ func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (tc.CacheName,
 		} else if !ok {
 			return "", errors.New("server not found"), nil, http.StatusNotFound
 		}
-		return tc.CacheName(serverName), nil, nil, http.StatusOK
+		return serverName, nil, nil, http.StatusOK
 	}
 
-	serverName := tc.CacheName(serverNameOrID)
-	if _, ok, err := dbhelpers.GetServerIDFromName(string(serverName), tx); err != nil {
-		return "", nil, fmt.Errorf("checking server name '%v' existence: %v", serverName, err), http.StatusInternalServerError
+	if _, ok, err := dbhelpers.GetServerIDFromName(serverNameOrID, tx); err != nil {
+		return "", nil, fmt.Errorf("checking server name '%v' existence: %v", serverNameOrID, err), http.StatusInternalServerError
 	} else if !ok {
 		return "", errors.New("server not found"), nil, http.StatusNotFound
 	}
-	return serverName, nil, nil, http.StatusOK
+	return serverNameOrID, nil, nil, http.StatusOK
 }
 
 // GetServerInfoByID returns the necessary info about the server, whether the server exists, and any error.
 func GetServerInfoByID(tx *sql.Tx, id int) (*atscfg.ServerInfo, bool, error) {
-	return getServerInfo(tx, ServerInfoQuery()+`WHERE s.id = $1`, []interface{}{id})
+	return GetServerInfo(tx, ServerInfoQuery()+`WHERE s.id = $1`, []interface{}{id})
 }
 
 // GetServerInfoByHost returns the necessary info about the server, whether the server exists, and any error.
-func GetServerInfoByHost(tx *sql.Tx, host tc.CacheName) (*atscfg.ServerInfo, bool, error) {
-	return getServerInfo(tx, ServerInfoQuery()+` WHERE s.host_name = $1 `, []interface{}{host})
+func GetServerInfoByHost(tx *sql.Tx, host string) (*atscfg.ServerInfo, bool, error) {
+	return GetServerInfo(tx, ServerInfoQuery()+` WHERE s.host_name = $1 `, []interface{}{host})
 }
 
 // getServerInfo returns the necessary info about the server, whether the server exists, and any error.
-func getServerInfo(tx *sql.Tx, qry string, qryParams []interface{}) (*atscfg.ServerInfo, bool, error) {
+func GetServerInfo(tx *sql.Tx, qry string, qryParams []interface{}) (*atscfg.ServerInfo, bool, error) {
 	s := atscfg.ServerInfo{}
-	if err := tx.QueryRow(qry, qryParams...).Scan(&s.CDN, &s.CDNID, &s.ID, &s.HostName, &s.DomainName, &s.IP, &s.ProfileID, &s.ProfileName, &s.Port, &s.HTTPSPort, &s.Type, &s.CacheGroupID, &s.ParentCacheGroupID, &s.SecondaryParentCacheGroupID, &s.ParentCacheGroupType, &s.SecondaryParentCacheGroupType); err != nil {
+	if err := tx.QueryRow(qry, qryParams...).Scan(&s.CDN, &s.CDNID, &s.ID, &s.HostName, &s.DomainName, &s.ProfileID, &s.ProfileName, &s.Port, &s.HTTPSPort, &s.Type, &s.CacheGroupID, &s.ParentCacheGroupID, &s.SecondaryParentCacheGroupID, &s.ParentCacheGroupType, &s.SecondaryParentCacheGroupType); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, false, nil
 		}
 		return nil, false, errors.New("querying server info: " + err.Error())
 	}
+
+	infs, err := dbhelpers.GetServerInterfaces(s.ID, tx)
+	if err != nil {
+		return nil, false, fmt.Errorf("querying server info interfaces: %v", err)
+	}
+
+	legacyInfo, err := tc.InterfaceInfoToLegacyInterfaces(infs)
+	if err != nil {
+		return nil, false, fmt.Errorf("converting server info interfaces to legacy: %v", err)
+	}
+
+	if legacyInfo.IPAddress != nil {
+		s.IP = *legacyInfo.IPAddress
+	}
+
 	return &s, true, nil
 }
 
@@ -591,7 +605,6 @@ SELECT
   s.id,
   s.host_name,
   c.domain_name,
-  s.ip_address,
   s.profile AS profile_id,
   p.name AS profile_name,
   s.tcp_port,

@@ -94,7 +94,7 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 `
 
-const selectInterfacesQuery = `
+const SelectInterfacesQuery = `
 SELECT (
 	ARRAY ( SELECT (
 		json_build_object (
@@ -104,14 +104,14 @@ SELECT (
 					json_build_object (
 						'address', ip_address.address,
 						'gateway', ip_address.gateway,
-						'service_address', ip_address.service_address
+						'serviceAddress', ip_address.service_address
 					)
 				)
 				FROM ip_address
 				WHERE ip_address.interface = interface.name
 				AND ip_address.server = server.id
 			),
-			'max_bandwidth', interface.max_bandwidth,
+			'maxBandwidth', interface.max_bandwidth,
 			'monitor', interface.monitor,
 			'mtu', interface.mtu,
 			'name', interface.name
@@ -543,10 +543,22 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	var servers []tc.ServerNullable
+	servers := []tc.ServerNullable{}
 	servers, _, userErr, sysErr, errCode = getServers(inf.Params, inf.Tx, inf.User)
 
-	legacyServers := make([]tc.ServerNullableV11, len(servers))
+	if len(servers) > 1 {
+		api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("ID '%d' matched more than one server (%d total)", inf.IntParams["id"], len(servers)), &alternative)
+		return
+	}
+
+	deprecationAlerts := api.CreateDeprecationAlerts(&alternative)
+
+	// No need to bother converting if there's no data
+	if len(servers) < 1 {
+		api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, servers)
+	}
+
+	legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2()
 		if err != nil {
@@ -555,7 +567,6 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 		}
 		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
 	}
-	deprecationAlerts := api.CreateDeprecationAlerts(&alternative)
 	api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, legacyServers)
 }
 
@@ -647,7 +658,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		ids = append(ids, *s.ID)
 	}
 
-	interfaceRows, err := tx.Tx.Query(selectInterfacesQuery, pq.Array(ids))
+	interfaceRows, err := tx.Tx.Query(SelectInterfacesQuery, pq.Array(ids))
 	if err != nil {
 		return nil, unfiltered, nil, fmt.Errorf("querying for interfaces: %v", err), http.StatusInternalServerError
 	}
@@ -1164,6 +1175,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(servers) > 1 {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("There are somehow two servers with id %d - cannot delete", id))
+		return
+	}
+
+	userErr, sysErr, errCode = deleteInterfaces(id, tx)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 

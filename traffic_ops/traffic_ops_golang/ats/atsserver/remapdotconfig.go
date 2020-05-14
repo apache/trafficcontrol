@@ -26,6 +26,8 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
@@ -50,13 +52,13 @@ func GetServerConfigRemap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	atsMajorVersion, err := ats.GetATSMajorVersionFromServerName(inf.Tx.Tx, serverName)
+	atsMajorVersion, err := ats.GetATSMajorVersionFromServerName(inf.Tx.Tx, tc.CacheName(serverName))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ATS major version: "+err.Error()))
 		return
 	}
 
-	cacheURLConfigParams, err := ats.GetServerProfileParamData(inf.Tx.Tx, serverName, "cacheurl.config")
+	cacheURLConfigParams, err := ats.GetServerProfileParamData(inf.Tx.Tx, tc.CacheName(serverName), "cacheurl.config")
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cacheurl.config params: "+err.Error()))
 		return
@@ -86,7 +88,7 @@ func GetServerConfigRemap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txt := atscfg.MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	txt := atscfg.MakeRemapDotConfig(tc.CacheName(serverName), toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
 
 	w.Header().Set(rfc.ContentType, rfc.ContentTypeTextPlain)
 	io.WriteString(w, txt)
