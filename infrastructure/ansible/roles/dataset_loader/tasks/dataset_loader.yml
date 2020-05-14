@@ -81,6 +81,7 @@
   register: get_all_cdns
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_cdns['status']|default(0) == 200
 
 - name: Assign fqdn to cdn
@@ -95,6 +96,7 @@
   register: get_all_tenants
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_tenants['status']|default(0) == 200
 
 - name: Get All Roles
@@ -104,6 +106,7 @@
   register: get_all_roles
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_roles['status']|default(0) == 200
 
 - name: Create Types
@@ -128,6 +131,7 @@
   register: get_all_types
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_types['status']|default(0) == 200
 
 - name: Create Users
@@ -210,6 +214,7 @@
   register: get_all_cachegroups
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_cachegroups['status']|default(0) == 200
 
 - name: Create Cachegroups - Mid Tier
@@ -237,6 +242,7 @@
   register: get_all_cachegroups
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_cachegroups['status']|default(0) == 200
 
 - name: Create Cachegroups - Edge Tier
@@ -264,6 +270,7 @@
   register: get_all_cachegroups
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_cachegroups['status']|default(0) == 200
 
 # Map of hosts to cachegroups
@@ -316,6 +323,7 @@
   register: get_all_divisions
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_divisions['status']|default(0) == 200
 
 - name: Assemble assignments of region to division
@@ -350,6 +358,7 @@
   register: get_all_regions
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_regions['status']|default(0) == 200
 
 - name: Constuct physLocation payload
@@ -409,6 +418,7 @@
   register: get_all_physlocations
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_physlocations['status']|default(0) == 200
 
 - name: Assign types to servers
@@ -503,6 +513,7 @@
       register: get_all_profiles
       no_log: true
       retries: 10
+      delay: 10
       until: get_all_profiles['status']|default(0) == 200
 
     - name: Get All Parameters from GLOBAL profile
@@ -512,6 +523,7 @@
       register: get_global_parameters
       no_log: true
       retries: 10
+      delay: 10
       until: get_global_parameters['status']|default(0) == 200
 
     - name: Unlink all Global Profile parameters to be recreated
@@ -578,6 +590,7 @@
       register: get_all_profiles
       no_log: true
       retries: 10
+      delay: 10
       until: get_all_profiles['status']|default(0) == 200
 
     - name: Get all Parameters per Profile - with curl workaround
@@ -588,6 +601,7 @@
       register: get_all_parameters_by_profile_raw
       no_log: true
       retries: 10
+      delay: 10
 
     - name: Convert the curl workaround output to match normal URI output
       set_fact:
@@ -612,6 +626,7 @@
   register: get_all_statuses
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_statuses['status']|default(0) == 200
 
 - name: Get the CDN Assignments into a more queryable form
@@ -800,6 +815,7 @@
   register: get_all_servers
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_servers['status']|default(0) == 200
 
 - name: Collect All CDN delegations assigned to Fake Origins
@@ -845,6 +861,7 @@
   register: get_all_ds
   no_log: true
   retries: 10
+  delay: 10
   until: get_all_ds['status']|default(0) == 200
 
 - name: Ensure SSL info directory exists
