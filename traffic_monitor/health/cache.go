@@ -274,9 +274,9 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 				if status.Why != "" {
 					newWhyText := fmt.Sprintf("%s: %s", interfaceName, status.Why)
 					if aggregateStatus.Why != "" {
-						newWhyText += ", " + newWhyText
+						newWhyText = ", " + newWhyText
 					}
-					aggregateStatus.Why = newWhyText
+					aggregateStatus.Why += newWhyText
 				}
 
 				if status.UnavailableStat != "" {
