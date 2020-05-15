@@ -44,7 +44,7 @@ func CreateTestTopologies(t *testing.T) {
 		err          error
 	)
 	for _, topology := range testData.Topologies {
-		if postResponse, _, err = TOSession.CreateTopology(topology); err != nil {
+		if postResponse, _, err, _ = TOSession.CreateTopology(topology); err != nil {
 			t.Fatalf("could not CREATE topology: %v", err)
 		}
 		postResponse.Response.LastUpdated = nil
@@ -88,14 +88,18 @@ func ValidationTestTopologies(t *testing.T) {
 		}}},
 	}
 	for _, testCase := range invalidTopologyTestCases {
-		if _, _, err := TOSession.CreateTopology(testCase.Topology); err == nil {
+		_, _, err, statusCode := TOSession.CreateTopology(testCase.Topology)
+		if err == nil {
 			t.Fatalf("expected POST with %v to return an error, actual: nil", testCase.reasonToFail)
+		}
+		if statusCode < 400 || statusCode >= 500 {
+			t.Fatalf("Expected a 400-level status code for topology %s but got %d", testCase.Topology.Name, statusCode)
 		}
 	}
 }
 
 func updateSingleTopology(topology tc.Topology) error {
-	updateResponse, _, err := TOSession.UpdateTopology(topology.Name, topology)
+	updateResponse, _, err, _ := TOSession.UpdateTopology(topology.Name, topology)
 	if err != nil {
 		return fmt.Errorf("cannot PUT topology: %v - %v", err, updateResponse)
 	}
@@ -125,12 +129,12 @@ func UpdateTestTopologies(t *testing.T) {
 
 func DeleteTestTopologies(t *testing.T) {
 	for _, top := range testData.Topologies {
-		delResp, _, err := TOSession.DeleteTopology(top.Name)
+		delResp, _, err, _ := TOSession.DeleteTopology(top.Name)
 		if err != nil {
 			t.Fatalf("cannot DELETE topology: %v - %v", err, delResp)
 		}
 
-		topology, _, err := TOSession.GetTopology(top.Name)
+		topology, _, err, _ := TOSession.GetTopology(top.Name)
 		if err == nil {
 			t.Fatalf("expected error trying to GET deleted topology: %s, actual: nil", top.Name)
 		}
