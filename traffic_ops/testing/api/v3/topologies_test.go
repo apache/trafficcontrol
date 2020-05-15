@@ -89,6 +89,9 @@ func ValidationTestTopologies(t *testing.T) {
 		{reasonToFail: "a nonexistent cache group", Topology: tc.Topology{Name: "nonexistent-cg", Description: "Invalid because it references a cache group that does not exist", Nodes: []tc.TopologyNode{
 			{Cachegroup: "legitcachegroup", Parents: []int{0}},
 		}}},
+		{reasonToFail: "an out-of-bounds parent index", Topology: tc.Topology{Name: "oob-parent", Description: "Invalid because it contains a parent", Nodes: []tc.TopologyNode{
+			{Cachegroup: "cachegroup1", Parents: []int{7}},
+		}}},
 	}
 	for _, testCase := range invalidTopologyTestCases {
 		_, _, err, statusCode := TOSession.CreateTopology(testCase.Topology)
