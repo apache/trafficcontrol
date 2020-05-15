@@ -51,7 +51,7 @@ under the License.
                     <hr class="divider"/>
                     <li role="menuitem"><a ng-click="viewCharts()">View Charts</a></li>
                     <hr class="divider"/>
-                    <li role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
+                    <li ng-if="::deliveryService.topology == null" role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
                 </ul>
             </div>
         </div>
