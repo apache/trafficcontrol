@@ -50,9 +50,8 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.edit', [
                             origin: function($stateParams, originService) {
                                 return originService.getOrigins({ deliveryservice: $stateParams.deliveryServiceId, primary: true })
                             },
-                            topologies: function() {
-                                // todo: real call
-                                return [{ name: 'foo-bar'}, { name: 'foo-baz'}];
+                            topologies: function(topologyService) {
+                                return topologyService.getTopologies();
                             },
                             type: function($stateParams) {
                                 return $stateParams.type;
