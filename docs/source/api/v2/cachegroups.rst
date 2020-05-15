@@ -38,8 +38,6 @@ Request Structure
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 	| type      | no       | Return only :term:`Cache Groups` that are of the :ref:`cache-group-type` identified by this integral, unique identifier  |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
-	| topology  | no       | Return only :term:`Cache Groups` that are used in the Topology identified by this unique identifier                      |
-	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array      |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------+
 	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                 |
