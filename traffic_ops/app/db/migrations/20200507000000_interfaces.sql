@@ -112,5 +112,5 @@ AND server.ip6_address != '';
 DROP TABLE IF EXISTS ip_address;
 DROP TABLE IF EXISTS interface;
 
-DROP TYPE IF EXISTS server_ip_address;
 DROP TYPE IF EXISTS server_interface;
+DROP TYPE IF EXISTS server_ip_address;
