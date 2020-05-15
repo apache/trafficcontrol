@@ -176,7 +176,7 @@ under the License.
                             <select id="topology" name="topology" class="form-control" ng-model="deliveryService.topology" ng-options="topology.name as topology.name for topology in topologies">
                                 <option selected value="">None</option>
                             </select>
-                            <small ng-show="deliveryService.topology"><a href="/#!/topologies/{{deliveryService.topology}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <small ng-show="deliveryService.topology"><a href="/#!/topologies/edit?name={{deliveryService.topology}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.topology != dsCurrent.topology">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.topology}}</pre>
