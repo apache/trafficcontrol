@@ -87,6 +87,7 @@ type CompiledRoute struct {
 	Handler http.HandlerFunc
 	Regex   *regexp.Regexp
 	Params  []string
+	ID      int
 }
 
 func getSortedRouteVersions(rs []Route) []api.Version {
@@ -142,6 +143,7 @@ func indexOfApiVersion(versions []api.Version, desiredVersion api.Version) int {
 type PathHandler struct {
 	Path    string
 	Handler http.HandlerFunc
+	ID      int
 }
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
@@ -170,11 +172,11 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRout
 			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
 
 			if isPerlRoute {
-				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: perlHandler})
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: perlHandler, ID: r.ID})
 			} else if isDisabledRoute {
-				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.WrapAccessLog(authBase.Secret, middleware.DisabledRouteHandler())})
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.WrapAccessLog(authBase.Secret, middleware.DisabledRouteHandler()), ID: r.ID})
 			} else {
-				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.Use(r.Handler, middlewares)})
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.Use(r.Handler, middlewares), ID: r.ID})
 			}
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
@@ -189,7 +191,6 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRout
 	for _, version := range versions {
 		versionSet[version] = struct{}{}
 	}
-
 	return m, versionSet
 }
 
@@ -223,7 +224,8 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 				route = route[:open] + `([^/]+)` + route[close+1:]
 			}
 			regex := regexp.MustCompile(route)
-			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params})
+			id := pathHandler.ID
+			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params, ID: id})
 		}
 	}
 	return compiledRoutes
@@ -270,7 +272,6 @@ func Handler(
 		catchall.ServeHTTP(w, r)
 		return
 	}
-
 	for _, compiledRoute := range mRoutes {
 		match := compiledRoute.Regex.FindStringSubmatch(requested)
 		if len(match) == 0 {
@@ -283,10 +284,10 @@ func Handler(
 
 		routeCtx := context.WithValue(ctx, api.PathParamsKey, params)
 		r = r.WithContext(routeCtx)
+		r.Header.Add(middleware.RouteID, strconv.Itoa(compiledRoute.ID))
 		compiledRoute.Handler(w, r)
 		return
 	}
-
 	if IsRequestAPIAndUnknownVersion(r, versions) {
 		h := middleware.WrapAccessLog(cfg.Secrets[0], middleware.NotImplementedHandler())
 		h.ServeHTTP(w, r)
