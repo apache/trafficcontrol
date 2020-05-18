@@ -73,14 +73,14 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	}}
 
 	expectedErrors := []string{
-	/*
-		`'regionalGeoBlocking' is required`,
-		`'xmlId' cannot contain spaces`,
-		`'dscp' is required`,
-		`'displayName' cannot be blank`,
-		`'geoProvider' is required`,
-		`'typeId' is required`,
-	*/
+		/*
+			`'regionalGeoBlocking' is required`,
+			`'xmlId' cannot contain spaces`,
+			`'dscp' is required`,
+			`'displayName' cannot be blank`,
+			`'geoProvider' is required`,
+			`'typeId' is required`,
+		*/
 	}
 
 	r.SetKeys(map[string]interface{}{"id": 10})
