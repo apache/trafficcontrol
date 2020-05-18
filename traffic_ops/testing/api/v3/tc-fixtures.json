@@ -1629,14 +1629,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:8::1/64",
-            "ip6Gateway": "2345:1234:12:8::1",
-            "ipAddress": "127.0.0.21",
-            "ipGateway": "127.0.0.21",
-            "ipIsService": true,
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.21/30",
+                            "gateway": "127.0.0.21",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:8::1/64",
+                            "gateway": "2345:1234:12:8::1",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -1667,14 +1679,21 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 1500,
-            "interfaceName": "eth0",
-            "ip6Address": "",
-            "ip6Gateway": "",
-            "ipAddress": "0.0.0.0",
-            "ipGateway": "0.0.0.0",
-            "ipIsService": true,
-            "ipNetmask": "0.0.0.0",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "0.0.0.0/0",
+                            "gateway": "0.0.0.0",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 1500,
+                    "name": "eth0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -1705,14 +1724,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 1500,
-            "interfaceName": "eth1",
-            "ip6Address": "2345:1234:12:8::2/64",
-            "ip6Gateway": "2345:1234:12:8::2",
-            "ipAddress": "127.0.0.11",
-            "ipGateway": "127.0.0.11",
-            "ipIsService": true,
-            "ipNetmask": "255.255.252.0",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.11/22",
+                            "gateway": "127.0.0.11",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:8::2/64",
+                            "gateway": "2345:1234:12:8::2",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 1500,
+                    "name": "eth1"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -1743,14 +1774,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:8::3/64",
-            "ip6Gateway": "2345:1234:12:8::3",
-            "ipAddress": "127.0.0.12",
-            "ipGateway": "127.0.0.1",
-            "ipIsService": true,
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.12/30",
+                            "gateway": "127.0.0.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:8::3/64",
+                            "gateway": "2345:1234:12:8::3",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -1781,14 +1824,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:2::4/64",
-            "ip6Gateway": "2345:1234:12:8::4",
-            "ipAddress": "127.0.0.13",
-            "ipGateway": "127.0.0.1",
-            "ipIsService": true,
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:12:2::4/64",
+                            "gateway": "2345:1234:12:2::4",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.13/30",
+                            "gateway": "127.0.0.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -1819,14 +1874,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:8::5/64",
-            "ip6Gateway": "2345:1234:12:8::5",
-            "ipAddress": "127.0.0.14",
-            "ipGateway": "127.0.0.1",
-            "ipIsService": true,
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:12:8::5/64",
+                            "gateway": "2345:1234:12:8::5",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.14/30",
+                            "gateway": "127.0.0.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -1857,13 +1924,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:d::6/64",
-            "ip6Gateway": "2345:1234:12:d::6",
-            "ipAddress": "127.0.0.15",
-            "ipGateway": "127.0.0.7",
-            "ipIsService": true,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:12:d::6/64",
+                            "gateway": "2345:1234:12:d::6",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.15/30",
+                            "gateway": "127.0.0.7",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "ipNetmask": "255.255.255.252",
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
@@ -1895,14 +1975,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:d::7/64",
-            "ip6Gateway": "2345:1234:12:d::7",
-            "ipAddress": "127.0.0.16",
-            "ipGateway": "127.0.0.7",
-            "ipIsService": true,
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:12:d::7/64",
+                            "gateway": "2345:1234:12:d::7",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.16/30",
+                            "gateway": "127.0.0.7",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -1933,14 +2025,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:d::8/64",
-            "ip6Gateway": "2345:1234:12:d::8",
-            "ipAddress": "127.0.0.17",
-            "ipGateway": "127.0.0.17",
-            "ipIsService": true,
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:12:d::8/64",
+                            "gateway": "2345:1234:12:d::8",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.17/30",
+                            "gateway": "127.0.0.17",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -1971,14 +2075,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:d::9/64",
-            "ip6Gateway": "2345:1234:12:d::9",
-            "ipAddress": "127.0.0.18",
-            "ipGateway": "127.0.0.18",
-            "ipIsService": true,
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.18/30",
+                            "gateway": "127.0.0.18",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:d::9/64",
+                            "gateway": "2345:1234:12:d::9",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -2009,14 +2125,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:9::10/64",
-            "ip6Gateway": "2345:1234:12:9::10",
-            "ipAddress": "127.0.0.2",
-            "ipGateway": "127.0.0.2",
-            "ipIsService": true,
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.2/30",
+                            "gateway": "127.0.0.2",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:9::10/64",
+                            "gateway": "2345:1234:12:9::10",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -2047,14 +2175,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:b::11/64",
-            "ip6Gateway": "2345:1234:12:b::11",
-            "ipAddress": "127.0.0.4",
-            "ipIsService": true,
-            "ipGateway": "127.0.0.4",
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.4/30",
+                            "gateway": "127.0.0.4",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:b::11/64",
+                            "gateway": "2345:1234:12:b::11",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -2085,14 +2225,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:b::13/64",
-            "ip6Gateway": "2345:1234:12:b::13",
-            "ipAddress": "127.0.0.31",
-            "ipIsService": true,
-            "ipGateway": "127.0.0.4",
-            "ipNetmask": "255.255.255.0",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.31/24",
+                            "gateway": "127.0.0.4",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:b::13/64",
+                            "gateway": "2345:1234:12:b::13",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
@@ -2122,14 +2274,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 1500,
-            "interfaceName": "eth1",
-            "ip6Address": "2345:1234:12:b::12/64",
-            "ip6Gateway": "2345:1234:12:b::12",
-            "ipAddress": "127.0.0.1",
-            "ipIsService": true,
-            "ipGateway": "127.0.0.1",
-            "ipNetmask": "255.255.252.0",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.1/22",
+                            "gateway": "127.0.0.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:b::12/64",
+                            "gateway": "2345:1234:12:b::12",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 1500,
+                    "name": "eth1"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -2160,14 +2324,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "2345:1234:12:8::20/64",
-            "ip6Gateway": "2345:1234:12:8::20",
-            "ipAddress": "127.0.0.1",
-            "ipIsService": true,
-            "ipGateway": "127.0.0.1",
-            "ipNetmask": "255.255.255.252",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.0.1/30",
+                            "gateway": "127.0.0.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1234:12:8::20/64",
+                            "gateway": "2345:1234:12:8::20",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
@@ -2198,14 +2374,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "::13/64",
-            "ip6Gateway": "2345:1234:12:b::13",
-            "ipAddress": "127.0.0.100",
-            "ipIsService": true,
-            "ipGateway": "127.0.0.4",
-            "ipNetmask": "255.255.255.0",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "::13/64",
+                            "gateway": "2345:1234:12:b::13",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.100/24",
+                            "gateway": "127.0.0.4",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
@@ -2235,14 +2423,26 @@
             "iloIpNetmask": "",
             "iloPassword": "",
             "iloUsername": "",
-            "interfaceMtu": 9000,
-            "interfaceName": "bond0",
-            "ip6Address": "::14/64",
-            "ip6Gateway": "2345:1234:12:b::13",
-            "ipAddress": "127.0.0.101",
-            "ipIsService": true,
-            "ipGateway": "127.0.0.4",
-            "ipNetmask": "255.255.255.0",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "::14/64",
+                            "gateway": "2345:1234:12:b::13",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.101/24",
+                            "gateway": "127.0.0.4",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
             "mgmtIpAddress": "",
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
