@@ -172,7 +172,7 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		}
 		start := time.Now()
 		defer func() {
-			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v %v "%v"`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, r.Header.Get(RouteID), iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
+			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %v`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), r.Header.Get(RouteID))
 		}()
 		h.ServeHTTP(iw, r)
 	}
