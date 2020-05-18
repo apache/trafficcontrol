@@ -906,6 +906,7 @@
   file:
     state: directory
     path: "{{ lookup('env', 'PWD') }}/out/ssl"
+  delegate_to: localhost
 
 - name: Set a default list of HTTPS DS
   set_fact:
@@ -927,6 +928,7 @@
     path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.key.pem"
     force: yes
   with_items: "{{ scrubbed_https_ds }}"
+  delegate_to: localhost
   no_log: true
 
 - name: Generate DS CSRs
@@ -950,6 +952,7 @@
       - CA:FALSE
     path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.csr"
     force: yes
+  delegate_to: localhost
   with_items: "{{ scrubbed_https_ds }}"
 
 - name: Generate DS Certificates
@@ -968,6 +971,7 @@
     provider: ownca
     ownca_path: "{{ lookup('env', 'PWD') }}/out/ssl/lab.intermediateca.crt"
     ownca_privatekey_path: "{{ lookup('env', 'PWD') }}/out/ssl/lab.intermediateca.key.pem"
+  delegate_to: localhost
   with_items: "{{ scrubbed_https_ds }}"
   no_log: true
 
@@ -1006,6 +1010,7 @@
         crt: |
           {{ lookup('file', crtpath) }}
           {{ lookup('file', intcertpath) }}
+  delegate_to: localhost
   with_items: "{{ scrubbed_https_ds }}"
   register: create_ds_sslkeys_out
   failed_when: (create_ds_sslkeys_out.status == 400 and create_ds_sslkeys_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_sslkeys_out.status > 400 and create_ds_sslkeys_out.status < 600)
