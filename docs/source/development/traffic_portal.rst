@@ -44,7 +44,7 @@ Installing The Traffic Portal Developer Environment
 #. Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
 #. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
 #. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
-#. Before running the next step, make sure that ``compass`` is installed and functioning correctly.
+#. Make sure that compass is installed and functioning correctly by running ``compass version``. If ``compass`` is not running, you can install it on macOSas follows:
     #. macOS comes with its own version of ruby built into it. In order to install compass, if you run a command like ``sudo gem install compass``, it will take the default ruby available in mac. In order to properly install compass, here is what you should be doing:
     #. ``brew install ruby``
     #. ``gem update --system``
