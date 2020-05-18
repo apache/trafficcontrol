@@ -45,6 +45,7 @@ func CreateTestCacheGroups(t *testing.T) {
 		resp, _, err = TOSession.CreateCacheGroupNullable(cg)
 		if err != nil {
 			t.Errorf("could not CREATE cachegroups: %v, request: %v", err, cg)
+			continue
 		}
 
 		// Testing 'join' fields during create
