@@ -126,10 +126,16 @@ interface Server {
 	 * It is illegal for a server to not have at least one interface.
 	 */
 	interfaces: Array<Interface> & {0: Interface};
+
+	// these should be moved into the interfaces property at the earliest
+	// convenience, as they are deprecated and will disappear in a future
+	// release.
+	mgmtIpAddress: string;
+	mgmtIpGateway: string;
+	mgmtIpNetmask: string;
 	lastUpdated?:  string;
 
 	// notice not here: mgmtIpAddress, mgmtIpGateway, mgmtIpNetmask
-	// these will be moved into the interfaces property
 
 	offlineReason:   string;
 	physLocation?:   string | null;
@@ -231,6 +237,9 @@ The resulting server table after migration should look like:
  ilo_ip_gateway   | text                     |           |          |
  ilo_username     | text                     |           |          |
  ilo_password     | text                     |           |          |
+ mgmt_ip_address  | text                     |           |          |
+ mgmt_ip_gateway  | text                     |           |          |
+ mgmt_ip_netmask  | text                     |           |          |
  router_host_name | text                     |           |          |
  router_port_name | text                     |           |          |
  guid             | text                     |           |          |
@@ -417,6 +426,9 @@ After this feature's inclusion, the same element would look like this:
 		}
 	],
 	"lastUpdated": "2018-12-05 18:45:05+00",
+	"mgmtIpAddress": "",
+	"mgmtIpGateway": "",
+	"mgmtIpNetmask": "",
 	"offlineReason": "",
 	"physLocation": "Apachecon North America 2018",
 	"physLocationId": 1,
@@ -437,6 +449,9 @@ After this feature's inclusion, the same element would look like this:
 	"xmppPasswd": "",
 }
 ```
+The `mgmtIpAddress`, `mgmtIpGateway`, and `mgmtIpNetmask` fields are deprecated
+by this change, and should be removed in a future release.
+
 Request payloads for `PUT` and `POST` methods will need to change similarly. A
 server object should be accepted (based only on its `interfaces` property) if
 it has at least one interface, every interface has at least one IP address,
@@ -682,22 +697,25 @@ that has service addresses.
 ### Traffic Monitor Impact
 <a name="sec:TM-impact"></a>
 Traffic Monitor will need to update its parsing of `/monitoring` payloads to
-account for the new structure, but will still need to be able to parse the old structure for backwards compatibility.
-It will need to poll all listed interfaces (instead of just one per cache server as was done previously)
-for health, connections, and bandwidth.
+account for the new structure, but will still need to be able to parse the old
+structure for backwards compatibility. It will need to poll all listed
+interfaces (instead of just one per cache server as was done previously) for
+health, connections, and bandwidth.
 
 The cache server should be marked unavailable - or "down" - if the total
 used bandwidth of all monitored interfaces exceeds the limits set by Parameters
 on the cache server's Profile, _or_ if the bandwidth of any single interface
 exceeds its `maxBandwidth` property.
 
-The Traffic Monitor API and user interface will be updated to include statistics about each individual interface
-as well as the aggregate status.
+The Traffic Monitor API and user interface will be updated to include
+statistics about each individual interface as well as the aggregate status.
 
 ## Documentation Impact
-Documentation for the affected endpoints will need to be updated. Beyond that,
-the "Health Protocol" section and perhaps the "Traffic Monitor - Using" section
-should be updated to describe the behavior of multiple monitored interfaces.
+Documentation for the affected endpoints will need to be updated - including
+mentioning that the "Management" IP Address/Gateway/Netmask fields are
+deprecated. Beyond that, the "Health Protocol" section and perhaps the
+"Traffic Monitor - Using" section should be updated to describe the behavior of
+multiple monitored interfaces.
 
 ## Testing Impact
 A swathe of client/API integration tests should be written to verify the
@@ -744,9 +762,17 @@ feature.
 ## Upgrade Impact
 There will be at least one, but possibly two, database migrations. The changes
 to Traffic Monitor ought to be made in such a way that it can parse either the
-old `/monitoring` payloads or the new ones. Then Traffic Monitor should be
-upgraded before Traffic Ops, and no additional, special steps need be taken to
-upgrade.
+old `/monitoring` payloads or the new ones.
+
+Prior to upgrading, operators will need to ensure that previously unstructured
+data fields are properly structured - or the upgrade **WILL** fail!
+Specifically, all MTU values need to be positive integers with values of at
+least `1280`, and all "IP Gateway"/"IP Address"/"IP Netmask" fields (including
+their IPv6 counterparts) need to be valid IP addresses (or empty string/null
+where permitted). The API currently only validates IP/IP6 Address fields for
+correctness, and the database enforces no constraints - so it's possible that
+even IP/IP6 Addresses are incorrectly stored with old enough data or direct
+database manipulation.
 
 ## Operations Impact
 Operators will need to learn the new method for creating, viewing, and updating
@@ -756,6 +782,12 @@ interfaces and how/when/why they would need to be added/changed.
 The changes will be automated to a degree by the migration to convert old data.
 
 Overall, setting up a simple cache server will become slightly more complicated.
+
+Finally, it will be operators' responsibility to migrate their data from the
+old, unstructured, "Management" server properties to the new "interfaces"
+array, as those properties will go away some day. Since they were unstructured,
+it's not possible - in general - to do this automatically in a database
+migration without data loss.
 
 ## Alternatives
 One potential alternative is to add an `additionalInterfaces` property, and
