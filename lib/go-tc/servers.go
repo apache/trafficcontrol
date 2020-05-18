@@ -389,11 +389,20 @@ func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
 		ServerNullableV11: ServerNullableV11{
 			CommonServerProperties: s.CommonServerProperties,
 		},
+		IPIsService: new(bool),
+		IP6IsService: new(bool),
 	}
 
 	var err error
 	legacyServer.LegacyInterfaceDetails, err = InterfaceInfoToLegacyInterfaces(s.Interfaces)
-	return legacyServer, err
+	if err != nil {
+		return legacyServer, err
+	}
+
+	*legacyServer.IPIsService = legacyServer.LegacyInterfaceDetails.IPAddress != nil && *legacyServer.LegacyInterfaceDetails.IPAddress != ""
+	*legacyServer.IP6IsService = legacyServer.LegacyInterfaceDetails.IP6Address != nil && *legacyServer.LegacyInterfaceDetails.IP6Address != ""
+
+	return legacyServer, nil
 }
 
 type ServerUpdateStatus struct {
