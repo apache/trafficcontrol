@@ -33,6 +33,9 @@ import (
 // ServersResponse is the format of a response to a GET request for /servers.
 type ServersResponse struct {
 	Response []ServerNullable `json:"response"`
+	Summary struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
 	Alerts
 }
 
