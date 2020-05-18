@@ -548,27 +548,27 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major <= 1 {
-		legacyServers := make([]tc.ServerNullableV2, 0, len(servers))
+		legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
 		for _, server := range servers {
 			legacyServer, err := server.ToServerV2()
 			if err != nil {
 				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert servers to legacy format: %v", err))
 				return
 			}
-			legacyServers = append(legacyServers, legacyServer)
+			legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
 		}
 		api.WriteResp(w, r, legacyServers)
 		return
 	}
 
-	legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
+	legacyServers := make([]tc.ServerNullableV2, 0, len(servers))
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2()
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert servers to legacy format: %v", err))
 			return
 		}
-		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
+		legacyServers = append(legacyServers, legacyServer)
 	}
 	api.WriteResp(w, r, legacyServers)
 }
