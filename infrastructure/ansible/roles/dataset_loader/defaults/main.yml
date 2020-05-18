@@ -25,9 +25,9 @@ dl_to_user_password:
 dl_to_api_version: 1.3
 dl_target_api_url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}"
 # URL for the CZF file
-dl_shallow_czf_url: "{{ to_url }}/czf.json"
+dl_shallow_czf_url: "{{ dl_to_url }}/czf.json"
 # URL for the MaxMind Geolocation database
-dl_geolocation_url: "{{ to_url }}/MaxMind/auto/GeoIP2-CityLite.mmdb.gz"
+dl_geolocation_url: "{{ dl_to_url }}/MaxMind/auto/GeoIP2-CityLite.mmdb.gz"
 # Which IP Addresses are allowed to communicate with the astats endpoints on each cache
 dl_allow_ip4: "127.0.0.1"
 dl_allow_ip6: "::1"
