@@ -982,16 +982,16 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":               dbhelpers.WhereColumnInfo{"ds.id", api.IsInt},
-		"cdn":              dbhelpers.WhereColumnInfo{"ds.cdn_id", api.IsInt},
-		"xml_id":           dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
-		"xmlId":            dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
-		"profile":          dbhelpers.WhereColumnInfo{"ds.profile", api.IsInt},
-		"type":             dbhelpers.WhereColumnInfo{"ds.type", api.IsInt},
-		"logsEnabled":      dbhelpers.WhereColumnInfo{"ds.logs_enabled", api.IsBool},
-		"tenant":           dbhelpers.WhereColumnInfo{"ds.tenant_id", api.IsInt},
-		"signingAlgorithm": dbhelpers.WhereColumnInfo{"ds.signing_algorithm", nil},
-		"topology":         dbhelpers.WhereColumnInfo{"ds.topology", nil},
+		"id":               {"ds.id", api.IsInt},
+		"cdn":              {"ds.cdn_id", api.IsInt},
+		"xml_id":           {"ds.xml_id", nil},
+		"xmlId":            {"ds.xml_id", nil},
+		"profile":          {"ds.profile", api.IsInt},
+		"type":             {"ds.type", api.IsInt},
+		"logsEnabled":      {"ds.logs_enabled", api.IsBool},
+		"tenant":           {"ds.tenant_id", api.IsInt},
+		"signingAlgorithm": {"ds.signing_algorithm", nil},
+		"topology":         {"ds.topology", nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
