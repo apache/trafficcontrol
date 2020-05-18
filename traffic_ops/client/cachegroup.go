@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -190,6 +191,7 @@ func (to *Session) DeleteCacheGroupByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
+// GetCacheGroupsByQueryParams gets cache groups by the given query parameters.
 func (to *Session) GetCacheGroupsByQueryParams(qparams url.Values) ([]tc.CacheGroupNullable, ReqInf, error) {
 	route := API_CACHEGROUPS
 	if len(qparams) > 0 {
@@ -201,7 +203,7 @@ func (to *Session) GetCacheGroupsByQueryParams(qparams url.Values) ([]tc.CacheGr
 	if err != nil {
 		return nil, reqInf, err
 	}
-	defer resp.Body.Close()
+	defer log.Close(resp.Body, "unable to close cachegroups response body")
 
 	var data tc.CacheGroupsNullableResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {

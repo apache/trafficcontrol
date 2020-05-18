@@ -428,11 +428,11 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":        dbhelpers.WhereColumnInfo{"cachegroup.id", api.IsInt},
-		"name":      dbhelpers.WhereColumnInfo{"cachegroup.name", nil},
-		"shortName": dbhelpers.WhereColumnInfo{"cachegroup.short_name", nil},
-		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
-		"topology":  dbhelpers.WhereColumnInfo{"topology_cachegroup.topology", nil},
+		"id":        {"cachegroup.id", api.IsInt},
+		"name":      {"cachegroup.name", nil},
+		"shortName": {"cachegroup.short_name", nil},
+		"type":      {"cachegroup.type", nil},
+		"topology":  {"topology_cachegroup.topology", nil},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
