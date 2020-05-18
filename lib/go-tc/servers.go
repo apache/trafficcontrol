@@ -30,8 +30,15 @@ import (
  * under the License.
  */
 
-// ServersResponse is a list of Servers as a response.
+// ServersResponse is the format of a response to a GET request for /servers.
 type ServersResponse struct {
+	Response []ServerNullable `json:"response"`
+	Alerts
+}
+
+
+// ServersV2Response is a list of Servers as a response to an API v2 request.
+type ServersV2Response struct {
 	Response []Server `json:"response"`
 	Alerts
 }

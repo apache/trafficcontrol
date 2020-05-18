@@ -146,7 +146,7 @@ func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
+	var data tc.ServersV2Response
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
@@ -161,7 +161,7 @@ func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
+	var data tc.ServersV2Response
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -182,7 +182,7 @@ func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, er
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
+	var data tc.ServersV2Response
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -237,7 +237,7 @@ func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, er
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
+	var data tc.ServersV2Response
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
