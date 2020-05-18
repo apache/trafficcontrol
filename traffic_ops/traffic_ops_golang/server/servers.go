@@ -487,7 +487,7 @@ func validateV3(s tc.ServerNullable, tx *sql.Tx) (string, error) {
 
 			if addr.Gateway != nil {
 				if gateway := net.ParseIP(*addr.Gateway); gateway == nil {
-					errs = append(errs, fmt.Errorf("%s: gateway: %v", ruleName, err))
+					errs = append(errs, fmt.Errorf("%s: gateway: could not parse '%s' as a network gateway", ruleName, *addr.Gateway))
 				} else if (gateway.To4() == nil && parsedIP.To4() != nil) || (gateway.To4() != nil && parsedIP.To4() == nil) {
 					errs = append(errs, errors.New(ruleName + ": address family mismatch between address and gateway"))
 				}
