@@ -165,7 +165,7 @@ func (to *Session) GetServers(params *url.Values) ([]tc.ServerNullable, tc.Alert
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
+	var data tc.ServersResponsev3
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, data.Alerts, data.Summary.Count, reqInf, err
 }

@@ -30,8 +30,8 @@ import (
  * under the License.
  */
 
-// ServersResponse is the format of a response to a GET request for /servers.
-type ServersResponse struct {
+// ServersResponsev3 is the format of a response to a GET request for /servers.
+type ServersResponsev3 struct {
 	Response []ServerNullable `json:"response"`
 	Summary struct {
 		Count uint64 `json:"count"`
@@ -39,9 +39,9 @@ type ServersResponse struct {
 	Alerts
 }
 
-
-// ServersV2Response is a list of Servers as a response to an API v2 request.
-type ServersV2Response struct {
+// ServersResponse is a list of Servers as a response to an API v2 request.
+// This can't change because it will break ORT. Unfortunately.
+type ServersResponse struct {
 	Response []Server `json:"response"`
 	Alerts
 }
