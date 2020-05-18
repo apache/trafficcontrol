@@ -30,7 +30,7 @@ import (
 )
 
 func TestUsers(t *testing.T) {
-	WithObjs(t, []TCObj{Tenants, Users}, func() {
+	WithObjs(t, []TCObj{Tenants, Parameters, Users}, func() {
 		UpdateTestUsers(t)
 		RolenameCapitalizationTest(t)
 		OpsUpdateAdminTest(t)
