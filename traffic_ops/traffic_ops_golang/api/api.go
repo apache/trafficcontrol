@@ -70,13 +70,14 @@ WHERE type in ( SELECT id
               )
 AND status=(SELECT id FROM status WHERE name='ONLINE')
 `
+
 type APIResponse struct {
 	Response interface{} `json:"response"`
 }
 
 type APIResponseWithSummary struct {
 	Response interface{} `json:"response"`
-	Summary struct {
+	Summary  struct {
 		Count uint64 `json:"count"`
 	} `json:"summary"`
 }
@@ -87,7 +88,6 @@ func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
 	resp := APIResponse{v}
 	WriteRespRaw(w, r, resp)
 }
-
 
 // WriteRespRaw acts like WriteResp, but doesn't wrap the object in a `{"response":` object. This should be used to respond with endpoints which don't wrap their response in a "response" object.
 func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {

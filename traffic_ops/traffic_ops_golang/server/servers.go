@@ -39,8 +39,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -379,15 +379,14 @@ func validateV1(s tc.ServerNullableV11, tx *sql.Tx) error {
 		s.IP6Address = nil
 	}
 
-
 	errs := []error{}
 	if (s.IPAddress == nil || *s.IPAddress == "") && s.IP6Address == nil {
 		errs = append(errs, tc.NeedsAtLeastOneIPError)
 	}
 
 	validateErrs := validation.Errors{
-		"interfaceMtu":   validation.Validate(s.InterfaceMtu, validation.NotNil),
-		"interfaceName":  validation.Validate(s.InterfaceName, validation.NotNil),
+		"interfaceMtu":  validation.Validate(s.InterfaceMtu, validation.NotNil),
+		"interfaceName": validation.Validate(s.InterfaceName, validation.NotNil),
 	}
 
 	if s.IPAddress != nil && *s.IPAddress != "" {
@@ -469,8 +468,8 @@ func validateV3(s tc.ServerNullable, tx *sql.Tx) (string, error) {
 
 		ruleName := fmt.Sprintf("interface '%s' ", iface.Name)
 		errs = append(errs, tovalidate.ToErrors(validation.Errors{
-			ruleName + "name": validation.Validate(iface.Name, validation.Required),
-			ruleName + "mtu": validation.Validate(iface.MaxBandwidth, validation.By(validateMTU)),
+			ruleName + "name":        validation.Validate(iface.Name, validation.Required),
+			ruleName + "mtu":         validation.Validate(iface.MaxBandwidth, validation.By(validateMTU)),
 			ruleName + "ipAddresses": validation.Validate(iface.IPAddresses, validation.Required),
 		})...)
 
@@ -490,7 +489,7 @@ func validateV3(s tc.ServerNullable, tx *sql.Tx) (string, error) {
 				if gateway := net.ParseIP(*addr.Gateway); gateway == nil {
 					errs = append(errs, fmt.Errorf("%s: gateway: could not parse '%s' as a network gateway", ruleName, *addr.Gateway))
 				} else if (gateway.To4() == nil && parsedIP.To4() != nil) || (gateway.To4() != nil && parsedIP.To4() == nil) {
-					errs = append(errs, errors.New(ruleName + ": address family mismatch between address and gateway"))
+					errs = append(errs, errors.New(ruleName+": address family mismatch between address and gateway"))
 				}
 			}
 
@@ -672,9 +671,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 	}
 	defer rows.Close()
 
-
 	HiddenField := "********"
-
 
 	servers := make(map[int]tc.ServerNullable)
 	ids := []int{}
@@ -842,7 +839,7 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (
 		ifaceArgs = append(ifaceArgs, iface.MaxBandwidth, iface.Monitor, iface.MTU, iface.Name, id)
 		for _, ip := range iface.IPAddresses {
 			argStart = len(ipArgs)
-			ipQueryParts = append(ipQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)",  argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
+			ipQueryParts = append(ipQueryParts, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", argStart+1, argStart+2, argStart+3, argStart+4, argStart+5))
 			ipArgs = append(ipArgs, ip.Address, ip.Gateway, iface.Name, id, ip.ServiceAddress)
 		}
 	}
@@ -953,8 +950,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		server = tc.ServerNullableV2{
 			ServerNullableV11: legacyServer,
-			IPIsService: util.BoolPtr(true),
-			IP6IsService: util.BoolPtr(true),
+			IPIsService:       util.BoolPtr(true),
+			IP6IsService:      util.BoolPtr(true),
 		}
 	}
 
@@ -1078,7 +1075,6 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
-
 
 	if err := validateV2(&server, tx); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)

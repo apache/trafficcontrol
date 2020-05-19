@@ -535,8 +535,6 @@ WHERE
 			return nil, nil, errors.New("scanning: " + err.Error())
 		}
 
-
-
 		for _, cap := range caps {
 			s.Capabilities[atscfg.ServerCapability(cap)] = struct{}{}
 		}
@@ -557,7 +555,7 @@ WHERE
 			return nil, nil, fmt.Errorf("scanning server interfaces: %v", err)
 		}
 
-		s, ok := cgServers[id];
+		s, ok := cgServers[id]
 		if !ok {
 			log.Warnf("interfaces query returned interfaces for server #%d that was not in original query", id)
 			continue

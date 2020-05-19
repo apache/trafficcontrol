@@ -36,7 +36,7 @@ import (
 )
 
 type ServerAndInterfaces struct {
-	Server tc.Server
+	Server     tc.Server
 	Interfaces []byte
 }
 
@@ -222,7 +222,6 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.ID,
 		)
 	}
-
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT COUNT\\(server.id\\) FROM server").WillReturnRows(unfilteredRows)
@@ -443,28 +442,28 @@ func TestV3Validations(t *testing.T) {
 	goodInterface := tc.ServerInterfaceInfo{
 		IPAddresses: []tc.ServerIpAddress{
 			tc.ServerIpAddress{
-				Address: "127.0.0.1/32",
-				Gateway: nil,
+				Address:        "127.0.0.1/32",
+				Gateway:        nil,
 				ServiceAddress: true,
 			},
 		},
 		MaxBandwidth: nil,
-		Monitor: true,
-		MTU: nil,
-		Name: "eth0",
+		Monitor:      true,
+		MTU:          nil,
+		Name:         "eth0",
 	}
 
 	testServer := tc.ServerNullable{
 		CommonServerProperties: tc.CommonServerProperties{
-			CDNID: util.IntPtr(1),
-			HostName: util.StrPtr("test"),
-			DomainName: util.StrPtr("quest"),
+			CDNID:          util.IntPtr(1),
+			HostName:       util.StrPtr("test"),
+			DomainName:     util.StrPtr("quest"),
 			PhysLocationID: new(int),
-			ProfileID: new(int),
-			StatusID: new(int),
-			TypeID: new(int),
-			UpdPending: new(bool),
-			CachegroupID: new(int),
+			ProfileID:      new(int),
+			StatusID:       new(int),
+			TypeID:         new(int),
+			UpdPending:     new(bool),
+			CachegroupID:   new(int),
 		},
 		Interfaces: []tc.ServerInterfaceInfo{goodInterface},
 	}
@@ -538,7 +537,6 @@ func TestV3Validations(t *testing.T) {
 		t.Logf("Got expected error validating server with no IP addresses: %v", err)
 	}
 
-
 	badIface.IPAddresses = nil
 	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
 
@@ -554,8 +552,8 @@ func TestV3Validations(t *testing.T) {
 
 	badIface = goodInterface
 	badIP := tc.ServerIpAddress{
-		Address: "127.0.0.1/32",
-		Gateway: nil,
+		Address:        "127.0.0.1/32",
+		Gateway:        nil,
 		ServiceAddress: false,
 	}
 	badIface.IPAddresses = []tc.ServerIpAddress{badIP}
@@ -585,8 +583,8 @@ func TestV3Validations(t *testing.T) {
 
 	badIface = goodInterface
 	badIface.IPAddresses = append(badIface.IPAddresses, tc.ServerIpAddress{
-		Address: "1.2.3.4/1",
-		Gateway: nil,
+		Address:        "1.2.3.4/1",
+		Gateway:        nil,
 		ServiceAddress: true,
 	})
 	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}

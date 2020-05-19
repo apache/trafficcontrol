@@ -33,7 +33,7 @@ import (
 // ServersResponsev3 is the format of a response to a GET request for /servers.
 type ServersResponsev3 struct {
 	Response []ServerNullable `json:"response"`
-	Summary struct {
+	Summary  struct {
 		Count uint64 `json:"count"`
 	} `json:"summary"`
 	Alerts
@@ -160,8 +160,8 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 		}
 
 		ips = append(ips, ServerIpAddress{
-			Address: ipStr,
-			Gateway: lid.IPGateway,
+			Address:        ipStr,
+			Gateway:        lid.IPGateway,
 			ServiceAddress: ipv4IsService,
 		})
 	}
@@ -171,8 +171,8 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 			lid.IP6Gateway = nil
 		}
 		ips = append(ips, ServerIpAddress{
-			Address: *lid.IP6Address,
-			Gateway: lid.IP6Gateway,
+			Address:        *lid.IP6Address,
+			Gateway:        lid.IP6Gateway,
 			ServiceAddress: ipv6IsService,
 		})
 	}
@@ -231,7 +231,6 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 
 	return legacyDetails, nil
 }
-
 
 type Server struct {
 	Cachegroup       string              `json:"cachegroup" db:"cachegroup"`
@@ -403,7 +402,7 @@ func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
 		ServerNullableV11: ServerNullableV11{
 			CommonServerProperties: s.CommonServerProperties,
 		},
-		IPIsService: new(bool),
+		IPIsService:  new(bool),
 		IP6IsService: new(bool),
 	}
 

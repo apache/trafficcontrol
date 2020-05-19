@@ -21,15 +21,15 @@ package tc
 
 import "fmt"
 
-func ExampleLegacyInterfaceDetails_ToInterfaces(){
+func ExampleLegacyInterfaceDetails_ToInterfaces() {
 	lid := LegacyInterfaceDetails{
-		InterfaceMtu: new(int),
+		InterfaceMtu:  new(int),
 		InterfaceName: new(string),
-		IP6Address: new(string),
-		IP6Gateway: new(string),
-		IPAddress: new(string),
-		IPGateway: new(string),
-		IPNetmask: new(string),
+		IP6Address:    new(string),
+		IP6Gateway:    new(string),
+		IPAddress:     new(string),
+		IPGateway:     new(string),
+		IPNetmask:     new(string),
 	}
 	*lid.InterfaceMtu = 9000
 	*lid.InterfaceName = "test"
