@@ -84,7 +84,6 @@ func GetTestATSConfigs(t *testing.T) {
 		"sysctl.conf",
 		"volume.config",
 	}
-	t.Logf("SERVER PROFILE: %v", server.Profile)
 	for _, profileConfig := range profileConfigs {
 		if _, _, err = TOSession.GetATSProfileConfig(server.ProfileID, profileConfig); err != nil {
 			t.Errorf("Getting profile '" + server.Profile + "' config '" + profileConfig + "': " + err.Error() + "\n")
