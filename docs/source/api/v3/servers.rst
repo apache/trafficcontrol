@@ -216,6 +216,9 @@ Response Structure
 		"count": 13
 	}}
 
+Summary Fields
+""""""""""""""
+The ``summary`` object returned by this method of this endpoint uses only the ``count`` :ref:`standard property <reserved-summary-fields>`.
 
 ``POST``
 ========

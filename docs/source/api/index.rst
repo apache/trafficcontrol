@@ -102,6 +102,17 @@ Object
 ``undefined``
 	No ``response`` object is present in the response payload. Unless the format is otherwise noted, this means that there should be no field list in the "Response Structure" subsection.
 
+Summary
+-------
+The top-level ``summary`` object is used to provide summary statistics about object collections. In general the use of ``summary`` is left to be defined by API endpoints (subject to some restrictions). When an endpoint uses the ``summary`` object, its fields will be explained in a subsection of the "Response Structure" named "Summary Fields".
+
+The following, reserved properties of ``summary`` are guaranteed to always have their herein-described meaning.
+
+.. _reserved-summary-fields:
+
+``count``
+	``count`` contains an unsigned integer that defines the total number of results that could possibly be returned given the non-pagination query parameters supplied by the client.
+
 Using API Endpoints
 ===================
 #. Authenticate with valid Traffic Control user account credentials (the same used by Traffic Portal).
