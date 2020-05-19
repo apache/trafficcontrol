@@ -29,7 +29,6 @@ func TestServers(t *testing.T) {
 }
 
 func CreateTestServers(t *testing.T) {
-
 	// loop through servers, assign FKs and create
 	for _, server := range testData.Servers {
 		if server.HostName == nil {

@@ -325,10 +325,6 @@ const deleteInterfacesQuery = `DELETE FROM interface WHERE server=$1`
 const deleteIPsQuery = `DELETE FROM ip_address WHERE server = $1`
 
 func validateCommon(s tc.CommonServerProperties, tx *sql.Tx) []error {
-	if s.XMPPID == nil || *s.XMPPID == "" {
-		hostName := *s.HostName
-		s.XMPPID = &hostName
-	}
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
@@ -350,13 +346,18 @@ func validateCommon(s tc.CommonServerProperties, tx *sql.Tx) []error {
 		return errs
 	}
 
+	if s.XMPPID == nil || *s.XMPPID == "" {
+		hostName := *s.HostName
+		s.XMPPID = &hostName
+	}
+
 	if _, err := tc.ValidateTypeID(tx, s.TypeID, "server"); err != nil {
 		errs = append(errs, err)
 	}
 
 	var cdnID int
 	if err := tx.QueryRow("SELECT cdn from profile WHERE id=$1", s.ProfileID).Scan(&cdnID); err != nil {
-		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
+		log.Errorf("could not execute select cdnID from profile: %s\n", err)
 		if err == sql.ErrNoRows {
 			errs = append(errs, errors.New("associated profile must have a cdn associated"))
 		} else {

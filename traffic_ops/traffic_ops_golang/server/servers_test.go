@@ -26,6 +26,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
@@ -239,7 +241,6 @@ func TestGetServersByCachegroup(t *testing.T) {
 	if len(servers) != 3 {
 		t.Errorf("getServers expected: len(servers) == 3, actual: %v", len(servers))
 	}
-
 }
 
 func TestGetMidServers(t *testing.T) {
@@ -426,6 +427,178 @@ func TestGetMidServers(t *testing.T) {
 		t.Fatalf("getMidServers expected: Type == MID, actual: %v", mid[0].Type)
 		t.Fatalf("getMidServers expected: CachegroupID == 2, actual: %v", *(mid[0].CachegroupID))
 		t.Fatalf("getMidServers expected: Cachegroup == parentCacheGroup, actual: %v", *(mid[0].Cachegroup))
+	}
+}
+
+func TestV3Validations(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	goodInterface := tc.ServerInterfaceInfo{
+		IPAddresses: []tc.ServerIpAddress{
+			tc.ServerIpAddress{
+				Address: "127.0.0.1/32",
+				Gateway: nil,
+				ServiceAddress: true,
+			},
+		},
+		MaxBandwidth: nil,
+		Monitor: true,
+		MTU: nil,
+		Name: "eth0",
+	}
+
+	testServer := tc.ServerNullable{
+		CommonServerProperties: tc.CommonServerProperties{
+			CDNID: util.IntPtr(1),
+			HostName: util.StrPtr("test"),
+			DomainName: util.StrPtr("quest"),
+			PhysLocationID: new(int),
+			ProfileID: new(int),
+			StatusID: new(int),
+			TypeID: new(int),
+			UpdPending: new(bool),
+			CachegroupID: new(int),
+		},
+		Interfaces: []tc.ServerInterfaceInfo{goodInterface},
+	}
+
+	typeCols := []string{"name", "use_in_table"}
+	cdnCols := []string{"cdn"}
+	typeRows := sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows := sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	tx := db.MustBegin().Tx
+
+	_, err = validateV3(testServer, tx)
+	if err != nil {
+		t.Errorf("Unexpected error validating test server: %v", err)
+	}
+
+	testServer.Interfaces = []tc.ServerInterfaceInfo{}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with no interfaces to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with no interfaces: %v", err)
+	}
+
+	testServer.Interfaces = nil
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with nil interfaces to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with nil interfaces: %v", err)
+	}
+
+	badIface := goodInterface
+	var badMTU uint64 = 1279
+	badIface.MTU = &badMTU
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server an MTU < 1280 to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with an MTU < 1280: %v", err)
+	}
+
+	badIface.MTU = nil
+	badIface.IPAddresses = []tc.ServerIpAddress{}
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with no IP addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with no IP addresses: %v", err)
+	}
+
+
+	badIface.IPAddresses = nil
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with nil IP addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with nil IP addresses: %v", err)
+	}
+
+	badIface = goodInterface
+	badIP := tc.ServerIpAddress{
+		Address: "127.0.0.1/32",
+		Gateway: nil,
+		ServiceAddress: false,
+	}
+	badIface.IPAddresses = []tc.ServerIpAddress{badIP}
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with no service addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with no service addresses: %v", err)
+	}
+
+	testServer.Interfaces = []tc.ServerInterfaceInfo{goodInterface, goodInterface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with too many interfaces with service addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with too many interfaces with service addresses: %v", err)
+	}
+
+	badIface = goodInterface
+	badIface.IPAddresses = append(badIface.IPAddresses, tc.ServerIpAddress{
+		Address: "1.2.3.4/1",
+		Gateway: nil,
+		ServiceAddress: true,
+	})
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with no service addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with no service addresses: %v", err)
 	}
 }
 
