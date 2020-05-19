@@ -47,21 +47,37 @@ Request Structure
 :iloIpNetmask: An optional IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
 :iloPassword:  An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :abbr:`Role(s) <Role>`
 :iloUsername:  An optional string containing the user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-:interfaceMtu: The :abbr:`MTU (Maximum Transmission Unit)` configured on ``interfaceName``
+:interfaces:   A set of the network interfaces in use by the server. In most scenarios, only one will be necessary, but it is illegal for this set to be an empty collection.
 
-	.. note:: In virtually all cases this ought to be 1500. Further note that the only acceptable values are 1500 and 9000.
+	:ipAddresses: A set of objects representing IP Addresses assigned to this network interface. In most scenarios, only one or two (usually one IPv4 address and one IPv6 address) will be necessary, but it is illegal for this set to be an empty collection.
 
-:interfaceName:  The name of the primary network interface used by the server
-:ip6Address:     An optional IPv6 address and subnet mask of ``interfaceName``
-:ip6IsService:   An optional boolean value which if ``true`` indicates that the IPv6 address will be used for routing content.  Defaults to ``true``.
-:ip6Gateway:     An optional IPv6 address of the gateway used by ``interfaceName``
-:ipAddress:      The IPv4 address of ``interfaceName``
-:ipIsService:    An optional boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.  Defaults to ``true``.
-:ipGateway:      The IPv4 address of the gateway used by ``interfaceName``
-:ipNetmask:      The IPv4 subnet mask used by ``interfaceName``
-:mgmtIpAddress:  An optional IPv4 address of some network interface on the server used for 'management'
-:mgmtIpGateway:  An optional IPv4 address of a gateway used by some network interface on the server used for 'management'
-:mgmtIpNetmask:  An optional IPv4 subnet mask used by some network interface on the server used for 'management'
+		:address:        The actual IP address, including any mask as a CIDR-notation suffix
+		:gateway:        Either the IP address of the network gateway for this address, or ``null`` to signify that no such gateway exists
+		:serviceAddress: A boolean that describes whether or not the server's main service is available at this IP address. When this property is ``true``, the IP address is referred to as a "service address". It is illegal for a server to not have at least one service address. It is also illegal for a server to have more than one service address of the same address family (i.e. more than one IPv4 service address and/or more than one IPv6 address). Finally, all service addresses for a server must be contained within one interface - which is therefore sometimes referred to as the "service interface" for the server.
+
+	:maxBandwidth: The maximum healthy bandwidth allowed for this interface. If bandwidth exceeds this limit, Traffic Monitors will consider the entire server unhealthy - which includes *all* configured network interfaces. If this is ``null``, it has the meaning "no limit". It has no effect if ``monitor`` is not true for this interface.
+
+		.. seealso:: :ref:`health-proto`
+
+	:monitor: A boolean which describes whether or not this interface should be monitored by Traffic Monitor for statistics and health consideration.
+	:mtu:     The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information is either not available or not applicable for this interface. This unsigned integer must not be less than 1280.
+	:name:    The name of the interface. No two interfaces of the same server may share a name. It is the same as the network interface's device name on the server, e.g. ``eth0``.
+
+:mgmtIpAddress: The IPv4 address of some network interface on the server used for 'management'
+
+	.. deprecated:: 3.0
+		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
+
+:mgmtIpGateway: The IPv4 address of a gateway used by some network interface on the server used for 'management'
+
+	.. deprecated:: 3.0
+		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
+
+:mgmtIpNetmask: The IPv4 subnet mask used by some network interface on the server used for 'management'
+
+	.. deprecated:: 3.0
+		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
+
 :physLocationId: An integral, unique identifier for the physical location where the server resides
 :profileId:      The :ref:`profile-id` the :term:`Profile` that shall be used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
@@ -84,7 +100,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/3.0/servers/13 HTTP/1.1
+	PUT /api/3.0/servers/14 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -103,6 +119,26 @@ Request Structure
 		"iloIpNetmask": "",
 		"iloPassword": "",
 		"iloUsername": "",
+		"interfaces": [
+			{
+				"ipAddresses": [
+					{
+						"address": "::1",
+						"gateway": "::2",
+						"serviceAddress": true
+					},
+					{
+						"address": "0.0.0.1/24",
+						"gateway": "0.0.0.2",
+						"serviceAddress": false
+					}
+				],
+				"maxBandwidth": null,
+				"monitor": true,
+				"mtu": 1500,
+				"name": "bond0"
+			}
+		],
 		"interfaceMtu": 1500,
 		"interfaceName": "eth0",
 		"ip6Address": "::1",
@@ -121,9 +157,7 @@ Request Structure
 		"statusId": 3,
 		"tcpPort": 80,
 		"typeId": 12,
-		"updPending": true,
-		"ipIsService": true,
-		"ip6IsService": true
+		"updPending": false
 	}
 
 Response Structure
@@ -140,27 +174,46 @@ Response Structure
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
 :id:             An integral, unique identifier for this server
-:iloIpAddress:   The IPv4 address of the server's Integrated Lights-Out (ILO) service\ [1]_
-:iloIpGateway:   The IPv4 gateway address of the server's ILO service\ [1]_
-:iloIpNetmask:   The IPv4 subnet mask of the server's ILO service\ [1]_
-:iloPassword:    The password of the of the server's ILO service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' role(s)
-:iloUsername:    The user name for the server's ILO service\ [1]_
-:interfaceMtu:   The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
-:interfaceName:  The name of the primary network interface used by the server
-:ip6Address:     The IPv6 address and subnet mask of ``interfaceName``
-:ip6IsService:   A boolean value which if ``true`` indicates that the IPv6 address will be used for routing content.
-:ip6Gateway:     The IPv6 address of the gateway used by ``interfaceName``
-:ipAddress:      The IPv4 address of ``interfaceName``
-:ipIsService:    A boolean value which if ``true`` indicates that the IPv4 address will be used for routing content.
-:ipGateway:      The IPv4 address of the gateway used by ``interfaceName``
-:ipNetmask:      The IPv4 subnet mask used by ``interfaceName``
-:lastUpdated:    The date and time at which this server description was last modified
-:mgmtIpAddress:  The IPv4 address of some network interface on the server used for 'management'
-:mgmtIpGateway:  The IPv4 address of a gateway used by some network interface on the server used for 'management'
-:mgmtIpNetmask:  The IPv4 subnet mask used by some network interface on the server used for 'management'
+:iloIpAddress:   The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloIpGateway:   The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloIpNetmask:   The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloPassword:    The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :abbr:`Role(s) <Role>`
+:iloUsername:    The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:interfaces:   A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
+
+	:ipAddresses: A set of objects representing IP Addresses assigned to this network interface. In most scenarios, only one or two (usually one IPv4 address and one IPv6 address) will be present, but it is illegal for this set to be an empty collection.
+
+		:address:        The actual IP address, including any mask as a CIDR-notation suffix
+		:gateway:        Either the IP address of the network gateway for this address, or ``null`` to signify that no such gateway exists
+		:serviceAddress: A boolean that describes whether or not the server's main service is available at this IP address. When this property is ``true``, the IP address is referred to as a "service address". It is illegal for a server to not have at least one service address. It is also illegal for a server to have more than one service address of the same address family (i.e. more than one IPv4 service address and/or more than one IPv6 address). Finally, all service addresses for a server must be contained within one interface - which is therefore sometimes referred to as the "service interface" for the server.
+
+	:maxBandwidth: The maximum healthy bandwidth allowed for this interface. If bandwidth exceeds this limit, Traffic Monitors will consider the entire server unhealthy - which includes *all* configured network interfaces. If this is ``null``, it has the meaning "no limit". It has no effect if ``monitor`` is not true for this interface.
+
+		.. seealso:: :ref:`health-proto`
+
+	:monitor: A boolean which describes whether or not this interface should be monitored by Traffic Monitor for statistics and health consideration.
+	:mtu:     The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information is either not available or not applicable for this interface.
+	:name:    The name of the interface. No two interfaces of the same server may share a name. It is the same as the network interface's device name on the server, e.g. ``eth0``.
+
+:lastUpdated:   The date and time at which this server description was last modified
+:mgmtIpAddress: The IPv4 address of some network interface on the server used for 'management'
+
+	.. deprecated:: 3.0
+		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
+
+:mgmtIpGateway: The IPv4 address of a gateway used by some network interface on the server used for 'management'
+
+	.. deprecated:: 3.0
+		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
+
+:mgmtIpNetmask: The IPv4 subnet mask used by some network interface on the server used for 'management'
+
+	.. deprecated:: 3.0
+		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
+
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physLocation:   The name of the physical location where the server resides
-:physLocationId: An integral, unique identifier for the physical location where the server resides
+:physLocation:   The name of the :term:`Physical Location` where the server resides
+:physLocationId: An integral, unique identifier for the :term:`Physical Location` where the server resides
 :profile:        The :ref:`profile-name` of the :term:`Profile` used by this server
 :profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
 :profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
@@ -194,65 +247,77 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: 9lGAMCCC9I/bOpuBSyf3ACffjHeRuXCTuxrA/oU78uYzW5FeFTq5PHSSnsnqKG5E0vWg0Rko0CwguGeNc9IT0w==
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 19 May 2020 17:46:33 GMT; Max-Age=3600; HttpOnly
+	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 10 Dec 2018 17:58:57 GMT
-	Content-Length: 848
+	Date: Tue, 19 May 2020 16:46:33 GMT
+	Content-Length: 566
 
 	{ "alerts": [
 		{
-			"text": "server was updated.",
+			"text": "Server updated",
 			"level": "success"
 		}
 	],
 	"response": {
-		"cachegroup": null,
+		"cachegroup": "CDN_in_a_Box_Mid",
 		"cachegroupId": 6,
 		"cdnId": 2,
-		"cdnName": null,
+		"cdnName": "CDN-in-a-Box",
 		"domainName": "infra.ciab.test",
 		"guid": null,
 		"hostName": "quest",
 		"httpsPort": 443,
-		"id": 13,
+		"id": 14,
 		"iloIpAddress": "",
 		"iloIpGateway": "",
 		"iloIpNetmask": "",
 		"iloPassword": "",
 		"iloUsername": "",
-		"interfaceMtu": 1500,
-		"interfaceName": "eth0",
-		"ip6Address": "::1",
-		"ip6Gateway": "::2",
-		"ipAddress": "0.0.0.1",
-		"ipGateway": "0.0.0.2",
-		"ipNetmask": "255.255.255.0",
-		"lastUpdated": "2018-12-10 17:58:57+00",
+		"lastUpdated": "2020-05-19 16:46:33+00",
 		"mgmtIpAddress": "",
 		"mgmtIpGateway": "",
 		"mgmtIpNetmask": "",
 		"offlineReason": "",
-		"physLocation": null,
+		"physLocation": "Apachecon North America 2018",
 		"physLocationId": 1,
-		"profile": null,
-		"profileDesc": null,
+		"profile": "ATS_MID_TIER_CACHE",
+		"profileDesc": "Mid Cache - Apache Traffic Server",
 		"profileId": 10,
 		"rack": null,
-		"revalPending": null,
+		"revalPending": false,
 		"routerHostName": "",
 		"routerPortName": "",
-		"status": null,
+		"status": "REPORTED",
 		"statusId": 3,
 		"tcpPort": 80,
-		"type": "",
+		"type": "MID",
 		"typeId": 12,
-		"updPending": true,
+		"updPending": false,
 		"xmppId": null,
 		"xmppPasswd": null,
-		"ipIsService": true,
-		"ip6IsService": true
+		"interfaces": [
+			{
+				"ipAddresses": [
+					{
+						"address": "::1",
+						"gateway": "::2",
+						"serviceAddress": true
+					},
+					{
+						"address": "0.0.0.1/24",
+						"gateway": "0.0.0.2",
+						"serviceAddress": false
+					}
+				],
+				"maxBandwidth": null,
+				"monitor": true,
+				"mtu": 1500,
+				"name": "bond0"
+			}
+		]
 	}}
 
 ``DELETE``
@@ -261,7 +326,10 @@ Allow user to delete server through api.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Response Type:  ``undefined``
+:Response Type:  Object
+
+	.. versionchanged:: 3.0
+		In older versions of the API, this endpoint did not return a response object. It now returns a representation of the deleted server.
 
 Request Structure
 -----------------
@@ -276,7 +344,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/3.0/servers/13 HTTP/1.1
+	DELETE /api/3.0/servers/14 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -288,22 +356,77 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: JZdjKJYWN9w9NF6VE/rVkGUqecycKB2ABkkI4LNDmgpJLwu53bRHAA+4uWrow0zuba/4MSEhHKshutziypSxPg==
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 19 May 2020 17:50:13 GMT; Max-Age=3600; HttpOnly
+	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 10 Dec 2018 18:23:21 GMT
-	Content-Length: 61
+	Date: Tue, 19 May 2020 16:50:13 GMT
+	Content-Length: 568
 
 	{ "alerts": [
 		{
-			"text": "server was deleted.",
+			"text": "Server deleted",
 			"level": "success"
 		}
-	]}
+	],
+	"response": {
+		"cachegroup": "CDN_in_a_Box_Mid",
+		"cachegroupId": 6,
+		"cdnId": 2,
+		"cdnName": "CDN-in-a-Box",
+		"domainName": "infra.ciab.test",
+		"guid": null,
+		"hostName": "quest",
+		"httpsPort": 443,
+		"id": 14,
+		"iloIpAddress": "",
+		"iloIpGateway": "",
+		"iloIpNetmask": "",
+		"iloPassword": "",
+		"iloUsername": "",
+		"lastUpdated": "2020-05-19 16:46:33+00",
+		"mgmtIpAddress": "",
+		"mgmtIpGateway": "",
+		"mgmtIpNetmask": "",
+		"offlineReason": "",
+		"physLocation": "Apachecon North America 2018",
+		"physLocationId": 1,
+		"profile": "ATS_MID_TIER_CACHE",
+		"profileDesc": "Mid Cache - Apache Traffic Server",
+		"profileId": 10,
+		"rack": null,
+		"revalPending": false,
+		"routerHostName": "",
+		"routerPortName": "",
+		"status": "REPORTED",
+		"statusId": 3,
+		"tcpPort": 80,
+		"type": "MID",
+		"typeId": 12,
+		"updPending": false,
+		"xmppId": null,
+		"xmppPasswd": null,
+		"interfaces": [
+			{
+				"ipAddresses": [
+					{
+						"address": "0.0.0.1/24",
+						"gateway": "0.0.0.2",
+						"serviceAddress": false
+					},
+					{
+						"address": "::1",
+						"gateway": "::2",
+						"serviceAddress": true
+					}
+				],
+				"maxBandwidth": null,
+				"monitor": true,
+				"mtu": 1500,
+				"name": "bond0"
+			}
+		]
+	}}
 
-.. [1] For more information see the `Wikipedia page on Lights-Out management <https://en.wikipedia.org/wiki/Out-of-band_management>`_\ .
+.. [#ilo] For more information see the `Wikipedia page on Lights-Out management <https://en.wikipedia.org/wiki/Out-of-band_management>`_\ .

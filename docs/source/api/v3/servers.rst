@@ -250,7 +250,7 @@ Request Structure
 		.. seealso:: :ref:`health-proto`
 
 	:monitor: A boolean which describes whether or not this interface should be monitored by Traffic Monitor for statistics and health consideration.
-	:mtu:     The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information is either not available or not applicable for this interface.
+	:mtu:     The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information is either not available or not applicable for this interface. This unsigned integer may not be less than 1280.
 	:name:    The name of the interface. No two interfaces of the same server may share a name. It is the same as the network interface's device name on the server, e.g. ``eth0``.
 
 :mgmtIpAddress: The IPv4 address of some network interface on the server used for 'management'
@@ -433,15 +433,10 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 201 Created
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
 	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE1ODk5MDk2ODAsImJ5IjoidHJhZmZpY2NvbnRyb2wtZ28tdG9jb29raWUifQ--208fa3c993b41a3365aa394daf5e3b94e44c0340; Path=/; Expires=Tue, 19 May 2020 17:34:40 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 19 May 2020 17:34:40 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: ljrtkIc9hx2i7AmIOCZXTDbOyUwpoLHk2Yu1yl+ZdDnj2+B45qJqvLYi6mgXWHfz7O2IYQhU8pe5SaS5+PbhkQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Tue, 19 May 2020 16:34:40 GMT
 	Content-Length: 562
