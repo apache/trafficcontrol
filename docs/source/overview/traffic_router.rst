@@ -32,7 +32,7 @@ Traffic routing options are often configured at the :term:`Delivery Service` lev
 
 DNS Content Routing
 ===================
-For a DNS :term:`Delivery Service` the client might receive a URL such as ``http://video.demo1.mycdn.ciab.test/``. When the :abbr:`LDNS (Local Domain Name Server)` is resolving this ``video.demo1.mycdn.ciab.test`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``mycdn.ciab.test`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible :term:`cache servers` based on the location of the :abbr:`LDNS (Local Domain Name Server)`. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what :term:`cache server` IP address (or list of :term:`cache server` IP addresses) to return is solely based on the location of the :abbr:`LDNS (Local Domain Name Server)` and the health of the :term:`cache servers`. The client then connects to port 80 (HTTP) or port 443 (HTTPS) on the :term:`cache server`, and sends the ``Host: video.demo1.mycdn.ciab.test`` header. The configuration of the :term:`cache server` includes the "remap rule" ``http://video.demo1.mycdn.ciab.test http://origin.infra.ciab.test`` to map the routed name to an :term:`origin` hostname.
+For a DNS :term:`Delivery Service` the client might receive a URL such as ``http://video.demo1.mycdn.ciab.test/``. When the :abbr:`LDNS (Local Domain Name Server)` is resolving this ``video.demo1.mycdn.ciab.test`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``mycdn.ciab.test`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible :term:`cache servers` based on the location of the :abbr:`LDNS (Local Domain Name Server)`. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what :term:`cache server` IP address (or list of :term:`cache server` IP addresses) to return is solely based on the location of the :abbr:`LDNS (Local Domain Name Server)` and the health of the :term:`cache servers`. The client then connects to port 80 (HTTP) or port 443 (HTTPS) on the :term:`cache server`, and sends the ``Host: video.demo1.mycdn.ciab.test`` header. The configuration of the :term:`cache server` includes the "remap rule" ``http://video.demo1.mycdn.ciab.test http://origin.infra.ciab.test`` to map the routed name to an :term:`Origin` hostname.
 
 .. _http-cr:
 
@@ -50,7 +50,7 @@ For an HTTP :term:`Delivery Service` the client might receive a URL such as ``ht
 Traffic Router uses an HTTP ``302 Found`` response to redirect the client to the best :term:`cache server`.
 
 .. code-block:: http
-	:caption: Traffic Router Redirect to Edge-tier :term:`Cache Server`
+	:caption: Traffic Router Redirect to Edge-tier :term:`cache server`
 
 	HTTP/1.1 302 Found
 	Location: http://edge.demo1.mycdn.ciab.test/

@@ -22,7 +22,7 @@ A :dfn:`Cache Group` is - ostensibly - exactly what it sounds like it is: a grou
 
 The most typical :ref:`Types <cache-group-type>` of Cache Groups are EDGE_LOC_ which contain :term:`Edge-tier cache servers` and MID_LOC_ which contain :term:`Mid-tier cache servers`. The latter are each designated as a Parent_ of one or more of the former to fill out the two-tiered caching hierarchy of an :abbr:`ATC (Apache Traffic Control)` CDN.
 
-Consider the example CDN in :numref:`fig-cg_hierarchy`. Here some country/province/region has been divided into quarters: Northeast, Southeast, Northwest, and Southwest. The arrows in the diagram indicate the flow of requests. If a client in the Northwest, for example, were to make a request to the :term:`Delivery Service`, it would first be directed to some :term:`cache server` in the "Northwest" Edge-tier :dfn:`Cache Group`. Should the requested content not be in cache, the Edge-tier server will select a parent from the "West" :dfn:`Cache Group` and pass the request up, caching the result for future use. All Mid-tier :dfn:`Cache Groups` (usually) answer to a single :term:`origin` that provides canonical content. If requested content is not in the Mid-tier cache, then the request will be passed up to the :term:`origin` and the result cached.
+Consider the example CDN in :numref:`fig-cg_hierarchy`. Here some country/province/region has been divided into quarters: Northeast, Southeast, Northwest, and Southwest. The arrows in the diagram indicate the flow of requests. If a client in the Northwest, for example, were to make a request to the :term:`Delivery Service`, it would first be directed to some :term:`cache server` in the "Northwest" Edge-tier :dfn:`Cache Group`. Should the requested content not be in cache, the Edge-tier server will select a parent from the "West" :dfn:`Cache Group` and pass the request up, caching the result for future use. All Mid-tier :dfn:`Cache Groups` (usually) answer to a single :term:`Origin` that provides canonical content. If requested content is not in the Mid-tier cache, then the request will be passed up to the :term:`Origin` and the result cached.
 
 .. _fig-cg_hierarchy:
 
@@ -307,7 +307,7 @@ This :term:`Type` of Cache Group contains :term:`Mid-tier cache servers`
 
 ORG_LOC
 """""""
-This :term:`Type` of Cache Group contains :term:`origins`. The primary purpose of these is to group :term:`origins` for the purposes of "multi-site-origins", and it's suggested that if that doesn't meet your use-case that these be mostly avoided. In general, it's not strictly necessary to create :term:`origin` *servers* in ATC at all, unless you have to support "multi-site-origins".
+This :term:`Type` of Cache Group contains :term:`Origins`. The primary purpose of these is to group :term:`Origins` for the purposes of "multi-site-origins", and it's suggested that if that doesn't meet your use-case that these be mostly avoided. In general, it's not strictly necessary to create :term:`Origin` *servers* in ATC at all, unless you have to support "multi-site-origins".
 
 .. seealso:: :ref:`multi-site-origin-qht`
 

@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Retrieves properties of :term:`Edge-Tier cache servers` eligible for assignment to a particular :term:`Delivery Service`. Eligibility is determined based on the following properties:
+Retrieves properties of :term:`Edge-tier cache servers` eligible for assignment to a particular :term:`Delivery Service`. Eligibility is determined based on the following properties:
 
 - The name of the server's :term:`Type` must match one of the glob patterns ``EDGE*``, ``ORG*``
 - The server and :term:`Delivery Service` must belong to the same CDN
