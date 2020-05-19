@@ -352,6 +352,83 @@ Request Structure
 
 Response Structure
 ------------------
+:cachegroup:   A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belonged
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belonged
+:cdnId:        The integral, unique identifier of the CDN to which the server belonged
+:cdnName:      Name of the CDN to which the server belonged
+:domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:guid:         An identifier used to uniquely identify the server
+
+	.. note:: This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+
+:hostName:     The (short) hostname of the server
+:httpsPort:    The port on which the server listened for incoming HTTPS connections/requests
+:id:           An integral, unique identifier for this server
+:iloIpAddress: The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloIpGateway: The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloIpNetmask: The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:iloPassword:  The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
+:iloUsername:  The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
+:interfaces:   A set of the network interfaces that were in use by the server
+
+	:ipAddresses: A set of objects representing IP Addresses that were assigned to this network interface
+
+		:address:        The actual IP address, including any mask as a CIDR-notation suffix
+		:gateway:        Either the IP address of the network gateway for this address, or ``null`` to signify that no such gateway exists
+		:serviceAddress: A boolean that describes whether or not the server's main service is available at this IP address. When this property is ``true``, the IP address is referred to as a "service address".
+
+	:maxBandwidth: The maximum healthy bandwidth allowed for this interface. If bandwidth exceeds this limit, Traffic Monitors would have considered the entire server unhealthy - which includes *all* configured network interfaces. If this was ``null``, it has the meaning "no limit". It had no effect if ``monitor`` was not true for this interface.
+
+		.. seealso:: :ref:`health-proto`
+
+	:monitor: A boolean which describes whether or not this interface should have been monitored by Traffic Monitor for statistics and health consideration
+	:mtu:     The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information was either not available or not applicable for this interface.
+	:name:    The name of the interface. It is the same as the network interface's device name on the server, e.g. ``eth0``.
+
+:lastUpdated:   The date and time at which this server description was last modified
+:mgmtIpAddress: The IPv4 address of some network interface on the server that was used for 'management'
+
+	.. deprecated:: 3.0
+		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
+
+:mgmtIpGateway: The IPv4 address of a gateway used by some network interface on the server that was used for 'management'
+
+	.. deprecated:: 3.0
+		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
+
+:mgmtIpNetmask: The IPv4 subnet mask used by some network interface on the server that was used for 'management'
+
+	.. deprecated:: 3.0
+		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
+
+:offlineReason:  A user-entered reason why the server was in ADMIN_DOWN or OFFLINE status
+:physLocation:   The name of the physical location where the server resided
+:physLocationId: An integral, unique identifier for the physical location where the server resided
+:profile:        The :ref:`profile-name` of the :term:`Profile` which was used by this server
+:profileDesc:    A :ref:`profile-description` of the :term:`Profile` which was used by this server
+:profileId:      The :ref:`profile-id` the :term:`Profile` which was used by this server
+:revalPending:   A boolean value which, if ``true`` indicates that this server had pending content invalidation/revalidation
+:rack:           A string indicating "server rack" location
+:routerHostName: The human-readable name of the router responsible for reaching this server
+:routerPortName: The human-readable name of the port used by the router responsible for reaching this server
+:status:         The :term:`Status` of the server
+
+	.. seealso:: :ref:`health-proto`
+
+:statusId: The integral, unique identifier of the status of this server
+
+	.. seealso:: :ref:`health-proto`
+
+:tcpPort: The port on which this server listened for incoming TCP connections
+
+	.. note:: This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
+
+:type:       The name of the :term:`Type` of this server
+:typeId:     The integral, unique identifier of the 'type' of this server
+:updPending: A boolean value which, if ``true``, indicates that the server had updates of some kind pending, typically to be acted upon by Traffic Ops :term:`ORT`
+:xmppId:     An identifier to be used in XMPP communications with the server - in nearly all cases this will be the same as ``hostName``
+:xmppPasswd: The password used in XMPP communications with the server
+
 .. code-block:: http
 	:caption: Response Example
 
