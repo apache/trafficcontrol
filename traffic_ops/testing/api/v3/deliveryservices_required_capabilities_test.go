@@ -17,6 +17,7 @@ package v3
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -181,7 +182,10 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// First assign current capabilities to edge server so we can assign it to the DS
-	servers, _, err := TOSession.GetServerByHostName("atlanta-edge-01")
+	// TODO: DON'T hard-code hostnames!
+	params := url.Values{}
+	params.Add("hostName", "atlanta-edge-01")
+	servers, _, _, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname: %v", err)
 	}
@@ -189,8 +193,12 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 		t.Fatal("need at least one server to test invalid ds required capability assignment")
 	}
 
+	if servers[0].ID == nil {
+		t.Fatal("server 'atlanta-edge-01' had nil ID")
+	}
+
 	dsID := capabilities[0].DeliveryServiceID
-	sID := servers[0].ID
+	sID := *servers[0].ID
 	serverCaps := []tc.ServerServerCapability{}
 
 	for _, cap := range capabilities {

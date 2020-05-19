@@ -314,6 +314,8 @@ func DeleteTestCacheGroups(t *testing.T) {
 			if err != nil {
 				t.Errorf("cannot DELETE CacheGroup by name: '%s' %v", *respCG.Name, err)
 			}
+
+			t.Logf("Deleted Cache Group '%s'", *respCG.Name)
 			// Retrieve the CacheGroup to see if it got deleted
 			cgs, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 			if err != nil {

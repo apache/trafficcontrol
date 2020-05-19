@@ -16,6 +16,7 @@ package v3
 */
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -32,21 +33,26 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	// Valid POSTs
 
 	// loop through server ServerCapabilities, assign FKs and create
+	params := url.Values{}
 	for _, ssc := range testData.ServerServerCapabilities {
-		servResp, _, err := TOSession.GetServerByHostName(*ssc.Server)
+		if ssc.Server == nil {
+			t.Fatalf("server-server-capability structure had nil server")
+		}
+		params.Set("hostName", *ssc.Server)
+		servResp, alerts, _, _, err := TOSession.GetServers(&params)
 		if err != nil {
-			t.Fatalf("cannot GET Server by hostname: %v - %v", *ssc.Server, err)
+			t.Fatalf("cannot GET Server by hostname '%s': %v - %v", *ssc.Server, err, alerts)
 		}
 		if len(servResp) != 1 {
 			t.Fatalf("cannot GET Server by hostname: %v. Response did not include record.", *ssc.Server)
 		}
 		server := servResp[0]
-		ssc.ServerID = &server.ID
+		ssc.ServerID = server.ID
 		resp, _, err := TOSession.CreateServerServerCapability(ssc)
 		if err != nil {
 			t.Errorf("could not POST the server capability %v to server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
 		}
-		t.Log("Response: ", server.HostName, " ", resp)
+		t.Log("Response: ", *ssc.Server, " ", resp)
 	}
 
 	// Invalid POSTs
@@ -98,16 +104,18 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Attempt to assign a server capability to a non MID/EDGE server
-	servers, _, err := TOSession.GetServerByHostName("riak")
+	// TODO: DON'T hard-code server hostnames!
+	params.Set("hostName", "riak")
+	servers, alerts, _, _, err := TOSession.GetServers(&params)
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname: %v - %v", *ssc.Server, err)
+		t.Fatalf("cannot GET Server by hostname 'riak': %v - %v", err, alerts)
 	}
 	if len(servers) < 1 {
 		t.Fatal("need at least one server to test invalid server type assignment")
 	}
 
 	sscInvalidType := tc.ServerServerCapability{
-		ServerID:         &servers[0].ID,
+		ServerID:         servers[0].ID,
 		ServerCapability: ssc.ServerCapability,
 	}
 	_, _, err = TOSession.CreateServerServerCapability(sscInvalidType)
