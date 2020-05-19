@@ -126,6 +126,10 @@ type LegacyInterfaceDetails struct {
 	IPNetmask     *string `json:"ipNetmask" db:"ip_netmask"`
 }
 
+// ToInterfaces converts a LegacyInterfaceDetails to a slice of
+// ServerInterfaceInfo structures. No interfaces will be marked for monitoring,
+// and it will generate service addresses according to the passed indicators
+// for each address family.
 func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService bool) ([]ServerInterfaceInfo, error) {
 	var iface ServerInterfaceInfo
 	if lid.InterfaceMtu == nil {
