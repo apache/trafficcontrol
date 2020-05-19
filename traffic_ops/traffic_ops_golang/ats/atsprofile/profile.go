@@ -26,9 +26,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -55,7 +53,6 @@ func WithProfileData(w http.ResponseWriter, r *http.Request, contentType string,
 			return
 		}
 	}
-	log.Debugf("aosnutehantoehuntoehau %s", profileNameOrID)
 
 	fileName := strings.TrimSuffix(inf.Params["file"], ".json")
 
