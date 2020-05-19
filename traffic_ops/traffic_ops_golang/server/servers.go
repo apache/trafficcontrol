@@ -718,7 +718,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		}
 	}
 
-	var returnable []tc.ServerNullable
+	returnable := make([]tc.ServerNullable, 0, len(servers))
 	for _, server := range servers {
 		returnable = append(returnable, server)
 	}
