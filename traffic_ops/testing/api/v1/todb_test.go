@@ -326,8 +326,6 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM origin;
 	DELETE FROM ip_address;
 	DELETE FROM interface;
-	DELETE FROM ip_address;
-	DELETE FROM interface;
 	DELETE FROM server;
 	DELETE FROM phys_location;
 	DELETE FROM region;
