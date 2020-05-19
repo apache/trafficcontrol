@@ -209,7 +209,7 @@ func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
 // server found to have the Host Name 'n'.
 func (to *Session) GetServerFQDN(n string) (string, tc.Alerts, ReqInf, error) {
 	// TODO fix to only request one server
-	var params url.Values
+	params := url.Values{}
 	params.Add("hostName", n)
 
 	servers, alerts, _, reqInf, err := to.GetServers(&params)
