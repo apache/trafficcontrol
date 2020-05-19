@@ -44,31 +44,37 @@ Installing The Traffic Portal Developer Environment
 #. Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
 #. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
 #. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
-#. Make sure that compass is installed and functioning correctly by running ``compass version``. If ``compass`` is not running, you can install it on macOSas follows:
+#. Make sure that compass is installed and functioning correctly by running ``compass version``. If ``compass`` is not running, you can install it on macOS as follows:
     #. macOS comes with its own version of ruby built into it. In order to install compass, if you run a command like ``sudo gem install compass``, it will take the default ruby available in mac. In order to properly install compass, here is what you should be doing:
+
     #. ``brew install ruby``
+
     #. ``gem update --system``
+
     #. ``gem install compass``
-       Note: You might need to install sass before you install compass. You can do that by running:
-    #. ``gem install sass``
-    #. Make sure that compass and sass are part of your ``PATH`` environment variable.
-    #. If not, you can see where gem installs compass and sass by running:
+
+        .. tip:: You need to install ``sass`` before you install ``compass``. You can do that by running:
+                 ``gem install sass``
+
+    #. Make sure that ``compass`` and ``sass`` are part of your ``PATH`` environment variable.
+
+    #. If not, you can see where gem installs ``compass`` and ``sass`` by running:
        ``gem environment``
+
     #. In there, you can see where ruby is installing all the gems. Add that path to your ``PATH`` environment variable.
        For ex, it is ``/usr/local/lib/ruby/gems/2.7.0/gems/compass-1.0.3/bin/`` for this test setup.
-    #. Once you have installed compass successfully, make sure you can reach it by typing
+
+    #. Once you have installed ``compass`` successfully, make sure you can reach it by typing:
        ``compass version``
-       This should give a valid output. For ex, for the test setup, the output is
+       This should give a valid output. For example, for the test setup, the output is:
 
-       ``Compass 1.0.3 (Polaris)``
+    .. code-block:: bash
 
-       ``Copyright (c) 2008-2020 Chris Eppstein``
-
-       ``Released under the MIT License.``
-
-       ``Compass is charityware.``
-
-       ``Please make a tax deductable donation for a worthy cause: http://umdf.org/compass``
+        Compass 1.0.3 (Polaris)
+        Copyright (c) 2008-2020 Chris Eppstein
+        Released under the MIT License.
+        Compass is charityware.
+        Please make a tax deductable donation for a worthy cause: http://umdf.org/compass
 
 #. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
 #. Modify ``traffic_portal/conf/config.js``:
