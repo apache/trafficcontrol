@@ -68,7 +68,9 @@ Installing The Traffic Portal Developer Environment
        ``compass version``
        This should give a valid output. For example, for the test setup, the output is:
 
-    .. code-block:: bash
+    .. code-block:: text
+
+        :caption: Compass version output
 
         Compass 1.0.3 (Polaris)
         Copyright (c) 2008-2020 Chris Eppstein
