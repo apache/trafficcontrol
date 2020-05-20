@@ -53,12 +53,9 @@ func GetTestATSConfigs(t *testing.T) {
 	}
 
 	serverConfigs := []string{
-		"ip_allow.config",
 		"hosting.config",
 		"packages",
 		"chkconfig",
-		"remap.config",
-		"parent.config",
 	}
 	for _, serverConfig := range serverConfigs {
 		if _, _, err = TOSession.GetATSServerConfig(server.ID, serverConfig); err != nil {
