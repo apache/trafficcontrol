@@ -18,130 +18,105 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net"
 	"net/http"
 	"net/url"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const (
-	ApiTopologies = apiBase + "/topologies"
-)
+const ApiTopologies = apiBase + "/topologies"
 
 // CreateTopology creates a topology and returns the response.
-func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf, error, int) {
-	var (
-		statusCode = http.StatusNotAcceptable
-		remoteAddr net.Addr
-	)
+func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf, error) {
+	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(top)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, reqInf, err, statusCode
+		return nil, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, ApiTopologies, reqBody)
-	if resp != nil {
-		statusCode = resp.StatusCode
-	}
 	if err != nil {
-		return nil, reqInf, err, statusCode
+		return nil, reqInf, err
 	}
 	defer log.Close(resp.Body, "unable to close response")
 	var topResp tc.TopologyResponse
 	if err = json.NewDecoder(resp.Body).Decode(&topResp); err != nil {
-		return nil, reqInf, err, statusCode
+		return nil, reqInf, err
 	}
-	return &topResp, reqInf, nil, statusCode
+	return &topResp, reqInf, nil
 }
 
 // GetTopologies returns all topologies.
-func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error, int) {
-	var statusCode = http.StatusNotAcceptable
+func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, ApiTopologies, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if resp != nil {
-		statusCode = resp.StatusCode
-	}
 	if err != nil {
-		return nil, reqInf, err, statusCode
+		return nil, reqInf, err
 	}
 	defer log.Close(resp.Body, "unable to close response")
 
 	var data tc.TopologiesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err, statusCode
+		return nil, reqInf, err
 	}
 
-	return data.Response, reqInf, nil, statusCode
+	return data.Response, reqInf, nil
 }
 
 // GetTopology returns the given topology by name.
-func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error, int) {
-	var statusCode = http.StatusNotAcceptable
+func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil)
-	if resp != nil {
-		statusCode = resp.StatusCode
-	}
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, reqInf, err, statusCode
+		return nil, reqInf, err
 	}
 	defer log.Close(resp.Body, "unable to close response")
 
 	var data tc.TopologiesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err, statusCode
+		return nil, reqInf, err
 	}
 
 	if len(data.Response) == 1 {
-		return &data.Response[0], reqInf, nil, statusCode
+		return &data.Response[0], reqInf, nil
 	}
-	return nil, reqInf, fmt.Errorf("expected one topology in response, instead got: %+v", data.Response), statusCode
+	return nil, reqInf, fmt.Errorf("expected one topology in response, instead got: %+v", data.Response)
 }
 
 // UpdateTopology updates a Topology by name.
-func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyResponse, ReqInf, error, int) {
-	var (
-		statusCode = http.StatusNotAcceptable
-		remoteAddr net.Addr
-	)
+func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyResponse, ReqInf, error) {
+	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(t)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, reqInf, err, statusCode
+		return nil, reqInf, err
 	}
 	route := fmt.Sprintf("%s?name=%s", ApiTopologies, name)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
-	if resp != nil {
-		statusCode = resp.StatusCode
-	}
 	if err != nil {
-		return nil, reqInf, err, statusCode
+		return nil, reqInf, err
 	}
 	defer log.Close(resp.Body, "unable to close response")
 	var response = new(tc.TopologyResponse)
 	err = json.NewDecoder(resp.Body).Decode(response)
-	return response, reqInf, err, statusCode
+	return response, reqInf, err
 }
 
 // DeleteTopology deletes the given topology by name.
-func (to *Session) DeleteTopology(name string) (tc.Alerts, ReqInf, error, int) {
-	var statusCode = http.StatusNotAcceptable
+func (to *Session) DeleteTopology(name string) (tc.Alerts, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodDelete, reqUrl, nil)
-	if resp != nil {
-		statusCode = resp.StatusCode
-	}
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err, statusCode
+		return tc.Alerts{}, reqInf, err
 	}
 	defer log.Close(resp.Body, "unable to close response")
 	var alerts tc.Alerts
 	if err = json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return tc.Alerts{}, reqInf, err, statusCode
+		return tc.Alerts{}, reqInf, err
 	}
-	return alerts, reqInf, nil, statusCode
+	return alerts, reqInf, nil
 }
