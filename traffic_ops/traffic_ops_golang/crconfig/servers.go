@@ -23,12 +23,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 const RouterTypeName = "CCR"
@@ -99,12 +100,15 @@ type ServerUnion struct {
 	SecureAPIPort *string
 }
 
+type ServerAndHost struct {
+	Server ServerUnion
+	Host string
+}
+
 const DefaultWeightMultiplier = 1000.0
 const DefaultWeight = 0.999
 
 func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
-	servers := map[string]ServerUnion{}
-
 	serverParams, err := getServerParams(cdn, tx)
 	if err != nil {
 		return nil, errors.New("Error getting server params: " + err.Error())
@@ -112,87 +116,74 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 
 	// TODO select deliveryservices as array?
 	q := `
-select s.host_name, 
-       cg.name as cachegroup, 
-       concat(s.host_name, '.', s.domain_name) as fqdn, 
-       s.xmpp_id as hashid, 
-       s.https_port, 
-       s.interface_name, 
-       s.ip_address_is_service,
-       s.ip6_address_is_service,
-       s.ip_address,
-       s.ip6_address, 
-       s.tcp_port, 
-       p.name as profile_name, 
-       cast(p.routing_disabled as int), 
-       st.name as status, 
-       t.name as type
-from server as s
-inner join cachegroup as cg ON cg.id = s.cachegroup
-inner join type as t on t.id = s.type
-inner join profile as p ON p.id = s.profile
-inner join status as st ON st.id = s.status
-where cdn_id = (select id from cdn where name = $1)
-and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
-`
+	SELECT
+		s.id
+		s.host_name,
+		cg.name as cachegroup,
+		concat(s.host_name, '.', s.domain_name) AS fqdn,
+		s.xmpp_id AS hashid,
+		s.https_port,
+		s.tcp_port,
+		p.name AS profile_name,
+		cast(p.routing_disabled AS int),
+		st.name AS status,
+		t.name AS type
+	FROM server AS s
+	INNER JOIN cachegroup AS cg ON cg.id = s.cachegroup
+	INNER JOIN type AS t on t.id = s.type
+	INNER JOIN profile AS p ON p.id = s.profile
+	INNER JOIN status AS st ON st.id = s.status
+	WHERE cdn_id = (SELECT id FROM cdn WHERE name = $1)
+	AND (st.name = 'REPORTED' OR st.name = 'ONLINE' OR st.name = 'ADMIN_DOWN')
+	`
 	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("Error querying servers: " + err.Error())
 	}
 	defer rows.Close()
 
+	servers := map[int]ServerAndHost{}
+
 	for rows.Next() {
-		port := sql.NullInt64{}
-		ip6 := sql.NullString{}
-		hashId := sql.NullString{}
-		httpsPort := sql.NullInt64{}
+		var port sql.NullInt64
+		var hashId sql.NullString
+		var httpsPort sql.NullInt64
 
-		ipIsService := false
-		ip6IsService := false
+		var s ServerAndHost
 
-		s := ServerUnion{}
-
-		host := ""
-		status := ""
-		if err := rows.Scan(&host, &s.CacheGroup, &s.Fqdn, &hashId, &httpsPort, &s.InterfaceName, &ipIsService, &ip6IsService, &s.Ip, &ip6, &port, &s.Profile, &s.RoutingDisabled, &status, &s.ServerType); err != nil {
+		var status string
+		var id int
+		if err := rows.Scan(&id, &s.Host, &s.Server.CacheGroup, &s.Server.Fqdn, &hashId, &httpsPort, &port, &s.Server.Profile, &s.Server.RoutingDisabled, &status, &s.Server.ServerType); err != nil {
 			return nil, errors.New("Error scanning server: " + err.Error())
 		}
-		if !ipIsService {
-			s.Ip = util.StrPtr("")
-		}
-		if !ip6IsService {
-			s.Ip6 = util.StrPtr("")
-		} else {
-			s.Ip6 = &ip6.String // Don't check valid, assign empty string if null
-		}
 
-		s.LocationId = s.CacheGroup
+		s.Server.LocationId = s.Server.CacheGroup
 
 		serverStatus := tc.CRConfigServerStatus(status)
-		s.ServerStatus = &serverStatus
+		s.Server.ServerStatus = &serverStatus
 		if port.Valid {
 			i := int(port.Int64)
-			s.Port = &i
+			s.Server.Port = &i
 		}
 
 		if hashId.String != "" {
-			s.HashId = &hashId.String
+			s.Server.HashId = &hashId.String
 		} else {
-			s.HashId = &host
+			s.Server.HashId = &s.Host
 		}
 
 		if httpsPort.Valid {
 			i := int(httpsPort.Int64)
-			s.HttpsPort = &i
+			s.Server.HttpsPort = &i
 		}
 
-		params, hasParams := serverParams[host]
+		params, hasParams := serverParams[s.Host]
 		if hasParams && params.APIPort != nil {
-			s.APIPort = params.APIPort
+			s.Server.APIPort = params.APIPort
 		}
 
 		if hasParams && params.SecureAPIPort != nil {
-			s.SecureAPIPort = params.SecureAPIPort
+			s.Server.SecureAPIPort = params.SecureAPIPort
 		}
 
 		weightMultiplier := DefaultWeightMultiplier
@@ -204,15 +195,40 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 			weight = *params.Weight
 		}
 		hashCount := int(weight * weightMultiplier)
-		s.HashCount = &hashCount
+		s.Server.HashCount = &hashCount
 
-		servers[host] = s
+		servers[id] = s
 	}
 	if err := rows.Err(); err != nil {
 		return nil, errors.New("Error iterating router param rows: " + err.Error())
 	}
 
-	return servers, nil
+	hostToServerMap := make(map[string]ServerUnion, len(servers))
+	for id, server := range servers {
+		infs, err := dbhelpers.GetServerInterfaces(id, tx)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting interfaces for serve '%s' (#%d): %v", server.Host, id, err)
+		}
+
+		legacyNet, err := tc.InterfaceInfoToLegacyInterfaces(infs)
+		if err != nil {
+			return nil, fmt.Errorf("Error converting interfaces to legacy data for server '%s' (#%d): %v", server.Host, id, err)
+		}
+
+		server.Server.Ip = legacyNet.IPAddress
+		server.Server.Ip6 = legacyNet.IP6Address
+
+		if server.Server.Ip == nil {
+			server.Server.Ip = new(string)
+		}
+		if server.Server.Ip6 == nil {
+			server.Server.Ip6 = new(string)
+		}
+
+		hostToServerMap[server.Host] = server.Server
+	}
+
+	return hostToServerMap, nil
 }
 
 func getServerDSNames(cdn string, tx *sql.Tx) (map[tc.CacheName][]tc.DeliveryServiceName, error) {
