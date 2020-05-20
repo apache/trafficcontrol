@@ -219,6 +219,7 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 			} else {
 				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
 				legacyDetails.IPGateway = gateway
+				legacyDetails.IPNetmask = new(string)
 			}
 
 			if intFace.MTU != nil {
