@@ -21,9 +21,11 @@ package v3
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 type topologyTestCase struct {
@@ -128,6 +130,16 @@ func DeleteTestTopologies(t *testing.T) {
 		delResp, _, err := TOSession.DeleteTopology(top.Name)
 		if err != nil {
 			t.Fatalf("cannot DELETE topology: %v - %v", err, delResp)
+		}
+		deleteLog, _, err := TOSession.GetLogsByLimit(1)
+		if err != nil {
+			t.Fatalf("unable to get latest audit log entry")
+		}
+		if len(deleteLog) != 1 {
+			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog))
+		}
+		if !strings.Contains(*deleteLog[0].Message, top.Name) {
+			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, *deleteLog[0].Message)
 		}
 
 		topology, _, err := TOSession.GetTopology(top.Name)
