@@ -271,6 +271,21 @@ FOR EACH ROW EXECUTE PROCEDURE on_delete_current_timestamp_last_updated('to_exte
 
 CREATE TRIGGER on_delete_current_timestamp
 AFTER DELETE
+ON topology
+FOR EACH ROW EXECUTE PROCEDURE on_delete_current_timestamp_last_updated('topology');
+
+CREATE TRIGGER on_delete_current_timestamp
+AFTER DELETE
+ON topology_cachegroup
+FOR EACH ROW EXECUTE PROCEDURE on_delete_current_timestamp_last_updated('topology_cachegroup');
+
+CREATE TRIGGER on_delete_current_timestamp
+AFTER DELETE
+ON topology_cachegroup_parents
+FOR EACH ROW EXECUTE PROCEDURE on_delete_current_timestamp_last_updated('topology_cachegroup_parents');
+
+CREATE TRIGGER on_delete_current_timestamp
+AFTER DELETE
 ON type
 FOR EACH ROW EXECUTE PROCEDURE on_delete_current_timestamp_last_updated('type');
 
@@ -337,6 +352,9 @@ create index steering_target_last_updated_idx on steering_target (last_updated D
 create index tenant_last_updated_idx on tenant (last_updated DESC NULLS LAST);
 create index tm_user_last_updated_idx on tm_user (last_updated DESC NULLS LAST);
 create index to_extension_last_updated_idx on to_extension (last_updated DESC NULLS LAST);
+create index topology_last_updated_idx on topology_cachegroup (last_updated DESC NULLS LAST);
+create index topology_cachegroup_last_updated_idx on topology_cachegroup (last_updated DESC NULLS LAST);
+create index topology_cachegroup_parents_last_updated_idx on topology_cachegroup_parents (last_updated DESC NULLS LAST);
 create index type_last_updated_idx on type (last_updated DESC NULLS LAST);
 create index user_role_last_updated_idx on user_role (last_updated DESC NULLS LAST);
 create index server_capability_last_updated_idx on server_capability (last_updated DESC NULLS LAST);
@@ -390,6 +408,9 @@ DROP TRIGGER IF EXISTS on_delete_current_timestamp on status;
 DROP TRIGGER IF EXISTS on_delete_current_timestamp on steering_target;
 DROP TRIGGER IF EXISTS on_delete_current_timestamp on tenant;
 DROP TRIGGER IF EXISTS on_delete_current_timestamp on tm_user;
+DROP TRIGGER IF EXISTS on_delete_current_timestamp on topology;
+DROP TRIGGER IF EXISTS on_delete_current_timestamp on topology_cachegroup;
+DROP TRIGGER IF EXISTS on_delete_current_timestamp on topology_cachegroup_parents;
 DROP TRIGGER IF EXISTS on_delete_current_timestamp on to_extension;
 DROP TRIGGER IF EXISTS on_delete_current_timestamp on type;
 DROP TRIGGER IF EXISTS on_delete_current_timestamp on user_role;
@@ -439,6 +460,9 @@ DROP INDEX IF EXISTS steering_target_last_updated_idx;
 DROP INDEX IF EXISTS tenant_last_updated_idx;
 DROP INDEX IF EXISTS tm_user_last_updated_idx;
 DROP INDEX IF EXISTS to_extension_last_updated_idx;
+DROP INDEX IF EXISTS topology_last_updated_idx;
+DROP INDEX IF EXISTS topology_cachegroup_last_updated_idx;
+DROP INDEX IF EXISTS topology_cachegroup_parents_last_updated_idx;
 DROP INDEX IF EXISTS type_last_updated_idx;
 DROP INDEX IF EXISTS user_role_last_updated_idx;
 DROP INDEX IF EXISTS server_capability_last_updated_idx;
