@@ -30,8 +30,8 @@ import (
  * under the License.
  */
 
-// ServersResponsev3 is the format of a response to a GET request for /servers.
-type ServersResponsev3 struct {
+// ServersV3Response is the format of a response to a GET request for /servers.
+type ServersV3Response struct {
 	Response []ServerNullable `json:"response"`
 	Summary  struct {
 		Count uint64 `json:"count"`
