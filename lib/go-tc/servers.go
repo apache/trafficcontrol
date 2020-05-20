@@ -227,6 +227,12 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 			}
 
 			legacyDetails.InterfaceName = &intFace.Name
+
+			// we can jump out here since servers can only legally have one
+			// IPv4 and one IPv6 service address
+			if legacyDetails.IPAddress != nil && *legacyDetails.IPAddress != "" && legacyDetails.IP6Address != nil && *legacyDetails.IP6Address != "" {
+				return legacyDetails, nil
+			}
 		}
 	}
 
