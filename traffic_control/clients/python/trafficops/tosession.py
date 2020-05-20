@@ -21,6 +21,8 @@ Requires Python Version >= 3.6
 # Core Modules
 import logging
 import sys
+from requests import Response
+from typing import Any, Dict, List, Tuple, Union
 
 # Third-party Modules
 import munch
@@ -1863,6 +1865,53 @@ class TOSession(RestApiSession):
 		:param extension_id: The extension id to delete
 		:type extension_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	#
+	# Topologies
+	#
+	@api_request('post', 'topologies', ('3.0',))
+	def create_topology(self, data: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
+		"""
+		:ref:`to-api-topologies`
+		:param data: The Topology data to use for Topology creation.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('get', 'topologies', ('3.0',))
+	def create_topology(self, data: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
+		"""
+		:ref:`to-api-topologies`
+		Get Topologies.
+		:ref:`to-api-topologies`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('put', 'topologies', ('3.0',))
+	def update_topologies(self, data: Dict[str, Any]=None, query_params: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
+		"""
+		Update a Topology
+		:ref:`to-api-topologies`
+		:param data: The new values for the Topology
+		:type data: Dict[str, Any]
+		:type query: Dict[str, Any]
+		:param query_params: 'id' is a required parameter, defining the Topology to be replaced.
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'topologies', ('3.0',))
+	def delete_topology(self, query_params: Dict[str, Any]=None) -> Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]:
+		"""
+		Delete a Topology
+		:ref:`to-api-topologies`
+		:param topology_id: The ID of the Topology to delete
+		:type topology_id: int
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 

@@ -103,7 +103,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		for _, dsID := range dsIDs {
 			found := false
 			for _, serverDS := range serverDSes {
-				if serverDS.ID == int(dsID) {
+				if *serverDS.ID == int(dsID) {
 					found = true
 					break
 				}

@@ -39,6 +39,7 @@ type GetDeliveryServiceResponse struct {
 }
 
 // DeliveryServicesResponse ...
+// Deprecated: use DeliveryServicesNullableResponse instead
 type DeliveryServicesResponse struct {
 	Response []DeliveryService `json:"response"`
 	Alerts
@@ -51,40 +52,37 @@ type DeliveryServicesNullableResponse struct {
 }
 
 // CreateDeliveryServiceResponse ...
+// Deprecated: use CreateDeliveryServiceNullableResponse instead
 type CreateDeliveryServiceResponse struct {
-	Response []DeliveryService      `json:"response"`
-	Alerts   []DeliveryServiceAlert `json:"alerts"`
+	Response []DeliveryService `json:"response"`
+	Alerts
 }
 
 // CreateDeliveryServiceNullableResponse ...
 type CreateDeliveryServiceNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
-	Alerts   []DeliveryServiceAlert    `json:"alerts"`
+	Alerts
 }
 
 // UpdateDeliveryServiceResponse ...
+// Deprecated: use UpdateDeliveryServiceNullableResponse instead
 type UpdateDeliveryServiceResponse struct {
-	Response []DeliveryService      `json:"response"`
-	Alerts   []DeliveryServiceAlert `json:"alerts"`
+	Response []DeliveryService `json:"response"`
+	Alerts
 }
 
 // UpdateDeliveryServiceNullableResponse ...
 type UpdateDeliveryServiceNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
-	Alerts   []DeliveryServiceAlert    `json:"alerts"`
-}
-
-// DeliveryServiceResponse ...
-type DeliveryServiceResponse struct {
-	Response DeliveryService        `json:"response"`
-	Alerts   []DeliveryServiceAlert `json:"alerts"`
+	Alerts
 }
 
 // DeleteDeliveryServiceResponse ...
 type DeleteDeliveryServiceResponse struct {
-	Alerts []DeliveryServiceAlert `json:"alerts"`
+	Alerts
 }
 
+// Deprecated: use DeliveryServiceNullable instead
 type DeliveryService struct {
 	DeliveryServiceV13
 	MaxOriginConnections      int      `json:"maxOriginConnections" db:"max_origin_connections"`
@@ -481,12 +479,6 @@ type DeliveryServiceMatch struct {
 	Pattern   string      `json:"pattern"`
 }
 
-// DeliveryServiceAlert ...
-type DeliveryServiceAlert struct {
-	Level string `json:"level"`
-	Text  string `json:"text"`
-}
-
 // DeliveryServiceStateResponse ...
 type DeliveryServiceStateResponse struct {
 	Response DeliveryServiceState `json:"response"`
@@ -632,10 +624,10 @@ type AssignedDsResponse struct {
 // DeliveryServiceSafeUpdateRequest represents a request to update the "safe" fields of a
 // Delivery Service.
 type DeliveryServiceSafeUpdateRequest struct {
-	DisplayName *string `json:"displayName`
+	DisplayName *string `json:"displayName"`
 	InfoURL     *string `json:"infoUrl"`
 	LongDesc    *string `json:"longDesc"`
-	LongDesc1   *string `json:"longDesc1`
+	LongDesc1   *string `json:"longDesc1"`
 }
 
 // Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
