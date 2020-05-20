@@ -426,7 +426,7 @@ func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroup
 	return cacheGroupMap, nil, nil, http.StatusOK
 }
 
-func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) { {
+func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -487,7 +487,6 @@ func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, 
 		s.Fallbacks = &cgfs
 		cacheGroups = append(cacheGroups, s)
 	}
-
 	return cacheGroups, nil, nil, http.StatusOK, &maxTime
 }
 

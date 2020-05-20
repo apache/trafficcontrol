@@ -182,16 +182,15 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 			}
 		}
 		start := time.Now()
-
-		_, ok := r.Header[rfc.IfModifiedSince]
-		if ok {
-			if iw.Code == http.StatusNotModified {
-				imsType = IMSHIT
-			} else {
-				imsType = IMSMISS
-			}
-		}
 		defer func() {
+			_, ok := r.Header[rfc.IfModifiedSince]
+			if ok {
+				if iw.Code == http.StatusNotModified {
+					imsType = IMSHIT
+				} else {
+					imsType = IMSMISS
+				}
+			}
 			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %v %s`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), r.Header.Get(RouteID), imsType)
 		}()
 		h.ServeHTTP(iw, r)
