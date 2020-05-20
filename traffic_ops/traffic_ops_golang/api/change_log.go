@@ -68,7 +68,7 @@ func CreateChangeLog(level string, action string, i Identifier, user *auth.Curre
 func CreateChangeLogBuildMsg(level string, action string, user *auth.CurrentUser, tx *sql.Tx, objType string, auditName string, keys map[string]interface{}) error {
 	keyStr := "{ "
 	for key, value := range keys {
-		keyStr += key + ":" + fmt.Sprintf("%v", value) + " "
+		keyStr += key + ": " + fmt.Sprintf("%v", value) + " "
 	}
 	keyStr += "}"
 	id, ok := keys["id"]
