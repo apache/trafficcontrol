@@ -1251,11 +1251,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/volume\.config/?$`, atsprofile.GetVolume, auth.PrivLevelOperations, Authenticated, nil, 792704719, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/{file}/?$`, atsprofile.GetUnknown, auth.PrivLevelOperations, Authenticated, nil, 1651257268, perlBypass},
 
-		{api.Version{1, 1}, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/parent\.config/?(\.json)?$`, atsserver.GetParentDotConfig, auth.PrivLevelOperations, Authenticated, nil, 645056066, perlBypass},
-		{api.Version{1, 1}, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/remap\.config/?(\.json)?$`, atsserver.GetServerConfigRemap, auth.PrivLevelOperations, Authenticated, nil, 2038454899, perlBypass},
-
 		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/cache\.config/?(\.json)?$`, atsserver.GetCacheDotConfig, auth.PrivLevelOperations, Authenticated, nil, 34686861, perlBypass},
-		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/ip_allow\.config/?(\.json)?$`, atsserver.GetIPAllowDotConfig, auth.PrivLevelOperations, Authenticated, nil, 724651786, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/hosting\.config/?(\.json)?$`, atsserver.GetHostingDotConfig, auth.PrivLevelOperations, Authenticated, nil, 1387459113, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/packages/?(\.json)?$`, atsserver.GetPackages, auth.PrivLevelOperations, Authenticated, nil, 245024839, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/chkconfig/?(\.json)?$`, atsserver.GetChkconfig, auth.PrivLevelOperations, Authenticated, nil, 1012457987, perlBypass},

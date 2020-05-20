@@ -37,6 +37,38 @@ import (
 // RemapDotConfigIncludeInactiveDeliveryServices is whether delivery services with 'active' false are included in the remap.config.
 const RemapDotConfigIncludeInactiveDeliveryServices = true
 
+func GetServerParams(tx *sql.Tx, serverName tc.CacheName, configFile string) (map[string][]string, error) {
+	qry := `
+	SELECT
+		pa.name,
+		pa.value
+	FROM
+		parameter pa
+		JOIN profile_parameter pp ON pp.parameter = pa.id
+		JOIN profile pr ON pr.id = pp.profile
+		JOIN server s ON s.profile = pr.id
+	WHERE
+		s.host_name = $1
+		AND pa.config_file = $2
+	`
+	rows, err := tx.Query(qry, serverName, configFile)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	params := map[string][]string{}
+	for rows.Next() {
+		name := ""
+		val := ""
+		if err := rows.Scan(&name, &val); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		params[name] = append(params[name], val)
+	}
+	return params, nil
+}
+
 // GetProfilesParamData returns a map[profileID][paramName]paramVal
 func GetProfilesParamData(tx *sql.Tx, profileIDs []int, configFile string) (map[int]map[string]string, error) {
 	qry := `
