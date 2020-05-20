@@ -81,8 +81,8 @@ type ServersV3DetailResponse struct {
 	Alerts
 }
 
-// ServerIpAddress is the data associated with a server's interface's IP address.
-type ServerIpAddress struct {
+// ServerIPAddress is the data associated with a server's interface's IP address.
+type ServerIPAddress struct {
 	Address        string  `json:"address" db:"address"`
 	Gateway        *string `json:"gateway" db:"gateway"`
 	ServiceAddress bool    `json:"serviceAddress" db:"service_address"`
@@ -90,7 +90,7 @@ type ServerIpAddress struct {
 
 // ServerInterfaceInfo is the data associated with a server's interface.
 type ServerInterfaceInfo struct {
-	IPAddresses  []ServerIpAddress `json:"ipAddresses" db:"ip_addresses"`
+	IPAddresses  []ServerIPAddress `json:"ipAddresses" db:"ip_addresses"`
 	MaxBandwidth *uint64           `json:"maxBandwidth" db:"max_bandwidth"`
 	Monitor      bool              `json:"monitor" db:"monitor"`
 	MTU          *uint64           `json:"mtu" db:"mtu"`
@@ -143,7 +143,7 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 	}
 	iface.Name = *lid.InterfaceName
 
-	var ips []ServerIpAddress
+	var ips []ServerIPAddress
 	if lid.IPAddress != nil && *lid.IPAddress != "" {
 		if lid.IPGateway != nil && *lid.IPGateway == "" {
 			lid.IPGateway = nil
@@ -159,7 +159,7 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 			ipStr = fmt.Sprintf("%s/%d", ipStr, cidr)
 		}
 
-		ips = append(ips, ServerIpAddress{
+		ips = append(ips, ServerIPAddress{
 			Address:        ipStr,
 			Gateway:        lid.IPGateway,
 			ServiceAddress: ipv4IsService,
@@ -170,7 +170,7 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 		if lid.IP6Gateway != nil && *lid.IP6Gateway == "" {
 			lid.IP6Gateway = nil
 		}
-		ips = append(ips, ServerIpAddress{
+		ips = append(ips, ServerIPAddress{
 			Address:        *lid.IP6Address,
 			Gateway:        lid.IP6Gateway,
 			ServiceAddress: ipv6IsService,

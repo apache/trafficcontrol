@@ -440,8 +440,8 @@ func TestV3Validations(t *testing.T) {
 	defer db.Close()
 
 	goodInterface := tc.ServerInterfaceInfo{
-		IPAddresses: []tc.ServerIpAddress{
-			tc.ServerIpAddress{
+		IPAddresses: []tc.ServerIPAddress{
+			tc.ServerIPAddress{
 				Address:        "127.0.0.1/32",
 				Gateway:        nil,
 				ServiceAddress: true,
@@ -524,7 +524,7 @@ func TestV3Validations(t *testing.T) {
 	}
 
 	badIface.MTU = nil
-	badIface.IPAddresses = []tc.ServerIpAddress{}
+	badIface.IPAddresses = []tc.ServerIPAddress{}
 	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
 
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
@@ -551,12 +551,12 @@ func TestV3Validations(t *testing.T) {
 	}
 
 	badIface = goodInterface
-	badIP := tc.ServerIpAddress{
+	badIP := tc.ServerIPAddress{
 		Address:        "127.0.0.1/32",
 		Gateway:        nil,
 		ServiceAddress: false,
 	}
-	badIface.IPAddresses = []tc.ServerIpAddress{badIP}
+	badIface.IPAddresses = []tc.ServerIPAddress{badIP}
 	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
 
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
@@ -582,7 +582,7 @@ func TestV3Validations(t *testing.T) {
 	}
 
 	badIface = goodInterface
-	badIface.IPAddresses = append(badIface.IPAddresses, tc.ServerIpAddress{
+	badIface.IPAddresses = append(badIface.IPAddresses, tc.ServerIPAddress{
 		Address:        "1.2.3.4/1",
 		Gateway:        nil,
 		ServiceAddress: true,
