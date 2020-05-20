@@ -43,6 +43,16 @@ import (
 // This should be used by all Traffic Ops routing, and is recommended for use by plugins.
 const DefaultRequestTimeout = time.Second * time.Duration(60)
 
+// These are the different status values associated with an If-Modified-Since(IMS) request
+// NONIMS when the request doesn't contain the If-Modified-Since header
+const NONIMS = "NON_IMS"
+
+// IMSHIT when a 304(Not Modified) was returned
+const IMSHIT = "IMS_HIT"
+
+// IMSMISS when anything other than a 304 was returned, meaning that something changed after the If-Modified-Since time of the request
+const IMSMISS = "IMS_MISS"
+
 // ServerName is the name and version of Traffic Ops.
 // Things that print the server application name and version, for example in headers or logs, should use this.
 var ServerName = "traffic_ops_golang" + "/" + about.About.Version
@@ -158,6 +168,7 @@ func GetWrapAccessLog(secret string) Middleware {
 // This is not a Middleware, because it needs the secret as a parameter. For a Middleware, see GetWrapAccessLog.
 func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var imsType = NONIMS
 		iw := &util.Interceptor{W: w}
 		user := "-"
 		cookie, err := r.Cookie(tocookie.Name)
@@ -168,8 +179,17 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 			}
 		}
 		start := time.Now()
+
+		_, ok := r.Header[rfc.IfModifiedSince]
+		if ok {
+			if iw.Code == http.StatusNotModified {
+				imsType = IMSHIT
+			} else {
+				imsType = IMSMISS
+			}
+		}
 		defer func() {
-			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v"`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
+			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %s`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), imsType)
 		}()
 		h.ServeHTTP(iw, r)
 	}

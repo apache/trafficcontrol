@@ -108,7 +108,7 @@ func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, paginatio
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from server_capability sc ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='server_capability') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='server_capability') as res`
 }
 
 func (v *TOServerCapability) Create() (error, error, int) { return api.GenericCreateNameBasedID(v) }

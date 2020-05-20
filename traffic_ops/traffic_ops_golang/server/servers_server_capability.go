@@ -133,7 +133,7 @@ func (v *TOServerServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pag
 		SELECT max(sc.last_updated) as t from server_server_capability sc
 JOIN server s ON sc.server = s.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='server_server_capability') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='server_server_capability') as res`
 }
 
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {

@@ -111,7 +111,7 @@ func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interfa
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
 
-	runSecond, maxTime := ims.MakeFirstQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -148,7 +148,7 @@ func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) 
 	LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
 	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservice_request') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_request') as res`
 }
 
 func selectDeliveryServiceRequestsQuery() string {

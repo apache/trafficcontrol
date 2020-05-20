@@ -166,7 +166,7 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	runSecond, maxTime := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -214,7 +214,7 @@ LEFT JOIN coordinate c ON o.coordinate = c.id
 LEFT JOIN profile p ON o.profile = p.id
 LEFT JOIN tenant t ON o.tenant = t.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='origin') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='origin') as res`
 }
 
 func selectQuery() string {

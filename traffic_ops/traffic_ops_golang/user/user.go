@@ -188,7 +188,7 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "u.tenant_id", tenantIDs)
 
-	runSecond, maxTime := ims.MakeFirstQuery(this.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, "", ""))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(this.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, "", ""))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -228,7 +228,7 @@ func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) 
 		LEFT JOIN tenant t ON u.tenant_id = t.id
 		LEFT JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='tm_user') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='tm_user') as res`
 }
 
 func (user *TOUser) privCheck() (error, error, int) {

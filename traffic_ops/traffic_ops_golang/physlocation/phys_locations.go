@@ -111,7 +111,7 @@ func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, t
 		SELECT max(pl.last_updated) as t FROM phys_location pl
 JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='phys_location') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='phys_location') as res`
 }
 
 func (pl *TOPhysLocation) Update() (error, error, int) { return api.GenericUpdate(pl) }

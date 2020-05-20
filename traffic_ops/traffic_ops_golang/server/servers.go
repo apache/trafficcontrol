@@ -237,7 +237,7 @@ JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='server') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }
 
 func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.ServerNullable, error, error, int, *time.Time) {
@@ -289,7 +289,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	servers := []tc.ServerNullable{}
-	runSecond, maxTime := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")

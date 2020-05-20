@@ -65,7 +65,7 @@ func (v *TOParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tabl
 LEFT JOIN profile_parameter pp ON p.id = pp.parameter
 LEFT JOIN profile pr ON pp.profile = pr.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='` + tableName + `') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
 func (v *TOParameter) NewReadObj() interface{} { return &tc.ParameterNullable{} }
@@ -141,7 +141,7 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	runSecond, maxTime := ims.MakeFirstQuery(param.APIInfo().Tx, h, queryValues, param.SelectMaxLastUpdatedQuery(where, orderBy, pagination, "parameter"))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(param.APIInfo().Tx, h, queryValues, param.SelectMaxLastUpdatedQuery(where, orderBy, pagination, "parameter"))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")

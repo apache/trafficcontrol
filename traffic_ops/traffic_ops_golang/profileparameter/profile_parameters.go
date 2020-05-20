@@ -165,7 +165,7 @@ func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(where, orderBy, paginatio
 JOIN profile prof ON prof.id = pp.profile
 JOIN parameter param ON param.id = pp.parameter ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='profile_parameter') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='profile_parameter') as res`
 }
 
 func selectQuery() string {

@@ -914,7 +914,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	runSecond, maxTime := ims.MakeFirstQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, "", pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, "", pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -964,7 +964,7 @@ func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) 
 	LEFT JOIN profile ON ds.profile = profile.id
 	LEFT JOIN tenant ON ds.tenant_id = tenant.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservice') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }
 
 func getOldHostName(id int, tx *sql.Tx) (string, error) {

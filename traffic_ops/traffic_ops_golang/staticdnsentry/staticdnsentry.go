@@ -130,7 +130,7 @@ JOIN type as tp on sde.type = tp.id
 LEFT JOIN cachegroup as cg ON sde.cachegroup = cg.id
 JOIN deliveryservice as ds on sde.deliveryservice = ds.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='staticdnsentry') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='staticdnsentry') as res`
 }
 
 func insertQuery() string {

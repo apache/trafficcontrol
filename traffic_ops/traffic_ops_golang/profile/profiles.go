@@ -127,7 +127,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
-	runSecond, maxTime := ims.MakeFirstQuery(prof.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(prof.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -178,7 +178,7 @@ func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) 
 		SELECT max(prof.last_updated) as t FROM profile prof
 LEFT JOIN cdn c ON prof.cdn = c.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='profile') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='profile') as res`
 }
 
 func selectProfilesQuery() string {

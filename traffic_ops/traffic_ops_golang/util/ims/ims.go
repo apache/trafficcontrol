@@ -7,6 +7,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
+	"net/http"
 	"time"
 )
 
@@ -34,8 +35,8 @@ type LatestTimestamp struct {
 	LatestTime *tc.TimeNoMod `json:"latestTime" db:"max"`
 }
 
-// MakeFirstQuery for components that DO NOT implement the CRUDER interface
-func MakeFirstQuery(tx *sqlx.Tx, h map[string][]string, queryValues map[string]interface{}, query string) (bool, time.Time) {
+// TryIfModifiedSinceQuery for components that DO NOT implement the CRUDER interface
+func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]interface{}, query string) (bool, time.Time) {
 	var maxTime time.Time
 	ims := []string{}
 	runSecond := true

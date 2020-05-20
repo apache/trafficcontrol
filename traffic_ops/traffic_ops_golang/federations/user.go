@@ -53,7 +53,7 @@ func (v *TOUsers) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableNam
 RIGHT JOIN tm_user u ON fedu.tm_user = u.id
 JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='federation_tmuser') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='federation_tmuser') as res`
 }
 
 func (v *TOUsers) NewReadObj() interface{} { return &tc.FederationUser{} }

@@ -234,7 +234,7 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 	if err != nil {
 		log.Warnf("Error getting the max last updated query %v", err)
 	}
-	runSecond, maxTime := ims.MakeFirstQuery(tx, h, map[string]interface{}{}, query1)
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, map[string]interface{}{}, query1)
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -314,7 +314,7 @@ AND s.server = ANY(:serverids)
 	selectStmt += ` LIMIT ` + limit + ` OFFSET ` + offset + ` ROWS`
 	if getMaxQuery {
 		return selectStmt + `UNION ALL
-		select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservice_server') as res`, nil
+		select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`, nil
 	}
 	return selectStmt, nil
 }
@@ -688,7 +688,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	query := deliveryservice.GetDSSelectQuery() + where + orderBy + pagination
 	queryValues["server"] = dss.APIInfo().Params["id"]
 
-	runSecond, maxTime := ims.MakeFirstQuery(dss.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(dss.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -719,7 +719,7 @@ func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) 
 	return `SELECT max(t) from (
 		SELECT max(dss.last_updated) as t from deliveryservice_server dss ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservice_server') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`
 }
 
 type DSInfo struct {

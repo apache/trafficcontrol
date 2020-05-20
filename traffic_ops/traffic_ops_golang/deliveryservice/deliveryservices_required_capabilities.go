@@ -204,7 +204,7 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
-	runSecond, maxTime := ims.MakeFirstQuery(rc.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQueryRC(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(rc.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQueryRC(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -238,7 +238,7 @@ func selectMaxLastUpdatedQueryRC(where string, orderBy string, pagination string
 		SELECT max(rc.last_updated) as t FROM deliveryservices_required_capability rc
 	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='deliveryservices_required_capability') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservices_required_capability') as res`
 }
 
 // Delete implements the api.CRUDer interface.

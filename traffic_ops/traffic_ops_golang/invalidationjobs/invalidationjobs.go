@@ -199,7 +199,7 @@ func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
 	JOIN tm_user u ON job.job_user = u.id
 	JOIN deliveryservice ds  ON job.job_deliveryservice = ds.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='job') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='job') as res`
 }
 
 // Used by GET requests to `/jobs`, simply returns a filtered list of
@@ -231,7 +231,7 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 	}
 	queryValues["tenants"] = pq.Array(accessibleTenants)
 
-	runSecond, maxTime := ims.MakeFirstQuery(job.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(job.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")

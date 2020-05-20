@@ -26,7 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/grove/web"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	ims2 "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+	ims "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"time"
 
@@ -125,24 +125,23 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orderBy string, pagination string, queryValues map[string]interface{}) (bool, time.Time) {
+func TryIfModifiedSinceQuery(val GenericReader, h http.Header, where string, orderBy string, pagination string, queryValues map[string]interface{}) (bool, time.Time) {
 	var max time.Time
-	ims := []string{}
+	imsDate := []string{}
 	runSecond := true
 	if h == nil {
 		return runSecond, max
 	}
-	ims = h[rfc.IfModifiedSince]
-	if len(ims) == 0 {
+	imsDate = h[rfc.IfModifiedSince]
+	if len(imsDate) == 0 {
 		return runSecond, max
 	}
-	if l, ok := web.ParseHTTPDate(ims[0]); !ok {
-		log.Warnf("Date not parsable %v", ims[0])
+	if l, ok := web.ParseHTTPDate(imsDate[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDate[0])
 		return runSecond, max
 	} else {
 		query := val.SelectMaxLastUpdatedQuery(where, orderBy, pagination, val.GetType())
 		rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
-		defer rows.Close()
 		if err != nil {
 			log.Warnf("Couldn't get the max last updated time: %v", err)
 			return runSecond, max
@@ -151,9 +150,10 @@ func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orde
 			runSecond = false
 			return runSecond, max
 		}
+		defer rows.Close()
 		// This should only ever contain one row
 		if rows.Next() {
-			v := &ims2.LatestTimestamp{}
+			v := &ims.LatestTimestamp{}
 			if err = rows.StructScan(v); err != nil || v == nil {
 				log.Warnf("Failed to parse the max time stamp into a struct %v", err)
 				return runSecond, max
@@ -174,12 +174,13 @@ func MakeFirstQuery(val GenericReader, h map[string][]string, where string, orde
 func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	vals := []interface{}{}
 	code := http.StatusOK
+	var maxTime time.Time
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	runSecond, maxTime := MakeFirstQuery(val, h, where, orderBy, pagination, queryValues)
 	if useIMS {
+		runSecond, maxTime := TryIfModifiedSinceQuery(val, h, where, orderBy, pagination, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			code = http.StatusNotModified

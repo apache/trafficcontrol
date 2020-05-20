@@ -395,7 +395,7 @@ func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, 
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
-	runSecond, maxTime := ims.MakeFirstQuery(cg.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(cg.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -453,7 +453,7 @@ INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='cachegroup') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='cachegroup') as res`
 }
 
 //The TOCacheGroup implementation of the Updater interface

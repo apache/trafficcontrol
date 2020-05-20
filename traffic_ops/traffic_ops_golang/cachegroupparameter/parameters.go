@@ -87,7 +87,7 @@ func (cgparam *TOCacheGroupParameter) Read(h http.Header, useIMS bool) ([]interf
 	}
 
 	params := []interface{}{}
-	runSecond, maxTime := ims.MakeFirstQuery(cgparam.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(cgparam.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
@@ -124,7 +124,7 @@ func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) 
 		SELECT max(p.last_updated) as t FROM parameter p
 LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.tab_name='parameter') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='parameter') as res`
 }
 
 func selectQuery() string {

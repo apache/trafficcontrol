@@ -62,7 +62,7 @@ func (cgunparam *TOCacheGroupUnassignedParameter) Read(h http.Header, useIMS boo
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
-	runSecond, maxTime := ims.MakeFirstQuery(cgunparam.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(cgunparam.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
 		if !runSecond {
 			log.Debugln("IMS HIT")
