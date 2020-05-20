@@ -44,6 +44,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - Removed deprecated Traffic Ops Go Client methods.
+- Configuration generation logic in the TO API (v1) for:
+  - `ip_allow.config`
+  - `parent.config`
+  - `remap.config`
 
 ## [4.1.0] - 2020-04-23
 ### Added
