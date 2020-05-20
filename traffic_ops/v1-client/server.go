@@ -172,7 +172,9 @@ func (to *Session) GetServerByID(id int) ([]tc.ServerV1, ReqInf, error) {
 
 // GET a Server by the Server hostname
 func (to *Session) GetServerByHostName(hostName string) ([]tc.ServerV1, ReqInf, error) {
-	url := fmt.Sprintf("%s?hostName=%s", API_v13_Servers, hostName)
+	v := url.Values{}
+	v.Add("hostName", hostName)
+	url := API_v13_Servers + "?" + v.Encode()
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -190,7 +192,10 @@ func (to *Session) GetServerByHostName(hostName string) ([]tc.ServerV1, ReqInf, 
 
 // GetServerDetailsByHostName GETs Servers by the Server hostname.
 func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetailV11, ReqInf, error) {
-	url := fmt.Sprintf("%s?hostName=%s", API_SERVERS_DETAILS, hostName)
+	v := url.Values{}
+	v.Add("hostName", hostName)
+	url := API_SERVERS_DETAILS + "?" + v.Encode()
+
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

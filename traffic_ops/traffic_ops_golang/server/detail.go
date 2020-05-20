@@ -197,25 +197,25 @@ SELECT
 	s.ilo_password,
 	s.ilo_username,
 	ARRAY (
-SELECT ( json_build_object (
-'ipAddresses', ARRAY (
-SELECT ( json_build_object (
-'address', ip_address.address,
-'gateway', ip_address.gateway,
-'service_address', ip_address.service_address
-))
-FROM ip_address
-WHERE ip_address.interface = interface.name
-AND ip_address.server = s.id
-),
-'max_bandwidth', interface.max_bandwidth,
-'monitor', interface.monitor,
-'mtu', COALESCE (interface.mtu, 9000),
-'name', interface.name
-))
-FROM interface
-WHERE interface.server = s.id
-) AS interfaces,
+		SELECT ( json_build_object (
+			'ipAddresses', ARRAY (
+				SELECT ( json_build_object (
+					'address', ip_address.address,
+					'gateway', ip_address.gateway,
+					'service_address', ip_address.service_address
+				))
+				FROM ip_address
+				WHERE ip_address.interface = interface.name
+				AND ip_address.server = s.id
+			),
+			'max_bandwidth', interface.max_bandwidth,
+			'monitor', interface.monitor,
+			'mtu', COALESCE (interface.mtu, 9000),
+			'name', interface.name
+		))
+		FROM interface
+		WHERE interface.server = s.id
+	) AS interfaces,
 	s.mgmt_ip_address,
 	s.mgmt_ip_gateway,
 	s.mgmt_ip_netmask,

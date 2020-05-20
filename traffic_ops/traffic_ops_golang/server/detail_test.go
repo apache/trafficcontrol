@@ -133,6 +133,10 @@ func TestGetDetailServers(t *testing.T) {
 	if len(actualSrvs[0].HardwareInfo) != 3 {
 		t.Fatalf("servers.read expected len(actualSrvs[0].HardwareInfo) == 3, actual = %v", len(actualSrvs[0].HardwareInfo))
 	}
+
+	if !srvInts[0].IpAddresses[0].ServiceAddress {
+		t.Fatalf("srvInts[0].IpAddresses[0].ServiceAddress expected to be true, actual = %v", srvInts[0].IpAddresses[0].ServiceAddress)
+	}
 }
 
 func getMockServerDetails() []tc.ServerDetailV30 {

@@ -189,7 +189,10 @@ func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, er
 
 // GetServerDetailsByHostName GETs Servers by the Server hostname.
 func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetailV30, ReqInf, error) {
-	url := fmt.Sprintf("%s?hostName=%s", API_SERVERS_DETAILS, hostName)
+	v := url.Values{}
+	v.Add("hostName", hostName)
+	url := API_SERVERS_DETAILS + "?" + v.Encode()
+
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

@@ -74,9 +74,7 @@ type ServersV3DetailResponse struct {
 type ServerIpAddress struct {
 	Address        string  `json:"address" db:"address"`
 	Gateway        *string `json:"gateway" db:"gateway"`
-	Interface      string  `json:"interface,omitempty" db:"interface"`
-	Server         uint64  `json:"server,omitempty" db:"server"`
-	ServiceAddress bool    `json:"serviceAddress" db:"service_address"`
+	ServiceAddress bool    `json:"service_address" db:"service_address"`
 }
 
 // ServerInterfaceInfo is the data associated with a server's interface.
@@ -132,6 +130,10 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 		legacyDetails.InterfaceName = &intFace.Name
 
 		for _, addr := range intFace.IpAddresses {
+			if !addr.ServiceAddress {
+				continue
+			}
+
 			address := addr.Address
 			gateway := addr.Gateway
 
