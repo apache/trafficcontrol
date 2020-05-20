@@ -117,7 +117,7 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 	// TODO select deliveryservices as array?
 	q := `
 	SELECT
-		s.id
+		s.id,
 		s.host_name,
 		cg.name as cachegroup,
 		concat(s.host_name, '.', s.domain_name) AS fqdn,
