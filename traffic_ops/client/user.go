@@ -28,13 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// Users gets an array of Users.
-// Deprecated: use GetUsers
-func (to *Session) Users() ([]tc.User, error) {
-	us, _, err := to.GetUsers()
-	return us, err
-}
-
 // GetUsers returns all users accessible from current user
 func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}

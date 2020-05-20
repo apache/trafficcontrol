@@ -31,20 +31,14 @@ gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub \n\
 " > /etc/yum.repos.d/google-chrome.repo
 
 RUN yum update -y
-
 RUN yum install -y java-1.8.0-openjdk git google-chrome-stable bind-utils net-tools
 
 RUN curl -LO https://nodejs.org/dist/v12.16.3/node-v12.16.3-linux-x64.tar.xz
-
-RUN ls -lah
-
 # Use bsdtar, because regular tar doesn't work with Docker
 RUN yum install -y bsdtar
 RUN bsdtar --strip-components 1 -xzvf node-v* -C /usr/local
 RUN npm install -g protractor
 RUN npm install --save-dev jasmine-reporters@^2.0.0
-
-RUN ls -lah /lang/traffic_portal/test/end_to_end
 
 RUN sed -i "s/baseUrl: 'https:\/\/localhost:4443/baseUrl: 'https:\/\/trafficportal.infra.ciab.test:443/" /lang/traffic_portal/test/end_to_end/conf.js
 
@@ -62,9 +56,6 @@ RUN export junit_conf_chrome="\
 			args: ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors', '--disable-extensions', '--whitelisted-ips=\"\"'] \n\
 		},\n\
 " && perl -p -i -e 'BEGIN{ ($e=$ENV{junit_conf_chrome}) =~ s/\\n/\n/g } if (/\bbrowserName\b/../}/) {print $e; $e=""}' conf.js
-
-# debug
-RUN cat conf.js
 
 RUN webdriver-manager clean
 RUN webdriver-manager update

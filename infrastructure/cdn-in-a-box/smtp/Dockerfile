@@ -28,3 +28,6 @@ COPY smtp/run.sh /usr/bin/
 # Unset entrypoint
 ENTRYPOINT []
 CMD ["/usr/bin/env", "run.sh"]
+
+HEALTHCHECK --interval=10s --timeout=1s \
+	CMD bash -c 'source /to-access.sh && [[ "$(wget -qO- https://$SMTP_FQDN/healthz)" == true ]]'

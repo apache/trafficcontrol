@@ -21,8 +21,12 @@ package monitoring
 
 import (
 	"context"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"reflect"
 	"sort"
+	"strconv"
 	"testing"
 	"time"
 
@@ -30,6 +34,71 @@ import (
 	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
+
+func ExpectedGetParams() []parameter.TOParameter {
+	name := "peers.polling.interval"
+	value := "3000"
+	return []parameter.TOParameter{
+		{
+			api.APIInfoImpl{ReqInfo: nil},
+			tc.ParameterNullable{
+				ConfigFile:  nil,
+				ID:          nil,
+				LastUpdated: nil,
+				Name:        &name,
+				Profiles:    nil,
+				Secure:      nil,
+				Value:       &value,
+			},
+		},
+	}
+}
+
+func TestGetProfileWithParams(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	cdn := "mycdn"
+	mock.ExpectBegin()
+	expected := ExpectedGetParams()
+	MockGetParams(mock, expected, cdn)
+	mock.ExpectCommit()
+
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := getConfig(tx, cdn)
+	if err != nil {
+		t.Fatalf("getConfig err expected: nil, actual: %v", err)
+	}
+
+	// Should be just one
+	for k, v := range actual {
+		if *expected[0].Name != k {
+			t.Fatalf("Expected param name %s doesn't match actual %s", *expected[0].Name, k)
+		}
+		if *expected[0].Value != strconv.Itoa(v.(int)) {
+			t.Fatalf("Expected param value %s doesn't match actual %s", *expected[0].Value, v)
+		}
+	}
+}
+
+func MockGetParams(mock sqlmock.Sqlmock, expected []parameter.TOParameter, cdn string) {
+	rows := sqlmock.NewRows([]string{"name", "value"})
+	for _, param := range expected {
+		n := param.Name
+		v := param.Value
+		rows = rows.AddRow(*n, *v)
+	}
+	mock.ExpectQuery("SELECT").WithArgs(tc.MonitorProfilePrefix+"%%", MonitorConfigFile, cdn).WillReturnRows(rows)
+}
 
 func TestGetMonitoringServers(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
@@ -446,7 +515,7 @@ func TestGetConfig(t *testing.T) {
 		rows = rows.AddRow(name, val)
 	}
 
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(tc.MonitorProfilePrefix+"%%", MonitorConfigFile, "mycdn").WillReturnRows(rows)
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
 	tx, err := db.BeginTx(dbCtx, nil)
@@ -454,7 +523,7 @@ func TestGetConfig(t *testing.T) {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlConfig, err := getConfig(tx)
+	sqlConfig, err := getConfig(tx, "mycdn")
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}

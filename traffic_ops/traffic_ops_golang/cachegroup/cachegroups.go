@@ -90,23 +90,28 @@ func (cg *TOCacheGroup) SetID(i int) {
 // Is the cachegroup being used?
 func isUsed(tx *sqlx.Tx, ID int) (bool, error) {
 
+	var usedByTopology bool
 	var usedByServer bool
 	var usedByParent bool
 	var usedBySecondaryParent bool
 	var usedByASN bool
 
 	query := `SELECT
+    (SELECT id FROM topology_cachegroup WHERE topology_cachegroup.cachegroup = (SELECT name FROM cachegroup WHERE id = $1) LIMIT 1) IS NOT NULL,
     (SELECT id FROM server WHERE server.cachegroup = $1 LIMIT 1) IS NOT NULL,
     (SELECT id FROM cachegroup WHERE cachegroup.parent_cachegroup_id = $1 LIMIT 1) IS NOT NULL,
     (SELECT id FROM cachegroup WHERE cachegroup.secondary_parent_cachegroup_id = $1 LIMIT 1) IS NOT NULL,
     (SELECT id FROM asn WHERE cachegroup = $1 LIMIT 1) IS NOT NULL;`
 
-	err := tx.QueryRow(query, ID).Scan(&usedByServer, &usedByParent, &usedBySecondaryParent, &usedByASN)
+	err := tx.QueryRow(query, ID).Scan(&usedByTopology, &usedByServer, &usedByParent, &usedBySecondaryParent, &usedByASN)
 	if err != nil {
 		log.Errorf("received error: %++v from query execution", err)
 		return false, err
 	}
 	//Only return the immediate error
+	if usedByTopology {
+		return true, errors.New("cachegroup is in use by one or more topologies")
+	}
 	if usedByServer {
 		return true, errors.New("cachegroup is in use by one or more servers")
 	}
@@ -381,14 +386,55 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 	return nil
 }
 
-func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroupNullable, error, error, int) {
+	query := SelectQuery() + multipleCacheGroupsWhere()
+	namesPqArray := pq.Array(names)
+	rows, err := Tx.Query(query, namesPqArray)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return nil, userErr, sysErr, errCode
+	}
+	defer log.Close(rows, "unable to close DB connection")
+	cacheGroupMap := map[string]tc.CacheGroupNullable{}
+	for rows.Next() {
+		var s tc.CacheGroupNullable
+		lms := make([]tc.LocalizationMethod, 0)
+		cgfs := make([]string, 0)
+		if err = rows.Scan(
+			&s.ID,
+			&s.Name,
+			&s.ShortName,
+			&s.Latitude,
+			&s.Longitude,
+			pq.Array(&lms),
+			&s.ParentCachegroupID,
+			&s.ParentName,
+			&s.SecondaryParentCachegroupID,
+			&s.SecondaryParentName,
+			&s.Type,
+			&s.TypeID,
+			&s.LastUpdated,
+			pq.Array(&cgfs),
+			&s.FallbackToClosest,
+		); err != nil {
+			return nil, nil, errors.New("cachegroup read: scanning: " + err.Error()), http.StatusInternalServerError
+		}
+		s.LocalizationMethods = &lms
+		s.Fallbacks = &cgfs
+		cacheGroupMap[*s.Name] = s
+	}
+	return cacheGroupMap, nil, nil, http.StatusOK
+}
+
+func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) { {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":        dbhelpers.WhereColumnInfo{"cachegroup.id", api.IsInt},
-		"name":      dbhelpers.WhereColumnInfo{"cachegroup.name", nil},
-		"shortName": dbhelpers.WhereColumnInfo{"cachegroup.short_name", nil},
-		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
+		"id":        {"cachegroup.id", api.IsInt},
+		"name":      {"cachegroup.name", nil},
+		"shortName": {"cachegroup.short_name", nil},
+		"type":      {"cachegroup.type", nil},
+		"topology":  {"topology_cachegroup.topology", nil},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -642,7 +688,16 @@ FROM cachegroup
 LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
-LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
+LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id
+LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
+`
+}
+
+func multipleCacheGroupsWhere() string {
+	return `
+WHERE
+cachegroup.name = ANY ($1)
+`
 }
 
 func UpdateQuery() string {

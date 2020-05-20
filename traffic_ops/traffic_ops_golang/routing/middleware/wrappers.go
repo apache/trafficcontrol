@@ -53,6 +53,9 @@ const IMSHIT = "IMS_HIT"
 // IMSMISS when anything other than a 304 was returned, meaning that something changed after the If-Modified-Since time of the request
 const IMSMISS = "IMS_MISS"
 
+// RouteID
+const RouteID = "RouteID"
+
 // ServerName is the name and version of Traffic Ops.
 // Things that print the server application name and version, for example in headers or logs, should use this.
 var ServerName = "traffic_ops_golang" + "/" + about.About.Version
@@ -189,7 +192,7 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 			}
 		}
 		defer func() {
-			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %s`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), imsType)
+			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %v %s`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), r.Header.Get(RouteID), imsType)
 		}()
 		h.ServeHTTP(iw, r)
 	}
