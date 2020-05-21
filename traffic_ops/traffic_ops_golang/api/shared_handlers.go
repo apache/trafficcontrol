@@ -403,25 +403,31 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 			HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alternative)
 			return
 		}
-		if !deleteKeyOptionExists {
-			keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
-			keys := make(map[string]interface{})
-			for _, kf := range keyFields {
-				paramKey := inf.Params[kf.Field]
-				if paramKey == "" {
+		keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
+		keys := make(map[string]interface{})
+		for _, kf := range keyFields {
+			paramKey := inf.Params[kf.Field]
+			if paramKey == "" {
+				if isOptionsDeleter {
+					continue
+				} else {
 					HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil, alternative)
 					return
 				}
+			}
 
-				paramValue, err := kf.Func(paramKey)
-				if err != nil {
+			paramValue, err := kf.Func(paramKey)
+			if err != nil {
+				if isOptionsDeleter {
+					continue
+				} else {
 					HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil, alternative)
 					return
 				}
-				keys[kf.Field] = paramValue
 			}
-			obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
+			keys[kf.Field] = paramValue
 		}
+		obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 
 		if t, ok := obj.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
