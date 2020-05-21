@@ -98,6 +98,9 @@ func ValidationTestTopologies(t *testing.T) {
 		if err == nil {
 			t.Fatalf("expected POST with %v to return an error, actual: nil", testCase.reasonToFail)
 		}
+		if statusCode < 400 || statusCode >= 500 {
+			t.Fatalf("Expected a 400-level status code for topology %s but got %d", testCase.Topology.Name, statusCode)
+		}
 	}
 }
 
