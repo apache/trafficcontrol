@@ -58,7 +58,10 @@ func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
 
 //Implementation of the Identifier, Validator interface functions
 func (region TORegion) GetKeys() (map[string]interface{}, bool) {
-	return map[string]interface{}{"id": region.ID}, true
+	return map[string]interface{}{
+		"id":   region.ID,
+		"name": region.Name,
+	}, true
 }
 
 // DeleteKeyOptions returns a map containing the different fields a resource can be deleted by.
@@ -70,8 +73,13 @@ func (region TORegion) DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo {
 }
 
 func (region *TORegion) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	region.ID = i
+	//this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	if id, exists := keys["id"].(int); exists {
+		region.ID = id
+	}
+	if name, exists := keys["name"].(string); exists {
+		region.Name = name
+	}
 }
 
 func (region *TORegion) GetAuditName() string {
