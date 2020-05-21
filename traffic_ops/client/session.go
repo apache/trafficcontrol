@@ -307,7 +307,7 @@ func NewNoAuthSession(toURL string, insecure bool, userAgent string, useCache bo
 	}, useCache)
 }
 
-// ErrUnlessOk returns the response an error if the given Response's status code is anything but 200 OK. This includes reading the Response.Body and Closing it. Otherwise, the given response and a nil error is returned.
+// ErrUnlessOk returns the response an error if the given Response's status code is anything but 200 OK. This includes reading the Response.Body and Closing it. Otherwise, the given response and a nil error are returned.
 func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err error, path string) (*http.Response, net.Addr, error) {
 	if err != nil {
 		return resp, remoteAddr, err
