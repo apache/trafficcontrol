@@ -88,10 +88,22 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "parentCachegroup", Parents: []int{2}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{1}},
 		}}},
+		{reasonToFail: "a nonexistent cache group", Topology: tc.Topology{Name: "nonexistent-cg", Description: "Invalid because it references a cache group that does not exist", Nodes: []tc.TopologyNode{
+			{Cachegroup: "legitcachegroup", Parents: []int{0}},
+		}}},
+		{reasonToFail: "an out-of-bounds parent index", Topology: tc.Topology{Name: "oob-parent", Description: "Invalid because it contains a parent", Nodes: []tc.TopologyNode{
+			{Cachegroup: "cachegroup1", Parents: []int{7}},
+		}}},
 	}
+	var statusCode int
 	for _, testCase := range invalidTopologyTestCases {
-		if _, _, err := TOSession.CreateTopology(testCase.Topology); err == nil {
+		_, reqInf, err := TOSession.CreateTopology(testCase.Topology)
+		if err == nil {
 			t.Fatalf("expected POST with %v to return an error, actual: nil", testCase.reasonToFail)
+		}
+		statusCode = reqInf.StatusCode
+		if statusCode < 400 || statusCode >= 500 {
+			t.Fatalf("Expected a 400-level status code for topology %s but got %d", testCase.Topology.Name, statusCode)
 		}
 	}
 }

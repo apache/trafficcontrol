@@ -307,7 +307,9 @@ func NewNoAuthSession(toURL string, insecure bool, userAgent string, useCache bo
 	}, useCache)
 }
 
-// ErrUnlessOk returns nil and an error if the given Response's status code is anything but 200 OK. This includes reading the Response.Body and Closing it. Otherwise, the given response and error are returned unchanged.
+// ErrUnlessOk returns the response, the remote address, and an error if the given Response's status code is anything
+// but 200 OK. This includes reading the Response.Body and Closing it. Otherwise, the given response, the remote
+// address, and a nil error are returned.
 func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err error, path string) (*http.Response, net.Addr, error) {
 	if err != nil {
 		return resp, remoteAddr, err
@@ -319,14 +321,14 @@ func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err err
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotImplemented {
-		return nil, remoteAddr, errors.New("Traffic Ops Server returned 'Not Implemented', this client is probably newer than Traffic Ops, and you probably need to either upgrade Traffic Ops, or use a client whose version matches your Traffic Ops version.")
+		return resp, remoteAddr, errors.New("Traffic Ops Server returned 'Not Implemented', this client is probably newer than Traffic Ops, and you probably need to either upgrade Traffic Ops, or use a client whose version matches your Traffic Ops version.")
 	}
 
 	body, readErr := ioutil.ReadAll(resp.Body)
 	if readErr != nil {
-		return nil, remoteAddr, readErr
+		return resp, remoteAddr, readErr
 	}
-	return nil, remoteAddr, errors.New(resp.Status + "[" + strconv.Itoa(resp.StatusCode) + "] - Error requesting Traffic Ops " + to.getURL(path) + " " + string(body))
+	return resp, remoteAddr, errors.New(resp.Status + "[" + strconv.Itoa(resp.StatusCode) + "] - Error requesting Traffic Ops " + to.getURL(path) + " " + string(body))
 }
 
 func (to *Session) getURL(path string) string { return to.URL + path }
@@ -385,7 +387,7 @@ func (to *Session) RawRequest(method, path string, body []byte) (*http.Response,
 
 	resp, err := to.Client.Do(req)
 	if err != nil {
-		return nil, remoteAddr, err
+		return resp, remoteAddr, err
 	}
 
 	return resp, remoteAddr, nil
@@ -394,6 +396,7 @@ func (to *Session) RawRequest(method, path string, body []byte) (*http.Response,
 type ReqInf struct {
 	CacheHitStatus CacheHitStatus
 	RemoteAddr     net.Addr
+	StatusCode     int
 }
 
 type CacheHitStatus string

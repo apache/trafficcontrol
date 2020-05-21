@@ -160,7 +160,7 @@ func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc
 	}
 
 	resp, remoteAddr, err := to.request(http.MethodGet, path, nil)
-	reqInf := ReqInf{CacheHitStatusMiss, remoteAddr}
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
