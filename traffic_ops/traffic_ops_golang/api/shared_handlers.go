@@ -322,20 +322,18 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 			if paramKey == "" {
 				if isOptionsDeleter {
 					continue
-				} else {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
-					return
 				}
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
+				return
 			}
 
 			paramValue, err := kf.Func(paramKey)
 			if err != nil {
 				if isOptionsDeleter {
 					continue
-				} else {
-					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
-					return
 				}
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
+				return
 			}
 			keys[kf.Field] = paramValue
 		}
@@ -410,20 +408,18 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 			if paramKey == "" {
 				if isOptionsDeleter {
 					continue
-				} else {
-					HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil, alternative)
-					return
 				}
+				HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil, alternative)
+				return
 			}
 
 			paramValue, err := kf.Func(paramKey)
 			if err != nil {
 				if isOptionsDeleter {
 					continue
-				} else {
-					HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil, alternative)
-					return
 				}
+				HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil, alternative)
+				return
 			}
 			keys[kf.Field] = paramValue
 		}
