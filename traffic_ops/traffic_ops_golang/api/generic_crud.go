@@ -130,48 +130,46 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 // If the returned boolean is false, there is no need to run the main query for the GET API endpoint, and we return a 304 status
 func TryIfModifiedSinceQuery(val GenericReader, h http.Header, where string, orderBy string, pagination string, queryValues map[string]interface{}) (bool, time.Time) {
 	var max time.Time
-	imsDate := []string{}
+	var imsDate time.Time
+	var ok bool
+	imsDateHeader := []string{}
 	runSecond := true
+	dontRunSecond := false
 	if h == nil {
 		return runSecond, max
 	}
-	imsDate = h[rfc.IfModifiedSince]
-	if len(imsDate) == 0 {
+	imsDateHeader = h[rfc.IfModifiedSince]
+	if len(imsDateHeader) == 0 {
 		return runSecond, max
 	}
-	if l, ok := web.ParseHTTPDate(imsDate[0]); !ok {
-		log.Warnf("IMS request header date '%s' not parsable", imsDate[0])
+	if imsDate, ok = web.ParseHTTPDate(imsDateHeader[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
 		return runSecond, max
-	} else {
-		query := val.SelectMaxLastUpdatedQuery(where, orderBy, pagination, val.GetType())
-		rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
-		if err != nil {
-			log.Warnf("Couldn't get the max last updated time: %v", err)
+	}
+	query := val.SelectMaxLastUpdatedQuery(where, orderBy, pagination, val.GetType())
+	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		log.Warnf("Couldn't get the max last updated time: %v", err)
+		return runSecond, max
+	}
+	if err == sql.ErrNoRows {
+		return dontRunSecond, max
+	}
+	defer rows.Close()
+	// This should only ever contain one row
+	if rows.Next() {
+		v := &ims.LatestTimestamp{}
+		if err = rows.StructScan(v); err != nil || v == nil {
+			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
 			return runSecond, max
 		}
-		if err == sql.ErrNoRows {
-			runSecond = false
-			return runSecond, max
-		}
-		defer rows.Close()
-		// This should only ever contain one row
-		if rows.Next() {
-			v := &ims.LatestTimestamp{}
-			if err = rows.StructScan(v); err != nil || v == nil {
-				log.Warnf("Failed to parse the max time stamp into a struct %v", err)
-				return runSecond, max
-			}
-			max = v.LatestTime.Time
-			// The request IMS time is later than the max of (lastUpdated, deleted_time)
-			if l.After(v.LatestTime.Time) {
-				runSecond = false
-				return runSecond, max
-			}
-		} else {
-			runSecond = false
+		max = v.LatestTime.Time
+		// The request IMS time is later than the max of (lastUpdated, deleted_time)
+		if imsDate.After(v.LatestTime.Time) {
+			return dontRunSecond, max
 		}
 	}
-	return runSecond, max
+	return dontRunSecond, max
 }
 
 func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

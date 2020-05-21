@@ -42,7 +42,10 @@ type LatestTimestamp struct {
 func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]interface{}, query string) (bool, time.Time) {
 	var maxTime time.Time
 	ims := []string{}
+	var imsDate time.Time
+	var ok bool
 	runSecond := true
+	dontRunSecond := false
 	if h == nil {
 		return runSecond, maxTime
 	}
@@ -50,7 +53,7 @@ func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]
 	if ims == nil || len(ims) == 0 {
 		return runSecond, maxTime
 	}
-	if l, ok := web.ParseHTTPDate(ims[0]); !ok {
+	if imsDate, ok = web.ParseHTTPDate(ims[0]); !ok {
 		return runSecond, maxTime
 	} else {
 		rows, err := tx.NamedQuery(query, queryValues)
@@ -62,8 +65,7 @@ func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]
 			return runSecond, maxTime
 		}
 		if err == sql.ErrNoRows {
-			runSecond = false
-			return runSecond, maxTime
+			return dontRunSecond, maxTime
 		}
 		// This should only ever contain one row
 		if rows.Next() {
@@ -74,13 +76,10 @@ func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]
 			}
 			maxTime = v.LatestTime.Time
 			// The request IMS time is later than the max of (lastUpdated, deleted_time)
-			if v.LatestTime != nil && l.After(v.LatestTime.Time) {
-				runSecond = false
-				return runSecond, maxTime
+			if v.LatestTime != nil && imsDate.After(v.LatestTime.Time) {
+				return dontRunSecond, maxTime
 			}
-		} else {
-			runSecond = false
 		}
 	}
-	return runSecond, maxTime
+	return dontRunSecond, maxTime
 }
