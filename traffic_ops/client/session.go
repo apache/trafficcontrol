@@ -394,6 +394,7 @@ func (to *Session) RawRequest(method, path string, body []byte) (*http.Response,
 type ReqInf struct {
 	CacheHitStatus CacheHitStatus
 	RemoteAddr     net.Addr
+	StatusCode     int
 }
 
 type CacheHitStatus string
