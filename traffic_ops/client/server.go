@@ -34,6 +34,10 @@ const (
 	API_SERVER_ASSIGN_DELIVERY_SERVICES = API_SERVER_DELIVERY_SERVICES + "?replace=%t"
 )
 
+func needAndCanFetch(id *int, name *string) bool {
+	return (id == nil || *id == 0) && name != nil && *name != ""
+}
+
 // CreateServer creates a Server.
 func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, error) {
 
@@ -41,7 +45,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
-	if (server.CachegroupID == nil || *server.CachegroupID == 0) && server.Cachegroup != nil && *server.Cachegroup != "" {
+	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
 		cg, _, err := to.GetCacheGroupNullableByName(*server.Cachegroup)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no cachegroup named %s: %v", *server.Cachegroup, err)
@@ -54,7 +58,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 		}
 		server.CachegroupID = cg[0].ID
 	}
-	if (server.CDNID == nil || *server.CDNID == 0) && server.CDNName != nil && *server.CDNName != "" {
+	if needAndCanFetch(server.CDNID, server.CDNName) {
 		c, _, err := to.GetCDNByName(*server.CDNName)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no CDN named %s: %v", *server.CDNName, err)
@@ -64,7 +68,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 		}
 		server.CDNID = &c[0].ID
 	}
-	if (server.PhysLocationID == nil || *server.PhysLocationID == 0) && server.PhysLocation != nil && *server.PhysLocation != "" {
+	if needAndCanFetch(server.PhysLocationID, server.PhysLocation) {
 		ph, _, err := to.GetPhysLocationByName(*server.PhysLocation)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no physlocation named %s: %v", *server.PhysLocation, err)
@@ -74,7 +78,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 		}
 		server.PhysLocationID = &ph[0].ID
 	}
-	if (server.ProfileID == nil || *server.ProfileID == 0) && server.Profile != nil && *server.Profile != "" {
+	if needAndCanFetch(server.ProfileID, server.Profile) {
 		pr, _, err := to.GetProfileByName(*server.Profile)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no profile named %s: %v", *server.Profile, err)
@@ -84,7 +88,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 		}
 		server.ProfileID = &pr[0].ID
 	}
-	if (server.StatusID == nil || *server.StatusID == 0) && server.Status != nil && *server.Status != "" {
+	if needAndCanFetch(server.StatusID, server.Status) {
 		st, _, err := to.GetStatusByName(*server.Status)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no status named %s: %v", *server.Status, err)
