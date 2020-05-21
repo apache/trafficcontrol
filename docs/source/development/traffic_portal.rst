@@ -62,7 +62,7 @@ Installing The Traffic Portal Developer Environment
        ``gem environment``
 
     #. In there, you can see where ruby is installing all the gems. Add that path to your ``PATH`` environment variable.
-       For ex, it is ``/usr/local/lib/ruby/gems/2.7.0/gems/compass-1.0.3/bin/`` for this test setup.
+       For example, it is ``/usr/local/lib/ruby/gems/2.7.0/gems/compass-1.0.3/bin/`` for this test setup.
 
     #. Once you have installed ``compass`` successfully, make sure you can reach it by typing:
        ``compass version``
