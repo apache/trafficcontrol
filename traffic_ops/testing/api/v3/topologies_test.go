@@ -93,11 +93,13 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "cachegroup1", Parents: []int{7}},
 		}}},
 	}
+	var statusCode int
 	for _, testCase := range invalidTopologyTestCases {
-		_, _, err := TOSession.CreateTopology(testCase.Topology)
+		_, reqInf, err := TOSession.CreateTopology(testCase.Topology)
 		if err == nil {
 			t.Fatalf("expected POST with %v to return an error, actual: nil", testCase.reasonToFail)
 		}
+		statusCode = reqInf.StatusCode
 		if statusCode < 400 || statusCode >= 500 {
 			t.Fatalf("Expected a 400-level status code for topology %s but got %d", testCase.Topology.Name, statusCode)
 		}
