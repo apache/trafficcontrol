@@ -185,8 +185,8 @@ Updates a delivery service request comment.
 
 Request Structure
 -----------------
-:deliveryServiceRequestId:
-:value:
+:deliveryServiceRequestId:      The integral, unique identifier of the :term:`Delivery Service Request` that the comment was posted on.
+:value:                         The comment text itself.
 
 .. table:: Request Query Parameters
 
