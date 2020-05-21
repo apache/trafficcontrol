@@ -223,38 +223,6 @@ INSERT INTO server (
 	upd_pending
 `
 
-const insertInterfaceQuery = `
-INSERT INTO interface (
-	max_bandwidth,
-	monitor,
-	mtu,
-	name,
-	server
-) VALUES (
-	$1,
-	$2,
-	$3,
-	$4,
-	$5
-)
-`
-
-const insertIPQuery = `
-INSERT INTO ip_address (
-	address,
-	gateway,
-	interface,
-	server,
-	service_address
-) VALUES (
-	$1,
-	$2,
-	$3,
-	$4,
-	$5
-)
-`
-
 const updateQuery = `
 UPDATE server SET
 	cachegroup=:cachegroup_id,
