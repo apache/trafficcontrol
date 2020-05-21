@@ -320,14 +320,22 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 		for _, kf := range keyFields {
 			paramKey := inf.Params[kf.Field]
 			if paramKey == "" {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
-				return
+				if isOptionsDeleter {
+					continue
+				} else {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
+					return
+				}
 			}
 
 			paramValue, err := kf.Func(paramKey)
 			if err != nil {
-				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
-				return
+				if isOptionsDeleter {
+					continue
+				} else {
+					HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
+					return
+				}
 			}
 			keys[kf.Field] = paramValue
 		}
