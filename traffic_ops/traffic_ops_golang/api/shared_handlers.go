@@ -114,8 +114,8 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 	return v.Validate()
 }
 
-func hasDeleteKeyOption(obj interface{}, params map[string]string) (bool, error, error, int) {
-	optionsDeleter, ok := obj.(HasDeleteKeyOptions)
+func checkIfOptionsDeleter(obj interface{}, params map[string]string) (bool, error, error, int) {
+	optionsDeleter, ok := obj.(OptionsDeleter)
 	if !ok {
 		return false, nil, nil, http.StatusOK
 	}
@@ -310,7 +310,7 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Deleter)
 		obj.SetInfo(inf)
 
-		deleteKeyOptionExists, userErr, sysErr, errCode := hasDeleteKeyOption(obj, inf.Params)
+		isOptionsDeleter, userErr, sysErr, errCode := checkIfOptionsDeleter(obj, inf.Params)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -345,7 +345,7 @@ func DeleteHandler(deleter Deleter) http.HandlerFunc {
 			}
 		}
 
-		if deleteKeyOptionExists {
+		if isOptionsDeleter {
 			obj := reflect.New(objectType).Interface().(OptionsDeleter)
 			obj.SetInfo(inf)
 			userErr, sysErr, errCode = obj.OptionsDelete()
@@ -390,7 +390,7 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 		obj := reflect.New(objectType).Interface().(Deleter)
 		obj.SetInfo(inf)
 
-		deleteKeyOptionExists, userErr, sysErr, errCode := hasDeleteKeyOption(obj, inf.Params)
+		isOptionsDeleter, userErr, sysErr, errCode := checkIfOptionsDeleter(obj, inf.Params)
 		if userErr != nil || sysErr != nil {
 			HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, alternative)
 			return
@@ -427,7 +427,7 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 			}
 		}
 
-		if deleteKeyOptionExists {
+		if isOptionsDeleter {
 			obj := reflect.New(objectType).Interface().(OptionsDeleter)
 			obj.SetInfo(inf)
 			userErr, sysErr, errCode = obj.OptionsDelete()
