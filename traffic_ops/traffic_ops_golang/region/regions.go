@@ -58,10 +58,7 @@ func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
 
 //Implementation of the Identifier, Validator interface functions
 func (region TORegion) GetKeys() (map[string]interface{}, bool) {
-	return map[string]interface{}{
-		"id":   region.ID,
-		"name": region.Name,
-	}, true
+	return map[string]interface{}{"id": region.ID}, true
 }
 
 // DeleteKeyOptions returns a map containing the different fields a resource can be deleted by.
