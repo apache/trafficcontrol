@@ -36,6 +36,9 @@ type LatestTimestamp struct {
 }
 
 // TryIfModifiedSinceQuery for components that DO NOT implement the CRUDER interface
+// Checks to see the max time that an entity was changed, and then returns a boolean (which tells us whether or not to run the main query for the endpoint)
+// along with the max time
+// If the returned boolean is false, there is no need to run the main query for the GET API endpoint, and we return a 304 status
 func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]interface{}, query string) (bool, time.Time) {
 	var maxTime time.Time
 	ims := []string{}

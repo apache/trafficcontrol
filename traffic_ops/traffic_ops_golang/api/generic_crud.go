@@ -125,6 +125,9 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+// TryIfModifiedSinceQuery checks to see the max time that an entity was changed, and then returns a boolean (which tells us whether or not to run the main query for the endpoint)
+// along with the max time
+// If the returned boolean is false, there is no need to run the main query for the GET API endpoint, and we return a 304 status
 func TryIfModifiedSinceQuery(val GenericReader, h http.Header, where string, orderBy string, pagination string, queryValues map[string]interface{}) (bool, time.Time) {
 	var max time.Time
 	imsDate := []string{}

@@ -170,7 +170,7 @@ func (topology *TOTopology) Create() (error, error, int) {
 }
 
 // Read is a requirement of the api.Reader interface and is called by api.ReadHandler().
-func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface {}, error, error, int, *time.Time) {
+func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var interfaces []interface{}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(topology.ReqInfo.Params, topology.ParamColumns())
 	if len(errs) > 0 {
