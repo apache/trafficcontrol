@@ -412,17 +412,6 @@ func validateMTU(mtu interface{}) error {
 	return nil
 }
 
-func validateGateway(g interface{}) error {
-	if g == nil {
-		return nil
-	}
-
-	if gtwy := net.ParseIP(*g.(*string)); gtwy == nil {
-		return errors.New("gateway not a valid IP address")
-	}
-	return nil
-}
-
 func validateV3(s tc.ServerNullable, tx *sql.Tx) (string, error) {
 
 	if len(s.Interfaces) == 0 {
