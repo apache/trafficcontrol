@@ -29,6 +29,7 @@ import (
 
 const (
 	API_SERVERS                         = apiBase + "/servers"
+	API_SERVERS_DETAILS                 = apiBase + "/servers/details"
 	API_SERVER_ASSIGN_DELIVERY_SERVICES = API_SERVER_DELIVERY_SERVICES + "?replace=%t"
 )
 
@@ -170,7 +171,10 @@ func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
 
 // GetServerByHostName GETs Servers by the Server hostname.
 func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, error) {
-	url := fmt.Sprintf("%s?hostName=%s", API_SERVERS, hostName)
+	v := url.Values{}
+	v.Add("hostName", hostName)
+	url := API_SERVERS + "?" + v.Encode()
+
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -179,6 +183,27 @@ func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, er
 	defer resp.Body.Close()
 
 	var data tc.ServersResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GetServerDetailsByHostName GETs Servers by the Server hostname.
+func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetailV11, ReqInf, error) {
+	v := url.Values{}
+	v.Add("hostName", hostName)
+	url := API_SERVERS_DETAILS + "?" + v.Encode()
+
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ServersV1DetailResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}

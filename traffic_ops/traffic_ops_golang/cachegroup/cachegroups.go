@@ -438,8 +438,14 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
+	baseSelect := SelectQuery()
+	if _, ok := cg.ReqInfo.Params["topology"]; ok {
+		baseSelect += `
+LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
+`
+	}
 
-	query := SelectQuery() + where + orderBy + pagination
+	query := baseSelect + where + orderBy + pagination
 	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError
@@ -665,7 +671,6 @@ LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id
-LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
 `
 }
 
