@@ -434,12 +434,12 @@ func DeprecatedDeleteHandler(deleter Deleter, alternative *string) http.HandlerF
 				switch reflect.ValueOf(info.Checker) {
 				case reflect.ValueOf(IsInt):
 					if keys[key], err = GetIntKey(paramKey); err != nil {
-						HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil, alternative)
+						HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+key), nil, alternative)
 						return
 					}
 				case reflect.ValueOf(IsBool):
 					if keys[key], err = strconv.ParseBool(paramKey); err != nil {
-						HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil, alternative)
+						HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+key), nil, alternative)
 						return
 					}
 				default:
