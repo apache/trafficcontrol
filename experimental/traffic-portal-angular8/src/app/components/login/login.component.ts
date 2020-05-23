@@ -44,7 +44,7 @@ export class LoginComponent implements OnInit {
 
 	/**
 	 * Handles submission of the Login form, and redirects the user back to their requested page
-	 * should it be succesful. If the user had not yet requested a page, they will be redirected to
+	 * should it be successful. If the user had not yet requested a page, they will be redirected to
 	 * `/`
 	*/
 	submitLogin (): void {

@@ -42,7 +42,7 @@ Request Structure
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
 	| dsId            | no       | Return only invalidation jobs pending on the :term:`Delivery Service` identified by this integral, unique identifier |
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
-	| id              | no       | Return only the single invalidation job identified by this integral, unique identifer                                |
+	| id              | no       | Return only the single invalidation job identified by this integral, unique identifier                               |
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
 	| keyword         | no       | Return only invalidation jobs that have this "keyword" - only "PURGE" should exist                                   |
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+

@@ -27,7 +27,7 @@ else:
 class AdapterBase(ABC):
 	"""
 	Base adapter class.
-	This class implements the API required for storing and retriving the content kept in the vault.
+	This class implements the API required for storing and retrieving the content kept in the vault.
 	
 	Methods to be implemented at derived classes:
 	:meth:`get_parameter_storage_path` given a url-key of a parameter return the storage path
@@ -43,12 +43,12 @@ class AdapterBase(ABC):
 	Return a tuple: "success" bool & "value" kept in the parameter
 	:meth:`read_parameters_by_storage_path` given a storage and and a key holding 
 	filters on the key and values.
-	Return "success" bool indicating a sucessful write, and a key->value dictionary 
+	Return "success" bool indicating a successful write, and a key->value dictionary 
 	for the relevant parameters
 	:meth:`write_parameter_by_storage_path` given a storage path and a value string,
-	keep the parameter value. Return "success" bool indicating a sucessful write
+	keep the parameter value. Return "success" bool indicating a successful write
 	:meth:`remove_parameter_by_storage_path` given a storage path, delete the parameter
-	from the DB. Return "success" bool indicating a sucessful deletion
+	from the DB. Return "success" bool indicating a successful deletion
 	"""
 
 	@abstractmethod
@@ -142,7 +142,7 @@ class AdapterBase(ABC):
 		Writing the value to the provided file name.
 		:param parameterStoragePath: the file name 
 		:type parameterUrlPath: str
-		:param value: value to be writen
+		:param value: value to be written
 		:type parameterUrlPath: str
 		:return: 'True' for successful writing
 		:rtype: bool		

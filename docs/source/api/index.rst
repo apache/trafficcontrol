@@ -285,7 +285,7 @@ The most common errors returned by Traffic Ops are:
 	When a server-side error occurs, the API will return a ``500 INTERNAL SERVER ERROR`` response.
 
 	.. code-block:: http
-		:caption: Example Response to ``GET /api/2.0/servers``. (when a server error such as a postgres failure occured)
+		:caption: Example Response to ``GET /api/2.0/servers``. (when a server error such as a postgres failure occurred)
 
 		HTTP/1.1 500 Internal Server Error
 		Access-Control-Allow-Credentials: true

@@ -543,7 +543,7 @@ export class APIService {
 	}
 
 	/**
-	 * This method is handled seperately from :js:method:`APIService.getTypes` because this information
+	 * This method is handled separately from :js:method:`APIService.getTypes` because this information
 	 * (should) never change, and therefore can be cached. This method makes an HTTP request iff the values are not already
 	 * cached.
 	 * @returns An Observable that will emit an array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service

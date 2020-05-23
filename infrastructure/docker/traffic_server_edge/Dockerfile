@@ -216,7 +216,7 @@ status(){ \n\
     pid=`cat "$pidfile"` \n\
     if kill -0 $pid > /dev/null 2> /dev/null ; then \n\
       # process by this pid is running. \n\
-      # It may not be our pid, but thats what you get with just pidfiles. \n\
+      # It may not be our pid, but that's what you get with just pidfiles. \n\
       # TODO(sissel): Check if this process seems to be the same as the one we \n\
       # expect. Itd be nice to use flock here, but flock uses fork, not exec, \n\
       # so it makes it quite awkward to use in this case. \n\

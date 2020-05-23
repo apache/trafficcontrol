@@ -51,7 +51,7 @@ export class AuthenticationService {
 	}
 
 	/**
-	 * Updates the current user, and provides a way for callers to check if the update was succesful
+	 * Updates the current user, and provides a way for callers to check if the update was successful
 	 * @returns An `Observable` which will emit a boolean value indicating the success of the update
 	*/
 	updateCurrentUser (): Observable<boolean> {
@@ -76,7 +76,7 @@ export class AuthenticationService {
 	}
 
 	/**
-	 * Logs in a user and, on succesful login, updates the current user.
+	 * Logs in a user and, on successful login, updates the current user.
 	*/
 	login (u: string, p: string): Observable<boolean> {
 		return this.api.login(u, p).pipe(map(

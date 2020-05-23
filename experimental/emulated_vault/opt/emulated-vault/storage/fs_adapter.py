@@ -21,13 +21,13 @@ from . adapter_base import AdapterBase
 class FsAdapter(AdapterBase):
 	"""
 	Fs (file system) adapter class.
-	This class implements the API required for storing and retriving the content kept in the vault.
-	This specific Adapter works using files upon a file-system. 
+	This class implements the API required for storing and retrieving the content kept in the vault.
+	This specific Adapter works using files upon a file-system.
 	Inputs configuration (held under "fs-adapter" section in the config file) include:
 	:param db-base-os-path: The path in which the DB files are stored
-	:param ping-os-path: The path of a variable mimicing the RIAK ping functionality
+	:param ping-os-path: The path of a variable mimicking the RIAK ping functionality
 	"""
-	
+
 	def __init__ (self, logger):
 		"""
 		The class constructor.
@@ -45,11 +45,11 @@ class FsAdapter(AdapterBase):
 		self.basePath = myCfgData.get("db-base-os-path")
 		if self.basePath is None:
 			self.logger.error("Missing %s/%s configuration", "fs-adapter", "db-base-os-path")
-			return False 
+			return False
 		self.pingStoragePath = myCfgData.get("ping-os-path")
 		if self.pingStoragePath is None:
 			self.logger.error("Missing %s/%s configuration", "fs-adapter", "ping-os-path")
-			return False 
+			return False
 		return True
 
 	def init(self):# -> bool:
@@ -65,14 +65,14 @@ class FsAdapter(AdapterBase):
 
 	def get_parameter_storage_path(self, parameterUrlPath):# -> bool, str:
 		"""
-		Conversion function - taking a key's path and translate to a file path on the file system
+	        Conversion function - taking a key's path and translate to a file path on the file system
 		"""
-		#verifying the existance of "/" at the beging
+		#verifying the existence of "/" at the beginning
 		if not parameterUrlPath.startswith("/"):
 			self.logger.error("Failed to translate url path '%s': no leading '/'", parameterUrlPath)
 			return False, ""
-		# avoiding the use of os.path.join in purpuse. 
-		# we do not want the "/" at the begining push us to the root path		
+		# avoiding the use of os.path.join in purpuse.
+		# we do not want the "/" at the beginning push us to the root path
 		return True, self.basePath + parameterUrlPath.replace("/", os.path.sep)
 
 	def get_parameter_url_path_from_storage_path(self, parameterStoragePath):# -> str:
@@ -131,12 +131,12 @@ class FsAdapter(AdapterBase):
 			success_path, parameterUrlPath = self.get_parameter_url_path_from_storage_path(fileName)
 			if not success_path:
 				self.logger.error("%s parameter os path is invalid.", fileName)
-				return False, None				
+				return False, None
 			success, value = self.read_parameter_by_storage_path(fileName)
 			if not success:
 				self.logger.error("%s parameter os path not found.", fileName)
 				return False, None
-				
+
 			parameters[parameterUrlPath] = value
 
 		return True, parameters
@@ -152,7 +152,7 @@ class FsAdapter(AdapterBase):
 			if dirname and not os.path.exists(dirname):
 				os.makedirs(dirname)
 			with open(parameterStoragePath, "w") as fd:
-				fd.write(value)			
+				fd.write(value)
 		except Exception as e:
 			self.logger.exception("could not post parameter os path %s", parameterStoragePath)
 			return False

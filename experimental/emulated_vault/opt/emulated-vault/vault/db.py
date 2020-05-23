@@ -18,20 +18,20 @@
 class Db(object):
 	"""
 	DB class representing the DB layer.
-	
-	Implemented methods 
-	:meth:`ping` test the 'ping' status with the adapter. 
+
+	Implemented methods
+	:meth:`ping` test the 'ping' status with the adapter.
 	Return a tuple: "success" bool & "value" kept as ping variable
 	:meth:`getParameter` given a parameter key (in url-path format) retrieve the parameter value.
 	Return a tuple: "success" bool & "value" kept in the parameter
 	:meth:`searchParameter` given a parameters key prefix (in url-path format) and, a dict holding
 	variable key filters, and a key holding filters on the values as well.
-	Return "success" bool indicating a sucessful write, and a key->value dictionary 
+	Return "success" bool indicating a successful write, and a key->value dictionary
 	for the relevant parameters
 	:meth:`setParameter` given a parameter key (in url-path format) and a value string,
-	keep the parameter value. Return "success" bool indicating a sucessful write
+	keep the parameter value. Return "success" bool indicating a successful write
 	:meth:`deleteParameter` given a parameter key (in url-path format), delete the parameter
-	from the DB. Return "success" bool indicating a sucessful deletion		
+	from the DB. Return "success" bool indicating a successful deletion
 	"""
 
 	def __init__ (self, logger, storage_adaper):
@@ -39,10 +39,10 @@ class Db(object):
 		The class constructor.
 		:param logger: logger to send log messages to
 		:type logger: a python logging logger class
-		:param storage_adaper: an initalized storage adapter
-		:type storage_adaper: a storage.adapter_base.AdapterBase class 
+		:param storage_adaper: an initialized storage adapter
+		:type storage_adaper: a storage.adapter_base.AdapterBase class
 		"""
-		
+
 		self.logger = logger
 		self.storage_adaper = storage_adaper
 
@@ -59,8 +59,8 @@ class Db(object):
 	def getParameter(self, parameterUrlPath):
 		"""
 		Get value for the specified parameter. Part of Adapter required API.
-		:param parameterUrlPath: the key of the parameter as presented as url path 
-		(tokens seperated by "/", with "/" as a prefix)
+		:param parameterUrlPath: the key of the parameter as presented as url path
+		(tokens separated by "/", with "/" as a prefix)
 		:type parameterUrlPath: str
 		:return: A tuple - 'True' for successful retrival and the retrieved value
 		:rtype: Tuple[bool, str]
@@ -79,22 +79,22 @@ class Db(object):
 		self.logger.debug("Parameter get response for %s ready", parameterUrlPath)
 		return True, value
 
-	def searchParameters(self, parameterKeyPrefixUrlPath, keyFilters, filters):		
+	def searchParameters(self, parameterKeyPrefixUrlPath, keyFilters, filters):
 		"""
 		Get key/value dict of parameters by key pprefix
-		:param parameterKeyPrefixUrlPath: the key prefix for the parameter as presented as url path 
-		(tokens seperated by "/", with "/" as a prefix)
+		:param parameterKeyPrefixUrlPath: the key prefix for the parameter as presented as url path
+		(tokens separated by "/", with "/" as a prefix)
 		:type parameterKeyPrefixUrlPath: str
-		:param keyFilters: a dictionary of filter-name/filter-functions - 
-		each function gets a single variable - a parameter key - 
+		:param keyFilters: a dictionary of filter-name/filter-functions -
+		each function gets a single variable - a parameter key -
 		and return "True" if the variable should be included in the response.
 		:type keyFilters: Dict[str, function[str]]
-		:param filters: a dictionary of filter-name/filter-functions - 
-		each function gets 2 variable - a parameter key and val - 
+		:param filters: a dictionary of filter-name/filter-functions -
+		each function gets 2 variable - a parameter key and val -
 		and return "True" if the variable should be included in the response.
-		:type filters: Dict[str, function[str,str]]		
+		:type filters: Dict[str, function[str,str]]
 		:return: 'True' for successful retrival and the retrieved values dict (parameter-key/value)
-		:rtype: Tuple[bool, Dict[str, str]]		
+		:rtype: Tuple[bool, Dict[str, str]]
 		"""
 		self.logger.debug("Get parameters under path %s", parameterKeyPrefixUrlPath)
 		success_path, parameterStoragePathPrefix = self.storage_adaper.get_parameter_storage_path(parameterKeyPrefixUrlPath)
@@ -123,8 +123,8 @@ class Db(object):
 	def setParameter(self, parameterUrlPath, value):
 		"""
 		Set value for the specified parameter. Part of Adapter required API.
-		:param parameterUrlPath: the key of the parameter as presented as url path 
-		(tokens seperated by "/", with "/" as a prefix)
+		:param parameterUrlPath: the key of the parameter as presented as url path
+		(tokens separated by "/", with "/" as a prefix)
 		:type parameterUrlPath: str
 		:param value: the value to be kept
 		:type value: str
@@ -145,8 +145,8 @@ class Db(object):
 	def deleteParameter(self, parameterUrlPath):
 		"""
 		Delete the specified parameter. Part of Adapter required API.
-		:param parameterUrlPath: the key of the parameter as presented as url path 
-		(tokens seperated by "/", with "/" as a prefix)
+		:param parameterUrlPath: the key of the parameter as presented as url path
+		(tokens separated by "/", with "/" as a prefix)
 		:type parameterUrlPath: str
 		:return: 'True' for successful deletion
 		:rtype: bool

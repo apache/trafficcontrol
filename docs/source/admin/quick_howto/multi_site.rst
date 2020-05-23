@@ -81,11 +81,11 @@ The following steps will take you through the procedure of setting up an :abbr:`
 		|                                        |                  | codes, eg "500,502,503"  | in records.config       |
 		|                                        |                  |                          | when unused.            |
 		+----------------------------------------+------------------+--------------------------+-------------------------+
-		| mso.max_simple_retries                 | parent.config    | Nubmer of retries made   | defaults to the value   |
+		| mso.max_simple_retries                 | parent.config    | Number of retries made   | defaults to the value   |
 		|                                        |                  | after a 4xx error        | in records.config       |
 		|                                        |                  |                          | when unused.            |
 		+----------------------------------------+------------------+--------------------------+-------------------------+
-		| mso.max_unavailable_server_retries     | parent.config    | Nubmer of retries made   | defaults to the value   |
+		| mso.max_unavailable_server_retries     | parent.config    | Number of retries made   | defaults to the value   |
 		|                                        |                  | after a 5xx error        | in records.config       |
 		|                                        |                  |                          | when unused.            |
 		+----------------------------------------+------------------+--------------------------+-------------------------+
