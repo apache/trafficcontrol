@@ -16,7 +16,7 @@ trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0
 set -o errexit -o nounset -o pipefail;
 
 #----------------------------------------
-function importFunctions() {
+importFunctions() {
 	echo "Verifying the build configuration environment."
 	local script=$(readlink -f "$0")
 	local scriptdir=$(dirname "$script")
@@ -31,7 +31,7 @@ function importFunctions() {
 }
 
 #----------------------------------------
-function buildRpmTrafficRouter () {
+buildRpmTrafficRouter () {
 	echo "Building the rpm."
 
 	export STARTUP_SCRIPT_DIR="/lib/systemd/system"
@@ -58,7 +58,7 @@ function buildRpmTrafficRouter () {
 
 
 #----------------------------------------
-function adaptEnvironment() {
+adaptEnvironment() {
 	echo "Verifying the build configuration environment."
 	# get traffic_control src path -- relative to build_rpm.sh script
 	export PACKAGE="traffic_router"
@@ -84,7 +84,7 @@ function adaptEnvironment() {
 }
 
 # ---------------------------------------
-function initBuildArea() {
+initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
@@ -103,7 +103,7 @@ function initBuildArea() {
 }
 
 #----------------------------------------
-function buildRpmTomcat () {
+buildRpmTomcat () {
 	echo "Building the rpm for Tomcat."
 
 	cd "$TR_DIR"/tomcat-rpm || { echo "Could not cd to $TR_DIR/tomcat-rpm: $?"; return 1; }

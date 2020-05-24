@@ -15,7 +15,8 @@
 trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0}" >/dev/stderr; exit $exit_code' EXIT;
 set -o errexit -o nounset -o pipefail;
 
-function importFunctions() {
+#----------------------------------------
+importFunctions() {
 	local script=$(readlink -f "$0")
 	local scriptdir=$(dirname "$script")
 	export TM_DIR=$(dirname "$scriptdir")
@@ -29,7 +30,7 @@ function importFunctions() {
 }
 
 #----------------------------------------
-function initBuildArea() {
+initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
@@ -67,7 +68,7 @@ function initBuildArea() {
 	echo "The build area has been initialized."
 }
 
-function preBuildChecks() {
+preBuildChecks() {
 	if [[ -e "$TM_DIR"/traffic_monitor ]]; then
 		echo "Found $TM_DIR/traffic_monitor, please remove before retrying to build"
 		return 1

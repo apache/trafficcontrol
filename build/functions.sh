@@ -20,7 +20,7 @@
 #   if versionOk $haveversion $needversion; then
 #      echo "Need at least version $needversion"; return 1
 #   fi
-function versionOk() {
+versionOk() {
 	local h=$1 n=$2
 	# string compare -- no need to do more if the same
 	[[ $h == $n ]] && return 0
@@ -41,19 +41,19 @@ function versionOk() {
 }
 
 # ---------------------------------------
-function getRevCount() {
+getRevCount() {
 	local buildNum=$(getBuildNumber)
 	echo ${buildNum%.*}
 }
 
 # ---------------------------------------
-function isInGitTree() {
+isInGitTree() {
 	# ignore output -- use exit status
 	git rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
 
 # ---------------------------------------
-function getBuildNumber() {
+getBuildNumber() {
 	local in_git=$()
 	if isInGitTree; then
 		local commits=$(git rev-list HEAD 2>/dev/null | wc -l)
@@ -70,7 +70,7 @@ function getBuildNumber() {
 }
 
 # ---------------------------------------
-function getVersion() {
+getVersion() {
 	local d="$1"
 	local vf="$d/VERSION"
 	[ -r $vf ] || { echo "Could not read $vf: $!"; return 1; }
@@ -78,18 +78,18 @@ function getVersion() {
 }
 
 # ---------------------------------------
-function getRhelVersion {
+getRhelVersion() {
         echo el$(rpm -q --qf "%{VERSION}" $(rpm -q --whatprovides redhat-release))
 }
 
 # ---------------------------------------
-function getCommit() {
+getCommit() {
 	local buildNum=$(getBuildNumber)
 	echo ${buildNum%.*}
 }
 
 # ---------------------------------------
-function checkEnvironment {
+checkEnvironment() {
 	export TC_VERSION=$(getVersion "$TC_DIR")
 	export BUILD_NUMBER=$(getBuildNumber)
 	export RHEL_VERSION=$(getRhelVersion)
@@ -120,7 +120,7 @@ function checkEnvironment {
 }
 
 # ---------------------------------------
-function createSourceDir() {
+createSourceDir() {
 	local target="$1-$TC_VERSION"
 	local srcpath="$RPMBUILD/SOURCES/$target"
 	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; return 1; }
@@ -128,7 +128,7 @@ function createSourceDir() {
 }
 
 # ---------------------------------------
-function buildRpm () {
+buildRpm() {
 	for package in "$@"; do
 		local pre="${package}-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}"
 		local rpm="${pre}.$(uname -m).rpm"
@@ -159,7 +159,7 @@ function buildRpm () {
 }
 
 # ---------------------------------------
-function createTarball() {
+createTarball() {
 	local projDir=$(cd "$1"; pwd)
 	local projName=trafficcontrol
 	local version=$(getVersion "$TC_DIR")
@@ -177,7 +177,7 @@ function createTarball() {
 }
 
 # ---------------------------------------
-function createDocsTarball() {
+createDocsTarball() {
 	local projDir=$(cd "$1"; pwd)
 	local projName=trafficcontrol
 	local version=$(getVersion "$TC_DIR")
@@ -197,7 +197,7 @@ function createDocsTarball() {
 # ----------------------------------------
 # verify if the go compiler is version 1.14 or higher, returns 0 if if not. returns 1 if it is.
 # 
-function verify_and_set_go_version () {
+verify_and_set_go_version() {
   GO_VERSION="none"
   GO="none"
   go_in_path=`type -p go`

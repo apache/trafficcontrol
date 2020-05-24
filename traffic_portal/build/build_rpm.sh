@@ -16,7 +16,7 @@ trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0
 set -o errexit -o nounset -o pipefail;
 
 #----------------------------------------
-function importFunctions() {
+importFunctions() {
 	local script=$(readlink -f "$0")
 	local scriptdir=$(dirname "$script")
 	export TP_DIR=$(dirname "$scriptdir")
@@ -31,7 +31,7 @@ function importFunctions() {
 
 
 # ---------------------------------------
-function initBuildArea() {
+initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; return 1; }
 

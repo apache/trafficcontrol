@@ -16,7 +16,7 @@ trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0
 set -o errexit -o nounset -o pipefail;
 
 #----------------------------------------
-function importFunctions() {
+importFunctions() {
 	[ ! -z "$TC_DIR" ] || { echo "Cannot find repository root." >&2 ; return 1; }
 	export TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
@@ -28,7 +28,7 @@ function importFunctions() {
 }
 
 #----------------------------------------
-function checkGroveEnvironment() {
+checkGroveEnvironment() {
 	echo "Verifying the build configuration environment."
 
 	local script=$(readlink -f "$0")
@@ -62,7 +62,7 @@ function checkGroveEnvironment() {
 }
 
 # ---------------------------------------
-function initBuildArea() {
+initBuildArea() {
 	cd "$GROVE_DIR"
 
 	# prep build environment
@@ -72,7 +72,7 @@ function initBuildArea() {
 }
 
 # ---------------------------------------
-function buildRpmGrove() {
+buildRpmGrove() {
 	# build
 	$GO get -v -d . || { echo "Failed to go get dependencies: $?" >&2; return 1; }
 	$GO build -v -ldflags "-X main.Version=$GROVE_VERSION" || { echo "Failed to build grove: $?" >&2; return 1; }
@@ -89,7 +89,7 @@ function buildRpmGrove() {
 	if ! id $spec_owner >/dev/null 2>&1; then
 	  chown $(id -u):$(id -g) build/grove.spec
 
-	  function give_spec_back {
+		give_spec_back() {
 		chown ${spec_owner}:${spec_group} build/grove.spec
 	  }
 	  trap give_spec_back EXIT
