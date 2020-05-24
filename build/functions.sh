@@ -1,7 +1,4 @@
-#!/bin/bash
-
-#
-#
+#!/usr/bin/env sh
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,13 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# shellcheck shell=ash
 
 # ---------------------------------------
 # versionOk checks version number against required version.
 #   ``versionOk 1.2.3 2.0.4.7'' returns false value indicating
 #       version you have is not at least version you need
 #   if versionOk $haveversion $needversion; then
-#      echo "Need at least version $needversion"; exit 1
+#      echo "Need at least version $needversion"; return 1
 #   fi
 function versionOk() {
 	local h=$1 n=$2
@@ -65,7 +63,7 @@ function getBuildNumber() {
 		# Expect it's from the released tarball -- if BUILD_NUMBER file is not present,  abort
 		if [[ ! -f $TC_DIR/BUILD_NUMBER ]]; then
 			echo "Not in git repository and no BUILD_NUMBER present -- aborting!"
-			exit 1
+			return 1
 		fi
 		grep -v '^#' $TC_DIR/BUILD_NUMBER
 	fi
@@ -75,7 +73,7 @@ function getBuildNumber() {
 function getVersion() {
 	local d="$1"
 	local vf="$d/VERSION"
-	[ -r $vf ] || { echo "Could not read $vf: $!"; exit 1; }
+	[ -r $vf ] || { echo "Could not read $vf: $!"; return 1; }
 	cat "$vf"
 }
 
@@ -99,7 +97,7 @@ function checkEnvironment {
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
 
-	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
+	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; return 1; }
 
 	# verify required tools available in path -- extra tools required by subsystem are passed in
 	for pgm in git rpmbuild "$@"; do
@@ -109,7 +107,7 @@ function checkEnvironment {
 	requiredGitVersion=1.7.12
 	if ! versionOk $(git --version | tr -dc 0-9. ) "$requiredGitVersion"; then
 		echo "$(git --version) must be at least $requiredGitVersion"
-		exit 1
+		return 1
 	fi
 	echo "Build environment has been verified."
 
@@ -125,7 +123,7 @@ function checkEnvironment {
 function createSourceDir() {
 	local target="$1-$TC_VERSION"
 	local srcpath="$RPMBUILD/SOURCES/$target"
-	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; exit 1; }
+	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; return 1; }
 	echo "$srcpath"
 }
 
@@ -147,7 +145,7 @@ function buildRpm () {
 				 --define "commit $(getCommit)" \
 				 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
 				 -ba SPECS/$package.spec || \
-				 { echo "RPM BUILD FAILED: $?"; exit 1; }
+				 { echo "RPM BUILD FAILED: $?"; return 1; }
 
 		echo
 		echo "========================================================================================"
@@ -155,8 +153,8 @@ function buildRpm () {
 		echo "========================================================================================"
 		echo
 
-		cp "$RPMBUILD/RPMS/$(uname -m)/$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
-		cp "$RPMBUILD/SRPMS/$srpm" "$DIST/." || { echo "Could not copy $srpm to $DIST: $?"; exit 1; }
+		cp "$RPMBUILD/RPMS/$(uname -m)/$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; return 1; }
+		cp "$RPMBUILD/SRPMS/$srpm" "$DIST/." || { echo "Could not copy $srpm to $DIST: $?"; return 1; }
 	done
 }
 

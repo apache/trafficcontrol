@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-
+#!/usr/bin/env sh
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,15 +10,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# shellcheck shell=ash
+trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0}" >/dev/stderr; exit $exit_code' EXIT;
+set -o errexit -o nounset -o pipefail;
 
 #----------------------------------------
 function importFunctions() {
-	[ ! -z "$TC_DIR" ] || { echo "Cannot find repository root." >&2 ; exit 1; }
+	[ ! -z "$TC_DIR" ] || { echo "Cannot find repository root." >&2 ; return 1; }
 	export TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "Error: Can't find $functions_sh"
-		exit 1
+		return 1
 	fi
 	. "$functions_sh"
 }
@@ -42,7 +45,7 @@ function checkGroveEnvironment() {
 	# grove needs to be built with go 1.14 or greater
 	verify_and_set_go_version
 	if [[ $? -ne 1 ]]; then
-		exit 0
+		return 0
 	fi
 
 	echo "=================================================="
@@ -64,18 +67,18 @@ function initBuildArea() {
 
 	# prep build environment
 	[ -e $RPMBUILD ] && rm -rf $RPMBUILD
-	[ ! -e $RPMBUILD ] || { echo "Failed to clean up rpm build directory '$RPMBUILD': $?" >&2; exit 1; }
-	mkdir -p $RPMBUILD/{BUILD,RPMS,SOURCES} || { echo "Failed to create build directory '$RPMBUILD': $?" >&2; exit 1; }
+	[ ! -e $RPMBUILD ] || { echo "Failed to clean up rpm build directory '$RPMBUILD': $?" >&2; return 1; }
+	mkdir -p $RPMBUILD/{BUILD,RPMS,SOURCES} || { echo "Failed to create build directory '$RPMBUILD': $?" >&2; return 1; }
 }
 
 # ---------------------------------------
 function buildRpmGrove() {
 	# build
-	$GO get -v -d . || { echo "Failed to go get dependencies: $?" >&2; exit 1; }
-	$GO build -v -ldflags "-X main.Version=$GROVE_VERSION" || { echo "Failed to build grove: $?" >&2; exit 1; }
+	$GO get -v -d . || { echo "Failed to go get dependencies: $?" >&2; return 1; }
+	$GO build -v -ldflags "-X main.Version=$GROVE_VERSION" || { echo "Failed to build grove: $?" >&2; return 1; }
 
 	# tar
-	tar -cvzf $RPMBUILD/SOURCES/grove-${GROVE_VERSION}.tgz grove conf/grove.cfg build/grove.init build/grove.logrotate || { echo "Failed to create archive for rpmbuild: $?" >&2; exit 1; }
+	tar -cvzf $RPMBUILD/SOURCES/grove-${GROVE_VERSION}.tgz grove conf/grove.cfg build/grove.init build/grove.logrotate || { echo "Failed to create archive for rpmbuild: $?" >&2; return 1; }
 
 	# Work around bug in rpmbuild. Fixed in rpmbuild 4.13.
 	# See: https://github.com/rpm-software-management/rpm/commit/916d528b0bfcb33747e81a57021e01586aa82139
@@ -93,7 +96,7 @@ function buildRpmGrove() {
 	fi
 
 	# build RPM
-	rpmbuild --define "_topdir $RPMBUILD" --define "version ${GROVE_VERSION}" --define "build_number ${BUILD_NUMBER}" -ba build/grove.spec || { echo "rpmbuild failed: $?" >&2; exit 1; }
+	rpmbuild --define "_topdir $RPMBUILD" --define "version ${GROVE_VERSION}" --define "build_number ${BUILD_NUMBER}" -ba build/grove.spec || { echo "rpmbuild failed: $?" >&2; return 1; }
 
 	# copy build RPM to .
 	[ -e $DIST ] || mkdir -p $DIST
