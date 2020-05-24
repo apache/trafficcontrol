@@ -59,12 +59,11 @@ initBuildArea() {
 								{ echo "Could not build traffic_stats binary"; return 1; }
 
 	# compile influx_db_tools
-	pushd influxdb_tools
+	(cd influxdb_tools
 	go build -v sync/sync_ts_databases.go || \
 								{ echo "Could not build sync_ts_databases binary"; return 1; }
 	go build -v create/create_ts_databases.go || \
-								{ echo "Could not build create_ts_databases binary"; return 1; }
-	popd
+								{ echo "Could not build create_ts_databases binary"; return 1; })
 
 	rsync -aLv ./ "$ts_dest"/ || \
 		 { echo "Could not copy to $ts_dest: $?"; return 1; }

@@ -62,9 +62,9 @@ for p in "${projects[@]}"; do
 	if [ "$p" = docs ]; then
 		if isInGitTree; then
 			echo "-----  Building docs ..."
-			pushd docs
+			( cd docs
 			make html
-			popd
+			)
 			tarball=$(createDocsTarball "${TC_DIR}")
 			ls -l "$tarball"
 		else
