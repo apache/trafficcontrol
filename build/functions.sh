@@ -147,17 +147,21 @@ buildRpm() {
 		rpm="${pre}.$(uname -m).rpm"
 		local srpm="${pre}.src.rpm"
 		echo "Building the rpm."
-		if [[ "$DEBUG_BUILD" == true ]]; then
+		{ set +o nounset
+		set -- # Clear arguments for reuse
+		if [ "$DEBUG_BUILD" = true ]; then
 			echo 'RPM will not strip binaries before packaging.';
-			echo '%__os_install_post %{nil}' >> /etc/rpm/macros; # Do not strip binaries before packaging
+			set -- "$@" --define '%__os_install_post %{nil}' # Do not strip binaries before packaging
 		fi;
+		set -o nounset; }
 
 		(cd "$RPMBUILD" && \
 			rpmbuild --define "_topdir $(pwd)" \
-				 --define "traffic_control_version $TC_VERSION" \
-				 --define "commit $(getCommit)" \
-				 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
+				--define "traffic_control_version $TC_VERSION" \
+				--define "commit $(getCommit)" \
+				--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
 				 -ba SPECS/$package.spec \
+				"$@" # variable number of arguments
 				) || \
 				 { echo "RPM BUILD FAILED: $?"; return 1; }
 
