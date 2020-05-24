@@ -26,7 +26,7 @@ checkEnvironment() {
 	TC_DIR="$(dirname "$TR_DIR")"
 	export TR_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
+	if [ ! -r "$functions_sh" ]; then
 		echo "Error: Can't find $functions_sh"
 		exit 1
 	fi
@@ -44,8 +44,8 @@ checkEnvironment() {
 	echo "WORKSPACE: $WORKSPACE"
 	echo "TOMCAT_RELEASE: $TOMCAT_RELEASE"  #defined in traffic_router
 	echo "TOMCAT_VERSION: $TOMCAT_VERSION"  #defined in traffic_router
-	echo "BUILD_NUMBER: $BUILD_NUMBER"    #defined in traffic_router
-	echo "BUILD_LOCK: $BUILD_LOCK"      #defined in traffic_router
+	echo "BUILD_NUMBER: $BUILD_NUMBER"      #defined in traffic_router
+	echo "BUILD_LOCK: $BUILD_LOCK"          #defined in traffic_router
 	echo "RPM: $RPM"
 	echo "--------------------------------------------------"
 }
@@ -74,9 +74,9 @@ buildRpmTomcat () {
 }
 
 buildRpmForEl () {
-				echo "Building the rpm for "$RHEL_VERSION"."
+				echo "Building the rpm for ${RHEL_VERSION}."
 
-				cd $RPMBUILD
+				cd "$RPMBUILD"
 				rpmbuild --define "_topdir $(pwd)" \
 								 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
 								 --define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
@@ -84,7 +84,7 @@ buildRpmForEl () {
 								 { echo "RPM BUILD FAILED: $?"; exit 1; }
 				local rpm
 				rpm="$(find ./RPMS -name "$RPM")"
-				if [[ -z $rpm ]]; then
+				if [ -z "$rpm" ]; then
 								echo "Could not find rpm file $RPM in $(pwd)"
 								exit 1;
 				fi

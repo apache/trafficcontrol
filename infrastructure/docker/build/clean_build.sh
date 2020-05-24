@@ -22,7 +22,7 @@ set -o errexit -o nounset;
 setowner() {
 	own=$(stat -c '%u:%g' "$1")
 	shift
-	[[ -n $* ]] && chown -R "${own}" "$@"
+	[ -n "$*" ] && chown -R "${own}" "$@"
 }
 
 cleanup() {
@@ -34,14 +34,14 @@ set -o xtrace;
 # set owner of dist dir -- cleans up existing dist permissions...
 export GOPATH=/tmp/go;
 tc_dir=${GOPATH}/src/github.com/apache/trafficcontrol;
-mkdir -p ${GOPATH}/{src,pkg,bin} $tc_dir;
+mkdir -p ${GOPATH}/{src,pkg,bin} "$tc_dir";
 ( set -o errexit;
-	rsync -a /trafficcontrol/ $tc_dir;
-	if ! [[ -d ${tc_dir}/.git ]]; then
+	rsync -a /trafficcontrol/ "$tc_dir";
+	if ! [ -d ${tc_dir}/.git ]; then
 		rsync -a /trafficcontrol/.git $tc_dir; # Docker for Windows compatibility
 	fi;
-	rm -rf ${tc_dir}/dist;
+	rm -rf "${tc_dir}/dist";
 	mkdir -p /trafficcontrol/dist;
-	ln -s /trafficcontrol/dist ${tc_dir}/dist; ) && \
-	cd $tc_dir &&
+	ln -s /trafficcontrol/dist "${tc_dir}/dist") && \
+	cd "$tc_dir" &&
 	( ( ( (./build/build.sh "$1" 2>&1; echo $? >&3) | tee ./dist/build-"$1".log >&4) 3>&1) | (read -r x; exit "$x"); ) 4>&1

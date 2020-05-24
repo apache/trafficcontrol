@@ -26,7 +26,7 @@ importFunctions() {
 	TC_DIR="$(dirname "$TR_DIR")"
 	export TR_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
+	if [ ! -r "$functions_sh" ]; then
 		echo "Error: Can't find $functions_sh"
 		return 1
 	fi
@@ -46,7 +46,7 @@ buildRpmTrafficRouter () {
 
 	local rpm
 	rpm="$(find . -name \*.rpm | head -n1)"
-	if [[ -z $rpm ]]; then
+	if [ -z "$rpm" ]; then
 		echo "Could not find rpm file $RPM in $(pwd)"
 		return 1;
 	fi
@@ -97,13 +97,13 @@ initBuildArea() {
 	tr_dest=$(createSourceDir traffic_router)
 
 	export MVN_CMD="mvn versions:set -DnewVersion=$TC_VERSION"
-	echo $MVN_CMD
-	(cd $TR_DIR; $MVN_CMD)
+	echo "$MVN_CMD"
+	(cd "$TR_DIR"; $MVN_CMD)
 	cp -r "$TR_DIR"/{build,connector,core} "$tr_dest"/. || { echo "Could not copy to $tr_dest: $?"; return 1; }
 	cp  "$TR_DIR"/pom.xml "$tr_dest" || { echo "Could not copy to $tr_dest: $?"; return 1; }
 
 	# tar/gzip the source
-	tar -czf "$tr_dest".tgz -C "$RPMBUILD/SOURCES" $(basename $tr_dest) || { echo "Could not create tar archive $tr_dest: $?"; return 1; }
+	tar -czf "$tr_dest".tgz -C "$RPMBUILD/SOURCES" "$(basename "$tr_dest")" || { echo "Could not create tar archive $tr_dest: $?"; return 1; }
 
 	echo "The build area has been initialized."
 }

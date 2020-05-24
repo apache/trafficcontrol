@@ -25,7 +25,7 @@ importFunctions() {
 	TC_DIR="$(dirname "$TP_DIR")"
 	export TP_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
+	if [ ! -r "$functions_sh" ]; then
 		echo "error: can't find $functions_sh"
 		return 1
 	fi
@@ -43,11 +43,11 @@ initBuildArea() {
 	tp_dest="$(createSourceDir traffic_portal)"
 	cd "$TP_DIR" || \
 		 { echo "Could not cd to $TP_DIR: $?"; return 1; }
-	rsync -av ./ "$ts_dest"/ || \
+	rsync -av ./ "$tp_dest"/ || \
 		 { echo "Could not copy to $to_dest: $?"; return 1; }
-	cp -r "$TP_DIR"/ "$ts_dest" || { echo "Could not copy $TP_DIR to $ts_dest: $?"; return 1; }
+	cp -r "$TP_DIR"/ "$tp_dest" || { echo "Could not copy $TP_DIR to $tp_dest: $?"; return 1; }
 
-	tar -czvf "$ts_dest".tgz -C "$RPMBUILD"/SOURCES $(basename $ts_dest) || { echo "Could not create tar archive $ts_dest.tgz: $?"; return 1; }
+	tar -czvf "$tp_dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$tp_dest")" || { echo "Could not create tar archive ${tp_dest}.tgz: $?"; return 1; }
 	cp "$TP_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; return 1; }
 
 	echo "The build area has been initialized."

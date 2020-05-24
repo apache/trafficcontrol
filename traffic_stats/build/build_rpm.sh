@@ -25,7 +25,7 @@ importFunctions() {
 	TC_DIR="$(dirname "$TS_DIR")"
 	export TS_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
+	if [ ! -r "$functions_sh" ]; then
 		echo "error: can't find $functions_sh"
 		return 1
 	fi
@@ -69,14 +69,14 @@ initBuildArea() {
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; return 1; }
 
-	tar -czvf "$ts_dest".tgz -C "$RPMBUILD"/SOURCES $(basename $ts_dest) || { echo "Could not create tar archive $ts_dest.tgz: $?"; return 1; }
+	tar -czvf "$ts_dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$ts_dest")" || { echo "Could not create tar archive $ts_dest.tgz: $?"; return 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; return 1; }
 
 	echo "The build area has been initialized."
 }
 
 preBuildChecks() {
-		if [[ -e "$TS_DIR"/traffic_stats ]]; then
+		if [ -e "${TS_DIR}/traffic_stats" ]; then
 				echo "Found $TS_DIR/traffic_stats, please remove before retrying to build"
 				return 1
 		fi

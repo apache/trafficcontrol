@@ -18,13 +18,13 @@ set -o errexit -o nounset -o pipefail -o xtrace;
 #----------------------------------------
 importFunctions() {
 	local script scriptdir;
-	script=$(readlink -f "$0");
-	scriptdir=$(dirname "$script");
-	ORT_DIR=$(dirname "$scriptdir");
-	TC_DIR=$(dirname "$ORT_DIR");
+	script="$(readlink -f "$0")";
+	scriptdir="$(dirname "$script")";
+	ORT_DIR="$(dirname "$scriptdir")";
+	TC_DIR="$(dirname "$ORT_DIR")";
 	export ORT_DIR TC_DIR;
 	functions_sh="$TC_DIR/build/functions.sh";
-	if [[ ! -r $functions_sh ]]; then
+	if [ ! -r "$functions_sh" ]; then
 		echo "error: can't find $functions_sh" >&2;
 		return 1;
 	fi
@@ -49,20 +49,20 @@ initBuildArea() {
 
 	GC=(go build)
 	GFLAGS=(-v)
-	if [[ "$DEBUG_BUILD" == true ]]; then
+	if [ "$DEBUG_BUILD" == true ]; then
 		echo "DEBUG_BUILD is enabled, building without optimization or inlining...";
 		GFLAGS+=(--gcflags 'all=-N -l');
 	fi;
 
 	pushd atstccfg;
-	"${GC[@]}" "${GCFLAGS[@]}" -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=${TC_VERSION}";
+	"${GC[@]}" "${GCFLAGS[@]}" -ldflags "-X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}";
 	popd;
 
 	cp -p traffic_ops_ort.pl "$dest";
 	cp -p supermicro_udev_mapper.pl "$dest";
 	mkdir -p "${dest}/atstccfg";
 	cp -a atstccfg/* "${dest}/atstccfg";
-	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$dest");
+	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$dest")";
 	cp build/traffic_ops_ort.spec "$RPMBUILD"/SPECS/.;
 
 	echo "The build area has been initialized.";

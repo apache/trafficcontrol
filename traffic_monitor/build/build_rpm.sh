@@ -25,7 +25,7 @@ importFunctions() {
 	TC_DIR="$(dirname "$TM_DIR")"
 	export TM_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
+	if [ ! -r "$functions_sh" ]; then
 		echo "error: can't find $functions_sh"
 		return 1
 	fi
@@ -53,27 +53,32 @@ initBuildArea() {
 		{ echo "Could not get go package dependencies"; return 1; }
 
 	# compile traffic_monitor
-	go_build=(go build -v)
-	if [[ "$DEBUG_BUILD" == true ]]; then
+	gcflags=''
+	ldflags="-X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}"
+	{ set +o nounset;
+	if [ "$DEBUG_BUILD" = true ]; then
 		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
-		go_build+=(-gcflags 'all=-N -l');
+		gcflags="${gcflags} all=-N -l";
+	else
+		ldflags="${ldflags} -s -w"; #strip binary
 	fi;
-	"${go_build[@]}" -ldflags "-X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" || \
+	set -o nounset; }
+	go build -v -gcflags "$gcflags" -ldflags "$ldflags" || \
 		{ echo "Could not build traffic_monitor binary"; return 1; }
 
-	rsync -av ./ "$tm_dest"/ || \
+	cp -av ./ "$tm_dest"/ || \
 		 { echo "Could not copy to $tm_dest: $?"; return 1; }
-	cp "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
+	cp -av "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; return 1; }
 
-	tar -czvf "$tm_dest".tgz -C "$RPMBUILD"/SOURCES $(basename $tm_dest) || { echo "Could not create tar archive $tm_dest.tgz: $?"; return 1; }
+	tar -czvf "$tm_dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$tm_dest")" || { echo "Could not create tar archive $tm_dest.tgz: $?"; return 1; }
 	cp "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; return 1; }
 
 	echo "The build area has been initialized."
 }
 
 preBuildChecks() {
-	if [[ -e "$TM_DIR"/traffic_monitor ]]; then
+	if [ -e "$TM_DIR"/traffic_monitor ]; then
 		echo "Found $TM_DIR/traffic_monitor, please remove before retrying to build"
 		return 1
 	fi

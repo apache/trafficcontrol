@@ -23,14 +23,14 @@ topscript='' TC_DIR=''
 topscript="$(readlink -f "$0")"
 TC_DIR="$(dirname "$(dirname "$topscript")")"
 export TC_DIR
-[[ -n $TC_DIR ]] && cd "$TC_DIR" || { echo "Could not cd $TC_DIR"; exit 1; }
+[ -n "$TC_DIR" ] && cd "$TC_DIR" || { echo "Could not cd $TC_DIR"; exit 1; }
 
 . build/functions.sh
 
 checkEnvironment
 
 
-if [[ $# -gt 0 ]]; then
+if [ $# -gt 0 ]; then
 	projects=( "$*" )
 else
 	# get all subdirs containing build/build_rpm.sh
@@ -49,33 +49,33 @@ fi
 declare -a badproj
 declare -a goodproj
 for p in "${projects[@]}"; do
-	if [[ $p == tarball ]]; then
+	if [ "$p" = tarball ]; then
 		if isInGitTree; then
 			echo "-----  Building tarball ..."
-			tarball=$(createTarball "$TC_DIR")
-			ls -l $tarball
+			tarball="$(createTarball "$TC_DIR")"
+			ls -l "$tarball"
 		else
 			echo "---- Skipping tarball creation"
 		fi
 		continue
 	fi
-	if [[ $p == docs ]]; then
+	if [ "$p" = docs ]; then
 		if isInGitTree; then
 			echo "-----  Building docs ..."
 			pushd docs
 			make html
 			popd
 			tarball=$(createDocsTarball "${TC_DIR}")
-			ls -l $tarball
+			ls -l "$tarball"
 		else
 			echo "---- Skipping docs creation"
 		fi
 		continue
 	fi
 	# strip trailing /
-	p=${p%/}
-	bldscript="$p/build/build_rpm.sh"
-	if [[ ! -x $bldscript ]]; then
+	p="${p%/}"
+	bldscript="${p}/build/build_rpm.sh"
+	if [ ! -x "$bldscript" ]; then
 		echo "$bldscript not found"
 		badproj+=($p)
 		continue
@@ -85,7 +85,7 @@ for p in "${projects[@]}"; do
 	if $bldscript; then
 		goodproj+=($p)
 	else
-		echo "$p failed: $!"
+		echo "${p} failed: ${bldscript}"
 		badproj+=($p)
 	fi
 done

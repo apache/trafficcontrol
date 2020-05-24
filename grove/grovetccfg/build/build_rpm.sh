@@ -17,10 +17,10 @@ set -o errexit -o nounset -o pipefail;
 
 #----------------------------------------
 importFunctions() {
-	[ ! -z "$TC_DIR" ] || { echo "Cannot find repository root." >&2 ; return 1; }
+	[ -n "$TC_DIR" ] || { echo "Cannot find repository root." >&2 ; exit 1; }
 	export TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
+	if [ ! -r "$functions_sh" ]; then
 		echo "Error: Can't find $functions_sh"
 		return 1
 	fi
@@ -70,8 +70,8 @@ initBuildArea() {
 	cd "$GROVETC_DIR"
 
 	# prep build environment
-	[ -e $RPMBUILD ] && rm -rf $RPMBUILD
-	[ ! -e $RPMBUILD ] || { echo "Failed to clean up rpm build directory '$RPMBUILD': $?" >&2; return 1; }
+	[ -e "$RPMBUILD" ] && rm -rf "$RPMBUILD"
+	[ ! -e "$RPMBUILD" ] || { echo "Failed to clean up rpm build directory '$RPMBUILD': $?" >&2; return 1; }
 	mkdir -p $RPMBUILD/{BUILD,RPMS,SOURCES} || { echo "Failed to create build directory '$RPMBUILD': $?" >&2; return 1; }
 }
 
@@ -82,7 +82,7 @@ buildRpmGrove() {
 	$GO build -v -ldflags "-X main.Version=$GROVE_VERSION" || { echo "Failed to build $PACKAGE: $?" >&2; return 1; }
 
 	# tar
-	tar -cvzf $RPMBUILD/SOURCES/${PACKAGE}-${GROVE_VERSION}.tgz ${PACKAGE}|| { echo "Failed to create archive for rpmbuild: $?" >&2; return 1; }
+	tar -cvzf "${RPMBUILD}/SOURCES/${PACKAGE}-${GROVE_VERSION}.tgz" ${PACKAGE}|| { echo "Failed to create archive for rpmbuild: $?" >&2; return 1; }
 
 	# Work around bug in rpmbuild. Fixed in rpmbuild 4.13.
 	# See: https://github.com/rpm-software-management/rpm/commit/916d528b0bfcb33747e81a57021e01586aa82139
@@ -90,11 +90,11 @@ buildRpmGrove() {
 	spec=build/${PACKAGE}.spec
 	spec_owner=$(stat -c%u $spec)
 	spec_group=$(stat -c%g $spec)
-	if ! id $spec_owner >/dev/null 2>&1; then
-		chown $(id -u):$(id -g) build/${PACKAGE}.spec
+	if ! id "$spec_owner" >/dev/null 2>&1; then
+		chown "$(id -u):$(id -g)" build/${PACKAGE}.spec
 
 		give_spec_back() {
-		chown ${spec_owner}:${spec_group} build/${PACKAGE}.spec
+		chown "${spec_owner}:${spec_group}" build/${PACKAGE}.spec
 		}
 		trap give_spec_back EXIT
 	fi
@@ -103,8 +103,8 @@ buildRpmGrove() {
 	rpmbuild --define "_topdir $RPMBUILD" --define "version ${GROVE_VERSION}" --define "build_number ${BUILD_NUMBER}" -ba build/${PACKAGE}.spec || { echo "rpmbuild failed: $?" >&2; return 1; }
 
 	# copy build RPM to .
-	[ -e $DIST ] || mkdir -p $DIST
-	cp $RPMBUILD/RPMS/x86_64/${RPM} $DIST
+	[ -e "$DIST" ] || mkdir -p "$DIST"
+	cp "${RPMBUILD}/RPMS/x86_64/${RPM}" "$DIST"
 }
 
 importFunctions

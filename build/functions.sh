@@ -21,20 +21,20 @@
 #      echo "Need at least version $needversion"; return 1
 #   fi
 versionOk() {
-	local h=$1 n=$2
+	local h="$1" n="$2"
 	# string compare -- no need to do more if the same
-	[[ $h == $n ]] && return 0
+	[ "$h" = "$n" ] && return 0
 
 	# split into fields
-	local have=(${h//\./ })
-	local need=(${n//\./ })
+	local have="${h//\./ }"
+	local need="${n//\./ }"
 	# cmp first entry of each array.  Bail when unequal.
-	while [[ -n $have && $have -eq $need ]]; do
+	while [ -n "$have" ] && [ "$have" = "$need" ]; do
 		# pop 1st entry from each
 		have=("${have[@]:1}")
 		need=("${need[@]:1}")
 	done
-	if [[ ${have:-0} -lt ${need:-0} ]]; then
+	if [ "${have:-0}" -lt "${need:-0}" ]; then
 		return 1
 	fi
 	return 0
@@ -44,7 +44,7 @@ versionOk() {
 getRevCount() {
 	local buildNum
 	buildNum=$(getBuildNumber)
-	echo ${buildNum%.*}
+	echo "${buildNum%.*}"
 }
 
 # ---------------------------------------
@@ -63,11 +63,11 @@ getBuildNumber() {
 		echo "$commits.$sha"
 	else
 		# Expect it's from the released tarball -- if BUILD_NUMBER file is not present,  abort
-		if [[ ! -f $TC_DIR/BUILD_NUMBER ]]; then
+		if [ ! -f "${TC_DIR}/BUILD_NUMBER" ]; then
 			echo "Not in git repository and no BUILD_NUMBER present -- aborting!"
 			return 1
 		fi
-		grep -v '^#' $TC_DIR/BUILD_NUMBER
+		grep -v '^#' "${TC_DIR}/BUILD_NUMBER"
 	fi
 }
 
@@ -75,7 +75,7 @@ getBuildNumber() {
 getVersion() {
 	local d="$1"
 	local vf="$d/VERSION"
-	[ -r $vf ] || { echo "Could not read $vf: $!"; return 1; }
+	[ -r "$vf" ] || { echo "Could not read $vf: $!"; return 1; }
 	cat "$vf"
 }
 
@@ -88,7 +88,7 @@ getRhelVersion() {
 getCommit() {
 	local buildNum
 	buildNum="$(getBuildNumber)"
-	echo ${buildNum%.*}
+	echo "${buildNum%.*}"
 }
 
 # ---------------------------------------
@@ -102,15 +102,15 @@ checkEnvironment() {
 	DIST="$WORKSPACE/dist"
 	export TC_VERSION BUILD_NUMBER RHEL_VERSION WORKSPACE RPMBUILD DIST
 
-	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; return 1; }
+	mkdir -p "$DIST" || { echo "Could not create ${DIST}: ${?}"; return 1; }
 
 	# verify required tools available in path -- extra tools required by subsystem are passed in
 	for pgm in git rpmbuild "$@"; do
-		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; }
+		type "$pgm" 2>/dev/null || { echo "$pgm not found in PATH"; }
 	done
 	# verify git version
 	requiredGitVersion=1.7.12
-	if ! versionOk $(git --version | tr -dc 0-9. ) "$requiredGitVersion"; then
+	if ! versionOk "$(git --version | tr -dc 0-9. )" "$requiredGitVersion"; then
 		echo "$(git --version) must be at least $requiredGitVersion"
 		return 1
 	fi
@@ -126,7 +126,7 @@ checkEnvironment() {
 
 # ---------------------------------------
 createSourceDir() {
-	local target="$1-$TC_VERSION"
+	local target="${1}-${TC_VERSION}"
 	local srcpath="$RPMBUILD/SOURCES/$target"
 	mkdir -p "$srcpath" || { echo "Could not create $srcpath: $?"; return 1; }
 	echo "$srcpath"
@@ -211,13 +211,14 @@ createDocsTarball() {
 verify_and_set_go_version() {
 	GO_VERSION="none"
 	GO="none"
-	go_in_path=`type -p go`
-	for g in $go_in_path /usr/bin/go /usr/local/go/bin/go; do
-		if [[ -z $g ]] || [[ ! -x $g ]]; then
+	go_in_path="$(type -p go)"
+	local group_1='' group_2=''
+	for g in "$go_in_path" /usr/bin/go /usr/local/go/bin/go; do
+		if [ -z "$g" ] || [ ! -x "$g" ]; then
 			continue
 		fi
 
-		go_version=`$g version | awk '{print $3}'`
+		go_version="$($g version | awk '{print $3}')"
 
 		if [[ $go_version =~ go([1-9])\.([1-9]+) ]] && [[ ${BASH_REMATCH[1]} -ge 1 ]] && [[ ${BASH_REMATCH[2]} -ge 14 ]]; then
 			GO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; export GO_VERSION
@@ -235,7 +236,7 @@ verify_and_set_go_version() {
 		fi
 	done
 
-	if [[ $GO == none ]]; then
+	if [ "$GO" = none ]; then
 		echo "ERROR: this build needs go 1.14 or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
 		return 0
 	fi
