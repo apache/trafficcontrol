@@ -220,25 +220,27 @@ verify_and_set_go_version() {
 
 		go_version="$($g version | awk '{print $3}')"
 
-		if [[ $go_version =~ go([1-9])\.([1-9]+) ]] && [[ ${BASH_REMATCH[1]} -ge 1 ]] && [[ ${BASH_REMATCH[2]} -ge 14 ]]; then
-			GO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; export GO_VERSION
-			GO=$g; export GO
-			PATH=`dirname $g`:$PATH; export PATH
-			echo "go version for $g is ${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
-			echo "will use $g"
-			return 1
-		else
-			if [[ $go_version =~ go([1-9])\.([1-9]+) ]]; then
-				GO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; export GO_VERSION
-				echo "go version for $g is ${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+		version_pattern='.*go([1-9]+)\.([1-9]+).*'
+		if echo "$go_version" | grep -E "$version_pattern"; then
+			group_1="$(echo "$go_version" | sed -E "s/.*${version_pattern}/\1/")"
+			group_2="$(echo "$go_version" | sed -E "s/${version_pattern}/\2/")"
+			if [ ! "$group_1" -ge 1 ] || [ ! "$group_2" -ge 14 ]; then
+				GO_VERSION="${group_1}.${group_2}"; export GO_VERSION
+				echo "go version for $g is ${group_1}.${group_2}"
 				continue
 			fi
+			GO_VERSION="${group_1}.${group_2}"; export GO_VERSION
+			GO=$g; export GO
+			PATH="$(dirname "$g"):${PATH}"; export PATH
+			echo "go version for $g is ${group_1}.${group_2}"
+			echo "will use $g"
+			return 0
 		fi
 	done
 
 	if [ "$GO" = none ]; then
 		echo "ERROR: this build needs go 1.14 or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
-		return 0
+		return 1
 	fi
 }
 

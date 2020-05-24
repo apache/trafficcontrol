@@ -46,10 +46,9 @@ checkGroveEnvironment() {
 	export GROVE_DIR GROVE_VERSION PACKAGE BUILD_NUMBER RPMBUILD DIST RPM
 
 	# grove needs to be built with go 1.14 or greater
-	verify_and_set_go_version
-	if [[ $? -ne 1 ]]; then
-		return 0
-	fi
+	if ! verify_and_set_go_version; then
+		return $?;
+	fi;
 
 	echo "=================================================="
 	echo "GO_VERSION: $GO_VERSION"
