@@ -57,6 +57,7 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/init.d/traffic_portal ${RPM_BUILD_ROOT}/etc/init.d/.
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal ${RPM_BUILD_ROOT}/etc/logrotate.d/.
 		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal-access ${RPM_BUILD_ROOT}/etc/logrotate.d/.
+		%__rm -f ${RPM_BUILD_DIR}/traffic_portal-%{version}/app/dist/package-lock.json
 		%__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/app/dist/* ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
 
 	# creates dynamic json file needed at runtime for traffic portal to display release info
@@ -79,11 +80,15 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 %files
 %defattr(644,root,root,755)
 %attr(755,root,root) /etc/init.d/traffic_portal
-%attr(755,root,root) %{traffic_portal_home}/node_modules/forever/bin/*
+%attr(755,root,root) %{traffic_portal_home}/node_modules/forever/bin/forever
+%attr(755,root,root) %{traffic_portal_home}/node_modules/forever/bin/monitor
 %config(noreplace)/etc/traffic_portal/conf/config.js
 %config(noreplace)%{traffic_portal_home}/public/traffic_portal_properties.json
 %dir /var/log/traffic_portal
-%{traffic_portal_home}/*
+%{traffic_portal_home}/node_modules
+%{traffic_portal_home}/package.json
+%{traffic_portal_home}/public
+%{traffic_portal_home}/server
+%{traffic_portal_home}/server.js
 /etc/logrotate.d/traffic_portal
 /etc/logrotate.d/traffic_portal-access
-/etc/init.d/traffic_portal

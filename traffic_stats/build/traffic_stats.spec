@@ -113,8 +113,8 @@ fi
 %files
 %defattr(644, traffic_stats, traffic_stats, 755)
 
-%config(noreplace) /opt/traffic_stats/conf/traffic_stats.cfg
-%config(noreplace) /opt/traffic_stats/conf/traffic_stats_seelog.xml
+%config(noreplace) %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/traffic_stats.cfg
+%config(noreplace) %attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/traffic_stats_seelog.xml
 %config(noreplace) /etc/logrotate.d/traffic_stats
 
 %dir /opt/traffic_stats
@@ -128,11 +128,14 @@ fi
 %dir /usr/share/grafana/public/dashboards
 %dir /opt/traffic_stats/influxdb_tools
 
-%attr(600, traffic_stats, traffic_stats) /opt/traffic_stats/conf/*
-%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/*
+%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/traffic_stats
 %attr(755, traffic_stats, traffic_stats) /etc/init.d/traffic_stats
-%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/*
-%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/*
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/traffic_ops_cachegroup.js
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/traffic_ops_deliveryservice.js
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/traffic_ops_scripted.js
+%attr(644, traffic_stats, traffic_stats) /usr/share/grafana/public/dashboards/traffic_ops_server.js
+%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/create_ts_databases
+%attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/sync_ts_databases
 
 %preun
 # args for hooks: https://www.ibm.com/developerworks/library/l-rpm2/
