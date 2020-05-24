@@ -60,6 +60,8 @@ initBuildArea() {
 	if [ "$DEBUG_BUILD" = true ]; then
 		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
 		gcflags="${gcflags} all=-N -l";
+	else
+		ldflags="${ldflags} -s -w"; # strip binary
 	fi;
 	set -o nounset; }
 	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.version=traffic_ops-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION} -B 0x$(git rev-parse HEAD)" || \

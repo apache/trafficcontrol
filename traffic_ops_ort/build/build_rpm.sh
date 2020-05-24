@@ -55,6 +55,8 @@ initBuildArea() {
 	if [ "$DEBUG_BUILD" = true ]; then
 		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
 		gcflags="${gcflags} all=-N -l";
+	else
+		ldflags="${ldflags} -s -w"; # strip binary
 	fi;
 	set -o nounset; }
 
