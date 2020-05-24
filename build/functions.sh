@@ -179,17 +179,23 @@ createTarball() {
 	local version
 	version="$(getVersion "$TC_DIR")"
 	local tarball="dist/apache-${projName}-${version}.tar.gz"
-	local tardir
-	tardir="$(basename "$tarball" .tar.gz)"
+	local tarDir
+	tarDir="$(basename "$tarball" .tar.gz)"
+	local tarLink
+	( trap 'rm -f "${projDir}/BUILD_NUMBER" "$projLink"' EXIT
+	projLink="$(dirname "$projDir")/${tarDir}"
+	ln -sf "$projDir" "$projLink"
 
-	# Create a BULDNUMBER file and add to tarball
-	local bndir=$(mktemp -d)
-				getBuildNumber >"$bndir/BUILD_NUMBER"
+	# Create a BUILDNUMBER file and add to tarball
+	getBuildNumber >"${projDir}/BUILD_NUMBER"
 
-				# create the tarball only from files in repo and BUILD_NUMBER
-				tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$tardir/@S" $(git ls-files)
-				rm -r "$bndir"
-				echo "$tarball"
+	# create the tarball from BUILD_NUMBER and files tracked in git
+	git ls-files |
+		sed "s|^|${tarDir}/|g" |
+		tar -czf "$tarball" -C "${projLink}/.." -T - "${tarDir}/BUILD_NUMBER"
+		# ^ read files from stdin to avoid tar argument limit
+	)
+	echo "$tarball"
 }
 
 # ---------------------------------------
@@ -200,16 +206,15 @@ createDocsTarball() {
 	local version
 	version="$(getVersion "$TC_DIR")"
 	local tarball="dist/apache-$projName-$version-docs.tar.gz"
-	local tardir="${projDir}/docs/build/"
+	local tarDir="${projDir}/docs/build/"
 
-	# Create a BULDNUMBER file and add to tarball
-	local bndir=$(mktemp -d)
-				getBuildNumber >"$bndir/BUILD_NUMBER"
+	# Create a BUILDNUMBER file and add to tarball
+	getBuildNumber >"${tarDir}/BUILD_NUMBER"
 
-				# create the tarball only from files in repo and BUILD_NUMBER
-				tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$tardir" . --exclude-vcs
-				rm -r "$bndir"
-				echo "$tarball"
+	# create the tarball only from files in repo and BUILD_NUMBER
+	tar -czf "$tarball" -C "$tarDir" .
+	rm "${tarDir}/BUILD_NUMBER"
+	echo "$tarball"
 }
 
 # ----------------------------------------
