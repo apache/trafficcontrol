@@ -13,6 +13,11 @@
 #
 # shellcheck shell=ash
 
+removeFirstArg() {
+	shift
+	echo "$@"
+}
+
 # ---------------------------------------
 # versionOk checks version number against required version.
 #   ``versionOk 1.2.3 2.0.4.7'' returns false value indicating
@@ -31,9 +36,11 @@ versionOk() {
 	# cmp first entry of each array.  Bail when unequal.
 	while [ -n "$have" ] && [ "$have" = "$need" ]; do
 		# pop 1st entry from each
-		have=("${have[@]:1}")
-		need=("${need[@]:1}")
+		have="$(removeFirstArg ${have})"
+		need="$(removeFirstArg ${need})"
 	done
+	have="${have%% *}";
+	need="${need%% *}";
 	if [ "${have:-0}" -lt "${need:-0}" ]; then
 		return 1
 	fi

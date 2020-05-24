@@ -31,24 +31,24 @@ checkEnvironment
 
 
 if [ $# -gt 0 ]; then
-	projects=( "$*" )
+	projects="$*"
 else
 	# get all subdirs containing build/build_rpm.sh
-	projects_to_build=( */build/build_rpm.sh )
+	projects_to_build='*/build/build_rpm.sh'
 	# Always build tarball when building everything..
-	projects=(tarball)
-	for p in "${projects_to_build[@]}"; do
-		p=${p%%/*}
-		if [[ $p != "traffic_monitor_golang" ]]; then
-			projects+=($p)
+	projects=tarball
+	for p in ${projects_to_build}; do
+		p="${p%%/*}"
+		if [ "$p" != "traffic_monitor_golang" ]; then
+			projects="${projects} ${p}"
 		fi
 	done
 fi
 
 
-declare -a badproj
-declare -a goodproj
-for p in "${projects[@]}"; do
+badproj=''
+goodproj=''
+for p in ${projects}; do
 	if [ "$p" = tarball ]; then
 		if isInGitTree; then
 			echo "-----  Building tarball ..."
@@ -77,30 +77,30 @@ for p in "${projects[@]}"; do
 	bldscript="${p}/build/build_rpm.sh"
 	if [ ! -x "$bldscript" ]; then
 		echo "$bldscript not found"
-		badproj+=($p)
+		badproj="${badproj} ${p}"
 		continue
 	fi
 
 	echo "-----  Building $p ..."
 	if $bldscript; then
-		goodproj+=($p)
+		goodproj="${goodproj} ${p}"
 	else
 		echo "${p} failed: ${bldscript}"
-		badproj+=($p)
+		badproj="${badproj} ${p}"
 	fi
 done
 
-if [[ ${#goodproj[@]} -ne 0 ]]; then
+if [ "$(echo "${goodproj}" | wc -w)" -ne 0 ]; then
 	echo "The following subdirectories built successfully: "
-	for p in "${goodproj[@]}"; do
+	for p in ${goodproj}; do
 		echo "   $p"
 	done
 	echo "See $(pwd)/dist for newly built rpms."
 fi
 
-if [[ ${#badproj[@]} -ne 0 ]]; then
+if [ "$(echo "${badproj}" | wc -w)" -ne 0 ]; then
 	echo "The following subdirectories had errors: "
-	for p in "${badproj[@]}"; do
+	for p in ${badproj}; do
 		echo "   $p"
 	done
 	exit 1

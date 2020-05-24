@@ -49,15 +49,17 @@ initBuildArea() {
 
 	go get -v golang.org/x/crypto/ed25519 golang.org/x/crypto/scrypt golang.org/x/net/ipv4 golang.org/x/net/ipv6 golang.org/x/sys/unix;
 
-	GC=(go build)
-	GFLAGS=(-v)
-	if [ "$DEBUG_BUILD" == true ]; then
-		echo "DEBUG_BUILD is enabled, building without optimization or inlining...";
-		GFLAGS+=(--gcflags 'all=-N -l');
+	gcflags=''
+	ldflags=''
+	{ set +o nounset;
+	if [ "$DEBUG_BUILD" = true ]; then
+		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
+		gcflags="${gcflags} all=-N -l";
 	fi;
+	set -o nounset; }
 
 	(cd atstccfg;
-	"${GC[@]}" "${GCFLAGS[@]}" -ldflags "-X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}")
+	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}")
 
 	cp -p traffic_ops_ort.pl "$dest";
 	cp -p supermicro_udev_mapper.pl "$dest";
