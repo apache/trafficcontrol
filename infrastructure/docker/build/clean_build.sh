@@ -13,20 +13,20 @@
 #
 # shellcheck shell=ash
 trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0}"; cleanup; exit $exit_code' EXIT;
-set -o errexit -o nounset;
+set -o errexit -o nounset -o pipefail;
 
 
 # Fix ownership of output files
 #  $1 is file or dir with correct ownership
 #  remaining args are files/dirs to be fixed, recursively
 setowner() {
-	own=$(stat -c '%u:%g' "$1")
+	own=$(stat -c%u:%g "$1" 2>/dev/null || stat -f%u:%g "$1")
 	shift
 	[ -n "$*" ] && chown -R "${own}" "$@"
 }
 
 cleanup() {
-	setowner /trafficcontrol /trafficcontrol/dist
+	setowner "$tc_volume" "${tc_volume}/dist"
 }
 
 set -o xtrace;
@@ -34,17 +34,21 @@ set -o xtrace;
 # set owner of dist dir -- cleans up existing dist permissions...
 export GOPATH=/tmp/go;
 tc_dir=${GOPATH}/src/github.com/apache/trafficcontrol;
+tc_volume='/trafficcontrol'
 (mkdir -p "$GOPATH"
  cd "$GOPATH"
  mkdir -p src pkg bin "$(dirname "$tc_dir")"
 )
-( set -o errexit;
-	rsync -a /trafficcontrol/ "$tc_dir";
-	if ! [ -d ${tc_dir}/.git ]; then
-		rsync -a /trafficcontrol/.git $tc_dir; # Docker for Windows compatibility
-	fi;
-	rm -rf "${tc_dir}/dist";
-	mkdir -p /trafficcontrol/dist;
-	ln -s /trafficcontrol/dist "${tc_dir}/dist") && \
-	cd "$tc_dir" &&
-	( ( ( (./build/build.sh "$1" 2>&1; echo $? >&3) | tee ./dist/build-"$1".log >&4) 3>&1) | (read -r x; exit "$x"); ) 4>&1
+rsync -a "${tc_volume}/" "$tc_dir";
+if ! [ -d ${tc_dir}/.git ]; then
+	rsync -a "${tc_volume}/.git" $tc_dir; # Docker for Windows compatibility
+fi
+
+cd "$tc_dir"
+rm -rf "dist"
+mkdir -p "${tc_volume}/dist"
+ln -sf "${tc_volume}/dist" "dist"
+
+for project in "$@"; do
+	./build/build.sh "${project}" 2>&1 | tee "dist/build-${project//\//-}.log"
+done
