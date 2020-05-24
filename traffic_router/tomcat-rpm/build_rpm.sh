@@ -18,10 +18,13 @@ set -o errexit -o nounset -o pipefail;
 #----------------------------------------
 checkEnvironment() {
 	echo "Verifying the build configuration environment."
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
-	export TR_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TR_DIR")
+	local script scriptdir
+	script="$(readlink -f "$0")"
+	scriptdir="$(dirname "$script")"
+	TR_DIR='' TC_DIR=''
+	TR_DIR="$(dirname "$scriptdir")"
+	TC_DIR="$(dirname "$TR_DIR")"
+	export TR_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "Error: Can't find $functions_sh"
@@ -79,7 +82,8 @@ buildRpmForEl () {
                  --define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
                  -ba SPECS/$SPEC_FILE_NAME || \
                  { echo "RPM BUILD FAILED: $?"; exit 1; }
-        local rpm=$(find ./RPMS -name $RPM)
+        local rpm
+        rpm="$(find ./RPMS -name "$RPM")"
         if [[ -z $rpm ]]; then
                 echo "Could not find rpm file $RPM in $(pwd)"
                 exit 1;

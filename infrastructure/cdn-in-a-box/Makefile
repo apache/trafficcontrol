@@ -32,8 +32,8 @@ endif
 PKG_FLAGS := -v
 BUILD_NUMBER := $(shell git rev-list HEAD 2>/dev/null | wc -l | tr -d '[[:space:]]').$(shell git rev-parse --short=8 HEAD)
 TC_VERSION := $(shell cat "../../VERSION")
-TOMCAT_VERSION := $(shell grep 'export TOMCAT_VERSION=' ../../traffic_router/build/build_rpm.sh  | cut -d '=' -f 2)
-TOMCAT_RELEASE := $(shell grep 'export TOMCAT_RELEASE=' ../../traffic_router/build/build_rpm.sh  | cut -d '=' -f 2)
+TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' ../../traffic_router/build/build_rpm.sh  | cut -d= -f2)
+TOMCAT_RELEASE := $(shell grep '^\s*TOMCAT_RELEASE=' ../../traffic_router/build/build_rpm.sh  | cut -d= -f2)
 
 RHEL_VERSION := el7
 

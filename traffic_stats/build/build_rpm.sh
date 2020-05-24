@@ -17,10 +17,13 @@ set -o errexit -o nounset -o pipefail;
 
 #----------------------------------------
 importFunctions() {
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
-	export TS_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TS_DIR")
+	local script scriptdir
+	TS_DIR='' TC_DIR=''
+	script="$(readlink -f "$0")"
+	scriptdir="$(dirname "$script")"
+	TS_DIR="$(dirname "$scriptdir")"
+	TC_DIR="$(dirname "$TS_DIR")"
+	export TS_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "error: can't find $functions_sh"
@@ -35,7 +38,8 @@ initBuildArea() {
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
 	# tar/gzip the source
-	local ts_dest=$(createSourceDir traffic_stats)
+	local ts_dest
+	ts_dest="$(createSourceDir traffic_stats)"
 	cd "$TS_DIR" || \
 		 { echo "Could not cd to $TS_DIR: $?"; return 1; }
 

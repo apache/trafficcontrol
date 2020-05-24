@@ -17,10 +17,12 @@ set -o errexit -o nounset -o pipefail -o xtrace;
 
 #----------------------------------------
 importFunctions() {
-	local script=$(readlink -f "$0");
-	local scriptdir=$(dirname "$script");
-	export ORT_DIR=$(dirname "$scriptdir");
-	export TC_DIR=$(dirname "$ORT_DIR");
+	local script scriptdir;
+	script=$(readlink -f "$0");
+	scriptdir=$(dirname "$script");
+	ORT_DIR=$(dirname "$scriptdir");
+	TC_DIR=$(dirname "$ORT_DIR");
+	export ORT_DIR TC_DIR;
 	functions_sh="$TC_DIR/build/functions.sh";
 	if [[ ! -r $functions_sh ]]; then
 		echo "error: can't find $functions_sh" >&2;
@@ -34,7 +36,8 @@ initBuildArea() {
 	echo "Initializing the build area for Traffic Ops ORT";
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT}
 
-	local dest=$(createSourceDir traffic_ops_ort);
+	local dest;
+	dest=$(createSourceDir traffic_ops_ort);
 	cd "$ORT_DIR";
 
 	echo "PATH: $PATH";

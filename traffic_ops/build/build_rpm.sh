@@ -17,10 +17,12 @@ set -o errexit -o nounset -o pipefail;
 
 #----------------------------------------
 importFunctions() {
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
-	export TO_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TO_DIR")
+	local script scriptdir
+	script="$(readlink -f "$0")"
+	scriptdir="$(dirname "$script")"
+	TO_DIR="$(dirname "$scriptdir")"
+	TC_DIR="$(dirname "$TO_DIR")"
+	export TO_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "error: can't find $functions_sh"
@@ -34,7 +36,8 @@ initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
-	local dest=$(createSourceDir traffic_ops)
+	local dest
+	dest="$(createSourceDir traffic_ops)"
 	cd "$TO_DIR" || \
 		 { echo "Could not cd to $TO_DIR: $?"; return 1; }
 
@@ -79,7 +82,8 @@ initBuildArea() {
 	cp "$TO_DIR"/build/traffic_ops.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; return 1; }
 
-	export PLUGINS=$(grep -l -P '(?<!func )AddPlugin\(' ${TO_DIR}/traffic_ops_golang/plugin/*.go | xargs -I '{}' basename {} '.go')
+	PLUGINS="$(grep -l 'AddPlugin(' "${TO_DIR}/traffic_ops_golang/plugin/"*.go | grep -v 'func AddPlugin(' | xargs -I '{}' basename {} '.go')"
+	export PLUGINS
 
 	echo "The build area has been initialized."
 }

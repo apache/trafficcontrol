@@ -18,10 +18,13 @@ set -o errexit -o nounset -o pipefail;
 #----------------------------------------
 importFunctions() {
 	echo "Verifying the build configuration environment."
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
-	export TR_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TR_DIR")
+	local script scriptdir
+	script="$(readlink -f "$0")"
+	scriptdir="$(dirname "$script")"
+	TR_DIR='' TC_DIR=''
+	TR_DIR="$(dirname "$scriptdir")"
+	TC_DIR="$(dirname "$TR_DIR")"
+	export TR_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "Error: Can't find $functions_sh"
@@ -41,7 +44,8 @@ buildRpmTrafficRouter () {
 	mvn -P rpm-build -Dmaven.test.skip=true -DminimumTPS=1 clean package ||  \
 		{ echo "RPM BUILD FAILED: $?"; return 1; }
 
-	local rpm=$(find -name \*.rpm)
+	local rpm
+	rpm="$(find . -name \*.rpm | head -n1)"
 	if [[ -z $rpm ]]; then
 		echo "Could not find rpm file $RPM in $(pwd)"
 		return 1;
@@ -61,16 +65,18 @@ buildRpmTrafficRouter () {
 adaptEnvironment() {
 	echo "Verifying the build configuration environment."
 	# get traffic_control src path -- relative to build_rpm.sh script
-	export PACKAGE="traffic_router"
-	export TC_VERSION=$(getVersion "$TC_DIR")
-	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
-	export BUILD_LOCK=$(getBuildNumber).${RHEL_VERSION}
-	export WORKSPACE=${WORKSPACE:-$TC_DIR}
-	export RPMBUILD="$WORKSPACE/rpmbuild"
-	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
-	export TOMCAT_VERSION=8.5
-	export TOMCAT_RELEASE=32
+	PACKAGE='' TC_VERSION='' BUILD_LOCK='' RPMBUILD='' DIST='' RPM='' TOMCAT_VERSION='' TOMCAT_RELEASE=''
+	PACKAGE="traffic_router"
+	TC_VERSION=$(getVersion "$TC_DIR")
+	BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
+	BUILD_LOCK=$(getBuildNumber).${RHEL_VERSION}
+	WORKSPACE=${WORKSPACE:-$TC_DIR}
+	RPMBUILD="$WORKSPACE/rpmbuild"
+	DIST="$WORKSPACE/dist"
+	RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+	TOMCAT_VERSION=8.5
+	TOMCAT_RELEASE=32
+	export PACKAGE TC_VERSION BUILD_NUMBER BUILD_LOCK WORKSPACE RPMBUILD DIST RPM TOMCAT_VERSION TOMCAT_RELEASE
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"

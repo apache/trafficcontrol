@@ -42,7 +42,8 @@ versionOk() {
 
 # ---------------------------------------
 getRevCount() {
-	local buildNum=$(getBuildNumber)
+	local buildNum
+	buildNum=$(getBuildNumber)
 	echo ${buildNum%.*}
 }
 
@@ -54,10 +55,11 @@ isInGitTree() {
 
 # ---------------------------------------
 getBuildNumber() {
-	local in_git=$()
+	local in_git=''
 	if isInGitTree; then
-		local commits=$(git rev-list HEAD 2>/dev/null | wc -l)
-		local sha=$(git rev-parse --short=8 HEAD)
+		local commits sha
+		commits="$(git rev-list HEAD 2>/dev/null | wc -l)"
+		sha="$(git rev-parse --short=8 HEAD)"
 		echo "$commits.$sha"
 	else
 		# Expect it's from the released tarball -- if BUILD_NUMBER file is not present,  abort
@@ -84,18 +86,21 @@ getRhelVersion() {
 
 # ---------------------------------------
 getCommit() {
-	local buildNum=$(getBuildNumber)
+	local buildNum
+	buildNum="$(getBuildNumber)"
 	echo ${buildNum%.*}
 }
 
 # ---------------------------------------
 checkEnvironment() {
-	export TC_VERSION=$(getVersion "$TC_DIR")
-	export BUILD_NUMBER=$(getBuildNumber)
-	export RHEL_VERSION=$(getRhelVersion)
-	export WORKSPACE=${WORKSPACE:-$TC_DIR}
-	export RPMBUILD="$WORKSPACE/rpmbuild"
-	export DIST="$WORKSPACE/dist"
+	TC_VERSION='' BUILD_NUMBER='' RHEL_VERSION='' RPMBUILD='' DIST=''
+	TC_VERSION="$(getVersion "$TC_DIR")"
+	BUILD_NUMBER="$(getBuildNumber)"
+	RHEL_VERSION="$(getRhelVersion)"
+	WORKSPACE="${WORKSPACE:-$TC_DIR}"
+	RPMBUILD="$WORKSPACE/rpmbuild"
+	DIST="$WORKSPACE/dist"
+	export TC_VERSION BUILD_NUMBER RHEL_VERSION WORKSPACE RPMBUILD DIST
 
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; return 1; }
 
@@ -131,7 +136,8 @@ createSourceDir() {
 buildRpm() {
 	for package in "$@"; do
 		local pre="${package}-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}"
-		local rpm="${pre}.$(uname -m).rpm"
+		local rpm
+		rpm="${pre}.$(uname -m).rpm"
 		local srpm="${pre}.src.rpm"
 		echo "Building the rpm."
 		if [[ "$DEBUG_BUILD" == true ]]; then
@@ -160,11 +166,14 @@ buildRpm() {
 
 # ---------------------------------------
 createTarball() {
-	local projDir=$(cd "$1"; pwd)
+	local projDir
+	projDir="$(cd "$1"; pwd)"
 	local projName=trafficcontrol
-	local version=$(getVersion "$TC_DIR")
-	local tarball="dist/apache-$projName-$version.tar.gz"
-	local tardir=$(basename $tarball .tar.gz)
+	local version
+	version="$(getVersion "$TC_DIR")"
+	local tarball="dist/apache-${projName}-${version}.tar.gz"
+	local tardir
+	tardir="$(basename "$tarball" .tar.gz)"
 
 	# Create a BULDNUMBER file and add to tarball
 	local bndir=$(mktemp -d)
@@ -178,9 +187,11 @@ createTarball() {
 
 # ---------------------------------------
 createDocsTarball() {
-	local projDir=$(cd "$1"; pwd)
+	local projDir
+	projDir="$(cd "$1"; pwd)"
 	local projName=trafficcontrol
-	local version=$(getVersion "$TC_DIR")
+	local version
+	version="$(getVersion "$TC_DIR")"
 	local tarball="dist/apache-$projName-$version-docs.tar.gz"
 	local tardir="${projDir}/docs/build/"
 

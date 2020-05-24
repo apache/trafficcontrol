@@ -30,17 +30,20 @@ importFunctions() {
 #----------------------------------------
 checkGroveEnvironment() {
 	echo "Verifying the build configuration environment."
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
+	local script scriptdir
+	script=$(readlink -f "$0")
+	scriptdir=$(dirname "$script")
 
-	export GROVETC_DIR=$(dirname "$scriptdir")
-	export GROVE_DIR=$(dirname "$GROVETC_DIR")
-	export GROVE_VERSION=`cat ${GROVE_DIR}/VERSION`
-	export PACKAGE="grovetccfg"
-	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
-	export RPMBUILD="${GROVE_DIR}/rpmbuild"
-	export DIST="${TC_DIR}/dist"
-	export RPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+	GROVETC_DIR='' GROVE_DIR='' GROVE_VERSION='' PACKAGE='' RPMBUILD='' DIST='' RPM=''
+	GROVETC_DIR=$(dirname "$scriptdir")
+	GROVE_DIR=$(dirname "$GROVETC_DIR")
+	GROVE_VERSION="$(cat "${GROVE_DIR}/VERSION")"
+	PACKAGE="grovetccfg"
+	BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
+	RPMBUILD="${GROVE_DIR}/rpmbuild"
+	DIST="${TC_DIR}/dist"
+	RPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+	export GROVETC_DIR GROVE_DIR GROVE_VERSION PACKAGE BUILD_NUMBER RPMBUILD DIST RPM
 
 	# grovetccfg needs to be built with go 1.14 or greater
 	verify_and_set_go_version
