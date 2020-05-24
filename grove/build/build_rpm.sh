@@ -78,8 +78,10 @@ initBuildArea() {
 # ---------------------------------------
 buildRpmGrove() {
 	# build
+	ldflags='-s -w'
+	tags='osusergo netgo'
 	$GO get -v -d . || { echo "Failed to go get dependencies: $?" >&2; return 1; }
-	$GO build -v -ldflags "-X main.Version=$GROVE_VERSION" || { echo "Failed to build grove: $?" >&2; return 1; }
+	$GO build -v -ldflags "${ldflags} -X main.Version=$GROVE_VERSION" -tags "$tags" || { echo "Failed to build grove: $?" >&2; return 1; }
 
 	# tar
 	tar -cvzf "${RPMBUILD}/SOURCES/grove-${GROVE_VERSION}.tgz" grove conf/grove.cfg build/grove.init build/grove.logrotate || { echo "Failed to create archive for rpmbuild: $?" >&2; return 1; }

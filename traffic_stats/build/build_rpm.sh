@@ -49,20 +49,22 @@ initBuildArea() {
 				echo "GOPATH: $GOPATH"
 				go version
 				go env
+				ldflags='-s -w'
+				tags='osusergo netgo'
 
 				# get x/* packages (everything else should be properly vendored)
 				go get -v golang.org/x/net/publicsuffix || \
 								{ echo "Could not get go package dependencies"; return 1; }
 
 				# compile traffic_stats
-				go build -v || \
+				go build -v -ldflags "$ldflags" -tags "$tags" || \
 								{ echo "Could not build traffic_stats binary"; return 1; }
 
 	# compile influx_db_tools
 	(cd influxdb_tools
-	go build -v sync/sync_ts_databases.go || \
+	go build -v -ldflags "$ldflags" -tags="$tags" sync/sync_ts_databases.go || \
 								{ echo "Could not build sync_ts_databases binary"; return 1; }
-	go build -v create/create_ts_databases.go || \
+	go build -v -ldflags "$ldflags" -tags="$tags" create/create_ts_databases.go || \
 								{ echo "Could not build create_ts_databases binary"; return 1; })
 
 	rsync -aLv ./ "$ts_dest"/ || \
