@@ -70,7 +70,9 @@ initBuildArea() {
 	# prep build environment
 	[ -e "$RPMBUILD" ] && rm -rf "$RPMBUILD"
 	[ ! -e "$RPMBUILD" ] || { echo "Failed to clean up rpm build directory '$RPMBUILD': $?" >&2; return 1; }
-	mkdir -p $RPMBUILD/{BUILD,RPMS,SOURCES} || { echo "Failed to create build directory '$RPMBUILD': $?" >&2; return 1; }
+	(mkdir -p "$RPMBUILD"
+	 cd "$RPMBUILD"
+	 mkdir -p BUILD RPMS SOURCES) || { echo "Failed to create build directory '$RPMBUILD': $?" >&2; return 1; }
 }
 
 # ---------------------------------------

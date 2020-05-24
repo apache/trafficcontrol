@@ -92,14 +92,16 @@ adaptEnvironment() {
 # ---------------------------------------
 initBuildArea() {
 	echo "Initializing the build area."
-	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; return 1; }
+	(mkdir -p "$RPMBUILD"
+	 cd "$RPMBUILD"
+	 mkdir -p SPECS SOURCES RPMS SRPMS BUILD BUILDROOT) || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
 	tr_dest=$(createSourceDir traffic_router)
 
 	export MVN_CMD="mvn versions:set -DnewVersion=$TC_VERSION"
 	echo "$MVN_CMD"
 	(cd "$TR_DIR"; $MVN_CMD)
-	cp -r "$TR_DIR"/{build,connector,core} "$tr_dest"/. || { echo "Could not copy to $tr_dest: $?"; return 1; }
+	cp -r "$TR_DIR"/build "$TR_DIR"/connector "$TR_DIR"/core "$tr_dest"/. || { echo "Could not copy to $tr_dest: $?"; return 1; }
 	cp  "$TR_DIR"/pom.xml "$tr_dest" || { echo "Could not copy to $tr_dest: $?"; return 1; }
 
 	# tar/gzip the source

@@ -34,7 +34,10 @@ set -o xtrace;
 # set owner of dist dir -- cleans up existing dist permissions...
 export GOPATH=/tmp/go;
 tc_dir=${GOPATH}/src/github.com/apache/trafficcontrol;
-mkdir -p ${GOPATH}/{src,pkg,bin} "$tc_dir";
+(mkdir -p "$GOPATH"
+ cd "$GOPATH"
+ mkdir -p src pkg bin "$(dirname "$tc_dir")"
+)
 ( set -o errexit;
 	rsync -a /trafficcontrol/ "$tc_dir";
 	if ! [ -d ${tc_dir}/.git ]; then

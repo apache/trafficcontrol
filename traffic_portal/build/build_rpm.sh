@@ -36,7 +36,9 @@ importFunctions() {
 # ---------------------------------------
 initBuildArea() {
 	echo "Initializing the build area."
-	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; return 1; }
+	(mkdir -p "$RPMBUILD"
+	 cd "$RPMBUILD"
+	 mkdir -p SPECS SOURCES RPMS SRPMS BUILD BUILDROOT) || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
 	# tar/gzip the source
 	local tp_dest

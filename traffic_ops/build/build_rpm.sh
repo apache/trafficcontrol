@@ -34,7 +34,9 @@ importFunctions() {
 # ---------------------------------------
 initBuildArea() {
 	echo "Initializing the build area."
-	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; return 1; }
+	(mkdir -p "$RPMBUILD"
+	 cd "$RPMBUILD"
+	 mkdir -p SPECS SOURCES RPMS SRPMS BUILD BUILDROOT) || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
 	local dest
 	dest="$(createSourceDir traffic_ops)"
@@ -75,8 +77,10 @@ initBuildArea() {
 
 	rsync -av etc install "$dest"/ || \
 		 { echo "Could not copy to $dest: $?"; return 1; }
-	rsync -av app/{bin,conf,cpanfile,db,lib,public,script,templates} "$dest"/app/ || \
-		 { echo "Could not copy to $dest/app: $?"; return 1; }
+	if ! (cd app; rsync -av bin conf cpanfile db lib public script templates "${dest}/app"); then
+		echo "Could not copy to $dest/app"
+		return 1
+	fi
 	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$dest")" || \
 		 { echo "Could not create tar archive $dest.tgz: $?"; return 1; }
 	cp "$TO_DIR"/build/traffic_ops.spec "$RPMBUILD"/SPECS/. || \
