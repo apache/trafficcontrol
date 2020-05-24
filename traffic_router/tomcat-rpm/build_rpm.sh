@@ -79,9 +79,12 @@ buildRpmForEl () {
 				echo "Building the rpm for ${RHEL_VERSION}."
 
 				cd "$RPMBUILD"
+				# build RPM with xz level 2 compression
 				rpmbuild --define "_topdir $(pwd)" \
 								 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
 								 --define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
+								 --define '%_source_payload w2.xzdio' \
+								 --define '%_binary_payload w2.xzdio' \
 								 -ba SPECS/$SPEC_FILE_NAME || \
 								 { echo "RPM BUILD FAILED: $?"; exit 1; }
 				local rpm

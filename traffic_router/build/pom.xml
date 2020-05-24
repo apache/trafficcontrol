@@ -133,6 +133,10 @@
 							<name>${project.parent.artifactId}</name>
 							<release>${env.BUILD_NUMBER}.${env.RHEL_VERSION}</release>
 							<needarch>x86_64</needarch>
+							<defineStatements>
+								<defineStatement>_source_payload w2.xzdio</defineStatement>
+								<defineStatement>_binary_payload w2.xzdio</defineStatement>
+							</defineStatements>
 							<mappings>
 								<mapping>
 									<directory>${deploy.dir}</directory>

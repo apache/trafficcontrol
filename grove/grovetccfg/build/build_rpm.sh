@@ -100,8 +100,15 @@ buildRpmGrove() {
 		trap give_spec_back EXIT
 	fi
 
-	# build RPM
-	rpmbuild --define "_topdir $RPMBUILD" --define "version ${GROVE_VERSION}" --define "build_number ${BUILD_NUMBER}" -ba build/${PACKAGE}.spec || { echo "rpmbuild failed: $?" >&2; return 1; }
+	# build RPM with xz level 2 compression
+	rpmbuild \
+		--define "_topdir $RPMBUILD" \
+		--define "version ${GROVE_VERSION}" \
+		--define "build_number ${BUILD_NUMBER}" \
+		--define '%_source_payload w2.xzdio' \
+		--define '%_binary_payload w2.xzdio' \
+		-ba build/${PACKAGE}.spec ||
+		{ echo "rpmbuild failed: $?" >&2; return 1; }
 
 	# copy build RPM to .
 	[ -e "$DIST" ] || mkdir -p "$DIST"

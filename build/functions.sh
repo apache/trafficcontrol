@@ -153,6 +153,8 @@ buildRpm() {
 			echo 'RPM will not strip binaries before packaging.';
 			set -- "$@" --define '%__os_install_post %{nil}' # Do not strip binaries before packaging
 		fi;
+		set -- "$@" --define '%_source_payload w2.xzdio' # xz level 2 compression for text files
+		set -- "$@" --define '%_binary_payload w2.xzdio' # xz level 2 compression for binary files
 		set -o nounset; }
 
 		(cd "$RPMBUILD" && \
