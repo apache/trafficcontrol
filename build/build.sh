@@ -23,7 +23,10 @@ topscript='' TC_DIR=''
 topscript="$(readlink -f "$0")"
 TC_DIR="$(dirname "$(dirname "$topscript")")"
 export TC_DIR
-[ -n "$TC_DIR" ] && cd "$TC_DIR" || { echo "Could not cd $TC_DIR"; exit 1; }
+if [ -z "$TC_DIR" ] || ! cd "$TC_DIR"; then
+	echo "Could not cd TC_DIR ${TC_DIR}";
+	exit 1;
+fi;
 
 . build/functions.sh
 

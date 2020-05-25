@@ -152,12 +152,13 @@ buildRpm() {
 			echo '%__os_install_post %{nil}' >> /etc/rpm/macros; # Do not strip binaries before packaging
 		fi;
 
-		cd "$RPMBUILD" && \
+		(cd "$RPMBUILD" && \
 			rpmbuild --define "_topdir $(pwd)" \
 				 --define "traffic_control_version $TC_VERSION" \
 				 --define "commit $(getCommit)" \
 				 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
-				 -ba SPECS/$package.spec || \
+				 -ba SPECS/$package.spec \
+				) || \
 				 { echo "RPM BUILD FAILED: $?"; return 1; }
 
 		echo
