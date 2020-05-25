@@ -19,7 +19,7 @@ set -o errexit -o nounset -o pipefail;
 importFunctions() {
 	echo "Verifying the build configuration environment."
 	local script scriptdir
-	script="$(readlink -f "$0")"
+	script="$(realpath "$0")"
 	scriptdir="$(dirname "$script")"
 	TR_DIR='' TC_DIR=''
 	TR_DIR="$(dirname "$scriptdir")"

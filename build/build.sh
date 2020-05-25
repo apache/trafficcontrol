@@ -18,17 +18,17 @@ set -o errexit -o nounset -o pipefail;
 # By default all sub-projects are built.  Supply a list of projects to build if
 # only a subset is wanted.
 
+. build/functions.sh
+
 # make sure we start out in traffic_control dir
 topscript='' TC_DIR=''
-topscript="$(readlink -f "$0")"
+topscript="$(realpath "$0")"
 TC_DIR="$(dirname "$(dirname "$topscript")")"
 export TC_DIR
 if [ -z "$TC_DIR" ] || ! cd "$TC_DIR"; then
 	echo "Could not cd TC_DIR ${TC_DIR}";
 	exit 1;
 fi;
-
-. build/functions.sh
 
 checkEnvironment
 

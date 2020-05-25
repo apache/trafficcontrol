@@ -18,7 +18,7 @@ set -o errexit -o nounset -o pipefail -o xtrace;
 #----------------------------------------
 importFunctions() {
 	local script scriptdir;
-	script="$(readlink -f "$0")";
+	script="$(realpath "$0")";
 	scriptdir="$(dirname "$script")";
 	ORT_DIR="$(dirname "$scriptdir")";
 	TC_DIR="$(dirname "$ORT_DIR")";

@@ -14,11 +14,12 @@
 # shellcheck shell=ash
 trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0}" >/dev/stderr; exit $exit_code' EXIT;
 set -o errexit -o nounset -o pipefail;
+set -o xtrace
 
 #----------------------------------------
 importFunctions() {
 	local script scriptdir
-	script="$(readlink -f "$0")"
+	script="$(realpath "$0")"
 	scriptdir="$(dirname "$script")"
 	TO_DIR="$(dirname "$scriptdir")"
 	TC_DIR="$(dirname "$TO_DIR")"

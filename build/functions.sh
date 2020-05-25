@@ -13,6 +13,17 @@
 #
 # shellcheck shell=ash
 
+if ! type -p realpath; then
+	# by default, macOS does not have realpath
+	realpath() {
+		ls "$(
+			cd "$(dirname "$0")"
+			pwd -P # -P resolves symlinks
+		)/$(basename "$0")"
+	}
+	export -f realpath
+fi;
+
 removeFirstArg() {
 	shift
 	echo "$@"

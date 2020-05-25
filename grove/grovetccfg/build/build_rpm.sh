@@ -31,7 +31,7 @@ importFunctions() {
 checkGroveEnvironment() {
 	echo "Verifying the build configuration environment."
 	local script scriptdir
-	script=$(readlink -f "$0")
+	script=$(realpath "$0")
 	scriptdir=$(dirname "$script")
 
 	GROVETC_DIR='' GROVE_DIR='' GROVE_VERSION='' PACKAGE='' RPMBUILD='' DIST='' RPM=''

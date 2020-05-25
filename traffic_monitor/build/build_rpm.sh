@@ -19,7 +19,7 @@ set -o errexit -o nounset -o pipefail;
 importFunctions() {
 	local script scriptdir
 	TM_DIR='' TC_DIR=''
-	script=$(readlink -f "$0")
+	script=$(realpath "$0")
 	scriptdir=$(dirname "$script")
 	TM_DIR="$(dirname "$scriptdir")"
 	TC_DIR="$(dirname "$TM_DIR")"
