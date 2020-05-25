@@ -39,12 +39,15 @@ tc_volume='/trafficcontrol'
  cd "$GOPATH"
  mkdir -p src pkg bin "$(dirname "$tc_dir")"
 )
-rsync -a "${tc_volume}/" "$tc_dir";
+rsync -a --exclude=dist "${tc_volume}/" "$tc_dir";
 if ! [ -d ${tc_dir}/.git ]; then
 	rsync -a "${tc_volume}/.git" $tc_dir; # Docker for Windows compatibility
 fi
 
 cd "$tc_dir"
+# In case the mirrored repo already exists, remove gitignored files
+git clean -fX
+
 rm -rf "dist"
 mkdir -p "${tc_volume}/dist"
 ln -sf "${tc_volume}/dist" "dist"
