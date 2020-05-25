@@ -37,6 +37,7 @@ checkEnvironment() {
 	export PACKAGE="tomcat"
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
+	export RPM_TARGET_OS="${RPM_TARGET_OS:-linux}"
 	export DIST="$WORKSPACE/dist"
 	export RPM="${PACKAGE}-${TOMCAT_VERSION}.${TOMCAT_RELEASE}-${BUILD_NUMBER}.${RHEL_VERSION}.x86_64.rpm"
 
@@ -83,9 +84,10 @@ buildRpmForEl () {
 				rpmbuild --define "_topdir $(pwd)" \
 								 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
 								 --define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
+								 --define "_target_os ${RPM_TARGET_OS}" \
 								 --define '%_source_payload w2.xzdio' \
 								 --define '%_binary_payload w2.xzdio' \
-								 -ba SPECS/$SPEC_FILE_NAME || \
+								 -ba SPECS/$SPEC_FILE_NAME ||
 								 { echo "RPM BUILD FAILED: $?"; exit 1; }
 				local rpm
 				rpm="$(find ./RPMS -name "$RPM")"

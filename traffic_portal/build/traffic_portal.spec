@@ -40,9 +40,9 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 %setup
 
 %build
-		/usr/bin/npm install
-		/usr/bin/bower install
-		/usr/bin/grunt dist
+		npm install
+		bower install
+		grunt dist
 
 %install
 		%__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d

@@ -24,6 +24,23 @@ if ! type -p realpath; then
 	export -f realpath
 fi;
 
+if { ! stat -c%u . >/dev/null && stat -f%u .; } >/dev/null 2>&1; then
+	#BSD stat uses -f as its formatting flag instead of -c
+	stat() {
+		local format=''
+		while getopts c: option; do
+			case "$option" in
+				c) format="$OPTARG";;
+				*) return 1
+			esac
+		done
+		shift $(( OPTIND - 1 ))
+		unset OPTIND
+		$(which stat) "-f${format}" "$@"
+	}
+	export -f stat
+fi
+
 removeFirstArg() {
 	shift
 	echo "$@"
@@ -76,7 +93,7 @@ getBuildNumber() {
 	local in_git=''
 	if isInGitTree; then
 		local commits sha
-		commits="$(git rev-list HEAD 2>/dev/null | wc -l)"
+		commits="$(git rev-list HEAD 2>/dev/null | wc -l | awk '{print $1}')" # awk is for BSD compatibility
 		sha="$(git rev-parse --short=8 HEAD)"
 		echo "$commits.$sha"
 	else
@@ -127,8 +144,10 @@ checkEnvironment() {
 	RHEL_VERSION="$(getRhelVersion)"
 	WORKSPACE="${WORKSPACE:-$TC_DIR}"
 	RPMBUILD="$WORKSPACE/rpmbuild"
+	GOOS="${GOOS:-linux}"
+	RPM_TARGET_OS="${RPM_TARGET_OS:-$GOOS}"
 	DIST="$WORKSPACE/dist"
-	export TC_VERSION BUILD_NUMBER RHEL_VERSION WORKSPACE RPMBUILD DIST
+	export TC_VERSION BUILD_NUMBER RHEL_VERSION WORKSPACE RPMBUILD GOOS RPM_TARGET_OS DIST
 
 	mkdir -p "$DIST" || { echo "Could not create ${DIST}: ${?}"; return 1; }
 
@@ -183,6 +202,7 @@ buildRpm() {
 				--define "traffic_control_version $TC_VERSION" \
 				--define "commit $(getCommit)" \
 				--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
+				--define "_target_os $RPM_TARGET_OS" \
 				 -ba SPECS/$package.spec \
 				"$@" # variable number of arguments
 				) || \

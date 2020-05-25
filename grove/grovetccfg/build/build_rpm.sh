@@ -43,7 +43,9 @@ checkGroveEnvironment() {
 	RPMBUILD="${GROVE_DIR}/rpmbuild"
 	DIST="${TC_DIR}/dist"
 	RPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
-	export GROVETC_DIR GROVE_DIR GROVE_VERSION PACKAGE BUILD_NUMBER RPMBUILD DIST RPM
+	GOOS="${GOOS:-linux}"
+	RPM_TARGET_OS="${RPM_TARGET_OS:-$GOOS}"
+	export GROVETC_DIR GROVE_DIR GROVE_VERSION PACKAGE BUILD_NUMBER RPMBUILD DIST RPM GOOS RPM_TARGET_OS
 
 	# grovetccfg needs to be built with go 1.14 or greater
 	if ! verify_and_set_go_version; then
@@ -107,6 +109,7 @@ buildRpmGrove() {
 		--define "_topdir $RPMBUILD" \
 		--define "version ${GROVE_VERSION}" \
 		--define "build_number ${BUILD_NUMBER}" \
+		--define "_target_os ${RPM_TARGET_OS}" \
 		--define '%_source_payload w2.xzdio' \
 		--define '%_binary_payload w2.xzdio' \
 		-ba build/${PACKAGE}.spec ||

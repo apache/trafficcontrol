@@ -92,6 +92,7 @@
 									<variableName>TOMCAT_VERSION</variableName>
 									<variableName>TOMCAT_RELEASE</variableName>
 									<variableName>RHEL_VERSION</variableName>
+									<variableName>RPM_TARGET_OS</variableName>
 									<variableName>STARTUP_SCRIPT_DIR</variableName>
 									<variableName>STARTUP_SCRIPT_LOC</variableName>
 								</requireEnvironmentVariable>
@@ -133,6 +134,7 @@
 							<name>${project.parent.artifactId}</name>
 							<release>${env.BUILD_NUMBER}.${env.RHEL_VERSION}</release>
 							<needarch>x86_64</needarch>
+							<targetOS>${env.RPM_TARGET_OS}</targetOS>
 							<defineStatements>
 								<defineStatement>_source_payload w2.xzdio</defineStatement>
 								<defineStatement>_binary_payload w2.xzdio</defineStatement>

@@ -32,8 +32,11 @@ cleanup() {
 set -o xtrace;
 
 # set owner of dist dir -- cleans up existing dist permissions...
-export GOPATH=/tmp/go;
+export GOPATH=/tmp/go GOOS="${GOOS:-linux}";
 tc_dir=${GOPATH}/src/github.com/apache/trafficcontrol;
+if which cygpath 2>/dev/null; then
+	GOPATH="$(cygpath -w "$GOPATH")" # cygwin compatibility
+fi
 tc_volume='/trafficcontrol'
 (mkdir -p "$GOPATH"
  cd "$GOPATH"
