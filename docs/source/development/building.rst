@@ -74,19 +74,99 @@ Output :file:`{component}-{version}.rpm` files, build logs and source tarballs w
 .. _build-with-dc:
 
 Build Using ``docker-compose``
+------------------------------
 If the ``pkg`` script fails, ``docker-compose`` can still be used to build the projects directly. The compose file can be found at ``infrastructure/docker/build/docker-compose.yml`` under the repository's root directory. It can be passed directly to ``docker-compose``, either from the ``infrastructure/docker/build/`` directory or by explicitly passing a path to the ``infrastructure/docker/build/docker-compose.yml`` file via ``-f``. It is recommended that between builds ``docker-compose down -v`` is run to prevent caching of old build steps. The service names are the same as the project names described above in `Usage`_, and similar to the ``pkg`` script, the build results, logs and source tarballs may all be found in the ``dist`` directory after completion.
 
 .. note:: Calling ``docker-compose`` in the way described above will build _all_ projects, not just the default projects.
 
 .. seealso:: `The Docker Compose command line reference <https://docs.docker.com/compose/reference/overview/>`_
 
+.. _dev-building-natively:
 
+Build the RPMs Natively
+=======================
+A developer may end up building the RPMs several times to test or :ref:`debug <dev-debugging-ciab>` code changes, so it can be desirable to build the RPMs quickly for this purpose. Natively building the RPMs has the lowest build time of any method.
 
+Install the Dependencies
+------------------------
+
+.. table:: Build dependencies for Traffic Control
+
+	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	|                                    | Common dependencies | :ref:`dev-traffic-monitor` | :ref:`dev-traffic-ops` | :ref:`dev-traffic-portal` | :ref:`dev-traffic-router` | :ref:`dev-traffic-stats` | Grove    | Grove TC Config (grovetccfg) | :ref:`Docs <docs-guide>` |
+	+====================================+=====================+============================+========================+===========================+===========================+==========================+==========+==============================+==========================+
+	| macOS (homebrew_)\ [3]_,\ [4]_     | - rpm               | - go                       | - go                   | - npm                     | - maven                   | - go                     | - go     | - go                         | - python3                |
+	|                                    |                     |                            |                        | - bower                   |                           |                          |          |                              | - sphinx-doc             |
+	|                                    |                     |                            |                        | - grunt-cli               |                           |                          |          |                              |                          |
+	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| CentOS/Red Hat/Fedora (yum_)\ [5]_ | - git               |                            |                        | - epel-release            | - java-1.8.0-openjdk      |                          |          |                              | - python3-devel          |
+	|                                    | - rpm-build         |                            |                        | - npm                     | - maven                   |                          |          |                              | - gcc                    |
+	|                                    | - rsync             |                            |                        | - nodejs-grunt-cli        |                           |                          |          |                              | - make                   |
+	|                                    |                     |                            |                        | - ruby-devel              |                           |                          |          |                              |                          |
+	|                                    |                     |                            |                        | - gcc                     |                           |                          |          |                              |                          |
+	|                                    |                     |                            |                        | - make                    |                           |                          |          |                              |                          |
+	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Arch Linux (pacman_)               | - git               | - go                       | - go                   | - npm                     | - jdk8-openjdk            | - go                     | - go     | - go                         | - python-pip             |
+	|                                    | - rpm-tools         |                            |                        | - bower                   | - maven                   |                          |          |                              | - python-sphinx          |
+	|                                    | - diff              |                            |                        | - grunt-cli               |                           |                          |          |                              | - make                   |
+	|                                    | - rsync             |                            |                        | - ruby                    |                           |                          |          |                              |                          |
+	|                                    |                     |                            |                        | - gcc                     |                           |                          |          |                              |                          |
+	|                                    |                     |                            |                        | - make                    |                           |                          |          |                              |                          |
+	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Windows (cygwin_)\ [6]_            | - git               |                            |                        | - ruby-devel              | - curl                    |                          |          |                              |                          |
+	|                                    | - rpm-build         |                            |                        | - make                    |                           |                          |          |                              |                          |
+	|                                    | - rsync             |                            |                        | - gcc-g++                 |                           |                          |          |                              |                          |
+	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Windows (chocolatey_)              |                     | - golang                   | - golang               | - nodejs                  | - openjdk8                | - golang                 | - golang | - golang                     | - python                 |
+	|                                    |                     |                            |                        |                           | - maven                   |                          |          |                              | - pip                    |
+	|                                    |                     |                            |                        |                           |                           |                          |          |                              | - make                   |
+	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+
+.. _homebrew:   https://brew.sh/
+.. _yum:        https://wiki.centos.org/PackageManagement/Yum
+.. _pacman:     https://www.archlinux.org/pacman/
+.. _cygwin:     https://cygwin.com/
+.. _chocolatey: https://chocolatey.org/
+
+.. [3] If you are on macOS, you additionally need to :ref:`dev-tr-mac-jdk`.
+
+.. [4]  On macOS, in order to add the ``sphinx-build`` binary to your ``PATH`` after installing the ``sphinx-doc`` package, run ``brew link --force sphinx-doc``
+
+.. [5] If you are on CentOS, you need to `download Go directly <https://golang.org/dl/>`_ instead of using a package manager in order to get the latest Go version. For most users, the desired architecture is AMD64/x86_64.
+
+.. [6] If you are on Windows, you need to install both the Cygwin packages and the Chocolatey packages in order to build the Apache Traffic Control RPMs natively.
+
+.. |AdoptOpenJDK instructions| replace:: add the AdoptOpenJDK tap and install the ``adoptopenjdk8`` cask
+.. _AdoptOpenJDK instructions: https://github.com/AdoptOpenJDK/homebrew-openjdk#other-versions
+
+After installing the packages using your platform's package manager,
+
+	- Install the :ref:`global NPM packages <dev-tp-global-npm>` and :ref:`Compass <dev-tp-compass>`.. to build Traffic Portal.
+
+	- Install the Python 3 modules used to :ref:`build the documentation <docs-build>`.
+
+Run ``build/clean_build.sh`` directly
+-------------------------------------
+
+In a terminal, nativate to the root directory of the repository. You can run ``build/clean_build.sh`` with no arguments to build all components.
 
 .. code-block:: shell
+	:caption: ``build/clean_build.sh`` with no arguments
 
+	build/clean_build.sh
 
+This is the equivalent of running
 
+.. code-block:: shell
+	:caption: ``build/clean_build.sh`` with all components
+
+	build/clean_build.sh tarball traffic_monitor traffic_ops traffic_portal traffic_router traffic_stats grove grove/grovetccfg docs
+
+If any component fails to build, no further component builds will be attempted.
+
+Regardless of which OS the RPMs were built on, they are meant to be installed on CentOS 7. The exception is if the RPMs were built on CentOS 8, in which case the target OS for the RPMs is CentOS 8.
+
+.. warning:: Although there are no known issues with natively-built RPMs, the official, supported method of building the RPMs is by using :ref:`pkg <pkg>` or :ref:`docker-compose <build-with-dc>`. Use natively-built RPMs at your own risk.
 
 Building Individual Components
 ==============================

@@ -43,7 +43,7 @@ RUN curl -LO https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
 
 ###
 
-ADD infrastructure/docker/build/clean_build.sh /
+ADD build/clean_build.sh /
 
 ENV GOPATH=/go
 RUN mkdir -p /go/src/github.com/apache && ln -s /tmp/trafficcontrol /go/src/github.com/apache/trafficcontrol
