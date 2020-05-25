@@ -91,12 +91,12 @@ buildRpmGrove() {
 	spec_owner=$(stat -c%u $spec)
 	spec_group=$(stat -c%g $spec)
 	if ! id $spec_owner >/dev/null 2>&1; then
-	  chown $(id -u):$(id -g) build/${PACKAGE}.spec
+		chown $(id -u):$(id -g) build/${PACKAGE}.spec
 
 		give_spec_back() {
 		chown ${spec_owner}:${spec_group} build/${PACKAGE}.spec
-	  }
-	  trap give_spec_back EXIT
+		}
+		trap give_spec_back EXIT
 	fi
 
 	# build RPM

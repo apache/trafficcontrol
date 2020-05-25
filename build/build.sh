@@ -38,7 +38,7 @@ else
 	# Always build tarball when building everything..
 	projects=(tarball)
 	for p in "${projects_to_build[@]}"; do
-	  p=${p%%/*}
+		p=${p%%/*}
 		if [[ $p != "traffic_monitor_golang" ]]; then
 			projects+=($p)
 		fi

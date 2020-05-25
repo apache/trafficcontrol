@@ -43,25 +43,25 @@ initBuildArea() {
 	cd "$TS_DIR" || \
 		 { echo "Could not cd to $TS_DIR: $?"; return 1; }
 
-        echo "PATH: $PATH"
-        echo "GOPATH: $GOPATH"
-        go version
-        go env
+				echo "PATH: $PATH"
+				echo "GOPATH: $GOPATH"
+				go version
+				go env
 
-        # get x/* packages (everything else should be properly vendored)
-        go get -v golang.org/x/net/publicsuffix || \
-                { echo "Could not get go package dependencies"; return 1; }
+				# get x/* packages (everything else should be properly vendored)
+				go get -v golang.org/x/net/publicsuffix || \
+								{ echo "Could not get go package dependencies"; return 1; }
 
-        # compile traffic_stats
-        go build -v || \
-                { echo "Could not build traffic_stats binary"; return 1; }
+				# compile traffic_stats
+				go build -v || \
+								{ echo "Could not build traffic_stats binary"; return 1; }
 
 	# compile influx_db_tools
 	pushd influxdb_tools
 	go build -v sync/sync_ts_databases.go || \
-                { echo "Could not build sync_ts_databases binary"; return 1; }
+								{ echo "Could not build sync_ts_databases binary"; return 1; }
 	go build -v create/create_ts_databases.go || \
-                { echo "Could not build create_ts_databases binary"; return 1; }
+								{ echo "Could not build create_ts_databases binary"; return 1; }
 	popd
 
 	rsync -aLv ./ "$ts_dest"/ || \
@@ -76,10 +76,10 @@ initBuildArea() {
 }
 
 preBuildChecks() {
-    if [[ -e "$TS_DIR"/traffic_stats ]]; then
-        echo "Found $TS_DIR/traffic_stats, please remove before retrying to build"
-        return 1
-    fi
+		if [[ -e "$TS_DIR"/traffic_stats ]]; then
+				echo "Found $TS_DIR/traffic_stats, please remove before retrying to build"
+				return 1
+		fi
 }
 
 # ---------------------------------------

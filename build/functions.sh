@@ -81,7 +81,7 @@ getVersion() {
 
 # ---------------------------------------
 getRhelVersion() {
-        echo el$(rpm -q --qf "%{VERSION}" $(rpm -q --whatprovides redhat-release))
+				echo el$(rpm -q --qf "%{VERSION}" $(rpm -q --whatprovides redhat-release))
 }
 
 # ---------------------------------------
@@ -177,12 +177,12 @@ createTarball() {
 
 	# Create a BULDNUMBER file and add to tarball
 	local bndir=$(mktemp -d)
-        getBuildNumber >"$bndir/BUILD_NUMBER"
+				getBuildNumber >"$bndir/BUILD_NUMBER"
 
-        # create the tarball only from files in repo and BUILD_NUMBER
-        tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$tardir/@S" $(git ls-files)
-        rm -r "$bndir"
-        echo "$tarball"
+				# create the tarball only from files in repo and BUILD_NUMBER
+				tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$tardir/@S" $(git ls-files)
+				rm -r "$bndir"
+				echo "$tarball"
 }
 
 # ---------------------------------------
@@ -197,47 +197,47 @@ createDocsTarball() {
 
 	# Create a BULDNUMBER file and add to tarball
 	local bndir=$(mktemp -d)
-        getBuildNumber >"$bndir/BUILD_NUMBER"
+				getBuildNumber >"$bndir/BUILD_NUMBER"
 
-        # create the tarball only from files in repo and BUILD_NUMBER
-        tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$tardir" . --exclude-vcs
-        rm -r "$bndir"
-        echo "$tarball"
+				# create the tarball only from files in repo and BUILD_NUMBER
+				tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$tardir" . --exclude-vcs
+				rm -r "$bndir"
+				echo "$tarball"
 }
 
 # ----------------------------------------
 # verify if the go compiler is version 1.14 or higher, returns 0 if if not. returns 1 if it is.
-# 
+#
 verify_and_set_go_version() {
-  GO_VERSION="none"
-  GO="none"
-  go_in_path=`type -p go`
-  for g in $go_in_path /usr/bin/go /usr/local/go/bin/go; do
-    if [[ -z $g ]] || [[ ! -x $g ]]; then
-      continue
-    fi
-    
-    go_version=`$g version | awk '{print $3}'`
+	GO_VERSION="none"
+	GO="none"
+	go_in_path=`type -p go`
+	for g in $go_in_path /usr/bin/go /usr/local/go/bin/go; do
+		if [[ -z $g ]] || [[ ! -x $g ]]; then
+			continue
+		fi
 
-    if [[ $go_version =~ go([1-9])\.([1-9]+) ]] && [[ ${BASH_REMATCH[1]} -ge 1 ]] && [[ ${BASH_REMATCH[2]} -ge 14 ]]; then
-      GO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; export GO_VERSION
-      GO=$g; export GO
-      PATH=`dirname $g`:$PATH; export PATH
-      echo "go version for $g is ${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
-      echo "will use $g"
-      return 1
-    else
-      if [[ $go_version =~ go([1-9])\.([1-9]+) ]]; then
-        GO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; export GO_VERSION
-        echo "go version for $g is ${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
-        continue
-      fi
-    fi
-  done
+		go_version=`$g version | awk '{print $3}'`
 
-  if [[ $GO == none ]]; then
-    echo "ERROR: this build needs go 1.14 or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
-    return 0
-  fi
+		if [[ $go_version =~ go([1-9])\.([1-9]+) ]] && [[ ${BASH_REMATCH[1]} -ge 1 ]] && [[ ${BASH_REMATCH[2]} -ge 14 ]]; then
+			GO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; export GO_VERSION
+			GO=$g; export GO
+			PATH=`dirname $g`:$PATH; export PATH
+			echo "go version for $g is ${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+			echo "will use $g"
+			return 1
+		else
+			if [[ $go_version =~ go([1-9])\.([1-9]+) ]]; then
+				GO_VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; export GO_VERSION
+				echo "go version for $g is ${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+				continue
+			fi
+		fi
+	done
+
+	if [[ $GO == none ]]; then
+		echo "ERROR: this build needs go 1.14 or greater and no usable go compiler was found, found GO_VERSION: $GO_VERSION"
+		return 0
+	fi
 }
 

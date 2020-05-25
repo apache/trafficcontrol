@@ -42,29 +42,29 @@ checkEnvironment() {
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
-	echo "TOMCAT_RELEASE: $TOMCAT_RELEASE" 	#defined in traffic_router
-	echo "TOMCAT_VERSION: $TOMCAT_VERSION"	#defined in traffic_router
-	echo "BUILD_NUMBER: $BUILD_NUMBER"		#defined in traffic_router
-	echo "BUILD_LOCK: $BUILD_LOCK"			#defined in traffic_router
+	echo "TOMCAT_RELEASE: $TOMCAT_RELEASE"  #defined in traffic_router
+	echo "TOMCAT_VERSION: $TOMCAT_VERSION"  #defined in traffic_router
+	echo "BUILD_NUMBER: $BUILD_NUMBER"    #defined in traffic_router
+	echo "BUILD_LOCK: $BUILD_LOCK"      #defined in traffic_router
 	echo "RPM: $RPM"
 	echo "--------------------------------------------------"
 }
 
 # ---------------------------------------
 initBuildArea() {
-        echo "Initializing the build area."
-        mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
-        export VERSION=$TOMCAT_VERSION
-        export RELEASE=$TOMCAT_RELEASE
+				echo "Initializing the build area."
+				mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
+				export VERSION=$TOMCAT_VERSION
+				export RELEASE=$TOMCAT_RELEASE
 
-        echo "Downloading Tomcat $VERSION.$RELEASE..."
-        curl -fo "$RPMBUILD"/SOURCES/apache-tomcat-$VERSION.$RELEASE.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v$VERSION.$RELEASE/bin/apache-tomcat-$VERSION.$RELEASE.tar.gz || \
-        { echo "Could not download Tomcat $VERSION.$RELEASE: $?"; exit 1; }
+				echo "Downloading Tomcat $VERSION.$RELEASE..."
+				curl -fo "$RPMBUILD"/SOURCES/apache-tomcat-$VERSION.$RELEASE.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v$VERSION.$RELEASE/bin/apache-tomcat-$VERSION.$RELEASE.tar.gz || \
+				{ echo "Could not download Tomcat $VERSION.$RELEASE: $?"; exit 1; }
 
-        cp "$TR_DIR/tomcat-rpm/tomcat.service" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
-        cp "$TR_DIR/tomcat-rpm/tomcat.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
+				cp "$TR_DIR/tomcat-rpm/tomcat.service" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
+				cp "$TR_DIR/tomcat-rpm/tomcat.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
 
-        echo "The build area has been initialized."
+				echo "The build area has been initialized."
 }
 
 #----------------------------------------
@@ -74,27 +74,27 @@ buildRpmTomcat () {
 }
 
 buildRpmForEl () {
-        echo "Building the rpm for "$RHEL_VERSION"."
+				echo "Building the rpm for "$RHEL_VERSION"."
 
-        cd $RPMBUILD
-        rpmbuild --define "_topdir $(pwd)" \
-                 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
-                 --define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
-                 -ba SPECS/$SPEC_FILE_NAME || \
-                 { echo "RPM BUILD FAILED: $?"; exit 1; }
-        local rpm
-        rpm="$(find ./RPMS -name "$RPM")"
-        if [[ -z $rpm ]]; then
-                echo "Could not find rpm file $RPM in $(pwd)"
-                exit 1;
-        fi
-        echo "========================================================================================"
-        echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
-        echo "========================================================================================"
-        echo
-        mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
+				cd $RPMBUILD
+				rpmbuild --define "_topdir $(pwd)" \
+								 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
+								 --define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
+								 -ba SPECS/$SPEC_FILE_NAME || \
+								 { echo "RPM BUILD FAILED: $?"; exit 1; }
+				local rpm
+				rpm="$(find ./RPMS -name "$RPM")"
+				if [[ -z $rpm ]]; then
+								echo "Could not find rpm file $RPM in $(pwd)"
+								exit 1;
+				fi
+				echo "========================================================================================"
+				echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
+				echo "========================================================================================"
+				echo
+				mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-        cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
+				cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
 }
 
 checkEnvironment

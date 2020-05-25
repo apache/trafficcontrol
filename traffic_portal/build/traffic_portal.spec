@@ -15,15 +15,15 @@
 #
 # RPM spec file for the Traffic Portal
 #
-%define		debug_package %{nil}
-Name:		traffic_portal
-Version:	%{traffic_control_version}
-Release:	%{build_number}
-Summary:	Traffic Portal
-Group:		Applications/Communications
-License:	Apache License, Version 2.0
-URL:		https://github.com/apache/trafficcontrol/
-Source:		%{_sourcedir}/traffic_portal-%{traffic_control_version}.tgz
+%define   debug_package %{nil}
+Name:     traffic_portal
+Version:  %{traffic_control_version}
+Release:  %{build_number}
+Summary:  Traffic Portal
+Group:    Applications/Communications
+License:  Apache License, Version 2.0
+URL:      https://github.com/apache/trafficcontrol/
+Source:   %{_sourcedir}/traffic_portal-%{traffic_control_version}.tgz
 AutoReqProv: no
 Requires: nodejs
 
@@ -40,24 +40,24 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 %setup
 
 %build
-    /usr/bin/npm install
-    /usr/bin/bower install
-    /usr/bin/grunt dist
+		/usr/bin/npm install
+		/usr/bin/bower install
+		/usr/bin/grunt dist
 
 %install
-    %__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
-    %__mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
-    %__mkdir -p ${RPM_BUILD_ROOT}/etc/traffic_portal
-    %__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/public
-    %__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/server
-    %__mkdir -p ${RPM_BUILD_ROOT}/var/log/traffic_portal
+		%__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
+		%__mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
+		%__mkdir -p ${RPM_BUILD_ROOT}/etc/traffic_portal
+		%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/public
+		%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/server
+		%__mkdir -p ${RPM_BUILD_ROOT}/var/log/traffic_portal
 
-    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/server.js ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
-    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/conf ${RPM_BUILD_ROOT}/etc/traffic_portal/.
-    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/init.d/traffic_portal ${RPM_BUILD_ROOT}/etc/init.d/.
-    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal ${RPM_BUILD_ROOT}/etc/logrotate.d/.
-    %__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal-access ${RPM_BUILD_ROOT}/etc/logrotate.d/.
-    %__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/app/dist/* ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
+		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/server.js ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
+		%__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/conf ${RPM_BUILD_ROOT}/etc/traffic_portal/.
+		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/init.d/traffic_portal ${RPM_BUILD_ROOT}/etc/init.d/.
+		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal ${RPM_BUILD_ROOT}/etc/logrotate.d/.
+		%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/logrotate.d/traffic_portal-access ${RPM_BUILD_ROOT}/etc/logrotate.d/.
+		%__cp -r ${RPM_BUILD_DIR}/traffic_portal-%{version}/app/dist/* ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
 
 	# creates dynamic json file needed at runtime for traffic portal to display release info
 	VERSION=%{version}-%{build_number}
@@ -68,13 +68,13 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 	echo -e $JSON_VERSION > ${RPM_BUILD_ROOT}%{traffic_portal_home}/public/traffic_portal_release.json
 
 %post
-    echo "Successfully installed the traffic_portal assets to " %{traffic_portal_home}
-    %__chmod +x %{traffic_portal_home}/node_modules/forever/bin/forever
-    %__chmod +x /etc/init.d/traffic_portal
-    echo "Successfully installed the 'traffic_portal' service"
-    /sbin/chkconfig traffic_portal on
-    echo ""
-    echo "Start with 'service traffic_portal start'"
+		echo "Successfully installed the traffic_portal assets to " %{traffic_portal_home}
+		%__chmod +x %{traffic_portal_home}/node_modules/forever/bin/forever
+		%__chmod +x /etc/init.d/traffic_portal
+		echo "Successfully installed the 'traffic_portal' service"
+		/sbin/chkconfig traffic_portal on
+		echo ""
+		echo "Start with 'service traffic_portal start'"
 
 %files
 %defattr(644,root,root,755)
