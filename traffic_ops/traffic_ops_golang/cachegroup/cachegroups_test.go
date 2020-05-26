@@ -274,7 +274,7 @@ func TestValidate(t *testing.T) {
 	}
 }
 
-func TestBadTypeParamCacheGroups (t *testing.T) {
+func TestBadTypeParamCacheGroups(t *testing.T) {
 	detail := `cachegroup read: converting cachegroup type to integer strconv.Atoi: parsing "wrong": invalid syntax`
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
@@ -336,7 +336,7 @@ func TestBadTypeParamCacheGroups (t *testing.T) {
 	if sc != http.StatusBadRequest {
 		t.Errorf("Read expected status code: Bad Request, actual: %v ", sc)
 	}
-	if userErr == nil{
+	if userErr == nil {
 		t.Errorf("Read expected: user error with details %v, actual: nil", detail)
 	}
 	if userErr.Error() != detail {
