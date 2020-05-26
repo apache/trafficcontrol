@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"net/http"
 	"testing"
 	"time"
@@ -94,6 +95,65 @@ func getTestServers() []tc.Server {
 	servers = append(servers, testServer2)
 
 	return servers
+}
+
+// Test to make sure that updating the "cdn" of a server already assigned to a DS fails
+func TestUpdateServer(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	testServers := getTestServers()
+
+	rows := sqlmock.NewRows([]string{"type", "cdn_id"})
+	// note here that the cdnid is 5, which is not the same as the initial cdnid of the fist traffic server
+	rows.AddRow(testServers[0].TypeID, 5)
+	// Make it return a list of atleast one associated ds
+	dsrows := sqlmock.NewRows([]string{"array"})
+	dsrows.AddRow("{3}")
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
+
+	snv := tc.ServerNullableV11{
+		CDNID:            &testServers[0].CDNID,
+		FqdnTime:         time.Time{},
+		TypeID:           &testServers[0].TypeID,
+	}
+	sn := tc.ServerNullable{
+		ServerNullableV11: snv,
+		IPIsService:       nil,
+		IP6IsService:      nil,
+	}
+
+	s := &TOServer {
+		APIInfoImpl:    api.APIInfoImpl{
+			ReqInfo: &api.APIInfo{
+				Params:    nil,
+				IntParams: nil,
+				User:      nil,
+				ReqID:     0,
+				Version:   nil,
+				Tx:        db.MustBegin(),
+				Config:    nil,
+			},
+		},
+		ServerNullable: sn,
+	}
+
+	userErr, _, errCode := s.Update()
+	if errCode != 409 {
+		t.Errorf("Update servers: Expected error code of %v, but got %v", 409, errCode)
+	}
+	expectedErr := "server cdn can not be updated when it is currently assigned to delivery services"
+	if userErr == nil {
+		t.Errorf("Update expected error: %v, but got no error with status: %s", expectedErr, http.StatusText(errCode))
+	}
 }
 
 func TestGetServersByCachegroup(t *testing.T) {
