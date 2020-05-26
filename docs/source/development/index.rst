@@ -21,12 +21,13 @@ Use this guide to start developing applications that consume the Traffic Control
 .. toctree::
 	:maxdepth: 2
 
+	api_guidelines
 	building
-	traffic_ops
-	ort/traffic_ops_ort
-	traffic_portal
-	traffic_router
-	traffic_monitor
-	traffic_stats
 	debugging
 	documentation_guidelines
+	ort/traffic_ops_ort
+	traffic_monitor
+	traffic_ops
+	traffic_portal
+	traffic_router
+	traffic_stats
