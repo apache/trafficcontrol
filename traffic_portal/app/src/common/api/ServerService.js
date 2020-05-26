@@ -139,22 +139,6 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.getDeliveryServiceServers = function(dsId) {
-        return $http.get(ENV.api['root'] + 'servers?dsId=' + dsId).then(
-            function (result) {
-                return result.data.response;
-            }
-        );
-    };
-
-    this.getTopologyServers = function(topology) {
-        return $http.get(ENV.api['root'] + 'servers?topology=' + topology).then(
-            function (result) {
-                return result.data.response;
-            }
-        );
-    };
-
     this.getEligibleDeliveryServiceServers = function(dsId) {
         return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/servers/eligible').then(
             function (result) {
