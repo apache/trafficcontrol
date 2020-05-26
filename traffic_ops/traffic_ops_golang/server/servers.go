@@ -848,7 +848,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-
 	var server tc.ServerNullableV2
 	var interfaces []tc.ServerInterfaceInfo
 	if inf.Version.Major >= 3 {

@@ -106,8 +106,6 @@ func GetTestATSConfigs(t *testing.T) {
 	}
 }
 
-
-
 func CreateTestDeliveryServiceServers(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {

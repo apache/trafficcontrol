@@ -133,10 +133,10 @@ func TestUpdateServer(t *testing.T) {
 	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
 
 	s := tc.CommonServerProperties{
-		CDNID:            &testServers[0].Server.CDNID,
-		FqdnTime:         time.Time{},
-		TypeID:           &testServers[0].Server.TypeID,
-		ID:               &testServers[0].Server.ID,
+		CDNID:    &testServers[0].Server.CDNID,
+		FqdnTime: time.Time{},
+		TypeID:   &testServers[0].Server.TypeID,
+		ID:       &testServers[0].Server.ID,
 	}
 
 	userErr, _, errCode := checkTypeChangeSafety(s, db.MustBegin())
