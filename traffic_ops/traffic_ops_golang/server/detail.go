@@ -182,7 +182,7 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 	}
 	const JumboFrameBPS = 9000
 	q := `
-SELECT 
+SELECT
 	cg.name AS cachegroup,
 	cdn.name AS cdn_name,
 	ARRAY(select deliveryservice from deliveryservice_server where server = s.id),
@@ -202,7 +202,7 @@ SELECT
 				SELECT ( json_build_object (
 					'address', ip_address.address,
 					'gateway', ip_address.gateway,
-					'service_address', ip_address.service_address
+					'service_address', ip_address.serviceAddress
 				))
 				FROM ip_address
 				WHERE ip_address.interface = interface.name

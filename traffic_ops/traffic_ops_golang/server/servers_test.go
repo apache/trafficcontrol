@@ -132,20 +132,14 @@ func TestUpdateServer(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
 
-	snv := tc.ServerNullableV11{
-		CommonServerProperties: tc.CommonServerProperties{
-			CDNID:            &testServers[0].Server.CDNID,
-			FqdnTime:         time.Time{},
-			TypeID:           &testServers[0].Server.TypeID,
-		},
-	}
-	sn := tc.ServerNullableV2{
-		ServerNullableV11: snv,
-		IPIsService:       nil,
-		IP6IsService:      nil,
+	s := tc.CommonServerProperties{
+		CDNID:            &testServers[0].Server.CDNID,
+		FqdnTime:         time.Time{},
+		TypeID:           &testServers[0].Server.TypeID,
+		ID:               &testServers[0].Server.ID,
 	}
 
-	userErr, _, errCode := checkTypeChangeSafety(sn.CommonServerProperties, db.MustBegin())
+	userErr, _, errCode := checkTypeChangeSafety(s, db.MustBegin())
 	if errCode != 409 {
 		t.Errorf("Update servers: Expected error code of %v, but got %v", 409, errCode)
 	}

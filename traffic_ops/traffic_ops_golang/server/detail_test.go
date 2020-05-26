@@ -82,7 +82,7 @@ func TestGetDetailServers(t *testing.T) {
 			sd.ILOIPNetmask,
 			sd.ILOPassword,
 			sd.ILOUsername,
-			[]byte(`{"{\"ipAddresses\" : [{\"address\" : \"127.0.0.0\", \"gateway\" : null, \"service_address\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : 1500, \"name\" : \"eth0\"}"}`),
+			[]byte(`{"{\"ipAddresses\" : [{\"address\" : \"127.0.0.0\", \"gateway\" : null, \"serviceAddress\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : 1500, \"name\" : \"eth0\"}"}`),
 			sd.MgmtIPAddress,
 			sd.MgmtIPGateway,
 			sd.MgmtIPNetmask,
