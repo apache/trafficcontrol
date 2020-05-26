@@ -27,6 +27,7 @@ func TestJobs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		CreateTestJobs(t)
 		CreateTestInvalidationJobs(t)
+		CreateInvalidJob(t)
 		GetTestJobsQueryParams(t)
 		GetTestJobs(t)
 		GetTestInvalidationJobs(t)
@@ -79,6 +80,28 @@ func CreateTestInvalidationJobs(t *testing.T) {
 		if _, _, err := TOSession.CreateInvalidationJob(job); err != nil {
 			t.Errorf("could not CREATE job: %v", err)
 		}
+	}
+}
+
+func CreateInvalidJob(t *testing.T) {
+	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
+	}
+	dsNameIDs := map[string]int64{}
+	for _, ds := range toDSes {
+		dsNameIDs[*ds.XMLID] = int64(*ds.ID)
+	}
+
+	job := testData.InvalidationJobs[0]
+	_, ok := dsNameIDs[(*job.DeliveryService).(string)]
+	if !ok {
+		t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DeliveryService)
+	}
+	tooHigh := interface{}(2161)
+	job.TTL = &tooHigh
+	if _, _, err := TOSession.CreateInvalidationJob(job); err == nil {
+		t.Error("creating invalid job (TTL higher than maxRevalDurationDays) - expected: error, actual: nil error")
 	}
 }
 

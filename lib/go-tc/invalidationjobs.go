@@ -257,8 +257,15 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 	}
 
 	if job.TTL != nil {
-		if _, err := job.TTLHours(); err != nil {
+		hours, err := job.TTLHours()
+		if err != nil {
 			errs = append(errs, "ttl: must be a number of hours, or a duration string e.g. '48h'")
+		}
+		var maxDays uint
+		err = tx.QueryRow(`SELECT value FROM parameter WHERE name='maxRevalDurationDays' AND config_file='regex_revalidate.config'`).Scan(&maxDays)
+		maxHours := maxDays * 24
+		if err == nil && hours > maxHours { // silently ignore other errors too
+			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(uint64(maxHours), 10)+"!")
 		}
 	}
 
@@ -349,12 +356,13 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 
 	if job.TTL != nil {
 		row := tx.QueryRow(`SELECT value FROM parameter WHERE name='maxRevalDurationDays' AND config_file='regex_revalidate.config'`)
-		var max uint64
-		err := row.Scan(&max)
+		var maxDays uint64
+		err := row.Scan(&maxDays)
+		maxHours := maxDays * 24
 		if err == sql.ErrNoRows && MaxTTL < *(job.TTL) {
 			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(MaxTTL, 10)+"!")
-		} else if err == nil && max < *(job.TTL) { //silently ignore other errors to
-			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(max, 10)+"!")
+		} else if err == nil && maxHours < *(job.TTL) { //silently ignore other errors to
+			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(maxHours, 10)+"!")
 		} else if *(job.TTL) < 1 {
 			errs = append(errs, "ttl: must be at least 1!")
 		}
