@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileLogsXMLDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileProfileLogsXMLDotConfig(toData *config.TOData) (string, string, string, error) {
 	params := ParamsToMap(FilterParams(toData.ServerParams, atscfg.LogsXMLFileName, "", "", "location"))
-	return atscfg.MakeLogsXMLDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeLogsDotXML, nil
+	return atscfg.MakeLogsXMLDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeLogsDotXML, atscfg.LineCommentLogsDotXML, nil
 }

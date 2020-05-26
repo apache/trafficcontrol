@@ -20,6 +20,7 @@ package atscfg
  */
 
 const ContentTypeURISigningDotConfig = `application/json; charset=us-ascii`
+const LineCommentURISigningDotConfig = ""
 
 func MakeURISigningConfig(
 	uriSigningKeysBts []byte,

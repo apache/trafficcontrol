@@ -26,7 +26,7 @@ import (
 
 const StorageFileName = "storage.config"
 
-func GetConfigFileProfileStorageDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileProfileStorageDotConfig(toData *config.TOData) (string, string, string, error) {
 	params := ParamsToMap(FilterParams(toData.ServerParams, StorageFileName, "", "", "location"))
-	return atscfg.MakeStorageDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeStorageDotConfig, nil
+	return atscfg.MakeStorageDotConfig(toData.Server.Profile, params, toData.TOToolName, toData.TOURL), atscfg.ContentTypeStorageDotConfig, atscfg.LineCommentStorageDotConfig, nil
 }

@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"errors"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +36,8 @@ const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer 
 const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 
 const ContentTypeTextASCII = `text/plain; charset=us-ascii`
+
+const LineCommentHash = "#"
 
 type ServerCapability string
 
@@ -103,10 +106,14 @@ func GenericProfileConfig(
 	separator string,
 ) string {
 	text := ""
+
+	lines := []string{}
 	for name, val := range paramData {
 		name = trimParamUnderscoreNumSuffix(name)
-		text += name + separator + val + "\n"
+		lines = append(lines, name+separator+val+"\n")
 	}
+	sort.Strings(lines)
+	text = strings.Join(lines, "")
 	return text
 }
 

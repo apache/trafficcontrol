@@ -20,6 +20,7 @@ package atscfg
  */
 
 const ContentType12MFacts = ContentTypeTextASCII
+const LineComment12MFacts = LineCommentHash
 
 func Make12MFacts(
 	profileName string,

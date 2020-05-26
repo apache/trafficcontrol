@@ -28,20 +28,20 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileServerIPAllowDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileServerIPAllowDotConfig(toData *config.TOData) (string, string, string, error) {
 	fileParams := ParamsToMultiMap(FilterParams(toData.ServerParams, atscfg.IPAllowConfigFileName, "", "", ""))
 
 	cgMap := map[string]tc.CacheGroupNullable{}
 	for _, cg := range toData.CacheGroups {
 		if cg.Name == nil {
-			return "", "", errors.New("got cachegroup with nil name!'")
+			return "", "", "", errors.New("got cachegroup with nil name!'")
 		}
 		cgMap[*cg.Name] = cg
 	}
 
 	serverCG, ok := cgMap[toData.Server.Cachegroup]
 	if !ok {
-		return "", "", errors.New("server cachegroup not in cachegroups!")
+		return "", "", "", errors.New("server cachegroup not in cachegroups!")
 	}
 
 	childCGs := map[string]tc.CacheGroupNullable{}
@@ -59,5 +59,5 @@ func GetConfigFileServerIPAllowDotConfig(toData *config.TOData) (string, string,
 		}
 	}
 
-	return atscfg.MakeIPAllowDotConfig(tc.CacheName(toData.Server.HostName), tc.CacheType(toData.Server.Type), toData.TOToolName, toData.TOURL, fileParams, childServers), atscfg.ContentTypeIPAllowDotConfig, nil
+	return atscfg.MakeIPAllowDotConfig(tc.CacheName(toData.Server.HostName), tc.CacheType(toData.Server.Type), toData.TOToolName, toData.TOURL, fileParams, childServers), atscfg.ContentTypeIPAllowDotConfig, atscfg.LineCommentIPAllowDotConfig, nil
 }

@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
@@ -39,6 +40,8 @@ func MakeServerCacheDotConfig(
 ) string {
 	text := GenericHeaderComment(string(serverName), toToolName, toURL)
 
+	lines := []string{}
+
 	seenOrigins := map[string]struct{}{}
 	for _, ds := range dses {
 		if ds.Type != tc.DSTypeHTTPNoCache {
@@ -51,12 +54,13 @@ func MakeServerCacheDotConfig(
 
 		originFQDN, originPort := GetOriginFQDNAndPort(ds.OrgServerFQDN)
 		if originPort != nil {
-			text += `dest_domain=` + originFQDN + ` port=` + strconv.Itoa(*originPort) + ` scheme=http action=never-cache` + "\n"
+			lines = append(lines, `dest_domain=`+originFQDN+` port=`+strconv.Itoa(*originPort)+` scheme=http action=never-cache`+"\n")
 		} else {
-			text += `dest_domain=` + originFQDN + ` scheme=http action=never-cache` + "\n"
+			lines = append(lines, `dest_domain=`+originFQDN+` scheme=http action=never-cache`+"\n")
 		}
 	}
-	return text
+	sort.Strings(lines)
+	return text + strings.Join(lines, "")
 }
 
 // TODO unit test

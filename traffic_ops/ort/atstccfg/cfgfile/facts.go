@@ -24,6 +24,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfile12MFacts(toData *config.TOData) (string, string, error) {
-	return atscfg.Make12MFacts(toData.Server.Profile, toData.TOToolName, toData.TOURL), atscfg.ContentType12MFacts, nil
+func GetConfigFileProfile12MFacts(toData *config.TOData) (string, string, string, error) {
+	return atscfg.Make12MFacts(toData.Server.Profile, toData.TOToolName, toData.TOURL), atscfg.ContentType12MFacts, atscfg.LineComment12MFacts, nil
 }

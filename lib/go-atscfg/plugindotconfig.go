@@ -22,6 +22,7 @@ package atscfg
 const PluginSeparator = " "
 const PluginFileName = "plugin.config"
 const ContentTypePluginDotConfig = ContentTypeTextASCII
+const LineCommentPluginDotConfig = LineCommentHash
 
 func MakePluginDotConfig(
 	profileName string,
