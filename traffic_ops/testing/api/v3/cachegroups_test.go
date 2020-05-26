@@ -17,6 +17,7 @@ package v3
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 	"testing"
 
@@ -24,9 +25,11 @@ import (
 )
 
 func TestCacheGroups(t *testing.T) {
-	WithObjs(t, []TCObj{Types, Parameters, CacheGroups}, func() {
+	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, Topologies}, func() {
+		GetTestCacheGroups(t)
 		GetTestCacheGroupsByName(t)
 		GetTestCacheGroupsByShortName(t)
+		GetTestCacheGroupsByTopology(t)
 		CheckCacheGroupsAuthentication(t)
 		UpdateTestCacheGroups(t)
 	})
@@ -64,22 +67,75 @@ func CreateTestCacheGroups(t *testing.T) {
 	}
 }
 
+func GetTestCacheGroups(t *testing.T) {
+	resp, _, err := TOSession.GetCacheGroupsByQueryParams(url.Values{})
+	if err != nil {
+		t.Errorf("cannot GET CacheGroups %v - %v", err, resp)
+	}
+	expectedCachegroups := make(map[string]struct{})
+	for _, cg := range testData.CacheGroups {
+		expectedCachegroups[*cg.Name] = struct{}{}
+	}
+	foundCachegroups := make(map[string]struct{})
+	for _, cg := range resp {
+		if _, expected := expectedCachegroups[*cg.Name]; !expected {
+			t.Errorf("got unexpected cachegroup: %s", *cg.Name)
+		}
+		if _, found := foundCachegroups[*cg.Name]; !found {
+			foundCachegroups[*cg.Name] = struct{}{}
+		} else {
+			t.Errorf("GET returned duplicate cachegroup: %s", *cg.Name)
+		}
+	}
+}
+
 func GetTestCacheGroupsByName(t *testing.T) {
 	for _, cg := range testData.CacheGroups {
 		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 		if err != nil {
 			t.Errorf("cannot GET CacheGroup by name: %v - %v", err, resp)
 		}
+		if *resp[0].Name != *cg.Name {
+			t.Errorf("name expected: %s, actual: %s", *cg.Name, *resp[0].Name)
+		}
 	}
 }
 
 func GetTestCacheGroupsByShortName(t *testing.T) {
 	for _, cg := range testData.CacheGroups {
-		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.ShortName)
+		resp, _, err := TOSession.GetCacheGroupNullableByShortName(*cg.ShortName)
 		if err != nil {
 			t.Errorf("cannot GET CacheGroup by shortName: %v - %v", err, resp)
 		}
+		if *resp[0].ShortName != *cg.ShortName {
+			t.Errorf("short name expected: %s, actual: %s", *cg.ShortName, *resp[0].ShortName)
+		}
 	}
+}
+
+func GetTestCacheGroupsByTopology(t *testing.T) {
+	for _, top := range testData.Topologies {
+		qparams := url.Values{}
+		qparams.Set("topology", top.Name)
+		resp, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
+		if err != nil {
+			t.Errorf("cannot GET CacheGroups by topology: %v - %v", err, resp)
+		}
+		expectedCGs := topologyCachegroups(top)
+		for _, cg := range resp {
+			if _, exists := expectedCGs[*cg.Name]; !exists {
+				t.Errorf("GET cachegroups by topology - expected one of: %v, actual: %s", expectedCGs, *cg.Name)
+			}
+		}
+	}
+}
+
+func topologyCachegroups(top tc.Topology) map[string]struct{} {
+	res := make(map[string]struct{})
+	for _, node := range top.Nodes {
+		res[node.Cachegroup] = struct{}{}
+	}
+	return res
 }
 
 func UpdateTestCacheGroups(t *testing.T) {

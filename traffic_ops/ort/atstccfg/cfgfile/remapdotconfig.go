@@ -32,7 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, string, error) {
 	// TODO TOAPI add /servers?cdn=1 query param
 
 	atsVersionParam := ""
@@ -49,7 +49,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 
 	atsMajorVer, err := atscfg.GetATSMajorVersionFromATSVersion(atsVersionParam)
 	if err != nil {
-		return "", "", errors.New("getting ATS major version from version parameter (profile '" + toData.Server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
+		return "", "", "", errors.New("getting ATS major version from version parameter (profile '" + toData.Server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
 	}
 
 	dsIDs := map[int]struct{}{}
@@ -167,24 +167,23 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 		if paramValue == "STRING __HOSTNAME__" {
 			paramValue = toData.Server.HostName + "." + toData.Server.DomainName // TODO strings.Replace to replace all anywhere, instead of just an exact match?
 		}
+
+		if val, ok := serverPackageParamData[paramName]; ok {
+			if val < paramValue {
+				log.Errorln("remap config generation got multiple parameters for server package name '" + paramName + "' - ignoring '" + paramValue + "'")
+				continue
+			} else {
+				log.Errorln("config generation got multiple parameters for server package name '" + paramName + "' - ignoring '" + val + "'")
+			}
+		}
 		serverPackageParamData[paramName] = paramValue
 	}
 
-	cacheURLParams := map[string]string{}
-	for _, param := range toData.ServerParams {
-		if param.ConfigFile != atscfg.CacheURLParameterConfigFile {
-			continue
-		}
-		if existingVal, ok := cacheURLParams[param.Name]; ok {
-			log.Warnln("generating remap.config: server profile '" + toData.Server.Profile + "' cacheurl.config has multiple parameters for '" + param.Name + "' - using '" + existingVal + "' and ignoring the rest!")
-			continue
-		}
-		cacheURLParams[param.Name] = param.Value
-	}
+	cacheURLParams := ParamsToMap(FilterParams(toData.ServerParams, atscfg.CacheURLParameterConfigFile, "", "", ""))
 
 	cacheKeyParamsWithProfiles, err := TCParamsToParamsWithProfiles(toData.CacheKeyParams)
 	if err != nil {
-		return "", "", errors.New("decoding cache key parameter profiles: " + err.Error())
+		return "", "", "", errors.New("decoding cache key parameter profiles: " + err.Error())
 	}
 
 	cacheKeyParamsWithProfilesMap := ParameterWithProfilesToMap(cacheKeyParamsWithProfiles)
@@ -204,9 +203,13 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 				if _, ok := dsProfilesCacheKeyConfigParams[dsProfileID]; !ok {
 					dsProfilesCacheKeyConfigParams[dsProfileID] = map[string]string{}
 				}
-				if _, ok := dsProfilesCacheKeyConfigParams[dsProfileID][param.Name]; ok {
-					// TODO warn
-					continue
+				if val, ok := dsProfilesCacheKeyConfigParams[dsProfileID][param.Name]; ok {
+					if val < param.Value {
+						log.Errorln("remap config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + param.Value + "'")
+						continue
+					} else {
+						log.Errorln("remap config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + val + "'")
+					}
 				}
 				dsProfilesCacheKeyConfigParams[dsProfileID][param.Name] = param.Value
 			}
@@ -220,14 +223,14 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 	cgMap := map[string]tc.CacheGroupNullable{}
 	for _, cg := range toData.CacheGroups {
 		if cg.Name == nil {
-			return "", "", errors.New("got cachegroup with nil name!'")
+			return "", "", "", errors.New("got cachegroup with nil name!'")
 		}
 		cgMap[*cg.Name] = cg
 	}
 
 	serverCG, ok := cgMap[toData.Server.Cachegroup]
 	if !ok {
-		return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' not found in CacheGroups")
+		return "", "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' not found in CacheGroups")
 	}
 
 	parentCGID := -1
@@ -235,15 +238,15 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
 		parentCG, ok := cgMap[*serverCG.ParentName]
 		if !ok {
-			return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+			return "", "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
 		}
 		if parentCG.ID == nil {
-			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return "", "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		parentCGID = *parentCG.ID
 
 		if parentCG.Type == nil {
-			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return "", "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 		parentCGType = *parentCG.Type
 	}
@@ -253,15 +256,15 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
 		parentCG, ok := cgMap[*serverCG.SecondaryParentName]
 		if !ok {
-			return "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+			return "", "", "", errors.New("server '" + toData.Server.HostName + "' cachegroup '" + toData.Server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
 		}
 
 		if parentCG.ID == nil {
-			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+			return "", "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
 		}
 		secondaryParentCGID = *parentCG.ID
 		if parentCG.Type == nil {
-			return "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+			return "", "", "", errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
 		}
 
 		secondaryParentCGType = *parentCG.Type
@@ -285,7 +288,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, e
 		SecondaryParentCacheGroupType: secondaryParentCGType,
 		Type:                          toData.Server.Type,
 	}
-	return atscfg.MakeRemapDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData), atscfg.ContentTypeRemapDotConfig, nil
+	return atscfg.MakeRemapDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData), atscfg.ContentTypeRemapDotConfig, atscfg.LineCommentRemapDotConfig, nil
 }
 
 type DeliveryServiceRegexesSortByTypeThenSetNum []tc.DeliveryServiceRegex

@@ -42,7 +42,7 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	servers, err := getDetailServers(inf.Tx.Tx, inf.User, inf.Params["hostName"], -1, "", 0)
+	servers, err := getDetailServers(inf.Tx.Tx, inf.User, inf.Params["hostName"], -1, "", 0, *inf.Version)
 	if err != nil {
 		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting detail servers: "+err.Error()), &alt)
 		return
@@ -52,6 +52,23 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	server := servers[0]
+	if inf.Version.Major < 3 {
+		v11server := tc.ServerDetailV11{}
+		v11server.ServerDetail = server.ServerDetail
+
+		interfaces := *server.ServerInterfaces
+		legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+			return
+		}
+		v11server.LegacyInterfaceDetails = legacyInterface
+
+		server := v11server
+		alerts := api.CreateDeprecationAlerts(&alt)
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
+		return
+	}
 	alerts := api.CreateDeprecationAlerts(&alt)
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 }
@@ -92,16 +109,36 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	servers, err := getDetailServers(inf.Tx.Tx, inf.User, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit)
+	servers, err := getDetailServers(inf.Tx.Tx, inf.User, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit, *inf.Version)
 	respVals := map[string]interface{}{
 		"orderby": orderBy,
 		"limit":   limit,
 		"size":    len(servers),
 	}
+
+	if inf.Version.Major < 3 {
+		v11ServerList := []tc.ServerDetailV11{}
+		for _, server := range servers {
+			v11server := tc.ServerDetailV11{}
+			v11server.ServerDetail = server.ServerDetail
+
+			interfaces := *server.ServerInterfaces
+			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				return
+			}
+			v11server.LegacyInterfaceDetails = legacyInterface
+
+			v11ServerList = append(v11ServerList, v11server)
+		}
+		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v11ServerList, err)
+		return
+	}
 	api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(servers, err)
 }
 
-func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int) ([]tc.ServerDetail, error) {
+func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV30, error) {
 	allowedOrderByCols := map[string]string{
 		"":                 "",
 		"cachegroup":       "s.cachegroup",
@@ -145,43 +182,56 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 	}
 	const JumboFrameBPS = 9000
 	q := `
-SELECT
-cg.name as cachegroup,
-cdn.name as cdn_name,
-ARRAY(select deliveryservice from deliveryservice_server where server = s.id),
-s.domain_name,
-s.guid,
-s.host_name,
-s.https_port,
-s.id,
-s.ilo_ip_address,
-s.ilo_ip_gateway,
-s.ilo_ip_netmask,
-s.ilo_password,
-s.ilo_username,
-COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-s.interface_name,
-s.ip6_address,
-s.ip6_gateway,
-s.ip_address,
-s.ip_gateway,
-s.ip_netmask,
-s.mgmt_ip_address,
-s.mgmt_ip_gateway,
-s.mgmt_ip_netmask,
-s.offline_reason,
-pl.name as phys_location,
-p.name as profile,
-p.description as profile_desc,
-s.rack,
-s.router_host_name,
-s.router_port_name,
-st.name as status,
-s.tcp_port,
-t.name as server_type,
-s.xmpp_id,
-s.xmpp_passwd
-FROM server as s
+SELECT 
+	cg.name AS cachegroup,
+	cdn.name AS cdn_name,
+	ARRAY(select deliveryservice from deliveryservice_server where server = s.id),
+	s.domain_name,
+	s.guid,
+	s.host_name,
+	s.https_port,
+	s.id,
+	s.ilo_ip_address,
+	s.ilo_ip_gateway,
+	s.ilo_ip_netmask,
+	s.ilo_password,
+	s.ilo_username,
+	ARRAY (
+		SELECT ( json_build_object (
+			'ipAddresses', ARRAY (
+				SELECT ( json_build_object (
+					'address', ip_address.address,
+					'gateway', ip_address.gateway,
+					'service_address', ip_address.service_address
+				))
+				FROM ip_address
+				WHERE ip_address.interface = interface.name
+				AND ip_address.server = s.id
+			),
+			'max_bandwidth', interface.max_bandwidth,
+			'monitor', interface.monitor,
+			'mtu', COALESCE (interface.mtu, 9000),
+			'name', interface.name
+		))
+		FROM interface
+		WHERE interface.server = s.id
+	) AS interfaces,
+	s.mgmt_ip_address,
+	s.mgmt_ip_gateway,
+	s.mgmt_ip_netmask,
+	s.offline_reason,
+	pl.name as phys_location,
+	p.name as profile,
+	p.description as profile_desc,
+	s.rack,
+	s.router_host_name,
+	s.router_port_name,
+	st.name as status,
+	s.tcp_port,
+	t.name as server_type,
+	s.xmpp_id,
+	s.xmpp_passwd
+FROM server AS s
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
@@ -217,12 +267,15 @@ JOIN type t ON s.type = t.id
 	}
 	defer rows.Close()
 	sIDs := []int{}
-	servers := []tc.ServerDetail{}
+	servers := []tc.ServerDetailV30{}
+	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 	for rows.Next() {
-		s := tc.ServerDetail{}
-		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &s.InterfaceMTU, &s.InterfaceName, &s.IP6Address, &s.IP6Gateway, &s.IPAddress, &s.IPGateway, &s.IPNetmask, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		s := tc.ServerDetailV30{}
+		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
+
+		s.ServerInterfaces = &serverInterfaceInfo
 
 		hiddenField := "********"
 		if user.PrivLevel < auth.PrivLevelOperations {

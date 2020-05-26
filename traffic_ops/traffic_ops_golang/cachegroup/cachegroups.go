@@ -88,23 +88,28 @@ func (cg *TOCacheGroup) SetID(i int) {
 // Is the cachegroup being used?
 func isUsed(tx *sqlx.Tx, ID int) (bool, error) {
 
+	var usedByTopology bool
 	var usedByServer bool
 	var usedByParent bool
 	var usedBySecondaryParent bool
 	var usedByASN bool
 
 	query := `SELECT
+    (SELECT id FROM topology_cachegroup WHERE topology_cachegroup.cachegroup = (SELECT name FROM cachegroup WHERE id = $1) LIMIT 1) IS NOT NULL,
     (SELECT id FROM server WHERE server.cachegroup = $1 LIMIT 1) IS NOT NULL,
     (SELECT id FROM cachegroup WHERE cachegroup.parent_cachegroup_id = $1 LIMIT 1) IS NOT NULL,
     (SELECT id FROM cachegroup WHERE cachegroup.secondary_parent_cachegroup_id = $1 LIMIT 1) IS NOT NULL,
     (SELECT id FROM asn WHERE cachegroup = $1 LIMIT 1) IS NOT NULL;`
 
-	err := tx.QueryRow(query, ID).Scan(&usedByServer, &usedByParent, &usedBySecondaryParent, &usedByASN)
+	err := tx.QueryRow(query, ID).Scan(&usedByTopology, &usedByServer, &usedByParent, &usedBySecondaryParent, &usedByASN)
 	if err != nil {
 		log.Errorf("received error: %++v from query execution", err)
 		return false, err
 	}
 	//Only return the immediate error
+	if usedByTopology {
+		return true, errors.New("cachegroup is in use by one or more topologies")
+	}
 	if usedByServer {
 		return true, errors.New("cachegroup is in use by one or more servers")
 	}
@@ -423,17 +428,24 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":        dbhelpers.WhereColumnInfo{"cachegroup.id", api.IsInt},
-		"name":      dbhelpers.WhereColumnInfo{"cachegroup.name", nil},
-		"shortName": dbhelpers.WhereColumnInfo{"cachegroup.short_name", nil},
-		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
+		"id":        {"cachegroup.id", api.IsInt},
+		"name":      {"cachegroup.name", nil},
+		"shortName": {"cachegroup.short_name", nil},
+		"type":      {"cachegroup.type", nil},
+		"topology":  {"topology_cachegroup.topology", nil},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
+	baseSelect := SelectQuery()
+	if _, ok := cg.ReqInfo.Params["topology"]; ok {
+		baseSelect += `
+LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
+`
+	}
 
-	query := SelectQuery() + where + orderBy + pagination
+	query := baseSelect + where + orderBy + pagination
 	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError
@@ -658,7 +670,8 @@ FROM cachegroup
 LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
-LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
+LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id
+`
 }
 
 func multipleCacheGroupsWhere() string {

@@ -36,7 +36,7 @@ import (
 )
 
 // GetAllConfigs gets all config files for cfg.CacheHostName.
-func GetAllConfigs(cfg config.TCCfg, toData *config.TOData) ([]config.ATSConfigFile, error) {
+func GetAllConfigs(toData *config.TOData, revalOnly bool) ([]config.ATSConfigFile, error) {
 	meta, err := GetMeta(toData)
 	if err != nil {
 		return nil, errors.New("creating meta: " + err.Error())
@@ -45,10 +45,10 @@ func GetAllConfigs(cfg config.TCCfg, toData *config.TOData) ([]config.ATSConfigF
 	hasSSLMultiCertConfig := false
 	configs := []config.ATSConfigFile{}
 	for _, fi := range meta.ConfigFiles {
-		if cfg.RevalOnly && fi.FileNameOnDisk != atscfg.RegexRevalidateFileName {
+		if revalOnly && fi.FileNameOnDisk != atscfg.RegexRevalidateFileName {
 			continue
 		}
-		txt, contentType, err := GetConfigFile(toData, fi)
+		txt, contentType, lineComment, err := GetConfigFile(toData, fi)
 		if err != nil {
 			return nil, errors.New("getting config file '" + fi.APIURI + "': " + err.Error())
 		}
@@ -56,7 +56,7 @@ func GetAllConfigs(cfg config.TCCfg, toData *config.TOData) ([]config.ATSConfigF
 			hasSSLMultiCertConfig = true
 		}
 		txt = PreprocessConfigFile(toData.Server, txt)
-		configs = append(configs, config.ATSConfigFile{ATSConfigMetaDataConfigFile: fi, Text: txt, ContentType: contentType})
+		configs = append(configs, config.ATSConfigFile{ATSConfigMetaDataConfigFile: fi, Text: txt, ContentType: contentType, LineComment: lineComment})
 	}
 
 	if hasSSLMultiCertConfig {
@@ -71,13 +71,15 @@ func GetAllConfigs(cfg config.TCCfg, toData *config.TOData) ([]config.ATSConfigF
 }
 
 const HdrConfigFilePath = "Path"
+const HdrLineComment = "Line-Comment"
 
 // WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
 func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
 	w := multipart.NewWriter(output)
 
 	// Create a unique boundary. Because we're using a text encoding, we need to make sure the boundary text doesn't occur in any body.
-	boundary := w.Boundary()
+	// Always start with the same random UUID, so generating twice diffs the same (except in the unlikely chance this string is in a config somewhere).
+	boundary := `dc5p7zOLNkyTzdcZSme6tg` // random UUID
 	randSet := `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`
 	for _, cfg := range configs {
 		for strings.Contains(cfg.Text, boundary) {
@@ -93,6 +95,7 @@ func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
 	for _, cfg := range configs {
 		hdr := map[string][]string{
 			rfc.ContentType:   {cfg.ContentType},
+			HdrLineComment:    {cfg.LineComment},
 			HdrConfigFilePath: {filepath.Join(cfg.Location, cfg.FileNameOnDisk)},
 		}
 		partW, err := w.CreatePart(hdr)

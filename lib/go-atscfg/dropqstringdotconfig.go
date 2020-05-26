@@ -22,6 +22,7 @@ package atscfg
 const DropQStringDotConfigFileName = "drop_qstring.config"
 const DropQStringDotConfigParamName = "content"
 const ContentTypeDropQStringDotConfig = ContentTypeTextASCII
+const LineCommentDropQStringDotConfig = LineCommentHash
 
 func MakeDropQStringDotConfig(
 	profileName string,

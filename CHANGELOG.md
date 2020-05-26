@@ -10,8 +10,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [Flexible Topologies (in progress)](https://github.com/apache/trafficcontrol/blob/master/blueprints/flexible-topologies.md)
     - Traffic Ops: Added an API 3.0 endpoint, /api/3.0/topologies, to create, read, update and delete flexible topologies.
     - Traffic Ops: Added new `topology` field to the /api/3.0/deliveryservices APIs
+    - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/cachegroups` to return all cachegroups used in the given topology.
     - Traffic Portal: Added the ability to create, read, update and delete flexible topologies.
     - Traffic Portal: Added the ability to assign topologies to delivery services
+- Updated /servers/details to use multiple interfaces in API v3
 
 ### Fixed
 - Fixed the `GET /api/x/jobs` and `GET /api/x/jobs/:id` Traffic Ops API routes to allow falling back to Perl via the routing blacklist
@@ -22,6 +24,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
 - Changed Traffic Portal to use Traffic Ops API v3
+- Changed the access logs in Traffic Ops to now show the route ID with every API endpoint call. The Route ID is appended to the end of the access log line.
+- With the addition of multiple server interfaces, interface data is constructed from IP Address/Gateway/Netmask (and their IPv6 counterparts) and Interface Name and Interface MTU fields on services. These **MUST** have proper, valid data before attempting to upgrade or the upgrade **WILL** fail. In particular IP fields need to be valid IP addresses/netmasks, and MTU must only be positive integers of at least 1280.
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.

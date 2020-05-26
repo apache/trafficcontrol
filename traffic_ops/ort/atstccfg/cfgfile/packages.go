@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileServerPackages(toData *config.TOData) (string, string, error) {
+func GetConfigFileServerPackages(toData *config.TOData) (string, string, string, error) {
 	params := ParamsToMultiMap(FilterParams(toData.ServerParams, atscfg.PackagesParamConfigFile, "", "", ""))
-	return atscfg.MakePackages(params), atscfg.ContentTypePackages, nil
+	return atscfg.MakePackages(params), atscfg.ContentTypePackages, atscfg.LineCommentPackages, nil
 }

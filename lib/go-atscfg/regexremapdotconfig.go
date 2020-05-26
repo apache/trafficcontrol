@@ -27,6 +27,7 @@ import (
 )
 
 const ContentTypeRegexRemapDotConfig = ContentTypeTextASCII
+const LineCommentRegexRemapDotConfig = LineCommentHash
 
 type CDNDS struct {
 	OrgServerFQDN string

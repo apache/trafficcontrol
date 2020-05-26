@@ -80,6 +80,9 @@ Response Structure
 	:ipAddress:		The IPv4 address of ``interfaceName``
 	:ipGateway:		The IPv4 address of the gateway used by ``interfaceName``
 	:ipNetmask:		The IPv4 subnet mask used by ``interfaceName``
+	:mgmtIpAddress:  The IPv4 address of the server's management port
+	:mgmtIpGateway:  The IPv4 gateway of the server's management port
+	:mgmtIpNetmask:  The IPv4 subnet mask of the server's management port
 	:offlineReason:		A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 	:physLocation:		The name of the physical location where the server resides
 	:profile:		The :ref:`profile-name` of the :term:`Profile` used by this server

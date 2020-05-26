@@ -25,7 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNCacheURL(toData *config.TOData, fileName string) (string, string, error) {
+func GetConfigFileCDNCacheURL(toData *config.TOData, fileName string) (string, string, string, error) {
 	dsIDs := map[int]struct{}{}
 	for _, ds := range toData.DeliveryServices {
 		if ds.ID != nil {
@@ -60,9 +60,9 @@ func GetConfigFileCDNCacheURL(toData *config.TOData, fileName string) (string, s
 
 	cfgDSes := atscfg.DeliveryServicesToCacheURLDSes(dsesWithServers)
 
-	return atscfg.MakeCacheURLDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes), atscfg.ContentTypeCacheURLDotConfig, nil
+	return atscfg.MakeCacheURLDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, fileName, cfgDSes), atscfg.ContentTypeCacheURLDotConfig, atscfg.LineCommentCacheURLDotConfig, nil
 }
 
-func GetConfigFileCDNCacheURLPlain(toData *config.TOData) (string, string, error) {
+func GetConfigFileCDNCacheURLPlain(toData *config.TOData) (string, string, string, error) {
 	return GetConfigFileCDNCacheURL(toData, "cacheurl.config")
 }

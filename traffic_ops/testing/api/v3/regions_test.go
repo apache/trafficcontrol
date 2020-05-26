@@ -16,6 +16,7 @@ package v3
 */
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -25,6 +26,7 @@ func TestRegions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
 		UpdateTestRegions(t)
 		GetTestRegions(t)
+		DeleteTestRegionsByName(t)
 	})
 }
 
@@ -82,6 +84,37 @@ func GetTestRegions(t *testing.T) {
 			t.Errorf("cannot GET Region by region: %v - %v", err, resp)
 		}
 	}
+}
+
+func DeleteTestRegionsByName(t *testing.T) {
+	for _, region := range testData.Regions {
+		delResp, _, err := TOSession.DeleteRegion(nil, &region.Name)
+		if err != nil {
+			t.Errorf("cannot DELETE Region by name: %v - %v", err, delResp)
+		}
+
+		deleteLog, _, err := TOSession.GetLogsByLimit(1)
+		if err != nil {
+			t.Fatalf("unable to get latest audit log entry")
+		}
+		if len(deleteLog) != 1 {
+			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog))
+		}
+		if !strings.Contains(*deleteLog[0].Message, region.Name) {
+			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, *deleteLog[0].Message)
+		}
+
+		// Retrieve the Region to see if it got deleted
+		regionResp, _, err := TOSession.GetRegionByName(region.Name)
+		if err != nil {
+			t.Errorf("error deleting Region region: %s", err.Error())
+		}
+		if len(regionResp) > 0 {
+			t.Errorf("expected Region : %s to be deleted", region.Name)
+		}
+	}
+
+	CreateTestRegions(t)
 }
 
 func DeleteTestRegions(t *testing.T) {
