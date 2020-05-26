@@ -66,7 +66,10 @@ func GetTestServers(t *testing.T) {
 func GetTestServersDetails(t *testing.T) {
 
 	for _, server := range testData.Servers {
-		resp, _, err := TOSession.GetServerDetailsByHostName(server.HostName)
+		if server.HostName == nil {
+			t.Errorf("found server with nil hostname: %+v", server)
+		}
+		resp, _, err := TOSession.GetServerDetailsByHostName(*server.HostName)
 		if err != nil {
 			t.Errorf("cannot GET Server Details by name: %v - %v", err, resp)
 		}
