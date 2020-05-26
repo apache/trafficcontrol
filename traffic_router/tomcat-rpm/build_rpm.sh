@@ -104,6 +104,6 @@ buildRpmForEl () {
 				cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
 }
 
-checkEnvironment
+checkEnvironment -i curl
 initBuildArea
 buildRpmTomcat

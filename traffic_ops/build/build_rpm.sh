@@ -99,6 +99,6 @@ initBuildArea() {
 
 # ---------------------------------------
 importFunctions
-checkEnvironment go
+checkEnvironment -i go,rsync
 initBuildArea
 buildRpm traffic_ops

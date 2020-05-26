@@ -138,6 +138,36 @@ getCommit() {
 
 # ---------------------------------------
 checkEnvironment() {
+	include_programs='' exclude_programs=''
+	while getopts i:e: option; do
+		case "$option" in
+			i) include_programs="$OPTARG";;
+			e) exclude_programs="$OPTARG";;
+			*) return 1
+		esac
+	done
+	unset OPTIND
+	include_file="$(mktemp)"
+	exclude_file="$(mktemp)"
+	printf '%s\n' git rpmbuild  ${include_programs//,/ } | sort >"$include_file"
+	printf '%s\n' ${exclude_programs//,/ } | sort >"$exclude_file"
+	programs="$(comm -23 "$include_file" "$exclude_file")"
+	rm "$include_file" "$exclude_file"
+
+	# verify required tools available in path -- extra tools required by subsystem are passed in
+	for program in $programs; do
+		if ! type "$program"; then
+			echo "$program not found in PATH"
+			return 1
+		fi
+	done
+	# verify git version
+	requiredGitVersion=1.7.12
+	if ! versionOk "$(git --version | tr -dc 0-9. )" "$requiredGitVersion"; then
+		echo "$(git --version) must be at least $requiredGitVersion"
+		return 1
+	fi
+
 	TC_VERSION='' BUILD_NUMBER='' RHEL_VERSION='' RPMBUILD='' DIST=''
 	TC_VERSION="$(getVersion "$TC_DIR")"
 	BUILD_NUMBER="$(getBuildNumber)"
@@ -151,16 +181,6 @@ checkEnvironment() {
 
 	mkdir -p "$DIST" || { echo "Could not create ${DIST}: ${?}"; return 1; }
 
-	# verify required tools available in path -- extra tools required by subsystem are passed in
-	for pgm in git rpmbuild "$@"; do
-		type "$pgm" 2>/dev/null || { echo "$pgm not found in PATH"; }
-	done
-	# verify git version
-	requiredGitVersion=1.7.12
-	if ! versionOk "$(git --version | tr -dc 0-9. )" "$requiredGitVersion"; then
-		echo "$(git --version) must be at least $requiredGitVersion"
-		return 1
-	fi
 	echo "Build environment has been verified."
 
 	echo "=================================================="

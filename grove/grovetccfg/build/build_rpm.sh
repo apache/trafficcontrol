@@ -121,6 +121,7 @@ buildRpmGrove() {
 }
 
 importFunctions
+checkEnvironment -i go
 checkGroveEnvironment
 initBuildArea
 buildRpmGrove

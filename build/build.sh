@@ -30,9 +30,6 @@ if [ -z "$TC_DIR" ] || ! cd "$TC_DIR"; then
 	exit 1;
 fi;
 
-checkEnvironment
-
-
 if [ $# -gt 0 ]; then
 	projects="$*"
 else
@@ -55,6 +52,7 @@ for p in ${projects}; do
 	if [ "$p" = tarball ]; then
 		if isInGitTree; then
 			echo "-----  Building tarball ..."
+			checkEnvironment -e rpmbuild
 			tarball="$(createTarball "$TC_DIR")"
 			ls -l "$tarball"
 		else
@@ -65,6 +63,7 @@ for p in ${projects}; do
 	if [ "$p" = docs ]; then
 		if isInGitTree; then
 			echo "-----  Building docs ..."
+			checkEnvironment -i python,sphinx-build,make, -e rpmbuild
 			( cd docs
 			make html
 			)

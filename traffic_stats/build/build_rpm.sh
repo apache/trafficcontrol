@@ -89,6 +89,6 @@ preBuildChecks() {
 
 importFunctions
 preBuildChecks
-checkEnvironment go
+checkEnvironment -i go,rsync
 initBuildArea
 buildRpm traffic_stats
