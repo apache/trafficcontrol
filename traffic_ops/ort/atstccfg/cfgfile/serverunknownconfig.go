@@ -25,7 +25,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileServerUnknownConfig(toData *config.TOData, fileName string) (string, string, error) {
+func GetConfigFileServerUnknownConfig(toData *config.TOData, fileName string) (string, string, string, error) {
 	params := ParamsToMultiMap(FilterParams(toData.ServerParams, fileName, "", "", ""))
-	return atscfg.MakeServerUnknown(tc.CacheName(toData.Server.HostName), toData.Server.DomainName, toData.TOToolName, toData.TOURL, params), atscfg.ContentTypeServerUnknownConfig, nil
+	lineComment := atscfg.GetServerUnknownConfigCommentType(tc.CacheName(toData.Server.HostName), toData.Server.DomainName, toData.TOToolName, toData.TOURL, params)
+	return atscfg.MakeServerUnknown(tc.CacheName(toData.Server.HostName), toData.Server.DomainName, toData.TOToolName, toData.TOURL, params), atscfg.ContentTypeServerUnknownConfig, lineComment, nil
 }

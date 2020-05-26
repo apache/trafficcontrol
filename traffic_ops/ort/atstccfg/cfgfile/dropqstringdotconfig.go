@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileDropQStringDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileProfileDropQStringDotConfig(toData *config.TOData) (string, string, string, error) {
 	dropQStringVal := (*string)(nil)
 	for _, param := range toData.ServerParams {
 		if param.ConfigFile != atscfg.DropQStringDotConfigFileName {
@@ -37,5 +37,5 @@ func GetConfigFileProfileDropQStringDotConfig(toData *config.TOData) (string, st
 		break
 	}
 
-	return atscfg.MakeDropQStringDotConfig(toData.Server.Profile, toData.TOToolName, toData.TOURL, dropQStringVal), atscfg.ContentTypeDropQStringDotConfig, nil
+	return atscfg.MakeDropQStringDotConfig(toData.Server.Profile, toData.TOToolName, toData.TOURL, dropQStringVal), atscfg.ContentTypeDropQStringDotConfig, atscfg.LineCommentDropQStringDotConfig, nil
 }

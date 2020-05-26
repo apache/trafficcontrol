@@ -22,6 +22,7 @@ package atscfg
 const SysctlSeparator = " = "
 const SysctlFileName = "sysctl.conf"
 const ContentTypeSysctlDotConf = ContentTypeTextASCII
+const LineCommentSysctlDotConf = LineCommentHash
 
 func MakeSysCtlDotConf(
 	profileName string,

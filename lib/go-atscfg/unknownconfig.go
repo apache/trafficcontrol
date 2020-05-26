@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -33,7 +34,7 @@ func MakeUnknownConfig(
 ) string {
 	hdr := GenericHeaderComment(profileName, toToolName, toURL)
 
-	text := ""
+	lines := []string{}
 	for paramName, paramVal := range paramData {
 		if paramName == "header" {
 			if paramVal == "none" {
@@ -42,9 +43,28 @@ func MakeUnknownConfig(
 				hdr = paramVal + "\n"
 			}
 		} else {
-			text += paramVal + "\n"
+			lines = append(lines, paramVal+"\n")
 		}
 	}
+	sort.Strings(lines)
+	text := strings.Join(lines, "")
 	text = strings.Replace(text, "__RETURN__", "\n", -1)
 	return hdr + text
+}
+
+// GetUnknownConfigCommentType takes the same data as MakeUnknownConfig and returns the comment type for that config.
+// In particular, it returns # unless there is a 'header' parameter, in which case it returns an empty string.
+// Wwe don't actually know that the first characters of a custom header are a comment, or how many characters it might be.
+func GetUnknownConfigCommentType(
+	profileName string,
+	paramData map[string]string,
+	toToolName string,
+	toURL string,
+) string {
+	for paramName, _ := range paramData {
+		if paramName == "header" {
+			return ""
+		}
+	}
+	return LineCommentHash
 }
