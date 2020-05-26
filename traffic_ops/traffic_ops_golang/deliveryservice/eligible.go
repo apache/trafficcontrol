@@ -162,9 +162,9 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 	}
 	defer rows.Close()
 
-	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 	servers := []tc.DSServer{}
 	for rows.Next() {
+		serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 		s := tc.DSServer{}
 		err := rows.Scan(
 			&s.Cachegroup,

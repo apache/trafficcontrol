@@ -560,9 +560,9 @@ func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.
 	}
 	defer rows.Close()
 
-	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 	servers := []tc.DSServer{}
 	for rows.Next() {
+		serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 		s := tc.DSServer{}
 		err := rows.Scan(
 			&s.Cachegroup,
