@@ -509,7 +509,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		for _, server := range servers {
 			legacyServer, err := server.ToServerV2()
 			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert servers to legacy format: %v", err))
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
 				return
 			}
 			legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
@@ -522,7 +522,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2()
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert servers to legacy format: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
 			return
 		}
 		legacyServers = append(legacyServers, legacyServer)
@@ -559,7 +559,7 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2()
 		if err != nil {
-			api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Failed to convert servers to legacy format: %v", err), &alternative)
+			api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err), &alternative)
 			return
 		}
 		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
@@ -570,7 +570,7 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, uint64, error, error, int) {
 	var unfiltered uint64
 	if err := tx.QueryRow(unfilteredServersQuery).Scan(&unfiltered); err != nil {
-		return nil, 0, nil, fmt.Errorf("Failed to get servers count: %v", err), http.StatusInternalServerError
+		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError
 	}
 
 	// Query Parameters to Database Query column mappings
@@ -598,7 +598,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
-			return nil, unfiltered, errors.New("Forbidden"), sysErr, http.StatusForbidden
+			return nil, unfiltered, errors.New("forbidden"), sysErr, http.StatusForbidden
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
 		queryAddition = "\nFULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id\n"
@@ -865,7 +865,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 		server, err = newServer.ToServerV2()
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Converting v3 server to v2 for update: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("converting v3 server to v2 for update: %v", err))
 			return
 		}
 		server.InterfaceName = util.StrPtr(serviceInterface)
@@ -884,7 +884,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 		interfaces, err = server.LegacyInterfaceDetails.ToInterfaces(*server.IPIsService, *server.IP6IsService)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Converting server legacy interfaces to interface array: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("converting server legacy interfaces to interface array: %v", err))
 			return
 		}
 	} else {
@@ -902,7 +902,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 		interfaces, err = legacyServer.LegacyInterfaceDetails.ToInterfaces(true, true)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Converting server legacy interfaces to interface array: %v", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("converting server legacy interfaces to interface array: %v", err))
 			return
 		}
 		server = tc.ServerNullableV2{
@@ -1176,11 +1176,11 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(servers) < 1 {
-		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("No server exists by id #%d", id), nil)
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no server exists by id #%d", id), nil)
 		return
 	}
 	if len(servers) > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("There are somehow two servers with id %d - cannot delete", id))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("there are somehow two servers with id %d - cannot delete", id))
 		return
 	}
 
