@@ -169,7 +169,7 @@ Additionally, this MAY be used instead of `404 Not Found`_ when the client is re
 
 This is also the proper response status code when the conditions of a request cannot be met, e.g. when a client submits a PATCH request for a resource with an :mailheader:`If-Match` header that does not match the stored object's :mailheader:`ETag`.
 
-The request body MUST indicate what the conflict is that prevented the request from being fulfilled via one or more ``error``-level alerts.
+The response body MUST indicate what the conflict is that prevented the request from being fulfilled via one or more ``error``-level alerts.
 
 500 Internal Server Error
 -------------------------
