@@ -177,7 +177,7 @@ under the License.
                                 <option selected value="">None</option>
                             </select>
                             <small ng-show="deliveryService.topology"><a href="/#!/topologies/edit?name={{deliveryService.topology}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.topology != dsCurrent.topology">
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.topology !== dsCurrent.topology">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.topology}}</pre>
                             </aside>
