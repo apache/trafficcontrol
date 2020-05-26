@@ -336,7 +336,7 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 	if job.StartTime == nil {
 		errs = append(errs, "startTime: cannot be blank")
 	} else if job.StartTime.After(time.Now().Add(twoDays)) {
-		errs = append(errs, "startTime: must be within two days!")
+		errs = append(errs, "startTime: must be within two days")
 	}
 
 	if job.Regex != nil && *(job.Regex) != "" {
@@ -350,7 +350,7 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 		var id uint
 		if err := row.Scan(&id); err != nil {
 			log.Errorln(err.Error())
-			errs = append(errs, "No Delivery Service corresponding to 'dsId'!")
+			errs = append(errs, "no Delivery Service corresponding to 'dsId'")
 		}
 	}
 
@@ -360,11 +360,11 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 		err := row.Scan(&maxDays)
 		maxHours := maxDays * 24
 		if err == sql.ErrNoRows && MaxTTL < *(job.TTL) {
-			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(MaxTTL, 10)+"!")
-		} else if err == nil && maxHours < *(job.TTL) { //silently ignore other errors to
-			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(maxHours, 10)+"!")
+			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(MaxTTL, 10))
+		} else if err == nil && maxHours < *(job.TTL) { // silently ignore other errors
+			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(maxHours, 10))
 		} else if *(job.TTL) < 1 {
-			errs = append(errs, "ttl: must be at least 1!")
+			errs = append(errs, "ttl: must be at least 1")
 		}
 	}
 

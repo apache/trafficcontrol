@@ -16,6 +16,8 @@ package v3
 */
 
 import (
+	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -27,7 +29,7 @@ func TestJobs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		CreateTestJobs(t)
 		CreateTestInvalidationJobs(t)
-		CreateInvalidJob(t)
+		CreateTestInvalidJob(t)
 		GetTestJobsQueryParams(t)
 		GetTestJobs(t)
 		GetTestInvalidationJobs(t)
@@ -83,7 +85,7 @@ func CreateTestInvalidationJobs(t *testing.T) {
 	}
 }
 
-func CreateInvalidJob(t *testing.T) {
+func CreateTestInvalidJob(t *testing.T) {
 	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
@@ -98,10 +100,29 @@ func CreateInvalidJob(t *testing.T) {
 	if !ok {
 		t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DeliveryService)
 	}
-	tooHigh := interface{}(2161)
+	maxRevalDays := 0
+	foundMaxRevalDays := false
+	for _, p := range testData.Parameters {
+		if p.Name == "maxRevalDurationDays" {
+			maxRevalDays, err = strconv.Atoi(p.Value)
+			if err != nil {
+				t.Fatalf("unable to parse maxRevalDurationDays value '%s' to int", p.Value)
+			}
+			foundMaxRevalDays = true
+			break
+		}
+	}
+	if !foundMaxRevalDays {
+		t.Fatalf("expected: parameter named maxRevalDurationDays, actual: not found")
+	}
+	tooHigh := interface{}((maxRevalDays * 24) + 1)
 	job.TTL = &tooHigh
-	if _, _, err := TOSession.CreateInvalidationJob(job); err == nil {
+	_, reqInf, err := TOSession.CreateInvalidationJob(job)
+	if err == nil {
 		t.Error("creating invalid job (TTL higher than maxRevalDurationDays) - expected: error, actual: nil error")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Errorf("creating invalid job (TTL higher than maxRevalDurationDays) - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 }
 
