@@ -59,18 +59,18 @@ func TestServerUpdateStatus(t *testing.T) {
 				},
 			} {
 				params.Set("hostName", s.name)
-				resp, alerts, _, _, err := TOSession.GetServers(&params)
+				resp, _, err := TOSession.GetServers(&params)
 				if err != nil {
-					t.Errorf("cannot GET Server by hostname '%s': %v - %v", s.name, err, alerts)
+					t.Errorf("cannot GET Server by hostname '%s': %v - %v", s.name, err, resp.Alerts)
 				}
-				if len(resp) < 1 {
+				if len(resp.Response) < 1 {
 					t.Fatalf("Expected a server named '%s' to exist", s.name)
 				}
-				if len(resp) > 1 {
-					t.Errorf("Expected exactly one server named '%s' to exist - actual: %d", s.name, len(resp))
-					t.Logf("Testing will proceed with server: %+v", resp[0])
+				if len(resp.Response) > 1 {
+					t.Errorf("Expected exactly one server named '%s' to exist - actual: %d", s.name, len(resp.Response))
+					t.Logf("Testing will proceed with server: %+v", resp.Response[0])
 				}
-				*s.server = resp[0]
+				*s.server = resp.Response[0]
 				if s.server.ID == nil {
 					t.Fatalf("server '%s' was returned with nil ID", s.name)
 				}
@@ -208,18 +208,18 @@ func TestServerQueueUpdate(t *testing.T) {
 		var s tc.ServerNullable
 		params := url.Values{}
 		params.Add("hostName", serverName)
-		resp, alerts, _, _, err := TOSession.GetServers(&params)
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
-			t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, alerts)
+			t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
 		}
-		if len(resp) < 1 {
+		if len(resp.Response) < 1 {
 			t.Fatalf("Expected a server named '%s' to exist", serverName)
 		}
-		if len(resp) > 1 {
+		if len(resp.Response) > 1 {
 			t.Errorf("Expected exactly one server named '%s' to exist", serverName)
-			t.Logf("Testing will proceed with server: %+v", resp[0])
+			t.Logf("Testing will proceed with server: %+v", resp.Response[0])
 		}
-		s = resp[0]
+		s = resp.Response[0]
 
 		// assert that servers don't have updates pending
 		if s.UpdPending == nil {
@@ -248,18 +248,18 @@ func TestServerQueueUpdate(t *testing.T) {
 				}
 
 				// assert that the server has updates queued
-				resp, alerts, _, _, err = TOSession.GetServers(&params)
+				resp, _, err = TOSession.GetServers(&params)
 				if err != nil {
-					t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, alerts)
+					t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
 				}
-				if len(resp) < 1 {
+				if len(resp.Response) < 1 {
 					t.Fatalf("Expected a server named '%s' to exist", serverName)
 				}
-				if len(resp) > 1 {
+				if len(resp.Response) > 1 {
 					t.Errorf("Expected exactly one server named '%s' to exist", serverName)
-					t.Logf("Testing will proceed with server: %+v", resp[0])
+					t.Logf("Testing will proceed with server: %+v", resp.Response[0])
 				}
-				s = resp[0]
+				s = resp.Response[0]
 				if s.UpdPending == nil {
 					t.Fatalf("Server '%s' had null (or missing) updPending property", serverName)
 				}
@@ -308,12 +308,14 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 		params := url.Values{}
 		params.Add("hostName", *testServer.HostName)
 		testVals := func(queue *bool, reval *bool) {
-			existingServer, alerts, _, _, err := TOSession.GetServers(&params)
+			resp, _, err := TOSession.GetServers(&params)
 			if err != nil {
-				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, alerts)
-			} else if len(existingServer) != 1 {
-				t.Fatalf("GET Server expected 1, actual %v", len(existingServer))
+				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
+			} else if len(resp.Response) != 1 {
+				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
 			}
+
+			existingServer := resp.Response
 
 			if existingServer[0].UpdPending == nil {
 				t.Fatalf("Server '%s' had nil UpdPending before update status change", *testServer.HostName)
@@ -326,12 +328,14 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v", err)
 			}
 
-			newServer, alerts, _, _, err := TOSession.GetServers(&params)
+			resp, _, err = TOSession.GetServers(&params)
 			if err != nil {
-				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, alerts)
-			} else if len(newServer) != 1 {
-				t.Fatalf("GET Server expected 1, actual %v", len(newServer))
+				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
+			} else if len(resp.Response) != 1 {
+				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
 			}
+
+			newServer := resp.Response
 
 			if newServer[0].UpdPending == nil {
 				t.Fatalf("Server '%s' had nil UpdPending after update status change", *testServer.HostName)

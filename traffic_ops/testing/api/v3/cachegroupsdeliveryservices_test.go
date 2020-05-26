@@ -107,10 +107,11 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	params := url.Values{}
 	for _, serverName := range resp.Response.ServerNames {
 		params.Set("hostName", string(serverName))
-		servers, _, _, _, err := TOSession.GetServers(&params)
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
 			t.Fatalf("getting server: %v", err)
 		}
+		servers := resp.Response
 		if len(servers) != 1 {
 			t.Fatalf("getting servers: expected 1 got %v", len(servers))
 		}

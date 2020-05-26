@@ -51,10 +51,11 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 
 	// create an ANY_MAP DS assignment to verify that it doesn't show up in the CRConfig
-	servers, _, _, _, err := TOSession.GetServers(nil)
+	resp, _, err := TOSession.GetServers(nil)
 	if err != nil {
-		t.Errorf("GetServers err expected nil, actual %+v", err)
+		t.Fatalf("GetServers err expected nil, actual %+v", err)
 	}
+	servers := resp.Response
 	serverID := 0
 	for _, server := range servers {
 		if server.Type == "EDGE" && server.CDNName != nil && *server.CDNName == "cdn1" && server.ID != nil {

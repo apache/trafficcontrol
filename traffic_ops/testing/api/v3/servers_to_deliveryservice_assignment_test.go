@@ -43,13 +43,13 @@ func AssignTestDeliveryService(t *testing.T) {
 	params := url.Values{}
 	params.Add("hostName", *server.HostName)
 
-	rs, alerts, _, _, err := TOSession.GetServers(&params)
+	rs, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
-	} else if len(rs) == 0 {
+	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
-	firstServer := rs[0]
+	firstServer := rs.Response[0]
 	if firstServer.ID == nil {
 		t.Fatalf("Server '%s' had nil ID", *server.HostName)
 	}
@@ -65,7 +65,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*firstServer.ID, []int{*firstDS.ID}, true)
+	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*firstServer.ID, []int{*firstDS.ID}, true)
 	if err != nil {
 		t.Errorf("Couldn't assign DS '%+v' to server '%+v': %v (alerts: %v)", firstDS, firstServer, err, alerts)
 	}
@@ -108,13 +108,13 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("hostName", hostname)
-	rs, alerts, _, _, err := TOSession.GetServers(&params)
+	rs, _, err := TOSession.GetServers(&params)
 	if err != nil {
-		t.Fatalf("Failed to fetch server information: %v - %v", err, alerts)
-	} else if len(rs) == 0 {
+		t.Fatalf("Failed to fetch server information: %v - %v", err, rs.Alerts)
+	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
-	server = &rs[0]
+	server = &rs.Response[0]
 	if server.ID == nil {
 		t.Fatalf("Server '%s' has nil ID", hostname)
 	}
@@ -130,7 +130,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false)
+	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false)
 	if err == nil {
 		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
 	}

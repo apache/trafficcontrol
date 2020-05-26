@@ -151,27 +151,25 @@ func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts
 // GetServers returns a list of Servers.
 // The 'params' parameter can be used to optionally pass URL "query string
 // parameters" in the request.
-// It returns, in order, the requested servers, any Alerts the API returned,
-// the returned summary.count value, a request info object, and any error that
-// occurred.
-func (to *Session) GetServers(params *url.Values) ([]tc.ServerNullable, tc.Alerts, uint64, ReqInf, error) {
+// It returns, in order, the API response that Traffic Ops returned, a request
+// info object, and any error that occurred.
+func (to *Session) GetServers(params *url.Values) (tc.ServersV3Response, ReqInf, error) {
 	route := API_SERVERS
 	if params != nil {
 		route += "?" + params.Encode()
 	}
 
-	var alerts tc.Alerts
+	var data tc.ServersV3Response
 
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, alerts, 0, reqInf, err
+		return data, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersV3Response
 	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, data.Alerts, data.Summary.Count, reqInf, err
+	return data, reqInf, err
 }
 
 // GetServerDetailsByHostName GETs Servers by the Server hostname.
@@ -216,13 +214,13 @@ func (to *Session) GetServerFQDN(n string) (string, tc.Alerts, ReqInf, error) {
 	params := url.Values{}
 	params.Add("hostName", n)
 
-	servers, alerts, _, reqInf, err := to.GetServers(&params)
+	resp, reqInf, err := to.GetServers(&params)
 	if err != nil {
-		return "", alerts, reqInf, err
+		return "", resp.Alerts, reqInf, err
 	}
 
 	var fdn string
-	for _, server := range servers {
+	for _, server := range resp.Response {
 		if server.HostName != nil && server.DomainName != nil {
 			fdn = fmt.Sprintf("%s.%s", *server.HostName, *server.DomainName)
 		}
@@ -232,19 +230,19 @@ func (to *Session) GetServerFQDN(n string) (string, tc.Alerts, ReqInf, error) {
 		err = fmt.Errorf("No Server %s found", n)
 	}
 
-	return fdn, alerts, reqInf, err
+	return fdn, resp.Alerts, reqInf, err
 }
 
 // GetServersShortNameSearch returns all of the Host Names of servers that
 // contain 'shortname'.
 func (to *Session) GetServersShortNameSearch(shortname string) ([]string, tc.Alerts, ReqInf, error) {
 	var serverlst []string
-	servers, alerts, _, reqInf, err := to.GetServers(nil)
+	resp, reqInf, err := to.GetServers(nil)
 	if err != nil {
-		return serverlst, alerts, reqInf, err
+		return serverlst, resp.Alerts, reqInf, err
 	}
 
-	for _, server := range servers {
+	for _, server := range resp.Response {
 		if server.HostName != nil && strings.Contains(*server.HostName, shortname) {
 			serverlst = append(serverlst, *server.HostName)
 		}
@@ -254,7 +252,7 @@ func (to *Session) GetServersShortNameSearch(shortname string) ([]string, tc.Ale
 		err = errors.New("No Servers Found")
 	}
 
-	return serverlst, alerts, reqInf, err
+	return serverlst, resp.Alerts, reqInf, err
 }
 
 // AssignDeliveryServiceIDsToServerID assigns a set of Delivery Services to a

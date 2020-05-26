@@ -123,10 +123,11 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		t.Run(ctc.description, func(t *testing.T) {
 			params := url.Values{}
 			params.Add("hostName", ctc.serverName)
-			servers, _, _, _, err := TOSession.GetServers(&params)
+			resp, _, err := TOSession.GetServers(&params)
 			if err != nil {
 				t.Fatalf("cannot GET Server by hostname: %v", err)
 			}
+			servers := resp.Response
 			server := servers[0]
 			if server.ID == nil {
 				t.Fatalf("server %s had nil ID", ctc.serverName)
@@ -170,10 +171,11 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	// TODO: DON'T hard-code server hostnames!
 	params := url.Values{}
 	params.Add("hostName", "denver-mso-org-01")
-	servers, _, _, _, err := TOSession.GetServers(&params)
+	resp, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("GET server denver-mso-org-01: %v", err)
 	}
+	servers := resp.Response
 	if len(servers) != 1 {
 		t.Fatal("expected 1 server with hostname denver-mso-org-01")
 	}
@@ -297,10 +299,11 @@ func getServersAndDSes(t *testing.T) ([]tc.DeliveryServiceNullable, []tc.ServerN
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
-	servers, _, _, _, err := TOSession.GetServers(nil)
+	resp, _, err := TOSession.GetServers(nil)
 	if err != nil {
 		t.Fatalf("cannot GET Servers: %v", err)
 	}
+	servers := resp.Response
 	if len(servers) < 1 {
 		t.Fatal("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}

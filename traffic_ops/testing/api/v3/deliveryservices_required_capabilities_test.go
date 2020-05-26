@@ -185,10 +185,11 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// TODO: DON'T hard-code hostnames!
 	params := url.Values{}
 	params.Add("hostName", "atlanta-edge-01")
-	servers, _, _, _, err := TOSession.GetServers(&params)
+	resp, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname: %v", err)
 	}
+	servers := resp.Response
 	if len(servers) < 1 {
 		t.Fatal("need at least one server to test invalid ds required capability assignment")
 	}

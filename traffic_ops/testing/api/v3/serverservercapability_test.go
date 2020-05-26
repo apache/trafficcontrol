@@ -39,20 +39,21 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 			t.Fatalf("server-server-capability structure had nil server")
 		}
 		params.Set("hostName", *ssc.Server)
-		servResp, alerts, _, _, err := TOSession.GetServers(&params)
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
-			t.Fatalf("cannot GET Server by hostname '%s': %v - %v", *ssc.Server, err, alerts)
+			t.Fatalf("cannot GET Server by hostname '%s': %v - %v", *ssc.Server, err, resp.Alerts)
 		}
+		servResp := resp.Response
 		if len(servResp) != 1 {
 			t.Fatalf("cannot GET Server by hostname: %v. Response did not include record.", *ssc.Server)
 		}
 		server := servResp[0]
 		ssc.ServerID = server.ID
-		resp, _, err := TOSession.CreateServerServerCapability(ssc)
+		createResp, _, err := TOSession.CreateServerServerCapability(ssc)
 		if err != nil {
 			t.Errorf("could not POST the server capability %v to server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
 		}
-		t.Log("Response: ", *ssc.Server, " ", resp)
+		t.Log("Response: ", *ssc.Server, " ", createResp)
 	}
 
 	// Invalid POSTs
@@ -106,10 +107,11 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	// Attempt to assign a server capability to a non MID/EDGE server
 	// TODO: DON'T hard-code server hostnames!
 	params.Set("hostName", "riak")
-	servers, alerts, _, _, err := TOSession.GetServers(&params)
+	resp, _, err := TOSession.GetServers(&params)
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname 'riak': %v - %v", err, alerts)
+		t.Fatalf("cannot GET Server by hostname 'riak': %v - %v", err, resp.Alerts)
 	}
+	servers := resp.Response
 	if len(servers) < 1 {
 		t.Fatal("need at least one server to test invalid server type assignment")
 	}
