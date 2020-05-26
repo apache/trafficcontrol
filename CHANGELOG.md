@@ -18,10 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed ORT config generation not using the coalesce_number_v6 Parameter.
 - Removed audit logging from the `POST /api/x/serverchecks` Traffic Ops API endpoint in order to reduce audit log spam
 - Fixed audit logging from the `/jobs` APIs to bring them back to the same level of information provided by TO-Perl
+- Fixed update procedure of servers, so that if a server is linked to one or more delivery services, you cannot change its "cdn".
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
 - Changed Traffic Portal to use Traffic Ops API v3
+- Changed ORT Config Generation to be deterministic, which will prevent spurious diffs when nothing actually changed.
 - Changed the access logs in Traffic Ops to now show the route ID with every API endpoint call. The Route ID is appended to the end of the access log line.
 - With the addition of multiple server interfaces, interface data is constructed from IP Address/Gateway/Netmask (and their IPv6 counterparts) and Interface Name and Interface MTU fields on services. These **MUST** have proper, valid data before attempting to upgrade or the upgrade **WILL** fail. In particular IP fields need to be valid IP addresses/netmasks, and MTU must only be positive integers of at least 1280.
 

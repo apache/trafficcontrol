@@ -27,11 +27,11 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNSetDSCP(toData *config.TOData, fileName string) (string, string, error) {
+func GetConfigFileCDNSetDSCP(toData *config.TOData, fileName string) (string, string, string, error) {
 	// TODO verify prefix, suffix, and that it's a number? Perl doesn't.
 	dscpNumStr := fileName
 	dscpNumStr = strings.TrimPrefix(dscpNumStr, "set_dscp_")
 	dscpNumStr = strings.TrimSuffix(dscpNumStr, ".config")
 
-	return atscfg.MakeSetDSCPDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, dscpNumStr), atscfg.ContentTypeSetDSCPDotConfig, nil
+	return atscfg.MakeSetDSCPDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, dscpNumStr), atscfg.ContentTypeSetDSCPDotConfig, atscfg.LineCommentSetDSCPDotConfig, nil
 }
