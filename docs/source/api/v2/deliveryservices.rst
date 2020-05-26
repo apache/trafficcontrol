@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v2-deliveryservices:
+.. _to-api-deliveryservices:
 
 ********************
 ``deliveryservices``
@@ -31,37 +31,35 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| Name            | Required | Description                                                                                                                             |
-	+=================+==========+=========================================================================================================================================+
-	| cdn             | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier                   |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| id              | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                        |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| logsEnabled     | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                               |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| profile         | no       | Return only :term:`Delivery Services` using the :term:`Profile` that has this :ref:`profile-id`                                         |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant          | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier                  |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| type            | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier    |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| accessibleTo    | no       | Return the :term:`Delivery Services` accessible from a :term:`Tenant` *or it's children* identified by this integral, unique identifier |
-    +-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| xmlId           | no       | Show only the :term:`Delivery Service` that has this text-based, unique identifier                                                      |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| orderby         | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                           |
-	|                 |          | array                                                                                                                                   |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| sortOrder       | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| limit           | no       | Choose the maximum number of results to return                                                                                          |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| offset          | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                    |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| page            | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.    |
-	|                 |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                       |
-	+-----------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| Name         | Required | Description                                                                                                                             |
+	+==============+==========+=========================================================================================================================================+
+	| cdn          | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier                   |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| id           | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                        |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| logsEnabled  | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                               |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| profile      | no       | Return only :term:`Delivery Services` using the :term:`Profile` that has this :ref:`profile-id`                                         |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| tenant       | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier                  |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| type         | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier    |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| accessibleTo | no       | Return the :term:`Delivery Services` accessible from a :term:`Tenant` *or it's children* identified by this integral, unique identifier |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby      | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                           |
+	|              |          | array                                                                                                                                   |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder    | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| limit        | no       | Choose the maximum number of results to return                                                                                          |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| offset       | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                    |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| page         | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.    |
+	|              |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                       |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -130,7 +128,7 @@ Response Structure
 :remapText:            :ref:`ds-raw-remap`
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
-:rangeSliceBlockSize:  An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
+:rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
 :sslKeyVersion:        This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 :trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`

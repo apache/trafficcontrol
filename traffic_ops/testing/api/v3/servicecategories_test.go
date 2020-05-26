@@ -16,6 +16,8 @@ package v3
 */
 
 import (
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -24,7 +26,7 @@ import (
 )
 
 func TestServiceCategories(t *testing.T) {
-	WithObjs(t, []TCObj{ServiceCategories, Tenants, Users}, func() {
+	WithObjs(t, []TCObj{Tenants, ServiceCategories, Users}, func() {
 		UpdateTestServiceCategories(t)
 		GetTestServiceCategories(t)
 		ServiceCategoryTenancyTest(t)
@@ -32,8 +34,11 @@ func TestServiceCategories(t *testing.T) {
 }
 
 func CreateTestServiceCategories(t *testing.T) {
+	tenant1 := "tenant1"
 	// loop through service categories, assign FKs and create
 	for _, sc := range testData.ServiceCategories {
+		tenant, _, err := TOSession.TenantByName(tenant1)
+		sc.TenantID = tenant.ID
 		resp, _, err := TOSession.CreateServiceCategory(sc)
 		if err != nil {
 			t.Errorf("could not CREATE service category: %v", err)
@@ -43,8 +48,10 @@ func CreateTestServiceCategories(t *testing.T) {
 }
 
 func GetTestServiceCategories(t *testing.T) {
+	params := url.Values{}
 	for _, sc := range testData.ServiceCategories {
-		resp, _, err := TOSession.GetServiceCategoryByName(sc.Name)
+		params.Add("name", sc.Name)
+		resp, _, err := TOSession.GetServiceCategories(&params)
 		if err != nil {
 			t.Errorf("cannot GET Service Category by name: %v - %v", err, resp)
 		}
@@ -52,15 +59,22 @@ func GetTestServiceCategories(t *testing.T) {
 }
 
 func UpdateTestServiceCategories(t *testing.T) {
-	firstServiceCategory := testData.ServiceCategories[0]
+	firstServiceCategory := tc.ServiceCategory{}
+	if len(testData.ServiceCategories) > 0 {
+		firstServiceCategory = testData.ServiceCategories[0]
+	} else {
+		t.Errorf("cannot UPDATE Service Category, test data does not have service categories")
+	}
 	// Retrieve the Service Category by service category so we can get the id for the Update
-	resp, _, err := TOSession.GetServiceCategoryByName(firstServiceCategory.Name)
+	paramsFirst := url.Values{}
+	paramsFirst.Add("name", firstServiceCategory.Name)
+	resp, _, err := TOSession.GetServiceCategories(&paramsFirst)
 	if err != nil {
 		t.Errorf("cannot GET Service Category by service category: %v - %v", firstServiceCategory.Name, err)
 	}
 	if len(resp) > 0 {
 		remoteServiceCategory := resp[0]
-		expectedServiceCategory := "service-category-test"
+		expectedServiceCategory := firstServiceCategory.Name + "-test-update"
 		remoteServiceCategory.Name = expectedServiceCategory
 		var alert tc.Alerts
 		alert, _, err = TOSession.UpdateServiceCategoryByID(remoteServiceCategory.ID, remoteServiceCategory)
@@ -69,7 +83,9 @@ func UpdateTestServiceCategories(t *testing.T) {
 		}
 
 		// Retrieve the Service Category to check service category got updated
-		resp, _, err = TOSession.GetServiceCategoryByID(remoteServiceCategory.ID)
+		paramsRemote := url.Values{}
+		paramsRemote.Add("id", strconv.Itoa(remoteServiceCategory.ID))
+		resp, _, err = TOSession.GetServiceCategories(&paramsRemote)
 		if err != nil {
 			t.Errorf("cannot GET Service Category by service category: %v - %v", firstServiceCategory.Name, err)
 		}
@@ -89,14 +105,34 @@ func UpdateTestServiceCategories(t *testing.T) {
 }
 
 func ServiceCategoryTenancyTest(t *testing.T) {
+	var alert tc.Alerts
+	tenant3, _, err := TOSession.TenantByName("tenant3")
+	if err != nil {
+		t.Errorf("cannot GET Tenant3: %v", err)
+	}
+
+	params := url.Values{}
+	serviceCategories, _, err := TOSession.GetServiceCategories(&params)
+	if err != nil {
+		t.Errorf("cannot GET Service Categories: %v", err)
+	}
+	for _, sc := range serviceCategories {
+		if sc.Name == "serviceCategory1" {
+			alert, _, err = TOSession.UpdateServiceCategoryByID(sc.ID, sc)
+			if err != nil {
+				t.Errorf("cannot UPDATE Service Category by id: %v - %v", err, alert)
+			}
+			sc.TenantID = tenant3.ID
+		}
+	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v2-client-tests/tenant4user", true, toReqTimeout)
+	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v3-client-tests/tenant4user", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
 	}
 
-	serviceCategoriesReadableByTenant4, _, err := tenant4TOClient.GetServiceCategories()
+	serviceCategoriesReadableByTenant4, _, err := tenant4TOClient.GetServiceCategories(&params)
 	if err != nil {
 		t.Error("tenant4user cannot GET service categories")
 	}
@@ -112,7 +148,9 @@ func ServiceCategoryTenancyTest(t *testing.T) {
 func DeleteTestServiceCategories(t *testing.T) {
 	for _, sc := range testData.ServiceCategories {
 		// Retrieve the Service Category by name so we can get the id
-		resp, _, err := TOSession.GetServiceCategoryByName(sc.Name)
+		params := url.Values{}
+		params.Add("name", sc.Name)
+		resp, _, err := TOSession.GetServiceCategories(&params)
 		if err != nil {
 			t.Errorf("cannot GET Service Category by name: %v - %v", sc.Name, err)
 		}
@@ -125,7 +163,7 @@ func DeleteTestServiceCategories(t *testing.T) {
 			}
 
 			// Retrieve the Service Category to see if it got deleted
-			respDelServiceCategory, _, err := TOSession.GetServiceCategoryByName(sc.Name)
+			respDelServiceCategory, _, err := TOSession.GetServiceCategories(&params)
 			if err != nil {
 				t.Errorf("error deleting Service Category: %s", err.Error())
 			}

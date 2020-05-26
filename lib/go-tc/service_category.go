@@ -20,51 +20,21 @@ package tc
  */
 
 // ServiceCategoriesResponse is a list of Service Categories as a response.
-// swagger:response ServiceCategoriesResponse
 type ServiceCategoriesResponse struct {
-	// in: body
 	Response []ServiceCategory `json:"response"`
 }
 
 // ServiceCategoryResponse is a single Service Category response for Update and Create to
 // depict what changed.
-// swagger:response ServiceCategoryResponse
-// in: body
 type ServiceCategoryResponse struct {
-	// in: body
 	Response ServiceCategory `json:"response"`
 }
 
 // ServiceCategory ...
 type ServiceCategory struct {
-
-	// ServiceCategory ID
-	//
 	ID int `json:"id" db:"id"`
-
-	// LastUpdated
-	//
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
-
-	// Division Name
-	//
-	// required: true
 	Name string `json:"name" db:"name"`
-
-	// ServiceCategory Tenant Id
-	//
 	TenantID int `json:"tenantId" db:"tenant_id"`
-
-	// ServiceCategory Tenant Name
-	//
 	TenantName string `json:"tenant"`
-}
-
-// ServiceCategoryNullable is a nullable struct that holds info about a service category
-type ServiceCategoryNullable struct {
-	ID          *int       `json:"id" db:"id"`
-	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        *string    `json:"name" db:"name"`
-	TenantID    *int       `json:"tenantId" db:"tenant_id"`
-	TenantName  *string    `json:"tenant"`
 }

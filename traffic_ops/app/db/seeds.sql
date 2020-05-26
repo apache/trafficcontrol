@@ -693,11 +693,10 @@ insert into api_capability (http_method, route, capability) values ('GET', 'serv
 insert into api_capability (http_method, route, capability) values ('POST', 'server_server_capabilities', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('DELETE', 'server_server_capabilities', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- service categories
-insert into api_capability (http_method, route, capability) values ('GET', 'servicecategories', 'service-categories-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('GET', 'servicecategories/*', 'service-categories-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('POST', 'servicecategories', 'service-categories-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('PUT', 'servicecategories/*', 'service-categories-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('DELETE', 'servicecategories/*', 'service-categories-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'service_categories', 'service-categories-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'service_categories', 'service-categories-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'service_categories/*', 'service-categories-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'service_categories/*', 'service-categories-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- stats
 insert into api_capability (http_method, route, capability) values ('GET', 'caches/stats', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'stats_summary', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;

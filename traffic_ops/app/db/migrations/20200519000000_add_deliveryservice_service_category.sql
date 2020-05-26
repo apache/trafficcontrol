@@ -13,9 +13,9 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 CREATE TABLE IF NOT EXISTS service_category (
-                                                id SERIAL PRIMARY KEY,
-                                                name TEXT NOT NULL,
-                                                tenant_id INT NOT NULL,
+                                                id BIGSERIAL PRIMARY KEY,
+                                                name TEXT UNIQUE NOT NULL CHECK (name <> ''),
+                                                tenant_id BIGINT NOT NULL REFERENCES tenant(id),
                                                 last_updated TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
 ALTER TABLE deliveryservice ADD COLUMN service_category INT REFERENCES service_category(id);

@@ -16,7 +16,7 @@
 .. _to-api-service-categories:
 
 **********************
-``service categories``
+``service_categories``
 **********************
 
 
@@ -58,7 +58,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/3.0/servicecategories?name=SERVICE_CATEGORY_NAME HTTP/1.1
+	GET /api/3.0/service_categories?name=SERVICE_CATEGORY_NAME HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -115,7 +115,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/3.0/servicecategories HTTP/1.1
+	POST /api/3.0/service_categories HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -123,10 +123,10 @@ Request Structure
 	Content-Length: 48
 	Content-Type: application/json
 
-	{
-		"name": "SERVICE_CATEGORY_NAME",
-                "tenantId": 1,
-	}
+    {
+        "name": "SERVICE_CATEGORY_NAME",
+        "tenantId": 1,
+    }
 
 Response Structure
 ------------------

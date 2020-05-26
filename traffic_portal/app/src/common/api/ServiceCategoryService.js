@@ -20,7 +20,7 @@
 var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
 
     this.getServiceCategories = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'servicecategories', {params: queryParams}).then(
+        return $http.get(ENV.api['root'] + 'service_categories', {params: queryParams}).then(
             function(result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.getServiceCategory = function(id) {
-        return $http.get(ENV.api['root'] + 'servicecategories', {params: {id: id}}).then(
+        return $http.get(ENV.api['root'] + 'service_categories', {params: {id: id}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -42,10 +42,10 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.createServiceCategory = function(serviceCategory) {
-        return $http.post(ENV.api['root'] + 'servicecategories', serviceCategory).then(
+        return $http.post(ENV.api['root'] + 'service_categories', serviceCategory).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
-                locationUtils.navigateToPath('/servicecategories');
+                locationUtils.navigateToPath('/service_categories');
                 return result;
             },
             function(err) {
@@ -55,9 +55,8 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
-    // todo: change to use query param when it is supported
     this.updateServiceCategory = function(serviceCategory) {
-        return $http.put(ENV.api['root'] + 'servicecategories/' + serviceCategory.id, serviceCategory).then(
+        return $http.put(ENV.api['root'] + 'service_categories/' + serviceCategory.id, serviceCategory).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;            },
@@ -68,15 +67,14 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
-    // todo: change to use query param when it is supported
     this.deleteServiceCategory = function(id) {
-        return $http.delete(ENV.api['root'] + 'servicecategories/' + id).then(
+        return $http.delete(ENV.api['root'] + 'service_categories/' + id).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 return result;
             },
             function(err) {
-                messageModel.setMessages(err.data.alerts, true);
+                messageModel.setMessages(err.data.alerts, false);
                 throw err;
             }
         );

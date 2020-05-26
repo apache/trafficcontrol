@@ -20,11 +20,11 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/servicecategories')">Service Categories</a></li>
+            <li><a ng-click="navigateToPath('/service_categories')">Service Categories</a></li>
             <li class="active">{{serviceCategoryName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="View Delivery Services" ng-click="viewDSs()">View Delivery Services</button>
+            <button type=button class="btn btn-primary" title="View Delivery Services" ng-click="viewDSs()">View Delivery Services</button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -43,7 +43,7 @@ under the License.
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Tenant</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select name="tenantId" class="form-control" ng-model="serviceCategory.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
-                        <option value="">Select...</option>
+                        <option hidden disabled selected value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serviceCategoryForm.tenantId, 'required')">Required</small>
                     <small ng-show="serviceCategory.tenantId"><a href="/#!/tenants/{{serviceCategory.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>

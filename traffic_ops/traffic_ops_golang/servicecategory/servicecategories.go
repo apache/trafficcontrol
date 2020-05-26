@@ -37,13 +37,12 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-//we need a type alias to define functions on
 type TOServiceCategory struct {
 	api.APIInfoImpl `json:"-"`
-	tc.ServiceCategoryNullable
+	tc.ServiceCategory
 }
 
-func (v *TOServiceCategory) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOServiceCategory) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = t }
 func (v *TOServiceCategory) InsertQuery() string           { return insertQuery() }
 func (v *TOServiceCategory) NewReadObj() interface{}       { return &tc.ServiceCategory{} }
 func (v *TOServiceCategory) SelectQuery() string           { return selectQuery() }
@@ -51,14 +50,14 @@ func (v *TOServiceCategory) UpdateQuery() string           { return updateQuery(
 func (v *TOServiceCategory) DeleteQuery() string           { return deleteQuery() }
 
 func (serviceCategory TOServiceCategory) GetAuditName() string {
-	if serviceCategory.Name != nil {
-		return *serviceCategory.Name
+	if serviceCategory.Name != "" {
+		return serviceCategory.Name
 	}
-	if serviceCategory.ID != nil {
-		return strconv.Itoa(*serviceCategory.ID)
+	if serviceCategory.ID != 0 {
+		return strconv.Itoa(serviceCategory.ID)
 	}
-	if serviceCategory.TenantID != nil {
-		return strconv.Itoa(*serviceCategory.TenantID)
+	if serviceCategory.TenantID != 0 {
+		return strconv.Itoa(serviceCategory.TenantID)
 	}
 	return "unknown"
 }
@@ -69,15 +68,15 @@ func (serviceCategory TOServiceCategory) GetKeyFieldsInfo() []api.KeyFieldInfo {
 
 //Implementation of the Identifier, Validator interface functions
 func (serviceCategory TOServiceCategory) GetKeys() (map[string]interface{}, bool) {
-	if serviceCategory.ID == nil {
+	if serviceCategory.ID == 0 {
 		return map[string]interface{}{"id": 0}, false
 	}
-	return map[string]interface{}{"id": *serviceCategory.ID}, true
+	return map[string]interface{}{"id": serviceCategory.ID}, true
 }
 
 func (serviceCategory *TOServiceCategory) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	serviceCategory.ID = &i
+	serviceCategory.ID = i
 }
 
 func (serviceCategory TOServiceCategory) GetType() string {

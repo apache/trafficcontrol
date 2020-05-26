@@ -753,7 +753,7 @@ Servers can be assigned to Delivery Services using the :ref:`tp-configure-server
 
 Service Category
 ----------------
-Defines the type of content being delivered by the Delivery Service. Some example values are: "Linear", "VOD", and "OTT"
+A service category is a tag that describes the type of content being delivered by the Delivery Service. Some example values are: "Linear" and "VOD"
 
 .. _ds-signing-algorithm:
 

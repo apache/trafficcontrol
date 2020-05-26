@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var FormServiceCategoryController = function(serviceCategory, $scope, $location, formUtils, stringUtils, locationUtils, tenantService, tenantUtils) {
+var FormServiceCategoryController = function(serviceCategory, $scope, $location, formUtils, stringUtils, locationUtils, tenantService, tenantUtils, userModel) {
 
     var getTenants = function() {
-        tenantService.getTenant()
+        tenantService.getTenant(userModel.user.tenantId)
             .then(function(tenant) {
                 tenantService.getTenants()
                     .then(function(tenants) {
@@ -55,5 +55,5 @@ var FormServiceCategoryController = function(serviceCategory, $scope, $location,
 
 };
 
-FormServiceCategoryController.$inject = ['serviceCategory', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'tenantService', 'tenantUtils'];
+FormServiceCategoryController.$inject = ['serviceCategory', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'tenantService', 'tenantUtils', 'userModel'];
 module.exports = FormServiceCategoryController;

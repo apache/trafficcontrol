@@ -25,7 +25,7 @@ var FormEditServiceCategoryController = function(serviceCategory, $scope, $contr
     var deleteServiceCategory = function(serviceCategory) {
         serviceCategoryService.deleteServiceCategory(serviceCategory.id)
             .then(function() {
-                locationUtils.navigateToPath('/servicecategories');
+                locationUtils.navigateToPath('/service_categories');
             });
     };
 
