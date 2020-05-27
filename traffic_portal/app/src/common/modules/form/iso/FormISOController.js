@@ -33,18 +33,9 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 
 	$scope.selectedServer = null;
 
-	$scope.falseTrue = [
-		{ value: 'yes', label: 'yes' },
-		{ value: 'no', label: 'no' }
-	];
-
 	$scope.iso = {
 		dhcp: false,
 		interfaceMtu: 1500
-	};
-
-	$scope.isDHCP = function() {
-		return $scope.iso.dhcp == 'yes';
 	};
 
 	$scope.fqdn = function(server) {
