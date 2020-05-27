@@ -40,7 +40,7 @@ type tester struct {
 	APIInfoImpl `json:"-"`
 	userErr     error //only for testing
 	sysErr      error //only for testing
-	errCode     int   //only for testing
+	errCode     int //only for testing
 }
 
 var cfg = config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}

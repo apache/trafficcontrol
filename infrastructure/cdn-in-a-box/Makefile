@@ -29,6 +29,7 @@ ifneq ($(PWD),$(makefile_dir))
 $(error This makefile MUST be run from within its directory)
 endif
 
+PKG_FLAGS := -v
 BUILD_NUMBER := $(shell git rev-list HEAD 2>/dev/null | wc -l | tr -d '[[:space:]]').$(shell git rev-parse --short=8 HEAD)
 TC_VERSION := $(shell cat "../../VERSION")
 TOMCAT_VERSION := $(shell grep 'export TOMCAT_VERSION=' ../../traffic_router/build/build_rpm.sh  | cut -d '=' -f 2)
@@ -47,10 +48,17 @@ TP_SOURCE := $(wildcard ../../traffic_portal/**/*)
 TR_SOURCE := $(wildcard ../../traffic_router/**/*)
 TS_SOURCE := $(wildcard ../../traffic_stats/**/*)
 
-.PHONY: clean very-clean all nearly-all
+.PHONY: clean very-clean all nearly-all debug
 
 # Default target; builds all pre-requisite rpms from source trees
 all: traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_ops/traffic_ops.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm traffic_stats/traffic_stats.rpm
+
+debug: PKG_FLAGS += -d
+ifneq ($(MAKECMDGOALS), debug)
+debug: $(MAKECMDGOALS)
+else
+debug: all
+endif
 
 # Actual output rpm recipies
 traffic_monitor/traffic_monitor.rpm: ../../dist/traffic_monitor-$(SPECIAL_SAUCE)
@@ -68,19 +76,19 @@ traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
 
 # Dist rpms
 ../../dist/traffic_monitor-$(SPECIAL_SAUCE): $(TM_SOURCE)
-	sudo ../../pkg -v traffic_monitor_build
+	../../pkg $(PKG_FLAGS) traffic_monitor_build
 
 ../../dist/traffic_ops-$(SPECIAL_SAUCE): $(TO_SOURCE)
-	sudo ../../pkg -v traffic_ops_build
+	../../pkg $(PKG_FLAGS) traffic_ops_build
 
 ../../dist/traffic_portal-$(SPECIAL_SAUCE): $(TP_SOURCE)
-	sudo ../../pkg -v traffic_portal_build
+	../../pkg $(PKG_FLAGS) traffic_portal_build
 
 ../../dist/traffic_rou%er-$(SPECIAL_SAUCE) ../../dist/tomca%-$(SPECIAL_SEASONING): $(TR_SOURCE)
-	sudo ../../pkg -v traffic_router_build
+	../../pkg $(PKG_FLAGS) traffic_router_build
 
 ../../dist/traffic_stats-$(SPECIAL_SAUCE): $(TS_SOURCE)
-	sudo ../../pkg -v traffic_stats_build
+	../../pkg $(PKG_FLAGS) traffic_stats_build
 
 clean:
 	$(RM) traffic_monitor/traffic_monitor.rpm traffic_ops/traffic_ops.rpm traffic_portal/traffic_portal.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm edge/traffic_ops_ort.rpm mid/traffic_ops_ort.rpm traffic_stats/traffic_stats.rpm

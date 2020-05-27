@@ -208,7 +208,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	var role string
 	var tenant string
-	user, exists, err := dbhelpers.GetUserByEmail(inf.Tx, req.Email.Address.Address)
+	user, exists, err := dbhelpers.GetUserByEmail(req.Email.Address.Address, inf.Tx.Tx)
 	if err != nil {
 		errCode = http.StatusInternalServerError
 		sysErr = fmt.Errorf("Checking for existing user with email %s: %v", req.Email, err)

@@ -47,38 +47,41 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 .. _ciab-service-info:
 .. table:: Service Info
 
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Service                         | Ports exposed and their usage                                | Username                              | Password                                  |
-	+=================================+==============================================================+=======================================+===========================================+
-	| DNS                             | DNS name resolution on 9353                                  | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Edge Tier Cache                 | Apache Trafficserver HTTP caching reverse proxy on port 9000 | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Mid Tier Cache                  | Apache Trafficserver HTTP caching forward proxy on port 9100 | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Mock Origin Server              | Example web page served on port 9200                         | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Monitor                 | Web interface and API on port 80                             | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Ops                     | Main API endpoints on port 6443, with a direct route to the  | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
-	|                                 | Perl API on port 60443\ [3]_                                 |                                       |                                           |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Ops PostgresQL Database | PostgresQL connections accepted on port 5432 (database name: | ``DB_USER`` in `variables.env`_       | ``DB_USER_PASS`` in `variables.env`_      |
-	|                                 | ``DB_NAME`` in `variables.env`_)                             |                                       |                                           |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Portal                  | Web interface on 443 (Javascript required)                   | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Router                  | Web interfaces on ports 3080 (HTTP) and 3443 (HTTPS), with a | N/A                                   | N/A                                       |
-	|                                 | DNS service on 53 and an API on 3333 (HTTP) and 2222 (HTTPS) |                                       |                                           |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Vault                   | Riak key-value store on port 8010                            | ``TV_ADMIN_USER`` in `variables.env`_ | ``TV_ADMIN_PASSWORD`` in `variables.env`_ |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Stats                   | N/A                                                          | N/A                                   | N/A                                       |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Traffic Stats Influxdb          | Influxdbd connections accepted on port 8086 (database name:  | ``INFLUXDB_ADMIN_USER`` in            | ``INFLUXDB_ADMIN_PASSWORD`` in            |
-	|                                 | ``cache_stats``, ``daily_stats`` and                         | `variables.env`_                      | `variables.env`_                          |
-	|                                 | ``deliveryservice_stats``)                                   |                                       |                                           |
-	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Service                         | Ports exposed and their usage                                  | Username                              | Password                                  |
+	+=================================+================================================================+=======================================+===========================================+
+	| DNS                             | DNS name resolution on 9353                                    | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Edge Tier Cache                 | Apache Trafficserver HTTP caching reverse proxy on port 9000   | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Mid Tier Cache                  | Apache Trafficserver HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Mock Origin Server              | Example web page served on port 9200                           | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| SMTP Server                     | Passwordless, cleartext SMTP server on port 25 (no relay)      | N/A                                   | N/A                                       |
+	|                                 | Web interface exposed on port 4443 (port 443 in the container) |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Monitor                 | Web interface and API on port 80                               | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Ops                     | Main API endpoints on port 6443, with a direct route to the    | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
+	|                                 | Perl API on port 60443\ [3]_                                   |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Ops PostgresQL Database | PostgresQL connections accepted on port 5432 (database name:   | ``DB_USER`` in `variables.env`_       | ``DB_USER_PASS`` in `variables.env`_      |
+	|                                 | ``DB_NAME`` in `variables.env`_)                               |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Portal                  | Web interface on 443 (Javascript required)                     | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Router                  | Web interfaces on ports 3080 (HTTP) and 3443 (HTTPS), with a   | N/A                                   | N/A                                       |
+	|                                 | DNS service on 53 and an API on 3333 (HTTP) and 2222 (HTTPS)   |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Vault                   | Riak key-value store on port 8010                              | ``TV_ADMIN_USER`` in `variables.env`_ | ``TV_ADMIN_PASSWORD`` in `variables.env`_ |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Stats                   | N/A                                                            | N/A                                   | N/A                                       |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Stats Influxdb          | Influxdbd connections accepted on port 8086 (database name:    | ``INFLUXDB_ADMIN_USER`` in            | ``INFLUXDB_ADMIN_PASSWORD`` in            |
+	|                                 | ``cache_stats``, ``daily_stats`` and                           | `variables.env`_                      | `variables.env`_                          |
+	|                                 | ``deliveryservice_stats``)                                     |                                       |                                           |
+	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 
 .. seealso:: :ref:`tr-api` and :ref:`tm-api`
 
@@ -90,6 +93,31 @@ While the components may be interacted with by the host using these ports, the t
 	sudo docker-compose exec enroller /usr/bin/curl -L "http://video.demo1.mycdn.ciab.test"
 
 When the CDN is to be shut down, it is often best to do so using ``sudo docker-compose down -v`` due to the use of shared volumes in the system which might interfere with a proper initialization upon the next run.
+
+Readiness Check
+"""""""""""""""
+
+In order to check the "readiness" of your CDN, you can optionally start the Readiness Container, which will continually :manpage:`curl(1)` the :term:`Delivery Services` in your CDN until they all return successful responses before exiting successfully.
+
+.. code-block:: shell
+	:caption: Example Command to Run the Readiness Container
+
+	sudo docker-compose -f docker-compose.readiness.yml up
+
+Integration Tests
+"""""""""""""""""
+
+There also exist TP and TO integration tests containers. Both of these containers assume that CDN in a Box is already running on the local system.
+
+.. code-block:: shell
+	:caption: Running TP Integration Tests
+
+	sudo docker-compose -f docker-compose.traffic-portal-test.yml up
+
+.. code-block:: shell
+	:caption: Running TO Integration Tests
+
+	sudo docker-compose -f docker-compose.traffic-ops-test.yml up
 
 variables.env
 """""""""""""
@@ -433,3 +461,8 @@ There are some *scripted dashboards* can show beautiful charts. You can display 
 * ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``. The query parameter `which` in this particular URL should be the **cachegroup**. Take CIAB as an example, it can be filled in with **CDN_in_a_Box_Edge** or **CDN_in_a_Box_Edge**.
 * ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``. The query parameter `which` in this particular URL should be the **xml_id** of the desired Delivery Service.
 * ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``. The query parameter `which` in this particular URL should be the **hostname** (not **FQDN**). It can be filled in with **edge** or **mid** in CIAB.
+
+Debugging
+---------
+
+See :ref:`dev-debugging-ciab`.

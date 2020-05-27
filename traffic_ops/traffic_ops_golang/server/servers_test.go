@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"net/http"
 	"testing"
 	"time"
@@ -94,6 +95,65 @@ func getTestServers() []tc.Server {
 	servers = append(servers, testServer2)
 
 	return servers
+}
+
+// Test to make sure that updating the "cdn" of a server already assigned to a DS fails
+func TestUpdateServer(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	testServers := getTestServers()
+
+	rows := sqlmock.NewRows([]string{"type", "cdn_id"})
+	// note here that the cdnid is 5, which is not the same as the initial cdnid of the fist traffic server
+	rows.AddRow(testServers[0].TypeID, 5)
+	// Make it return a list of atleast one associated ds
+	dsrows := sqlmock.NewRows([]string{"array"})
+	dsrows.AddRow("{3}")
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
+
+	snv := tc.ServerNullableV11{
+		CDNID:            &testServers[0].CDNID,
+		FqdnTime:         time.Time{},
+		TypeID:           &testServers[0].TypeID,
+	}
+	sn := tc.ServerNullable{
+		ServerNullableV11: snv,
+		IPIsService:       nil,
+		IP6IsService:      nil,
+	}
+
+	s := &TOServer {
+		APIInfoImpl:    api.APIInfoImpl{
+			ReqInfo: &api.APIInfo{
+				Params:    nil,
+				IntParams: nil,
+				User:      nil,
+				ReqID:     0,
+				Version:   nil,
+				Tx:        db.MustBegin(),
+				Config:    nil,
+			},
+		},
+		ServerNullable: sn,
+	}
+
+	userErr, _, errCode := s.Update()
+	if errCode != 409 {
+		t.Errorf("Update servers: Expected error code of %v, but got %v", 409, errCode)
+	}
+	expectedErr := "server cdn can not be updated when it is currently assigned to delivery services"
+	if userErr == nil {
+		t.Errorf("Update expected error: %v, but got no error with status: %s", expectedErr, http.StatusText(errCode))
+	}
 }
 
 func TestGetServersByCachegroup(t *testing.T) {
@@ -176,6 +236,199 @@ func TestGetServersByCachegroup(t *testing.T) {
 		t.Errorf("getServers expected: len(servers) == 3, actual: %v", len(servers))
 	}
 
+}
+
+func TestGetMidServers(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	testServers := getTestServers()
+	testServers = testServers[0:2]
+
+	testServers[1].Cachegroup = "parentCacheGroup"
+	testServers[1].CachegroupID = 2
+	testServers[1].Type = "MID"
+
+	cols := test.ColsFromStructByTag("db", tc.Server{})
+	rows := sqlmock.NewRows(cols)
+
+	for _, ts := range testServers {
+		rows = rows.AddRow(
+			ts.Cachegroup,
+			ts.CachegroupID,
+			ts.CDNID,
+			ts.CDNName,
+			ts.DomainName,
+			ts.GUID,
+			ts.HostName,
+			ts.HTTPSPort,
+			ts.ID,
+			ts.ILOIPAddress,
+			ts.ILOIPGateway,
+			ts.ILOIPNetmask,
+			ts.ILOPassword,
+			ts.ILOUsername,
+			ts.InterfaceMtu,
+			ts.InterfaceName,
+			ts.IP6Address,
+			ts.IP6IsService,
+			ts.IP6Gateway,
+			ts.IPAddress,
+			ts.IPIsService,
+			ts.IPNetmask,
+			ts.IPGateway,
+			ts.LastUpdated,
+			ts.MgmtIPAddress,
+			ts.MgmtIPGateway,
+			ts.MgmtIPNetmask,
+			ts.OfflineReason,
+			ts.PhysLocation,
+			ts.PhysLocationID,
+			ts.Profile,
+			ts.ProfileDesc,
+			ts.ProfileID,
+			ts.Rack,
+			ts.RevalPending,
+			ts.RouterHostName,
+			ts.RouterPortName,
+			ts.Status,
+			ts.StatusID,
+			ts.TCPPort,
+			ts.Type,
+			ts.TypeID,
+			ts.UpdPending,
+			ts.XMPPID,
+			ts.XMPPPasswd,
+		)
+	}
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	v := map[string]string{}
+
+	user := auth.CurrentUser{}
+
+	servers, userErr, sysErr, errCode := getServers(v, db.MustBegin(), &user)
+
+	if userErr != nil || sysErr != nil {
+		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
+	}
+
+	cols2 := test.ColsFromStructByTag("db", tc.Server{})
+	rows2 := sqlmock.NewRows(cols2)
+
+	cgs := []tc.CacheGroup{}
+	testCG1 := tc.CacheGroup{
+		ID:                          1,
+		Name:                        "Cachegroup",
+		ShortName:                   "cg1",
+		Latitude:                    38.7,
+		Longitude:                   90.7,
+		ParentCachegroupID:          2,
+		SecondaryParentCachegroupID: 2,
+		LocalizationMethods: []tc.LocalizationMethod{
+			tc.LocalizationMethodDeepCZ,
+			tc.LocalizationMethodCZ,
+			tc.LocalizationMethodGeo,
+		},
+		Type:        "EDGE_LOC",
+		TypeID:      6,
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
+		Fallbacks: []string{
+			"cachegroup2",
+			"cachegroup3",
+		},
+		FallbackToClosest: true,
+	}
+	cgs = append(cgs, testCG1)
+	testCG2 := tc.CacheGroup{
+		ID:                          2,
+		Name:                        "parentCacheGroup",
+		ShortName:                   "pg1",
+		Latitude:                    38.7,
+		Longitude:                   90.7,
+		ParentCachegroupID:          1,
+		SecondaryParentCachegroupID: 1,
+		LocalizationMethods: []tc.LocalizationMethod{
+			tc.LocalizationMethodDeepCZ,
+			tc.LocalizationMethodCZ,
+			tc.LocalizationMethodGeo,
+		},
+		Type:        "MID_LOC",
+		TypeID:      7,
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
+	}
+	cgs = append(cgs, testCG2)
+
+	ts := servers[1]
+	rows2 = rows2.AddRow(
+		ts.Cachegroup,
+		ts.CachegroupID,
+		ts.CDNID,
+		ts.CDNName,
+		ts.DomainName,
+		ts.GUID,
+		ts.HostName,
+		ts.HTTPSPort,
+		ts.ID,
+		ts.ILOIPAddress,
+		ts.ILOIPGateway,
+		ts.ILOIPNetmask,
+		ts.ILOPassword,
+		ts.ILOUsername,
+		ts.InterfaceMtu,
+		ts.InterfaceName,
+		ts.IP6Address,
+		ts.IP6IsService,
+		ts.IP6Gateway,
+		ts.IPAddress,
+		ts.IPIsService,
+		ts.IPNetmask,
+		ts.IPGateway,
+		ts.LastUpdated,
+		ts.MgmtIPAddress,
+		ts.MgmtIPGateway,
+		ts.MgmtIPNetmask,
+		ts.OfflineReason,
+		ts.PhysLocation,
+		ts.PhysLocationID,
+		ts.Profile,
+		ts.ProfileDesc,
+		ts.ProfileID,
+		ts.Rack,
+		ts.RevalPending,
+		ts.RouterHostName,
+		ts.RouterPortName,
+		ts.Status,
+		ts.StatusID,
+		ts.TCPPort,
+		ts.Type,
+		ts.TypeID,
+		ts.UpdPending,
+		ts.XMPPID,
+		ts.XMPPPasswd,
+	)
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
+	mid, userErr, sysErr, errCode := getMidServers(servers, db.MustBegin())
+
+	if userErr != nil || sysErr != nil {
+		t.Fatalf("getMidServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
+	}
+	if len(mid) != 1 {
+		t.Fatalf("getMidServers expected: len(mid) == 1, actual: %v", len(mid))
+	}
+	if mid[0].Type != "MID" || *(mid[0].CachegroupID) != 2 || *(mid[0].Cachegroup) != "parentCacheGroup" {
+		t.Fatalf("getMidServers expected: Type == MID, actual: %v", mid[0].Type)
+		t.Fatalf("getMidServers expected: CachegroupID == 2, actual: %v", *(mid[0].CachegroupID))
+		t.Fatalf("getMidServers expected: Cachegroup == parentCacheGroup, actual: %v", *(mid[0].Cachegroup))
+	}
 }
 
 type SortableServers []tc.Server

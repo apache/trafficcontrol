@@ -38,9 +38,9 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
 	}
 
-	dses, _, err := TOSession.GetDeliveryServices()
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
+		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
 	clientCGs, _, err := TOSession.GetCacheGroupNullableByName(TestEdgeServerCacheGroupName)
@@ -60,8 +60,8 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 
 	dsIDs := []int64{}
 	for _, ds := range dses {
-		if ds.CDNName == "cdn1" {
-			dsIDs = append(dsIDs, int64(ds.ID))
+		if *ds.CDNName == "cdn1" {
+			dsIDs = append(dsIDs, int64(*ds.ID))
 		}
 	}
 	if len(dsIDs) < 1 {
@@ -70,10 +70,10 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 
 	resp, _, err := TOSession.SetCachegroupDeliveryServices(cgID, dsIDs)
 	if err != nil {
-		t.Errorf("setting cachegroup delivery services returned error: %v", err)
+		t.Fatalf("setting cachegroup delivery services returned error: %v", err)
 	}
 	if len(resp.Response.ServerNames) == 0 {
-		t.Error("setting cachegroup delivery services returned success, but no servers set")
+		t.Fatal("setting cachegroup delivery services returned success, but no servers set")
 	}
 
 	// Note this second post of the same cg-dses specifically tests a previous bug, where the query
@@ -90,10 +90,10 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	for _, serverName := range resp.Response.ServerNames {
 		servers, _, err := TOSession.GetServerByHostName(string(serverName))
 		if err != nil {
-			t.Errorf("getting server: " + err.Error())
+			t.Fatalf("getting server: %v", err)
 		}
 		if len(servers) != 1 {
-			t.Errorf("getting servers: expected 1 got %v", len(servers))
+			t.Fatalf("getting servers: expected 1 got %v", len(servers))
 		}
 		server := servers[0]
 		serverID := server.ID
@@ -103,7 +103,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		for _, dsID := range dsIDs {
 			found := false
 			for _, serverDS := range serverDSes {
-				if serverDS.ID == int(dsID) {
+				if *serverDS.ID == int(dsID) {
 					found = true
 					break
 				}

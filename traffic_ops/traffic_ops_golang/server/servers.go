@@ -335,14 +335,11 @@ func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullabl
 	edgeIDs := strings.Join(ids, ",")
 	// TODO: include secondary parent?
 	q := selectQuery() + `
-WHERE s.id IN (
-	SELECT mid.id FROM server mid
-	JOIN cachegroup cg ON cg.id IN (
-		SELECT cg.parent_cachegroup_id
-		FROM server s
-		JOIN cachegroup cg ON cg.id = s.cachegroup
-		WHERE s.id IN (` + edgeIDs + `))
-	JOIN type t ON mid.type = (SELECT id FROM type WHERE name = 'MID'))
+WHERE t.name = 'MID' AND s.cachegroup IN (
+SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
+WHERE cg.id IN (
+SELECT s.cachegroup FROM server AS s
+WHERE s.id IN (` + edgeIDs + `)))
 `
 	rows, err := tx.Queryx(q)
 	if err != nil {
@@ -366,22 +363,28 @@ func (s *TOServer) Update() (error, error, int) {
 	if s.IP6Address != nil && len(strings.TrimSpace(*s.IP6Address)) == 0 {
 		s.IP6Address = nil
 	}
-
 	// see if type changed
 	typeID := -1
-	if err := s.APIInfo().Tx.QueryRow("SELECT type FROM server WHERE id = $1", s.ID).Scan(&typeID); err != nil {
+	// see if cdn changed
+	cdnId := -1
+
+	if err := s.APIInfo().Tx.QueryRow("SELECT type, cdn_id FROM server WHERE id = $1", s.ID).Scan(&typeID, &cdnId); err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("no server found with this id"), nil, http.StatusNotFound
 		}
 		return nil, fmt.Errorf("getting current server type: %v", err), http.StatusInternalServerError
 	}
 
+	dsIDs := []int64{}
+	if err := s.APIInfo().Tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", s.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("getting server assigned delivery services: %v", err), http.StatusInternalServerError
+	}
+	// Check to see if the user is trying to change the CDN of a server, which is already linked with a DS
+	if cdnId != *s.CDNID && len(dsIDs) != 0 {
+		return errors.New("server cdn can not be updated when it is currently assigned to delivery services"), nil, http.StatusConflict
+	}
 	// If type is changing ensure it isn't assigned to any DSes.
 	if typeID != *s.TypeID {
-		dsIDs := []int64{}
-		if err := s.APIInfo().Tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", s.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
-			return nil, fmt.Errorf("getting server assigned delivery services: %v", err), http.StatusInternalServerError
-		}
 		if len(dsIDs) != 0 {
 			return errors.New("server type can not be updated when it is currently assigned to delivery services"), nil, http.StatusConflict
 		}

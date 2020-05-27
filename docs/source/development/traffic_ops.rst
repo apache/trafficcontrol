@@ -31,7 +31,7 @@ The two different implementations have different requirements, but they do share
 - `Goose <https://bitbucket.org/liamstask/goose/>`_ (although the ``postinstall`` Perl script will install this if desired)
 - `PostgreSQL 9.6.6 <https://www.postgresql.org/download/>`_ - the machine where (either implementation of) Traffic Ops is running must have the client tool set (e.g. :manpage:`psql(1)`), but the actual database can be run anywhere so long as it is accessible.
 - :manpage:`openssl(1SSL)` is recommended to generate server certificates, though not strictly required if certificates can be obtained by other means.
-- Some kind of SMTP server is required for certain :ref:`to-api` endpoints to work, but for purposes unrelated to them an SMTP server is not required.
+- Some kind of SMTP server is required for certain :ref:`to-api` endpoints to work, but for purposes unrelated to them an SMTP server is not required. :ref:`ciab` comes with a relayless SMTP server for testing (you can view the emails that Traffic Ops sends, but they aren't sent anywhere outside CDN-in-a-Box).
 
 .. tip:: Alternatively, development and testing can be done using :ref:`ciab` - albeit somewhat more slowly.
 

@@ -31,7 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	"github.com/apache/trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
 	"github.com/json-iterator/go"
 )
@@ -42,13 +42,6 @@ type ITrafficOpsSession interface {
 	LastCRConfig(cdn string) ([]byte, time.Time, error)
 	TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error)
 	Set(session *client.Session)
-	URL() (string, error)
-	User() (string, error)
-	Servers() ([]tc.Server, error)
-	Profiles() ([]tc.Profile, error)
-	Parameters(profileName string) ([]tc.Parameter, error)
-	DeliveryServices() ([]tc.DeliveryService, error)
-	CacheGroups() ([]tc.CacheGroupNullable, error)
 	CRConfigHistory() []CRConfigStat
 	BackupFileExists() bool
 }
@@ -191,22 +184,6 @@ func (s TrafficOpsSessionThreadsafe) get() *client.Session {
 		return nil
 	}
 	return *s.session
-}
-
-func (s TrafficOpsSessionThreadsafe) URL() (string, error) {
-	ss := s.get()
-	if ss == nil {
-		return "", ErrNilSession
-	}
-	return ss.URL, nil
-}
-
-func (s TrafficOpsSessionThreadsafe) User() (string, error) {
-	ss := s.get()
-	if ss == nil {
-		return "", ErrNilSession
-	}
-	return ss.UserName, nil
 }
 
 func (s TrafficOpsSessionThreadsafe) CRConfigHistory() []CRConfigStat {
@@ -540,49 +517,4 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		}
 	}
 	return mc, nil
-}
-
-func (s TrafficOpsSessionThreadsafe) Servers() ([]tc.Server, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	servers, _, error := ss.GetServers()
-	return servers, error
-}
-
-func (s TrafficOpsSessionThreadsafe) Profiles() ([]tc.Profile, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	profiles, _, error := ss.GetProfiles()
-	return profiles, error
-}
-
-func (s TrafficOpsSessionThreadsafe) Parameters(profileName string) ([]tc.Parameter, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	parameters, _, error := ss.GetParametersByProfileName(profileName)
-	return parameters, error
-}
-
-func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]tc.DeliveryService, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	deliveryServices, _, error := ss.GetDeliveryServices()
-	return deliveryServices, error
-}
-
-func (s TrafficOpsSessionThreadsafe) CacheGroups() ([]tc.CacheGroupNullable, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	cacheGroups, _, error := ss.GetCacheGroupsNullable()
-	return cacheGroups, error
 }

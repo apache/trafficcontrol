@@ -17,6 +17,16 @@
 # under the License.
 NAME="Traffic Router Application"
 
+function longer_dns_timeout() {
+  local day_in_ms dns_properties;
+  day_in_ms=$(( 1000 * 60 * 60 * 24 )); # Timing out debugging after 1 day seems fair
+  dns_properties=/opt/traffic_router/conf/dns.properties;
+  <<-DNS_CONFIG_LINES cat >> $dns_properties;
+		dns.tcp.timeout.task=$(( day_in_ms ))
+		dns.udp.timeout.task=$(( day_in_ms ))
+DNS_CONFIG_LINES
+}
+
 set-dns.sh
 insert-self-into-dns.sh
 
@@ -37,6 +47,11 @@ CATALINA_OPTS="\
   -XX:+UseG1GC \
   -XX:+UnlockExperimentalVMOptions \
   -XX:InitiatingHeapOccupancyPercent=30"
+
+if [[ "$TR_DEBUG_ENABLE" == true ]]; then
+    export JPDA_OPTS="-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n";
+    longer_dns_timeout;
+fi;
 
 JAVA_HOME=/opt/java
 JAVA_OPTS="\
@@ -113,6 +128,10 @@ until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
 done
 
 touch $LOGFILE $ACCESSLOG
-exec /opt/tomcat/bin/catalina.sh run &
+if [[ "$TR_DEBUG_ENABLE" == true ]]; then
+    exec /opt/tomcat/bin/catalina.sh jpda start &
+else
+    exec /opt/tomcat/bin/catalina.sh run &
+fi;
 
 tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG 

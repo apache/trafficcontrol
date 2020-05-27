@@ -34,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -206,21 +207,14 @@ func (job *InvalidationJob) Read() ([]interface{}, error, error, int) {
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(job.APIInfo().Params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		var b strings.Builder
-		b.WriteString("Reading jobs:")
-		for _, err := range errs {
-			b.WriteString("\n\t")
-			b.WriteString(err.Error())
-		}
-
-		return nil, nil, errors.New(b.String()), http.StatusInternalServerError
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(job.APIInfo().Tx.Tx, job.APIInfo().User.TenantID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting accessible tenants for user - %v", err), http.StatusInternalServerError
 	}
-	if len(where) == 0 {
+	if len(where) > 0 {
 		where += " AND ds.tenant_id = ANY(:tenants) "
 	} else {
 		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) "
@@ -367,7 +361,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Created+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, api.Created+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 // Used by PUT requests to `/jobs`, replaces an existing content invalidation job
@@ -526,7 +520,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
 	w.Write(append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+"content invalidation job: #"+strconv.FormatUint(*job.ID, 10), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" content invalidation job - ID: "+strconv.FormatUint(*job.ID, 10)+" DS: "+*job.DeliveryService+" URL: '"+*job.AssetURL+"' Params: '"+*job.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 // Used by DELETE requests to `/jobs`, deletes an existing content invalidation job
@@ -612,7 +606,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
 	w.Write(append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 func setRevalFlags(d interface{}, tx *sql.Tx) error {

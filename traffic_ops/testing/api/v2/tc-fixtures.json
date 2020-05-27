@@ -699,6 +699,26 @@
             "anonymousBlockingEnabled": true
         }
     ],
+    "deliveryServicesRegexes": [
+        {
+            "dsName": "ds1",
+            "typeName": "HOST_REGEXP",
+            "setNumber": 1,
+            "pattern" : ".*"
+        },
+        {
+            "dsName": "ds1",
+            "typeName": "HOST_REGEXP",
+            "setNumber": 2,
+            "pattern" : "\\d+"
+        },
+        {
+            "dsName": "ds2",
+            "typeName": "HOST_REGEXP",
+            "setNumber": 1,
+            "pattern" : ".*"
+        }
+    ],
     "deliveryservicesRequiredCapabilities": [
         {
             "xmlID": "ds1",
@@ -924,6 +944,13 @@
             "name": "use_tenancy",
             "secure": false,
             "value": "1"
+        },
+        {
+            "configFile": "global",
+            "lastUpdated": "2020-04-21T05:19:43.853831+00:00",
+            "name": "tm.instance_name",
+            "secure": false,
+            "value": "Traffic Ops API Tests"
         }
     ],
     "physLocations": [
@@ -2559,6 +2586,14 @@
                 "startTime": "2019-01-01 00:00:00",
                 "ttl": 80,
                 "regex": "/foo"
+            }
+        },
+        {
+            "dsName": "ds2",
+            "request": {
+                "startTime": "2019-01-01 00:00:00",
+                "ttl": 80,
+                "regex": "/bar"
             }
         },
         {

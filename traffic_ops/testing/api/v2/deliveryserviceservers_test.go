@@ -181,7 +181,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	dses, servers := getServersAndDSes(t)
 	ds, server := dses[0], servers[0]
 
-	_, err := TOSession.CreateDeliveryServiceServers(ds.ID, []int{server.ID}, true)
+	_, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{server.ID}, true)
 	if err != nil {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
@@ -193,7 +193,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 
 	found := false
 	for _, dss := range dsServers.Response {
-		if *dss.DeliveryService == ds.ID && *dss.Server == server.ID {
+		if *dss.DeliveryService == *ds.ID && *dss.Server == server.ID {
 			found = true
 			break
 		}
@@ -202,7 +202,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Error("POST delivery service servers returned success, but ds-server not in GET")
 	}
 
-	if _, _, err := TOSession.DeleteDeliveryServiceServer(ds.ID, server.ID); err != nil {
+	if _, _, err := TOSession.DeleteDeliveryServiceServer(*ds.ID, server.ID); err != nil {
 		t.Errorf("DELETE delivery service server: %v", err)
 	}
 
@@ -213,7 +213,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 
 	found = false
 	for _, dss := range dsServers.Response {
-		if *dss.DeliveryService == ds.ID && *dss.Server == server.ID {
+		if *dss.DeliveryService == *ds.ID && *dss.Server == server.ID {
 			found = true
 			break
 		}
@@ -223,8 +223,8 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 }
 
-func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.Server) {
-	dses, _, err := TOSession.GetDeliveryServices()
+func getServersAndDSes(t *testing.T) ([]tc.DeliveryServiceNullable, []tc.Server) {
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
 	}

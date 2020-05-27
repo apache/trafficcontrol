@@ -342,8 +342,10 @@ func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName
 	lastStat.Available = stat.CommonStats.IsAvailable.Value
 }
 
-// latestBytes returns the most recent OutBytes from the given cache results, and the time of that result. It assumes zero results are not valid, but nonzero results with errors are valid.
-func latestBytes(p cache.PrecomputedData) (int64, time.Time, error) {
+// latestBytes returns the most recent OutBytes from the given cache results,
+// and the time of that result. It assumes zero results are not valid, but
+// nonzero results with errors are valid.
+func latestBytes(p cache.PrecomputedData) (uint64, time.Time, error) {
 	if p.OutBytes == 0 {
 		return 0, time.Time{}, fmt.Errorf("no valid results")
 	}
@@ -362,7 +364,7 @@ func addCachePerSecStats(lastStats *dsdata.LastStats, cacheName tc.CacheName, pr
 		lastStat = &dsdata.LastStatsData{}
 		lastStats.Caches[cacheName] = lastStat
 	}
-	if err = addLastStat(&lastStat.Bytes, outBytes, outBytesTime); err != nil {
+	if err = addLastStat(&lastStat.Bytes, int64(outBytes), outBytesTime); err != nil {
 		log.Warnf("while computing delivery service data for cache %v: %v\n", cacheName, err)
 	}
 }
@@ -420,10 +422,10 @@ func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData toda
 				continue
 			}
 
-			httpDsStat, hadHttpDsStat := dsStats.DeliveryService[ds]
+			httpDsStat, hadHttpDsStat := dsStats.DeliveryService[tc.DeliveryServiceName(ds)]
 			if !hadHttpDsStat {
 				httpDsStat = dsdata.NewStat() // TODO sync.Pool?
-				dsStats.DeliveryService[ds] = httpDsStat
+				dsStats.DeliveryService[tc.DeliveryServiceName(ds)] = httpDsStat
 			}
 
 			httpDsStatCg := httpDsStat.CacheGroups[cachegroup]
@@ -448,7 +450,7 @@ func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData toda
 			SumDSAstats(httpDsStatCg, resultStat)
 			SumDSAstats(httpDsStatType, resultStat)
 			SumDSAstats(httpDsStatCache, resultStat)
-			httpDsStat.CommonStats = dsStats.DeliveryService[ds].CommonStats // TODO verify whether this should be a sum
+			httpDsStat.CommonStats = dsStats.DeliveryService[tc.DeliveryServiceName(ds)].CommonStats // TODO verify whether this should be a sum
 		}
 	}
 
@@ -468,7 +470,7 @@ func getDSErr(dsName tc.DeliveryServiceName, dsStats dsdata.StatCacheStats, moni
 	return nil
 }
 
-func SumDSAstats(ds *dsdata.StatCacheStats, cacheStat *cache.AStat) {
+func SumDSAstats(ds *dsdata.StatCacheStats, cacheStat *cache.DSStat) {
 	ds.OutBytes.Value += int64(cacheStat.OutBytes)
 	ds.InBytes.Value += float64(cacheStat.InBytes)
 	ds.Status2xx.Value += int64(cacheStat.Status2xx)

@@ -5,6 +5,40 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Traffic Ops API v3
+- Added an optional readiness check service to cdn-in-a-box that exits successfully when it is able to get a `200 OK` from all delivery services
+- [Flexible Topologies (in progress)](https://github.com/apache/trafficcontrol/blob/master/blueprints/flexible-topologies.md)
+    - Traffic Ops: Added an API 3.0 endpoint, /api/3.0/topologies, to create, read, update and delete flexible topologies.
+    - Traffic Ops: Added new `topology` field to the /api/3.0/deliveryservices APIs
+    - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/cachegroups` to return all cachegroups used in the given topology.
+    - Traffic Portal: Added the ability to create, read, update and delete flexible topologies.
+    - Traffic Portal: Added the ability to assign topologies to delivery services
+- Updated /servers/details to use multiple interfaces in API v3
+- Astats csv support - astats will now respond to `Accept: text/csv` and return a csv formatted stats list
+
+### Fixed
+- Fixed the `GET /api/x/jobs` and `GET /api/x/jobs/:id` Traffic Ops API routes to allow falling back to Perl via the routing blacklist
+- Fixed ORT config generation not using the coalesce_number_v6 Parameter.
+- Removed audit logging from the `POST /api/x/serverchecks` Traffic Ops API endpoint in order to reduce audit log spam
+- Fixed audit logging from the `/jobs` APIs to bring them back to the same level of information provided by TO-Perl
+- Fixed `maxRevalDurationDays` validation for `POST /api/1.x/user/current/jobs` and added that validation to the `/api/x/jobs` endpoints
+- Fixed update procedure of servers, so that if a server is linked to one or more delivery services, you cannot change its "cdn".
+
+### Changed
+- Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
+- Changed Traffic Portal to use Traffic Ops API v3
+- Changed ORT Config Generation to be deterministic, which will prevent spurious diffs when nothing actually changed.
+- Changed the access logs in Traffic Ops to now show the route ID with every API endpoint call. The Route ID is appended to the end of the access log line.
+- With the addition of multiple server interfaces, interface data is constructed from IP Address/Gateway/Netmask (and their IPv6 counterparts) and Interface Name and Interface MTU fields on services. These **MUST** have proper, valid data before attempting to upgrade or the upgrade **WILL** fail. In particular IP fields need to be valid IP addresses/netmasks, and MTU must only be positive integers of at least 1280.
+
+### Deprecated
+- Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
+
+### Removed
+- Removed deprecated Traffic Ops Go Client methods.
+
+## [4.1.0] - 2020-04-23
+### Added
 - Added support for use of ATS Slice plugin as an additonal option to range request handling on HTTP/DNS DSes.
 - Added a boolean to delivery service in Traffic Portal and Traffic Ops to enable EDNS0 client subnet at the delivery service level and include it in the cr-config.
 - Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
@@ -15,6 +49,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an API 1.5 endpoint to GET a single or all records for Let's Encrypt DNS challenge
 - Added an API 1.5 endpoint to renew certificates
 - Added ability to create multiple objects from generic API Create with a single POST.
+- Added debugging functionality to CDN-in-a-Box.
+- Added an SMTP server to CDN-in-a-Box.
+- Cached builder Docker images on Docker Hub to speed up build time
 - Traffic Ops Golang Endpoints
   - /api/2.0 for all of the most recent route versions
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
@@ -38,8 +75,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/2.0/snapshot `PUT`
 
 ### Changed
+- Add null check in astats plugin before calling strtok to find ip mask values in the config file
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.
 - Fixed Traffic Portal regenerating CDN DNSSEC keys with the wrong effective date
+- Fixed issue #4583: POST /users/register internal server error caused by failing DB query
 - Type mutation through the api is now restricted to only those types that apply to the "server" table
 - Updated The Traffic Ops Python, Go and Java clients to use API version 2.0 (when possible)
 - Updated CDN-in-a-Box scripts and enroller to use TO API version 2.0
@@ -52,6 +91,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Traffic Monitor to default to polling both IPv4 and IPv6.
 - Traffic Ops, Traffic Monitor, Traffic Stats, and Grove are now compiled using Go version 1.14. This requires a Traffic Vault config update (see note below).
 - Existing installations **must** enable TLSv1.1 for Traffic Vault in order for Traffic Ops to reach it. See [Enabling TLS 1.1](https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_vault.html#tv-admin-enable-tlsv1-1) in the Traffic Vault administrator's guide for instructions.
+- Changed the `totalBytes` property of responses to GET requests to `/deliveryservice_stats` to the more appropriate `totalKiloBytes` in API 2.x
+- Fix to traffic_ops_ort to generate logging.yaml files correctly.
+- Fixed issue #4650: add the "Vary: Accept-Encoding" header to all responses from Traffic Ops
 
 ### Deprecated/Removed
 - The Traffic Ops `db/admin.pl` script has now been removed. Please use the `db/admin` binary instead.
@@ -313,7 +355,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[Unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...HEAD
+[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.1.0...HEAD
+[4.1.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...RELEASE-4.1.0
 [4.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...RELEASE-4.0.0
 [3.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.2.0...RELEASE-3.0.0
 [2.2.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.1.0...RELEASE-2.2.0

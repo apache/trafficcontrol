@@ -65,6 +65,7 @@ services:
     depends_on:
       - db
       - enroller
+      - smtp
       - trafficops-perl
     domainname: infra.ciab.test
     env_file:
@@ -288,6 +289,21 @@ services:
       - ./dns/set-dns-update.sh:/usr/local/sbin/set-dns-update.sh
       - shared:/shared
     hostname: dns
+    domainname: infra.ciab.test
+
+  smtp:
+    build:
+      context: .
+      dockerfile: smtp/Dockerfile
+    hostname: smtp
+    depends_on:
+      - dns
+    env_file:
+      - variables.env
+    volumes:
+      - shared:/shared
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
     domainname: infra.ciab.test
 
 volumes:

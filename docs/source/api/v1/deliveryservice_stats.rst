@@ -21,6 +21,8 @@
 *************************
 .. versionadded:: 1.2
 
+.. danger:: The output of this endpoint can be confusing and/or misleading. Specifically, the response field ``totalBytes`` does **not** contain an amount in units of Bytes. See the field description for more information, or use :ref:`to-api-v2-deliveryservice_stats` for more intuitive response objects.
+
 ``GET``
 =======
 Retrieves time-aggregated statistics on a specific :term:`Delivery Service`.
@@ -143,7 +145,7 @@ Response Structure
 	:min:                    The minimum value that can be found in the requested data set
 	:ninetyEighthPercentile: Data points with values greater than or equal to this number constitute the "top" 2% of the data set
 	:ninetyFifthPercentile:  Data points with values greater than or equal to this number constitute the "top" 5% of the data set
-	:totalBytes:             When the ``metricType`` requested is ``kbps``, this will contain the total number of bytes transferred by the :term:`Delivery Service` within the requested time window. Note that fractional amounts are possible, as the data transfer rate will almost certainly not be cleanly divided by the requested time range.
+	:totalBytes:             When the ``metricType`` requested is ``kbps``, this will contain the total number of *kilobytes* - **not** *bytes* - transferred by the :term:`Delivery Service` within the requested time window. Note that fractional amounts are possible, as the data transfer rate will almost certainly not be cleanly divided by the requested time range.
 	:totalTransactions:      When the ``metricType`` requested is **not** ``kbps``, this will contain the total number of transactions completed by the :term:`Delivery Service` within the requested time window. Note that fractional amounts are possible, as the transaction rate will almost certainly not be cleanly divided by the requested time range.
 
 :version: A legacy field that seems to have been meant to indicate the API version used. Will always be "1.2"

@@ -21,10 +21,11 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileAstatsDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileProfileAstatsDotConfig(toData *config.TOData) (string, string, string, error) {
 	paramData := map[string]string{}
 	// TODO add configFile query param to profile/parameters endpoint, to only get needed data
 	for _, param := range toData.ServerParams {
@@ -34,8 +35,16 @@ func GetConfigFileProfileAstatsDotConfig(toData *config.TOData) (string, string,
 		if param.Name == "location" {
 			continue
 		}
+		if val, ok := paramData[param.Name]; ok {
+			if val < param.Value {
+				log.Errorln("data error: making astats.config: parameter '" + param.Name + "' had multiple values, ignoring '" + param.Value + "'")
+				continue
+			} else {
+				log.Errorln("data error: making astats.config: parameter '" + param.Name + "' had multiple values, ignoring '" + val + "'")
+			}
+		}
 		paramData[param.Name] = param.Value
 	}
 
-	return atscfg.MakeAStatsDotConfig(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeAstatsDotConfig, nil
+	return atscfg.MakeAStatsDotConfig(toData.Server.Profile, paramData, toData.TOToolName, toData.TOURL), atscfg.ContentTypeAstatsDotConfig, atscfg.LineCommentAstatsDotConfig, nil
 }

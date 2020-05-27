@@ -14,7 +14,7 @@
 ..
 
 
-.. _to-api-logs-newcount:
+.. _to-api-v2-logs-newcount:
 
 *****************
 ``logs/newcount``

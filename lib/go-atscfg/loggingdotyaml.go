@@ -28,6 +28,7 @@ import (
 
 const LoggingYAMLFileName = "logging.yaml"
 const ContentTypeLoggingDotYAML = "application/yaml; charset=us-ascii" // Note YAML has no IANA standard mime type. This is one of several common usages, and is likely to be the standardized value. If you're reading this, please check IANA to see if YAML has been added, and change this to the IANA definition if so. Also note we include 'charset=us-ascii' because YAML is commonly UTF-8, but ATS is likely to be unable to handle UTF.
+const LineCommentLoggingDotYAML = LineCommentHash
 
 func MakeLoggingDotYAML(
 	profileName string,
@@ -81,6 +82,7 @@ func MakeLoggingDotYAML(
 		}
 	}
 
+	var firstObject = true
 	for i := 0; i < maxLogObjects; i++ {
 		logObjectField := "LogObject"
 		if i > 0 {
@@ -99,7 +101,10 @@ func MakeLoggingDotYAML(
 			logObjectRollingSizeMb := paramData[logObjectField+".RollingSizeMb"]
 			logObjectFilters := paramData[logObjectField+".Filters"]
 
-			text += "\nlogs:\n"
+			if firstObject {
+				text += "\nlogs:\n"
+				firstObject = false
+			}
 			text += "- mode: " + logObjectType + "\n"
 			text += "  filename: " + logObjectFilename + "\n"
 			text += "  format: " + logObjectFormat + "\n"

@@ -25,6 +25,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNBGFetchDotConfig(toData *config.TOData) (string, string, error) {
-	return atscfg.MakeBGFetchDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL), atscfg.ContentTypeBGFetchDotConfig, nil
+func GetConfigFileCDNBGFetchDotConfig(toData *config.TOData) (string, string, string, error) {
+	return atscfg.MakeBGFetchDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL), atscfg.ContentTypeBGFetchDotConfig, atscfg.LineCommentBGFetchDotConfig, nil
 }

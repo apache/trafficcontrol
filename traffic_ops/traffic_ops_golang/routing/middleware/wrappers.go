@@ -43,6 +43,9 @@ import (
 // This should be used by all Traffic Ops routing, and is recommended for use by plugins.
 const DefaultRequestTimeout = time.Second * time.Duration(60)
 
+// RouteID
+const RouteID = "RouteID"
+
 // ServerName is the name and version of Traffic Ops.
 // Things that print the server application name and version, for example in headers or logs, should use this.
 var ServerName = "traffic_ops_golang" + "/" + about.About.Version
@@ -110,12 +113,14 @@ func TimeOutWrapper(timeout time.Duration) Middleware {
 //  - Adds default CORS headers to the response.
 //  - Adds the Whole-Content-SHA512 checksum header to the response.
 //  - Gzips the response and sets the Content-Encoding header, if the client sent an Accept-Encoding: gzip header.
+//  - Adds the Vary: Accept-Encoding header to the response
 func WrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie")
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set(rfc.Vary, rfc.AcceptEncoding)
 		w.Header().Set("X-Server-Name", ServerName)
 		iw := &util.BodyInterceptor{W: w}
 		h(iw, r)
@@ -167,7 +172,7 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		}
 		start := time.Now()
 		defer func() {
-			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v"`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
+			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v" %v`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent(), r.Header.Get(RouteID))
 		}()
 		h.ServeHTTP(iw, r)
 	}

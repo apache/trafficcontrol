@@ -52,6 +52,7 @@ under the License.
                 </li>
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Topology</span></a>
                     <ul class="nav child_menu" style="display: none">
+                        <li class="side-menu-category-item" ng-if="hasCapability('topologies-read')" ng-class="{'current-page': isState('trafficPortal.private.topologies')}"><a href="/#!/topologies">Topologies</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('cache-groups-read')" ng-class="{'current-page': isState('trafficPortal.private.cacheGroups')}"><a href="/#!/cache-groups">Cache Groups</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('coordinates-read')" ng-class="{'current-page': isState('trafficPortal.private.coordinates')}"><a href="/#!/coordinates">Coordinates</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('phys-locations-read')" ng-class="{'current-page': isState('trafficPortal.private.physLocations')}"><a href="/#!/phys-locations">Phys Locations</a></li>

@@ -301,10 +301,10 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		return nil
 	}
 
-	fs := []func() error{dssF, serversF, cgF, scopeParamsF, jobsF}
+	fs := []func() error{serversF, cgF, scopeParamsF, jobsF}
 	if !cfg.RevalOnly {
 		// skip data not needed for reval, if we're reval-only
-		fs = append([]func() error{dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF}, fs...)
+		fs = append([]func() error{dssF, dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF}, fs...)
 	}
 	errs := runParallel(fs)
 	return toData, util.JoinErrs(errs)
@@ -418,8 +418,12 @@ func ParamsToMap(params []tc.Parameter) map[string]string {
 	mp := map[string]string{}
 	for _, param := range params {
 		if val, ok := mp[param.Name]; ok {
-			log.Errorln("config generation got multiple parameters for name '" + param.Name + "' - using '" + val + "'")
-			continue
+			if val < param.Value {
+				log.Errorln("config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + param.Value + "'")
+				continue
+			} else {
+				log.Errorln("config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + val + "'")
+			}
 		}
 		mp[param.Name] = param.Value
 	}

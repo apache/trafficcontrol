@@ -36,7 +36,7 @@
 # TP_HOST
 #
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_PERL_HOST TO_PERL_PORT TO_HOST TO_PORT TP_HOST)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_PERL_HOST TO_PERL_PORT TO_PERL_SCHEME TO_HOST TO_PORT TP_HOST)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
@@ -67,11 +67,15 @@ key="$X509_INFRA_KEY_FILE"
 echo "crt=$crt"
 echo "key=$key"
 
+if [[ "$TO_DEBUG_ENABLE" == true ]]; then
+  DEBUGGING_TIMEOUT=$(( 60 * 60 * 24 )); # Timing out debugging after 1 day seems fair
+fi;
+
 cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
 {
     "hypnotoad" : {
         "listen" : [
-            "https://$TO_PERL_FQDN:$TO_PERL_PORT?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+            "$TO_PERL_SCHEME://$TO_PERL_FQDN:$TO_PERL_PORT?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
         ],
         "user" : "trafops",
         "group" : "trafops",
@@ -82,25 +86,33 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     "traffic_ops_golang" : {
         "insecure": true,
         "port" : "$TO_PORT",
-        "proxy_timeout" : 60,
+        "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_keep_alive" : 60,
-        "proxy_tls_timeout" : 60,
-        "proxy_read_header_timeout" : 60,
-        "read_timeout" : 60,
-        "read_header_timeout" : 60,
-        "write_timeout" : 60,
-        "idle_timeout" : 60,
+        "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "proxy_read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "read_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "request_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "write_timeout" : ${DEBUGGING_TIMEOUT:-60},
+        "idle_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "log_location_error": "$TO_LOG_ERROR",
         "log_location_warning": "$TO_LOG_WARNING",
         "log_location_info": "$TO_LOG_INFO",
         "log_location_debug": "$TO_LOG_DEBUG",
         "log_location_event": "$TO_LOG_EVENT",
         "max_db_connections": 20,
+        "db_conn_max_lifetime_seconds": ${DEBUGGING_TIMEOUT:-60},
+        "db_query_timeout_seconds": ${DEBUGGING_TIMEOUT:-20},
         "backend_max_connections": {
             "mojolicious": 4
         },
         "whitelisted_oauth_urls": [],
-        "oauth_client_secret": ""
+        "oauth_client_secret": "",
+        "routing_blacklist": {
+            "ignore_unknown_routes": false,
+            "perl_routes": [],
+            "disabled_routes": []
+        }
     },
     "cors" : {
         "access_control_allow_origin" : "*"
@@ -124,10 +136,10 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     },
     "inactivity_timeout" : 60,
     "smtp" : {
-        "enabled" : false,
+        "enabled" : true,
         "user" : "",
         "password" : "",
-        "address" : ""
+        "address" : "${SMTP_FQDN}:${SMTP_PORT}"
     },
     "InfluxEnabled": true,
     "influxdb_conf_path": "/opt/traffic_ops/app/conf/production/influx.conf",

@@ -35,7 +35,10 @@
 
 # Check that env vars are set
 
-set -x
+# Setting the monitor shell option enables job control, which we need in order
+# to bring traffic_ops_golang back to the foreground.
+set -o xtrace -o monitor;
+
 envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS)
 for v in $envvars
 do
@@ -56,6 +59,21 @@ while ! nc "$TO_PERL_FQDN" $TO_PERL_PORT </dev/null 2>/dev/null; do
         sleep 3
 done
 
+(
+maxtries=10
+for ((tries = 0; tries < maxtries; tries++)); do
+        if nc -zvw2 "$SMTP_FQDN" "$SMTP_PORT"; then
+          echo "${SMTP_FQDN}:${SMTP_PORT} was found."
+          break;
+        fi;
+        echo "waiting for ${SMTP_FQDN}:${SMTP_PORT}"
+        sleep 3
+done
+if (( tries == maxtries )); then
+  echo "SMTP service was not found at ${SMTP_FQDN}:${SMTP_PORT} after ${maxtries} tries. Skipping..."
+fi
+)
+
 cd /opt/traffic_ops/app
 
 CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
@@ -67,7 +85,12 @@ touch /var/log/traffic_ops/traffic_ops.log
 # enroll in the background so traffic_ops_golang can run in foreground
 TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
-./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF -riakcfg $RIAKCONF &
+traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF");
+if [[ "$TO_DEBUG_ENABLE" == true ]]; then
+  traffic_ops_golang_command=(dlv '--accept-multiclient' '--continue' '--listen=:2345' '--headless=true' '--api-version=2' exec
+    "${traffic_ops_golang_command[0]}" -- "${traffic_ops_golang_command[@]:1}");
+fi;
+"${traffic_ops_golang_command[@]}" &
 
 to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 
@@ -101,4 +124,9 @@ if [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]]; then
   to-auto-snapqueue $AUTO_SNAPQUEUE_SERVERS $CDN_NAME
 fi
 
-exec tail -f /dev/null
+fg '"${traffic_ops_golang_command[@]}"'; # Bring traffic_ops_golang to foreground
+fg; # Bring to-enroll to foreground if it is still running
+
+if [[ "$TO_DEBUG_ENABLE" == true ]]; then
+  tail -f /dev/null;
+fi;

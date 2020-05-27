@@ -58,26 +58,18 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	b := true
 	u := "UPDATE"
 	st := tc.RequestStatusSubmitted
+	ds := tc.DeliveryServiceNullable{}
+	ds.XMLID = &s
+	ds.CDNID = &i
+	ds.LogsEnabled = &b
+	ds.DSCP = nil
+	ds.GeoLimit = &i
+	ds.Active = &b
+	ds.TypeID = &i
 	r := &TODeliveryServiceRequest{DeliveryServiceRequestNullable: tc.DeliveryServiceRequestNullable{
-		ChangeType: &u,
-		Status:     &st,
-		DeliveryService: &tc.DeliveryServiceNullable{
-			DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
-				DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
-					DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
-						DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
-							XMLID:       &s,
-							CDNID:       &i,
-							LogsEnabled: &b,
-							DSCP:        nil,
-							GeoLimit:    &i,
-							Active:      &b,
-							TypeID:      &i,
-						},
-					},
-				},
-			},
-		},
+		ChangeType:      &u,
+		Status:          &st,
+		DeliveryService: &ds,
 	}}
 
 	expectedErrors := []string{

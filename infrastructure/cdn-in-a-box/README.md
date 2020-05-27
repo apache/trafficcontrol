@@ -52,6 +52,22 @@ Finally, run the test CDN using the command:
 docker-compose up --build
 ```
 
+## Readiness
+To know if your CDN in a Box has started up successfully and is ready to use,
+you can optionally start the "readiness" container which will test your CDN and
+exit successfully when your CDN in a Box is ready:
+
+```bash
+docker-compose -f docker-compose.readiness.yml up --build
+```
+
+If the container does not exit successfully after a reasonable amount of time,
+something might have gone wrong with the main CDN services. Because the
+container continually runs end-to-end CDN requests, it will never exit
+successfully if there are issues with the main CDN services that cause the
+requests to fail. Check the log output of the main CDN services to see what
+might be getting stuck.
+
 ## Components
 > The following assumes that the default configuration provided in
 > [`variables.env`](./variables.env) is used.

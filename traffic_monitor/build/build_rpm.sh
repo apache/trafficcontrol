@@ -48,7 +48,12 @@ function initBuildArea() {
 		{ echo "Could not get go package dependencies"; exit 1; }
 
 	# compile traffic_monitor
-	go build -v -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=${TC_VERSION}" || \
+	go_build=(go build -v)
+	if [[ "$DEBUG_BUILD" == true ]]; then
+		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
+		go_build+=(-gcflags 'all=-N -l');
+	fi;
+	"${go_build[@]}" -ldflags "-X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" || \
 		{ echo "Could not build traffic_monitor binary"; exit 1; }
 
 	rsync -av ./ "$tm_dest"/ || \

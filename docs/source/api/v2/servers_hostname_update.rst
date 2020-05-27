@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-hostname-update:
+.. _to-api-v2-servers-hostname-update:
 
 *************************************
 ``servers/{{HostName-Or-ID}}/update``
@@ -75,7 +75,7 @@ Response Structure
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: 9Mmo9hIFZyF5gAvfdJD//VH9eNgiHVLinXt88H0GlJSHhwND8gMxaFyC+f9XZfiNAoGd1MKi1934ZJGmaIR6qQ==
 	Content-Length: 49
-	
+
 	{
 		"alerts" :
 			[

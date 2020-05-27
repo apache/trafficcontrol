@@ -188,6 +188,7 @@ func getScope(cfgFile string, scopeParams map[string]string) tc.ATSConfigMetaDat
 		cfgFile == "drop_qstring.config",
 		cfgFile == "logs_xml.config",
 		cfgFile == "logging.config",
+		cfgFile == "logging.yaml",
 		cfgFile == "plugin.config",
 		cfgFile == "records.config",
 		cfgFile == "storage.config",

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice_stats:
+.. _to-api-v2-deliveryservice_stats:
 
 *************************
 ``deliveryservice_stats``
@@ -82,7 +82,7 @@ Request Structure
 	|                     |                   | Epoch, or in the same, proprietary format as the ``lastUpdated`` fields prevalent throughout the Traffic Ops API                                                                          |
 	+---------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. _deliveryservice_stats-get-request-example:
+.. _v2-deliveryservice_stats-get-request-example:
 .. code-block:: http
 	:caption: Request Example
 
@@ -95,7 +95,7 @@ Request Structure
 
 Content Format
 """"""""""""""
-It's important to note in :ref:`deliveryservice_stats-get-request-example` the use of a complex "Accept" header. This endpoint accepts two special media types in the "Accept" header that instruct it on how to format the timestamps associated with the returned data. Specifically, Traffic Ops will recognize the special, optional, non-standard parameter of :mimetype:`application/json`: ``timestamp``. The values of this parameter are restricted to one of
+It's important to note in :ref:`v2-deliveryservice_stats-get-request-example` the use of a complex "Accept" header. This endpoint accepts two special media types in the "Accept" header that instruct it on how to format the timestamps associated with the returned data. Specifically, Traffic Ops will recognize the special, optional, non-standard parameter of :mimetype:`application/json`: ``timestamp``. The values of this parameter are restricted to one of
 
 rfc
 	Returned timestamps will be formatted according to :rfc:`3339` (no sub-second precision).
@@ -120,11 +120,6 @@ Response Structure
 		:time:  The time at which the measurement was taken. This corresponds to the *beginning* of the interval. This time comes in the format of either an :rfc:`3339`-formatted string, or a number containing the number of nanoseconds since the Unix Epoch depending on the "Accept" header sent by the client, according to the rules outlined in `Content Format`_.
 		:value: The value of the requested ``metricType`` at the time given by ``time``. This will always be a floating point number, unless no data is available for the data interval, in which case it will be ``null``
 
-:source:  A legacy field meant only for plugins that override this endpoint to name themselves. Should always be "TrafficStats".
-
-	.. deprecated:: 1.4
-		As this has no known purpose, developers are advised it will be removed in the future.
-
 :summary: An object containing summary statistics describing the data series
 
 	:average:                The arithmetic mean of the data's values
@@ -134,13 +129,8 @@ Response Structure
 	:min:                    The minimum value that can be found in the requested data set
 	:ninetyEighthPercentile: Data points with values greater than or equal to this number constitute the "top" 2% of the data set
 	:ninetyFifthPercentile:  Data points with values greater than or equal to this number constitute the "top" 5% of the data set
-	:totalBytes:             When the ``metricType`` requested is ``kbps``, this will contain the total number of bytes transferred by the :term:`Delivery Service` within the requested time window. Note that fractional amounts are possible, as the data transfer rate will almost certainly not be cleanly divided by the requested time range.
+	:totalKiloBytes:         When the ``metricType`` requested is ``kbps``, this will contain the total number of kilobytes transferred by the :term:`Delivery Service` within the requested time window. Note that fractional amounts are possible, as the data transfer rate will almost certainly not be cleanly divided by the requested time range.
 	:totalTransactions:      When the ``metricType`` requested is **not** ``kbps``, this will contain the total number of transactions completed by the :term:`Delivery Service` within the requested time window. Note that fractional amounts are possible, as the transaction rate will almost certainly not be cleanly divided by the requested time range.
-
-:version: A legacy field that seems to have been meant to indicate the API version used. Will always be "1.2"
-
-	.. deprecated:: 1.4
-		As this has no known purpose, developers are advised it will be removed in the future.
 
 .. code-block:: http
 	:caption: Response Example
@@ -189,7 +179,7 @@ Response Structure
 			"min": 0,
 			"ninetyEighthPercentile": 0,
 			"ninetyFifthPercentile": 0,
-			"totalBytes": null,
+			"totalKiloBytes": null,
 			"totalTransactions": 0
 		},
 		"version": "1.2"

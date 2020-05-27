@@ -22,7 +22,7 @@ package tmcheck
 import (
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	to "github.com/apache/trafficcontrol/traffic_ops/client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 	"time"
 )
 

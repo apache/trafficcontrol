@@ -20,8 +20,11 @@ package atscfg
  */
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 func TestMakeLoggingDotYAML(t *testing.T) {
@@ -55,5 +58,101 @@ func TestMakeLoggingDotYAML(t *testing.T) {
 	}
 	if strings.Contains(txt, "ShouldNotBeHere") {
 		t.Errorf("expected config to omit unknown config 'ShouldNotBeHere', actual: '%v'", txt)
+	}
+}
+
+func TestMakeLoggingDotYAMLMultiFormat(t *testing.T) {
+	profileName := "myProfile"
+	toolName := "myToolName"
+	toURL := "https://myto.example.net"
+	paramData := map[string]string{
+		"LogFormat.Name":           "myFormatName0",
+		"LogFormat.Format":         "myFormat0",
+		"LogFormat1.Name":          "myFormatName1",
+		"LogFormat1.Format":        "myFormat1",
+		"LogFormat9.Name":          "myFormatName9",
+		"LogFormat9.Format":        "myFormat9",
+		"LogFormat2.Name":          "myFormatName2",
+		"LogFormat2.Format":        "myFormat2",
+		"LogFormat11.Name":         "shouldNotBeHere11",
+		"LogFormat11.Format":       "shouldNotBeHere11",
+		"LogObject.Filename":       "myFilename0",
+		"LogObject.Format":         "myFormatName0",
+		"LogObject.RollingEnabled": "myRollingEnabled",
+		"LogFormat.Invalid":        "ShouldNotBeHere",
+		"LogObject.Invalid":        "ShouldNotBeHere",
+		"LogObject2.Filename":      "myFilename2",
+		"LogObject2.Format":        "myFormatName2",
+		"LogObject11.Filename":     "shouldNotBeHere11",
+		"LogObject11.Format":       "shouldNotBeHere11",
+		"LogObject9.Filename":      "myFilename9",
+		"LogObject9.Format":        "myFormatName9",
+		"LogObject1.Filename":      "myFilename1",
+		"LogObject1.Format":        "myFormatName1",
+	}
+
+	txt := MakeLoggingDotYAML(profileName, paramData, toolName, toURL)
+
+	testComment(t, txt, profileName, toolName, toURL)
+
+	if !strings.Contains(txt, "myFormatName") {
+		t.Errorf("expected config to contain LogFormat.Name 'myFormatName', actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "myFormat") {
+		t.Errorf("expected config to contain LogFormat.Format 'myFormat', actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "myFilename") {
+		t.Errorf("expected config to contain LogFormat.Filename 'myFilename', actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "myRollingEnabled") {
+		t.Errorf("expected config to contain LogFormat.RollingEnabled 'myRollingEnabled', actual: '%v'", txt)
+	}
+	if strings.Contains(txt, "ShouldNotBeHere") {
+		t.Errorf("expected config to omit unknown config 'ShouldNotBeHere', actual: '%v'", txt)
+	}
+
+	var v struct {
+		Formats []struct {
+			Name   string
+			Format string
+		}
+		Logs []struct {
+			Mode                 string
+			Filename             string
+			Format               string
+			Rolling_enabled      string
+			Rolling_interval_sec int
+			Rolling_offset_hr    int
+			Rolling_size_mb      int
+		}
+	}
+	err := yaml.Unmarshal([]byte(txt), &v)
+	if err != nil {
+		t.Errorf("expected config to parse as yaml document '%v', actual: '%v'", err, txt)
+	}
+	if len(v.Formats) != 4 {
+		t.Errorf("expected config to contain 4 'format' elements: '%v', actual: '%v'", v, txt)
+		return
+	}
+	if len(v.Logs) != 4 {
+		t.Errorf("expected config to contain 4 'logs' elements: '%v', actual: '%v'", v, txt)
+		return
+	}
+	for i, n := range []int{0, 1, 2, 9} {
+		if v.Formats[i].Name != fmt.Sprintf("myFormatName%d", n) {
+			t.Errorf("expected config to contain formats.name 'myFormatName%d' in position %d, actual: '%v', full: '%v'", n, i, v.Formats[i].Name, txt)
+		}
+		if v.Formats[i].Format != fmt.Sprintf("myFormat%d", n) {
+			t.Errorf("expected config to contain formats.format 'myFormat%d' in position %d, actual: '%v', full: '%v'", n, i, v.Formats[i].Format, txt)
+		}
+		if v.Logs[i].Format != fmt.Sprintf("myFormatName%d", n) {
+			t.Errorf("expected config to contain logs.format 'myFormatName%d' in position %d, actual: '%v', full: '%v'", n, i, v.Logs[i].Format, txt)
+		}
+		if v.Logs[i].Filename != fmt.Sprintf("myFilename%d", n) {
+			t.Errorf("expected config to contain logs.filename 'myFilename%d' in position %d, actual: '%v', full: '%v'", n, i, v.Logs[i].Filename, txt)
+		}
+		if v.Logs[i].Mode != "ascii" {
+			t.Errorf("expected config to contain logs.mode 'ascii' in position %d, actual: '%v', full: '%v'", i, v.Logs[i].Mode, txt)
+		}
 	}
 }

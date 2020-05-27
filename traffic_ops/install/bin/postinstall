@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
+trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+set -o errexit -o nounset
+
 for arg in "$@"; do
 	case $arg in
 		-h*) action=bypass
@@ -25,7 +28,7 @@ done
 
 # above options don't require any of the extra processing -- just kick off the script with
 # options intact.
-if [[ $action == "bypass" ]]; then
+if [[ -v action && "$action" == "bypass" ]]; then
 	/opt/traffic_ops/install/bin/_postinstall "$@"
 	exit
 fi
@@ -45,7 +48,7 @@ cpanm Carton
 cd /opt/traffic_ops/app
 
 export POSTGRES_HOME=${POSTGRES_HOME:-/usr/pgsql-9.6}
-/usr/local/bin/carton
+perl -MCarton::CLI -e'Carton::CLI->new->run(@ARGV)'
 
 # Install go and goose
 /opt/traffic_ops/install/bin/install_goose.sh

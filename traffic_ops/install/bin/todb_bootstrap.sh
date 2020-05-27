@@ -22,6 +22,10 @@
 #
 #    $ TODB_USERNAME_PASSWORD=<yourpassword> ./todb_bootstrap.sh
 #
+
+trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+set -o errexit -o nounset
+
 TODB_USERNAME=traffic_ops
 TODB_NAME=traffic_ops
 
@@ -31,14 +35,14 @@ fi
 
 if [[ -z $TODB_USERNAME_PASSWORD ]]; then
    while true; do
-    read -s -p "Please ENTER the new password for database user '$TODB_USERNAME': " password
+    read -rsp "Please ENTER the new password for database user '$TODB_USERNAME': " password
     echo
-    read -s -p "Please CONFIRM enter the new password for database user '$TODB_USERNAME' again: " password_confirm
+    read -rsp "Please CONFIRM enter the new password for database user '$TODB_USERNAME' again: " password_confirm
     echo
     [ "$password" = "$password_confirm" ] && break
     echo "Passwords do not match, please try again"
    done
-   TODB_USERNAME_PASSWORD=$password
+   TODB_USERNAME_PASSWORD="$password"
 else
     echo "Using environment database password"
 fi

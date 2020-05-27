@@ -79,8 +79,8 @@ Glossary
 		.. code-block:: json
 			:caption: Example Deep Coverage Zone File
 
-			{ "coverageZones": {
-				"cache-group-01": {
+			{ "deepCoverageZones": {
+				"location-01": {
 					"network6": [
 						"1234:5678::/64",
 						"1234:5679::/64"
@@ -389,6 +389,10 @@ Glossary
 	Tenancy
 	Tenancies
 		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Services` and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Services` and does **not** apply permissions restrictions to any other aspect of Traffic Control.
+
+	Topology
+	Topologies
+		A structure composed of :term:`Cache Groups` and parent relationships, which is assignable to one or more :term:`Delivery Services`.
 
 	Type
 	Types

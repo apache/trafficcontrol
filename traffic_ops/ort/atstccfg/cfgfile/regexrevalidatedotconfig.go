@@ -26,7 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileCDNRegexRevalidateDotConfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileCDNRegexRevalidateDotConfig(toData *config.TOData) (string, string, string, error) {
 	params := map[string][]string{}
 	for _, param := range toData.GlobalParams {
 		if param.ConfigFile != atscfg.RegexRevalidateFileName {
@@ -52,5 +52,5 @@ func GetConfigFileCDNRegexRevalidateDotConfig(toData *config.TOData) (string, st
 		jobs = append(jobs, job)
 	}
 
-	return atscfg.MakeRegexRevalidateDotConfig(tc.CDNName(toData.Server.CDNName), params, toData.TOToolName, toData.TOURL, jobs), atscfg.ContentTypeRegexRevalidateDotConfig, nil
+	return atscfg.MakeRegexRevalidateDotConfig(tc.CDNName(toData.Server.CDNName), params, toData.TOToolName, toData.TOURL, jobs), atscfg.ContentTypeRegexRevalidateDotConfig, atscfg.LineCommentRegexRevalidateDotConfig, nil
 }

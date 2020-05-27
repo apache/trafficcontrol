@@ -26,6 +26,7 @@ import (
 )
 
 const ContentTypeSetDSCPDotConfig = ContentTypeTextASCII
+const LineCommentSetDSCPDotConfig = LineCommentHash
 
 func MakeSetDSCPDotConfig(
 	cdnName tc.CDNName,

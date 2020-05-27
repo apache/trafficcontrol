@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -31,11 +32,26 @@ import (
 
 const IPAllowConfigFileName = `ip_allow.config`
 const ContentTypeIPAllowDotConfig = ContentTypeTextASCII
+const LineCommentIPAllowDotConfig = LineCommentHash
 
 type IPAllowData struct {
 	Src    string
 	Action string
 	Method string
+}
+
+type IPAllowDatas []IPAllowData
+
+func (is IPAllowDatas) Len() int      { return len(is) }
+func (is IPAllowDatas) Swap(i, j int) { is[i], is[j] = is[j], is[i] }
+func (is IPAllowDatas) Less(i, j int) bool {
+	if is[i].Src != is[j].Src {
+		return is[i].Src < is[j].Src
+	}
+	if is[i].Action != is[j].Action {
+		return is[i].Action < is[j].Action
+	}
+	return is[i].Method < is[j].Method
 }
 
 const ParamPurgeAllowIP = "purge_allow_ip"
@@ -124,7 +140,7 @@ func MakeIPAllowDotConfig(
 			case ParamCoalesceNumberV6:
 				if vi, err := strconv.Atoi(val); err != nil {
 					log.Warnln("MakeIPAllowDotConfig got param '" + name + "' val '" + val + "' not a number, ignoring!")
-				} else if coalesceNumberV6 != DefaultCoalesceMaskLenV6 {
+				} else if coalesceNumberV6 != DefaultCoalesceNumberV6 {
 					log.Warnln("MakeIPAllowDotConfig got multiple param '" + name + "' - ignoring  val '" + val + "'!")
 				} else {
 					coalesceNumberV6 = vi
@@ -232,6 +248,9 @@ func MakeIPAllowDotConfig(
 			Action: ActionAllow,
 			Method: MethodAll,
 		})
+
+		// order matters, so sort before adding the denys
+		sort.Sort(IPAllowDatas(ipAllowData))
 
 		// end with a deny
 		ipAllowData = append(ipAllowData, IPAllowData{

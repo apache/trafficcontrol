@@ -28,19 +28,19 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileProfileURISigningConfig(toData *config.TOData, fileName string) (string, string, error) {
+func GetConfigFileProfileURISigningConfig(toData *config.TOData, fileName string) (string, string, string, error) {
 	dsName := GetDSFromURISigningConfigFileName(fileName)
 	if dsName == "" {
 		// extra safety, this should never happen, the routing shouldn't get here
-		return "", "", errors.New("getting ds name: malformed config file '" + fileName + "'")
+		return "", "", "", errors.New("getting ds name: malformed config file '" + fileName + "'")
 	}
 
 	uriSigningKeys, ok := toData.URISigningKeys[tc.DeliveryServiceName(dsName)]
 	if !ok {
-		return "", "", errors.New("no keys fetched for ds '" + dsName + "!")
+		return "", "", "", errors.New("no keys fetched for ds '" + dsName + "!")
 	}
 
-	return atscfg.MakeURISigningConfig(uriSigningKeys), atscfg.ContentTypeURISigningDotConfig, nil
+	return atscfg.MakeURISigningConfig(uriSigningKeys), atscfg.ContentTypeURISigningDotConfig, atscfg.LineCommentURISigningDotConfig, nil
 }
 
 // GetDSFromURISigningConfigFileName returns the DS of a URI Signing config file name.

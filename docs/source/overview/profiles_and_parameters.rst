@@ -507,14 +507,53 @@ For each Parameter with this Config File value on the same :ref:`Profile <profil
 
 .. seealso:: `The Apache Traffic server documentation on the plugin.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/plugin.config.en.html>`_ explains what Value_ and :ref:`parameter-name` a Parameter should have to be valid.
 
+.. _tm-related-cache-server-params:
+
 rascal.properties
 '''''''''''''''''
 This Config File is meant to be on Parameters assigned to either Traffic Monitor Profiles_ or :term:`cache server` Profiles_. Its allowed :ref:`Parameter Names <parameter-name>` are all configuration options for Traffic Monitor. The :ref:`Names <parameter-name>` with meaning are as follows.
 
+.. seealso:: :ref:`health-proto`
+
+.. _param-health-polling-format:
+
+health.polling.format
+	The Value_ of this Parameter should be the name of a parsing format supported by Traffic Monitor, used to decode statistics when polling for health and statistics. If this Parameter does not exist on a :term:`cache server`'s :ref:`Profile <Profiles>`, the default format (``astats``) will be used. The only supported values are
+
+	- ``astats`` parses the statistics output from the `astats_over_http plugin <https://github.com/apache/trafficcontrol/tree/master/traffic_server/plugins/astats_over_http/README.md>`_.
+	- ``stats_over_http`` parses the statistics output from the `stats_over_http plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/stats_over_http.en.html>`_.
+	- ``noop`` no statistics are parsed; the :term:`cache servers` using this Value_ will always be considered healthy, but statistics will never be gathered for them.
+
+	For more information on Traffic Monitor plug-ins that can expand the parsed formats, refer to :ref:`admin-tm-extensions`.
+
+.. _param-health-polling-url:
+
+health.polling.url
+	The Value_ of this Parameter sets the URL requested when Traffic Monitor polls cache servers that have this Parameter in their Profiles_. Specifically, the Value_ is interpreted as a template - in a format reminiscent of variable interpolation in double-quoted strings in Bash -, that offers the following substitutions:
+
+	- ``${hostname}`` Replaced by the *IP Address* of the :term:`cache server` being polled, and **not** its (short) hostname. The IP address used will be its IPv4 service address if it has one, otherwise its IPv6 service address. IPv6 addresses are properly formatted when inserted into the template, so the template need not include "square brackets" (:kbd:`[` and :kbd:`]`) around ``${hostname}``\ s even when they anticipate they will be IPv6 addresses.
+	- ``${interface_name}`` Replaced by the name of the network interface that contains the :term:`cache server`'s service address(es). For most cache servers (specifically those using the ``stats_over_http`` :abbr:`ATS (Apache Traffic Server)` plugin to report their health and statistics) using this in a template won't be necessary.
+
+	If the template doesn't include a specific port number, the :term:`cache server`'s TCP port will be inserted if the URL uses the HTTP scheme, or its HTTPS Port if the :term:`cache server` uses the the HTTPS scheme.
+
+	Table :ref:`tbl-health-polling-url-examples` gives some examples of templates, inputs, and outputs.
+
+	.. _tbl-health-polling-url-examples:
+
+	.. table:: health.polling.url Value Examples
+
+		+---------------------------------------------------------------+-------------------+----------+------------+----------------+--------------------------------------------------+
+		| Template                                                      | Chosen Service IP | TCP Port | HTTPS Port | Interface Name | Output                                           |
+		+===============================================================+===================+==========+============+================+==================================================+
+		| ``http://${hostname}/_astats?inf.name=${interface_name}``     | 192.0.2.42        | 8080     | 8443       | eth0           | ``http://192.0.2.42:8080/_astats?inf.name=eth0`` |
+		+---------------------------------------------------------------+-------------------+----------+------------+----------------+--------------------------------------------------+
+		| ``https://${hostname}/_stats``                                | 2001:DB8:0:0:1::1 | 8080     | 8443       | eth0           | ``https://[2001:DB8:0:0:1::1]/_stats``           |
+		+---------------------------------------------------------------+-------------------+----------+------------+----------------+--------------------------------------------------+
+		| ``http://${hostname}:80/custom/stats/path/${interface_name}`` | 192.0.2.42        | 8080     | 8443       | eth0           | ``http://192.0.2.42:80/custom/stats/path/eth0``  |
+		+---------------------------------------------------------------+-------------------+----------+------------+----------------+--------------------------------------------------+
+
 health.threshold.loadavg
 	The Value_ of this Parameter sets the "load average" above which the associated :ref:`Profile <profiles>`'s :term:`cache server` will be considered "unhealthy".
-
-	.. seealso:: :ref:`health-proto`
 
 	.. seealso:: The definition of a "load average" can be found in the documentation for the Linux/Unix command :manpage:`uptime(1)`.
 
@@ -523,9 +562,12 @@ health.threshold.loadavg
 health.threshold.availableBandwidthInKbps
 	The Value_ of this Parameter sets the amount of bandwidth (in kilobits per second) that Traffic Control will try to keep available on the :term:`cache server`. For example a Value_ of ">1500000" indicates that the :term:`cache server` will be marked "unhealthy" if its available remaining bandwidth on the network interface used by the caching proxy falls below 1.5Gbps.
 
-	.. seealso:: :ref:`health-proto`
-
 	.. caution:: If more than one Parameter with this :ref:`parameter-name` and Config File exist on the same :ref:`Profile <profiles>` with different :ref:`Values <parameter-value>`, the actual Value_ used by any given Traffic Monitor instance is undefined (though it will be the Value_ of one of those Parameters).
+
+history.count
+	The Value_ of this Parameter sets the maximum number of collected statistics will retain at a time. For example, if this is "30", then Traffic Monitor will keep up to the past 30 collected statistics runs for the :term:`cache servers` using the :ref:`Profile <profiles>` that has this Parameter. The minimum history size is 1, and if this Parameter's Value_ is set below that, it will be treated as though it were 1.
+
+	.. caution:: This **must** be an integer. What happens when the Value_ of this Parameter is *not* an integer is not known to this author; at a guess, in all likelihood it would be treated as though it were 1 and warnings/errors would be logged by Traffic Monitor and/or Traffic Ops. However, this is not known and setting it improperly is potentially dangerous, so *please ensure it is* **always** *an integer*.
 
 records.config
 ''''''''''''''

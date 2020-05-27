@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-dnsseckeys-refresh:
+.. _to-api-v2-cdns-dnsseckeys-refresh:
 
 ***************************
 ``cdns/dnsseckeys/refresh``

@@ -26,6 +26,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"database/sql"
 	"encoding/pem"
 	"errors"
 	"net/http"
@@ -198,6 +199,12 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 		log.Errorf(*req.DeliveryService+": Error getting tx: %s", err.Error())
 		return err
 	}
+	userTx, err := db.Begin()
+	if err != nil {
+		log.Errorf(*req.DeliveryService+": Error getting userTx: %s", err.Error())
+		return err
+	}
+	defer userTx.Commit()
 
 	logTx, err := db.Begin()
 	if err != nil {
@@ -221,16 +228,36 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	tx.Commit()
 
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	storedLEInfo, err := getStoredLetsEncryptInfo(userTx, cfg.ConfigLetsEncrypt.Email)
+	if err != nil {
+		log.Errorf(deliveryService+": Error finding stored LE information: %s", err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return err
+	}
+
+	myUser := MyUser{}
+	foundPreviousAccount := false
+	userPrivateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Errorf(deliveryService+": Error generating private key: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return err
 	}
+	if storedLEInfo == nil || cfg.ConfigLetsEncrypt.Email == "" {
 
-	myUser := MyUser{
-		key:   privateKey,
-		Email: cfg.ConfigLetsEncrypt.Email,
+		myUser = MyUser{
+			key:   userPrivateKey,
+			Email: cfg.ConfigLetsEncrypt.Email,
+		}
+	} else {
+		foundPreviousAccount = true
+		myUser = MyUser{
+			key:   &storedLEInfo.PrivateKey,
+			Email: cfg.ConfigLetsEncrypt.Email,
+			Registration: &registration.Resource{
+				URI: storedLEInfo.URI,
+			},
+		}
 	}
 
 	config := lego.NewConfig(&myUser)
@@ -260,13 +287,30 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	client.Challenge.SetDNS01Provider(trafficRouterDns)
 
-	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
-	if err != nil {
-		log.Errorf(deliveryService+": Error registering lets encrypt client: %s", err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
-		return err
+	if foundPreviousAccount {
+		log.Debugf("Found existing account with Let's Encrypt")
+		reg, err := client.Registration.QueryRegistration()
+		if err != nil {
+			log.Errorf(deliveryService+": Error querying Lets Encrypt for existing account: %s", err.Error())
+			api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+			return err
+		}
+		myUser.Registration = reg
+		if reg.Body.Status != "valid" {
+			log.Debugf("Account found with Let's Encrypt is not valid.")
+			foundPreviousAccount = false
+		}
 	}
-	myUser.Registration = reg
+	if !foundPreviousAccount {
+		reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
+		if err != nil {
+			log.Errorf(deliveryService+": Error registering lets encrypt client: %s", err.Error())
+			api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+			return err
+		}
+		myUser.Registration = reg
+		log.Debugf("Creating a new account with Let's Encrypt")
+	}
 
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -330,7 +374,77 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	tx2.Commit()
 
+	if foundPreviousAccount {
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: Added SSL keys with Lets Encrypt", currentUser, logTx)
+		return nil
+	}
+
+	userKeyDer := x509.MarshalPKCS1PrivateKey(userPrivateKey)
+	if userKeyDer == nil {
+		log.Errorf("marshalling private key: nil der")
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return errors.New("marshalling private key: nil der")
+	}
+	userKeyBuf := bytes.Buffer{}
+	if err := pem.Encode(&userKeyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: userKeyDer}); err != nil {
+		log.Errorf("pem-encoding private key: " + err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return errors.New("pem-encoding private key: " + err.Error())
+	}
+	userKeyPem := userKeyBuf.Bytes()
+	err = storeLEAccountInfo(userTx, myUser.Email, string(userKeyPem), myUser.Registration.URI)
+	if err != nil {
+		log.Errorf("storing user account info: " + err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return errors.New("storing user account info: " + err.Error())
+	}
+
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: Added SSL keys with Lets Encrypt", currentUser, logTx)
 
 	return nil
+}
+
+func getStoredLetsEncryptInfo(tx *sql.Tx, email string) (*LEInfo, error) {
+	leInfo := LEInfo{}
+	selectQuery := `SELECT email, private_key, uri FROM lets_encrypt_account WHERE email = $1 LIMIT 1`
+	if err := tx.QueryRow(selectQuery, email).Scan(&leInfo.Email, &leInfo.Key, &leInfo.URI); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, errors.New("getting lets encrypt account record: " + err.Error())
+	}
+
+	decodedKeyBlock, _ := pem.Decode([]byte(leInfo.Key))
+	decodedKey, err := x509.ParsePKCS1PrivateKey(decodedKeyBlock.Bytes)
+	if err != nil {
+		return nil, errors.New("decoding private key for user account")
+	}
+	leInfo.PrivateKey = *decodedKey
+
+	return &leInfo, nil
+}
+
+func storeLEAccountInfo(tx *sql.Tx, email string, privateKey string, uri string) error {
+	q := `INSERT INTO lets_encrypt_account (email, private_key, uri) VALUES ($1, $2, $3)`
+	response, err := tx.Exec(q, email, privateKey, uri)
+	if err != nil {
+		return err
+	}
+
+	rows, err := response.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return errors.New("zero rows affected when inserting Let's Encrypt account information")
+	}
+
+	return nil
+}
+
+type LEInfo struct {
+	Email      string `db:"email"`
+	Key        string `db:"private_key"`
+	URI        string `db:"uri"`
+	PrivateKey rsa.PrivateKey
 }

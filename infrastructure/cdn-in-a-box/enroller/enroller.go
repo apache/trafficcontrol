@@ -33,7 +33,7 @@ import (
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	client "github.com/apache/trafficcontrol/traffic_ops/client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/fsnotify.v1"
 )
@@ -432,14 +432,14 @@ func enrollRegion(toSession *session, r io.Reader) error {
 
 func enrollStatus(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.Status
+	var s tc.StatusNullable
 	err := dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Infof("error decoding Status: %s\n", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateStatus(s)
+	alerts, _, err := toSession.CreateStatusNullable(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("status %s already exists\n", s.Name)
@@ -560,8 +560,11 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			}
 		}
 		profiles, _, err = toSession.GetProfileByName(profile.Name)
-		if err != nil || len(profiles) == 0 {
+		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
+		}
+		if len(profiles) == 0 {
+			log.Infof("no results returned for getting profile ID from %+v", profile)
 		}
 		profile = profiles[0]
 		action = "creating"

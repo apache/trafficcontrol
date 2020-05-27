@@ -39,6 +39,7 @@ type GetDeliveryServiceResponse struct {
 }
 
 // DeliveryServicesResponse ...
+// Deprecated: use DeliveryServicesNullableResponse instead
 type DeliveryServicesResponse struct {
 	Response []DeliveryService `json:"response"`
 	Alerts
@@ -51,40 +52,37 @@ type DeliveryServicesNullableResponse struct {
 }
 
 // CreateDeliveryServiceResponse ...
+// Deprecated: use CreateDeliveryServiceNullableResponse instead
 type CreateDeliveryServiceResponse struct {
-	Response []DeliveryService      `json:"response"`
-	Alerts   []DeliveryServiceAlert `json:"alerts"`
+	Response []DeliveryService `json:"response"`
+	Alerts
 }
 
 // CreateDeliveryServiceNullableResponse ...
 type CreateDeliveryServiceNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
-	Alerts   []DeliveryServiceAlert    `json:"alerts"`
+	Alerts
 }
 
 // UpdateDeliveryServiceResponse ...
+// Deprecated: use UpdateDeliveryServiceNullableResponse instead
 type UpdateDeliveryServiceResponse struct {
-	Response []DeliveryService      `json:"response"`
-	Alerts   []DeliveryServiceAlert `json:"alerts"`
+	Response []DeliveryService `json:"response"`
+	Alerts
 }
 
 // UpdateDeliveryServiceNullableResponse ...
 type UpdateDeliveryServiceNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
-	Alerts   []DeliveryServiceAlert    `json:"alerts"`
-}
-
-// DeliveryServiceResponse ...
-type DeliveryServiceResponse struct {
-	Response DeliveryService        `json:"response"`
-	Alerts   []DeliveryServiceAlert `json:"alerts"`
+	Alerts
 }
 
 // DeleteDeliveryServiceResponse ...
 type DeleteDeliveryServiceResponse struct {
-	Alerts []DeliveryServiceAlert `json:"alerts"`
+	Alerts
 }
 
+// Deprecated: use DeliveryServiceNullable instead
 type DeliveryService struct {
 	DeliveryServiceV13
 	MaxOriginConnections      int      `json:"maxOriginConnections" db:"max_origin_connections"`
@@ -161,9 +159,14 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceNullableV15 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
+type DeliveryServiceNullableV30 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
 
 type DeliveryServiceNullable struct {
+	DeliveryServiceNullableV15
+	Topology *string `json:"topology" db:"topology"`
+}
+
+type DeliveryServiceNullableV15 struct {
 	DeliveryServiceNullableV14
 	EcsEnabled          bool `json:"ecsEnabled" db:"ecs_enabled"`
 	RangeSliceBlockSize *int `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
@@ -417,6 +420,14 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"topology": validation.Validate(ds,
+			validation.By(func(dsi interface{}) error {
+				ds := dsi.(*DeliveryServiceNullable)
+				if ds.Topology != nil && DSType(typeName).IsSteering() {
+					return fmt.Errorf("steering deliveryservice types cannot be assigned to a topology")
+				}
+				return nil
+			})),
 	}
 	toErrs := tovalidate.ToErrors(errs)
 	if len(toErrs) > 0 {
@@ -446,7 +457,7 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
 		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
 		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
-		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
+		"xmlId":               validation.Validate(ds.XMLID, validation.Required, noSpaces, noPeriods, validation.Length(1, 48)),
 	})
 	if err := ds.validateTypeFields(tx); err != nil {
 		errs = append(errs, errors.New("type fields: "+err.Error()))
@@ -479,12 +490,6 @@ type DeliveryServiceMatch struct {
 	Type      DSMatchType `json:"type"`
 	SetNumber int         `json:"setNumber"`
 	Pattern   string      `json:"pattern"`
-}
-
-// DeliveryServiceAlert ...
-type DeliveryServiceAlert struct {
-	Level string `json:"level"`
-	Text  string `json:"text"`
 }
 
 // DeliveryServiceStateResponse ...
@@ -632,10 +637,10 @@ type AssignedDsResponse struct {
 // DeliveryServiceSafeUpdateRequest represents a request to update the "safe" fields of a
 // Delivery Service.
 type DeliveryServiceSafeUpdateRequest struct {
-	DisplayName *string `json:"displayName`
+	DisplayName *string `json:"displayName"`
 	InfoURL     *string `json:"infoUrl"`
 	LongDesc    *string `json:"longDesc"`
-	LongDesc1   *string `json:"longDesc1`
+	LongDesc1   *string `json:"longDesc1"`
 }
 
 // Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
