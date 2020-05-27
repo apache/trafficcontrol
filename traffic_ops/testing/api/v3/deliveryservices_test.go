@@ -30,12 +30,13 @@ import (
 )
 
 func TestDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		GetAccessibleToTest(t)
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
 		UpdateDeliveryServiceWithInvalidRemapText(t)
 		UpdateDeliveryServiceWithInvalidSliceRangeRequest(t)
+		UpdateDeliveryServiceWithInvalidTopology(t)
 		GetTestDeliveryServices(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
@@ -201,6 +202,28 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers {
 		t.Errorf("results do not match actual: %s, expected: %s", *resp.LongDesc, updatedLongDesc)
 		t.Fatalf("results do not match actual: %d, expected: %d", *resp.MaxDNSAnswers, updatedMaxDNSAnswers)
+	}
+}
+
+// UpdateDeliveryServiceWithInvalidTopology ensures that a topology cannot be assigned to (CLIENT_)STEERING delivery services.
+func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("cannot GET Delivery Services: %v", err)
+	}
+
+	found := false
+	for _, ds := range dses {
+		if *ds.Type == tc.DSTypeClientSteering {
+			found = true
+			ds.Topology = util.StrPtr("my-topology")
+			if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), &ds); err == nil {
+				t.Errorf("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("expected at least one CLIENT_STEERING delivery service")
 	}
 }
 

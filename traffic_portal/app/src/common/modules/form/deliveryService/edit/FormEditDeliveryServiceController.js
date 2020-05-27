@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceController = function(deliveryService, origin, type, types, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
+var FormEditDeliveryServiceController = function(deliveryService, origin, topologies, type, types, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, origin: origin, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, origin: origin, topologies: topologies, type: type, types: types, $scope: $scope }));
 
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
@@ -273,5 +273,5 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 
 };
 
-FormEditDeliveryServiceController.$inject = ['deliveryService', 'origin', 'type', 'types', '$scope', '$state', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
+FormEditDeliveryServiceController.$inject = ['deliveryService', 'origin', 'topologies', 'type', 'types', '$scope', '$state', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
 module.exports = FormEditDeliveryServiceController;

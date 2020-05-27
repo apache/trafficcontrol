@@ -26,14 +26,14 @@ import (
 var fedIDs []int
 
 func TestCDNFederations(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServices, CDNFederations}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, CacheGroups, Topologies, DeliveryServices, CDNFederations}, func() {
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
 	})
 }
 
 func TestFederationFederationResolvers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServices, CDNFederations, FederationResolvers}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, CacheGroups, Topologies, DeliveryServices, CDNFederations, FederationResolvers}, func() {
 		AssignTestFederationFederationResolvers(t)
 		GetTestFederationFederationResolvers(t)
 	})

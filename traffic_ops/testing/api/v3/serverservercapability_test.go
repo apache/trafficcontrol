@@ -23,7 +23,7 @@ import (
 )
 
 func TestServerServerCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
 		GetTestServerServerCapabilities(t)
 	})
 }
