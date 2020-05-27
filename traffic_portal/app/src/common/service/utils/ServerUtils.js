@@ -56,6 +56,74 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 		);
 	};
 
+	/**
+	 * Converts a server's interfaces into legacy IP information. (primarily
+	 * for use in tables)
+	 *
+	 * It does this by returning only the service addresses of the server.
+	 *
+	 * @param {Array<object>} interfaces - The interfaces of the server to be converted
+	 * @returns {object} An object with all of the legacy properties of non-
+	 * interface-based servers: ipAddress, ipGateway, ipNetmask, ip6Address,
+	 * ip6Gateway, interfaceName, and interfaceMtu
+	 */
+	this.toLegacyIPInfo = function(interfaces) {
+		const legacyInfo = {
+			ipAddress: null,
+			ipGateway: null,
+			ipNetmask: null,
+			ip6Address: null,
+			ip6Gateway: null,
+			interfaceName: null,
+			interfaceMtu: null
+		};
+		for (const inf of interfaces) {
+			legacyInfo.interfaceName = inf.name;
+			legacyInfo.interfaceMtu = inf.mtu;
+
+			for (const ip of inf.ipAddresses) {
+				if (!ip.serviceAddress) {
+					continue;
+				}
+
+				const address = ip.address;
+
+				// we don't validate ips here; if it has a '.' it's ipv4,
+				// otherwise it's ipv6
+				if (address.contains(".")) {
+					if (address.contains("/")) {
+						const parts = address.split("/");
+						address = parts[0];
+						let masklen = Number(parts[1]);
+
+						const mask = [];
+						for (let i = 0; i < 4; ++i) {
+							const n = Math.min(masklen, 8);
+							mask.push(256 - Math.pow(2, 8-n));
+							masklen -= n;
+						}
+						legacyInfo.ipNetmask = mask.join(".");
+					}
+					legacyInfo.ipAddress = address;
+					legacyInfo.ipGateway = ip.gateway;
+				} else {
+					legacyInfo.ip6Address = address;
+					legacyInfo.ip6Gateway = ip.gateway;
+				}
+
+				if (legacyInfo.ipAddress && legacyInfo.ip6Address) {
+					break;
+				}
+			}
+
+			if (legacyInfo.ipAddress && legacyInfo.ip6Address) {
+				break;
+			}
+		}
+
+		return legacyInfo;
+	}
+
 };
 
 ServerUtils.$inject = ['$window', 'propertiesModel', 'userModel'];
