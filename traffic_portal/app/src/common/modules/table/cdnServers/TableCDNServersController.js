@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCDNServersController = function(cdn, servers, $controller, $scope) {
+var TableCDNServersController = function(cdn, servers, $controller, $scope, serverUtils) {
 
 	// extends the TableParentServersController to inherit common methods
 	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
@@ -53,5 +53,5 @@ var TableCDNServersController = function(cdn, servers, $controller, $scope) {
 
 };
 
-TableCDNServersController.$inject = ['cdn', 'servers', '$controller', '$scope'];
+TableCDNServersController.$inject = ['cdn', 'servers', '$controller', '$scope', 'serverUtils'];
 module.exports = TableCDNServersController;
