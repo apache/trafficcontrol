@@ -158,24 +158,24 @@ under the License.
             <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.mgmtIpAddress), 'has-feedback': hasError(isoForm.mgmtIpAddress)}">
                 <label for="mgmtIpAddress" class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Address</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="mgmtIpAddress" id="mgmtIpAddress" type="text" class="form-control" ng-model="iso.mgmtIpAddress" maxlength="50"/>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpAddress, 'maxlength')">Too Long</small>
+                    <input name="mgmtIpAddress" id="mgmtIpAddress" type="text" class="form-control" ng-model="iso.mgmtIpAddress" ng-pattern="iso.mgmtIpNetmask ? IPv4Pattern : IPPattern"/>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpAddress, 'pattern')">Invalid IP Address</small>
                     <span ng-show="hasError(isoForm.mgmtIpAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.mgmtIpNetmask), 'has-feedback': hasError(isoForm.mgmtIpNetmask)}">
                 <label for="mgmtIpNetmask" class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Netmask</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="mgmtIpNetmask" id="mgmtIpNetmask" type="text" class="form-control" ng-model="iso.mgmtIpNetmask" maxlength="50"/>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpNetmask, 'maxlength')">Too Long</small>
+                    <input name="mgmtIpNetmask" id="mgmtIpNetmask" type="text" class="form-control" ng-model="iso.mgmtIpNetmask" ng-pattern="IPv4Pattern"/>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpNetmask, 'pattern')">Invalid Netmask</small>
                     <span ng-show="hasError(isoForm.mgmtIpNetmask)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-if="!iso.dhcp" ng-class="{'has-error': hasError(isoForm.mgmtIpGateway), 'has-feedback': hasError(isoForm.mgmtIpGateway)}">
                 <label for="mgmtIpGateway" class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Gateway</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="mgmtIpGateway" id="mgmtIpGateway" type="text" class="form-control" ng-model="iso.mgmtIpGateway" maxlength="50"/>
-                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpGateway, 'maxlength')">Too Long</small>
+                    <input name="mgmtIpGateway" id="mgmtIpGateway" type="text" class="form-control" ng-model="iso.mgmtIpGateway" ng-pattern="iso.mgmtIpNetmask ? IPv4Pattern : IPPattern"/>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpGateway, 'pattern')">Invalid Gateway</small>
                     <span ng-show="hasError(isoForm.mgmtIpGateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
