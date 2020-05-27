@@ -35,6 +35,9 @@ func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts
 		return tc.Alerts{}, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+`/jobs`, reqBody)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}

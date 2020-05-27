@@ -257,8 +257,15 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 	}
 
 	if job.TTL != nil {
-		if _, err := job.TTLHours(); err != nil {
+		hours, err := job.TTLHours()
+		if err != nil {
 			errs = append(errs, "ttl: must be a number of hours, or a duration string e.g. '48h'")
+		}
+		var maxDays uint
+		err = tx.QueryRow(`SELECT value FROM parameter WHERE name='maxRevalDurationDays' AND config_file='regex_revalidate.config'`).Scan(&maxDays)
+		maxHours := maxDays * 24
+		if err == nil && hours > maxHours { // silently ignore other errors too
+			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(uint64(maxHours), 10)+"!")
 		}
 	}
 
@@ -329,7 +336,7 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 	if job.StartTime == nil {
 		errs = append(errs, "startTime: cannot be blank")
 	} else if job.StartTime.After(time.Now().Add(twoDays)) {
-		errs = append(errs, "startTime: must be within two days!")
+		errs = append(errs, "startTime: must be within two days")
 	}
 
 	if job.Regex != nil && *(job.Regex) != "" {
@@ -343,20 +350,21 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 		var id uint
 		if err := row.Scan(&id); err != nil {
 			log.Errorln(err.Error())
-			errs = append(errs, "No Delivery Service corresponding to 'dsId'!")
+			errs = append(errs, "no Delivery Service corresponding to 'dsId'")
 		}
 	}
 
 	if job.TTL != nil {
 		row := tx.QueryRow(`SELECT value FROM parameter WHERE name='maxRevalDurationDays' AND config_file='regex_revalidate.config'`)
-		var max uint64
-		err := row.Scan(&max)
+		var maxDays uint64
+		err := row.Scan(&maxDays)
+		maxHours := maxDays * 24
 		if err == sql.ErrNoRows && MaxTTL < *(job.TTL) {
-			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(MaxTTL, 10)+"!")
-		} else if err == nil && max < *(job.TTL) { //silently ignore other errors to
-			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(max, 10)+"!")
+			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(MaxTTL, 10))
+		} else if err == nil && maxHours < *(job.TTL) { // silently ignore other errors
+			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(maxHours, 10))
 		} else if *(job.TTL) < 1 {
-			errs = append(errs, "ttl: must be at least 1!")
+			errs = append(errs, "ttl: must be at least 1")
 		}
 	}
 

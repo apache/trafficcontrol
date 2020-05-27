@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed ORT config generation not using the coalesce_number_v6 Parameter.
 - Removed audit logging from the `POST /api/x/serverchecks` Traffic Ops API endpoint in order to reduce audit log spam
 - Fixed audit logging from the `/jobs` APIs to bring them back to the same level of information provided by TO-Perl
+- Fixed `maxRevalDurationDays` validation for `POST /api/1.x/user/current/jobs` and added that validation to the `/api/x/jobs` endpoints
 - Fixed update procedure of servers, so that if a server is linked to one or more delivery services, you cannot change its "cdn".
 
 ### Changed
