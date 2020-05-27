@@ -79,7 +79,7 @@ under the License.
             <a ng-if="node.cachegroup" title="View Servers Assigned to {{node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="viewCacheGroupServers(node)" style="margin-right: 8px;">
                 <i class="fa fa-server"></i>
             </a>
-            <a ng-disabled="node.type === 'EDGE_LOC'" title="{{(node.type !== 'EDGE_LOC') ? 'Add cache groups to ' + node.cachegroup : 'Cache groups cannot be added to EDGE_LOC cache groups'}}" class="btn btn-primary btn-xs" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
+            <a ng-disabled="node.type === 'EDGE_LOC'" title="{{(node.type !== 'EDGE_LOC') ? 'Add child cache groups to ' + nodeLabel(node) : 'Child cache groups cannot be added to EDGE_LOC cache groups'}}" class="btn btn-primary btn-xs" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
                 <i class="fa fa-plus"></i>
             </a>
             <a ng-if="node.cachegroup" title="Remove {{node.cachegroup}} Cache Group" class="btn btn-danger btn-xs" data-nodrag ng-click="deleteCacheGroup(node, this)">
