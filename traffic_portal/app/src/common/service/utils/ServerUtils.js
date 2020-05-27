@@ -77,27 +77,29 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 			interfaceName: null,
 			interfaceMtu: null
 		};
-		for (const inf of interfaces) {
+		for (let i = 0; i < interfaces.length; ++i) {
+			const inf = interfaces[i];
 			legacyInfo.interfaceName = inf.name;
 			legacyInfo.interfaceMtu = inf.mtu;
 
-			for (const ip of inf.ipAddresses) {
+			for (let j = 0; j < inf.ipAddresses.length; ++j) {
+				const ip = inf.ipAddresses[j];
 				if (!ip.serviceAddress) {
 					continue;
 				}
 
-				const address = ip.address;
+				let address = ip.address;
 
 				// we don't validate ips here; if it has a '.' it's ipv4,
 				// otherwise it's ipv6
-				if (address.contains(".")) {
-					if (address.contains("/")) {
+				if (address.includes(".")) {
+					if (address.includes("/")) {
 						const parts = address.split("/");
 						address = parts[0];
 						let masklen = Number(parts[1]);
 
 						const mask = [];
-						for (let i = 0; i < 4; ++i) {
+						for (let k = 0; k < 4; ++k) {
 							const n = Math.min(masklen, 8);
 							mask.push(256 - Math.pow(2, 8-n));
 							masklen -= n;
