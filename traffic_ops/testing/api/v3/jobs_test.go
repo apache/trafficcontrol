@@ -103,14 +103,14 @@ func CreateTestInvalidJob(t *testing.T) {
 	maxRevalDays := 0
 	foundMaxRevalDays := false
 	for _, p := range testData.Parameters {
-		if p.Name == "maxRevalDurationDays" {
-			maxRevalDays, err = strconv.Atoi(p.Value)
-			if err != nil {
-				t.Fatalf("unable to parse maxRevalDurationDays value '%s' to int", p.Value)
-			}
-			foundMaxRevalDays = true
-			break
+		if p.Name != "maxRevalDurationDays" {
+			continue
 		}
+		maxRevalDays, err = strconv.Atoi(p.Value)
+		if err != nil {
+			t.Fatalf("unable to parse maxRevalDurationDays value '%s' to int", p.Value)
+		}
+		foundMaxRevalDays = true
 	}
 	if !foundMaxRevalDays {
 		t.Fatalf("expected: parameter named maxRevalDurationDays, actual: not found")
