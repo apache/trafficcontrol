@@ -24,6 +24,8 @@ var TableCDNServersController = function(cdn, servers, $controller, $scope) {
 
 	let cdnServersTable;
 
+	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
+
 	$scope.cdn = cdn;
 
 	$scope.toggleVisibility = function(colName) {

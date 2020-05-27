@@ -110,8 +110,8 @@ under the License.
                     <td data-search="^{{::s.mgmtIpAddress}}$"><a ng-click="ssh(s.mgmtIpAddress, $event)">{{::s.mgmtIpAddress}}</a></td>
                     <td data-search="^{{::s.mgmtIpGateway}}$"><a ng-click="ssh(s.mgmtIpGateway, $event)">{{::s.mgmtIpGateway}}</a></td>
                     <td data-search="^{{::s.mgmtIpNetmask}}$">{{::s.mgmtIpNetmask}}</td>
-                    <td data-search="^{{::s.ipGateway}}$"><a ng-click="ssh(s.ipGateway, $event)">{{::serverNetInfo.get(s.id).ipGateway}}</a></td>
-                    <td data-search="^{{::s.ipAddress}}$"><a ng-click="ssh(s.ipAddress, $event)">{{::serverNetInfo.get(s.id).ipAddress}}</a></td>
+                    <td data-search="^{{::s.ipGateway}}$"><a ng-click="ssh(serverNetInfo.get(s.id).ipGateway, $event)">{{::serverNetInfo.get(s.id).ipGateway}}</a></td>
+                    <td data-search="^{{::s.ipAddress}}$"><a ng-click="ssh(serverNetInfo.get(s.id).ipAddress, $event)">{{::serverNetInfo.get(s.id).ipAddress}}</a></td>
                     <td data-search="^{{::s.interfaceMtu}}$">{{::serverNetInfo.get(s.id).interfaceMtu}}</td>
                     <td data-search="^{{::s.ipNetmask}}$">{{::serverNetInfo.get(s.id).ipNetmask}}</td>
                     <td data-search="^{{::s.offlineReason}}$">{{::s.offlineReason}}</td>
