@@ -17,10 +17,12 @@
  * under the License.
  */
 
-var TableCacheGroupsServersController = function(cacheGroup, servers, $controller, $scope, $state, $uibModal, cacheGroupService) {
+var TableCacheGroupsServersController = function(cacheGroup, servers, $controller, $scope, $state, $uibModal, cacheGroupService, serverUtils) {
 
 	// extends the TableParentServersController to inherit common methods
 	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
+
+	const serverNetInfo = new Map(servers.map(s=>[s.id, serverUtils.toLegacyIPInfo(s.interfaces)]));
 
 	let cacheGroupServersTable;
 
@@ -119,5 +121,5 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 
 };
 
-TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$controller', '$scope', '$state', '$uibModal', 'cacheGroupService'];
+TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$controller', '$scope', '$state', '$uibModal', 'cacheGroupService', "serverUtils"];
 module.exports = TableCacheGroupsServersController;
