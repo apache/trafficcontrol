@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.servers.edit', [])
                         controller: 'FormEditServerController',
                         resolve: {
                             server: function($stateParams, serverService) {
-                                return serverService.getServer($stateParams.serverId);
+                                return serverService.getServers({id: $stateParams.serverId});
                             }
                         }
                     }

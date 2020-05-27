@@ -30,17 +30,6 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
         )
     };
 
-    this.getServer = function(id) {
-        return $http.get(ENV.api['root'] + 'servers', {params: {id: id}}).then(
-            function (result) {
-                return result.data.response[0];
-            },
-            function (err) {
-                throw err;
-            }
-        )
-    };
-
     this.createServer = function(server) {
         return $http.post(ENV.api['root'] + 'servers', server).then(
             function(result) {
