@@ -37,12 +37,16 @@ th, td {
 	padding:5px 20px 5px 5px;
 }
 
-tbody#cache-states tr:nth-child(3n+3) {
+tbody#cache-states tr.server-status:nth-child(4n+3) {
 	background: #adb;
 }
 
-tbody#cache-states tr:nth-child(odd) td {
+tbody#cache-states tr.server-status:nth-child(odd) td {
 	border-top: 1px ridge black;
+}
+
+tbody.interface-content tr {
+	background: white;
 }
 
 tbody.interface-content tr:nth-child(even) {
@@ -72,6 +76,7 @@ div.sub-table-indicator {
 div.sub-table-indicator.right {
 	transform: rotate(-45deg);
 	-webkit-transform: rotate(-45deg);
+<<<<<<< Updated upstream
 }
 
 div.sub-table-indicator.down {
@@ -79,6 +84,15 @@ div.sub-table-indicator.down {
 	-webkit-transform: rotate(45deg);
 }
 
+=======
+}
+
+div.sub-table-indicator.down {
+	transform: rotate(45deg);
+	-webkit-transform: rotate(45deg);
+}
+
+>>>>>>> Stashed changes
 .error {
 	background-color: #f00!important;
 }

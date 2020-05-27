@@ -274,7 +274,7 @@ function getCacheStates() {
 						indicatorDiv.classList.add("right");
 						indicatorDiv.classList.remove("down");
 					}
-				}setInterval;
+				};
 
 				// Hide row by default
 				row.click();
