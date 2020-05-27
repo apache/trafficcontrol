@@ -100,7 +100,7 @@ PATCH
 -----
 At the time of this writing, no :ref:`to-api` endpoints handle the PATCH request method. PATCH requests that the server's stored data be mutated in some way using data provided in the request body. Unlike PUT, PATCH is not *idempotent*, which essentially means that it can be used to change only part of a stored object. When an object is modified, the response body MUST contain a representation of the object after modification, and that representation SHOULD fully describe the modified object, even the parts that were not modified.
 
-Handlers that implement PATCH in the :ref:`to-api` MUST use conditional requests to ensure that race conditions are not a problem, specifically they MUST support using :mailheader:`ETag` and :mailheader:`If-Match`, and SHOULD also support :mailheader:`If-Not-Modified-Since`.
+Handlers that implement PATCH in the :ref:`to-api` MUST use conditional requests to ensure that race conditions are not a problem, specifically they MUST support using :mailheader:`ETag` and :mailheader:`If-Match`, and SHOULD also support :mailheader:`If-Unmodified-Since`.
 
 Clients SHOULD use PATCH requests rather than PUT requests for modifying existing resources whenever it is supported.
 
