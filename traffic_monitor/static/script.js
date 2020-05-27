@@ -130,7 +130,7 @@ function getEvents() {
 	ajax("/publish/EventLog", function(r) {
 		const events = JSON.parse(r).events || [];
 		for (const event of events.slice(lastEvent+1)) {
-			lastEvent = event.index
+			lastEvent = event.index;
 			const row = document.getElementById("event-log").insertRow(0);
 
 			row.insertCell(0).textContent = event.name;
@@ -155,51 +155,136 @@ function getEvents() {
  * the "Cache States" table with the results - replacing the current content.
 */
 function getCacheStates() {
+	function parseIPAvailable(server, ipField) {
+		return server.status.indexOf("ONLINE") !== 0 ? server[ipField] : "N/A";
+	}
+
+	function parseBandwidth(server) {
+		if (Object.prototype.hasOwnProperty.call(server, "bandwidth_kbps")) {
+			const kbps = (server.bandwidth_kbps / kilobitsInMegabit).toFixed(2);
+			const max = numberStrWithCommas((server.bandwidth_capacity_kbps / kilobitsInMegabit).toFixed(0));
+			return `${kbps} / ${max}`;
+		} else {
+			return "N/A";
+		}
+	}
+	function parseStatusClass(server, row) {
+		if (Object.prototype.hasOwnProperty.call(server, "status")) {
+			if (server.status.indexOf("ADMIN_DOWN") !== -1 || server.status.indexOf("OFFLINE") !== -1) {
+				row.classList.add("warning");
+			} else if (!server.combined_available && server.status.indexOf("ONLINE") !== 0) {
+				row.classList.add("error");
+			} else if (server.status.indexOf(" availableBandwidth") !== -1) {
+				row.classList.add("error");
+			}
+		}
+	}
+
 	ajax("/api/cache-statuses", function(r) {
 		const servers = new Map(Object.entries(JSON.parse(r)));
-		const table = document.createElement('TBODY');
-		table.id = "cache-states"
 
-		for (const [serverName, server] of servers) {
-			const row = table.insertRow(0);
-
-			row.insertCell(0).textContent = serverName;
-			row.insertCell(1).textContent = server.type || "UNKNOWN";
-			row.insertCell(2).textContent = server.status.indexOf("ONLINE") !== 0 ? server.ipv4_available : "N/A";
-			row.insertCell(3).textContent = server.status.indexOf("ONLINE") !== 0 ?  server.ipv6_available : "N/A";
-			row.insertCell(4).textContent = server.status || "";
-			if (Object.prototype.hasOwnProperty.call(server, "status")) {
-				if (server.status.indexOf("ADMIN_DOWN") !== -1 || server.status.indexOf("OFFLINE") !== -1) {
-					row.classList.add("warning");
-				} else if (!server.combined_available && server.status.indexOf("ONLINE") !== 0) {
-					row.classList.add("error");
-				} else if (server.status.indexOf(" availableBandwidth") !== -1) {
-					row.classList.add("error");
-				}
-			}
-
-			row.insertCell(5).textContent = server.load_average || "";
-			row.insertCell(6).textContent = server.query_time_ms || "";
-			row.insertCell(7).textContent = server.health_time_ms || "";
-			row.insertCell(8).textContent = server.stat_time_ms || "";
-			row.insertCell(9).textContent = server.health_span_ms || "";
-			row.insertCell(10).textContent = server.stat_span_ms || "";
-
-			if (Object.prototype.hasOwnProperty.call(server, "bandwidth_kbps")) {
-				const kbps = (server.bandwidth_kbps / kilobitsInMegabit).toFixed(2);
-				const max = numberStrWithCommas((server.bandwidth_capacity_kbps / kilobitsInMegabit).toFixed(0));
-				row.insertCell(11).textContent = `${kbps} / ${max}`;
-			} else {
-				row.insertCell(11).textContent = "N/A";
-			}
-
-			row.insertCell(12).textContent = server.connection_count || "N/A";
-		}
-
+		// Sort by key (server name) so order doesn't change 'randomly'
+		servers[Symbol.iterator] = function* () {
+			yield *[...this.entries()].sort((serverCoupleA, serverCoupleB) => serverCoupleA[0] < serverCoupleB[0]);
+		};
 
 		const oldtable = document.getElementById("cache-states");
-		oldtable.parentNode.replaceChild(table, oldtable);
+		const table = document.createElement('TBODY');
+		const interfaceTableTemplate = document.getElementById("interface-template").content.children[0];
+		const interfaceRowTemplate = document.getElementById("interface-row-template").content.children[0];
+		const cacheStatusRowTemplate = document.getElementById("cache-status-row-template").content.children[0];
+		table.id = oldtable.id;
 
+		// Match visibility of interface tables based on previous table
+		const interfaceRows = oldtable.querySelectorAll(".encompassing-row");
+		let openCachesByName = [];
+		for(const row of interfaceRows) {
+            if(row.classList.contains("visible")){
+				openCachesByName.push(row.querySelector(".sub-table").getAttribute("server-name"));
+			}
+		}
+
+		for (const [serverName, server] of servers) {
+			const row = cacheStatusRowTemplate.cloneNode(true);
+			const cacheRowChildren = row.children;
+			const indicatorDiv = cacheRowChildren[0].children[0];
+
+			cacheRowChildren[1].textContent = serverName;
+			cacheRowChildren[2].textContent = server.type || "UNKNOWN";
+			cacheRowChildren[3].textContent = parseIPAvailable(server, "ipv4_available");
+			cacheRowChildren[4].textContent = parseIPAvailable(server, "ipv6_available");
+			cacheRowChildren[5].textContent = server.status || "";
+			parseStatusClass(server, row);
+
+			cacheRowChildren[6].textContent = server.load_average || "";
+			cacheRowChildren[7].textContent = server.query_time_ms || "";
+			cacheRowChildren[8].textContent = server.health_time_ms || "";
+			cacheRowChildren[9].textContent = server.stat_time_ms || "";
+			cacheRowChildren[10].textContent = server.health_span_ms || "";
+			cacheRowChildren[11].textContent = server.stat_span_ms || "";
+			cacheRowChildren[12].textContent = parseBandwidth(server);
+			cacheRowChildren[13].textContent = server.connection_count || "N/A";
+			table.prepend(row);
+
+			// Add interfaces
+			if (Object.prototype.hasOwnProperty.call(server, "interfaces")) {
+				server.interfaces = new Map(Object.entries(server.interfaces));
+				// Sort by key (interface name) so order doesn't change 'randomly'
+				server.interfaces[Symbol.iterator] = function*() {
+					yield *[...this.entries()].sort((interfaceA, interfaceB) => {
+						return interfaceA < interfaceB;
+					});
+				};
+				const interfaceTable = interfaceTableTemplate.cloneNode(true);
+				interfaceTable.removeAttribute("id");
+				// To determine what cache this interface table belongs to
+				// used to ensure servers that were expanded remain expanded when refreshing the data.
+				interfaceTable.setAttribute("server-name", serverName);
+				const interfaceBody = interfaceTable.querySelector(".interface-content");
+				for (const [interfaceName, stat] of server.interfaces) {
+					const interfaceRow = interfaceRowTemplate.cloneNode(true);
+					const cells = interfaceRow.children;
+
+					cells[0].textContent = interfaceName;
+					cells[1].textContent = parseIPAvailable(stat, "ipv4_available");
+					cells[2].textContent = parseIPAvailable(stat, "ipv6_available");
+					cells[3].textContent = stat.status || "";
+					cells[4].textContent = parseBandwidth(stat);
+					cells[5].textContent = stat.connection_count || "N/A";
+
+					parseStatusClass(stat, interfaceRow);
+
+					interfaceBody.prepend(interfaceRow);
+				}
+				const encompassingRow = table.insertRow(1);
+				encompassingRow.classList.add("encompassing-row");
+				const encompassingCell = encompassingRow.insertCell(0);
+				encompassingCell.appendChild(interfaceTable);
+				encompassingCell.colSpan = 14;
+				row.onclick = function() {
+					if(encompassingRow.classList.contains("hidden")) {
+						encompassingRow.classList.remove("hidden");
+						encompassingRow.classList.add("visible");
+						indicatorDiv.classList.remove("right");
+						indicatorDiv.classList.add("down");
+					}
+					else {
+						encompassingRow.classList.add("hidden");
+						encompassingRow.classList.remove("visible");
+						indicatorDiv.classList.add("right");
+						indicatorDiv.classList.remove("down");
+					}
+				}setInterval;
+
+				// Hide row by default
+				row.click();
+				if(openCachesByName.indexOf(serverName) > -1) {
+					row.click();
+				}
+			}
+		}
+
+		oldtable.parentNode.replaceChild(table, oldtable);
 	});
 }
 
@@ -208,7 +293,7 @@ function getCacheStates() {
  * For zero values, it returns an empty string, to make nonzero values more visible.
  * @param f The floating point number to format
 */
-const dsDisplayFloat = (f) => { return f === 0 ? "" : f.toFixed(2); }
+const dsDisplayFloat = (f) => { return f === 0 ? "" : f.toFixed(2); };
 
 /**
  * Attempts to extract data from a deliveryService object, but falls back on "N/A" if it doesn't have that
@@ -230,8 +315,6 @@ function getDSProperty(ds, prop) {
  * table with the results - replacing the current content.
 */
 function getDsStats() {
-	var now = Date.now();
-
 	/// \todo add /api/delivery-service-stats which only returns the data needed by the UI, for efficiency
 	ajax("/publish/DsStats", function(r) {
 		const deliveryServices = new Map(Object.entries(JSON.parse(r).deliveryService));
