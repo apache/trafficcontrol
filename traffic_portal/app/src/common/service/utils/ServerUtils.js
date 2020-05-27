@@ -77,6 +77,10 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 			interfaceName: null,
 			interfaceMtu: null
 		};
+		if (!interfaces) {
+			return legacyInfo;
+		}
+
 		for (let i = 0; i < interfaces.length; ++i) {
 			const inf = interfaces[i];
 			legacyInfo.interfaceName = inf.name;
