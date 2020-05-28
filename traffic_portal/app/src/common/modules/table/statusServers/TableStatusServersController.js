@@ -17,12 +17,14 @@
  * under the License.
  */
 
-var TableStatusServersController = function(status, servers, $controller, $scope) {
+var TableStatusServersController = function(status, servers, $controller, $scope, serverUtils) {
 
 	// extends the TableParentServersController to inherit common methods
 	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
 
 	let statusServersTable;
+
+	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
 
 	$scope.status = status;
 
@@ -51,5 +53,5 @@ var TableStatusServersController = function(status, servers, $controller, $scope
 
 };
 
-TableStatusServersController.$inject = ['status', 'servers', '$controller', '$scope'];
+TableStatusServersController.$inject = ['status', 'servers', '$controller', '$scope', 'serverUtils'];
 module.exports = TableStatusServersController;
