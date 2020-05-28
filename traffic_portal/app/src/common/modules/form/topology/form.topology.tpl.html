@@ -56,14 +56,17 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(topology)">Delete</button>
-                <button type="button" class="btn btn-success" ng-disabled="topologyForm.$invalid" ng-click="save(topology.name, topology.description, topologyTree)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="topologyForm.$pristine || topologyForm.$invalid" ng-click="save(topology.name, topology.description, topologyTree)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>
 </div>
 
 <script type="text/ng-template" id="nodes_renderer.html">
+    <!-- this hidden form field will make the form invalid (and disable the save btn) because it's a required field with no value -->
     <input name="error" ng-if="hasNodeError(node)" ng-model="error" type="hidden" required>
+    <!-- this hidden form field will mark the form as dirty (and enable the save btn) when the topology tree is modified in any way -->
+    <input name="dirty" ng-model="dirty" type="hidden">
     <div id="{{node.cachegroup}}" ui-tree-handle class="tree-node tree-node-content"
          ng-class="{ 'error': hasNodeError(node), 'origin': isOrigin(node), 'mid': isMid(node) }">
         <div class="tree-node-label pull-left">
