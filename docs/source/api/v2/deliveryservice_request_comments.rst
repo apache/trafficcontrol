@@ -56,6 +56,13 @@ Request Structure
 
 Response Structure
 ------------------
+:author:                        The username of the user who created the comment.
+:authorId:                      The integral, unique identifier of the user who created the comment.
+:deliveryServiceRequestId:      The integral, unique identifier of the :term:`Delivery Service Request` that the comment was posted on.
+:id:                            The integral, unique identifier of the :term:`DSR` comment.
+:lastUpdated:                   The date and time at which the user was last modified, in ISO format
+:value:                         The text of the comment that was posted.
+:xmlId:                         This is the `:xmlId:` value that you provided in the request.
 
 .. code-block:: http
 	:caption: Response Example
