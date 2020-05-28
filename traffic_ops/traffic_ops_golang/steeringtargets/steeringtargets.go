@@ -22,6 +22,7 @@ package steeringtargets
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strconv"
 
@@ -159,7 +160,34 @@ func read(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser) ([]
 	return filteredTargets, nil, nil, http.StatusOK
 }
 
+func checkTypeValidity(typeID int, tx *sqlx.Tx) (bool, error) {
+	row := tx.QueryRow(`SELECT name FROM type WHERE id=$1`, typeID)
+	if row == nil {
+		return false, errors.New("Not a valid type ID")
+	}
+	var name string
+	if err := row.Scan(&name); err != nil {
+		log.Errorln(err.Error())
+		return false, err
+	}
+	if name != "STEERING_ORDER" &&
+		name != "STEERING_WEIGHT" &&
+		name != "STEERING_GEO_ORDER" &&
+		name != "STEERING_GEO_WEIGHT" {
+		return false, errors.New("invalid type ID specified, should correspond to the ID of one of STEERING_ORDER, STEERING_WEIGHT, STEERING_GEO_ORDER or STEERING_GEO_WEIGHT")
+	}
+	return true, nil
+}
+
 func (st *TOSteeringTargetV11) Create() (error, error, int) {
+	if st.TypeID == nil {
+		return errors.New("no Type ID specified"), nil, http.StatusBadRequest
+	}
+	valid, err := checkTypeValidity(*st.TypeID, st.ReqInfo.Tx)
+	if !valid {
+		return err, nil, http.StatusBadRequest
+	}
+
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])
 	if err != nil {
 		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest
