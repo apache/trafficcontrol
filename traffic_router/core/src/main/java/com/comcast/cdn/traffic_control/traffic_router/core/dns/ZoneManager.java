@@ -458,8 +458,8 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings({"PMD.ExcessiveParameterList"})
 	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap,
-			final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks,
-			final BlockingQueue<Runnable> primingTasks, final String hostname, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys) throws IOException {
+		final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks,
+		final BlockingQueue<Runnable> primingTasks, final String hostname, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
 		final CacheRegister data = tr.getCacheRegister();
 		final JsonNode trafficRouters = data.getTrafficRouters();
@@ -479,12 +479,12 @@ public class ZoneManager extends Resolver {
 		final Name name = newName(domain);
 		final List<Record> list = zoneMap.get(domain);
 		final Name admin = newName(ZoneUtils.getAdminString(soa, "admin", "traffic_ops", domain));
-		list.add(new SOARecord(name, DClass.IN, 
+		list.add(new SOARecord(name, DClass.IN,
 				ZoneUtils.getLong(ttl, "SOA", 86400), getGlueName(ds, trafficRouters.get(hostname), name, hostname), admin,
-				ZoneUtils.getLong(soa, "serial", ZoneUtils.getSerial(data.getStats())), 
-				ZoneUtils.getLong(soa, "refresh", 28800), 
-				ZoneUtils.getLong(soa, "retry", 7200), 
-				ZoneUtils.getLong(soa, "expire", 604800), 
+				ZoneUtils.getLong(soa, "serial", ZoneUtils.getSerial(data.getStats())),
+				ZoneUtils.getLong(soa, "refresh", 28800),
+				ZoneUtils.getLong(soa, "retry", 7200),
+				ZoneUtils.getLong(soa, "expire", 604800),
 				ZoneUtils.getLong(soa, "minimum", 60)));
 		addTrafficRouters(list, trafficRouters, name, ttl, domain, ds);
 		addStaticDnsEntries(list, ds, domain);
@@ -651,10 +651,10 @@ public class ZoneManager extends Resolver {
 						ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
 					}
 					switch(type) {
-						case "A": 
+						case "A":
 							list.add(new ARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
 							break;
-						case "AAAA": 
+						case "AAAA":
 							list.add(new AAAARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
 							break;
 						case "CNAME":
@@ -692,7 +692,7 @@ public class ZoneManager extends Resolver {
 			String ip6 = JsonUtils.optString(trJo, IP6);
 			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), getGlueName(ds, trJo, name, key)));
 			list.add(new ARecord(trName,
-					DClass.IN, ZoneUtils.getLong(ttl, "A", 60), 
+					DClass.IN, ZoneUtils.getLong(ttl, "A", 60),
 					InetAddress.getByName(JsonUtils.optString(trJo, IP))));
 
 			if (ip6 != null && !ip6.isEmpty() && ip6RoutingEnabled) {
@@ -727,7 +727,7 @@ public class ZoneManager extends Resolver {
 	}
 
 	private static Name newName(final String hostname, final String domain) throws TextParseException {
-		if ("".equals(hostname)) {
+		if ("@".equals(hostname)) {
 			return newName(domain);
 		} else {
 			return newName(hostname + "." + domain);
@@ -816,7 +816,7 @@ public class ZoneManager extends Resolver {
 
 	/**
 	 * Gets trafficRouter.
-	 * 
+	 *
 	 * @return the trafficRouter
 	 */
 	public TrafficRouter getTrafficRouter() {
@@ -825,7 +825,7 @@ public class ZoneManager extends Resolver {
 
 	/**
 	 * Attempts to find a {@link Zone} that would contain the specified {@link Name}.
-	 * 
+	 *
 	 * @param name
 	 *            the Name to use to attempt to find the Zone
 	 * @return the Zone to use to resolve the specified Name
@@ -871,7 +871,7 @@ public class ZoneManager extends Resolver {
 	/**
 	 * Creates a dynamic zone that serves a set of A and AAAA records for the specified {@link Name}
 	 * .
-	 * 
+	 *
 	 * @param staticZone
 	 *            The Zone that would normally serve this request
 	 * @param name
@@ -1031,8 +1031,8 @@ public class ZoneManager extends Resolver {
 			final int qtype = (addr instanceof Inet6Address) ? Type.AAAA : Type.A;
 			final Zone dynamicZone = createDynamicZone(zone, name, qtype, addr, true, builder);
 
-			if (dynamicZone != null) { 
-				zone = dynamicZone; 
+			if (dynamicZone != null) {
+				zone = dynamicZone;
 			}
 
 			if (zone == null) {
