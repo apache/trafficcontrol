@@ -76,6 +76,9 @@ class Question():
 		ipt = input(self)
 		return ipt if ipt else self.default
 
+	def toJSON(self) -> str:
+		return f'{{"{self.question}": "{self.default}", "config_var": "{self.config_var}"{', "hidden": true' if self.hidden else ''}}}'
+
 
 # The default question/answer set
 DEFAULTS = {
@@ -134,6 +137,10 @@ DEFAULTS = {
 	]
 }
 
+class ConfigEncoder(json.JSONEncoder):
+	def default(self, o):
+		if type(o) is dict and all(type(k) is str and type(v) is list for k, v in o.items()) and all(type(v))
+
 def get_field(question: str, config_answer: str, hidden: bool = False) -> str:
 	if hidden:
 		while True:
@@ -147,10 +154,7 @@ def get_field(question: str, config_answer: str, hidden: bool = False) -> str:
 		return ipt if ipt else config_answer
 	return input(question + ": ")
 
-def get_config(user_input: typing.Dict[str, typing.List[typing.Dict[str, str]]], fname: str, automatic: bool = False) -> dict:
-
-	if fname not in user_input:
-		raise ValueError(f"No {fname} found in config")
+def get_config(questions: typing.List[Question], fname: str, automatic: bool = False) -> dict:
 
 	logging.info(f"==========={fname}===========")
 
@@ -165,29 +169,101 @@ def get_config(user_input: typing.Dict[str, typing.List[typing.Dict[str, str]]],
 
 	return config
 
-def generate_db_conf(user_input: dict, fname: str, todb_fname: str, automatic: bool):
+def generate_db_conf(questions: typing.List[Question], fname: str, todb_fname: str, automatic: bool):
 	"""
 	"""
-	db_conf = get_config(user_input, fname, automatic)
+	db_conf = get_config(questions, fname, automatic)
 
-def sanity_check_config(cfg: dict):
+def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic: bool) -> int:
+	"""
+	Checks a user-input configuration file, and outputs the number of files in the
+	default question set that did not appear in the input.
+
+	:param cfg: The user's parsed input questions.
+	:param automatic: If :keyword:`True` all missing questions will use their default answers. Otherwise, the user will be prompted for answers.
+	"""
 	diffs = 0
 
-	for fname, file in DEFAULTS:
+	for fname, file in DEFAULTS.items():
 		if fname not in cfg:
 			logging.warning("File '%s' found in defaults but not config file", fname)
 			cfg[fname] = []
 
 		for defaultValue in file:
 			for configValue in cfg[fname]:
-				if defaultValue["config_var"] == configValue.get("config_var"):
+				if defaultValue.config_var == configValue.config_var:
 					break
 			else:
 				continue
 
+			question = defaultValue.question
+			answer = defaultValue.answer
 
+			if not automatic:
+				logging.info("Prompting user for answer")
+				if defaultValue.hidden:
+					answer = defaultValue.ask()
+			else:
+				logging.info("Adding question '%s' with default answer%s", question, f" {answer}" if not defaultValue.hidden else "")
+
+			# The Perl here would ask questions, but those would just get asked later
+			# anyway, so I'm not sure why.
+			cfg[fname].append(Question(question, answer, defaultValue.config_var, defaultValue.hidden))
+			diffs += 1
+
+	return diffs
+
+def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
+	"""
+	Reads in a raw parsed configuration file and returns the resulting configuration.
+	>>> unmarshal_config({"test": [{"Do the thing?": "yes", "config_var": "thing"}]})
+	{'test': [Question(question='Do the thing?', default='yes', config_var='thing', hidden=False)]}
+	>>> unmarshal_config({"test": [{"foo": "", "config_var": "bar", "hidden": True}]})
+	{'test': [Question(question='foo', default='', config_var='bar', hidden=True)]}
+	"""
+	ret = {}
+	for file, questions in dct.items():
+		if type(questions) is not list:
+			raise ValueError(f"file '{file}' has malformed questions")
+
+		qs = []
+		for q in questions:
+			if type(q) is not dict:
+				raise ValueError(f"file '{file}' has a malformed question ({q})")
+			try:
+				question = next(key for key in q.keys() if q != "hidden" and q != "config_var")
+			except StopIteration:
+				raise ValueError(f"question in '{file}' has no question/answer properties ({q})")
+
+			answer = q[question]
+			if type(question) is not str or type(answer) is not str:
+				raise ValueError(f"question in '{file}' has malformed question/answer property ({question}: {answer})")
+
+			del q[question]
+			hidden = False
+			if "hidden" in q:
+				hidden = bool(q["hidden"])
+				del q["hidden"]
+
+			if "config_var" not in q:
+				raise ValueError(f"question in '{file}' has no 'config_var' property")
+			cfg_var = q["config_var"]
+			if type(cfg_var) is not str:
+				raise ValueError(f"question in '{file}' has malformed 'config_var' property ({cfg_var})")
+			del q["config_var"]
+
+			if q:
+				logging.warning("Found unknown extra properties in question in '%s' (%r)", file, q.keys())
+
+			qs.append(Question(question, answer, cfg_var, hidden=hidden))
+		ret[file] = qs
+
+	return ret
 
 def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None) -> int:
+	"""
+	Runs the main routine given the parsed arguments as input.
+	"""
 	if debug:
 		logging.getLogger().setLevel(logging.DEBUG)
 	else:
@@ -227,11 +303,20 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None) 
 		logging.info("Using input file %s", cfile)
 		try:
 			with open(cfile) as fd:
-				userInput = json.load(fd)
-			sanity_check_config(userInput)
-		except (OSError, ValueError) as e:
+				userInput = json.load(fd, object_hook=unmarshal_config)
+			diffs = sanity_check_config(userInput, automatic)
+			logging.info(f"File sanity check complete - found {diffs} difference{'' if diffs == 1 else 's'}")
+		except (OSError, ValueError, json.JSONDecodeError) as e:
 			logging.critical("Reading in input file '%s': %s", cfile, e)
 			return 1
+
+	try:
+		os.chdir("/opt/traffic_ops/install/bin")
+	except OSError as e:
+		logging.critical(f"Attempting to change directory to '/opt/traffic_ops/install/bin': {e}")
+		return 1
+
+	todbconf = generate_db_conf(userInput[DB_CONF_FILE], DB_CONF_FILE, , )
 	return 0
 
 if __name__ == '__main__':
