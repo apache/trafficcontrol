@@ -200,8 +200,8 @@ Request Structure
 	+-----------+----------+-----------------------------------------------------------------------------------+
 	| Parameter | Required | Description                                                                       |
 	+===========+==========+===================================================================================+
-	| id        | yes      | The integral, unique identifier of the delivery service comment that you wish to  |
-	|           |          | update.                                                                           |
+	| id        | yes      | The integral, unique identifier of the :term:`Delivery Service Request` comment   |
+	|           |          | that you wish to update.                                                          |
 	+-----------+----------+-----------------------------------------------------------------------------------+
 
 .. code-block:: http
@@ -281,8 +281,8 @@ Request Structure
 	+-----------+----------+-----------------------------------------------------------------------------------+
 	| Parameter | Required | Description                                                                       |
 	+===========+==========+===================================================================================+
-	| id        | yes      | The integral, unique identifier of the delivery service comment that you wish to  |
-	|           |          | delete.                                                                           |
+	| id        | yes      | The integral, unique identifier of the :term:`Delivery Service Request` comment   |
+	|           |          | that you wish to delete.                                                          |
 	+-----------+----------+-----------------------------------------------------------------------------------+
 
 .. code-block:: http
