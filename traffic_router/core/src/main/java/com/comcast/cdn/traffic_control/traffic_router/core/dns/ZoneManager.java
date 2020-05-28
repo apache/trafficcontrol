@@ -458,8 +458,8 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings({"PMD.ExcessiveParameterList"})
 	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap,
-		final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks,
-		final BlockingQueue<Runnable> primingTasks, final String hostname, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys) throws IOException {
+			final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks,
+			final BlockingQueue<Runnable> primingTasks, final String hostname, final ConcurrentMap<String, ZoneKey> newDomainsToZoneKeys) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
 		final CacheRegister data = tr.getCacheRegister();
 		final JsonNode trafficRouters = data.getTrafficRouters();
@@ -552,7 +552,7 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static void primeDNSDeliveryServices(final String domain, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> dzc,
-		final Zone zone, final DeliveryService ds, final CacheRegister data) throws TextParseException {
+			final Zone zone, final DeliveryService ds, final CacheRegister data) throws TextParseException {
 		final Name edgeName = newName(ds.getRoutingName(), domain);
 		final JsonNode config = data.getConfig();
 		final int primerLimit = JsonUtils.optInt(config, "dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
