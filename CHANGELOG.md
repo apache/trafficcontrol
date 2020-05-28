@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Portal: Added the ability to assign topologies to delivery services
 - Updated /servers/details to use multiple interfaces in API v3
 - Astats csv support - astats will now respond to `Accept: text/csv` and return a csv formatted stats list
+- Added ability to add a DNS root record to delivery service using `@`
 
 ### Fixed
 - Fixed the `GET /api/x/jobs` and `GET /api/x/jobs/:id` Traffic Ops API routes to allow falling back to Perl via the routing blacklist
