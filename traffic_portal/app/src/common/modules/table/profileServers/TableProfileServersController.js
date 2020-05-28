@@ -17,12 +17,14 @@
  * under the License.
  */
 
-var TableProfileServersController = function(profile, servers, $controller, $scope) {
+var TableProfileServersController = function(profile, servers, $controller, $scope, serverUtils) {
 
 	// extends the TableParentServersController to inherit common methods
 	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
 
 	let profileServersTable;
+
+	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
 
 	$scope.profile = profile;
 
@@ -51,5 +53,5 @@ var TableProfileServersController = function(profile, servers, $controller, $sco
 
 };
 
-TableProfileServersController.$inject = ['profile', 'servers', '$controller', '$scope'];
+TableProfileServersController.$inject = ['profile', 'servers', '$controller', '$scope', 'serverUtils'];
 module.exports = TableProfileServersController;
