@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/topologies')">Topologies</a></li>
-            <li class="active">{{topologyName}}</li>
+            <li class="active">{{::topologyName}}</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -69,20 +69,20 @@ under the License.
         <div class="tree-node-label pull-left">
             <a class="tree-toggle btn btn-primary btn-xs" ng-if="node.type !== 'ROOT' && hasChildren(node)" data-nodrag ng-click="toggle(this)">
                 <i class="fa" ng-class="collapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
-            </a> {{nodeLabel(node)}} <small>{{node.type}}</small>
+            </a> {{::nodeLabel(node)}} <small>{{::node.type}}</small>
         </div>
-        <div ng-if="hasNodeError(node)" class="error-msg">1+ child required for {{node.type}}</div>
+        <div ng-if="hasNodeError(node)" class="error-msg">1+ child required for {{::node.type}}</div>
         <div class="pull-right">
-            <a ng-show="node.cachegroup && node.parent" title="Set Secondary Parent Cache Group for {{node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="editSecParent(node)" style="margin-right: 8px;">
+            <a ng-show="node.cachegroup && node.parent" title="Set Secondary Parent Cache Group for {{::node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="editSecParent(node)" style="margin-right: 8px;">
                 2nd: {{(node.secParent) ? node.secParent : 'None'}}
             </a>
-            <a ng-if="node.cachegroup" title="View Servers Assigned to {{node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="viewCacheGroupServers(node)" style="margin-right: 8px;">
+            <a ng-if="node.cachegroup" title="View Servers Assigned to {{::node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="viewCacheGroupServers(node)" style="margin-right: 8px;">
                 <i class="fa fa-server"></i>
             </a>
             <a ng-disabled="node.type === 'EDGE_LOC'" title="{{(node.type !== 'EDGE_LOC') ? 'Add child cache groups to ' + nodeLabel(node) : 'Child cache groups cannot be added to EDGE_LOC cache groups'}}" class="btn btn-primary btn-xs" data-nodrag ng-click="addCacheGroups(node, this)" style="margin-right: 8px;">
                 <i class="fa fa-plus"></i>
             </a>
-            <a ng-if="node.cachegroup" title="Remove {{node.cachegroup}} Cache Group" class="btn btn-danger btn-xs" data-nodrag ng-click="deleteCacheGroup(node, this)">
+            <a ng-if="node.cachegroup" title="Remove {{::node.cachegroup}} Cache Group" class="btn btn-danger btn-xs" data-nodrag ng-click="deleteCacheGroup(node, this)">
                 <i class="fa fa-times"></i>
             </a>
         </div>
