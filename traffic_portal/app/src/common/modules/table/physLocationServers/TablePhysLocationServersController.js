@@ -17,12 +17,14 @@
  * under the License.
  */
 
-var TablePhysLocationServersController = function(physLocation, servers, $controller, $scope) {
+var TablePhysLocationServersController = function(physLocation, servers, $controller, $scope, serverUtils) {
 
 	// extends the TableParentServersController to inherit common methods
 	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
 
 	let physLocServersTable;
+
+	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
 
 	$scope.physLocation = physLocation;
 
@@ -51,5 +53,5 @@ var TablePhysLocationServersController = function(physLocation, servers, $contro
 
 };
 
-TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$controller', '$scope'];
+TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$controller', '$scope', 'serverUtils'];
 module.exports = TablePhysLocationServersController;
