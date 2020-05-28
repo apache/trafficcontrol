@@ -39,8 +39,8 @@ Request Structure
 	| targetID | The integral, unique identifier of a :term:`Delivery Service` which is a target of the :term:`Delivery Service` identified by ``ID`` |
 	+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 
-:typeId: The integral, unique identifier of the :ref:`routing type <ds-types>` of the target :term:`Delivery Service`
-:value:  The 'weight' which shall be attributed to the target :term:`Delivery Service`
+:typeId: The integral, unique identifier of the :ref:`routing type <ds-types>` of the target :term:`Delivery Service`. This should be corresponding to one of ``STEERING_WEIGHT``, ``STEERING_ORDER``, ``STEERING_GEO_ORDER`` or ``STEERING_GEO_WEIGHT``
+:value:  The 'weight', 'order', 'geo_order' or 'geo_weight' which shall be attributed to the target :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Request Example
@@ -55,7 +55,7 @@ Request Structure
 
 	{
 		"value": 1,
-		"typeId": 1
+		"typeId": 43
 	}
 
 Response Structure

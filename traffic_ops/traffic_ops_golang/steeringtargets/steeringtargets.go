@@ -187,7 +187,6 @@ func (st *TOSteeringTargetV11) Create() (error, error, int) {
 	if !valid {
 		return err, nil, http.StatusBadRequest
 	}
-
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])
 	if err != nil {
 		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest
@@ -226,6 +225,13 @@ func (st *TOSteeringTargetV11) Create() (error, error, int) {
 }
 
 func (st *TOSteeringTargetV11) Update() (error, error, int) {
+	if st.TypeID == nil {
+		return errors.New("no Type ID specified"), nil, http.StatusBadRequest
+	}
+	valid, err := checkTypeValidity(*st.TypeID, st.ReqInfo.Tx)
+	if !valid {
+		return err, nil, http.StatusBadRequest
+	}
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])
 	if err != nil {
 		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest
