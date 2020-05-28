@@ -17,12 +17,14 @@
  * under the License.
  */
 
-var TableTypeServersController = function(type, servers, $controller, $scope) {
+var TableTypeServersController = function(type, servers, $controller, $scope, serverUtils) {
 
 	// extends the TableParentServersController to inherit common methods
 	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
 
 	let typeServersTable;
+
+	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
 
 	$scope.type = type;
 
@@ -51,5 +53,5 @@ var TableTypeServersController = function(type, servers, $controller, $scope) {
 
 };
 
-TableTypeServersController.$inject = ['type', 'servers', '$controller', '$scope'];
+TableTypeServersController.$inject = ['type', 'servers', '$controller', '$scope', 'serverUtils'];
 module.exports = TableTypeServersController;
