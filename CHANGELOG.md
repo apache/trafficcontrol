@@ -58,6 +58,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Changed the `totalBytes` property of responses to GET requests to `/deliveryservice_stats` to the more appropriate `totalKiloBytes` in API 2.x
 - Fix to traffic_ops_ort to generate logging.yaml files correctly.
 - Fixed issue #4650: add the "Vary: Accept-Encoding" header to all responses from Traffic Ops
+- Fixed ORT config generation not using the coalesce_number_v6 Parameter.
 
 ### Deprecated/Removed
 - The Traffic Ops `db/admin.pl` script has now been removed. Please use the `db/admin` binary instead.
