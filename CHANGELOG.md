@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed issue #4650: add the "Vary: Accept-Encoding" header to all responses from Traffic Ops
 - Fixed ORT config generation not using the coalesce_number_v6 Parameter.
 - Removed audit logging from the `POST /api/x/serverchecks` Traffic Ops API endpoint in order to reduce audit log spam
+- Fixed the `GET /api/x/jobs` and `GET /api/x/jobs/:id` Traffic Ops API routes to allow falling back to Perl via the routing blacklist
 
 ### Deprecated/Removed
 - The Traffic Ops `db/admin.pl` script has now been removed. Please use the `db/admin` binary instead.
