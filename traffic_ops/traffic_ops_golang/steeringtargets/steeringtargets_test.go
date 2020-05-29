@@ -38,14 +38,15 @@ func TestInvalidSteeringTargetType(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	rows := sqlmock.NewRows([]string{
 		"name",
+		"use_in_table",
 	})
-	rows = rows.AddRow("HTTP")
+	rows = rows.AddRow("HTTP", "server")
 	defer db.Close()
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WithArgs(1).WillReturnRows(rows)
 	tx := db.MustBegin()
 
-	expected := `invalid type ID specified, should correspond to the ID of one of STEERING_ORDER, STEERING_WEIGHT, STEERING_GEO_ORDER or STEERING_GEO_WEIGHT`
+	expected := `type is not a valid steering_target type`
 	var dsID, targetID uint64
 	dsID = 0
 	targetID = 1
