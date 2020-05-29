@@ -28,7 +28,7 @@ import (
  * under the License.
  */
 
-func TestInvalidSteeringTargetType (t *testing.T) {
+func TestInvalidSteeringTargetType(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -60,7 +60,7 @@ func TestInvalidSteeringTargetType (t *testing.T) {
 		Value:             nil,
 	}
 	stObj := &TOSteeringTargetV11{
-		APIInfoImpl:            api.APIInfoImpl{
+		APIInfoImpl: api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Params:    nil,
 				IntParams: nil,

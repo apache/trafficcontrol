@@ -121,9 +121,9 @@ func TestUpdateServer(t *testing.T) {
 	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
 
 	snv := tc.ServerNullableV11{
-		CDNID:            &testServers[0].CDNID,
-		FqdnTime:         time.Time{},
-		TypeID:           &testServers[0].TypeID,
+		CDNID:    &testServers[0].CDNID,
+		FqdnTime: time.Time{},
+		TypeID:   &testServers[0].TypeID,
 	}
 	sn := tc.ServerNullable{
 		ServerNullableV11: snv,
@@ -131,8 +131,8 @@ func TestUpdateServer(t *testing.T) {
 		IP6IsService:      nil,
 	}
 
-	s := &TOServer {
-		APIInfoImpl:    api.APIInfoImpl{
+	s := &TOServer{
+		APIInfoImpl: api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Params:    nil,
 				IntParams: nil,
