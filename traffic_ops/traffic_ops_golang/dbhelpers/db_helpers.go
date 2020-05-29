@@ -617,7 +617,7 @@ WHERE
 	if err != nil {
 		return nil, errors.New("querying server host names and types: " + err.Error())
 	}
-	defer rows.Close()
+	defer log.Close(rows, "error closing rows")
 
 	servers := []ServerHostNameAndType{}
 	for rows.Next() {
@@ -645,7 +645,7 @@ WHERE
 	if err != nil {
 		return nil, errors.New("querying server host names and types: " + err.Error())
 	}
-	defer rows.Close()
+	defer log.Close(rows, "error closing rows")
 
 	servers := []ServerHostNameAndType{}
 	for rows.Next() {
@@ -753,7 +753,7 @@ WHERE
 	if err != nil {
 		return nil, errors.New("querying deliveryservice topologies: " + err.Error())
 	}
-	defer rows.Close()
+	defer log.Close(rows, "error closing rows")
 	dses := make([]int, 0)
 	for rows.Next() {
 		id := 0

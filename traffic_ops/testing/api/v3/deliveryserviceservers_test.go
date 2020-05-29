@@ -78,10 +78,10 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 
 	_, reqInf, err = TOSession.CreateDeliveryServiceServers(*ds[0].ID, []int{servers[0].ID}, false)
 	if err == nil {
-		t.Fatal("creating delliveryserviceserver assignment for topology-based delivery service - expected: error, actual: nil error")
+		t.Fatal("creating deliveryserviceserver assignment for topology-based delivery service - expected: error, actual: nil error")
 	}
 	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
-		t.Fatalf("creating delliveryserviceserver assignment for topology-based delivery service - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+		t.Fatalf("creating deliveryserviceserver assignment for topology-based delivery service - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 }
 
