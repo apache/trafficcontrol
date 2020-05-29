@@ -361,8 +361,3 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 [4.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...RELEASE-4.0.0
 [3.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.2.0...RELEASE-3.0.0
 [2.2.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.1.0...RELEASE-2.2.0
-
-
-[]: https://github.com/apache/trafficcontrol/issues/4116
-
-[https://github.com/apache/trafficcontrol/issues/3531]: https://github.com/apache/trafficcontrol/issues/3531

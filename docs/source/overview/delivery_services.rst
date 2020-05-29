@@ -829,6 +829,8 @@ HTTP_LIVE_NATNL
 HTTP_NO_CACHE\ [#dupOrigin]_
 	Uses HTTP Content Routing, but :term:`cache servers` will not actually cache the delivered content - they act as just proxies. This will bypass any existing :term:`Mid-tier` entirely (as it's totally useless when content is not being cached).
 
+.. _ds-steering:
+
 STEERING
 	This is a sort of "meta" Delivery Service. It is used for directing clients to one of a set of Delivery Services, rather than delivering content directly itself. The Delivery Services to which a STEERING Delivery Service routes clients are referred to as "targets". Targets in general have an associated "value" and can be of several :term:`Types` that define the meaning of the value - these being:
 

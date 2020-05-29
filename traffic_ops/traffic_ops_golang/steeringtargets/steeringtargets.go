@@ -161,19 +161,16 @@ func read(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser) ([]
 }
 
 func checkTypeValidity(typeID int, tx *sqlx.Tx) (bool, error) {
-	row := tx.QueryRow(`SELECT name FROM type WHERE id=$1`, typeID)
+	row := tx.QueryRow(`SELECT use_in_table FROM type WHERE id=$1`, typeID)
 	if row == nil {
 		return false, errors.New("Not a valid type ID")
 	}
-	var name string
-	if err := row.Scan(&name); err != nil {
+	var use string
+	if err := row.Scan(&use); err != nil {
 		log.Errorln(err.Error())
 		return false, err
 	}
-	if name != "STEERING_ORDER" &&
-		name != "STEERING_WEIGHT" &&
-		name != "STEERING_GEO_ORDER" &&
-		name != "STEERING_GEO_WEIGHT" {
+	if use != "steering_target" {
 		return false, errors.New("invalid type ID specified, should correspond to the ID of one of STEERING_ORDER, STEERING_WEIGHT, STEERING_GEO_ORDER or STEERING_GEO_WEIGHT")
 	}
 	return true, nil

@@ -72,7 +72,7 @@ Response Structure
 :deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
 :target:            A string that is the :ref:`ds-xmlid` of this target :term:`Delivery Service`
 :targetId:          An integral, unique identifier for this target :term:`Delivery Service`
-:type:              The routing type of this target :term:`Delivery Service`. This should be one of ``STEERING_WEIGHT``, ``STEERING_ORDER``, ``STEERING_GEO_ORDER`` or ``STEERING_GEO_WEIGHT``
+:type:              The steering type of this target :term:`Delivery Service`. This should be one of ``STEERING_WEIGHT``, ``STEERING_ORDER``, ``STEERING_GEO_ORDER`` or ``STEERING_GEO_WEIGHT``
 :typeId:            An integral, unique identifier for the :ref:`routing type <ds-types>` of this target :term:`Delivery Service`
 :value:             The 'weight', 'order', 'geo_order' or 'geo_weight' attributed to this steering target as an integer
 
@@ -148,7 +148,7 @@ Response Structure
 :deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
 :target:            A string that is the :ref:`ds-xmlid` of this target :term:`Delivery Service`
 :targetId:          An integral, unique identifier for this target :term:`Delivery Service`
-:type:              The routing type of this target :term:`Delivery Service`. This should be one of ``STEERING_WEIGHT``, ``STEERING_ORDER``, ``STEERING_GEO_ORDER`` or ``STEERING_GEO_WEIGHT``
+:type:              The steering type of this target :term:`Delivery Service`. This should be one of ``STEERING_WEIGHT``, ``STEERING_ORDER``, ``STEERING_GEO_ORDER`` or ``STEERING_GEO_WEIGHT``
 :typeId:            An integral, unique identifier for the :ref:`routing type <ds-types>` of this target :term:`Delivery Service`
 :value:             The 'weight', 'order', 'geo_order' or 'geo_weight' attributed to this steering target as an integer
 

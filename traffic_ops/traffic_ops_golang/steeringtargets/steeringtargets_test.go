@@ -1,14 +1,5 @@
 package steeringtargets
 
-import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/jmoiron/sqlx"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"net/http"
-	"testing"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -27,6 +18,15 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/jmoiron/sqlx"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"net/http"
+	"testing"
+)
 
 func TestInvalidSteeringTargetType(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
