@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -35,17 +36,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	influx "github.com/influxdata/influxdb/client/v2"
-)
-
-var (
-	dsMetricTypes = map[string]interface{}{
-		"kbps":      struct{}{},
-		"tps_total": struct{}{},
-		"tps_2xx":   struct{}{},
-		"tps_3xx":   struct{}{},
-		"tps_4xx":   struct{}{},
-		"tps_5xx":   struct{}{},
-	}
 )
 
 const (
@@ -93,10 +83,6 @@ func dsConfigFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficDSStatsConf
 	}
 	c.TrafficStatsConfig = statsConfig
 	c.MetricType = i.Params["metricType"]
-	if _, ok := dsMetricTypes[c.MetricType]; !ok {
-		e = fmt.Errorf("Unknown metric type: %s", c.MetricType)
-		return c, http.StatusBadRequest, e
-	}
 
 	var ok bool
 	if c.DeliveryService, ok = i.Params["deliveryServiceName"]; !ok {
@@ -347,7 +333,7 @@ func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db strin
 	var totalKB *float64
 	var totalTXN *float64
 	value := float64(ts.Count*60) * ts.Average
-	if conf.MetricType == "kbps" {
+	if strings.HasPrefix(conf.MetricType, "kbps") {
 		// TotalBytes is actually in units of kB....
 		value /= 8
 		totalKB = &value
