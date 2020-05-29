@@ -40,6 +40,14 @@
 	}
 }
 
+.has-error {
+	color: #a94442;
+
+	input, select, textarea {
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	}
+}
+
 .btn-link.request-status {
 	font-size: 20px;
 	color: #cd1323;
@@ -79,6 +87,7 @@ form label.has-tooltip {
 			width: max-content;
 			max-width: inherit;
 			cursor: auto;
+			line-height: 1.428;
 		}
 	}
 
