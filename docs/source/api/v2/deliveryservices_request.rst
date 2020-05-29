@@ -34,13 +34,6 @@ Request Structure
 :details: An object describing the actual parameters for the Delivery Service request
 
 	:customer:        Name of the customer associated with the :term:`Delivery Service`
-	:deepCachingType: An optional string describing when to do Deep Caching for this :term:`Delivery Service` - one of:
-
-		NEVER
-			Never use deep caching (default)
-		ALWAYS
-			Always use deep caching
-
 	:deliveryProtocol: The protocol used to retrieve content from the CDN - one of:
 
 		* http
@@ -68,7 +61,6 @@ Request Structure
 	:rangeRequestHandling:             A special string describing how the :term:`Delivery Service` should handle range requests
 	:rateLimitingGBPS:                 An optional field which, if defined, should contain the maximum allowed data transfer rate for the :term:`Delivery Service` in GigaBytes Per Second (GBPS)
 	:rateLimitingTPS:                  An optional field which, if defined, should contain the maximum allowed transaction rate for the :term:`Delivery Service` in Transactions Per Second (TPS)
-	:routingName:                      The routing name for the :term:`Delivery Service`, e.g. ``SomeRoutingName.DeliveryService_xml_id.CDNName.com``
 	:routingType:                      The :term:`Delivery Service`'s routing type, should be one of:
 
 		HTTP
