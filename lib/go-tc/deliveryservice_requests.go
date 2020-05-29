@@ -171,8 +171,6 @@ type DeliveryServiceRequestDetails struct {
 	ContentType string `json:"contentType"`
 	// Customer is the requesting customer - typically this is a Tenant.
 	Customer string `json:"customer"`
-	// DeepCachingType represents whether or not the Delivery Service should use Deep Caching.
-	DeepCachingType *DeepCachingType `json:"deepCachingType"`
 	// Delivery Protocol is the protocol clients should use to connect to the Delivery Service.
 	DeliveryProtocol *Protocol `json:"deliveryProtocol"`
 	// HasNegativeCachingCustomization indicates whether or not the resulting Delivery Service should
@@ -236,8 +234,6 @@ type DeliveryServiceRequestDetails struct {
 	// RateLimitingTPS is an optional rate limit for the requested Delivery Service in transactions
 	// per second.
 	RateLimitingTPS *uint `json:"rateLimitingTPS"`
-	// RoutingName is the top-level DNS label under which the Delivery Service should be requested.
-	RoutingName string `json:"routingName"`
 	// RoutingType is the type of routing Traffic Router should perform for the requested Delivery
 	// Service.
 	RoutingType *DSType `json:"routingType"`
@@ -274,16 +270,6 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 	err = validation.ValidateStruct(&details,
 		validation.Field(&details.ContentType, validation.Required),
 		validation.Field(&details.Customer, validation.Required),
-		validation.Field(&details.DeepCachingType, validation.By(
-			func(t interface{}) error {
-				if t == (*DeepCachingType)(nil) {
-					return errors.New("deepCachingType: required")
-				}
-				if *t.(*DeepCachingType) == DeepCachingTypeInvalid {
-					return errors.New("deepCachingType: invalid Deep Caching Type")
-				}
-				return nil
-			})),
 		validation.Field(&details.DeliveryProtocol, validation.By(
 			func(p interface{}) error {
 				if p == (*Protocol)(nil) {
@@ -339,7 +325,6 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.PeakTPSEstimate, validation.Required),
 		validation.Field(&details.QueryStringHandling, validation.Required),
 		validation.Field(&details.RangeRequestHandling, validation.Required),
-		validation.Field(&details.RoutingName, validation.Required),
 		validation.Field(&details.RoutingType, validation.By(
 			func(t interface{}) error {
 				if t == (*DSType)(nil) || *(t.(*DSType)) == "" {
