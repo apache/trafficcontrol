@@ -337,9 +337,9 @@ func TestBadTypeParamCacheGroups(t *testing.T) {
 		t.Errorf("Read expected status code: Bad Request, actual: %v ", sc)
 	}
 	if userErr == nil {
-		t.Errorf("Read expected: user error with details %v, actual: nil", detail)
+		t.Fatalf("Read expected: user error with details %v, actual: nil", detail)
 	}
 	if userErr.Error() != detail {
-		t.Errorf("Read expected: user error with details %v, actual: %v", detail, userErr.Error())
+		t.Fatalf("Read expected: user error with details %v, actual: %v", detail, userErr.Error())
 	}
 }
