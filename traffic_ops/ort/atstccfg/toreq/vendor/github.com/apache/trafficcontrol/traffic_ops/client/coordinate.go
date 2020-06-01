@@ -133,7 +133,7 @@ func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-func (to *Session) SetCachegroupDeliveryServices(cgID int, dsIDs []int64) (tc.CacheGroupPostDSRespResponse, ReqInf, error) {
+func (to *Session) SetCachegroupDeliveryServices(cgID int, dsIDs []int) (tc.CacheGroupPostDSRespResponse, ReqInf, error) {
 	uri := apiBase + `/cachegroups/` + strconv.Itoa(cgID) + `/deliveryservices`
 	req := tc.CachegroupPostDSReq{DeliveryServices: dsIDs}
 	reqBody, err := json.Marshal(req)

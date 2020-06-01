@@ -64,7 +64,7 @@ func (cgunparam *TOCacheGroupUnassignedParameter) Read() ([]interface{}, error, 
 		return nil, errors.New("cache group id must be an integer"), nil, http.StatusBadRequest
 	}
 
-	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgunparam.ReqInfo.Tx.Tx, int64(cgID))
+	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgunparam.ReqInfo.Tx.Tx, cgID)
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError
 	} else if !ok {

@@ -22,6 +22,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -211,4 +212,28 @@ func (to *Session) GetCacheGroupsByQueryParams(qparams url.Values) ([]tc.CacheGr
 	}
 
 	return data.Response, reqInf, nil
+}
+
+func (to *Session) SetCachegroupDeliveryServices(cgID int, dsIDs []int) (tc.CacheGroupPostDSRespResponse, ReqInf, error) {
+	uri := apiBase + `/cachegroups/` + strconv.Itoa(cgID) + `/deliveryservices`
+	req := tc.CachegroupPostDSReq{DeliveryServices: dsIDs}
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return tc.CacheGroupPostDSRespResponse{}, ReqInf{}, err
+	}
+	reqResp, remoteAddr, err := to.request(http.MethodPost, uri, reqBody)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if reqResp != nil {
+		reqInf.StatusCode = reqResp.StatusCode
+	}
+	if err != nil {
+		return tc.CacheGroupPostDSRespResponse{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
+	}
+	defer log.Close(reqResp.Body, "unable to close response body")
+
+	resp := tc.CacheGroupPostDSRespResponse{}
+	if err := json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
+		return tc.CacheGroupPostDSRespResponse{}, reqInf, errors.New("decoding response: " + err.Error())
+	}
+	return resp, reqInf, nil
 }

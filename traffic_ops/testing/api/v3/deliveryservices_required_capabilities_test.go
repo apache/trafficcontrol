@@ -206,7 +206,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// Assign server to ds
-	_, err = TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false)
+	_, _, err = TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false)
 	if err != nil {
 		t.Fatalf("cannot CREATE server delivery service assignement: %v", err)
 	}

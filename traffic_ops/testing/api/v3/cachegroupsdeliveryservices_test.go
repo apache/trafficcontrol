@@ -16,6 +16,7 @@ package v3
 */
 
 import (
+	"net/http"
 	"testing"
 )
 
@@ -58,14 +59,29 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	}
 	cgID := *clientCG.ID
 
-	dsIDs := []int64{}
+	dsIDs := []int{}
+	topologyDsIDs := []int{}
 	for _, ds := range dses {
-		if *ds.CDNName == "cdn1" {
-			dsIDs = append(dsIDs, int64(*ds.ID))
+		if *ds.CDNName == "cdn1" && ds.Topology == nil {
+			dsIDs = append(dsIDs, *ds.ID)
+		} else if *ds.CDNName == "cdn1" && ds.Topology != nil {
+			topologyDsIDs = append(topologyDsIDs, *ds.ID)
 		}
 	}
 	if len(dsIDs) < 1 {
 		t.Fatal("No Delivery Services found in CDN 'cdn1', cannot continue.")
+	}
+
+	if len(topologyDsIDs) < 1 {
+		t.Fatal("No Topology-based Delivery Services found in CDN 'cdn1', cannot continue.")
+	}
+
+	_, reqInf, err := TOSession.SetCachegroupDeliveryServices(cgID, topologyDsIDs)
+	if err == nil {
+		t.Fatal("assigning Topology-based delivery service to cachegroup - expected: error, actual: nil")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("assigning Topology-based delivery service to cachegroup - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
 	resp, _, err := TOSession.SetCachegroupDeliveryServices(cgID, dsIDs)

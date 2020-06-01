@@ -58,10 +58,10 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	}
 	cgID := *clientCG.ID
 
-	dsIDs := []int64{}
+	dsIDs := []int{}
 	for _, ds := range dses {
 		if *ds.CDNName == "cdn1" {
-			dsIDs = append(dsIDs, int64(*ds.ID))
+			dsIDs = append(dsIDs, *ds.ID)
 		}
 	}
 	if len(dsIDs) < 1 {
