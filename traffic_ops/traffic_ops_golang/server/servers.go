@@ -402,7 +402,10 @@ func validateV2(s *tc.ServerNullableV2, tx *sql.Tx) error {
 }
 
 func validateMTU(mtu interface{}) error {
-	m := mtu.(*uint64)
+	m, ok := mtu.(*uint64)
+	if !ok {
+		return errors.New("must be an unsigned integer with 64-bit precision")
+	}
 	if m == nil {
 		return nil
 	}
