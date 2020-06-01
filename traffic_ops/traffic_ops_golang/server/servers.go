@@ -48,9 +48,9 @@ import (
 	"github.com/lib/pq"
 )
 
-const unfilteredServersQuery = `
-SELECT COUNT(server.id)
-FROM server
+const serverCountQuery = `
+SELECT COUNT(s.id)
+FROM server AS s
 `
 
 const selectQuery = `
@@ -495,8 +495,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	servers := []tc.ServerNullable{}
-	var unfiltered uint64
-	servers, unfiltered, userErr, sysErr, errCode = getServers(inf.Params, inf.Tx, inf.User)
+	var serverCount uint64
+	servers, serverCount, userErr, sysErr, errCode = getServers(inf.Params, inf.Tx, inf.User)
 
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -504,7 +504,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major >= 3 {
-		api.WriteRespWithSummary(w, r, servers, unfiltered)
+		api.WriteRespWithSummary(w, r, servers, serverCount)
 		return
 	}
 
@@ -572,10 +572,6 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 }
 
 func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, uint64, error, error, int) {
-	var unfiltered uint64
-	if err := tx.QueryRow(unfilteredServersQuery).Scan(&unfiltered); err != nil {
-		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError
-	}
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
@@ -598,11 +594,11 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
 		if err != nil {
-			return nil, unfiltered, errors.New("dsId must be an integer"), nil, http.StatusNotFound
+			return nil, 0, errors.New("dsId must be an integer"), nil, http.StatusNotFound
 		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
-			return nil, unfiltered, errors.New("forbidden"), sysErr, http.StatusForbidden
+			return nil, 0, errors.New("forbidden"), sysErr, http.StatusForbidden
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
 		queryAddition = `
@@ -611,10 +607,10 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		// depending on ds type, also need to add mids
 		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
-			return nil, unfiltered, nil, err, http.StatusInternalServerError
+			return nil, 0, nil, err, http.StatusInternalServerError
 		}
 		if !exists {
-			return nil, unfiltered, fmt.Errorf("a deliveryservice with id %v was not found", dsID), nil, http.StatusBadRequest
+			return nil, 0, fmt.Errorf("a deliveryservice with id %v was not found", dsID), nil, http.StatusBadRequest
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
@@ -622,7 +618,25 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, unfiltered, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, 0, util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+
+	// TODO there's probably a cleaner way to do this by preparing a NamedStmt first and using its QueryRow method
+	var serverCount uint64
+	countRows, err := tx.NamedQuery(serverCountQuery + where, queryValues)
+	if err != nil {
+		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError
+	}
+	defer countRows.Close()
+	rowsAffected := 0
+	for countRows.Next() {
+		if err = countRows.Scan(&serverCount); err != nil {
+			return nil, 0, nil, fmt.Errorf("failed to read servers count: %v", err), http.StatusInternalServerError
+		}
+		rowsAffected++
+	}
+	if rowsAffected != 1 {
+		return nil, 0, nil, fmt.Errorf("incorrect rows returned for server count, want: 1 got: %v", rowsAffected), http.StatusInternalServerError
 	}
 
 	query := selectQuery + queryAddition + where + orderBy + pagination
@@ -630,7 +644,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, unfiltered, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError
+		return nil, serverCount, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -641,7 +655,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err = rows.StructScan(&s); err != nil {
-			return nil, unfiltered, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError
+			return nil, serverCount, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError
 		}
 		if user.PrivLevel < auth.PrivLevelOperations {
 			s.ILOPassword = &HiddenField
@@ -649,10 +663,10 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		}
 
 		if s.ID == nil {
-			return nil, unfiltered, nil, errors.New("found server with nil ID"), http.StatusInternalServerError
+			return nil, serverCount, nil, errors.New("found server with nil ID"), http.StatusInternalServerError
 		}
 		if _, ok := servers[*s.ID]; ok {
-			return nil, unfiltered, nil, fmt.Errorf("found more than one server with ID #%d", *s.ID), http.StatusInternalServerError
+			return nil, serverCount, nil, fmt.Errorf("found more than one server with ID #%d", *s.ID), http.StatusInternalServerError
 		}
 		servers[*s.ID] = s
 		ids = append(ids, *s.ID)
@@ -660,7 +674,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 
 	interfaceRows, err := tx.Tx.Query(SelectInterfacesQuery, pq.Array(ids))
 	if err != nil {
-		return nil, unfiltered, nil, fmt.Errorf("querying for interfaces: %v", err), http.StatusInternalServerError
+		return nil, serverCount, nil, fmt.Errorf("querying for interfaces: %v", err), http.StatusInternalServerError
 	}
 	defer interfaceRows.Close()
 
@@ -668,7 +682,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		ifaces := []tc.ServerInterfaceInfo{}
 		var id int
 		if err = interfaceRows.Scan(pq.Array(&ifaces), &id); err != nil {
-			return nil, unfiltered, nil, fmt.Errorf("getting server interfaces: %v", err), http.StatusInternalServerError
+			return nil, serverCount, nil, fmt.Errorf("getting server interfaces: %v", err), http.StatusInternalServerError
 		}
 
 		if s, ok := servers[id]; !ok {
@@ -691,12 +705,12 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
 		if userErr != nil || sysErr != nil {
-			return nil, unfiltered, userErr, sysErr, errCode
+			return nil, serverCount, userErr, sysErr, errCode
 		}
 		returnable = append(returnable, mids...)
 	}
 
-	return returnable, unfiltered, nil, nil, http.StatusOK
+	return returnable, serverCount, nil, nil, http.StatusOK
 }
 
 // getMidServers gets the mids used by the servers in this DS.

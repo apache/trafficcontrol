@@ -45,8 +45,6 @@ func CreateTestServers(t *testing.T) {
 }
 
 func GetTestServers(t *testing.T) {
-	serverCount := uint64(len(testData.Servers))
-
 	params := url.Values{}
 	for _, server := range testData.Servers {
 		if server.HostName == nil {
@@ -57,8 +55,8 @@ func GetTestServers(t *testing.T) {
 		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
 			t.Errorf("cannot GET Server by name '%s': %v - %v", *server.HostName, err, resp.Alerts)
-		} else if resp.Summary.Count != serverCount {
-			t.Errorf("incorrect server count, expected: %d, actual: %d", serverCount, resp.Summary.Count)
+		} else if resp.Summary.Count != 1 {
+			t.Errorf("incorrect server count, expected: 1, actual: %d", resp.Summary.Count)
 		}
 	}
 }
