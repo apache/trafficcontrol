@@ -99,10 +99,8 @@ JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 `
-
-const SelectInterfacesQuery = `
-SELECT (
-	ARRAY ( SELECT (
+const InterfacesArray = `
+ARRAY ( SELECT (
 		json_build_object (
 			'ipAddresses',
 			ARRAY (
@@ -125,7 +123,10 @@ SELECT (
 	)
 	FROM interface
 	WHERE interface.server = server.id
-)) AS interfaces,
+)`
+const SelectInterfacesQuery = `
+SELECT ( ` + InterfacesArray + `
+	) AS interfaces,
 server.id
 FROM server
 WHERE server.id = ANY ($1)

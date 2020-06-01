@@ -141,40 +141,40 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV30, error) {
 	allowedOrderByCols := map[string]string{
 		"":                 "",
-		"cachegroup":       "s.cachegroup",
+		"cachegroup":       "server.cachegroup",
 		"cdn_name":         "cdn.name",
-		"domain_name":      "s.domain_name",
-		"guid":             "s.guid",
-		"host_name":        "s.host_name",
-		"https_port":       "s.https_port",
-		"id":               "s.id",
-		"ilo_ip_address":   "s.ilo_ip_address",
-		"ilo_ip_gateway":   "s.ilo_ip_gateway",
-		"ilo_ip_netmask":   "s.ilo_ip_netmask",
-		"ilo_password":     "s.ilo_password",
-		"ilo_username":     "s.ilo_username",
+		"domain_name":      "server.domain_name",
+		"guid":             "server.guid",
+		"host_name":        "server.host_name",
+		"https_port":       "server.https_port",
+		"id":               "server.id",
+		"ilo_ip_address":   "server.ilo_ip_address",
+		"ilo_ip_gateway":   "server.ilo_ip_gateway",
+		"ilo_ip_netmask":   "server.ilo_ip_netmask",
+		"ilo_password":     "server.ilo_password",
+		"ilo_username":     "server.ilo_username",
 		"interface_mtu":    "interface_mtu",
-		"interface_name":   "s.interface_name",
-		"ip6_address":      "s.ip6_address",
-		"ip6_gateway":      "s.ip6_gateway",
-		"ip_address":       "s.ip_address",
-		"ip_gateway":       "s.ip_gateway",
-		"ip_netmask":       "s.ip_netmask",
-		"mgmt_ip_address":  "s.mgmt_ip_address",
-		"mgmt_ip_gateway":  "s.mgmt_ip_gateway",
-		"mgmt_ip_netmask":  "s.mgmt_ip_netmask",
-		"offline_reason":   "s.offline_reason",
+		"interface_name":   "server.interface_name",
+		"ip6_address":      "server.ip6_address",
+		"ip6_gateway":      "server.ip6_gateway",
+		"ip_address":       "server.ip_address",
+		"ip_gateway":       "server.ip_gateway",
+		"ip_netmask":       "server.ip_netmask",
+		"mgmt_ip_address":  "server.mgmt_ip_address",
+		"mgmt_ip_gateway":  "server.mgmt_ip_gateway",
+		"mgmt_ip_netmask":  "server.mgmt_ip_netmask",
+		"offline_reason":   "server.offline_reason",
 		"phys_location":    "pl.name",
 		"profile":          "p.name",
 		"profile_desc":     "p.description",
-		"rack":             "s.rack",
-		"router_host_name": "s.router_host_name",
-		"router_port_name": "s.router_port_name",
+		"rack":             "server.rack",
+		"router_host_name": "server.router_host_name",
+		"router_port_name": "server.router_port_name",
 		"status":           "st.name",
-		"tcp_port":         "s.tcp_port",
+		"tcp_port":         "server.tcp_port",
 		"server_type":      "t.name",
-		"xmpp_id":          "s.xmpp_id",
-		"xmpp_passwd":      "s.xmpp_passwd",
+		"xmpp_id":          "server.xmpp_id",
+		"xmpp_passwd":      "server.xmpp_passwd",
 	}
 	orderBy, ok := allowedOrderByCols[orderBy]
 	if !ok {
@@ -185,59 +185,40 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 SELECT
 	cg.name AS cachegroup,
 	cdn.name AS cdn_name,
-	ARRAY(select deliveryservice from deliveryservice_server where server = s.id),
-	s.domain_name,
-	s.guid,
-	s.host_name,
-	s.https_port,
-	s.id,
-	s.ilo_ip_address,
-	s.ilo_ip_gateway,
-	s.ilo_ip_netmask,
-	s.ilo_password,
-	s.ilo_username,
-	ARRAY (
-		SELECT ( json_build_object (
-			'ipAddresses', ARRAY (
-				SELECT ( json_build_object (
-					'address', ip_address.address,
-					'gateway', ip_address.gateway,
-					'serviceAddress', ip_address.service_address
-				))
-				FROM ip_address
-				WHERE ip_address.interface = interface.name
-				AND ip_address.server = s.id
-			),
-			'maxBandwidth', interface.max_bandwidth,
-			'monitor', interface.monitor,
-			'mtu', COALESCE (interface.mtu, 9000),
-			'name', interface.name
-		))
-		FROM interface
-		WHERE interface.server = s.id
-	) AS interfaces,
-	s.mgmt_ip_address,
-	s.mgmt_ip_gateway,
-	s.mgmt_ip_netmask,
-	s.offline_reason,
+	ARRAY(select deliveryservice from deliveryservice_server where server = server.id),
+	server.domain_name,
+	server.guid,
+	server.host_name,
+	server.https_port,
+	server.id,
+	server.ilo_ip_address,
+	server.ilo_ip_gateway,
+	server.ilo_ip_netmask,
+	server.ilo_password,
+	server.ilo_username,
+	` + InterfacesArray + ` AS interfaces,
+	server.mgmt_ip_address,
+	server.mgmt_ip_gateway,
+	server.mgmt_ip_netmask,
+	server.offline_reason,
 	pl.name as phys_location,
 	p.name as profile,
 	p.description as profile_desc,
-	s.rack,
-	s.router_host_name,
-	s.router_port_name,
+	server.rack,
+	server.router_host_name,
+	server.router_port_name,
 	st.name as status,
-	s.tcp_port,
+	server.tcp_port,
 	t.name as server_type,
-	s.xmpp_id,
-	s.xmpp_passwd
-FROM server AS s
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id
+	server.xmpp_id,
+	server.xmpp_passwd
+FROM server
+JOIN cachegroup cg ON server.cachegroup = cg.id
+JOIN cdn ON server.cdn_id = cdn.id
+JOIN phys_location pl ON server.phys_location = pl.id
+JOIN profile p ON server.profile = p.id
+JOIN status st ON server.status = st.id
+JOIN type t ON server.type = t.id
 `
 	limitStr := ""
 	if limit != 0 {
@@ -250,13 +231,13 @@ JOIN type t ON s.type = t.id
 	rows := (*sql.Rows)(nil)
 	err := error(nil)
 	if hostName != "" && physLocationID != -1 {
-		q += ` WHERE s.host_name = $1::text AND s.phys_location = $2::bigint` + orderByStr + limitStr
+		q += ` WHERE server.host_name = $1::text AND server.phys_location = $2::bigint` + orderByStr + limitStr
 		rows, err = tx.Query(q, hostName, physLocationID)
 	} else if hostName != "" {
-		q += ` WHERE s.host_name = $1::text` + orderByStr + limitStr
+		q += ` WHERE server.host_name = $1::text` + orderByStr + limitStr
 		rows, err = tx.Query(q, hostName)
 	} else if physLocationID != -1 {
-		q += ` WHERE s.phys_location = $1::int` + orderByStr + limitStr
+		q += ` WHERE server.phys_location = $1::int` + orderByStr + limitStr
 		rows, err = tx.Query(q, physLocationID)
 	} else {
 		q += orderByStr + limitStr
