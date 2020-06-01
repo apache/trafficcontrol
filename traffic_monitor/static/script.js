@@ -199,7 +199,7 @@ function getCacheStates() {
 		const interfaceRows = oldtable.querySelectorAll(".encompassing-row");
 		let openCachesByName = [];
 		for(const row of interfaceRows) {
-            if(row.classList.contains("visible")){
+			if(row.classList.contains("visible")){
 				openCachesByName.push(row.querySelector(".sub-table").getAttribute("server-name"));
 			}
 		}
@@ -331,9 +331,9 @@ function getDsStats() {
 			row.insertCell(0).textContent = dsName;
 			row.insertCell(1).textContent = available ? "available" : `unavailable - ${deliveryService["error-string"][0].value}`;
 			row.insertCell(2).textContent = (Object.prototype.hasOwnProperty.call(deliveryService, "caches-reporting") &&
-			                                 Object.prototype.hasOwnProperty.call(deliveryService, "caches-available") &&
-			                                 Object.prototype.hasOwnProperty.call(deliveryService, "caches-configured")) ?
-			                                 `${deliveryService['caches-reporting'][0].value} / ${deliveryService['caches-available'][0].value} / ${deliveryService['caches-configured'][0].value}` : "N/A";
+											 Object.prototype.hasOwnProperty.call(deliveryService, "caches-available") &&
+											 Object.prototype.hasOwnProperty.call(deliveryService, "caches-configured")) ?
+											 `${deliveryService['caches-reporting'][0].value} / ${deliveryService['caches-available'][0].value} / ${deliveryService['caches-configured'][0].value}` : "N/A";
 
 			row.insertCell(3).textContent = Object.prototype.hasOwnProperty.call(deliveryService, "total.kbps") ? (deliveryService['total.kbps'][0].value / kilobitsInMegabit).toFixed(2) : "N/A";
 			row.insertCell(4).textContent = getDSProperty(deliveryService, "total.tps_total");

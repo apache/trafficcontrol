@@ -69,14 +69,13 @@ div.sub-table-indicator {
 	display: inline-block;
 	padding: 5px;
 
-    /* for animation */
-    -webkit-transition-duration: 0.4s;
-    transition-duration: 0.4s;
+	/* for animation */
+	-webkit-transition-duration: 0.4s;
+	transition-duration: 0.4s;
 }
 div.sub-table-indicator.right {
 	transform: rotate(-45deg);
 	-webkit-transform: rotate(-45deg);
-<<<<<<< Updated upstream
 }
 
 div.sub-table-indicator.down {
@@ -84,15 +83,6 @@ div.sub-table-indicator.down {
 	-webkit-transform: rotate(45deg);
 }
 
-=======
-}
-
-div.sub-table-indicator.down {
-	transform: rotate(45deg);
-	-webkit-transform: rotate(45deg);
-}
-
->>>>>>> Stashed changes
 .error {
 	background-color: #f00!important;
 }
