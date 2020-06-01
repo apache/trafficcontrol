@@ -444,7 +444,13 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
 `
 	}
-
+	// If the type cannot be converted to an int, return 400
+	if cgType, ok := cg.ReqInfo.Params["type"]; ok {
+		_, err := strconv.Atoi(cgType)
+		if err != nil {
+			return nil, errors.New("cachegroup read: converting cachegroup type to integer " + err.Error()), nil, http.StatusBadRequest
+		}
+	}
 	query := baseSelect + where + orderBy + pagination
 	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
