@@ -218,7 +218,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	}
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT COUNT\\(server.id\\) FROM server").WillReturnRows(unfilteredRows)
+	mock.ExpectQuery("SELECT COUNT\\(s.id\\) FROM s").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
 
@@ -307,7 +307,7 @@ func TestGetMidServers(t *testing.T) {
 		)
 	}
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT COUNT\\(server.id\\) FROM server").WillReturnRows(unfilteredRows)
+	mock.ExpectQuery("SELECT COUNT\\(s.id\\) FROM s").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
 	v := map[string]string{}
