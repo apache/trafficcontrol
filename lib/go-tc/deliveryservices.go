@@ -614,13 +614,13 @@ type DSServerIDs struct {
 }
 
 type CachegroupPostDSReq struct {
-	DeliveryServices []int64 `json:"deliveryServices"`
+	DeliveryServices []int `json:"deliveryServices"`
 }
 
 type CacheGroupPostDSResp struct {
 	ID               util.JSONIntStr `json:"id"`
 	ServerNames      []CacheName     `json:"serverNames"`
-	DeliveryServices []int64         `json:"deliveryServices"`
+	DeliveryServices []int           `json:"deliveryServices"`
 }
 
 type CacheGroupPostDSRespResponse struct {

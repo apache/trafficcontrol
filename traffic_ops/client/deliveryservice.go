@@ -103,6 +103,11 @@ const (
 	// to the associations between Delivery Services and their assigned Server(s).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryserviceserver.html
 	API_DELIVERY_SERVICE_SERVER = apiBase + "/deliveryserviceserver"
+
+	// API_DELIVERY_SERVICES_SERVERS is the API path on which Traffic Ops serves functionality related
+	// to the associations between a Delivery Service and its assigned Server(s).
+	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_xmlid_servers.html
+	API_DELIVERY_SERVICES_SERVERS = apiBase + "/deliveryservices/%s/servers"
 )
 
 // GetDeliveryServicesByServer returns all of the (tenant-visible) Delivery Services assigned to

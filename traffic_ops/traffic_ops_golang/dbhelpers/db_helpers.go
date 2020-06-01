@@ -598,6 +598,66 @@ func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
 	return name, true, nil
 }
 
+type ServerHostNameAndType struct {
+	HostName string
+	Type     string
+}
+
+func GetServerHostNamesAndTypesFromIDs(tx *sql.Tx, ids []int) ([]ServerHostNameAndType, error) {
+	qry := `
+SELECT
+  s.host_name,
+  t.name
+FROM
+  server s JOIN type t ON s.type = t.id
+WHERE
+  s.id = ANY($1)
+`
+	rows, err := tx.Query(qry, pq.Array(ids))
+	if err != nil {
+		return nil, errors.New("querying server host names and types: " + err.Error())
+	}
+	defer log.Close(rows, "error closing rows")
+
+	servers := []ServerHostNameAndType{}
+	for rows.Next() {
+		s := ServerHostNameAndType{}
+		if err := rows.Scan(&s.HostName, &s.Type); err != nil {
+			return nil, errors.New("scanning server host name and type: " + err.Error())
+		}
+		servers = append(servers, s)
+	}
+	return servers, nil
+}
+
+// GetServerTypesFromHostNames returns the host names and types of the given server host names or an error if any occur.
+func GetServerTypesFromHostNames(tx *sql.Tx, hostNames []string) ([]ServerHostNameAndType, error) {
+	qry := `
+SELECT
+  s.host_name,
+  t.name
+FROM
+  server s JOIN type t ON s.type = t.id
+WHERE
+  s.host_name = ANY($1)
+`
+	rows, err := tx.Query(qry, pq.Array(hostNames))
+	if err != nil {
+		return nil, errors.New("querying server host names and types: " + err.Error())
+	}
+	defer log.Close(rows, "error closing rows")
+
+	servers := []ServerHostNameAndType{}
+	for rows.Next() {
+		s := ServerHostNameAndType{}
+		if err := rows.Scan(&s.HostName, &s.Type); err != nil {
+			return nil, errors.New("scanning server host name and type: " + err.Error())
+		}
+		servers = append(servers, s)
+	}
+	return servers, nil
+}
+
 func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}, error) {
 	dses := map[tc.DeliveryServiceName]struct{}{}
 	qry := `SELECT xml_id from deliveryservice where cdn_id = (select id from cdn where name = $1)`
@@ -666,7 +726,7 @@ func GetParamNameByID(tx *sql.Tx, id int) (string, bool, error) {
 }
 
 // GetCacheGroupNameFromID Get Cache Group name from a given ID
-func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
+func GetCacheGroupNameFromID(tx *sql.Tx, id int) (tc.CacheGroupName, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
@@ -675,6 +735,34 @@ func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, err
 		return "", false, errors.New("querying cachegroup ID: " + err.Error())
 	}
 	return tc.CacheGroupName(name), true, nil
+}
+
+// GetDeliveryServicesWithTopologies returns a list containing the delivery services in the given dsIDs
+// list that have a topology assigned. An error indicates unexpected errors that occurred when querying.
+func GetDeliveryServicesWithTopologies(tx *sql.Tx, dsIDs []int) ([]int, error) {
+	q := `
+SELECT
+  id
+FROM
+  deliveryservice
+WHERE
+  id = ANY($1::bigint[])
+  AND topology IS NOT NULL
+`
+	rows, err := tx.Query(q, pq.Array(dsIDs))
+	if err != nil {
+		return nil, errors.New("querying deliveryservice topologies: " + err.Error())
+	}
+	defer log.Close(rows, "error closing rows")
+	dses := make([]int, 0)
+	for rows.Next() {
+		id := 0
+		if err := rows.Scan(&id); err != nil {
+			return nil, errors.New("scanning deliveryservice id: " + err.Error())
+		}
+		dses = append(dses, id)
+	}
+	return dses, nil
 }
 
 // GetFederationIDForUserIDByXMLID retrieves the ID of the Federation assigned to the user defined by

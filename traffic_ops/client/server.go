@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -301,10 +302,13 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 	}
 
 	resp, remoteAddr, err := to.request(http.MethodPost, endpoint, reqBody)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	defer resp.Body.Close()
+	defer log.Close(resp.Body, "unable to close response body")
 	reqInf.RemoteAddr = remoteAddr
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)

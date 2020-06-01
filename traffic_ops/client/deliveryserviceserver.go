@@ -18,17 +18,19 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 // CreateDeliveryServiceServers associates the given servers with the given delivery services. If replace is true, it deletes any existing associations for the given delivery service.
-func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, replace bool) (*tc.DSServerIDs, error) {
+func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, replace bool) (*tc.DSServerIDs, ReqInf, error) {
 	path := apiBase + `/deliveryserviceserver`
 	req := tc.DSServerIDs{
 		DeliveryServiceID: util.IntPtr(dsID),
@@ -37,15 +39,16 @@ func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, repla
 	}
 	jsonReq, err := json.Marshal(&req)
 	if err != nil {
-		return nil, err
+		return nil, ReqInf{}, err
 	}
 	resp := struct {
 		Response tc.DSServerIDs `json:"response"`
 	}{}
-	if _, err := post(to, path, jsonReq, &resp); err != nil {
-		return nil, err
+	reqInf, err := post(to, path, jsonReq, &resp)
+	if err != nil {
+		return nil, reqInf, err
 	}
-	return &resp.Response, nil
+	return &resp.Response, reqInf, nil
 }
 
 func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alerts, ReqInf, error) {
@@ -56,6 +59,27 @@ func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alert
 		return tc.Alerts{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
 	}
 	defer reqResp.Body.Close()
+	resp := tc.Alerts{}
+	if err = json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
+		return tc.Alerts{}, reqInf, errors.New("decoding response: " + err.Error())
+	}
+	return resp, reqInf, nil
+}
+
+// AssignServersToDeliveryService assigns the given list of servers to the delivery service with the given xmlId.
+func (to *Session) AssignServersToDeliveryService(servers []string, xmlId string) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf(API_DELIVERY_SERVICES_SERVERS, xmlId)
+	dss := tc.DeliveryServiceServers{ServerNames: servers, XmlId: xmlId}
+	reqBody, err := json.Marshal(&dss)
+	reqResp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if reqResp != nil {
+		reqInf.StatusCode = reqResp.StatusCode
+	}
+	if err != nil {
+		return tc.Alerts{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
+	}
+	defer log.Close(reqResp.Body, "unable to close response body")
 	resp := tc.Alerts{}
 	if err = json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
 		return tc.Alerts{}, reqInf, errors.New("decoding response: " + err.Error())

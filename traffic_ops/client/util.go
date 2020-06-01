@@ -19,6 +19,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func get(to *Session, endpoint string, respStruct interface{}) (ReqInf, error) {
@@ -40,10 +42,13 @@ func del(to *Session, endpoint string, respStruct interface{}) (ReqInf, error) {
 func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) (ReqInf, error) {
 	resp, remoteAddr, err := to.request(method, endpoint, body) // TODO change to getBytesWithTTL
 	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return reqInf, err
 	}
-	defer resp.Body.Close()
+	defer log.Close(resp.Body, "unable to close response body")
 
 	bts, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

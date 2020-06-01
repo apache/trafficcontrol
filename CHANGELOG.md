@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Ops: Added an API 3.0 endpoint, /api/3.0/topologies, to create, read, update and delete flexible topologies.
     - Traffic Ops: Added new `topology` field to the /api/3.0/deliveryservices APIs
     - Traffic Ops: Added support for `topology` query parameter to `GET /api/3.0/cachegroups` to return all cachegroups used in the given topology.
+    - Traffic Ops: Added validation to prohibit assigning caches to topology-based delivery services
     - Traffic Portal: Added the ability to create, read, update and delete flexible topologies.
     - Traffic Portal: Added the ability to assign topologies to delivery services
 - Updated /servers/details to use multiple interfaces in API v3
@@ -24,6 +25,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed `maxRevalDurationDays` validation for `POST /api/1.x/user/current/jobs` and added that validation to the `/api/x/jobs` endpoints
 - Fixed update procedure of servers, so that if a server is linked to one or more delivery services, you cannot change its "cdn". [Related github issue](https://github.com/apache/trafficcontrol/issues/4116)
 - Fixed `POST /api/x/steering` and `PUT /api/x/steering` so that a steering target with an invalid `type` is no longer accepted. [Related github issue](https://github.com/apache/trafficcontrol/issues/3531)
+- Fixed `cachegroups` READ endpoint, so that if a request is made with the `type` specified as a non integer value, you get back a `400` with error details, instead of a `500`. [Related github issue](https://github.com/apache/trafficcontrol/issues/4703)
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.

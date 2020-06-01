@@ -76,7 +76,7 @@ func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) 
 		return nil, errors.New("cache group id must be an integer"), nil, http.StatusBadRequest
 	}
 
-	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgparam.ReqInfo.Tx.Tx, int64(cgID))
+	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgparam.ReqInfo.Tx.Tx, cgID)
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError
 	} else if !ok {
@@ -170,7 +170,7 @@ func (cgparam *TOCacheGroupParameter) GetKeys() (map[string]interface{}, bool) {
 
 // Delete implements the api.CRUDer interface.
 func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
-	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgparam.ReqInfo.Tx.Tx, int64(cgparam.CacheGroupID))
+	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgparam.ReqInfo.Tx.Tx, cgparam.CacheGroupID)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	} else if !ok {

@@ -76,7 +76,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Error("GetDeliveryServiceByXMLIDNullable got unknown delivery service id")
 	}
 	anymapDSID := *res[0].ID
-	_, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
+	_, _, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
 	if err != nil {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
