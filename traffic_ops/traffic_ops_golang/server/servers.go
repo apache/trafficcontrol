@@ -605,7 +605,9 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 			return nil, unfiltered, errors.New("forbidden"), sysErr, http.StatusForbidden
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
-		queryAddition = "\nFULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id\n"
+		queryAddition = `
+			FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
+		`
 		// depending on ds type, also need to add mids
 		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
