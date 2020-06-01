@@ -1202,7 +1202,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tx.QueryRow(deleteServerQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
+	if err := tx.QueryRow(deleteServerQuery, id).Scan(); err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
