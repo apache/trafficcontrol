@@ -21,6 +21,7 @@ package steeringtargets
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -48,9 +49,12 @@ func TestInvalidSteeringTargetType(t *testing.T) {
 
 	expected := `type is not a valid steering_target type`
 	var dsID, targetID uint64
+	var val util.JSONIntStr
 	dsID = 0
 	targetID = 1
 	typeID := 1
+	val = 100
+
 	st := tc.SteeringTargetNullable{
 		DeliveryService:   nil,
 		DeliveryServiceID: &dsID,
@@ -58,7 +62,7 @@ func TestInvalidSteeringTargetType(t *testing.T) {
 		TargetID:          &targetID,
 		Type:              nil,
 		TypeID:            &typeID,
-		Value:             nil,
+		Value:             &val,
 	}
 	stObj := &TOSteeringTargetV11{
 		APIInfoImpl: api.APIInfoImpl{

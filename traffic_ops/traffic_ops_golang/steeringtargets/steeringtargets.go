@@ -160,8 +160,8 @@ func read(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser) ([]
 }
 
 func (st *TOSteeringTargetV11) Create() (error, error, int) {
-	valid, err := tc.ValidateTypeID(st.ReqInfo.Tx.Tx, st.TypeID, "steering_target")
-	if valid == "" {
+	err := st.Validate()
+	if err != nil {
 		return err, nil, http.StatusBadRequest
 	}
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])
@@ -202,8 +202,8 @@ func (st *TOSteeringTargetV11) Create() (error, error, int) {
 }
 
 func (st *TOSteeringTargetV11) Update() (error, error, int) {
-	valid, err := tc.ValidateTypeID(st.ReqInfo.Tx.Tx, st.TypeID, "steering_target")
-	if valid == "" {
+	err := st.Validate()
+	if err != nil {
 		return err, nil, http.StatusBadRequest
 	}
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])

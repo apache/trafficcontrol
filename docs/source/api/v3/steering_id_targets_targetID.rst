@@ -65,7 +65,7 @@ Response Structure
 :target:            A string that is the :ref:`ds-xmlid` of this target :term:`Delivery Service`
 :targetId:          An integral, unique identifier for this target :term:`Delivery Service`
 :type:              The steering type of this target :term:`Delivery Service`
-:typeId:            An integral, unique identifier for the :ref:`routing type <ds-types>` of this target :term:`Delivery Service`
+:typeId:            An integral, unique identifier for the :ref:`steering type <ds-steering>` of this target :term:`Delivery Service`
 :value:             The 'weight' attributed to this steering target as an integer
 
 .. code-block:: http
