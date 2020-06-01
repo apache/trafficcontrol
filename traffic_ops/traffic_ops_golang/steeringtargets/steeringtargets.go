@@ -160,10 +160,6 @@ func read(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser) ([]
 }
 
 func (st *TOSteeringTargetV11) Create() (error, error, int) {
-	err := st.Validate()
-	if err != nil {
-		return err, nil, http.StatusBadRequest
-	}
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])
 	if err != nil {
 		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest
@@ -202,10 +198,6 @@ func (st *TOSteeringTargetV11) Create() (error, error, int) {
 }
 
 func (st *TOSteeringTargetV11) Update() (error, error, int) {
-	err := st.Validate()
-	if err != nil {
-		return err, nil, http.StatusBadRequest
-	}
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])
 	if err != nil {
 		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest

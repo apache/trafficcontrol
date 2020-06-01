@@ -25,7 +25,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"net/http"
 	"testing"
 )
 
@@ -64,10 +63,12 @@ func TestInvalidSteeringTargetType(t *testing.T) {
 		TypeID:            &typeID,
 		Value:             &val,
 	}
+	m := make(map[string]string)
+	m["deliveryservice"] = "3"
 	stObj := &TOSteeringTargetV11{
 		APIInfoImpl: api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
-				Params:    nil,
+				Params:    m,
 				IntParams: nil,
 				User:      nil,
 				ReqID:     0,
@@ -81,14 +82,11 @@ func TestInvalidSteeringTargetType(t *testing.T) {
 		LastUpdated:            nil,
 	}
 
-	userErr, _, statusCode := stObj.Create()
-	if statusCode != http.StatusBadRequest {
-		t.Errorf("expected status code %v,  got %v", http.StatusBadRequest, statusCode)
-	}
-	if userErr == nil {
+	err = stObj.Validate()
+	if err == nil {
 		t.Fatal("expected user error to say that type is invalid, got no error instead")
 	}
-	if userErr.Error() != expected {
-		t.Errorf("Expected error details %v, got %v", expected, userErr.Error())
+	if err.Error() != expected {
+		t.Errorf("Expected error details %v, got %v", expected, err.Error())
 	}
 }
