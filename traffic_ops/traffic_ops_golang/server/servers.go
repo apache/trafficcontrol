@@ -824,35 +824,28 @@ func createInterfaces(id int, interfaces []tc.ServerInterfaceInfo, tx *sql.Tx) (
 	ifaceQry += strings.Join(ifaceQueryParts, ",")
 	log.Debugf("Inserting interfaces for new server, query is: %s", ifaceQry)
 
-	ifaceRows, err := tx.Query(ifaceQry, ifaceArgs...)
+	_, err := tx.Exec(ifaceQry, ifaceArgs...)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-	defer ifaceRows.Close()
-	insertedIfaces := 0
-	for ifaceRows.Next() {
-		insertedIfaces++
-	}
-	log.Debugf("Inserted %d interfaces", insertedIfaces)
 
 	ipQry += strings.Join(ipQueryParts, ",")
 	log.Debugf("Inserting IP addresses for new server, query is: %s", ipQry)
 
-	ipRows, err := tx.Query(ipQry, ipArgs...)
+	_, err = tx.Exec(ipQry, ipArgs...)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-	defer ipRows.Close()
 
 	return nil, nil, http.StatusOK
 }
 
 func deleteInterfaces(id int, tx *sql.Tx) (error, error, int) {
-	if err := tx.QueryRow(deleteIPsQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
+	if _, err := tx.Exec(deleteIPsQuery, id); err != nil && err != sql.ErrNoRows {
 		return api.ParseDBError(err)
 	}
 
-	if err := tx.QueryRow(deleteInterfacesQuery, id).Scan(); err != nil && err != sql.ErrNoRows {
+	if _, err := tx.Exec(deleteInterfacesQuery, id); err != nil && err != sql.ErrNoRows {
 		return api.ParseDBError(err)
 	}
 
