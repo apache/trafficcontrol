@@ -269,7 +269,7 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 
 				// What does this mean on aggregated data?
 				// For now assume that if any interface was then the aggregate is
-				aggregateStatus.LastCheckedIPv4 = aggregateStatus.LastCheckedIPv4.IPv4 || status.LastCheckedIPv4
+				aggregateStatus.LastCheckedIPv4 = aggregateStatus.LastCheckedIPv4 || status.LastCheckedIPv4
 
 				if status.Why != "" {
 					newWhyText := fmt.Sprintf("%s: %s", interfaceName, status.Why)
