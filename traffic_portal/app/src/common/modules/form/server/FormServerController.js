@@ -20,6 +20,7 @@
 var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, typeService, messageModel, propertiesModel) {
 
     $scope.IPPattern = serverUtils.IPPattern;
+    $scope.IPWithCIDRPattern = serverUtils.IPWithCIDRPattern;
     $scope.IPv4Pattern = serverUtils.IPv4Pattern;
 
     var getPhysLocations = function() {
@@ -76,8 +77,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         $state.reload(); // reloads all the resolves for the view
     };
 
-    $scope.debug = function(){console.log($scope)}
-
     $scope.server = server[0];
 
     $scope.falseTrue = [
@@ -96,6 +95,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.showChartsButton = propertiesModel.properties.servers.charts.show;
 
     $scope.addIP = function(interface) {
+        $scope.serverForm.$setDirty();
         const newIP = {
             address: "",
             gateway: null,
@@ -110,10 +110,12 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     }
 
     $scope.deleteIP = function(interface, ip) {
+        $scope.serverForm.$setDirty();
         interface.ipAddresses.splice(interface.ipAddresses.indexOf(ip), 1);
     }
 
     $scope.addInterface = function() {
+        $scope.serverForm.$setDirty();
         const newInf = {
             mtu: 1500,
             maxBandwidth: null,
@@ -129,6 +131,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     }
 
     $scope.deleteInterface = function(interface) {
+        $scope.serverForm.$setDirty();
         $scope.server.interfaces.splice($scope.server.interfaces.indexOf(interface, 1));
     }
 

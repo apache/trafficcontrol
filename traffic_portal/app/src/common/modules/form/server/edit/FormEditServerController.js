@@ -37,7 +37,7 @@ var FormEditServerController = function(server, $scope, $controller, $uibModal, 
             });
     };
 
-    $scope.serverName = angular.copy(server.hostName);
+    $scope.serverName = server[0].hostName;
 
     $scope.settings = {
         isNew: false,
