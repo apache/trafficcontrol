@@ -208,7 +208,7 @@ SELECT
 				WHERE ip_address.interface = interface.name
 				AND ip_address.server = s.id
 			),
-			'max_bandwidth', interface.max_bandwidth,
+			'maxBandwidth', interface.max_bandwidth,
 			'monitor', interface.monitor,
 			'mtu', COALESCE (interface.mtu, 9000),
 			'name', interface.name
