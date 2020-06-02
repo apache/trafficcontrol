@@ -25,9 +25,11 @@ import hashlib
 import json
 import logging
 import os
+import random
 import re
 import shutil
 import stat
+import string
 import subprocess
 import sys
 import typing
@@ -119,6 +121,16 @@ class SSLConfig():
 
 	def params(self) -> str:
 		return f"/C={self.country}/ST={self.state}/L={self.locality}/O={self.company}/OU={self.org_unit}/CN={self.common_name}/"
+
+class CDNConfig():
+
+	def __init__(self, gen_secret: bool, num_secrets: int, port: int, num_workers: int, url: str, ldap_conf_location: str):
+		self.gen_secret = gen_secret
+		self.num_secrets = num_secrets
+		self.port = port
+		self.num_workers = num_workers
+		self.url = url
+		self.ldap_conf_location = ldap_conf_location
 
 # The default question/answer set
 DEFAULTS = {
@@ -547,6 +559,93 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 
 	return 0
 
+def random_word(length: int = 12) -> str:
+	word_chars = string.ascii_letters + string.digits + '_'
+	return ''.join(random.choice(word_chars) for _ in range(length))
+
+def generate_cdn_conf(questions:typing.List[Question], fname: str, automatic: bool, root: str):
+	cdn_conf = get_config(questions, fname, automatic)
+
+	if "genSecret" not in cdn_conf:
+		raise ValueError("missing 'genSecret' config_var")
+
+	gen_secret = cdn_conf["genSecret"].casefold() in {'y', 'yes'}
+
+	try:
+		num_secrets = int(cdn_conf["keepSecrets"])
+	except KeyError as e:
+		raise ValueError("missing 'keepSecrets' config_var") from e
+	except ValueError as e:
+		raise ValueError(f"invalid 'keepSecrets' config_var value: {e}") from e
+
+	try:
+		port = cdn_conf.get("port")
+	except KeyError as e:
+		raise ValueError("missing 'port' config_var") from e
+	except ValueError as e:
+		raise ValueError(f"invalid 'port' config_var value: {e}") from e
+
+	try:
+		workers = int(cdn_conf["workers"])
+	except KeyError as e:
+		raise ValueError("missing 'workers' config_var") from e
+	except ValueError as e:
+		raise ValueError(f"invalid 'workers' config_var value: {e}")
+
+	try:
+		url = cdn_conf["base_url"]
+	except KeyError as e:
+		raise ValueError("missing 'base_url' config_var") from e
+
+	try:
+		ldap_loc = cdn_conf["ldap_conf_location"]
+	except KeyError as e:
+		raise ValueError("missing 'ldap_conf_location' config_var") from e
+
+	conf = CDNConfig(gen_secret, num_secrets, port, workers, url, ldap_loc)
+
+	path = os.path.join(root, fname.lstrip('/'))
+	existingConf = {}
+	if os.path.isfile(path):
+		with open(path) as fd:
+			try:
+				existingConf = json.load(fd)
+			except json.JSONDecodeError as e:
+				raise ValueError(f"invalid existing cdn.config at {path}: {e}") from e
+
+	if type(existingConf) is not dict:
+		logging.warning("Existing cdn.conf (at '%s') is not an object - overwriting", path)
+		existingConf = {}
+
+	if conf.gen_secret:
+		if type(existingConf) is dict and "secrets" in existingConf and type(existingConf["secrets"]) is list:
+			logging.debug("Secrets found in cdn.conf file")
+		else:
+			existingConf["secrets"] = []
+			logging.debug("No secrets found in cdn.conf file")
+
+		existingConf["secrets"].insert(0, random_word())
+
+		if conf.num_secrets and len(existingConf["secrets"]) > conf.num_secrets:
+			existingConf["secrets"] = existingConf["secrets"][:conf.num_secrets - 1]
+
+	if conf.url:
+		if "to" not in existingConf or type(existingConf["to"]) is not dict:
+			existingConf["to"] = {}
+		existingConf["to"]["base_url"] = conf.url
+
+	if "traffic_ops_golang" not in existingConf or type(existingConf["traffic_ops_golang"]) is not dict:
+		existingConf["traffic_ops_golang"] = {}
+	existingConf["traffic_ops_golang"]["port"] = conf.port
+	existingConf["traffic_ops_golang"]["log_location_error"] = os.path.join(root, "var/log/traffic_ops/error.log")
+	existingConf["traffic_ops_golang"]["log_location_event"] = os.path.join(root, "var/log/traffic_ops/access.log")
+
+	if "hypnotoad" not in existingConf or type(existingConf["hypnotoad"]) is not dict:
+		existingConf["hypnotoad"]["workers"] = conf.num_workers
+
+	with open(path, "w+") as fd:
+		json.dump(existingConf, fd, indent="\t")
+	logging.info("CDN configuration has been saved")
 
 def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, root_dir: str = "/", ops_user: str = "trafops", ops_group: str = "trafops") -> int:
 	"""
@@ -637,6 +736,12 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 			return cert_code
 	except OSError as e:
 		logging.critical("Setting up SSL Certificates: %s", e)
+		return 1
+
+	try:
+		generate_cdn_conf(userInput[CDN_CONF_FILE], CDN_CONF_FILE, automatic, root_dir)
+	except OSError as e:
+		logging.critical("Generating cdn.conf: %s", e)
 		return 1
 
 	return 0
