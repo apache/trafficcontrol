@@ -26,6 +26,8 @@ import json
 import logging
 import os
 import re
+import shutil
+import stat
 import subprocess
 import sys
 import typing
@@ -75,6 +77,8 @@ class Question():
 		if self.hidden:
 			while True:
 				pw = getpass.getpass(self)
+				if not pw:
+					continue
 				if pw == getpass.getpass(f"Re-Enter {self.question}: "):
 					return pw
 				print("Error: passwords do not match, try again")
@@ -99,6 +103,22 @@ class Question():
 class User(typing.NamedTuple):
 	username: str
 	password: str
+
+class SSLConfig():
+
+	def __init__(self, gen_cert: bool, country: str, state: str, locality: str, company: str, org_unit: str, common_name: str, rsa_password: str):
+
+		self.gen_cert = gen_cert
+		self.country = country
+		self.state = state
+		self.locality = locality
+		self.company = company
+		self.org_unit = org_unit
+		self.common_name = common_name
+		self.rsa_password = rsa_password
+
+	def params(self) -> str:
+		return f"/C={self.country}/ST={self.state}/L={self.locality}/O={self.company}/OU={self.org_unit}/CN={self.common_name}/"
 
 # The default question/answer set
 DEFAULTS = {
@@ -289,8 +309,23 @@ def generate_profiles_dir(questions: typing.List[Question], fname: str):
 	"""
 	user_in = questions
 
-def generate_openssl_conf(questions: typing.List[Question], fname: str, automatic: bool) -> dict:
-	return get_config(questions, fname, automatic)
+def generate_openssl_conf(questions: typing.List[Question], fname: str, automatic: bool) -> SSLConfig:
+	cfg_map = get_config(questions, fname, automatic)
+	if "genCert" not in cfg_map:
+			raise ValueError("missing 'genCert' key")
+
+	gen_cert = cfg_map["genCert"]
+
+	country = cfg_map.get("country", "")
+	state = cfg_map.get("state", "")
+	locality = cfg_map.get("locality", "")
+	company = cfg_map.get("company", "")
+	org_unit = cfg_map.get("org_unit", "")
+	common_name = cfg_map.get("common_name", "")
+	rsa_password = cfg_map.get("rsaPassword", "")
+
+	# These only MUST exist if we need to use them
+	return SSLConfig(gen_cert.casefold() in {'y', 'yes'}, country, state, locality, company, org_unit, common_name, rsa_password)
 
 def generate_param_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str) -> dict:
 	conf = get_config(questions, fname, automatic)
@@ -322,22 +357,20 @@ def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic:
 				if defaultValue.config_var == configValue.config_var:
 					break
 			else:
-				continue
+				question = defaultValue.question
+				answer = defaultValue.default
 
-			question = defaultValue.question
-			answer = defaultValue.answer
+				if not automatic:
+					logging.info("Prompting user for answer")
+					if defaultValue.hidden:
+						answer = defaultValue.ask()
+				else:
+					logging.info("Adding question '%s' with default answer%s", question, f" {answer}" if not defaultValue.hidden else "")
 
-			if not automatic:
-				logging.info("Prompting user for answer")
-				if defaultValue.hidden:
-					answer = defaultValue.ask()
-			else:
-				logging.info("Adding question '%s' with default answer%s", question, f" {answer}" if not defaultValue.hidden else "")
-
-			# The Perl here would ask questions, but those would just get asked later
-			# anyway, so I'm not sure why.
-			cfg[fname].append(Question(question, answer, defaultValue.config_var, defaultValue.hidden))
-			diffs += 1
+				# The Perl here would ask questions, but those would just get asked later
+				# anyway, so I'm not sure why.
+				cfg[fname].append(Question(question, answer, defaultValue.config_var, defaultValue.hidden))
+				diffs += 1
 
 	return diffs
 
@@ -394,6 +427,7 @@ def setup_maxmind(mm: str, root: str):
 	"""
 	if mm.casefold() not in {'y', 'yes'}:
 		logging.info("Not downloading Maxmind data")
+		return
 
 	os.chdir(os.path.join(root, 'opt/traffic_ops/app/public/routing'))
 
@@ -410,7 +444,111 @@ def setup_maxmind(mm: str, root: str):
 		logging.error("Failed to download MaxMind data")
 		logging.debug("(ipv6) Exception: %s", e)
 
-def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, root_dir: str = "/") -> int:
+def exec_openssl(description: str, *args) -> bool:
+	logging.info(description)
+
+	while True:
+		proc = subprocess.run(["/usr/bin/openssl", *args], capture_output=True, universal_newlines=True)
+		if proc.returncode == 0:
+			return True
+
+		logging.debug(f"openssl exec failed with code {proc.returncode}; stderr: {proc.stderr}")
+		while True:
+			ans = input(f"{description} failed. Try again (y/n) [y]: ")
+			if not ans or ans.casefold().startswith('n'):
+				return False
+			if ans.casefold().startswith('y'):
+				break
+
+def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str) -> int:
+	"""
+	Generates self-signed SSL certificates from the given configuration.
+	:returns: For whatever reason this subroutine needs to dictate the return code of the script, so that's what it returns.
+	"""
+	if not conf.gen_cert:
+		logging.info("Not generating openssl certification")
+		return 0
+
+	if not os.path.isfile('/usr/bin/openssl') or not os.access('/usr/bin/openssl', os.X_OK):
+		logging.error("Unable to install SSL certificates as openssl is not installed")
+		logging.error("Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates")
+		return 4
+
+	logging.info("Installing SSL Certificates")
+	logging.info("\n\tWe're now running a script to generate a self signed X509 SSL certificate")
+	logging.info("Postinstall SSL Certificate Creation")
+
+	# Perl logs this before actually generating a key. So we do too.
+	logging.info("The server key has been generated")
+
+	if not exec_openssl("Generating an RSA Private Server Key", "genrsa", "-des3", "-out", "server.key", "-passout", f"pass:{conf.rsa_password}", "1024"):
+		return 1
+
+	if not exec_openssl("Creating a Certificate Signing Request (CSR)", "req", "-new", "-key", "server.key", "-out", "server.csr", "-passin", f"pass:{conf.rsa_password}", "-subj", conf.params()):
+		return 1
+
+	logging.info("The Certificate Signing Request has been generated")
+	os.rename("server.key", "server.key.orig")
+
+	if not exec_openssl("Removing the pass phrase from the server key", "rsa", "-in", "server.key.orig", "-out", "server.key", "-passin", f"pass:{conf.rsa_password}"):
+		return 1
+
+	logging.info("The pass phrase has been removed from the server key")
+	if not exec_openssl("Generating a Self-signed certificate", "x509", "-req", "-days", "365", "-in", "server.csr", "-signkey", "server.key", "-out", "server.crt"):
+		return 1
+
+	logging.info("A server key and self signed certificate has been generated")
+	logging.info("Installing a server key and certificate")
+
+	keypath = os.path.join(root, 'etc/pki/tls/private/localhost.key')
+	shutil.copy("server.key", keypath)
+	os.chmod(keypath, stat.S_IRUSR | stat.S_IWUSR)
+	shutil.chown(keypath, user=ops_user, group=ops_group)
+
+	logging.info("The private key has been installed")
+	logging.info("Installing self signed certificate")
+
+	certpath = os.path.join(root, 'etc/pki/tls/certs/localhost.crt')
+	shutil.copy("server.crt", certpath)
+	os.chmod(certpath, stat.S_IRUSR | stat.S_IWUSR)
+	shutil.chown(certpath, user=ops_user, group=ops_group)
+
+	logging.info("Saving the self signed csr")
+
+	csrpath = os.path.join(root, 'etc/pki/tls/certs/localhost.csr')
+	shutil.copy("server.csr", csrpath)
+	os.chmod(csrpath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
+	shutil.chown(csrpath, user=ops_user, group=ops_group)
+
+	logging.info("\n        The self signed certificate has now been installed.\n\n        You may obtain a certificate signed by a Certificate Authority using the\n        server.csr file saved in the current directory.  Once you have obtained\n        a signed certificate, copy it to %s and\n        restart Traffic Ops.", certpath)
+
+	cdn_conf_path = os.path.join(root, "opt/traffic_ops/app/conf/cdn.conf")
+	cdn_conf = None
+	try:
+		with open(cdn_conf_path) as fd:
+			cdn_conf = json.load(fd)
+	except (OSError, json.JSONDecodeError) as e:
+		raise OSError(f"reading {cdn_conf_path}: {e}") from e
+
+	if type(cdn_conf) is not dict or "hypnotoad" not in cdn_conf or type(cdn_conf["hypnotoad"]) is not dict:
+		logging.critical("Malformed %s; improper object and/or missing 'hypnotoad' key", cdn_conf_path)
+		return 1
+
+	hypnotoad = cdn_conf["hypnotoad"]
+	if "listen" not in hypnotoad or type(hypnotoad["listen"]) is not list or not hypnotoad["listen"] or type(hypnotoad["listen"][0]) is not str:
+		logging.error('\tThe "listen" portion of %s is missing from %s\n\tPlease ensure it contains the same structure as the one originally installed', cdn_conf_path, cdn_conf_path)
+		return 1
+
+	listen = hypnotoad["listen"][0]
+
+	if f"cert={certpath}" not in listen or f"key={keypath}" not in listen:
+		logging.error('\tThe "listen" portion of %s is:\n\t%s\n\tand does not reference the same "cert=" and "key=" values as are created here.\n\tPlease modify %s to add the following as parameters:\n\t?cert=%s&key=%s', cdn_conf_path, listen, cdn_conf_path, certpath, keypath)
+		return 1
+
+	return 0
+
+
+def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, root_dir: str = "/", ops_user: str = "trafops", ops_group: str = "trafops") -> int:
 	"""
 	Runs the main routine given the parsed arguments as input.
 	"""
@@ -454,7 +592,7 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 		logging.info("Using input file %s", cfile)
 		try:
 			with open(cfile) as fd:
-				userInput = json.load(fd, object_hook=unmarshal_config)
+				userInput = unmarshal_config(json.load(fd))
 			diffs = sanity_check_config(userInput, automatic)
 			logging.info(f"File sanity check complete - found {diffs} difference{'' if diffs == 1 else 's'}")
 		except (OSError, ValueError, json.JSONDecodeError) as e:
@@ -493,6 +631,14 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 		logging.critical("Setting up MaxMind: %s", e)
 		return 1
 
+	try:
+		cert_code = setup_certificates(opensslconf, root_dir, ops_user, ops_group)
+		if cert_code:
+			return cert_code
+	except OSError as e:
+		logging.critical("Setting up SSL Certificates: %s", e)
+		return 1
+
 	return 0
 
 if __name__ == '__main__':
@@ -503,10 +649,12 @@ if __name__ == '__main__':
 	parser.add_argument("--defaults", help="Writes out a configuration file with defaults which can be used as input", type=str, nargs="?", default=None, const="")
 	parser.add_argument("-n", "--no-root", help="Enable running as a non-root user (may cause failure)", action="store_true")
 	parser.add_argument("-r", "--root-directory", help="Set the directory to be treated as the system's root directory (e.g. for testing)", type=str, default="/")
+	parser.add_argument("-u", "--ops-user", help="Specify a username to own Traffic Ops files and processes", type=str, default="trafops")
+	parser.add_argument("-g", "--ops-group", help="Specify the group to own Traffic Ops files and processes", type=str, default="trafops")
 
 	args = parser.parse_args()
 
 	if not args.no_root and os.getuid() != 0:
 		logging.error("You must run this script as the root user")
 		sys.exit(1)
-	sys.exit(main(args.automatic, args.debug, args.defaults, args.cfile, args.root_directory))
+	sys.exit(main(args.automatic, args.debug, args.defaults, args.cfile, os.path.abspath(args.root_directory), args.ops_user, args.ops_group))
