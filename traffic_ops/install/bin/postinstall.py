@@ -20,8 +20,10 @@
 
 import argparse
 import getpass
+import json
 import logging
 import os
+import re
 import sys
 import typing
 
@@ -70,15 +72,26 @@ class Question():
 		if self.hidden:
 			while True:
 				pw = getpass.getpass(self)
-				if pw == getpass.getpass(f"Re-Enter {self.question}"):
+				if pw == getpass.getpass(f"Re-Enter {self.question}: "):
 					return pw
 				print("Error: passwords do not match, try again")
 		ipt = input(self)
 		return ipt if ipt else self.default
 
 	def toJSON(self) -> str:
-		return f'{{"{self.question}": "{self.default}", "config_var": "{self.config_var}"{', "hidden": true' if self.hidden else ''}}}'
+		"""
+		Converts a question to JSON encoding.
+		>>> Question("Do the thing?", "yes", "cfg_var", True).toJSON()
+		'{"Do the thing?": "yes", "config_var": "cfg_var", "hidden": true}'
+		>>> Question("Do the other thing?", "no", "other cfg_var").toJSON()
+		'{"Do the other thing?": "no", "config_var": "other cfg_var"}'
+		"""
+		if self.hidden:
+			return '{{"{}": "{}", "config_var": "{}", "hidden": true}}'.format(self.question, self.default, self.config_var)
+		return '{{"{}": "{}", "config_var": "{}"}}'.format(self.question, self.default, self.config_var)
 
+	def serialize(self) -> object:
+		return {self.question: self.default, "config_var": self.config_var, "hidden": self.hidden}
 
 # The default question/answer set
 DEFAULTS = {
@@ -138,21 +151,22 @@ DEFAULTS = {
 }
 
 class ConfigEncoder(json.JSONEncoder):
-	def default(self, o):
-		if type(o) is dict and all(type(k) is str and type(v) is list for k, v in o.items()) and all(type(v))
+	"""
+	ConfigEncoder encodes a dictionary of filenames to configuration question lists as JSON
+	>>> ConfigEncoder().encode({'/test/file':[Question('question', 'default', 'cfg_var', True)]})
+	'{"/test/file": [{"question": "default", "config_var": "cfg_var", "hidden": true}]}'
+	"""
+	def default(self, o) -> object:
+		"""
+		Returns a serializable representation of 'o' - specifically by attempting
+		to convert a dictionary of filenames to Question lists to a dictionary of
+		filenames to lists of dictionaries of strings to strings, falling back on
+		default encoding if the proper typing is not found.
+		"""
+		if isinstance(o, Question):
+			return o.serialize()
 
-def get_field(question: str, config_answer: str, hidden: bool = False) -> str:
-	if hidden:
-		while True:
-			pw = getpass.getpass(question)
-			if pw == getpass.getpass(f"Re-Enter {question}"):
-				return pw
-			print("Error: passwords do not match, try again", file=sys.stderr)
-
-	if config_answer:
-		ipt = input(f"{question} [{config_answer}]: ")
-		return ipt if ipt else config_answer
-	return input(question + ": ")
+		return json.JSONEncoder.default(self, o)
 
 def get_config(questions: typing.List[Question], fname: str, automatic: bool = False) -> dict:
 
@@ -160,19 +174,75 @@ def get_config(questions: typing.List[Question], fname: str, automatic: bool = F
 
 	config = {}
 
-	for var in user_input[fname]:
-		question = next(key for key in var.keys() if key != "hidden" and key != "config_var")
-		hidden = var.get("hidden")
-		answer = var.get(question) if automatic else get_field(question, var.get(question), hidden)
+	for q in questions:
+		answer = q.default if automatic else q.ask()
 
-		config[var.get(config_var)] = answer
+		config[q.config_var] = answer
 
 	return config
 
-def generate_db_conf(questions: typing.List[Question], fname: str, todb_fname: str, automatic: bool):
+def generate_db_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str) -> dict:
 	"""
 	"""
 	db_conf = get_config(questions, fname, automatic)
+	db_conf["description"] = f"{db_conf.get('type', 'UNKNOWN')} database on {db_conf.get('hostname','UNKOWN')}:{db_conf.get('port', 'UNKNOWN')}"
+
+	path = os.path.join(root, fname.lstrip('/'))
+	with open(path, 'w+') as fd:
+		json.dump(db_conf, fd, indent="\t")
+		print(file=fd)
+
+	logging.info("Database configuration has been saved")
+
+	return db_conf
+
+def generate_todb_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str, dbconf: dict) -> dict:
+	todbconf = get_config(questions, fname, automatic)
+
+	driver = "postgres"
+	if "type" not in dbconf:
+		logging.warning("Driver type not found in todb config; using 'postgres'")
+	else:
+		driver = "postgres" if dbconf["type"] == "Pg" else dbconf["type"]
+
+	path = os.path.join(root, fname.lstrip('/'))
+	hostname = dbconf.get('hostname', 'UNKNOWN')
+	port = dbconf.get('port', 'UNKNOWN')
+	user = dbconf.get('user', 'UNKNOWN')
+	password = dbconf.get('password', 'UNKNOWN')
+	dbname = dbconf.get('dbname', 'UNKNOWN')
+	with open(path, 'w+') as fd:
+		print("production", file=fd)
+		print("    driver:", driver, file=fd)
+		print(f"    open: host={hostname} port={port} user={user} password={password} dbname={dbname} sslmode=disable", file=fd)
+
+	return todbconf
+
+def generate_ldap_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str):
+	use_ldap_question = [q for q in questions if q.question == "Do you want to set up LDAP?"]
+	if not use_ldap_question:
+		logging.warning("Couldn't find question asking if LDAP should be set up, using default: no")
+		return
+	use_ldap = use_ldap_question[0].default if automatic else use_ldap_question[0].ask()
+
+	if use_ldap.casefold() not in {'y', 'yes'}:
+		logging.info("Not setting up ldap")
+		return
+
+	ldapConf = get_config([q for q in questions if q is not use_ldap_question[0]], fname, automatic)
+	for key in ('host', 'admin_dn', 'admin_pass', 'search_base', 'search_query', 'insecure', 'ldap_timeout_secs'):
+		if key not in ldapConf:
+			raise ValueError(f"{key} is a required key in {fname}")
+
+	if not re.fullmatch(r"\S+:\d+", ldapConf["host"]):
+		raise ValueError(f"host in {fname} must be of form 'hostname:port'")
+
+	path = os.path.join(root, fname.lstrip('/'))
+	os.makedirs(os.path.dirname(path), exist_ok=True)
+	with open(path, 'w+') as fd:
+		json.dump(ldapConf, fd, indent="\t")
+		print(file=fd)
+
 
 def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic: bool) -> int:
 	"""
@@ -260,7 +330,7 @@ def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
 
 	return ret
 
-def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None) -> int:
+def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, root_dir: str = "/") -> int:
 	"""
 	Runs the main routine given the parsed arguments as input.
 	"""
@@ -289,7 +359,8 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None) 
 					logging.critical("Writing output: %s", e)
 					return 1
 			else:
-				json.dump(DEFAULTS, sys.stdout, indent="\t")
+				json.dump(DEFAULTS, sys.stdout, cls=ConfigEncoder, indent="\t")
+				print()
 		except ValueError as e:
 			logging.critical("Converting defaults to JSON: %s", e)
 			return 1
@@ -311,12 +382,22 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None) 
 			return 1
 
 	try:
-		os.chdir("/opt/traffic_ops/install/bin")
+		path = os.path.join(root_dir, "opt/traffic_ops/install/bin")
+		# os.chdir(path)
 	except OSError as e:
-		logging.critical(f"Attempting to change directory to '/opt/traffic_ops/install/bin': {e}")
+		logging.critical(f"Attempting to change directory to '{path}': {e}")
 		return 1
 
-	todbconf = generate_db_conf(userInput[DB_CONF_FILE], DB_CONF_FILE, , )
+	try:
+		dbconf = generate_db_conf(userInput[DATABASE_CONF_FILE], DATABASE_CONF_FILE, automatic, root_dir)
+		todbconf = generate_todb_conf(userInput[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
+		generate_ldap_conf(userInput[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
+	except OSError as e:
+		logging.critical("Writing configuration: %s", e)
+		return 1
+	except ValueError as e:
+		logging.critical("Generating configuration: %s", e)
+		return 1
 	return 0
 
 if __name__ == '__main__':
@@ -326,10 +407,11 @@ if __name__ == '__main__':
 	parser.add_argument("--debug", help="Enables verbose output", action="store_true")
 	parser.add_argument("--defaults", help="Writes out a configuration file with defaults which can be used as input", type=str, nargs="?", default=None, const="")
 	parser.add_argument("-n", "--no-root", help="Enable running as a non-root user (may cause failure)", action="store_true")
+	parser.add_argument("-r", "--root-directory", help="Set the directory to be treated as the system's root directory (e.g. for testing)", type=str, default="/")
 
 	args = parser.parse_args()
 
 	if not args.no_root and os.getuid() != 0:
 		logging.error("You must run this script as the root user")
 		sys.exit(1)
-	sys.exit(main(args.automatic, args.debug, args.defaults, args.cfile))
+	sys.exit(main(args.automatic, args.debug, args.defaults, args.cfile, args.root_directory))
