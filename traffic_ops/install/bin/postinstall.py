@@ -26,6 +26,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 import sys
 import typing
 
@@ -288,6 +289,19 @@ def generate_profiles_dir(questions: typing.List[Question], fname: str):
 	"""
 	user_in = questions
 
+def generate_openssl_conf(questions: typing.List[Question], fname: str, automatic: bool) -> dict:
+	return get_config(questions, fname, automatic)
+
+def generate_param_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str) -> dict:
+	conf = get_config(questions, fname, automatic)
+
+	path = os.path.join(root, fname.lstrip('/'))
+	with open(path, 'w+') as fd:
+		json.dump(conf, fd, indent="\t")
+		print(file=fd)
+
+	return conf
+
 def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic: bool) -> int:
 	"""
 	Checks a user-input configuration file, and outputs the number of files in the
@@ -374,6 +388,28 @@ def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
 
 	return ret
 
+def setup_maxmind(mm: str, root: str):
+	"""
+	If 'mm' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind database using `wget`.
+	"""
+	if mm.casefold() not in {'y', 'yes'}:
+		logging.info("Not downloading Maxmind data")
+
+	os.chdir(os.path.join(root, 'opt/traffic_ops/app/public/routing'))
+
+	# Perl ignored errors downloading the databases, so we do too
+	try:
+		subprocess.run(["/usr/bin/wget", "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"], capture_output=True, check=True, universal_newlines=True)
+	except subprocess.SubprocessError as e:
+		logging.error("Failed to download MaxMind data")
+		logging.debug("(ipv4) Exception: %s", e)
+
+	try:
+		subprocess.run(["/usr/bin/wget", "https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"], capture_output=True, check=True, universal_newlines=True)
+	except subprocess.SubprocessError as e:
+		logging.error("Failed to download MaxMind data")
+		logging.debug("(ipv6) Exception: %s", e)
+
 def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, root_dir: str = "/") -> int:
 	"""
 	Runs the main routine given the parsed arguments as input.
@@ -437,13 +473,26 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 		todbconf = generate_todb_conf(userInput[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
 		generate_ldap_conf(userInput[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
 		admin_conf = generate_users_conf(userInput[USERS_CONF_FILE], USERS_CONF_FILE, automatic, root_dir)
-		custom_profiles = generate_profiles_dir(userInput[PROFILES_CONF_FILE], PROFILES_CONF_FILE)
+		custom_profile = generate_profiles_dir(userInput[PROFILES_CONF_FILE], PROFILES_CONF_FILE)
+		opensslconf = generate_openssl_conf(userInput[OPENSSL_CONF_FILE], OPENSSL_CONF_FILE, automatic)
+		paramconf = generate_param_conf(userInput[PARAM_CONF_FILE], PARAM_CONF_FILE, automatic, root_dir)
+		postinstall_cfg = os.path.join(root_dir, POST_INSTALL_CFG.lstrip('/'))
+		if not os.path.isfile(postinstall_cfg):
+			with open(postinstall_cfg, 'w+') as fd:
+				print("{}", file=fd)
 	except OSError as e:
 		logging.critical("Writing configuration: %s", e)
 		return 1
 	except ValueError as e:
 		logging.critical("Generating configuration: %s", e)
 		return 1
+
+	try:
+		setup_maxmind(todbconf.get("maxmind", "no"), root_dir)
+	except OSError as e:
+		logging.critical("Setting up MaxMind: %s", e)
+		return 1
+
 	return 0
 
 if __name__ == '__main__':
