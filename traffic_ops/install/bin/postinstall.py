@@ -19,7 +19,9 @@
 #
 
 import argparse
+import base64
 import getpass
+import hashlib
 import json
 import logging
 import os
@@ -92,6 +94,10 @@ class Question():
 
 	def serialize(self) -> object:
 		return {self.question: self.default, "config_var": self.config_var, "hidden": self.hidden}
+
+class User(typing.NamedTuple):
+	username: str
+	password: str
 
 # The default question/answer set
 DEFAULTS = {
@@ -243,6 +249,44 @@ def generate_ldap_conf(questions: typing.List[Question], fname: str, automatic: 
 		json.dump(ldapConf, fd, indent="\t")
 		print(file=fd)
 
+def hash_pass(passwd: str) -> str:
+	"""
+	Generates a Scrypt-based hash of the given password in a Perl-compatible format.
+	It's hard-coded - like the Perl - to use 64 random bytes for the salt, n=16384,
+	r=8, p=1 and dklen=64.
+	"""
+	salt=os.urandom(64)
+	n=16384
+	r=8
+	p=1
+	hashed = hashlib.scrypt(passwd.encode(), salt=salt, n=n, r=r, p=p, dklen=64)
+
+	hashed_b64 = base64.standard_b64encode(hashed).decode()
+	salt_b64 = base64.standard_b64encode(salt).decode()
+
+	return f"SCRYPT:{n}:{r}:{p}:{salt_b64}:{hashed_b64}"
+
+def generate_users_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str) -> User:
+	config = get_config(questions, fname, automatic)
+
+	if "tmAdminUser" not in config or "tmAdminPw" not in config:
+		raise ValueError(f"{fname} must include 'tmAdminUser' and 'tmAdminPw'")
+
+	hashedPass = hash_pass(config["tmAdminPw"])
+
+	path = os.path.join(root, fname.lstrip('/'))
+	with open(path, 'w+') as fd:
+		json.dump({"username": config["tmAdminUser"], "password": hashedPass}, fd, indent="\t")
+		print(file=fd)
+
+	return User(config["tmAdminUser"], config["tmAdminPw"])
+
+def generate_profiles_dir(questions: typing.List[Question], fname: str):
+	"""
+	I truly have no idea what's going on here. This is what the Perl did, so I
+	copied it. It does nothing. Literally nothing.
+	"""
+	user_in = questions
 
 def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic: bool) -> int:
 	"""
@@ -392,6 +436,8 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 		dbconf = generate_db_conf(userInput[DATABASE_CONF_FILE], DATABASE_CONF_FILE, automatic, root_dir)
 		todbconf = generate_todb_conf(userInput[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
 		generate_ldap_conf(userInput[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
+		admin_conf = generate_users_conf(userInput[USERS_CONF_FILE], USERS_CONF_FILE, automatic, root_dir)
+		custom_profiles = generate_profiles_dir(userInput[PROFILES_CONF_FILE], PROFILES_CONF_FILE)
 	except OSError as e:
 		logging.critical("Writing configuration: %s", e)
 		return 1
