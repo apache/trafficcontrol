@@ -251,7 +251,7 @@ def generate_todb_conf(questions: typing.List[Question], fname: str, automatic: 
 	password = dbconf.get('password', 'UNKNOWN')
 	dbname = dbconf.get('dbname', 'UNKNOWN')
 	with open(path, 'w+') as fd:
-		print("production", file=fd)
+		print("production:", file=fd)
 		print("    driver:", driver, file=fd)
 		print(f"    open: host={hostname} port={port} user={user} password={password} dbname={dbname} sslmode=disable", file=fd)
 
@@ -647,7 +647,146 @@ def generate_cdn_conf(questions:typing.List[Question], fname: str, automatic: bo
 		json.dump(existingConf, fd, indent="\t")
 	logging.info("CDN configuration has been saved")
 
-def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, root_dir: str = "/", ops_user: str = "trafops", ops_group: str = "trafops") -> int:
+def db_connection_string(dbconf: dict, todbconf: dict) -> str:
+	"""
+	Constructs a database connection string from the passed configuration objects.
+	"""
+	user = dbconf["user"]
+	password = dbconf["password"]
+	db_name = "traffic_ops" if dbconf["type"] == "Pg" else dbconf["type"]
+	hostname = dbconf["hostname"]
+	port = dbconf["port"]
+	return f"postgresql://{user}:{password}@{hostname}:{port}/{db_name}"
+
+def exec_psql(conn_str: str, query: str) -> str:
+	cmd = ["/usr/bin/psql", "--tuples-only", "-d", conn_str, "-c", query]
+	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True)
+	if proc.returncode != 0:
+		logging.debug("psql exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
+		raise OSError("failed to execute database query")
+	return proc.stdout.strip()
+
+def invoke_db_admin_pl(action: str, root: str):
+	path = os.path.join(root, "opt/traffic_ops/app")
+	# This is a workaround for admin using hard-coded relative paths. That
+	# should be fixed at some point, imo, but for now this work.
+	os.chdir(path)
+	cmd = [os.path.join(path, "db/admin"), "--env=production", action]
+	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True)
+	if proc.returncode != 0:
+		logging.debug("admin exec failed; stderr: %s\n\tstdout:%s", proc.stderr, proc.stdout)
+		raise OSError(f"Database {action} failed")
+	logging.info(f"Database {action} succeeded")
+
+def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
+	"""
+	Sets up all necessary initial database data using `/usr/bin/sql`
+	"""
+	logging.info("paramconf %r", param_conf)
+	logging.info("Setting up the database data")
+
+	tables_found_query = '''SELECT EXISTS(SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'tm_user');'''
+	if exec_psql(conn_str, tables_found_query) == "t":
+		logging.info("Found existing tables skipping table creation")
+	else:
+		invoke_db_admin_pl("load_schema", root)
+
+	invoke_db_admin_pl("migrate", root)
+	invoke_db_admin_pl("seed", root)
+	invoke_db_admin_pl("patch", root)
+
+	hashed_pass = hash_pass(user.password)
+	insert_admin_query = '''
+		INSERT INTO tm_user (username, tenant_id, role, local_passwd, confirm_local_passwd)
+		VALUES (
+			'{}',
+			(SELECT id FROM tenant WHERE name = 'root'),
+			(SELECT id FROM role WHERE name = 'admin'),
+			'{}',
+			'{}'
+		)
+		ON CONFLICT (username) DO NOTHING;
+	'''.format(user.username, hashed_pass, hashed_pass)
+	_ = exec_psql(conn_str, insert_admin_query)
+
+	logging.info("=========== Setting up cdn")
+	insert_cdn_query = "\n\t-- global parameters" + '''
+		INSERT INTO cdn (name, domain_name, dnssec_enabled)
+		VALUES ('{cdn_name}', '{dns_subdomain}', false)
+		ON CONFLICT DO NOTHING;
+	'''.format(**param_conf)
+	logging.info("\n%s", insert_cdn_query)
+	_ = exec_psql(conn_str, insert_cdn_query)
+
+	tm_url = param_conf["tm.url"]
+
+	logging.info("=========== Setting up parameters")
+	insert_parameters_query = "\n\t-- global parameters" + '''
+		INSERT INTO parameter (name, config_file, value)
+		VALUES ('tm.url', 'global', '{tm_url}'),
+			('tm.infourl', 'global', '{tm_url}/doc'),
+		-- CRConfic.json parameters
+			('geolocation.polling.url', 'CRConfig.json', '{tm_url}/routing/GeoLite2-City.mmdb.gz'),
+			('geolocation6.polling.url', 'CRConfig.json', '{tm_url}/routing/GeoLiteCityv6.dat.jz')
+		ON CONFLICT (name, config_file, value) DO NOTHING;
+	'''.format(tm_url=tm_url)
+	logging.info("\n%s", insert_parameters_query)
+	_ = exec_psql(conn_str, insert_parameters_query)
+
+	logging.info("\n=========== Setting up profiles")
+	insert_profiles_query = "\n\t-- global parameters" + '''
+		INSERT INTO profile (name, description, type, cdn)
+		VALUES ('GLOBAL' 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL'))
+		ON CONFLICT DO NOTHING;
+
+		INSERT INTO profile_parameter (profile, parameter)
+		VALUES
+			(
+				(SELECT id FROM profile WHERE name = 'GLOBAL'),
+				(
+					SELECT id
+					FROM parameter
+					WHERE name = 'tm.url'
+						AND config_file = 'global'
+						AND value = '{tm_url}'
+				)
+			),
+			(
+				(SELECT id FROM profile WHERE name = 'GLOBAL'),
+				(
+					SELECT id
+					FROM parameter
+					WHERE name = 'tm.infourl'
+						AND config_file = 'global'
+						AND value = '{tm_url}/doc'
+				)
+			),
+			(
+				(SELECT id FROM profile WHERE name = 'GLOBAL'),
+				(
+					SELECT id
+					FROM parameter
+					WHERE name = 'geolocation.polling.url'
+						AND config_file = 'CRConfig.json'
+						AND value = '{tm_url}/routing/GeoLite2-City.mmdb.gz'
+				)
+			),
+			(
+				(SELECT id FROM profile WHERE name = 'GLOBAL'),
+				(
+					SELECT id
+					FROM parameter
+					WHERE name = 'geolocation6.polling.url'
+						AND config_file = 'CRConfig.json'
+						AND value = '{tm_url}/routing/GeoLiteCityv6.mmdb.gz'
+				)
+			)
+		ON CONFLICT (profile, parameter) DO NOTHING;
+	'''.format(tm_url=tm_url)
+	logging.info("\n%s", insert_profiles_query)
+	_ = exec_psql(conn_str, insert_cdn_query)
+
+def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, root_dir: str = "/", ops_user: str = "trafops", ops_group: str = "trafops", no_restart_to: bool = False) -> int:
 	"""
 	Runs the main routine given the parsed arguments as input.
 	"""
@@ -744,6 +883,40 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 		logging.critical("Generating cdn.conf: %s", e)
 		return 1
 
+	try:
+		conn_str = db_connection_string(dbconf, todbconf)
+	except KeyError as e:
+		logging.error("Missing database connection variable: %s", e)
+		logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
+		return -1
+
+	if not os.path.isfile("/usr/bin/psql") or not os.access("/usr/bin/psql", os.X_OK):
+		logging.critical("psql is not installed, please install it to continue with database setup")
+		return 1
+
+	try:
+		setup_database_data(conn_str, admin_conf, paramconf, root_dir)
+	except (OSError, subprocess.SubprocessError)as e:
+		logging.error("Failed to set up database: %s", e)
+		logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
+		return -1
+
+
+	if not no_restart_to:
+		logging.info("Starting Traffic Ops")
+		try:
+			proc = subprocess.run(["/sbin/service", "traffic_ops", "restart"], capture_output=True, universal_newlines=True)
+		except (OSError, subprocess.SubprocessError) as e:
+			logging.critical("Failed to restart Traffic Ops, return code %d: %s", proc.returncode, e)
+			logging.debug("stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
+			return 1
+		# Perl didn't actually do any "waiting" before reporting success, so
+		# neither do we
+		logging.info("Waiting for Traffic Ops to restart")
+	else:
+		logging.info("Skipping Traffic Ops restart")
+	logging.info("Success! Postinstall complete.")
+
 	return 0
 
 if __name__ == '__main__':
@@ -756,10 +929,11 @@ if __name__ == '__main__':
 	parser.add_argument("-r", "--root-directory", help="Set the directory to be treated as the system's root directory (e.g. for testing)", type=str, default="/")
 	parser.add_argument("-u", "--ops-user", help="Specify a username to own Traffic Ops files and processes", type=str, default="trafops")
 	parser.add_argument("-g", "--ops-group", help="Specify the group to own Traffic Ops files and processes", type=str, default="trafops")
+	parser.add_argument("--no-restart-to", help="Skip restarting Traffic Ops after configuration and database changes are applied", action="store_true")
 
 	args = parser.parse_args()
 
 	if not args.no_root and os.getuid() != 0:
 		logging.error("You must run this script as the root user")
 		sys.exit(1)
-	sys.exit(main(args.automatic, args.debug, args.defaults, args.cfile, os.path.abspath(args.root_directory), args.ops_user, args.ops_group))
+	sys.exit(main(args.automatic, args.debug, args.defaults, args.cfile, os.path.abspath(args.root_directory), args.ops_user, args.ops_group, args.no_restart_to))
