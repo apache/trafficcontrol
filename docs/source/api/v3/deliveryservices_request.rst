@@ -19,14 +19,14 @@
 ``deliveryservices/request``
 ****************************
 
-.. seealso:: :ref:`ds_requests`
+.. note:: This route does NOT do the same thing as :ref:`POST deliveryservice_requests<to-api-deliveryservice-requests-post>`.
 
 ``POST``
 ========
-Allows a user to submit Delivery Service Requests.
+Submits an emailed requesting that a :term:`Delivery Service` be created.
 
 :Auth. Required: Yes
-:Roles Required: None
+:Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
 :Response Type:  ``undefined``
 
 Request Structure
