@@ -32,7 +32,6 @@ To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly us
 	* `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
 	* Access to a working instance of Traffic Ops
 
-.. note:: The Traffic Portal consumes the Traffic Ops API. Modify traffic_portal/conf/config.js to specify the location of Traffic Ops.
 
 Traffic Portal Project Tree Overview
 =====================================
@@ -90,3 +89,5 @@ Installing The Traffic Portal Developer Environment
 	#. Modify ``log.stream`` to be ``./server/log/access.log``.
 
 #. Navigate to http(s)://localhost:[port|sslPort defined in ``traffic_portal/conf/config.js``]
+
+.. note:: The Traffic Portal consumes the Traffic Ops API. Modify traffic_portal/conf/config.js to specify the location of Traffic Ops.
