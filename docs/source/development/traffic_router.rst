@@ -40,6 +40,30 @@ To work on Traffic Router you need a \*nix (MacOS and Linux are most commonly us
 * Tomcat Native >= 1.2.16
 * Not Tomcat - You do not need a Tomcat installation for development. An embedded version is launched for development testing instead.
 
+.. _dev-tr-mac-jdk:
+
+Get OpenJDK 8 on macOS
+--------------------------
+If you are on macOS, OpenJDK 8 is not available from Homebrew by default, but it can still be installed using Homebrew with little effort.
+
+Using Homebrew, |AdoptOpenJDK instructions|_
+
+.. code-block:: shell
+	:caption: Install OpenJDK 8 on macOS
+
+        brew tap AdoptOpenJDK/openjdk
+        brew cask install adoptopenjdk8
+
+Next, set the JAVA_HOME environment variable. Add this line to your ``~/.bash_profile``:
+
+.. code-block:: shell
+        :caption: Set JAVA_HOME environment variable
+
+        export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
+
+.. |AdoptOpenJDK instructions| replace:: add the AdoptOpenJDK tap and install the ``adoptopenjdk8`` cask
+.. _AdoptOpenJDK instructions: https://github.com/AdoptOpenJDK/homebrew-openjdk#other-versions
+
 Traffic Router Project Tree Overview
 ====================================
 * ``traffic_control/traffic_traffic_router/`` - base directory for Traffic Router
