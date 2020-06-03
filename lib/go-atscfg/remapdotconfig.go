@@ -207,6 +207,8 @@ func GetServerConfigRemapDotConfigForEdge(
 	return text
 }
 
+const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
+
 // BuildRemapLine builds the remap line for the given server and delivery service.
 // The cacheKeyConfigParams map may be nil, if this ds profile had no cache key config params.
 func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int, server *ServerInfo, pData map[string]string, text string, ds RemapConfigDSData, mapFrom string, mapTo string, cacheKeyConfigParams map[string]string) string {
@@ -285,15 +287,23 @@ func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int,
 	if ds.RegexRemap != nil && *ds.RegexRemap != "" {
 		text += ` @plugin=regex_remap.so @pparam=regex_remap_` + ds.Name + ".config"
 	}
+
+	rangeReqTxt := ""
 	if ds.RangeRequestHandling != nil {
 		if *ds.RangeRequestHandling == tc.RangeRequestHandlingBackgroundFetch {
-			text += ` @plugin=background_fetch.so @pparam=bg_fetch.config`
+			rangeReqTxt = ` @plugin=background_fetch.so @pparam=bg_fetch.config`
 		} else if *ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest {
-			text += ` @plugin=cache_range_requests.so `
+			rangeReqTxt = ` @plugin=cache_range_requests.so `
 		} else if *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && ds.RangeSliceBlockSize != nil {
-			text += ` @plugin=slice.so @pparam=--blockbytes=` + strconv.Itoa(*ds.RangeSliceBlockSize) + ` @plugin=cache_range_requests.so	`
+			rangeReqTxt = ` @plugin=slice.so @pparam=--blockbytes=` + strconv.Itoa(*ds.RangeSliceBlockSize) + ` @plugin=cache_range_requests.so	`
 		}
 	}
+	if ds.RemapText != nil && *ds.RemapText != "" && strings.Contains(*ds.RemapText, RemapConfigRangeDirective) {
+		*ds.RemapText = strings.Replace(*ds.RemapText, `__RANGE_DIRECTIVE__`, rangeReqTxt, 1)
+	} else {
+		text += rangeReqTxt
+	}
+
 	if ds.RemapText != nil && *ds.RemapText != "" {
 		text += " " + *ds.RemapText
 	}
