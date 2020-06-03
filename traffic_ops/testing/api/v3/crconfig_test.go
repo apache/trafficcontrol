@@ -24,7 +24,7 @@ import (
 )
 
 func TestCRConfig(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		UpdateTestCRConfigSnapshot(t)
 		SnapshotTestCDNbyName(t)
 		SnapshotTestCDNbyInvalidName(t)
@@ -76,7 +76,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Error("GetDeliveryServiceByXMLIDNullable got unknown delivery service id")
 	}
 	anymapDSID := *res[0].ID
-	_, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
+	_, _, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
 	if err != nil {
 		t.Errorf("POST delivery service servers: %v", err)
 	}

@@ -65,7 +65,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		}
 		reqObj.CDN = &cdn
 	}
-	cgID := int64(inf.IntParams["id"])
+	cgID := inf.IntParams["id"]
 	cgName, ok, err := dbhelpers.GetCacheGroupNameFromID(inf.Tx.Tx, cgID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cachegroup name from ID '"+inf.Params["id"]+"': "+err.Error()))
@@ -88,7 +88,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		CDN:            *reqObj.CDN,
 		CacheGroupID:   cgID,
 	})
-	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.FormatInt(cgID, 10)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates to the "+string(*reqObj.CDN)+" CDN", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.Itoa(cgID)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates to the "+string(*reqObj.CDN)+" CDN", inf.User, inf.Tx.Tx)
 }
 
 type QueueUpdatesResp struct {
@@ -96,10 +96,10 @@ type QueueUpdatesResp struct {
 	Action         string            `json:"action"`
 	ServerNames    []tc.CacheName    `json:"serverNames"`
 	CDN            tc.CDNName        `json:"cdn"`
-	CacheGroupID   int64             `json:"cachegroupID"`
+	CacheGroupID   int               `json:"cachegroupID"`
 }
 
-func queueUpdates(tx *sql.Tx, cgID int64, cdn tc.CDNName, queue bool) ([]tc.CacheName, error) {
+func queueUpdates(tx *sql.Tx, cgID int, cdn tc.CDNName, queue bool) ([]tc.CacheName, error) {
 	q := `
 UPDATE server SET upd_pending = $1
 WHERE server.cachegroup = $2

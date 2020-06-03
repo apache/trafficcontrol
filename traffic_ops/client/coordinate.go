@@ -17,11 +17,9 @@ package client
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
-	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -131,25 +129,4 @@ func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
-}
-
-func (to *Session) SetCachegroupDeliveryServices(cgID int, dsIDs []int64) (tc.CacheGroupPostDSRespResponse, ReqInf, error) {
-	uri := apiBase + `/cachegroups/` + strconv.Itoa(cgID) + `/deliveryservices`
-	req := tc.CachegroupPostDSReq{DeliveryServices: dsIDs}
-	reqBody, err := json.Marshal(req)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
-	if err != nil {
-		return tc.CacheGroupPostDSRespResponse{}, reqInf, err
-	}
-	reqResp, _, err := to.request(http.MethodPost, uri, reqBody)
-	if err != nil {
-		return tc.CacheGroupPostDSRespResponse{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
-	}
-	defer reqResp.Body.Close()
-
-	resp := tc.CacheGroupPostDSRespResponse{}
-	if err := json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
-		return tc.CacheGroupPostDSRespResponse{}, reqInf, errors.New("decoding response: " + err.Error())
-	}
-	return resp, reqInf, nil
 }

@@ -25,7 +25,7 @@ import (
 )
 
 func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		InvalidDeliveryServicesRequiredCapabilityAddition(t)
 		GetTestDeliveryServicesRequiredCapabilities(t)
 	})
@@ -206,7 +206,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// Assign server to ds
-	_, err = TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false)
+	_, _, err = TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false)
 	if err != nil {
 		t.Fatalf("cannot CREATE server delivery service assignement: %v", err)
 	}

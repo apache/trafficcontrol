@@ -79,9 +79,6 @@ func GetHostingDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Errorf("hosting config DEBUG params %+v\n", params)
-	log.Errorf("hosting config DEBUG multiParams %+v\n", multiParams)
-
 	txt := atscfg.MakeHostingDotConfig(serverName, toToolName, toURL, params, origins)
 
 	w.Header().Set("Content-Type", "text/plain")
@@ -118,8 +115,6 @@ WHERE
 `
 	}
 	// Note the 'ds.cdn_id = s.cdn_id' in the query shouldn't be necessary, but it is, because there's no DB constraint.
-
-	log.Errorln("hosting config DEBUG qry QQ" + qry + "QQ")
 
 	rows, err := tx.Query(qry, serverName)
 	if err != nil {

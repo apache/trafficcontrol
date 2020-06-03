@@ -84,15 +84,25 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 	serverInfo, ok, err := dbhelpers.GetServerInfo(server, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
+		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
 		return
 	}
 
-	if !strings.HasPrefix(serverInfo.Type, "ORG") {
+	if !strings.HasPrefix(serverInfo.Type, tc.OriginTypeName) {
 		usrErr, sysErr, status := ValidateDSCapabilities(dsList, serverInfo.HostName, inf.Tx.Tx)
 		if usrErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
+			return
+		}
+		dses, sysErr := dbhelpers.GetDeliveryServicesWithTopologies(inf.Tx.Tx, dsList)
+		if sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		if len(dses) > 0 {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("delivery services %v are already assigned to a topology", dses), nil)
 			return
 		}
 	}

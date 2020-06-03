@@ -23,7 +23,7 @@ import (
 )
 
 func TestServerServerCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
 		GetTestServerServerCapabilities(t)
 	})
 }
@@ -186,7 +186,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		dsReqCap := dsReqCapResp[0]
 
 		// Assign server to ds
-		_, err = TOSession.CreateDeliveryServiceServers(*dsReqCap.DeliveryServiceID, []int{*ssc.ServerID}, false)
+		_, _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap.DeliveryServiceID, []int{*ssc.ServerID}, false)
 		if err != nil {
 			t.Fatalf("cannot CREATE server delivery service assignment: %v", err)
 		}

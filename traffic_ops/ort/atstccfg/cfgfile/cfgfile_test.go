@@ -210,94 +210,86 @@ func randDS() *tc.DeliveryServiceNullable {
 	deepCachingTypeNever := tc.DeepCachingTypeNever
 	dsTypeHTTP := tc.DSTypeHTTP
 	protocol := tc.DSProtocolHTTP
-	return &tc.DeliveryServiceNullable{
-		EcsEnabled:          *randBool(),
-		RangeSliceBlockSize: randInt(),
-		DeliveryServiceNullableV14: tc.DeliveryServiceNullableV14{
-			ConsistentHashRegex: randStr(),
-			ConsistentHashQueryParams: []string{
-				*randStr(),
-				*randStr(),
-			},
-			MaxOriginConnections: randInt(),
-			DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
-				DeepCachingType:   &deepCachingTypeNever,
-				FQPacingRate:      randInt(),
-				SigningAlgorithm:  randStr(),
-				Tenant:            randStr(),
-				TRResponseHeaders: randStr(),
-				TRRequestHeaders:  randStr(),
-				DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
-					DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
-						Active:                   randBool(),
-						AnonymousBlockingEnabled: randBool(),
-						CacheURL:                 randStr(),
-						CCRDNSTTL:                randInt(),
-						CDNID:                    randInt(),
-						CDNName:                  randStr(),
-						CheckPath:                randStr(),
-						DisplayName:              randStr(),
-						DNSBypassCNAME:           randStr(),
-						DNSBypassIP:              randStr(),
-						DNSBypassIP6:             randStr(),
-						DNSBypassTTL:             randInt(),
-						DSCP:                     randInt(),
-						EdgeHeaderRewrite:        randStr(),
-						GeoLimit:                 randInt(),
-						GeoLimitCountries:        randStr(),
-						GeoLimitRedirectURL:      randStr(),
-						GeoProvider:              randInt(),
-						GlobalMaxMBPS:            randInt(),
-						GlobalMaxTPS:             randInt(),
-						HTTPBypassFQDN:           randStr(),
-						ID:                       randInt(),
-						InfoURL:                  randStr(),
-						InitialDispersion:        randInt(),
-						IPV6RoutingEnabled:       randBool(),
-						LastUpdated:              &tc.TimeNoMod{Time: time.Now()},
-						LogsEnabled:              randBool(),
-						LongDesc:                 randStr(),
-						LongDesc1:                randStr(),
-						LongDesc2:                randStr(),
-						MatchList: &[]tc.DeliveryServiceMatch{
-							tc.DeliveryServiceMatch{
-								Type:      tc.DSMatchTypeHostRegex,
-								SetNumber: 0,
-								Pattern:   `\.*foo\.*`,
-							},
-						},
-						MaxDNSAnswers:        randInt(),
-						MidHeaderRewrite:     randStr(),
-						MissLat:              randFloat64(),
-						MissLong:             randFloat64(),
-						MultiSiteOrigin:      randBool(),
-						OriginShield:         randStr(),
-						OrgServerFQDN:        randStr(),
-						ProfileDesc:          randStr(),
-						ProfileID:            randInt(),
-						ProfileName:          randStr(),
-						Protocol:             &protocol,
-						QStringIgnore:        randInt(),
-						RangeRequestHandling: randInt(),
-						RegexRemap:           randStr(),
-						RegionalGeoBlocking:  randBool(),
-						RemapText:            randStr(),
-						RoutingName:          randStr(),
-						Signed:               *randBool(),
-						SSLKeyVersion:        randInt(),
-						TenantID:             randInt(),
-						Type:                 &dsTypeHTTP,
-						TypeID:               randInt(),
-						XMLID:                randStr(),
-						ExampleURLs: []string{
-							*randStr(),
-							*randStr(),
-						},
-					},
-				},
-			},
+	ds := tc.DeliveryServiceNullable{}
+	ds.EcsEnabled = *randBool()
+	ds.RangeSliceBlockSize = randInt()
+	ds.ConsistentHashRegex = randStr()
+	ds.ConsistentHashQueryParams = []string{
+		*randStr(),
+		*randStr(),
+	}
+	ds.MaxOriginConnections = randInt()
+	ds.DeepCachingType = &deepCachingTypeNever
+	ds.FQPacingRate = randInt()
+	ds.SigningAlgorithm = randStr()
+	ds.Tenant = randStr()
+	ds.TRResponseHeaders = randStr()
+	ds.TRRequestHeaders = randStr()
+	ds.Active = randBool()
+	ds.AnonymousBlockingEnabled = randBool()
+	ds.CacheURL = randStr()
+	ds.CCRDNSTTL = randInt()
+	ds.CDNID = randInt()
+	ds.CDNName = randStr()
+	ds.CheckPath = randStr()
+	ds.DisplayName = randStr()
+	ds.DNSBypassCNAME = randStr()
+	ds.DNSBypassIP = randStr()
+	ds.DNSBypassIP6 = randStr()
+	ds.DNSBypassTTL = randInt()
+	ds.DSCP = randInt()
+	ds.EdgeHeaderRewrite = randStr()
+	ds.GeoLimit = randInt()
+	ds.GeoLimitCountries = randStr()
+	ds.GeoLimitRedirectURL = randStr()
+	ds.GeoProvider = randInt()
+	ds.GlobalMaxMBPS = randInt()
+	ds.GlobalMaxTPS = randInt()
+	ds.HTTPBypassFQDN = randStr()
+	ds.ID = randInt()
+	ds.InfoURL = randStr()
+	ds.InitialDispersion = randInt()
+	ds.IPV6RoutingEnabled = randBool()
+	ds.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
+	ds.LogsEnabled = randBool()
+	ds.LongDesc = randStr()
+	ds.LongDesc1 = randStr()
+	ds.LongDesc2 = randStr()
+	ds.MatchList = &[]tc.DeliveryServiceMatch{
+		{
+			Type:      tc.DSMatchTypeHostRegex,
+			SetNumber: 0,
+			Pattern:   `\.*foo\.*`,
 		},
 	}
+	ds.MaxDNSAnswers = randInt()
+	ds.MidHeaderRewrite = randStr()
+	ds.MissLat = randFloat64()
+	ds.MissLong = randFloat64()
+	ds.MultiSiteOrigin = randBool()
+	ds.OriginShield = randStr()
+	ds.OrgServerFQDN = randStr()
+	ds.ProfileDesc = randStr()
+	ds.ProfileID = randInt()
+	ds.ProfileName = randStr()
+	ds.Protocol = &protocol
+	ds.QStringIgnore = randInt()
+	ds.RangeRequestHandling = randInt()
+	ds.RegexRemap = randStr()
+	ds.RegionalGeoBlocking = randBool()
+	ds.RemapText = randStr()
+	ds.RoutingName = randStr()
+	ds.Signed = *randBool()
+	ds.SSLKeyVersion = randInt()
+	ds.TenantID = randInt()
+	ds.Type = &dsTypeHTTP
+	ds.TypeID = randInt()
+	ds.XMLID = randStr()
+	ds.ExampleURLs = []string{
+		*randStr(),
+		*randStr(),
+	}
+	return &ds
 }
 
 func randServer() *tc.Server {

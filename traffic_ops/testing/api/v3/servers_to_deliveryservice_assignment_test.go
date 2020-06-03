@@ -15,15 +15,17 @@ package v3
 */
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestAssignments(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Tenants, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Tenants, Topologies, DeliveryServices}, func() {
 		AssignTestDeliveryService(t)
 		AssignIncorrectTestDeliveryService(t)
+		AssignTopologyBasedDeliveryService(t)
 	})
 }
 
@@ -106,6 +108,65 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(server.ID, []int{*firstDS.ID}, false)
 	if err == nil {
 		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
+	}
+
+	response, _, err := TOSession.GetServerIDDeliveryServices(server.ID)
+	t.Logf("response: %+v", response)
+	if err != nil {
+		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *server, err)
+	}
+
+	var found bool
+	for _, ds := range response {
+
+		if ds.ID != nil && *ds.ID == *firstDS.ID {
+			found = true
+			break
+		}
+	}
+
+	if found {
+		t.Errorf(`Invalid Server/DS assignment was created!`)
+	}
+}
+
+func AssignTopologyBasedDeliveryService(t *testing.T) {
+	var server *tc.Server
+	for _, s := range testData.Servers {
+		if s.CDNName == "cdn1" && s.Type == string(tc.CacheTypeEdge) {
+			server = &s
+			break
+		}
+	}
+	if server == nil {
+		t.Fatalf("Couldn't find an EDGE server in CDN 'cdn1'!")
+	}
+
+	rs, _, err := TOSession.GetServerByHostName(server.HostName)
+	if err != nil {
+		t.Fatalf("Failed to fetch server information: %v", err)
+	} else if len(rs) == 0 {
+		t.Fatalf("Failed to fetch server information: No results returned!")
+	}
+	server = &rs[0]
+
+	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top")
+	if err != nil {
+		t.Fatalf("Failed to fetch DS information: %v", err)
+	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: No results returned!")
+	}
+	firstDS := rd[0]
+
+	if firstDS.ID == nil {
+		t.Fatal("Fetch DS information returned unknown ID")
+	}
+	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(server.ID, []int{*firstDS.ID}, false)
+	if err == nil {
+		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("assigning Topology-based delivery service to server - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
 	response, _, err := TOSession.GetServerIDDeliveryServices(server.ID)

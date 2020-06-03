@@ -22,7 +22,7 @@ import (
 )
 
 func TestServers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Servers}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Topologies, DeliveryServices, Servers}, func() {
 		UpdateTestServers(t)
 		GetTestServersDetails(t)
 		GetTestServers(t)
@@ -121,7 +121,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Assign server to DS
-	_, err = TOSession.CreateDeliveryServiceServers(*dses[0].ID, []int{remoteServer.ID}, true)
+	_, _, err = TOSession.CreateDeliveryServiceServers(*dses[0].ID, []int{remoteServer.ID}, true)
 	if err != nil {
 		t.Fatalf("POST delivery service servers: %v", err)
 	}

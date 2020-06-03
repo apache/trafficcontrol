@@ -17,12 +17,12 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, deliveryService, origin, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, $q, $location, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
+var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, deliveryService, origin, topologies, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, $q, $location, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
 
 	$scope.dsRequest = deliveryServiceRequest[0];
 		
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: $scope.dsRequest.deliveryService, dsCurrent: deliveryService, origin: origin, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: $scope.dsRequest.deliveryService, dsCurrent: deliveryService, origin: origin, topologies: topologies, type: type, types: types, $scope: $scope }));
 
 	$scope.changeType = $scope.dsRequest.changeType;
 
@@ -265,5 +265,5 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 };
 
-FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'deliveryService', 'origin', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', '$q', '$location', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
+FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'deliveryService', 'origin', 'topologies', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', '$q', '$location', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
 module.exports = FormEditDeliveryServiceRequestController;

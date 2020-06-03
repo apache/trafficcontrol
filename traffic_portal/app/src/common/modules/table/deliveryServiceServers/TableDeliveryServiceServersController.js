@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServiceServersController = function(deliveryService, servers, $controller, $scope, $uibModal, deliveryServiceService) {
+var TableDeliveryServiceServersController = function(deliveryService, servers, $controller, $scope, $uibModal, deliveryServiceService, serverUtils) {
 
 	// extends the TableServersController to inherit common methods
 	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
@@ -34,6 +34,10 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	};
 
 	$scope.deliveryService = deliveryService;
+
+	$scope.isEdge = serverUtils.isEdge;
+
+	$scope.isOrigin = serverUtils.isOrigin;
 
 	// adds some items to the base servers context menu
 	$scope.contextMenuItems.splice(2, 0,
@@ -138,5 +142,5 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 };
 
-TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$controller', '$scope', '$uibModal', 'deliveryServiceService'];
+TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$controller', '$scope', '$uibModal', 'deliveryServiceService', 'serverUtils'];
 module.exports = TableDeliveryServiceServersController;

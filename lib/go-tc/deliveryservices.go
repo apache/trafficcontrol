@@ -159,9 +159,14 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceNullableV15 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
+type DeliveryServiceNullableV30 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
 
 type DeliveryServiceNullable struct {
+	DeliveryServiceNullableV15
+	Topology *string `json:"topology" db:"topology"`
+}
+
+type DeliveryServiceNullableV15 struct {
 	DeliveryServiceNullableV14
 	EcsEnabled          bool `json:"ecsEnabled" db:"ecs_enabled"`
 	RangeSliceBlockSize *int `json:"rangeSliceBlockSize" db:"range_slice_block_size"`
@@ -415,6 +420,14 @@ func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"topology": validation.Validate(ds,
+			validation.By(func(dsi interface{}) error {
+				ds := dsi.(*DeliveryServiceNullable)
+				if ds.Topology != nil && DSType(typeName).IsSteering() {
+					return fmt.Errorf("steering deliveryservice types cannot be assigned to a topology")
+				}
+				return nil
+			})),
 	}
 	toErrs := tovalidate.ToErrors(errs)
 	if len(toErrs) > 0 {
@@ -601,13 +614,13 @@ type DSServerIDs struct {
 }
 
 type CachegroupPostDSReq struct {
-	DeliveryServices []int64 `json:"deliveryServices"`
+	DeliveryServices []int `json:"deliveryServices"`
 }
 
 type CacheGroupPostDSResp struct {
 	ID               util.JSONIntStr `json:"id"`
 	ServerNames      []CacheName     `json:"serverNames"`
-	DeliveryServices []int64         `json:"deliveryServices"`
+	DeliveryServices []int           `json:"deliveryServices"`
 }
 
 type CacheGroupPostDSRespResponse struct {
