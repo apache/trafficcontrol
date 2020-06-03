@@ -156,24 +156,29 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 }
 
 func AssignTopologyBasedDeliveryService(t *testing.T) {
-	var server *tc.Server
+	var server *tc.ServerNullable
 	for _, s := range testData.Servers {
-		if s.CDNName == "cdn1" && s.Type == string(tc.CacheTypeEdge) {
+		if s.CDNName != nil && *s.CDNName == "cdn1" && s.Type == string(tc.CacheTypeEdge) {
 			server = &s
 			break
 		}
 	}
-	if server == nil {
+	if server == nil || server.HostName == nil {
 		t.Fatalf("Couldn't find an EDGE server in CDN 'cdn1'!")
 	}
 
-	rs, _, err := TOSession.GetServerByHostName(server.HostName)
+	params := url.Values{}
+	params.Add("hostName", *server.HostName)
+	rs, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
-	} else if len(rs) == 0 {
+	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
-	server = &rs[0]
+	server = &rs.Response[0]
+	if server.ID == nil {
+		t.Fatal("Server had nil ID")
+	}
 
 	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top")
 	if err != nil {
@@ -186,7 +191,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(server.ID, []int{*firstDS.ID}, false)
+	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false)
 	if err == nil {
 		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
 	}
@@ -194,7 +199,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatalf("assigning Topology-based delivery service to server - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(server.ID)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID)
 	t.Logf("response: %+v", response)
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *server, err)

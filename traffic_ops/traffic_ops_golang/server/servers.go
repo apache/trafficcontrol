@@ -1202,8 +1202,15 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tx.QueryRow(deleteServerQuery, id).Scan(); err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
+	if _, err := tx.Exec(deleteServerQuery, id); err != nil {
+		if err == sql.ErrNoRows {
+			log.Warnf("Server #%d existed earlier in DELETE handler but no longer did on deletion", id)
+			userErr = fmt.Errorf("no server exists by id #%d", id)
+			errCode = http.StatusNotFound
+		} else {
+			log.Errorf("Raw error: %v", err)
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}

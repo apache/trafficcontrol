@@ -51,10 +51,10 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	if ds[0].Topology == nil {
 		t.Fatal("expected delivery service: 'ds-top' to have a non-nil Topology, actual: nil")
 	}
-	serversResp, _, err := TOSession.GetServers()
-	servers := []tc.Server{}
-	for _, s := range serversResp {
-		if s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
+	serversResp, _, err := TOSession.GetServers(nil)
+	servers := []tc.ServerNullable{}
+	for _, s := range serversResp.Response {
+		if s.CDNID != nil && *s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
 			servers = append(servers, s)
 		}
 	}
@@ -63,8 +63,8 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	}
 	serverNames := []string{}
 	for _, s := range servers {
-		if s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
-			serverNames = append(serverNames, s.HostName)
+		if s.CDNID != nil && *s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() && s.HostName != nil {
+			serverNames = append(serverNames, *s.HostName)
 		} else {
 			t.Fatalf("expected only EDGE servers in cdn '%s', actual: %v", *ds[0].CDNName, servers)
 		}
@@ -77,7 +77,7 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatalf("assigning servers to topology-based delivery service - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
-	_, reqInf, err = TOSession.CreateDeliveryServiceServers(*ds[0].ID, []int{servers[0].ID}, false)
+	_, reqInf, err = TOSession.CreateDeliveryServiceServers(*ds[0].ID, []int{*servers[0].ID}, false)
 	if err == nil {
 		t.Fatal("creating deliveryserviceserver assignment for topology-based delivery service - expected: error, actual: nil error")
 	}
