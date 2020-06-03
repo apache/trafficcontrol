@@ -1202,16 +1202,16 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := tx.Exec(deleteServerQuery, id); err != nil {
-		if err == sql.ErrNoRows {
-			log.Warnf("Server #%d existed earlier in DELETE handler but no longer did on deletion", id)
-			userErr = fmt.Errorf("no server exists by id #%d", id)
-			errCode = http.StatusNotFound
-		} else {
-			log.Errorf("Raw error: %v", err)
-			userErr, sysErr, errCode = api.ParseDBError(err)
-		}
+	if result, err := tx.Exec(deleteServerQuery, id); err != nil {
+		log.Errorf("Raw error: %v", err)
+		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	} else if rowsAffected, err := result.RowsAffected(); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("getting rows affected by server delete: %v", err))
+		return
+	} else if rowsAffected != 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("incorrect number of rows affected: %d", rowsAffected))
 		return
 	}
 
