@@ -1,10 +1,5 @@
 package servers
 
-import (
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"testing"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,12 +19,17 @@ import (
  * under the License.
  */
 
+import (
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"testing"
+)
+
 func TestValidateDSSAssignments(t *testing.T) {
 	expected := `server and delivery service CDNs do not match`
 	cdnID := 1
 	ds := DSInfo{
-		ID:                   0,
-		CDNID:                &cdnID,
+		ID:    0,
+		CDNID: &cdnID,
 	}
 	var servers []dbhelpers.ServerHostNameCdnIdAndType
 	server := dbhelpers.ServerHostNameCdnIdAndType{
