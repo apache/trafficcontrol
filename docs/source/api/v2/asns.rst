@@ -182,18 +182,9 @@ Updates an existing :abbr:`ASN (Autonomous System Number)`.
 
 Request Structure
 -----------------
-	+--------------+----------+---------------------------------------------------------------------------------+
-	| Name         | Required | Description                                                                     |
-	+==============+==========+=================================================================================+
-	| asn          | Yes      | The value of the new :abbr:`ASN (Autonomous System Number)`.                    |
-	+--------------+----------+---------------------------------------------------------------------------------+
-	| cachegroup   | Yes      | A string that specifies the :ref:`cache-group-name` of a :term:`Cache Group` to |
-	|              |          | which this :abbr:`ASN (Autonomous System Number)` will be assigned. If you do   |
-	|              |          | not pass this field, the cachegroup will be ``null``. For that reason, we list  |
-	|              |          | it as required.                                                                 |
-	+--------------+----------+---------------------------------------------------------------------------------+
-	| cachegroupId | Yes      | The integral, unique identifier of the status of the :term:`Cache Group`.       |
-	+--------------+----------+---------------------------------------------------------------------------------+
+:asn:           The value of the new :abbr:`ASN (Autonomous System Number)`.
+:cachegroup:    A string that specifies the :ref:`cache-group-name` of a :term:`Cache Group` to which this :abbr:`ASN (Autonomous System Number)` will be assigned. If you do not pass this field, the cachegroup will be ``null``.
+:cachegroupId:  The integral, unique identifier of the status of the :term:`Cache Group`.
 
 .. code-block:: http
 	:caption: Request Example
