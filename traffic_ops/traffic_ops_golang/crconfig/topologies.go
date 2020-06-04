@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/lib/pq"
 )
@@ -46,6 +47,7 @@ ORDER BY t.name
 	if rows, err = tx.Query(query, tc.CacheGroupEdgeTypeName); err != nil {
 		return nil, errors.New("querying topologies: " + err.Error())
 	}
+	defer log.Close(rows, "unable to close DB connection")
 
 	topologies := map[string]tc.CRConfigTopology{}
 	for rows.Next() {
@@ -58,9 +60,6 @@ ORDER BY t.name
 			return nil, errors.New("scanning topology: " + err.Error())
 		}
 		topologies[name] = topology
-	}
-	if err = rows.Close(); err != nil {
-		return nil, fmt.Errorf("closing rows: %s", err.Error())
 	}
 	return topologies, nil
 }
