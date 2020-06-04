@@ -1,14 +1,5 @@
 package crconfig
 
-import (
-	"database/sql"
-	"errors"
-	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/lib/pq"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -27,6 +18,14 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"database/sql"
+	"errors"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/lib/pq"
+)
 
 func makeTopologies(tx *sql.Tx) (map[string]tc.CRConfigTopology, error) {
 	query := `
