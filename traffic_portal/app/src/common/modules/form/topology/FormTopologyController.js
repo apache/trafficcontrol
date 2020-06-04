@@ -93,6 +93,8 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 				node.parent = "";
 				node.secParent = "";
 			}
+			// marks the form as dirty thus enabling the save btn
+			$scope.topologyForm.dirty.$setDirty();
 			return true;
 		}
 	};
@@ -150,6 +152,8 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 			} else {
 				node.secParent = '';
 			}
+			// marks the form as dirty thus enabling the save btn
+			$scope.topologyForm.dirty.$setDirty();
 		});
 	};
 
@@ -157,6 +161,8 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		if (node.cachegroup) {
 			removeSecParentReferences($scope.topologyTree, node.cachegroup);
 			scope.remove();
+			// marks the form as dirty thus enabling the save btn
+			$scope.topologyForm.dirty.$setDirty();
 		}
 	};
 
@@ -227,6 +233,8 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 			cacheGroupNodes.forEach(function(node) {
 				nodeData.children.unshift(node);
 			});
+			// marks the form as dirty thus enabling the save btn
+			$scope.topologyForm.dirty.$setDirty();
 		});
 	};
 
