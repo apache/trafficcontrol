@@ -672,42 +672,76 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		ids = append(ids, *s.ID)
 	}
 
-	interfaceRows, err := tx.Tx.Query(SelectInterfacesQuery, pq.Array(ids))
-	if err != nil {
-		return nil, serverCount, nil, fmt.Errorf("querying for interfaces: %v", err), http.StatusInternalServerError
-	}
-	defer interfaceRows.Close()
-
-	for interfaceRows.Next() {
-		ifaces := []tc.ServerInterfaceInfo{}
-		var id int
-		if err = interfaceRows.Scan(pq.Array(&ifaces), &id); err != nil {
-			return nil, serverCount, nil, fmt.Errorf("getting server interfaces: %v", err), http.StatusInternalServerError
-		}
-
-		if s, ok := servers[id]; !ok {
-			log.Warnf("interfaces query returned interfaces for server #%d that was not in original query", id)
-		} else {
-			s.Interfaces = ifaces
-			servers[id] = s
-		}
-	}
-
-	returnable := make([]tc.ServerNullable, 0, len(servers))
-	for _, server := range servers {
-		returnable = append(returnable, server)
-	}
-
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
-		mids, userErr, sysErr, errCode := getMidServers(returnable, tx)
+		userErr, sysErr, errCode := getMidServers(ids, servers, tx)
 
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
 		if userErr != nil || sysErr != nil {
 			return nil, serverCount, userErr, sysErr, errCode
 		}
-		returnable = append(returnable, mids...)
+	}
+
+	interfaces := map[int]map[string]tc.ServerInterfaceInfo{}
+	interfaceRows, err := tx.Tx.Query(`SELECT monitor, mtu, name, server FROM interface`)
+	if err != nil {
+		return nil, serverCount, nil, fmt.Errorf("querying for interfaces: %v", err), http.StatusInternalServerError
+	}
+	defer interfaceRows.Close()
+
+	for interfaceRows.Next() {
+		iface := tc.ServerInterfaceInfo{
+			IPAddresses: []tc.ServerIPAddress{},
+		}
+		var server int
+
+		if err = interfaceRows.Scan(&iface.Monitor, &iface.MTU, &iface.Name, &server); err != nil {
+			return nil, serverCount, nil, fmt.Errorf("getting server interfaces: %v", err), http.StatusInternalServerError
+		}
+
+		if _, ok := servers[server]; !ok  {
+			continue
+		}
+
+		if _, ok := interfaces[server]; !ok {
+			interfaces[server] = map[string]tc.ServerInterfaceInfo{}
+		}
+		interfaces[server][iface.Name] = iface
+	}
+
+	ipRows, err := tx.Tx.Query(`SELECT address, gateway, service_address, server, interface FROM ip_address`)
+	if err != nil {
+		return nil, serverCount, nil, fmt.Errorf("querying for IP addresses: %v", err), http.StatusInternalServerError
+	}
+	defer ipRows.Close()
+
+	for ipRows.Next() {
+		var ip tc.ServerIPAddress
+		var server int
+		var iface string
+
+		if err = ipRows.Scan(&ip.Address, &ip.Gateway, &ip.ServiceAddress, &server, &iface); err != nil {
+			return nil, serverCount, nil, fmt.Errorf("getting server IP addresses: %v", err), http.StatusInternalServerError
+		}
+
+		if _, ok := interfaces[server]; !ok {
+			continue
+		}
+		if i, ok := interfaces[server][iface]; !ok {
+			log.Warnf("IP addresses query returned addresses for an interface that was not found in interfaces query: %s", iface)
+		} else {
+			i.IPAddresses = append(i.IPAddresses, ip)
+			interfaces[server][iface] = i
+		}
+	}
+
+	returnable := make([]tc.ServerNullable, 0, len(servers))
+	for _, server := range servers {
+		for _, iface := range interfaces[*server.ID] {
+			server.Interfaces = append(server.Interfaces, iface)
+		}
+		returnable = append(returnable, server)
 	}
 
 	return returnable, serverCount, nil, nil, http.StatusOK
@@ -721,40 +755,45 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 // pulling the cachegroups of the edges and finding those cachegroups parent
 // cachegroup... then we see which servers have cachegroup in parent cachegroup
 // list...that's how we find mids for the ds :)
-func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullable, error, error, int) {
-	if len(servers) == 0 {
-		return nil, nil, nil, http.StatusOK
-	}
-	var ids []string
-	for _, s := range servers {
-		ids = append(ids, strconv.Itoa(*s.ID))
+func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx) (error, error, int) {
+	if len(edgeIDs) == 0 {
+		return nil, nil, http.StatusOK
 	}
 
-	edgeIDs := strings.Join(ids, ",")
 	// TODO: include secondary parent?
 	q := selectQuery + `
 	WHERE t.name = 'MID' AND s.cachegroup IN (
 	SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
 	WHERE cg.id IN (
 	SELECT s.cachegroup FROM server AS s
-	WHERE s.id IN (` + edgeIDs + `)))
+	WHERE s.id IN ($1)))
 	`
-	rows, err := tx.Queryx(q)
+	rows, err := tx.Queryx(q, pq.Array(edgeIDs))
 	if err != nil {
-		return nil, err, nil, http.StatusBadRequest
+		return err, nil, http.StatusBadRequest
 	}
 	defer rows.Close()
 
-	var mids []tc.ServerNullable
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err := rows.StructScan(&s); err != nil {
 			log.Error.Printf("could not scan mid servers: %s\n", err)
-			return nil, nil, err, http.StatusInternalServerError
+			return nil, err, http.StatusInternalServerError
 		}
-		mids = append(mids, s)
+		if s.ID == nil {
+			return nil, errors.New("found server with nil ID"), http.StatusInternalServerError
+		}
+
+		// This may mean that the server was caught by other query parameters,
+		// so not technically an error, unlike earlier in 'getServers'.
+		if _, ok := servers[*s.ID]; ok {
+			continue
+		}
+
+		servers[*s.ID] = s
 	}
-	return mids, nil, nil, http.StatusOK
+
+	return nil, nil, http.StatusOK
 }
 
 func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error, error, int) {
@@ -1021,6 +1060,7 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	ifaces, err := server.LegacyInterfaceDetails.ToInterfaces(true, true)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
 	}
 
 	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); err != nil {
