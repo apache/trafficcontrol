@@ -365,7 +365,7 @@ def generate_users_conf(qstns: typing.List[Question], fname: str, auto: bool, ro
 	path = os.path.join(root, fname.lstrip('/'))
 	with open(path, 'w+') as conf_file:
 		json.dump({"username": config["tmAdminUser"], "password": hashed_pass}, conf_file, indent="\t")
-		print(file=fd)
+		print(file=conf_file)
 
 	return User(config["tmAdminUser"], config["tmAdminPw"])
 
@@ -390,7 +390,7 @@ def generate_openssl_conf(questions: typing.List[Question], fname: str, auto: bo
 	return SSLConfig(gen_cert, cfg_map)
 
 def generate_param_conf(qstns: typing.List[Question], fname: str, auto: bool, root: str) -> dict:
-	conf = get_config(qstns, fname, automatic)
+	conf = get_config(qstns, fname, auto)
 
 	path = os.path.join(root, fname.lstrip('/'))
 	with open(path, 'w+') as conf_file:
@@ -415,24 +415,26 @@ def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic:
 			logging.warning("File '{}' found in defaults but not config file", fname)
 			cfg[fname] = []
 
-		for defaultValue in file:
-			for configValue in cfg[fname]:
-				if defaultValue.config_var == configValue.config_var:
+		for default_value in file:
+			for config_value in cfg[fname]:
+				if default_value.config_var == config_value.config_var:
 					break
 			else:
-				question = defaultValue.question
-				answer = defaultValue.default
+				question = default_value.question
+				answer = default_value.default
 
 				if not automatic:
 					logging.info("Prompting user for answer")
-					if defaultValue.hidden:
-						answer = defaultValue.ask()
+					if default_value.hidden:
+						answer = default_value.ask()
+				elif default_value.hidden:
+					logging.info("Adding question '{}' with default answer", question)
 				else:
-					logging.info("Adding question '{}' with default answer{}", question, f" {answer}" if not defaultValue.hidden else "")
+					logging.info("Adding question '{}' with default answer {}", question, answer)
 
 				# The Perl here would ask questions, but those would just get asked later
 				# anyway, so I'm not sure why.
-				cfg[fname].append(Question(question, answer, defaultValue.config_var, defaultValue.hidden))
+				cfg[fname].append(Question(question, answer, default_value.config_var, default_value.hidden))
 				diffs += 1
 
 	return diffs
@@ -440,6 +442,7 @@ def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic:
 def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
 	"""
 	Reads in a raw parsed configuration file and returns the resulting configuration.
+
 	>>> unmarshal_config({"test": [{"Do the thing?": "yes", "config_var": "thing"}]})
 	{'test': [Question(question='Do the thing?', default='yes', config_var='thing', hidden=False)]}
 	>>> unmarshal_config({"test": [{"foo": "", "config_var": "bar", "hidden": True}]})
@@ -447,21 +450,22 @@ def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
 	"""
 	ret = {}
 	for file, questions in dct.items():
-		if type(questions) is not list:
+		if isinstance(questions, list):
 			raise ValueError(f"file '{file}' has malformed questions")
 
 		qs = []
 		for q in questions:
-			if type(q) is not dict:
+			if not isinstance(q, dict):
 				raise ValueError(f"file '{file}' has a malformed question ({q})")
 			try:
-				question = next(key for key in q.keys() if q != "hidden" and q != "config_var")
+				question = next(key for key in q.keys() if q not in ("hidden", "config_var"))
 			except StopIteration:
 				raise ValueError(f"question in '{file}' has no question/answer properties ({q})")
 
 			answer = q[question]
-			if type(question) is not str or type(answer) is not str:
-				raise ValueError(f"question in '{file}' has malformed question/answer property ({question}: {answer})")
+			if not isinstance(question, str) or not isinstance(answer, str):
+				errstr = f"question in '{file}' has malformed question/answer property ({question}: {answer})"
+				raise ValueError(errstr)
 
 			del q[question]
 			hidden = False
@@ -472,40 +476,44 @@ def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
 			if "config_var" not in q:
 				raise ValueError(f"question in '{file}' has no 'config_var' property")
 			cfg_var = q["config_var"]
-			if type(cfg_var) is not str:
+			if not isinstance(cfg_var, str):
 				raise ValueError(f"question in '{file}' has malformed 'config_var' property ({cfg_var})")
 			del q["config_var"]
 
 			if q:
-				logging.warning("Found unknown extra properties in question in '%s' (%r)", file, q.keys())
+				logging.warning("Found unknown extra properties in question in '{}' ({r:})", file, q.keys())
 
 			qs.append(Question(question, answer, cfg_var, hidden=hidden))
 		ret[file] = qs
 
 	return ret
 
-def setup_maxmind(mm: str, root: str):
+def setup_maxmind(maxmind_answer: str, root: str):
 	"""
-	If 'mm' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind database using `wget`.
+	If 'maxmind_answer' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind
+	database using `wget`.
 	"""
-	if mm.casefold() not in {'y', 'yes'}:
+	if maxmind_answer.casefold() not in {'y', 'yes'}:
 		logging.info("Not downloading Maxmind data")
 		return
 
 	os.chdir(os.path.join(root, 'opt/traffic_ops/app/public/routing'))
 
+	wget = "/usr/bin/wget"
+	cmd = [wget, "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
 	# Perl ignored errors downloading the databases, so we do too
 	try:
-		subprocess.run(["/usr/bin/wget", "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"], capture_output=True, check=True, universal_newlines=True)
+		subprocess.run(cmd, capture_output=True, check=True, universal_newlines=True)
 	except subprocess.SubprocessError as e:
 		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv4) Exception: %s", e)
+		logging.debug("(ipv4) Exception: {}", e)
 
+	cmd[1] = "https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
 	try:
-		subprocess.run(["/usr/bin/wget", "https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"], capture_output=True, check=True, universal_newlines=True)
+		subprocess.run(cmd, capture_output=True, check=True, universal_newlines=True)
 	except subprocess.SubprocessError as e:
 		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv6) Exception: %s", e)
+		logging.debug("(ipv6) Exception: {}", e)
 
 def exec_openssl(description: str, *cmd_args) -> bool:
 	logging.info(description)
@@ -546,20 +554,63 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 	# Perl logs this before actually generating a key. So we do too.
 	logging.info("The server key has been generated")
 
-	if not exec_openssl("Generating an RSA Private Server Key", "genrsa", "-des3", "-out", "server.key", "-passout", f"pass:{conf.rsa_password}", "1024"):
+	args = (
+		"genrsa",
+		"-des3",
+		"-out",
+		"server.key",
+		"-passout",
+		f"pass:{conf.rsa_password}",
+		"1024"
+	)
+	if not exec_openssl("Generating an RSA Private Server Key", *args):
 		return 1
 
-	if not exec_openssl("Creating a Certificate Signing Request (CSR)", "req", "-new", "-key", "server.key", "-out", "server.csr", "-passin", f"pass:{conf.rsa_password}", "-subj", conf.params()):
+	args = (
+		"req",
+		"-new",
+		"-key",
+		"server.key",
+		"-out",
+		"server.csr",
+		"-passin",
+		f"pass:{conf.rsa_password}",
+		"-subj",
+		conf.params()
+	)
+	if not exec_openssl("Creating a Certificate Signing Request (CSR)", *args):
 		return 1
 
 	logging.info("The Certificate Signing Request has been generated")
 	os.rename("server.key", "server.key.orig")
 
-	if not exec_openssl("Removing the pass phrase from the server key", "rsa", "-in", "server.key.orig", "-out", "server.key", "-passin", f"pass:{conf.rsa_password}"):
+	args = (
+		"rsa",
+		"-in",
+		"server.key.orig",
+		"-out",
+		"server.key",
+		"-passin",
+		f"pass:{conf.rsa_password}"
+	)
+	if not exec_openssl("Removing the pass phrase from the server key", *args):
 		return 1
 
 	logging.info("The pass phrase has been removed from the server key")
-	if not exec_openssl("Generating a Self-signed certificate", "x509", "-req", "-days", "365", "-in", "server.csr", "-signkey", "server.key", "-out", "server.crt"):
+
+	args = (
+		"x509",
+		"-req",
+		"-days",
+		"365",
+		"-in",
+		"server.csr",
+		"-signkey",
+		"server.key",
+		"-out",
+		"server.crt"
+	)
+	if not exec_openssl("Generating a Self-signed certificate", *args):
 		return 1
 
 	logging.info("A server key and self signed certificate has been generated")
@@ -585,38 +636,49 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 	os.chmod(csrpath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
 	shutil.chown(csrpath, user=ops_user, group=ops_group)
 
-	logging.info("\n        The self signed certificate has now been installed.\n\n        You may obtain a certificate signed by a Certificate Authority using the\n        server.csr file saved in the current directory.  Once you have obtained\n        a signed certificate, copy it to %s and\n        restart Traffic Ops.", certpath)
+	log_msg = """
+        The self signed certificate has now been installed.
+
+        You may obtain a certificate signed by a Certificate Authority using the
+        server.csr file saved in the current directory.  Once you have obtained
+        a signed certificate, copy it to {} and
+        restart Traffic Ops."""
+	logging.info(log_msg, certpath)
 
 	cdn_conf_path = os.path.join(root, "opt/traffic_ops/app/conf/cdn.conf")
 	cdn_conf = None
 	try:
-		with open(cdn_conf_path) as fd:
-			cdn_conf = json.load(fd)
+		with open(cdn_conf_path) as conf_file:
+			cdn_conf = json.load(conf_file)
 	except (OSError, json.JSONDecodeError) as e:
 		raise OSError(f"reading {cdn_conf_path}: {e}") from e
 
-	if type(cdn_conf) is not dict or "hypnotoad" not in cdn_conf or type(cdn_conf["hypnotoad"]) is not dict:
-		logging.critical("Malformed %s; improper object and/or missing 'hypnotoad' key", cdn_conf_path)
+	if not isinstance(cdn_conf, dict) or "hypnotoad" not in cdn_conf or not isinstance(cdn_conf["hypnotoad"], dict):
+		logging.critical("Malformed {}; improper object and/or missing 'hypnotoad' key", cdn_conf_path)
 		return 1
 
 	hypnotoad = cdn_conf["hypnotoad"]
-	if "listen" not in hypnotoad or type(hypnotoad["listen"]) is not list or not hypnotoad["listen"] or type(hypnotoad["listen"][0]) is not str:
-		logging.error('\tThe "listen" portion of %s is missing from %s\n\tPlease ensure it contains the same structure as the one originally installed', cdn_conf_path, cdn_conf_path)
+	if "listen" not in hypnotoad or not isinstance(hypnotoad["listen"], list) or not hypnotoad["listen"] or not isinstance(hypnotoad["listen"][0], str):
+		logging.error('\tThe "listen" portion of {} is missing from {}\n\tPlease ensure it contains the same structure as the one originally installed', cdn_conf_path, cdn_conf_path)
 		return 1
 
 	listen = hypnotoad["listen"][0]
 
 	if f"cert={certpath}" not in listen or f"key={keypath}" not in listen:
-		logging.error('\tThe "listen" portion of %s is:\n\t%s\n\tand does not reference the same "cert=" and "key=" values as are created here.\n\tPlease modify %s to add the following as parameters:\n\t?cert=%s&key=%s', cdn_conf_path, listen, cdn_conf_path, certpath, keypath)
+		logging.error('\tThe "listen" portion of {} is:\n\t{}\n\tand does not reference the same "cert=" and "key=" values as are created here.\n\tPlease modify {} to add the following as parameters:\n\t?cert={}&key={}', cdn_conf_path, listen, cdn_conf_path, certpath, keypath)
 		return 1
 
 	return 0
 
 def random_word(length: int = 12) -> str:
+	"""
+	Returns a randomly generated string 'length' characters long containing only word
+	characters ([a-zA-Z0-9_]).
+	"""
 	word_chars = string.ascii_letters + string.digits + '_'
 	return ''.join(random.choice(word_chars) for _ in range(length))
 
-def generate_cdn_conf(questions:typing.List[Question], fname: str, automatic: bool, root: str):
+def generate_cdn_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str):
 	cdn_conf = get_config(questions, fname, automatic)
 
 	if "genSecret" not in cdn_conf:
@@ -658,49 +720,49 @@ def generate_cdn_conf(questions:typing.List[Question], fname: str, automatic: bo
 	conf = CDNConfig(gen_secret, num_secrets, port, workers, url, ldap_loc)
 
 	path = os.path.join(root, fname.lstrip('/'))
-	existingConf = {}
+	existing_conf = {}
 	if os.path.isfile(path):
-		with open(path) as fd:
+		with open(path) as conf_file:
 			try:
-				existingConf = json.load(fd)
+				existing_conf = json.load(conf_file)
 			except json.JSONDecodeError as e:
 				raise ValueError(f"invalid existing cdn.config at {path}: {e}") from e
 
-	if type(existingConf) is not dict:
-		logging.warning("Existing cdn.conf (at '%s') is not an object - overwriting", path)
-		existingConf = {}
+	if not isinstance(existing_conf, dict):
+		logging.warning("Existing cdn.conf (at '{}') is not an object - overwriting", path)
+		existing_conf = {}
 
 	if conf.gen_secret:
-		if type(existingConf) is dict and "secrets" in existingConf and type(existingConf["secrets"]) is list:
+		if isinstance(existing_conf, dict) and "secrets" in existing_conf and isinstance(existing_conf["secrets"], list):
 			logging.debug("Secrets found in cdn.conf file")
 		else:
-			existingConf["secrets"] = []
+			existing_conf["secrets"] = []
 			logging.debug("No secrets found in cdn.conf file")
 
-		existingConf["secrets"].insert(0, random_word())
+		existing_conf["secrets"].insert(0, random_word())
 
-		if conf.num_secrets and len(existingConf["secrets"]) > conf.num_secrets:
-			existingConf["secrets"] = existingConf["secrets"][:conf.num_secrets - 1]
+		if conf.num_secrets and len(existing_conf["secrets"]) > conf.num_secrets:
+			existing_conf["secrets"] = existing_conf["secrets"][:conf.num_secrets - 1]
 
 	if conf.url:
-		if "to" not in existingConf or type(existingConf["to"]) is not dict:
-			existingConf["to"] = {}
-		existingConf["to"]["base_url"] = conf.url
+		if "to" not in existing_conf or not isinstance(existing_conf["to"], dict):
+			existing_conf["to"] = {}
+		existing_conf["to"]["base_url"] = conf.url
 
-	if "traffic_ops_golang" not in existingConf or type(existingConf["traffic_ops_golang"]) is not dict:
-		existingConf["traffic_ops_golang"] = {}
-	existingConf["traffic_ops_golang"]["port"] = conf.port
-	existingConf["traffic_ops_golang"]["log_location_error"] = os.path.join(root, "var/log/traffic_ops/error.log")
-	existingConf["traffic_ops_golang"]["log_location_event"] = os.path.join(root, "var/log/traffic_ops/access.log")
+	if "traffic_ops_golang" not in existing_conf or not isinstance(existing_conf["traffic_ops_golang"], dict):
+		existing_conf["traffic_ops_golang"] = {}
+	existing_conf["traffic_ops_golang"]["port"] = conf.port
+	existing_conf["traffic_ops_golang"]["log_location_error"] = os.path.join(root, "var/log/traffic_ops/error.log")
+	existing_conf["traffic_ops_golang"]["log_location_event"] = os.path.join(root, "var/log/traffic_ops/access.log")
 
-	if "hypnotoad" not in existingConf or type(existingConf["hypnotoad"]) is not dict:
-		existingConf["hypnotoad"]["workers"] = conf.num_workers
+	if "hypnotoad" not in existing_conf or not isinstance(existing_conf["hypnotoad"], dict):
+		existing_conf["hypnotoad"]["workers"] = conf.num_workers
 
-	with open(path, "w+") as fd:
-		json.dump(existingConf, fd, indent="\t")
+	with open(path, "w+") as conf_file:
+		json.dump(existing_conf, conf_file, indent="\t")
 	logging.info("CDN configuration has been saved")
 
-def db_connection_string(dbconf: dict, todbconf: dict) -> str:
+def db_connection_string(dbconf: dict) -> str:
 	"""
 	Constructs a database connection string from the passed configuration objects.
 	"""
@@ -713,9 +775,9 @@ def db_connection_string(dbconf: dict, todbconf: dict) -> str:
 
 def exec_psql(conn_str: str, query: str) -> str:
 	cmd = ["/usr/bin/psql", "--tuples-only", "-d", conn_str, "-c", query]
-	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True)
+	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
 	if proc.returncode != 0:
-		logging.debug("psql exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
+		logging.debug("psql exec failed; stderr: {}\n\tstdout: {}", proc.stderr, proc.stdout)
 		raise OSError("failed to execute database query")
 	return proc.stdout.strip()
 
@@ -725,20 +787,26 @@ def invoke_db_admin_pl(action: str, root: str):
 	# should be fixed at some point, imo, but for now this work.
 	os.chdir(path)
 	cmd = [os.path.join(path, "db/admin"), "--env=production", action]
-	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True)
+	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
 	if proc.returncode != 0:
-		logging.debug("admin exec failed; stderr: %s\n\tstdout:%s", proc.stderr, proc.stdout)
+		logging.debug("admin exec failed; stderr: {}\n\tstdout:{}", proc.stderr, proc.stdout)
 		raise OSError(f"Database {action} failed")
-	logging.info(f"Database {action} succeeded")
+	logging.info("Database {} succeeded", action)
 
 def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 	"""
 	Sets up all necessary initial database data using `/usr/bin/sql`
 	"""
-	logging.info("paramconf %r", param_conf)
+	logging.info("paramconf {}", param_conf)
 	logging.info("Setting up the database data")
 
-	tables_found_query = '''SELECT EXISTS(SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'tm_user');'''
+	tables_found_query = '''
+		SELECT EXISTS(
+			SELECT 1
+			FROM pg_tables
+			WHERE schemaname = 'public'
+				AND tablename = 'tm_user'
+		);'''
 	if exec_psql(conn_str, tables_found_query) == "t":
 		logging.info("Found existing tables skipping table creation")
 	else:
@@ -755,11 +823,11 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 			'{}',
 			(SELECT id FROM tenant WHERE name = 'root'),
 			(SELECT id FROM role WHERE name = 'admin'),
-			'{}',
-			'{}'
+			'{hashed_pass}',
+			'{hashed_pass}'
 		)
 		ON CONFLICT (username) DO NOTHING;
-	'''.format(user.username, hashed_pass, hashed_pass)
+	'''.format(user.username, hashed_pass=hashed_pass)
 	_ = exec_psql(conn_str, insert_admin_query)
 
 	logging.info("=========== Setting up cdn")
@@ -768,7 +836,7 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 		VALUES ('{cdn_name}', '{dns_subdomain}', false)
 		ON CONFLICT DO NOTHING;
 	'''.format(**param_conf)
-	logging.info("\n%s", insert_cdn_query)
+	logging.info("\n{}", insert_cdn_query)
 	_ = exec_psql(conn_str, insert_cdn_query)
 
 	tm_url = param_conf["tm.url"]
@@ -783,7 +851,7 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 			('geolocation6.polling.url', 'CRConfig.json', '{tm_url}/routing/GeoLiteCityv6.dat.jz')
 		ON CONFLICT (name, config_file, value) DO NOTHING;
 	'''.format(tm_url=tm_url)
-	logging.info("\n%s", insert_parameters_query)
+	logging.info("\n{}", insert_parameters_query)
 	_ = exec_psql(conn_str, insert_parameters_query)
 
 	logging.info("\n=========== Setting up profiles")
@@ -836,7 +904,7 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 			)
 		ON CONFLICT (profile, parameter) DO NOTHING;
 	'''.format(tm_url=tm_url)
-	logging.info("\n%s", insert_profiles_query)
+	logging.info("\n{}", insert_profiles_query)
 	_ = exec_psql(conn_str, insert_cdn_query)
 
 def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, root_dir: str = "/", ops_user: str = "trafops", ops_group: str = "trafops", no_restart_to: bool = False) -> int:
@@ -862,64 +930,64 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 		try:
 			if defaults:
 				try:
-					with open(defaults, "w") as fd:
-						json.dump(DEFAULTS, fd, indent="\t")
+					with open(defaults, "w") as dump_file:
+						json.dump(DEFAULTS, dump_file, indent="\t")
 				except OSError as e:
-					logging.critical("Writing output: %s", e)
+					logging.critical("Writing output: {}", e)
 					return 1
 			else:
 				json.dump(DEFAULTS, sys.stdout, cls=ConfigEncoder, indent="\t")
 				print()
 		except ValueError as e:
-			logging.critical("Converting defaults to JSON: %s", e)
+			logging.critical("Converting defaults to JSON: {}", e)
 			return 1
 		return 0
 
-	userInput = None
+	user_input = None
 	if not cfile:
 		logging.info("No input file given - using defaults")
-		userInput = DEFAULTS
+		user_input = DEFAULTS
 	else:
-		logging.info("Using input file %s", cfile)
+		logging.info("Using input file {}", cfile)
 		try:
-			with open(cfile) as fd:
-				userInput = unmarshal_config(json.load(fd))
-			diffs = sanity_check_config(userInput, automatic)
-			logging.info(f"File sanity check complete - found {diffs} difference{'' if diffs == 1 else 's'}")
+			with open(cfile) as conf_file:
+				user_input = unmarshal_config(json.load(conf_file))
+			diffs = sanity_check_config(user_input, automatic)
+			logging.info("File sanity check complete - found {} difference{}", diffs, '' if diffs == 1 else 's')
 		except (OSError, ValueError, json.JSONDecodeError) as e:
-			logging.critical("Reading in input file '%s': %s", cfile, e)
+			logging.critical("Reading in input file '{}': {}", cfile, e)
 			return 1
 
 	try:
 		path = os.path.join(root_dir, "opt/traffic_ops/install/bin")
 		# os.chdir(path)
 	except OSError as e:
-		logging.critical(f"Attempting to change directory to '{path}': {e}")
+		logging.critical("Attempting to change directory to '{}': {}", path, e)
 		return 1
 
 	try:
-		dbconf = generate_db_conf(userInput[DATABASE_CONF_FILE], DATABASE_CONF_FILE, automatic, root_dir)
-		todbconf = generate_todb_conf(userInput[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
-		generate_ldap_conf(userInput[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
-		admin_conf = generate_users_conf(userInput[USERS_CONF_FILE], USERS_CONF_FILE, automatic, root_dir)
-		custom_profile = generate_profiles_dir(userInput[PROFILES_CONF_FILE])
-		opensslconf = generate_openssl_conf(userInput[OPENSSL_CONF_FILE], OPENSSL_CONF_FILE, automatic)
-		paramconf = generate_param_conf(userInput[PARAM_CONF_FILE], PARAM_CONF_FILE, automatic, root_dir)
+		dbconf = generate_db_conf(user_input[DATABASE_CONF_FILE], DATABASE_CONF_FILE, automatic, root_dir)
+		todbconf = generate_todb_conf(user_input[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
+		generate_ldap_conf(user_input[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
+		admin_conf = generate_users_conf(user_input[USERS_CONF_FILE], USERS_CONF_FILE, automatic, root_dir)
+		generate_profiles_dir(user_input[PROFILES_CONF_FILE])
+		opensslconf = generate_openssl_conf(user_input[OPENSSL_CONF_FILE], OPENSSL_CONF_FILE, automatic)
+		paramconf = generate_param_conf(user_input[PARAM_CONF_FILE], PARAM_CONF_FILE, automatic, root_dir)
 		postinstall_cfg = os.path.join(root_dir, POST_INSTALL_CFG.lstrip('/'))
 		if not os.path.isfile(postinstall_cfg):
-			with open(postinstall_cfg, 'w+') as fd:
-				print("{}", file=fd)
+			with open(postinstall_cfg, 'w+') as conf_file:
+				print("{}", file=conf_file)
 	except OSError as e:
-		logging.critical("Writing configuration: %s", e)
+		logging.critical("Writing configuration: {}", e)
 		return 1
 	except ValueError as e:
-		logging.critical("Generating configuration: %s", e)
+		logging.critical("Generating configuration: {}", e)
 		return 1
 
 	try:
 		setup_maxmind(todbconf.get("maxmind", "no"), root_dir)
 	except OSError as e:
-		logging.critical("Setting up MaxMind: %s", e)
+		logging.critical("Setting up MaxMind: {}", e)
 		return 1
 
 	try:
@@ -927,19 +995,19 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 		if cert_code:
 			return cert_code
 	except OSError as e:
-		logging.critical("Setting up SSL Certificates: %s", e)
+		logging.critical("Setting up SSL Certificates: {}", e)
 		return 1
 
 	try:
-		generate_cdn_conf(userInput[CDN_CONF_FILE], CDN_CONF_FILE, automatic, root_dir)
+		generate_cdn_conf(user_input[CDN_CONF_FILE], CDN_CONF_FILE, automatic, root_dir)
 	except OSError as e:
-		logging.critical("Generating cdn.conf: %s", e)
+		logging.critical("Generating cdn.conf: {}", e)
 		return 1
 
 	try:
-		conn_str = db_connection_string(dbconf, todbconf)
+		conn_str = db_connection_string(dbconf)
 	except KeyError as e:
-		logging.error("Missing database connection variable: %s", e)
+		logging.error("Missing database connection variable: {}", e)
 		logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
 		return -1
 
@@ -950,7 +1018,7 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 	try:
 		setup_database_data(conn_str, admin_conf, paramconf, root_dir)
 	except (OSError, subprocess.SubprocessError)as e:
-		logging.error("Failed to set up database: %s", e)
+		logging.error("Failed to set up database: {}", e)
 		logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
 		return -1
 
@@ -958,10 +1026,10 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 	if not no_restart_to:
 		logging.info("Starting Traffic Ops")
 		try:
-			proc = subprocess.run(["/sbin/service", "traffic_ops", "restart"], capture_output=True, universal_newlines=True)
+			proc = subprocess.run(["/sbin/service", "traffic_ops", "restart"], capture_output=True, universal_newlines=True, check=False)
 		except (OSError, subprocess.SubprocessError) as e:
-			logging.critical("Failed to restart Traffic Ops, return code %d: %s", proc.returncode, e)
-			logging.debug("stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
+			logging.critical("Failed to restart Traffic Ops, return code {}: {}", proc.returncode, e)
+			logging.debug("stderr: {}\n\tstdout: {}", proc.stderr, proc.stdout)
 			return 1
 		# Perl didn't actually do any "waiting" before reporting success, so
 		# neither do we
@@ -973,36 +1041,36 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 	return 0
 
 if __name__ == '__main__':
-	parser = argparse.ArgumentParser()
-	parser.add_argument("-a", "--automatic", help="If there are questions in the config file which do not have answers, the script will look to the defaults for the answer. If the answer is not in the defaults the script will exit", action="store_true")
-	parser.add_argument("--cfile", help="An input config file used to ask and answer questions", type=str, default=None)
-	parser.add_argument("--debug", help="Enables verbose output", action="store_true")
-	parser.add_argument("--defaults", help="Writes out a configuration file with defaults which can be used as input", type=str, nargs="?", default=None, const="")
-	parser.add_argument("-n", "--no-root", help="Enable running as a non-root user (may cause failure)", action="store_true")
-	parser.add_argument("-r", "--root-directory", help="Set the directory to be treated as the system's root directory (e.g. for testing)", type=str, default="/")
-	parser.add_argument("-u", "--ops-user", help="Specify a username to own Traffic Ops files and processes", type=str, default="trafops")
-	parser.add_argument("-g", "--ops-group", help="Specify the group to own Traffic Ops files and processes", type=str, default="trafops")
-	parser.add_argument("--no-restart-to", help="Skip restarting Traffic Ops after configuration and database changes are applied", action="store_true")
+	PARSER = argparse.ArgumentParser()
+	PARSER.add_argument("-a", "--automatic", help="If there are questions in the config file which do not have answers, the script will look to the defaults for the answer. If the answer is not in the defaults the script will exit", action="store_true")
+	PARSER.add_argument("--cfile", help="An input config file used to ask and answer questions", type=str, default=None)
+	PARSER.add_argument("--debug", help="Enables verbose output", action="store_true")
+	PARSER.add_argument("--defaults", help="Writes out a configuration file with defaults which can be used as input", type=str, nargs="?", default=None, const="")
+	PARSER.add_argument("-n", "--no-root", help="Enable running as a non-root user (may cause failure)", action="store_true")
+	PARSER.add_argument("-r", "--root-directory", help="Set the directory to be treated as the system's root directory (e.g. for testing)", type=str, default="/")
+	PARSER.add_argument("-u", "--ops-user", help="Specify a username to own Traffic Ops files and processes", type=str, default="trafops")
+	PARSER.add_argument("-g", "--ops-group", help="Specify the group to own Traffic Ops files and processes", type=str, default="trafops")
+	PARSER.add_argument("--no-restart-to", help="Skip restarting Traffic Ops after configuration and database changes are applied", action="store_true")
 
-	args = parser.parse_args()
+	ARGS = PARSER.parse_args()
 
-	if not args.no_root and os.getuid() != 0:
+	if not ARGS.no_root and os.getuid() != 0:
 		logging.error("You must run this script as the root user")
 		logging.shutdown()
 		sys.exit(1)
 
 	try:
-		exit_code = main(
-			args.automatic,
-			args.debug,
-			args.defaults,
-			args.cfile,
-			os.path.abspath(args.root_directory),
-			args.ops_user,
-			args.ops_group,
-			args.no_restart_to
+		EXIT_CODE = main(
+			ARGS.automatic,
+			ARGS.debug,
+			ARGS.defaults,
+			ARGS.cfile,
+			os.path.abspath(ARGS.root_directory),
+			ARGS.ops_user,
+			ARGS.ops_group,
+			ARGS.no_restart_to
 		)
-		sys.exit(exit_code)
+		sys.exit(EXIT_CODE)
 	except KeyboardInterrupt:
 		sys.exit(1)
 	finally:
