@@ -450,7 +450,7 @@ def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
 	"""
 	ret = {}
 	for file, questions in dct.items():
-		if isinstance(questions, list):
+		if not isinstance(questions, list):
 			raise ValueError(f"file '{file}' has malformed questions")
 
 		qs = []
