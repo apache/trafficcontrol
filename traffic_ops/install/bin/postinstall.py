@@ -36,30 +36,38 @@ import typing
 
 # Paths for output configuration files
 DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
-DB_CONF_FILE       = "/opt/traffic_ops/app/db/dbconf.yml"
-CDN_CONF_FILE      = "/opt/traffic_ops/app/conf/cdn.conf"
-LDAP_CONF_FILE     = "/opt/traffic_ops/app/conf/ldap.conf"
-USERS_CONF_FILE    = "/opt/traffic_ops/install/data/json/users.json"
+DB_CONF_FILE = "/opt/traffic_ops/app/db/dbconf.yml"
+CDN_CONF_FILE = "/opt/traffic_ops/app/conf/cdn.conf"
+LDAP_CONF_FILE = "/opt/traffic_ops/app/conf/ldap.conf"
+USERS_CONF_FILE = "/opt/traffic_ops/install/data/json/users.json"
 PROFILES_CONF_FILE = "/opt/traffic_ops/install/data/profiles/"
-OPENSSL_CONF_FILE  = "/opt/traffic_ops/install/data/json/openssl_configuration.json"
-PARAM_CONF_FILE    = "/opt/traffic_ops/install/data/json/profiles.json"
+OPENSSL_CONF_FILE = "/opt/traffic_ops/install/data/json/openssl_configuration.json"
+PARAM_CONF_FILE = "/opt/traffic_ops/install/data/json/profiles.json"
 
-CUSTOM_PROFILE_DIR = PROFILES_CONF_FILE + "custom"
 
-# Location of Traffic Ops profiles
-PROFILE_DIR = "/opt/traffic_ops/install/data/profiles/"
 POST_INSTALL_CFG = "/opt/traffic_ops/install/data/json/post_install.json"
 
 # Log file for the installer
-LOG_FILE = "/var/log/traffic_ops/postinstall.log"
+# TODO: determine if logging to a file should be directly supported.
+# LOG_FILE = "/var/log/traffic_ops/postinstall.log"
 
 # Log file for CPAN output
-CPAN_LOG_FILE = "/var/log/traffic_ops/cpan.log"
+# TODO: The Perl used to "rotate" this file on every run, for some reason. Should we?
+# CPAN_LOG_FILE = "/var/log/traffic_ops/cpan.log"
 
 # Configuration file output with answers which can be used as input to postinstall
-OUTPUT_CONFIG_FILE = "/opt/traffic_ops/install/bin/configuration_file.json"
+# TODO: Perl used to always write its defaults out to this file when requested.
+# Python, instead, outputs to stdout. This is breaking, but more flexible. Change it?
+# OUTPUT_CONFIG_FILE = "/opt/traffic_ops/install/bin/configuration_file.json"
 
 class Question():
+	"""
+	Question represents a single question to be asked of the user, to determine a configuration
+	value.
+
+	>>> Question("question", "answer", "var")
+	Question(question='question', default='answer', config_var='var', hidden=False)
+	"""
 
 	def __init__(self, question: str, default: str, config_var: str, hidden: bool = False):
 		self.question = question
@@ -73,64 +81,75 @@ class Question():
 		return f"{self.question}: "
 
 	def __repr__(self) -> str:
-		return f"Question(question='{self.question}', default='{self.default}', config_var='{self.config_var}', hidden={self.hidden})"
+		qstn = self.question
+		ans = self.default
+		cfgvr = self.config_var
+		hddn = self.hidden
+		return f"Question(question='{qstn}', default='{ans}', config_var='{cfgvr}', hidden={hddn})"
 
 	def ask(self) -> str:
+		"""
+		Asks the user the Question interactively.
+
+		If 'hidden' is true, output will not be echoed.
+		"""
 		if self.hidden:
 			while True:
-				pw = getpass.getpass(self)
-				if not pw:
+				passwd = getpass.getpass(self)
+				if not passwd:
 					continue
-				if pw == getpass.getpass(f"Re-Enter {self.question}: "):
-					return pw
+				if passwd == getpass.getpass(f"Re-Enter {self.question}: "):
+					return passwd
 				print("Error: passwords do not match, try again")
 		ipt = input(self)
 		return ipt if ipt else self.default
 
-	def toJSON(self) -> str:
+	def to_json(self) -> str:
 		"""
 		Converts a question to JSON encoding.
-		>>> Question("Do the thing?", "yes", "cfg_var", True).toJSON()
+
+		>>> Question("Do the thing?", "yes", "cfg_var", True).to_json()
 		'{"Do the thing?": "yes", "config_var": "cfg_var", "hidden": true}'
-		>>> Question("Do the other thing?", "no", "other cfg_var").toJSON()
+		>>> Question("Do the other thing?", "no", "other cfg_var").to_json()
 		'{"Do the other thing?": "no", "config_var": "other cfg_var"}'
 		"""
+		qstn = self.question
+		ans = self.default
+		cfgvr = self.config_var
 		if self.hidden:
-			return '{{"{}": "{}", "config_var": "{}", "hidden": true}}'.format(self.question, self.default, self.config_var)
-		return '{{"{}": "{}", "config_var": "{}"}}'.format(self.question, self.default, self.config_var)
+			return f'{{"{qstn}": "{ans}", "config_var": "{cfgvr}", "hidden": true}}'
+		return f'{{"{qstn}": "{ans}", "config_var": "{cfgvr}"}}'
 
 	def serialize(self) -> object:
+		"""Returns a serializable dictionary, suitable for converting to JSON."""
 		return {self.question: self.default, "config_var": self.config_var, "hidden": self.hidden}
 
 class User(typing.NamedTuple):
+	"""Users represents a user that will be inserted into the Traffic Ops database."""
+
+	#: The user's username.
 	username: str
+	#: The user's password - IN PLAINTEXT.
 	password: str
 
 class SSLConfig():
+	"""SSLConfig bundles the options for generating new (self-signed) SSL certificates"""
 
-	def __init__(self, gen_cert: bool, country: str, state: str, locality: str, company: str, org_unit: str, common_name: str, rsa_password: str):
+	def __init__(self, gen_cert: bool, cfg_map: typing.Dict[str, str]):
 
 		self.gen_cert = gen_cert
-		self.country = country
-		self.state = state
-		self.locality = locality
-		self.company = company
-		self.org_unit = org_unit
-		self.common_name = common_name
-		self.rsa_password = rsa_password
+		self.rsa_password = cfg_map["rsaPassword"]
+		self.params = "/C={country}/ST={state}/L={locality}/O={company}/OU={org_unit}/CN={common_name}/"
+		self.params = self.params.format(**cfg_map)
 
-	def params(self) -> str:
-		return f"/C={self.country}/ST={self.state}/L={self.locality}/O={self.company}/OU={self.org_unit}/CN={self.common_name}/"
-
-class CDNConfig():
-
-	def __init__(self, gen_secret: bool, num_secrets: int, port: int, num_workers: int, url: str, ldap_conf_location: str):
-		self.gen_secret = gen_secret
-		self.num_secrets = num_secrets
-		self.port = port
-		self.num_workers = num_workers
-		self.url = url
-		self.ldap_conf_location = ldap_conf_location
+class CDNConfig(typing.NamedTuple):
+	"""CDNConfig holds all of the options needed to format a cdn.conf file."""
+	gen_secret: bool
+	num_secrets: int
+	port: int
+	num_workers: int
+	url: str
+	ldap_conf_location: str
 
 # The default question/answer set
 DEFAULTS = {
@@ -191,73 +210,99 @@ DEFAULTS = {
 
 class ConfigEncoder(json.JSONEncoder):
 	"""
-	ConfigEncoder encodes a dictionary of filenames to configuration question lists as JSON
+	ConfigEncoder encodes a dictionary of filenames to configuration question lists as JSON.
+
 	>>> ConfigEncoder().encode({'/test/file':[Question('question', 'default', 'cfg_var', True)]})
 	'{"/test/file": [{"question": "default", "config_var": "cfg_var", "hidden": true}]}'
 	"""
+
+	# The linter is just wrong about this
+	#pylint:disable=method-hidden
 	def default(self, o) -> object:
 		"""
-		Returns a serializable representation of 'o' - specifically by attempting
-		to convert a dictionary of filenames to Question lists to a dictionary of
-		filenames to lists of dictionaries of strings to strings, falling back on
-		default encoding if the proper typing is not found.
+		Returns a serializable representation of 'o'.
+
+		Specifically, it does this by attempting to convert a dictionary of filenames to Question
+		lists to a dictionary of filenames to lists of dictionaries of strings to strings, falling
+		back on default encoding if the proper typing is not found.
 		"""
 		if isinstance(o, Question):
 			return o.serialize()
 
 		return json.JSONEncoder.default(self, o)
+	#pylint:enable=method-hidden
 
 def get_config(questions: typing.List[Question], fname: str, automatic: bool = False) -> dict:
+	"""Asks all provided questions, or uses their defaults in automatic mode"""
 
-	logging.info(f"==========={fname}===========")
+	logging.info("==========={}===========", fname)
 
 	config = {}
 
-	for q in questions:
-		answer = q.default if automatic else q.ask()
+	for question in questions:
+		answer = question.default if automatic else question.ask()
 
-		config[q.config_var] = answer
+		config[question.config_var] = answer
 
 	return config
 
-def generate_db_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str) -> dict:
+def generate_db_conf(qstns: typing.List[Question], fname: str, automatic: bool, root: str) -> dict:
 	"""
+	Generates the database.conf file and returns a map of its configuration.
+
+	Also writes the configuration file to the file 'fname' under the directory 'root'.
 	"""
-	db_conf = get_config(questions, fname, automatic)
-	db_conf["description"] = f"{db_conf.get('type', 'UNKNOWN')} database on {db_conf.get('hostname','UNKOWN')}:{db_conf.get('port', 'UNKNOWN')}"
+	db_conf = get_config(qstns, fname, automatic)
+	typ = db_conf.get("type", "UNKNOWN")
+	hostname = db_conf.get("hostname", "UNKNOWN")
+	port = db_conf.get("port", "UNKNOWN")
+
+	db_conf["description"] = f"{typ} database on {hostname}:{port}"
 
 	path = os.path.join(root, fname.lstrip('/'))
-	with open(path, 'w+') as fd:
-		json.dump(db_conf, fd, indent="\t")
-		print(file=fd)
+	with open(path, 'w+') as conf_file:
+		json.dump(db_conf, conf_file, indent="\t")
+		print(file=conf_file)
 
 	logging.info("Database configuration has been saved")
 
 	return db_conf
 
-def generate_todb_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str, dbconf: dict) -> dict:
-	todbconf = get_config(questions, fname, automatic)
+def generate_todb_conf(qstns: list, fname: str, auto: bool, root: str, conf: dict) -> dict:
+	"""
+	Generates the dbconf.yml file and returns a map of its configuration.
+
+	Also writes the configuration file to the file 'fname' under the directory 'root'.
+	"""
+	todbconf = get_config(qstns, fname, auto)
 
 	driver = "postgres"
-	if "type" not in dbconf:
+	if "type" not in conf:
 		logging.warning("Driver type not found in todb config; using 'postgres'")
 	else:
-		driver = "postgres" if dbconf["type"] == "Pg" else dbconf["type"]
+		driver = "postgres" if conf["type"] == "Pg" else conf["type"]
 
 	path = os.path.join(root, fname.lstrip('/'))
-	hostname = dbconf.get('hostname', 'UNKNOWN')
-	port = dbconf.get('port', 'UNKNOWN')
-	user = dbconf.get('user', 'UNKNOWN')
-	password = dbconf.get('password', 'UNKNOWN')
-	dbname = dbconf.get('dbname', 'UNKNOWN')
-	with open(path, 'w+') as fd:
-		print("production:", file=fd)
-		print("    driver:", driver, file=fd)
-		print(f"    open: host={hostname} port={port} user={user} password={password} dbname={dbname} sslmode=disable", file=fd)
+	hostname = conf.get('hostname', 'UNKNOWN')
+	port = conf.get('port', 'UNKNOWN')
+	user = conf.get('user', 'UNKNOWN')
+	password = conf.get('password', 'UNKNOWN')
+	dbname = conf.get('dbname', 'UNKNOWN')
+
+	open_line = f"host={hostname} port={port} user={user} password={password} dbname={dbname}"
+	with open(path, 'w+') as conf_file:
+		print("production:", file=conf_file)
+		print("    driver:", driver, file=conf_file)
+		print(f"    open: {open_line} sslmode=disable", file=conf_file)
 
 	return todbconf
 
 def generate_ldap_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str):
+	"""
+	Generates the ldap.conf file by asking the questions or using default answers in auto mode.
+
+	Also writes the configuration to the file 'fname' under the directory 'root'
+	"""
 	use_ldap_question = [q for q in questions if q.question == "Do you want to set up LDAP?"]
 	if not use_ldap_question:
 		logging.warning("Couldn't find question asking if LDAP should be set up, using default: no")
@@ -268,19 +313,29 @@ def generate_ldap_conf(questions: typing.List[Question], fname: str, automatic: 
 		logging.info("Not setting up ldap")
 		return
 
-	ldapConf = get_config([q for q in questions if q is not use_ldap_question[0]], fname, automatic)
-	for key in ('host', 'admin_dn', 'admin_pass', 'search_base', 'search_query', 'insecure', 'ldap_timeout_secs'):
-		if key not in ldapConf:
+	ldap_conf = get_config([q for q in questions if q is not use_ldap_question[0]], fname, automatic)
+	keys = (
+		'host',
+		'admin_dn',
+		'admin_pass',
+		'search_base',
+		'search_query',
+		'insecure',
+		'ldap_timeout_secs'
+	)
+
+	for key in keys:
+		if key not in ldap_conf:
 			raise ValueError(f"{key} is a required key in {fname}")
 
-	if not re.fullmatch(r"\S+:\d+", ldapConf["host"]):
+	if not re.fullmatch(r"\S+:\d+", ldap_conf["host"]):
 		raise ValueError(f"host in {fname} must be of form 'hostname:port'")
 
 	path = os.path.join(root, fname.lstrip('/'))
 	os.makedirs(os.path.dirname(path), exist_ok=True)
-	with open(path, 'w+') as fd:
-		json.dump(ldapConf, fd, indent="\t")
-		print(file=fd)
+	with open(path, 'w+') as conf_file:
+		json.dump(ldap_conf, conf_file, indent="\t")
+		print(file=conf_file)
 
 def hash_pass(passwd: str) -> str:
 	"""
@@ -288,10 +343,10 @@ def hash_pass(passwd: str) -> str:
 	It's hard-coded - like the Perl - to use 64 random bytes for the salt, n=16384,
 	r=8, p=1 and dklen=64.
 	"""
-	salt=os.urandom(64)
-	n=16384
-	r=8
-	p=1
+	salt = os.urandom(64)
+	n = 16384
+	r = 8
+	p = 1
 	hashed = hashlib.scrypt(passwd.encode(), salt=salt, n=n, r=r, p=p, dklen=64)
 
 	hashed_b64 = base64.standard_b64encode(hashed).decode()
@@ -299,53 +354,48 @@ def hash_pass(passwd: str) -> str:
 
 	return f"SCRYPT:{n}:{r}:{p}:{salt_b64}:{hashed_b64}"
 
-def generate_users_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str) -> User:
-	config = get_config(questions, fname, automatic)
+def generate_users_conf(qstns: typing.List[Question], fname: str, auto: bool, root: str) -> User:
+	config = get_config(qstns, fname, auto)
 
 	if "tmAdminUser" not in config or "tmAdminPw" not in config:
 		raise ValueError(f"{fname} must include 'tmAdminUser' and 'tmAdminPw'")
 
-	hashedPass = hash_pass(config["tmAdminPw"])
+	hashed_pass = hash_pass(config["tmAdminPw"])
 
 	path = os.path.join(root, fname.lstrip('/'))
-	with open(path, 'w+') as fd:
-		json.dump({"username": config["tmAdminUser"], "password": hashedPass}, fd, indent="\t")
+	with open(path, 'w+') as conf_file:
+		json.dump({"username": config["tmAdminUser"], "password": hashed_pass}, conf_file, indent="\t")
 		print(file=fd)
 
 	return User(config["tmAdminUser"], config["tmAdminPw"])
 
-def generate_profiles_dir(questions: typing.List[Question], fname: str):
+def generate_profiles_dir(questions: typing.List[Question]):
 	"""
 	I truly have no idea what's going on here. This is what the Perl did, so I
 	copied it. It does nothing. Literally nothing.
 	"""
 	user_in = questions
 
-def generate_openssl_conf(questions: typing.List[Question], fname: str, automatic: bool) -> SSLConfig:
-	cfg_map = get_config(questions, fname, automatic)
+def generate_openssl_conf(questions: typing.List[Question], fname: str, auto: bool) -> SSLConfig:
+	"""
+	Constructs an SSLConfig by asking the passed questions, or using their default answers if in
+	auto mode.
+	"""
+	cfg_map = get_config(questions, fname, auto)
 	if "genCert" not in cfg_map:
-			raise ValueError("missing 'genCert' key")
+		raise ValueError("missing 'genCert' key")
 
-	gen_cert = cfg_map["genCert"]
+	gen_cert = cfg_map["genCert"].casefold() in {"y", "yes"}
 
-	country = cfg_map.get("country", "")
-	state = cfg_map.get("state", "")
-	locality = cfg_map.get("locality", "")
-	company = cfg_map.get("company", "")
-	org_unit = cfg_map.get("org_unit", "")
-	common_name = cfg_map.get("common_name", "")
-	rsa_password = cfg_map.get("rsaPassword", "")
+	return SSLConfig(gen_cert, cfg_map)
 
-	# These only MUST exist if we need to use them
-	return SSLConfig(gen_cert.casefold() in {'y', 'yes'}, country, state, locality, company, org_unit, common_name, rsa_password)
-
-def generate_param_conf(questions: typing.List[Question], fname: str, automatic: bool, root: str) -> dict:
-	conf = get_config(questions, fname, automatic)
+def generate_param_conf(qstns: typing.List[Question], fname: str, auto: bool, root: str) -> dict:
+	conf = get_config(qstns, fname, automatic)
 
 	path = os.path.join(root, fname.lstrip('/'))
-	with open(path, 'w+') as fd:
-		json.dump(conf, fd, indent="\t")
-		print(file=fd)
+	with open(path, 'w+') as conf_file:
+		json.dump(conf, conf_file, indent="\t")
+		print(file=conf_file)
 
 	return conf
 
@@ -355,13 +405,14 @@ def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic:
 	default question set that did not appear in the input.
 
 	:param cfg: The user's parsed input questions.
-	:param automatic: If :keyword:`True` all missing questions will use their default answers. Otherwise, the user will be prompted for answers.
+	:param automatic: If :keyword:`True` all missing questions will use their default answers.
+	Otherwise, the user will be prompted for answers.
 	"""
 	diffs = 0
 
 	for fname, file in DEFAULTS.items():
 		if fname not in cfg:
-			logging.warning("File '%s' found in defaults but not config file", fname)
+			logging.warning("File '{}' found in defaults but not config file", fname)
 			cfg[fname] = []
 
 		for defaultValue in file:
@@ -377,7 +428,7 @@ def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic:
 					if defaultValue.hidden:
 						answer = defaultValue.ask()
 				else:
-					logging.info("Adding question '%s' with default answer%s", question, f" {answer}" if not defaultValue.hidden else "")
+					logging.info("Adding question '{}' with default answer{}", question, f" {answer}" if not defaultValue.hidden else "")
 
 				# The Perl here would ask questions, but those would just get asked later
 				# anyway, so I'm not sure why.
@@ -456,15 +507,17 @@ def setup_maxmind(mm: str, root: str):
 		logging.error("Failed to download MaxMind data")
 		logging.debug("(ipv6) Exception: %s", e)
 
-def exec_openssl(description: str, *args) -> bool:
+def exec_openssl(description: str, *cmd_args) -> bool:
 	logging.info(description)
 
+	cmd = ["/usr/bin/openssl", *cmd_args]
+
 	while True:
-		proc = subprocess.run(["/usr/bin/openssl", *args], capture_output=True, universal_newlines=True)
+		proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
 		if proc.returncode == 0:
 			return True
 
-		logging.debug(f"openssl exec failed with code {proc.returncode}; stderr: {proc.stderr}")
+		logging.debug("openssl exec failed with code {}; stderr: {}", proc.returncode, proc.stderr)
 		while True:
 			ans = input(f"{description} failed. Try again (y/n) [y]: ")
 			if not ans or ans.casefold().startswith('n'):
@@ -849,7 +902,7 @@ def main(automatic: bool, debug: bool, defaults: str = None, cfile: str = None, 
 		todbconf = generate_todb_conf(userInput[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
 		generate_ldap_conf(userInput[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
 		admin_conf = generate_users_conf(userInput[USERS_CONF_FILE], USERS_CONF_FILE, automatic, root_dir)
-		custom_profile = generate_profiles_dir(userInput[PROFILES_CONF_FILE], PROFILES_CONF_FILE)
+		custom_profile = generate_profiles_dir(userInput[PROFILES_CONF_FILE])
 		opensslconf = generate_openssl_conf(userInput[OPENSSL_CONF_FILE], OPENSSL_CONF_FILE, automatic)
 		paramconf = generate_param_conf(userInput[PARAM_CONF_FILE], PARAM_CONF_FILE, automatic, root_dir)
 		postinstall_cfg = os.path.join(root_dir, POST_INSTALL_CFG.lstrip('/'))
@@ -935,5 +988,22 @@ if __name__ == '__main__':
 
 	if not args.no_root and os.getuid() != 0:
 		logging.error("You must run this script as the root user")
+		logging.shutdown()
 		sys.exit(1)
-	sys.exit(main(args.automatic, args.debug, args.defaults, args.cfile, os.path.abspath(args.root_directory), args.ops_user, args.ops_group, args.no_restart_to))
+
+	try:
+		exit_code = main(
+			args.automatic,
+			args.debug,
+			args.defaults,
+			args.cfile,
+			os.path.abspath(args.root_directory),
+			args.ops_user,
+			args.ops_group,
+			args.no_restart_to
+		)
+		sys.exit(exit_code)
+	except KeyboardInterrupt:
+		sys.exit(1)
+	finally:
+		logging.shutdown()
