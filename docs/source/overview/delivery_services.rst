@@ -643,6 +643,13 @@ For HTTP and DNS-:ref:`Routed <ds-types>` Delivery Services, this will be added 
 	| remapText | In Traffic Ops source code and :ref:`to-api` requests/responses | unchanged (``text``, ``string`` etc.) |
 	+-----------+-----------------------------------------------------------------+---------------------------------------+
 
+Directives
+"""
+
+The Raw Remap text is ordinarily added at the end of the line, after everything else. However, it may be necessary to add Range Request Handling after the Raw Remap. For example, if you have a plugin which manipulates the Range header. In this case, you can insert the text ``__RANGE_DIRECTIVE__`` in the Raw Remap text, and the range request handling directives will be added at that point.
+
+For example, if you have an Apache Traffic Server lua plugin which manipulates the range, and are using Slice Range Request Handling which needs to run after your plugin, you can set a Raw Remap, ``@plugin=tslua.so @pparam=range.lua __RANGE_DIRECTIVE__``, and the ``@plugin=slice.so`` range directive will be inserted after your plugin.
+
 .. _ds-regex-remap:
 
 Regex Remap Expression
