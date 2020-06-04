@@ -615,8 +615,8 @@ public class DeliveryService {
 		return topology;
 	}
 
-	public boolean hasRequiredCapabilities(final Set<String> capabilities) {
-		return this.requiredCapabilities.containsAll(capabilities);
+	public boolean hasRequiredCapabilities(final Set<String> serverCapabilities) {
+		return serverCapabilities.containsAll(requiredCapabilities);
 	}
 
 	public Dispersion getDispersion() {
