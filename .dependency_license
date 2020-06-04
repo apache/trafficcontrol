@@ -13,69 +13,69 @@ CHANGELOG$, Docs
 #
 # These files cannot contain comments, so no header can be added.
 # They are nevertheless covered by the Apache license.
-\.gitignore$, Apache
-\.mailmap$, Apache
-\.gitattributes$, Apache
-\.classpath$, Apache
-\.pmd$, Apache
-\.project$, Apache
-RobotoSlab-Bold\.ttf$, Apache
-RobotoSlab-Regular\.ttf$, Apache
-\.cfg$, Apache
-\.json$, Apache
-\.webmanifest, Apache
-\.csv$, Apache
-\.conf$, Apache
-\.prop$, Apache
-\.test$, Apache
-\.config(\.example)?$, Apache
-/\.bowerrc$, Apache
-/\.jshintrc$, Apache
-\.traffic_ops$, Apache # JSON with a specific format.
-\.dist$, Apache # JSON with a specific format.
-traffic_monitor_config\.js$, Apache # Actually JSON with a specific format.
-CrStates$, Apache # JSON with a specific format.
-^docs/.*\.(png|jpe?g|ico|gif)$, Apache
-^blueprints/.*\.(png|jpe?g|ico|gif)$, Apache
-favicon.(ico|png)$, Apache
-^traffic_ops/experimental/goto/testFiles/, Apache
-cron\.d/[^/]*$, Apache
-\.pem$, Apache # Single certificate file.
-traffic_router/core/src/test/resources/api/2.0/cdns/name/thecdn/sslkeys(-missing-1)?, Apache #JSON files with no extension
-traffic_router/core/src/test/resources/api/2.0/steering*, Apache
-traffic_router/core/src/test/resources/api/2.0/federations/all, Apache
-BUILD_NUMBER$, Apache
+\.gitignore$, Apache-2.0
+\.mailmap$, Apache-2.0
+\.gitattributes$, Apache-2.0
+\.classpath$, Apache-2.0
+\.pmd$, Apache-2.0
+\.project$, Apache-2.0
+RobotoSlab-Bold\.ttf$, Apache-2.0
+RobotoSlab-Regular\.ttf$, Apache-2.0
+\.cfg$, Apache-2.0
+\.json$, Apache-2.0
+\.webmanifest, Apache-2.0
+\.csv$, Apache-2.0
+\.conf$, Apache-2.0
+\.prop$, Apache-2.0
+\.test$, Apache-2.0
+\.config(\.example)?$, Apache-2.0
+/\.bowerrc$, Apache-2.0
+/\.jshintrc$, Apache-2.0
+\.traffic_ops$, Apache-2.0 # JSON with a specific format.
+\.dist$, Apache-2.0 # JSON with a specific format.
+traffic_monitor_config\.js$, Apache-2.0 # Actually JSON with a specific format.
+CrStates$, Apache-2.0 # JSON with a specific format.
+^docs/.*\.(png|jpe?g|ico|gif)$, Apache-2.0
+^blueprints/.*\.(png|jpe?g|ico|gif)$, Apache-2.0
+favicon.(ico|png)$, Apache-2.0
+^traffic_ops/experimental/goto/testFiles/, Apache-2.0
+cron\.d/[^/]*$, Apache-2.0
+\.pem$, Apache-2.0 # Single certificate file.
+traffic_router/core/src/test/resources/api/2.0/cdns/name/thecdn/sslkeys(-missing-1)?, Apache-2.0 #JSON files with no extension
+traffic_router/core/src/test/resources/api/2.0/steering*, Apache-2.0
+traffic_router/core/src/test/resources/api/2.0/federations/all, Apache-2.0
+BUILD_NUMBER$, Apache-2.0
 
 # Images, created for this project or used under an Apache license.
-^misc/traffic-control-cdn/images/atc_logo\.png, Apache
-^misc/traffic-control-cdn/images/header_bkgd\.png, Apache
-^misc/traffic-control-cdn/images/main_bkgd\.png, Apache
-^misc/traffic-control-cdn/images/tc_logo\.png, Apache
-^misc/traffic-control-cdn/images/traffic_monitor_logo\.png, Apache
-^misc/traffic-control-cdn/images/traffic_operations_logo\.png, Apache
-^misc/traffic-control-cdn/images/traffic_portal_logo\.png, Apache
-^misc/traffic-control-cdn/images/traffic_router_logo\.png, Apache
-^misc/traffic-control-cdn/images/traffic_stats_logo\.png, Apache
-^misc/logos/ATC-PNG\.png, Apache
-^misc/logos/ATC-PNG-FULL-BLACK\.png, Apache
-^misc/logos/ATC-PNG-FULL-BLACK-LARGE\.png, Apache
-^misc/logos/ATC-PNG-FULL-WHITE\.png, Apache
-^misc/logos/ATC-PNG-FULL-WHITE-LARGE\.png, Apache
-^misc/logos/ATC-PNG-LARGE\.png, Apache
-^misc/logos/ATC-SVG\.sketch, Apache
-^misc/logos/ATC-SVG-FULL\.sketch, Apache
-^misc/logos/page_logos/trafficLogoFactory\.psd, Apache
-^misc/logos/page_logos/traffic_monitor_logo\.png, Apache
-^misc/logos/page_logos/traffic_operations_logo\.png, Apache
-^misc/logos/page_logos/traffic_portal\.png, Apache
-^misc/logos/page_logos/traffic_router_logo\.png, Apache
-^misc/logos/page_logos/traffic_stats_logo\.png, Apache
-^misc/logos/page_logos/traffic_stats_logo_red\.png, Apache
+^misc/traffic-control-cdn/images/atc_logo\.png, Apache-2.0
+^misc/traffic-control-cdn/images/header_bkgd\.png, Apache-2.0
+^misc/traffic-control-cdn/images/main_bkgd\.png, Apache-2.0
+^misc/traffic-control-cdn/images/tc_logo\.png, Apache-2.0
+^misc/traffic-control-cdn/images/traffic_monitor_logo\.png, Apache-2.0
+^misc/traffic-control-cdn/images/traffic_operations_logo\.png, Apache-2.0
+^misc/traffic-control-cdn/images/traffic_portal_logo\.png, Apache-2.0
+^misc/traffic-control-cdn/images/traffic_router_logo\.png, Apache-2.0
+^misc/traffic-control-cdn/images/traffic_stats_logo\.png, Apache-2.0
+^misc/logos/ATC-PNG\.png, Apache-2.0
+^misc/logos/ATC-PNG-FULL-BLACK\.png, Apache-2.0
+^misc/logos/ATC-PNG-FULL-BLACK-LARGE\.png, Apache-2.0
+^misc/logos/ATC-PNG-FULL-WHITE\.png, Apache-2.0
+^misc/logos/ATC-PNG-FULL-WHITE-LARGE\.png, Apache-2.0
+^misc/logos/ATC-PNG-LARGE\.png, Apache-2.0
+^misc/logos/ATC-SVG\.sketch, Apache-2.0
+^misc/logos/ATC-SVG-FULL\.sketch, Apache-2.0
+^misc/logos/page_logos/trafficLogoFactory\.psd, Apache-2.0
+^misc/logos/page_logos/traffic_monitor_logo\.png, Apache-2.0
+^misc/logos/page_logos/traffic_operations_logo\.png, Apache-2.0
+^misc/logos/page_logos/traffic_portal\.png, Apache-2.0
+^misc/logos/page_logos/traffic_router_logo\.png, Apache-2.0
+^misc/logos/page_logos/traffic_stats_logo\.png, Apache-2.0
+^misc/logos/page_logos/traffic_stats_logo_red\.png, Apache-2.0
 
 # Demo certificates
-ssl\.(crt|key)$, Apache
-/keystore, Apache
-COMODO.*\.crt$, Apache
+ssl\.(crt|key)$, Apache-2.0
+/keystore, Apache-2.0
+COMODO.*\.crt$, Apache-2.0
 
 # Uncommentable files
 #
@@ -95,11 +95,11 @@ ssl-bundle\.crt$, MPL
 # so we present them for the most part unmodified. These licenses must
 # be documented in the root LICENSE file.
 [Ff]ont[Aa]wesome[^\.]*\.css, MIT
-select2.css, Apache
+select2.css, Apache-2.0
 select2.css, GPL/LGPL
 j[Mm]enu.*\.(css|js), MIT
 sphinx_rtd_theme/.*\.(html|css|css\.map|js|py)$, MIT
-bootstrap-theme\.css\.map, MIT
+bootstrap(-theme)?\.css\.map, MIT
 datatables\.min, MIT
 GeoLite2-City.mmdb.gz, CC-A-SA
 jquery\.tree\.min\.css$, MIT
@@ -108,9 +108,9 @@ github\.com/basho/backoff/.*, MIT
 github\.com/dchest/siphash/.*, CC0
 github\.com/pkg/errors\..*, BSD
 traffic_portal/app/src/assets/js/chartjs/angular-chart\..*, BSD
-traffic_portal/app/src/assets/css/jsonformatter\..*, Apache
-traffic_portal/app/src/assets/js/jsonformatter\..*, Apache
-traffic_portal/app/src/assets/js/fast-json-patch\..*, MIT
+traffic_portal/app/src/assets/css/jsonformatter\..*, Apache-2.0
+traffic_portal/app/src/assets/js/jsonformatter\..*, Apache-2.0
+traffic_portal/app/src/assets/js/fast-json-patch.*, MIT
 traffic_portal/app/src/assets/css/colReorder.dataTables\..*, MIT
 traffic_portal/app/src/assets/js/colReorder.dataTables\..*, MIT
 traffic_portal/app/src/assets/js/dataTables.buttons\..*, MIT
@@ -125,7 +125,7 @@ traffic_ops/traffic_ops_golang/vendor/github\.com/lestrrat-go/.*, MIT
 # This file is created dynamically by the testing script itself, it is
 # not distributed, but if it were, it would be Apache, and the source
 # would be right with it.
-^infrastructure/test/license/license, Apache
+^infrastructure/test/license/license, Apache-2.0
 
 # Don't object to licenses in the license file itself.
 ^LICENSE$, !GoBSD
