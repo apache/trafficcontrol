@@ -194,24 +194,20 @@ public class Node extends DefaultHashable {
 		}
 
 		for (final InetRecord record : ipAddresses) {
-			if (record.getAddress() == ip4 && !ipv4Available) {
+			if (record.getAddress().equals(ip4) && !ipv4Available) {
 				newlyUnavailable.add(record);
-				LOGGER.debug("disabling IPv4 address " + record.getAddress());
 			}
-			if (record.getAddress() == ip6 && !ipv6Available) {
+			if (record.getAddress().equals(ip6) && !ipv6Available) {
 				newlyUnavailable.add(record);
-				LOGGER.debug("disabling IPv6 address " + record.getAddress());
 			}
 		}
 
 		for (final InetRecord record : unavailableIpAddresses) {
-			if (record.getAddress() == ip4 && ipv4Available) {
+			if (record.getAddress().equals(ip4) && ipv4Available) {
 				newlyAvailable.add(record);
-				LOGGER.debug("enabling IPv4 address " + record.getAddress());
 			}
-			if (record.getAddress() == ip6 && ipv6Available) {
+			if (record.getAddress().equals(ip6) && ipv6Available) {
 				newlyAvailable.add(record);
-				LOGGER.debug("enabling IPv6 address " + record.getAddress());
 			}
 		}
 
