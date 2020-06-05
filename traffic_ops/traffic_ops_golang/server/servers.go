@@ -674,17 +674,27 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
-		userErr, sysErr, errCode := getMidServers(ids, servers, tx)
+		midIDs, userErr, sysErr, errCode := getMidServers(ids, servers, tx)
 
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
 		if userErr != nil || sysErr != nil {
 			return nil, serverCount, userErr, sysErr, errCode
 		}
+		ids = append(ids, midIDs...)
 	}
 
+	if len(ids) < 1 {
+		return []tc.ServerNullable{}, serverCount, nil, nil, http.StatusOK
+	}
+
+	query, args, err := sqlx.In(`SELECT  monitor, mtu, name, server FROM interface WHERE server IN (?)`, ids)
+	if err != nil {
+		return nil, serverCount, nil, fmt.Errorf("building interfaces query: %v", err), http.StatusInternalServerError
+	}
+	query = tx.Rebind(query)
 	interfaces := map[int]map[string]tc.ServerInterfaceInfo{}
-	interfaceRows, err := tx.Tx.Query(`SELECT monitor, mtu, name, server FROM interface`)
+	interfaceRows, err := tx.Queryx(query, args...)
 	if err != nil {
 		return nil, serverCount, nil, fmt.Errorf("querying for interfaces: %v", err), http.StatusInternalServerError
 	}
@@ -710,7 +720,12 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		interfaces[server][iface.Name] = iface
 	}
 
-	ipRows, err := tx.Tx.Query(`SELECT address, gateway, service_address, server, interface FROM ip_address`)
+	query, args, err = sqlx.In(`SELECT address, gateway, service_address, server, interface FROM ip_address WHERE server IN (?)`, ids)
+	if err != nil {
+		return nil, serverCount, nil, fmt.Errorf("building IP addresses query: %v", err), http.StatusInternalServerError
+	}
+	query = tx.Rebind(query)
+	ipRows, err := tx.Tx.Query(query, args...)
 	if err != nil {
 		return nil, serverCount, nil, fmt.Errorf("querying for IP addresses: %v", err), http.StatusInternalServerError
 	}
@@ -755,9 +770,9 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 // pulling the cachegroups of the edges and finding those cachegroups parent
 // cachegroup... then we see which servers have cachegroup in parent cachegroup
 // list...that's how we find mids for the ds :)
-func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx) (error, error, int) {
+func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx) ([]int, error, error, int) {
 	if len(edgeIDs) == 0 {
-		return nil, nil, http.StatusOK
+		return nil, nil, nil, http.StatusOK
 	}
 
 	// TODO: include secondary parent?
@@ -766,22 +781,30 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx
 	SELECT cg.parent_cachegroup_id FROM cachegroup AS cg
 	WHERE cg.id IN (
 	SELECT s.cachegroup FROM server AS s
-	WHERE s.id IN ($1)))
+	WHERE s.id IN (?)))
 	`
-	rows, err := tx.Queryx(q, pq.Array(edgeIDs))
+
+	query, args, err := sqlx.In(q, edgeIDs)
 	if err != nil {
-		return err, nil, http.StatusBadRequest
+		return nil, nil, fmt.Errorf("constructing mid servers query: %v", err), http.StatusInternalServerError
+	}
+	query = tx.Rebind(query)
+
+	rows, err := tx.Queryx(query, args...)
+	if err != nil {
+		return nil, err, nil, http.StatusBadRequest
 	}
 	defer rows.Close()
 
+	ids := []int{}
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err := rows.StructScan(&s); err != nil {
 			log.Error.Printf("could not scan mid servers: %s\n", err)
-			return nil, err, http.StatusInternalServerError
+			return nil, nil, err, http.StatusInternalServerError
 		}
 		if s.ID == nil {
-			return nil, errors.New("found server with nil ID"), http.StatusInternalServerError
+			return nil, nil, errors.New("found server with nil ID"), http.StatusInternalServerError
 		}
 
 		// This may mean that the server was caught by other query parameters,
@@ -791,9 +814,10 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx
 		}
 
 		servers[*s.ID] = s
+		ids = append(ids, *s.ID)
 	}
 
-	return nil, nil, http.StatusOK
+	return ids, nil, nil, http.StatusOK
 }
 
 func checkTypeChangeSafety(server tc.CommonServerProperties, tx *sqlx.Tx) (error, error, int) {
