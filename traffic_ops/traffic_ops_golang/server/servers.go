@@ -688,7 +688,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		return []tc.ServerNullable{}, serverCount, nil, nil, http.StatusOK
 	}
 
-	query, args, err := sqlx.In(`SELECT  monitor, mtu, name, server FROM interface WHERE server IN (?)`, ids)
+	query, args, err := sqlx.In(`SELECT max_bandwidth, monitor, mtu, name, server FROM interface WHERE server IN (?)`, ids)
 	if err != nil {
 		return nil, serverCount, nil, fmt.Errorf("building interfaces query: %v", err), http.StatusInternalServerError
 	}
@@ -706,7 +706,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		}
 		var server int
 
-		if err = interfaceRows.Scan(&iface.Monitor, &iface.MTU, &iface.Name, &server); err != nil {
+		if err = interfaceRows.Scan(&iface.MaxBandwidth, &iface.Monitor, &iface.MTU, &iface.Name, &server); err != nil {
 			return nil, serverCount, nil, fmt.Errorf("getting server interfaces: %v", err), http.StatusInternalServerError
 		}
 

@@ -20,7 +20,6 @@ package server
  */
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -36,8 +35,8 @@ import (
 )
 
 type ServerAndInterfaces struct {
-	Server     tc.Server
-	Interfaces []byte
+	Server    tc.Server
+	Interface tc.ServerInterfaceInfo
 }
 
 func getTestServers() []ServerAndInterfaces {
@@ -90,21 +89,35 @@ func getTestServers() []ServerAndInterfaces {
 		XMPPPasswd:     "xmppPasswd",
 	}
 
-	interfaces := []byte(fmt.Sprintf(`{"{\"ipAddresses\" : [{\"address\" : \"%s\", \"gateway\" : null, \"service_address\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : %d, \"name\" : \"%s\"}"}`, testServer.IPAddress, testServer.InterfaceMtu, testServer.InterfaceName))
+	mtu := uint64(testServer.InterfaceMtu)
 
-	servers = append(servers, ServerAndInterfaces{Server: testServer, Interfaces: interfaces})
+	iface := tc.ServerInterfaceInfo{
+		IPAddresses: []tc.ServerIPAddress{
+			tc.ServerIPAddress{
+				Address: testServer.IPAddress,
+				Gateway: nil,
+				ServiceAddress: true,
+			},
+		},
+		MaxBandwidth: nil,
+		Monitor: true,
+		MTU: &mtu,
+		Name: testServer.InterfaceName,
+	}
+
+	servers = append(servers, ServerAndInterfaces{Server: testServer, Interface: iface})
 
 	testServer2 := testServer
 	testServer2.Cachegroup = "cachegroup2"
 	testServer2.HostName = "server2"
 	testServer2.ID = 2
-	servers = append(servers, ServerAndInterfaces{Server: testServer2, Interfaces: interfaces})
+	servers = append(servers, ServerAndInterfaces{Server: testServer2, Interface: iface})
 
 	testServer3 := testServer
 	testServer3.Cachegroup = "cachegroup3"
 	testServer3.HostName = "server3"
 	testServer3.ID = 3
-	servers = append(servers, ServerAndInterfaces{Server: testServer3, Interfaces: interfaces})
+	servers = append(servers, ServerAndInterfaces{Server: testServer3, Interface: iface})
 
 	return servers
 }
@@ -165,9 +178,12 @@ func TestGetServersByCachegroup(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
-	interfaceCols := []string{"interfaces", "id"}
+	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
+
+	ipCols := []string{"address", "gateway", "service_address", "server", "interface"}
+	ipRows := sqlmock.NewRows(ipCols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
 	//                    or by CSV if types get in the way
@@ -212,15 +228,29 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.XMPPPasswd,
 		)
 		interfaceRows = interfaceRows.AddRow(
-			srv.Interfaces,
+			srv.Interface.MaxBandwidth,
+			srv.Interface.Monitor,
+			srv.Interface.MTU,
+			srv.Interface.Name,
 			ts.ID,
 		)
+
+		for _, ip := range srv.Interface.IPAddresses {
+			ipRows = ipRows.AddRow(
+				ip.Address,
+				ip.Gateway,
+				ip.ServiceAddress,
+				ts.ID,
+				srv.Interface.Name,
+			)
+		}
 	}
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT COUNT\\(s.id\\) FROM s").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(ipRows)
 
 	v := map[string]string{"cachegroup": "2"}
 
@@ -257,9 +287,12 @@ func TestGetMidServers(t *testing.T) {
 	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
 
 	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
-	interfaceCols := []string{"interfaces", "id"}
+	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
+
+	ipCols := []string{"address", "gateway", "service_address", "server", "interface"}
+	ipRows := sqlmock.NewRows(ipCols)
 
 	for _, srv := range testServers {
 		ts := srv.Server
@@ -302,14 +335,28 @@ func TestGetMidServers(t *testing.T) {
 			ts.XMPPPasswd,
 		)
 		interfaceRows = interfaceRows.AddRow(
-			srv.Interfaces,
+			srv.Interface.MaxBandwidth,
+			srv.Interface.Monitor,
+			srv.Interface.MTU,
+			srv.Interface.Name,
 			ts.ID,
 		)
+
+		for _, ip := range srv.Interface.IPAddresses {
+			ipRows = ipRows.AddRow(
+				ip.Address,
+				ip.Gateway,
+				ip.ServiceAddress,
+				ts.ID,
+				srv.Interface.Name,
+			)
+		}
 	}
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT COUNT\\(s.id\\) FROM s").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(ipRows)
 	v := map[string]string{}
 
 	user := auth.CurrentUser{}
@@ -366,7 +413,18 @@ func TestGetMidServers(t *testing.T) {
 	}
 	cgs = append(cgs, testCG2)
 
+	serverMap := make(map[int]tc.ServerNullable, len(servers))
+	serverIDs := make([]int, 0, len(servers))
+	for _, server := range servers {
+		if server.ID == nil {
+			t.Fatal("Found server with nil ID")
+		}
+		serverIDs = append(serverIDs, *server.ID)
+		serverMap[*server.ID] = server
+	}
+
 	ts := servers[1]
+	*ts.ID = *ts.ID + 1
 	rows2 = rows2.AddRow(
 		ts.Cachegroup,
 		ts.CachegroupID,
@@ -408,7 +466,7 @@ func TestGetMidServers(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
-	mid, userErr, sysErr, errCode := getMidServers(servers, db.MustBegin())
+	mid, userErr, sysErr, errCode := getMidServers(serverIDs, serverMap, db.MustBegin())
 
 	if userErr != nil || sysErr != nil {
 		t.Fatalf("getMidServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
@@ -416,10 +474,20 @@ func TestGetMidServers(t *testing.T) {
 	if len(mid) != 1 {
 		t.Fatalf("getMidServers expected: len(mid) == 1, actual: %v", len(mid))
 	}
-	if mid[0].Type != "MID" || *(mid[0].CachegroupID) != 2 || *(mid[0].Cachegroup) != "parentCacheGroup" {
-		t.Fatalf("getMidServers expected: Type == MID, actual: %v", mid[0].Type)
-		t.Fatalf("getMidServers expected: CachegroupID == 2, actual: %v", *(mid[0].CachegroupID))
-		t.Fatalf("getMidServers expected: Cachegroup == parentCacheGroup, actual: %v", *(mid[0].Cachegroup))
+	if serverMap[mid[0]].Type != "MID" {
+		t.Errorf("getMidServers expected: Type == MID, actual: %v", serverMap[mid[0]].Type)
+	}
+
+	if serverMap[mid[0]].Cachegroup == nil {
+		t.Error("getMidServers expected: Cachegroup == parentCacheGroup, actual: nil")
+	} else if *(serverMap[mid[0]].Cachegroup) != "parentCacheGroup" {
+		t.Errorf("getMidServers expected: Cachegroup == parentCacheGroup, actual: %v", *(serverMap[mid[0]].Cachegroup))
+	}
+
+	if serverMap[mid[0]].CachegroupID == nil {
+		t.Error("getMidServers expected: CachegroupID == 2, actual: nil")
+	} else if *(serverMap[mid[0]].CachegroupID) != 2  {
+		t.Errorf("getMidServers expected: CachegroupID == 2, actual: %v", *(serverMap[mid[0]].CachegroupID))
 	}
 }
 
@@ -473,7 +541,7 @@ func TestV3Validations(t *testing.T) {
 
 	tx := db.MustBegin().Tx
 
-	_, err = validateV3(testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err != nil {
 		t.Errorf("Unexpected error validating test server: %v", err)
 	}
@@ -483,7 +551,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no interfaces to be invalid")
 	} else {
@@ -495,7 +563,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with nil interfaces to be invalid")
 	} else {
@@ -510,7 +578,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server an MTU < 1280 to be invalid")
 	} else {
@@ -524,7 +592,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no IP addresses to be invalid")
 	} else {
@@ -537,7 +605,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with nil IP addresses to be invalid")
 	} else {
@@ -556,7 +624,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no service addresses to be invalid")
 	} else {
@@ -568,7 +636,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with too many interfaces with service addresses to be invalid")
 	} else {
@@ -586,7 +654,7 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err = validateV3(testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no service addresses to be invalid")
 	} else {
