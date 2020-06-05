@@ -293,7 +293,7 @@ const deleteServerQuery = `DELETE FROM server WHERE id=$1`
 const deleteInterfacesQuery = `DELETE FROM interface WHERE server=$1`
 const deleteIPsQuery = `DELETE FROM ip_address WHERE server = $1`
 
-func validateCommon(s tc.CommonServerProperties, tx *sql.Tx) []error {
+func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
@@ -343,7 +343,7 @@ func validateCommon(s tc.CommonServerProperties, tx *sql.Tx) []error {
 	return errs
 }
 
-func validateV1(s tc.ServerNullableV11, tx *sql.Tx) error {
+func validateV1(s *tc.ServerNullableV11, tx *sql.Tx) error {
 	if s.IP6Address != nil && len(strings.TrimSpace(*s.IP6Address)) == 0 {
 		s.IP6Address = nil
 	}
@@ -367,7 +367,7 @@ func validateV1(s tc.ServerNullableV11, tx *sql.Tx) error {
 		validateErrs["ip6Address"] = validation.Validate(s.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress))
 	}
 	errs = append(errs, tovalidate.ToErrors(validateErrs)...)
-	errs = append(errs, validateCommon(s.CommonServerProperties, tx)...)
+	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
 
 	return util.JoinErrs(errs)
 }
@@ -375,7 +375,7 @@ func validateV1(s tc.ServerNullableV11, tx *sql.Tx) error {
 func validateV2(s *tc.ServerNullableV2, tx *sql.Tx) error {
 	var errs []error
 
-	if err := validateV1(s.ServerNullableV11, tx); err != nil {
+	if err := validateV1(&s.ServerNullableV11, tx); err != nil {
 		return err
 	}
 
@@ -416,7 +416,7 @@ func validateMTU(mtu interface{}) error {
 	return nil
 }
 
-func validateV3(s tc.ServerNullable, tx *sql.Tx) (string, error) {
+func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 
 	if len(s.Interfaces) == 0 {
 		return "", errors.New("a server must have at least one interface")
@@ -474,7 +474,7 @@ func validateV3(s tc.ServerNullable, tx *sql.Tx) (string, error) {
 		}
 	}
 
-	errs = append(errs, validateCommon(s.CommonServerProperties, tx)...)
+	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
 	return serviceInterface, util.JoinErrs(errs)
 }
 
@@ -932,7 +932,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		serviceInterface, err := validateV3(newServer, tx)
+		serviceInterface, err := validateV3(&newServer, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
@@ -969,7 +969,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err := validateV1(legacyServer, tx)
+		err := validateV1(&legacyServer, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
@@ -1053,7 +1053,7 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateV1(server, tx); err != nil {
+	if err := validateV1(&server, tx); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
@@ -1164,7 +1164,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceInterface, err := validateV3(server, tx)
+	serviceInterface, err := validateV3(&server, tx)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
