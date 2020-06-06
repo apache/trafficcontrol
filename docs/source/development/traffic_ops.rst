@@ -521,6 +521,8 @@ Writing New Endpoints
 =====================
 All new :ref:`to-api` endpoints should be written in Go, so writing endpoints for the Perl implementation is not discussed here. Furthermore, most new endpoints are accompanied by database schema changes which necessitate a new migration under :atc-file:`traffic_ops/app/db/migrations` and database best-practices are not discussed in this section.
 
+.. seealso:: This section contains a quick overview of API endpoint development; for the full guidelines for API endpoints, consult :ref:`api-guidelines`.
+
 The first thing to consider when writing a new endpoint is what the requests it will serve will look like. It's recommended that new endpoints avoid using "path parameters" when possible, and instead try to utilize request bodies and/or query string parameters. For example, instead of ``/foos/{{ID}}`` consider simply ``/foos`` with a supported ``id`` query parameter. The request *methods* should be restricted to the following, and respect each method's associated meaning.
 
 DELETE
