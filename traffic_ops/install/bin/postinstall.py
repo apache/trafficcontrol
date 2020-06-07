@@ -745,7 +745,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 		not hypnotoad["listen"] or
 		not isinstance(hypnotoad["listen"][0], str)
 	):
-		log_msg = """	The "listen" portion of {} is missing from {}
+		log_msg = """	The "listen" portion of %s is missing from %s
 	Please ensure it contains the same structure as the one originally installed"""
 		logging.error(log_msg, cdn_conf_path, cdn_conf_path)
 		return 1
@@ -753,11 +753,11 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 	listen = hypnotoad["listen"][0]
 
 	if f"cert={certpath}" not in listen or f"key={keypath}" not in listen:
-		log_msg = """	The "listen" portion of {} is:
-	{}
+		log_msg = """	The "listen" portion of %s is:
+	%s
 	and does not reference the same "cert=" and "key=" values as are created here.
-	Please modify {} to add the following as parameters:
-	?cert={}&key={}"""
+	Please modify %s to add the following as parameters:
+	?cert=%s&key=%s"""
 		logging.error(log_msg, cdn_conf_path, listen, cdn_conf_path, certpath, keypath)
 		return 1
 
