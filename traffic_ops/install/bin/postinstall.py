@@ -21,6 +21,7 @@ testing.
                               Default: trafops
 --no-restart-to               Skip restarting Traffic Ops after configuration and database changes
                               are applied.
+--no-database                 Skip all database operations.
 
 >>> [c for c in [[a for a in b if not a.config_var] for b in DEFAULTS.values()] if c]
 []
@@ -1014,7 +1015,9 @@ defaults: typing.Optional[str],
 cfile: typing.Optional[str],
 root_dir: str,
 ops_user: str,
-ops_group: str, no_restart_to: bool
+ops_group: str,
+no_restart_to: bool,
+no_database: bool
 ) -> int:
 	"""
 	Runs the main routine given the parsed arguments as input.
@@ -1121,23 +1124,24 @@ ops_group: str, no_restart_to: bool
 		logging.critical("Generating cdn.conf: {}", e)
 		return 1
 
-	try:
-		conn_str = db_connection_string(dbconf)
-	except KeyError as e:
-		logging.error("Missing database connection variable: {}", e)
-		logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
-		return -1
+	if not no_database:
+		try:
+			conn_str = db_connection_string(dbconf)
+		except KeyError as e:
+			logging.error("Missing database connection variable: {}", e)
+			logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
+			return -1
 
-	if not os.path.isfile("/usr/bin/psql") or not os.access("/usr/bin/psql", os.X_OK):
-		logging.critical("psql is not installed, please install it to continue with database setup")
-		return 1
+		if not os.path.isfile("/usr/bin/psql") or not os.access("/usr/bin/psql", os.X_OK):
+			logging.critical("psql is not installed, please install it to continue with database setup")
+			return 1
 
-	try:
-		setup_database_data(conn_str, admin_conf, paramconf, root_dir)
-	except (OSError, subprocess.SubprocessError)as e:
-		logging.error("Failed to set up database: {}", e)
-		logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
-		return -1
+		try:
+			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
+		except (OSError, subprocess.SubprocessError)as e:
+			logging.error("Failed to set up database: {}", e)
+			logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
+			return -1
 
 
 	if not no_restart_to:
@@ -1215,6 +1219,7 @@ if __name__ == '__main__':
 		help="Skip restarting Traffic Ops after configuration and database changes are applied",
 		action="store_true"
 	)
+	PARSER.add_argument("--no-database", help="Skip all database operations", action="store_true")
 
 	ARGS = PARSER.parse_args()
 
@@ -1232,7 +1237,8 @@ if __name__ == '__main__':
 		os.path.abspath(ARGS.root_directory),
 		ARGS.ops_user,
 		ARGS.ops_group,
-		ARGS.no_restart_to
+		ARGS.no_restart_to,
+		ARGS.no_database
 		)
 		sys.exit(EXIT_CODE)
 	except KeyboardInterrupt:
