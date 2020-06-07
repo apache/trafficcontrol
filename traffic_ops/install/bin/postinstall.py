@@ -523,7 +523,7 @@ def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
 		if not isinstance(questions, list):
 			raise ValueError(f"file '{file}' has malformed questions")
 
-		questions = []
+		qstns = []
 		for qstn in questions:
 			if not isinstance(qstn, dict):
 				raise ValueError(f"file '{file}' has a malformed question ({qstn})")
@@ -553,8 +553,8 @@ def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
 			if qstn:
 				logging.warning("Found unknown extra properties in question in '%s' (%r)", file, qstn.keys())
 
-			questions.append(Question(question, answer, cfg_var, hidden=hidden))
-		ret[file] = questions
+			qstns.append(Question(question, answer, cfg_var, hidden=hidden))
+		ret[file] = qstns
 
 	return ret
 
