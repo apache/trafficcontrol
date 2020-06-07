@@ -295,7 +295,7 @@ class ConfigEncoder(json.JSONEncoder):
 def get_config(questions: typing.List[Question], fname: str, automatic: bool = False) -> dict:
 	"""Asks all provided questions, or uses their defaults in automatic mode"""
 
-	logging.info("==========={}===========", fname)
+	logging.info("===========%s===========", fname)
 
 	config = {}
 
@@ -482,7 +482,7 @@ def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic:
 
 	for fname, file in DEFAULTS.items():
 		if fname not in cfg:
-			logging.warning("File '{}' found in defaults but not config file", fname)
+			logging.warning("File '%s' found in defaults but not config file", fname)
 			cfg[fname] = []
 
 		for default_value in file:
@@ -498,9 +498,9 @@ def sanity_check_config(cfg: typing.Dict[str, typing.List[Question]], automatic:
 					if default_value.hidden:
 						answer = default_value.ask()
 				elif default_value.hidden:
-					logging.info("Adding question '{}' with default answer", question)
+					logging.info("Adding question '%s' with default answer", question)
 				else:
-					logging.info("Adding question '{}' with default answer {}", question, answer)
+					logging.info("Adding question '%s' with default answer %s", question, answer)
 
 				# The Perl here would ask questions, but those would just get asked later
 				# anyway, so I'm not sure why.
@@ -551,7 +551,7 @@ def unmarshal_config(dct: dict) -> typing.Dict[str, typing.List[Question]]:
 			del qstn["config_var"]
 
 			if qstn:
-				logging.warning("Found unknown extra properties in question in '{}' ({r:})", file, qstn.keys())
+				logging.warning("Found unknown extra properties in question in '%s' (%r)", file, qstn.keys())
 
 			questions.append(Question(question, answer, cfg_var, hidden=hidden))
 		ret[file] = questions
@@ -576,14 +576,14 @@ def setup_maxmind(maxmind_answer: str, root: str):
 		subprocess.run(cmd, capture_output=True, check=True, universal_newlines=True)
 	except subprocess.SubprocessError as e:
 		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv4) Exception: {}", e)
+		logging.debug("(ipv4) Exception: %s", e)
 
 	cmd[1] = "https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
 	try:
 		subprocess.run(cmd, capture_output=True, check=True, universal_newlines=True)
 	except subprocess.SubprocessError as e:
 		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv6) Exception: {}", e)
+		logging.debug("(ipv6) Exception: %s", e)
 
 def exec_openssl(description: str, *cmd_args) -> bool:
 	"""
@@ -601,7 +601,7 @@ def exec_openssl(description: str, *cmd_args) -> bool:
 		if proc.returncode == 0:
 			return True
 
-		logging.debug("openssl exec failed with code {}; stderr: {}", proc.returncode, proc.stderr)
+		logging.debug("openssl exec failed with code %s; stderr: %s", proc.returncode, proc.stderr)
 		while True:
 			ans = input(f"{description} failed. Try again (y/n) [y]: ")
 			if not ans or ans.casefold().startswith('n'):
@@ -621,7 +621,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 	if not os.path.isfile('/usr/bin/openssl') or not os.access('/usr/bin/openssl', os.X_OK):
 		logging.error("Unable to install SSL certificates as openssl is not installed")
 		cmd = os.path.join(root, "opt/traffic_ops/install/bin/generateCert")
-		logging.error("Install openssl and then run {} to install SSL certificates", cmd)
+		logging.error("Install openssl and then run %s to install SSL certificates", cmd)
 		return 4
 
 	logging.info("Installing SSL Certificates")
@@ -653,7 +653,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 		"-passin",
 		f"pass:{conf.rsa_password}",
 		"-subj",
-		conf.params()
+		conf.params
 	)
 	if not exec_openssl("Creating a Certificate Signing Request (CSR)", *args):
 		return 1
@@ -718,7 +718,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 
         You may obtain a certificate signed by a Certificate Authority using the
         server.csr file saved in the current directory.  Once you have obtained
-        a signed certificate, copy it to {} and
+        a signed certificate, copy it to %s and
         restart Traffic Ops."""
 	logging.info(log_msg, certpath)
 
@@ -735,7 +735,7 @@ def setup_certificates(conf: SSLConfig, root: str, ops_user: str, ops_group: str
 		"hypnotoad" not in cdn_conf or
 		not isinstance(cdn_conf["hypnotoad"], dict)
 	):
-		logging.critical("Malformed {}; improper object and/or missing 'hypnotoad' key", cdn_conf_path)
+		logging.critical("Malformed %s; improper object and/or missing 'hypnotoad' key", cdn_conf_path)
 		return 1
 
 	hypnotoad = cdn_conf["hypnotoad"]
@@ -827,7 +827,7 @@ def generate_cdn_conf(questions: typing.List[Question], fname: str, automatic: b
 				raise ValueError(f"invalid existing cdn.config at {path}: {e}") from e
 
 	if not isinstance(existing_conf, dict):
-		logging.warning("Existing cdn.conf (at '{}') is not an object - overwriting", path)
+		logging.warning("Existing cdn.conf (at '%s') is not an object - overwriting", path)
 		existing_conf = {}
 
 	conf.generate_secret(existing_conf)
@@ -840,7 +840,7 @@ def generate_cdn_conf(questions: typing.List[Question], fname: str, automatic: b
 		existing_conf["traffic_ops_golang"] = {}
 
 	existing_conf["traffic_ops_golang"]["port"] = conf.port
-	err_log = os.path(root, "var/log/traffic_ops/error.log")
+	err_log = os.path.join(root, "var/log/traffic_ops/error.log")
 	existing_conf["traffic_ops_golang"]["log_location_error"] = err_log
 	access_log = os.path.join(root, "var/log/traffic_ops/access.log")
 	existing_conf["traffic_ops_golang"]["log_location_event"] = access_log
@@ -875,7 +875,7 @@ def exec_psql(conn_str: str, query: str) -> str:
 	cmd = ["/usr/bin/psql", "--tuples-only", "-d", conn_str, "-c", query]
 	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
 	if proc.returncode != 0:
-		logging.debug("psql exec failed; stderr: {}\n\tstdout: {}", proc.stderr, proc.stdout)
+		logging.debug("psql exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 		raise OSError("failed to execute database query")
 	return proc.stdout.strip()
 
@@ -890,15 +890,15 @@ def invoke_db_admin_pl(action: str, root: str):
 	cmd = [os.path.join(path, "db/admin"), "--env=production", action]
 	proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
 	if proc.returncode != 0:
-		logging.debug("admin exec failed; stderr: {}\n\tstdout:{}", proc.stderr, proc.stdout)
+		logging.debug("admin exec failed; stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 		raise OSError(f"Database {action} failed")
-	logging.info("Database {} succeeded", action)
+	logging.info("Database %s succeeded", action)
 
 def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 	"""
 	Sets up all necessary initial database data using `/usr/bin/sql`
 	"""
-	logging.info("paramconf {}", param_conf)
+	logging.info("paramconf %s", param_conf)
 	logging.info("Setting up the database data")
 
 	tables_found_query = '''
@@ -937,7 +937,7 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 		VALUES ('{cdn_name}', '{dns_subdomain}', false)
 		ON CONFLICT DO NOTHING;
 	'''.format(**param_conf)
-	logging.info("\n{}", insert_cdn_query)
+	logging.info("\n%s", insert_cdn_query)
 	_ = exec_psql(conn_str, insert_cdn_query)
 
 	tm_url = param_conf["tm.url"]
@@ -952,7 +952,7 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 			('geolocation6.polling.url', 'CRConfig.json', '{tm_url}/routing/GeoLiteCityv6.dat.jz')
 		ON CONFLICT (name, config_file, value) DO NOTHING;
 	'''.format(tm_url=tm_url)
-	logging.info("\n{}", insert_parameters_query)
+	logging.info("\n%s", insert_parameters_query)
 	_ = exec_psql(conn_str, insert_parameters_query)
 
 	logging.info("\n=========== Setting up profiles")
@@ -1005,7 +1005,7 @@ def setup_database_data(conn_str: str, user: User, param_conf: dict, root: str):
 			)
 		ON CONFLICT (profile, parameter) DO NOTHING;
 	'''.format(tm_url=tm_url)
-	logging.info("\n{}", insert_profiles_query)
+	logging.info("\n%s", insert_profiles_query)
 	_ = exec_psql(conn_str, insert_cdn_query)
 
 def main(
@@ -1044,13 +1044,13 @@ no_database: bool
 					with open(defaults, "w") as dump_file:
 						json.dump(DEFAULTS, dump_file, indent="\t")
 				except OSError as e:
-					logging.critical("Writing output: {}", e)
+					logging.critical("Writing output: %s", e)
 					return 1
 			else:
 				json.dump(DEFAULTS, sys.stdout, cls=ConfigEncoder, indent="\t")
 				print()
 		except ValueError as e:
-			logging.critical("Converting defaults to JSON: {}", e)
+			logging.critical("Converting defaults to JSON: %s", e)
 			return 1
 		return 0
 
@@ -1059,25 +1059,25 @@ no_database: bool
 		logging.info("No input file given - using defaults")
 		user_input = DEFAULTS
 	else:
-		logging.info("Using input file {}", cfile)
+		logging.info("Using input file %s", cfile)
 		try:
 			with open(cfile) as conf_file:
 				user_input = unmarshal_config(json.load(conf_file))
 			diffs = sanity_check_config(user_input, automatic)
 			logging.info(
-			"File sanity check complete - found {} difference{}",
+			"File sanity check complete - found %s difference%s",
 			diffs,
 			'' if diffs == 1 else 's'
 			)
 		except (OSError, ValueError, json.JSONDecodeError) as e:
-			logging.critical("Reading in input file '{}': {}", cfile, e)
+			logging.critical("Reading in input file '%s': %s", cfile, e)
 			return 1
 
 	try:
 		path = os.path.join(root_dir, "opt/traffic_ops/install/bin")
 		# os.chdir(path)
 	except OSError as e:
-		logging.critical("Attempting to change directory to '{}': {}", path, e)
+		logging.critical("Attempting to change directory to '%s': %s", path, e)
 		return 1
 
 	try:
@@ -1098,16 +1098,16 @@ no_database: bool
 			with open(postinstall_cfg, 'w+') as conf_file:
 				print("{}", file=conf_file)
 	except OSError as e:
-		logging.critical("Writing configuration: {}", e)
+		logging.critical("Writing configuration: %s", e)
 		return 1
 	except ValueError as e:
-		logging.critical("Generating configuration: {}", e)
+		logging.critical("Generating configuration: %s", e)
 		return 1
 
 	try:
 		setup_maxmind(todbconf.get("maxmind", "no"), root_dir)
 	except OSError as e:
-		logging.critical("Setting up MaxMind: {}", e)
+		logging.critical("Setting up MaxMind: %s", e)
 		return 1
 
 	try:
@@ -1115,20 +1115,20 @@ no_database: bool
 		if cert_code:
 			return cert_code
 	except OSError as e:
-		logging.critical("Setting up SSL Certificates: {}", e)
+		logging.critical("Setting up SSL Certificates: %s", e)
 		return 1
 
 	try:
 		generate_cdn_conf(user_input[CDN_CONF_FILE], CDN_CONF_FILE, automatic, root_dir)
 	except OSError as e:
-		logging.critical("Generating cdn.conf: {}", e)
+		logging.critical("Generating cdn.conf: %s", e)
 		return 1
 
 	if not no_database:
 		try:
 			conn_str = db_connection_string(dbconf)
 		except KeyError as e:
-			logging.error("Missing database connection variable: {}", e)
+			logging.error("Missing database connection variable: %s", e)
 			logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
 			return -1
 
@@ -1139,7 +1139,7 @@ no_database: bool
 		try:
 			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
 		except (OSError, subprocess.SubprocessError)as e:
-			logging.error("Failed to set up database: {}", e)
+			logging.error("Failed to set up database: %s", e)
 			logging.error("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.")
 			return -1
 
@@ -1150,8 +1150,8 @@ no_database: bool
 			cmd = ["/sbin/service", "traffic_ops", "restart"]
 			proc = subprocess.run(cmd, capture_output=True, universal_newlines=True, check=False)
 		except (OSError, subprocess.SubprocessError) as e:
-			logging.critical("Failed to restart Traffic Ops, return code {}: {}", proc.returncode, e)
-			logging.debug("stderr: {}\n\tstdout: {}", proc.stderr, proc.stdout)
+			logging.critical("Failed to restart Traffic Ops, return code %s: %s", proc.returncode, e)
+			logging.debug("stderr: %s\n\tstdout: %s", proc.stderr, proc.stdout)
 			return 1
 		# Perl didn't actually do any "waiting" before reporting success, so
 		# neither do we
