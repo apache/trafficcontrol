@@ -850,6 +850,7 @@ def generate_cdn_conf(questions: typing.List[Question], fname: str, automatic: b
 
 	with open(path, "w+") as conf_file:
 		json.dump(existing_conf, conf_file, indent="\t")
+		print(file=conf_file)
 	logging.info("CDN configuration has been saved")
 
 def db_connection_string(dbconf: dict) -> str:
