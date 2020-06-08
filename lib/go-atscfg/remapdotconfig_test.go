@@ -1167,8 +1167,11 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 	}
 }
 
-func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
-	hdr := "myHeaderComment"
+func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
+	serverName := tc.CacheName("server0")
+	toToolName := "to0"
+	toURL := "trafficops.example.net"
+	atsMajorVersion := 6
 
 	server := makeTestRemapServer()
 
@@ -1294,11 +1297,11 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 		t.Errorf("expected no 'hdr_rw_mid_' for nil mid header rewrite on DS, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "cacheurl") {
-		t.Errorf("expected 'cacheurl' for qstring pass up and ATS <=6, actual '%v'", txt)
+	if !strings.Contains(remapLine, "cachekey") {
+		t.Errorf("expected 'cachekey' for qstring pass up and ATS 6+, actual '%v'", txt)
 	}
-	if strings.Contains(remapLine, "cachekey") {
-		t.Errorf("expected no 'cachekey' for ATS <=6, actual '%v'", txt)
+	if strings.Contains(remapLine, "cacheurl") {
+		t.Errorf("expected no 'cacheurl' for ATS 6+, actual '%v'", txt)
 	}
 }
 
@@ -5400,8 +5403,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 		t.Errorf("expected remap on edge server with ats<5 to not contain cachekey plugin, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "cacheurl.so") {
-		t.Errorf("expected remap on edge server with ats<5 to contain cacheurl  plugin, actual '%v'", txt)
+	if strings.Contains(remapLine, "cacheurl.so") {
+		t.Errorf("expected remap on edge server with ats<5 to not contain cacheurl plugin, actual '%v'", txt)
 	}
 }
 
@@ -5518,14 +5521,6 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 	if strings.Contains(remapLine, "cachekey.so") {
 		t.Errorf("expected remap on edge server with ats<5 to not contain cachekey plugin, actual '%v'", txt)
 	}
-
-	if !strings.Contains(remapLine, "cacheurl.so") {
-		t.Errorf("expected remap on edge server with ats<5 to contain cacheurl  plugin, actual '%v'", txt)
-	}
-
-	if !strings.Contains(remapLine, "cacheurl_") {
-		t.Errorf("expected remap on edge server with ds qstring cacheurl and ds cacheurl to generate both, actual '%v'", txt)
-	}
 }
 
 func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCacheURL(t *testing.T) {
@@ -5641,14 +5636,6 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 
 	if strings.Contains(remapLine, "cachekey.so") {
 		t.Errorf("expected remap on edge server with ats<5 to not contain cachekey plugin, actual '%v'", txt)
-	}
-
-	if !strings.Contains(remapLine, "cacheurl.so") {
-		t.Errorf("expected remap on edge server with ats<5 to contain cacheurl  plugin, actual '%v'", txt)
-	}
-
-	if !strings.Contains(remapLine, "cacheurl_") {
-		t.Errorf("expected remap on edge server with ds qstring cacheurl and ds cacheurl to generate both, actual '%v'", txt)
 	}
 }
 

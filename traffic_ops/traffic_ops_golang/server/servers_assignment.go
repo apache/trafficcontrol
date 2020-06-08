@@ -350,7 +350,7 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 		atsConfigLocation = atsConfigLocation[:len(atsConfigLocation)-1]
 	}
 
-	//we need dses: xmlids and edge_header_rewrite, regex_remap, and cache_url
+	//we need dses: xmlids and edge_header_rewrite, regex_remap,
 	rows, err := tx.Query(`SELECT xml_id, edge_header_rewrite, regex_remap FROM deliveryservice WHERE id = ANY($1::bigint[])`, dsPqArray)
 	if err != nil {
 		return nil, errors.New("querying deliveryservice: " + err.Error())
