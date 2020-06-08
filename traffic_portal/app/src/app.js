@@ -20,11 +20,15 @@
 'use strict';
 require('app-templates');
 
+var AgGrid = require("ag-grid-community");
+
 var App = function($urlRouterProvider) {
     $urlRouterProvider.otherwise('/');
 };
 
 App.$inject = ['$urlRouterProvider'];
+
+AgGrid.initialiseAgGridWithAngular1(angular);
 
 var trafficPortal = angular.module('trafficPortal', [
         'config',
@@ -42,6 +46,7 @@ var trafficPortal = angular.module('trafficPortal', [
         'angular-loading-bar',
         'moment-picker',
         'jsonFormatter',
+        'agGrid',
 
         // public modules
         require('./modules/public').name,
@@ -509,5 +514,3 @@ trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $loc
 trafficPortal.config(function ($httpProvider) {
     $httpProvider.interceptors.push('authInterceptor');
 });
-
-

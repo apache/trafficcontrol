@@ -165,6 +165,78 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
         { "name": "Update Pending", "visible": true, "searchable": true }
     ];
 
+    $scope.gridOptions = {
+        // columnDefs: [
+        //     { headerName: "Cache Group", field: "cachegroup"},
+        //     { headerName: "CDN", field: "cdnName"},
+        //     { headerName: "Domain", field: "domainName"},
+        //     { headerName: "Host", field: "hostName"},
+        //     { headerName: "HTTPS Port", field: "httpsPort"},
+        //     { headerName: "ID", field: "id"},
+        //     { headerName: "ILO IP Address", field: "iloIpAddress"},
+        //     { headerName: "ILO IP Gateway", field: "iloIpGateway"},
+        //     { headerName: "ILO IP Netmask", field: "iloIpNetmask"},
+        //     { headerName: "ILO Username", field: "iloUsername"},
+        //     { headerName: "Interface Name", field: "interfaceName"},
+        //     { headerName: "IPv6 Address", field: "ipv6Address"},
+        //     { headerName: "IPv6 Gateway", field: "ipv6Gateway"},
+        //     { headerName: "Last Updated", field: "lastUpdated"},
+        //     { headerName: "Mgmt IP Address", field: "mgmtIPAddress"},
+        //     { headerName: "Mgmt IP Gateway", field: "mgmtIPGateway"},
+        //     { headerName: "Mgmt IP Netmask", field: "mgmtIPNetmask"},
+        //     { headerName: "Network Gateway", field: "ipGateway"},
+        //     { headerName: "Network IP", field: "idAddress"},
+        //     { headerName: "Network MTU", field: "interfaceMtu"},
+        //     { headerName: "Network Subnet", field: "ipNetmask"},
+        //     { headerName: "Offline Reason", field: "offlineReason"},
+        //     { headerName: "Phys Location", field: "physLocation"},
+        //     { headerName: "Profile", field: "profile"},
+        //     { headerName: "Rack", field: "rack"},
+        //     { headerName: "Reval Pending", field: "revalPending"},
+        //     { headerName: "Router Hostname", field: "routerHostName"},
+        //     { headerName: "Router Port Name", field: "routerPortName"},
+        //     { headerName: "Status", field: "status"},
+        //     { headerName: "TCP Port", field: "tcpPort"},
+        //     { headerName: "Type", field: "type"},
+        //     { headerName: "Update Pending", field: "updPending" }
+        // ],
+        // rowData: servers.map(function(x) {
+        //     return {
+        //         cachegroup: x.cachegroup,
+        //         cdnName: x.cdnName,
+        //         domain: x.domainName,
+        //         hostName: x.hostName,
+        //         httpsPort: x.httpsPort,
+        //         id: x.id,
+        //         physLocation: x.physLocation,
+        //         profile: x.profile,
+        //         rack: "",
+        //         revalPending: x.revalPending,
+        //         routerHostName: "",
+        //         routerPortName: "",
+        //         status: x.status,
+        //         tcpPort: x.tcpPort,
+        //         type: x.type,
+        //         updPending: x.updPending
+        //     };
+        // }),
+        columnDefs:  [
+            {headerName: "Make", field: "make"},
+            {headerName: "Model", field: "model"},
+            {headerName: "Price", field: "price"}
+        ],
+        rowData: [
+            {make: "Toyota", model: "Celica", price: 35000},
+            {make: "Ford", model: "Mondeo", price: 32000},
+            {make: "Porsche", model: "Boxter", price: 72000}
+        ],
+        onGridReady: function(params) {
+            params.api.sizeColumnsToFit();
+        }
+    };
+
+    console.log(servers);
+
     $scope.contextMenuItems = [
         {
             text: 'Open in New Tab',

@@ -25,6 +25,11 @@ module.exports = {
             expose: {
                 files: [
                     {
+                        cwd: "<%= globalConfig.importdir %>",
+                        src: ["ag-grid-community/dist/ag-grid-community.min.js"],
+                        rename: function () { return "ag-grid-community-min.js"; }
+                    },
+                    {
                         cwd: '<%= globalConfig.app %>/bower_components/',
                         src:
                             [
@@ -86,10 +91,15 @@ module.exports = {
             expose: {
                 files: [
                     {
+                        cwd: "<%= globalConfig.importdir %>",
+                        src: ["ag-grid-community/dist/ag-grid-community.min.js"],
+                        rename: function () { return "ag-grid-community.js"; }
+                    },
+                    {
                         cwd: '<%= globalConfig.app %>/bower_components/',
                         src:
                             [
-                                'angular/angular.js',
+                                // 'angular/angular.js',
                                 'angular-animate/angular-animate.js',
                                 'angular-bootstrap-contextmenu/contextMenu.js',
                                 'angular-bootstrap/ui-bootstrap.js',
@@ -105,6 +115,11 @@ module.exports = {
                                 'jquery/jquery.js',
                                 'json3/lib/json3.js'
                             ]
+                    },
+                    {
+                        cwd: "<%= globalConfig.importdir %>",
+                        src: ["angular/angular.min.js"],
+                        rename: function() {return "angular/angular.js";}
                     },
                     {
                         cwd: '<%= globalConfig.app %>/bower_components/',
