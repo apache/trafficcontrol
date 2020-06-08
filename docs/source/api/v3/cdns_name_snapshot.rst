@@ -413,7 +413,7 @@ Response Structure
 			"edge": {
 			    "cacheGroup": "CDN_in_a_Box_Edge",
 			    "capabilities": [
-				"heat-vision"
+				"RAM_DISK_STORAGE"
 			    ],
 			    "fqdn": "edge.infra.ciab.test",
 			    "hashCount": 999,
@@ -432,7 +432,7 @@ Response Structure
 			"mid": {
 			    "cacheGroup": "CDN_in_a_Box_Mid",
 			    "capabilities": [
-				"heat-vision"
+				"RAM_DISK_STORAGE"
 			    ],
 			    "fqdn": "mid.infra.ciab.test",
 			    "hashCount": 999,
@@ -491,7 +491,7 @@ Response Structure
 			    },
 			    "regionalGeoBlocking": "false",
 			    "requiredCapabilities": [
-				"heat-vision"
+				"RAM_DISK_STORAGE"
 			    ],
 			    "routingName": "video",
 			    "soa": {
