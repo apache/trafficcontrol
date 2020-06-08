@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,6 +18,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.table.topologyCacheGroups', [])
-	.controller('TableTopologyCacheGroupsController', require('./TableTopologyCacheGroupsController'))
-	.controller('TableSelectTopologyCacheGroupsController', require('./TableSelectTopologyCacheGroupsController'));
+module.exports = angular.module('trafficPortal.table.topologyDeliveryServices', [])
+	.controller('TableTopologyDeliveryServicesController', require('./TableTopologyDeliveryServicesController'));
