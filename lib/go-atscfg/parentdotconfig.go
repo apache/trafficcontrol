@@ -178,11 +178,16 @@ func MakeParentDotConfig(
 
 	textArr := []string{}
 	text := ""
-	// TODO put these in separate functions. No if-statement should be this long.
-	if serverInfo.IsTopLevelCache() {
-		uniqueOrigins := map[string]struct{}{}
 
-		for _, ds := range parentConfigDSes {
+	processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
+	for _, ds := range parentConfigDSes {
+		if existingDS, ok := processedOriginsToDSNames[ds.OriginFQDN]; ok {
+			log.Errorln("parent.config generation: duplicate origin! services '" + string(ds.Name) + "' and '" + string(existingDS) + "' share origin '" + orgURI.Host + "': skipping '" + string(ds.Name) + "'!")
+			continue
+		}
+
+		// TODO put these in separate functions. No if-statement should be this long.
+		if serverInfo.IsTopLevelCache() {
 			parentQStr := "ignore"
 			if ds.QStringHandling == "" && ds.MSOAlgorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 				parentQStr = "consider"
@@ -204,11 +209,6 @@ func MakeParentDotConfig(
 					log.Errorln("parent.config generation: delivery service '" + string(ds.Name) + "' origin  URI: '" + orgURIStr + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
 				}
 			}
-
-			if _, ok := uniqueOrigins[ds.OriginFQDN]; ok {
-				continue // TODO warn?
-			}
-			uniqueOrigins[ds.OriginFQDN] = struct{}{}
 
 			textLine := ""
 
@@ -246,18 +246,15 @@ func MakeParentDotConfig(
 				textLine += "\n" // TODO remove, and join later on "\n" instead of ""?
 				textArr = append(textArr, textLine)
 			}
-		}
-		sort.Sort(sort.StringSlice(textArr))
-		text = hdr + strings.Join(textArr, "")
-	} else {
-		processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
 
-		queryStringHandling := serverParams[ParentConfigParamQStringHandling] // "qsh" in Perl
+			sort.Sort(sort.StringSlice(textArr))
+			text = hdr + strings.Join(textArr, "")
+		} else {
+			queryStringHandling := serverParams[ParentConfigParamQStringHandling] // "qsh" in Perl
 
-		roundRobin := `round_robin=consistent_hash`
-		goDirect := `go_direct=false`
+			roundRobin := `round_robin=consistent_hash`
+			goDirect := `go_direct=false`
 
-		for _, ds := range parentConfigDSes {
 			parents, secondaryParents := getParentStrs(ds, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
 
 			text := ""
@@ -269,11 +266,6 @@ func MakeParentDotConfig(
 			orgURI, err := url.Parse(originFQDN) // TODO verify
 			if err != nil {
 				log.Errorln("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + originFQDN + "': skipping!" + err.Error())
-				continue
-			}
-
-			if existingDS, ok := processedOriginsToDSNames[originFQDN]; ok {
-				log.Errorln("parent.config generation: duplicate origin! services '" + string(ds.Name) + "' and '" + string(existingDS) + "' share origin '" + orgURI.Host + "': skipping '" + string(ds.Name) + "'!")
 				continue
 			}
 
@@ -316,24 +308,26 @@ func MakeParentDotConfig(
 				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
 			}
 			textArr = append(textArr, text)
-			processedOriginsToDSNames[originFQDN] = ds.Name
-		}
 
-		parents, secondaryParents := getParentStrs(ParentConfigDSTopLevel{}, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
-		// TODO determine if this is necessary. It's super-dangerous, and moreover ignores Server Capabilitites.
-		defaultDestText := `dest_domain=. ` + parents
-		if serverParams[ParentConfigParamAlgorithm] == tc.AlgorithmConsistentHash {
-			defaultDestText += secondaryParents
-		}
-		defaultDestText += ` round_robin=consistent_hash go_direct=false`
+			//			}
 
-		if qStr := serverParams[ParentConfigParamQString]; qStr != "" {
-			defaultDestText += ` qstring=` + qStr
-		}
-		defaultDestText += "\n"
+			parents, secondaryParents := getParentStrs(ParentConfigDSTopLevel{}, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
+			// TODO determine if this is necessary. It's super-dangerous, and moreover ignores Server Capabilitites.
+			defaultDestText := `dest_domain=. ` + parents
+			if serverParams[ParentConfigParamAlgorithm] == tc.AlgorithmConsistentHash {
+				defaultDestText += secondaryParents
+			}
+			defaultDestText += ` round_robin=consistent_hash go_direct=false`
 
-		sort.Sort(sort.StringSlice(textArr))
-		text = hdr + strings.Join(textArr, "") + defaultDestText
+			if qStr := serverParams[ParentConfigParamQString]; qStr != "" {
+				defaultDestText += ` qstring=` + qStr
+			}
+			defaultDestText += "\n"
+
+			sort.Sort(sort.StringSlice(textArr))
+			text = hdr + strings.Join(textArr, "") + defaultDestText
+		}
+		processedOriginsToDSNames[originFQDN] = ds.Name
 	}
 	return text
 }
