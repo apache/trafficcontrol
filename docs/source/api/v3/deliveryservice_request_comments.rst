@@ -115,7 +115,7 @@ Request Structure
 -----------------
 :deliveryServiceRequestId:	The integral, unique identifier of the delivery service that you are commenting on.
 :value:				The comment text itself.
-:xmlId:				This can be anything except undefined. Beyond that, it is not validated or used, although it is returned in the response.
+:xmlId:				This can be any string. It is not validated or used, though it is returned in the response.
 
 .. code-block:: http
 	:caption: Request Example
@@ -181,7 +181,7 @@ Response Structure
 =======
 :deliveryServiceRequestId:	The integral, unique identifier of the delivery service that you are commenting on.
 :value:				The comment text itself.
-:xmlId:				This can be anything except undefined. Beyond that, it is not validated or used, although it is returned in the response.
+:xmlId:				This can be any string. It is not validated or used, though it is returned in the response.
 
 Updates a delivery service request comment.
 
