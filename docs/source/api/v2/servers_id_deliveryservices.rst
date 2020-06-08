@@ -287,9 +287,9 @@ The request body is an array of IDs of :term:`Delivery Services` that you want t
 
 Response Structure
 ------------------
-:dsIds:		An array of integral, unique identifiers for :term:`Delivery Services` which the request added to server. If ``:replace:`` is ``false``, :term:`Delivery Services` that are already assigned will remain, though they are not listed by ``:dsIds:``.
-:replace:	The ``:replace:`` value you provided in the body of the request, or ``null`` if none was provided.
-:serverId:	The server's integral, unique identifier
+:dsIds:         An array of integral, unique identifiers for :term:`Delivery Services` which the request added to server. If ``:replace:`` is ``false``, :term:`Delivery Services` that are already assigned will remain, though they are not listed by ``:dsIds:``.
+:replace:       The ``:replace:`` value you provided in the body of the request, or ``null`` if none was provided.
+:serverId:      The server's integral, unique identifier
 
 .. code-block:: http
 	:caption: Response Example
