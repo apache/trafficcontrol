@@ -27,12 +27,12 @@ if ($#ARGV < 2) {
     die "Usage: $ARGV[0] USERNAME PASSWORD [ROLE] [TENANT] [EMAIL] [FULL_NAME]\n";
 }
 
-my $username = shift // 'admin';
+my $username = shift // $ENV{TO_ADMIN_USER};
 my $password = shift or die "Password is required\n";
 my $role = shift // 'admin';
 my $tenant = shift // 'root';
-my $email = shift // 'admin@no-reply.trafficops.infra.ciab.test';
-my $full_name = shift // 'James Cole'
+my $email = shift // $ENV{TO_EMAIL};
+my $full_name = shift // $ENV{TO_ADMIN_FULL_NAME};
 
 # Skip the insert if the admin 'username' is already there.
 my $hashed_passwd = hash_pass( $password );
