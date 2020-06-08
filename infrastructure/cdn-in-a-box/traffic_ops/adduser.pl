@@ -24,23 +24,27 @@ use strict;
 use Crypt::ScryptKDF qw{ scrypt_hash };
 
 if ($#ARGV < 2) {
-    die "Usage: $ARGV[0] <username> <password> <role>\n";
+    die "Usage: $ARGV[0] USERNAME PASSWORD [ROLE] [TENANT] [EMAIL] [FULL_NAME]\n";
 }
 
 my $username = shift // 'admin';
 my $password = shift or die "Password is required\n";
 my $role = shift // 'admin';
 my $tenant = shift // 'root';
+my $email = shift // 'admin@no-reply.trafficops.infra.ciab.test';
+my $full_name = shift // 'James Cole'
 
 # Skip the insert if the admin 'username' is already there.
 my $hashed_passwd = hash_pass( $password );
 print <<"EOSQL";
-INSERT INTO tm_user (username, role, local_passwd, confirm_local_passwd, tenant_id)
+INSERT INTO tm_user (username, role, local_passwd, confirm_local_passwd, tenant_id, email, full_name)
     VALUES  ('$username',
             (SELECT id FROM role WHERE name = '$role'),
             '$hashed_passwd',
             '$hashed_passwd',
-            (SELECT id FROM tenant WHERE name='$tenant'))
+            (SELECT id FROM tenant WHERE name='$tenant'),
+            '$email',
+            '$full_name')
     ON CONFLICT (username) DO UPDATE SET local_passwd='$hashed_passwd', confirm_local_passwd='$hashed_passwd';
 EOSQL
 
