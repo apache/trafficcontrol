@@ -339,11 +339,11 @@ if not isinstance(conf, dict) or len(conf) != 4 or 'hypnotoad' not in conf or 's
 	print('Malformed cdn.conf file - not an object or missing keys', file=sys.stderr)
 	exit(1)
 
-if not isinstance(conf['hypnotoad'], dict) or len(conf['hypnotoad']) != 1 or 'listen' not in conf['hypnotoad'] or not isinstance(conf['hypnotoad']['listen'], list) or len(conf['hypnotoad']['listen']) != 1 or not insinstance(conf['hypnotoad']['listen'][0], str):
+if not isinstance(conf['hypnotoad'], dict) or len(conf['hypnotoad']) != 1 or 'listen' not in conf['hypnotoad'] or not isinstance(conf['hypnotoad']['listen'], list) or len(conf['hypnotoad']['listen']) != 1 or not isinstance(conf['hypnotoad']['listen'][0], str):
 	print('Malformed hypnotoad object in cdn.conf:', conf['hypnotoad'], file=sys.stderr)
 	exit(1)
 
-listen = 'https://[::]:6443?cert=$ROOT_DIR/etc/pki/tls/certs/localhost.crt&key=$ROOT_DIR/etc/pki/tls/private/localhost.key'
+listen = 'https://[::]:60443?cert=$ROOT_DIR/etc/pki/tls/certs/localhost.crt&key=$ROOT_DIR/etc/pki/tls/private/localhost.key'
 if conf['hypnotoad']['listen'][0] != listen:
 	print('Incorrect hypnotoad.listen[0] in cdn.conf, expected:', listen, 'got:', conf['hypnotoad']['listen'][0], file=sys.stderr)
 	exit(1)
@@ -365,7 +365,7 @@ if conf['to']['base_url'] != 'http://localhost:3000':
 	exit(1)
 
 if not isinstance(conf['traffic_ops_golang'], dict) or len(conf['traffic_ops_golang']) != 3 or 'port' not in conf['traffic_ops_golang'] or 'log_location_error' not in conf['traffic_ops_golang'] or 'log_location_event' not in conf['traffic_ops_golang']:
-	print('Malformed traffic_ops_golang object in cdn.conf:' conf['traffic_ops_golang'], sys.stderr)
+	print('Malformed traffic_ops_golang object in cdn.conf:', conf['traffic_ops_golang'], sys.stderr)
 	exit(1)
 
 if conf['traffic_ops_golang']['port'] != '443':
@@ -383,7 +383,7 @@ if conf['traffic_ops_golang']['log_location_event'] != '$ROOT_DIR/var/log/traffi
 exit(0)
 ";
 
-/usr/bin/python3 -c "#CDN_CONF_TEST";
+/usr/bin/python3 -c "$CDN_CONF_TEST";
 
 
 DATABASE_CONF_EXPECTED='{
