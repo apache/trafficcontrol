@@ -467,6 +467,9 @@ HOST_REGEXP
 	This Delivery Service will be used if the requested host matches this regular expression. The host can be found using the ``Host`` HTTP Header, or as the requested name in a DNS request, depending on the `Type`_ of the Delivery Service.
 PATH_REGEXP
 	This Delivery Service will be used if the request path matches this regular expression.\ [#httpOnlyRegex]_
+
+.. _ds-steering-regexp:
+
 STEERING_REGEXP
 	This Delivery Service will be used if this regular expression matches the xml_id_ of one of this Delivery Service's "targets"
 
@@ -841,8 +844,13 @@ HTTP_NO_CACHE\ [#dupOrigin]_
 STEERING
 	This is a sort of "meta" Delivery Service. It is used for directing clients to one of a set of Delivery Services, rather than delivering content directly itself. The Delivery Services to which a STEERING Delivery Service routes clients are referred to as "targets". Targets in general have an associated "value" and can be of several :term:`Types` that define the meaning of the value - these being:
 
+.. _ds-steering-order:
+
 	STEERING_ORDER
 		The value of a STEERING_ORDER target sets a strict order of preference. In cases where a response to a client contains multiple Delivery Services, those targets with a lower "value" appear earlier than those with a higher "value". In cases where two or more targets share the same value, they each have an equal chance of being presented to the client - effectively spreading traffic evenly across them.
+
+.. _ds-steering-weight:
+
 	STEERING_WEIGHT
 		The values of STEERING_WEIGHT targets are interpreted as "weights", which define how likely it is that any given client will be routed to a specific Delivery Service - effectively this determines the spread of traffic across each target.
 
@@ -851,6 +859,8 @@ STEERING
 	.. seealso:: For more information on setting up a STEERING (or CLIENT_STEERING) Delivery Service, see :ref:`steering-qht`.
 
 	.. seealso:: For implementation details about how Traffic Router routes STEERING (and CLIENT_STEERING) Delivery Services, see :ref:`tr-steering`.
+
+.. _ds-client-steering:
 
 CLIENT_STEERING
 	A CLIENT_STEERING Delivery Service is exactly like STEERING except that it provides clients with methods of bypassing the weights, orders, and localizations of targets in order to choose any arbitrary target at will. When utilizing these methods, the client will either directly choose a target immediately or request a list of all available targets from Traffic Router and then choose one to which to send a subsequent request for actual content. CLIENT_STEERING also supports two additional target types:

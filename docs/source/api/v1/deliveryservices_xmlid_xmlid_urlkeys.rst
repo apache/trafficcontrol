@@ -43,7 +43,7 @@ Request Structure
 
 Response Structure
 ------------------
-:key<N>: The private URL signing key for this :term:`Delivery Service` as a base-64-encoded string, where ``<N>`` is the "generation" of the key e.g. the first key will always be named ``"key0"``. Up to 16 concurrent generations are retained at any time (``<N>`` is always on the interval [0,16])
+:key<N>: The private URL signing key for this :term:`Delivery Service` as a base-64-encoded string, where ``<N>`` is the "generation" of the key e.g. the first key will always be named ``"key0"``. Up to 16 concurrent generations are retained at any time (``<N>`` is always on the interval [0,15])
 
 .. code-block:: json
 	:caption: Response Example

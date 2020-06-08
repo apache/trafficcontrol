@@ -214,6 +214,8 @@ Guide
 		| Password for the admin user                        | The password for the administrative Traffic Ops user.                                          |
 		+----------------------------------------------------+------------------------------------------------------------------------------------------------+
 
+.. _to-upgrading:
+
 Upgrading
 =========
 To upgrade from older Traffic Ops versions, stop the service, use :manpage:`yum(8)` to upgrade to the latest available Traffic Ops package, and use the :ref:`admin <database-management>` tool to perform the database upgrade.
