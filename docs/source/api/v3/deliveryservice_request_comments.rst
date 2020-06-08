@@ -179,10 +179,6 @@ Response Structure
 
 ``PUT``
 =======
-:deliveryServiceRequestId:      The integral, unique identifier of the delivery service that you are commenting on.
-:value:                         The comment text itself.
-:xmlId:                         This can be any string. It is not validated or used, though it is returned in the response.
-
 Updates a delivery service request comment.
 
 :Auth. Required: Yes
@@ -194,6 +190,7 @@ Request Structure
 -----------------
 :deliveryServiceRequestId:      The integral, unique identifier of the :term:`Delivery Service Request` that the comment was posted on.
 :value:                         The comment text itself.
+:xmlId:                         This can be any string. It is not validated or used, though it is returned in the response.
 
 .. table:: Request Query Parameters
 
@@ -266,7 +263,6 @@ Response Structure
 
 ``DELETE``
 ==========
-
 Deletes a delivery service request comment.
 
 :Auth. Required: Yes
