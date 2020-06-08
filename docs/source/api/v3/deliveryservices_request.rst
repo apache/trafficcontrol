@@ -19,7 +19,7 @@
 ``deliveryservices/request``
 ****************************
 
-.. note:: This route does NOT do the same thing as :ref:`POST deliveryservice_requests<to-api-deliveryservice-requests-post>`.
+.. note:: This route does NOT do the same thing as :ref:`POST deliveryservice_requests<to-api-v3-deliveryservice-requests-post>`.
 
 ``POST``
 ========

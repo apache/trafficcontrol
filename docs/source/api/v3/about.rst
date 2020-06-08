@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-about:
+.. _to-api-v3-about:
 
 ***********
 ``about``

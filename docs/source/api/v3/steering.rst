@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-steering:
+.. _to-api-v3-steering:
 
 ************
 ``steering``

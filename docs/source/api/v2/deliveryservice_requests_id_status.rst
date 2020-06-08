@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice_requests-id-status:
+.. _to-api-v2-deliveryservice_requests-id-status:
 
 ******************************************
 ``deliveryservice_requests/{{ID}}/status``

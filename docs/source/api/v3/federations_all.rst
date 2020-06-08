@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-federations-all:
+.. _to-api-v3-federations-all:
 
 *******************
 ``federations/all``
