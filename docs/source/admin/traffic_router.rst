@@ -391,22 +391,22 @@ Localizing ``NS`` records reduces latency for the resolver, which, due to cachin
 
 Edge DNS Routing
 ----------------
-Edge DNS routing refers to the localization of ``NS`` records in Traffic Router. This can be turned on and off via the ``edge.dns.routing`` parameter; the number of records returned is controlled via ``edge.dns.limit`` and there is a hardcoded default limit of 4 when this feature is enabled. See :ref:`ccr-profile` documentation for parameter details.
+Edge DNS routing refers to the localization of ``NS`` records in Traffic Router. This can be turned on and off via the ``edge.dns.routing`` parameter; the number of records returned is controlled via ``edge.dns.limit`` and there is a hardcoded default limit of 4 when this feature is enabled. See :ref:`tr-profile` documentation for parameter details.
 
 Edge HTTP Routing
 -----------------
-Edge HTTP routing refers to the localization of ``A`` and ``AAAA`` records that represent routing names for HTTP delivery services. This can be turned on and off via the ``edge.http.routing`` parameter; the number of records returned is controlled via ``edge.http.limit`` and there is a hardcoded default limit of 4 when this feature is enabled. The default or global limit can be overridden by modifying the ``maxDnsAnswers`` setting on the delivery service. See :ref:`ccr-profile` documentation for parameter details.
+Edge HTTP routing refers to the localization of ``A`` and ``AAAA`` records that represent routing names for HTTP delivery services. This can be turned on and off via the ``edge.http.routing`` parameter; the number of records returned is controlled via ``edge.http.limit`` and there is a hardcoded default limit of 4 when this feature is enabled. The default or global limit can be overridden by modifying the ``maxDnsAnswers`` setting on the delivery service. See :ref:`tr-profile` documentation for parameter details.
 
 Edge Traffic Router Selection
 -----------------------------
 Traffic Router performs localization on client requests in order to determine which Traffic Routers should service a given request. After localization, Traffic Router will perform a consistent hash on the incoming name and will use the value to refine Traffic Router selection. There are two main cases for Traffic Router selection: a localization hit, and a localization miss.
 
 Localization Hit: Consistent Hash (CH)
-**************************************
+""""""""""""""""""""""""""""""""""""""
 When a client is localized, Traffic Router selects the nearest Traffic Router Location (cachegroup) based on proximity. Proximity is determined by using the latitude and longitude of the client, regardless of whether it is a coverage zone or geolocation hit, and the latitude and longitude specified on Traffic Router Locations. Once the location is identified, a consistent hash is performed on the incoming name and the list of Traffic Routers is ordered based upon the consistent hash. Once ordered, the list is limited to the appropriate number based on the limit parameter specified by the hardcoded default (4), ``edge.dns.limit``, ``edge.http.limit``, or ``maxDnsAnswers``, depending on the configuration and request being localized. This approach can be thought of as the consistent hash (CH) selection process.
 
 Localization Miss: Consistent Hash + Round Robin (CH + RR)
-**********************************************************
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 When a client cannot be localized, Traffic Router still needs to produce a list of Traffic Routers to service the request. Because the number of Traffic Routers in the CDN could far exceed the practical limits of what constitutes a "normal" sized answer, a selection algorithm is applied to select Traffic Routers. Much like the localization hit scenario, the incoming request name is consistent hashed and results size is limited by the same parameters. Because no client location is known, Traffic Router must distribute the load across all Traffic Router Locations. To distribute the load, Traffic Router will order all Traffic Routers at each location based on the consistent hash, selecting a Traffic Router at the nth position, incrementing the index, n, after iterating over all locations.
 
 For example, with four Traffic Router Locations each containing 10 Traffic Routers and a limit of 6, the algorithm would:
@@ -419,10 +419,10 @@ For example, with four Traffic Router Locations each containing 10 Traffic Route
 Because the algorithm employs consistent hashing, the answers should be consistent as long as the topology remains the same. This approach can be thought of as the consistent hash round robin (CH + RR) selection process.
 
 Example Request Flow
-********************
+""""""""""""""""""""
 The following is an example of the request flow when a client requests the routing name for an example delivery service, ``tr.service.cdn.example.com``. The request flow assumes that the resolver is cold and has yet to build a local cache of lookups, meaning it has to walk the domain hierarchy asking for ``NS`` records until it reaches ``service.cdn.example.com``. This example starts after the resolver has determined which name servers are authoritative for ``cdn.example.com``. Note that the same logic is applied for each of the three queries made by the resolver.
 
-.. figure:: images/edge_tr_example.png
+.. figure:: traffic_router/images/edge_tr_example.png
    :scale: 30%
    :align: center
    :alt: Example Request Flow for Edge Traffic Routing
