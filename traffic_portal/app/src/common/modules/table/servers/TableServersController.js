@@ -18,7 +18,7 @@
  */
 
 var TableServersController = function(servers, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel, $document) {
-	let statuses = [];
+	/**** Table cell formatters/renderers ****/
 
 	// browserify can't handle classes...
 	function SSHCellRenderer() {}
@@ -44,6 +44,10 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	}
 	UpdateCellRenderer.prototype.getGui = function() {return this.eGui;};
 
+	/**
+	 * Gets text with which to file a status tooltip.
+	 * @returns {string | undefined} The offline reason if the server is offline, otherwise nothing.
+	 */
 	function offlineReasonTooltip(params) {
 		if (!params.value || !serverUtils.isOffline(params.value)) {
 			return;
@@ -51,17 +55,18 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		return params.data.offlineReason;
 	}
 
+	/**
+	 * Formats the contents of a 'lastUpdated' column cell as "relative to now".
+	 */
 	function dateCellFormatter(params) {
 		return dateUtils.getRelativeTime(params.value);
 	}
 
-	function editServer(params) {
-		locationUtils.navigateToPath('/servers/' + params.data.id);
-		// Event is outside the digest cycle, so we need this to trigger one.
-		$scope.$apply();
-	}
 
-	const agColumns = [
+	/**** Constants, scope data, etc. ****/
+
+	/** The columns of the ag-grid table */
+	const columns = [
 		{
 			headerName: "Cache Group",
 			field: "cachegroup",
@@ -282,13 +287,100 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		}
 	];
 
-	var getStatuses = function() {
-		statusService.getStatuses().then(
-			function(result) {
-				statuses = result;
-			}
-		);
+	/** All of the statuses (populated on init). */
+	let statuses = [];
+
+	/** All of the servers - lastUpdated fields converted to actual Dates. */
+	$scope.servers = servers.map(function(x){x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;});
+
+	/** The base URL to use for constructing links to server charts. */
+	$scope.chartsBase = propertiesModel.properties.servers.charts.baseUrl;
+
+	/** The currently selected server - at the moment only used by the context menu */
+	$scope.server = {
+		hostName: "",
+		domainName: "",
+		id: -1
 	};
+
+	/** Options, configuration, data and callbacks for the ag-grid table. */
+	$scope.gridOptions = {
+		components: {
+			sshCellRenderer: SSHCellRenderer,
+			updateCellRenderer: UpdateCellRenderer
+		},
+		columnDefs: columns,
+		defaultColDef: {
+			filter: true,
+			onCellClicked: function(params) {
+					locationUtils.navigateToPath('/servers/' + params.data.id);
+					// Event is outside the digest cycle, so we need to trigger one.
+					$scope.$apply();
+				},
+			sortable: true,
+			resizable: true
+		},
+		rowData: servers,
+		pagination: true,
+		rowBuffer: 0,
+		onGridReady: function(params) {
+			params.api.sizeColumnsToFit();
+		},
+		menuTabs: 'columnsMenuTab',
+		tooltipShowDelay: 500,
+		allowContextMenuWithControlKey: true,
+		preventDefaultOnContextMenu: true,
+		onCellContextMenu: function(params) {
+			params.event.preventDefault();
+			console.log(params);
+			$scope.showMenu = true;
+			$scope.menuStyle.left = String(params.event.pageX) + "px";
+			$scope.menuStyle.top = String(params.event.pageY) + "px";
+			$scope.server = params.data;
+			$scope.$apply();
+		}
+	};
+
+	/** These three functions are used by the context menu to determine what functionality to provide for a server. */
+	$scope.isCache = serverUtils.isCache;
+	$scope.isEdge = serverUtils.isEdge;
+	$scope.isOrigin = serverUtils.isOrigin;
+
+	/** Used by the context menu to determine whether or not to include links to server charts. */
+	$scope.showCharts = propertiesModel.properties.servers.charts.show;
+
+	/** This is used to position the context menu under the cursor. */
+	$scope.menuStyle = {
+		left: 0,
+		top: 0,
+	};
+
+	/** Controls whether or not the context menu is visible. */
+	$scope.showMenu = false;
+
+
+	/**** Miscellaneous scope functions ****/
+
+	/** Reloads all 'resolve'd data for the view. */
+	$scope.refresh = function() {
+		$state.reload();
+	};
+
+	/** Toggles the visibility of a column that has the ID provided as 'col'. */
+	$scope.toggleVisibility = function(col) {
+		const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
+		$scope.gridOptions.columnApi.setColumnVisible(col, !visible);
+		try {
+			colsVisible = $scope.gridOptions.columnApi.getAllColumns().map(function(x){return [x.colId, x.isVisible()]});
+			localStorage.setItem("servers_table_columns", JSON.stringify(colsVisible));
+		} catch (e) {
+			console.error("Failed to store column defs to local storage:", e);
+		}
+		$scope.gridOptions.api.sizeColumnsToFit();
+	};
+
+
+	/**** Context menu functions ****/
 
 	$scope.queueServerUpdates = function(server, event) {
 		event.stopPropagation();
@@ -298,24 +390,6 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	$scope.clearServerUpdates = function(server, event) {
 		event.stopPropagation();
 		serverService.clearServerUpdates(server.id).then($scope.refresh);
-	};
-
-	var queueCDNServerUpdates = function(cdnId) {
-		cdnService.queueServerUpdates(cdnId)
-			.then(
-				function() {
-					$scope.refresh();
-				}
-			);
-	};
-
-	var clearCDNServerUpdates = function(cdnId) {
-		cdnService.clearServerUpdates(cdnId)
-			.then(
-				function() {
-					$scope.refresh();
-				}
-			);
 	};
 
 	$scope.confirmDelete = function(server, event) {
@@ -403,154 +477,14 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		);
 	};
 
-	$scope.servers = servers.map(function(x){x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;});
-
-	$scope.columns = [];
-
-	$scope.chartsBase = propertiesModel.properties.servers.charts.baseUrl;
-	$scope.server = {
-		hostName: "",
-		domainName: "",
-		id: -1
-	};
-
-	$scope.gridOptions = {
-		components: {
-			sshCellRenderer: SSHCellRenderer,
-			updateCellRenderer: UpdateCellRenderer
-		},
-		columnDefs: agColumns,
-		defaultColDef: {
-			filter: true,
-			onCellClicked: editServer,
-			sortable: true,
-			resizable: true
-		},
-		rowData: servers,
-		pagination: true,
-		rowBuffer: 0,
-		onGridReady: function(params) {
-			params.api.sizeColumnsToFit();
-		},
-		menuTabs: 'columnsMenuTab',
-		tooltipShowDelay: 500,
-		getContextMenuItems: getContextMenu,
-		allowContextMenuWithControlKey: true,
-		preventDefaultOnContextMenu: true,
-		onCellContextMenu: function(params) {
-			params.event.preventDefault();
-			console.log(params);
-			$scope.showMenu = true;
-			$scope.menuStyle.left = String(params.event.pageX) + "px";
-			$scope.menuStyle.top = String(params.event.pageY) + "px";
-			$scope.server = params.data;
-			$scope.chartslink = propertiesModel.properties.servers.charts.baseUrl + params.data.hostName;
-			$scope.$apply();
-		}
-	};
-
-	function getContextMenu(params) {
-		const serverID = params.node.data.id;
-		const hostname = params.node.data.hostName;
-		const domainName = params.node.data.domainName;
-		return [
-			{
-				name: "Open in New Tab",
-				action: function () {
-					$window.open("/#!/servers/" + String(serverID), "_blank");
-				}
-			},
-			"separator",
-			{
-				name: "Navigate to Server FQDN",
-				action: function () {
-					$window.open("http://" + hostname + "." + $itemScope.s.domainName, "_blank");
-				}
-			},
-			"separator",
-			{
-				name: "Edit",
-				action: function () {
-					editServer(params.node);
-				}
-			},
-			{
-				name: "Delete",
-				action: function () {
-					confirmDelete(params.node.data);
-				}
-			},
-			"separator",
-			{
-				name: "Update Status",
-				action: function () {
-					confirmStatusUpdate(params.node.data);
-				}
-			},
-			{
-				name: "Queue Server Updates",
-				disabled: !serverUtils.isCache(params.node.data) || node.data.updPending,
-				action: function () {
-					queueServerUpdates(params.node.data);
-				}
-			},
-			{
-				name: "Clear Server Updates",
-				disabled: !serverUtils.isCache(params.node.data) || !node.data.updPending,
-				action: function () {
-					clearServerUpdates(params.node.data);
-				}
-			},
-			"separator",
-			{
-				name: "Show Charts",
-				disabled: !propertiesModel.properties.servers.charts.show,
-				action: function () {
-					$window.open(propertiesModel.properties.servers.charts.baseUrl + hostname, "_blank");
-				}
-			},
-			"separator",
-			{
-				name: "Manage Capabilities",
-				disabled: !serverUtils.isCache($itemScope.s),
-				action: function () {
-					locationUtils.navigateToPath("/servers/" + String(serverID) + "/capabilities");
-				}
-			},
-			{
-				name: "Manage Delivery Services",
-				disabled: !serverUtils.isEdge(params.node.data) && serverUtils.isOrigin(params.node.data),
-				action: function () {
-					locationUtils.navigateToPath("/servers/" + String(serverID) + "/delivery-services");
-				}
-			}
-		];
-	}
-
-	$scope.isCache = serverUtils.isCache;
-	$scope.isEdge = serverUtils.isEdge;
-	$scope.isOrigin = serverUtils.isOrigin;
-	$scope.showCharts = propertiesModel.properties.servers.charts.show;
-
-	$scope.menuStyle = {
-		left: 0,
-		top: 0,
-	};
-
-	$scope.showMenu = false;
-
-	$scope.createServer = function() {
-		locationUtils.navigateToPath('/servers/new');
-	};
-
 	$scope.confirmCDNQueueServerUpdates = function(cdn) {
-		var params;
+		let params;
 		if (cdn) {
 			params = {
 				title: 'Queue Server Updates: ' + cdn.name,
 				message: 'Are you sure you want to queue server updates for all ' + cdn.name + ' servers?'
 			};
-			var modalInstance = $uibModal.open({
+			const modalInstance = $uibModal.open({
 				templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
 				controller: 'DialogConfirmController',
 				size: 'md',
@@ -561,16 +495,16 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 				}
 			});
 			modalInstance.result.then(function() {
-				queueCDNServerUpdates(cdn.id);
+				cdnService.queueServerUpdates(cdn.id).then($scope.refresh);
 			}, function () {
-				// do nothing
+				// this is just a cancel event from closing the dialog, do nothing
 			});
 		} else {
 			params = {
 				title: 'Queue Server Updates',
 				message: "Please select a CDN"
 			};
-			var modalInstance = $uibModal.open({
+			const modalInstance = $uibModal.open({
 				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
 				controller: 'DialogSelectController',
 				size: 'md',
@@ -584,7 +518,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 				}
 			});
 			modalInstance.result.then(function(cdn) {
-				queueCDNServerUpdates(cdn.id);
+				cdnService.queueServerUpdates(cdn.id).then($scope.refresh);
 			}, function () {
 				// do nothing
 			});
@@ -592,13 +526,13 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	};
 
 	$scope.confirmCDNClearServerUpdates = function(cdn) {
-		var params;
+		let params;
 		if (cdn) {
 			params = {
 				title: 'Clear Server Updates: ' + cdn.name,
 				message: 'Are you sure you want to clear server updates for all ' + cdn.name + ' servers?'
 			};
-			var modalInstance = $uibModal.open({
+			const modalInstance = $uibModal.open({
 				templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
 				controller: 'DialogConfirmController',
 				size: 'md',
@@ -609,7 +543,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 				}
 			});
 			modalInstance.result.then(function() {
-				clearCDNServerUpdates(cdn.id);
+				cdnService.clearServerUpdates(cdn.id).then($scope.refresh);
 			}, function () {
 				// do nothing
 			});
@@ -620,7 +554,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 				title: 'Clear Server Updates',
 				message: "Please select a CDN"
 			};
-			var modalInstance = $uibModal.open({
+			const modalInstance = $uibModal.open({
 				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
 				controller: 'DialogSelectController',
 				size: 'md',
@@ -634,40 +568,15 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 				}
 			});
 			modalInstance.result.then(function(cdn) {
-				clearCDNServerUpdates(cdn.id);
+				cdnService.clearServerUpdates(cdn.id).then($scope.refresh);
 			}, function () {
 				// do nothing
 			});
 		}
 	};
 
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
 
-	$scope.toggleVisibility = function(col) {
-		const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
-		$scope.gridOptions.columnApi.setColumnVisible(col, !visible);
-		try {
-			colsVisible = $scope.gridOptions.columnApi.getAllColumns().map(function(x){return [x.colId, x.isVisible()]});
-			localStorage.setItem("servers_table_columns", JSON.stringify(colsVisible));
-		} catch (e) {
-			console.error("Failed to store column defs to local storage:", e);
-		}
-		$scope.gridOptions.api.sizeColumnsToFit();
-	};
-
-	$scope.isOffline = serverUtils.isOffline;
-
-	$scope.offlineReason = serverUtils.offlineReason;
-
-	$scope.getRelativeTime = dateUtils.getRelativeTime;
-
-	var init = function () {
-		getStatuses();
-	};
-	init();
-
+	/**** Initialization code, including loading user columns from localstorage ****/
 	angular.element(document).ready(function () {
 		try {
 			// need to create the show/hide column checkboxes and bind to the current visibility
@@ -683,14 +592,20 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		} catch (e) {
 			console.error("Failure to retrieve required column info from localStorage (key=servers_table_columns):", e);
 		}
-	});
 
-	$document.bind("click", function(e) {
-		$scope.showMenu = false;
-		e.stopPropagation();
-		$scope.$apply();
-	});
+		// clicks outside the context menu will hide it
+		$document.bind("click", function(e) {
+			$scope.showMenu = false;
+			e.stopPropagation();
+			$scope.$apply();
+		});
 
+		statusService.getStatuses().then(
+			function(result) {
+				statuses = result;
+			}
+		);
+	});
 };
 
 TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel", "$document"];
