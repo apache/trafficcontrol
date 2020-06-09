@@ -20,15 +20,14 @@
 'use strict';
 require('app-templates');
 
-var AgGrid = require("ag-grid-community");
-
 var App = function($urlRouterProvider) {
     $urlRouterProvider.otherwise('/');
 };
 
+
 App.$inject = ['$urlRouterProvider'];
 
-AgGrid.initialiseAgGridWithAngular1(angular);
+agGrid.initialiseAgGridWithAngular1(angular);
 
 var trafficPortal = angular.module('trafficPortal', [
         'config',
