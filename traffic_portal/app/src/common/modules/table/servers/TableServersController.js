@@ -18,6 +18,7 @@
  */
 
 var TableServersController = function(servers, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel, $document) {
+	let statuses = [];
 
 	// browserify can't handle classes...
 	function SSHCellRenderer() {}
@@ -53,8 +54,6 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	function dateCellFormatter(params) {
 		return dateUtils.getRelativeTime(params.value);
 	}
-
-	let serversTable;
 
 	function editServer(params) {
 		locationUtils.navigateToPath('/servers/' + params.data.id);
@@ -284,10 +283,11 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	];
 
 	var getStatuses = function() {
-		statusService.getStatuses()
-			.then(function(result) {
-				$scope.statuses = result;
-			});
+		statusService.getStatuses().then(
+			function(result) {
+				statuses = result;
+			}
+		);
 	};
 
 	var queueServerUpdates = function(server) {
@@ -326,12 +326,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			);
 	};
 
-	$scope.confirmDelete = function(event) {
+	$scope.confirmDelete = function(server, event) {
 		event.stopPropagation();
 
 		const params = {
-			title: 'Delete Server: ' + $scope.server.hostName,
-			key: $scope.server.hostName
+			title: 'Delete Server: ' + server.hostName,
+			key: server.hostName
 		};
 		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
@@ -345,21 +345,49 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		});
 		modalInstance.result.then(
 			function() {
-				serverService.deleteServer($scope.server.id).then(
+				serverService.deleteServer(server.id).then(
 					function(result) {
 						messageModel.setMessages(result.alerts, false);
 						$scope.refresh();
+					},
+					function(err) {
+						// TODO: use template strings once the build can handle them.
+						console.error("Error deleting server", server.hostName + "." + server.domainName, "(#" + String(server.id) + "):", err);
 					}
 				);
 			},
-			function (err) {
-				// TODO: use template strings once the build can handle them.
-				console.error("Error deleting server", $scope.hostname + "." + $scope.domain, "(#" + String($scope.serverID) + "):", err);
+			function() {
+				// This is just a cancel event from closing the dialog, do nothing.
 			}
 		);
 	};
 
-	var confirmStatusUpdate = function(server) {
+	/**
+	 * updateStatus sets the status of the given server to the given status value.
+	 *
+	 * @param {{id: number, offlineReason?: string}} status The numeric ID of the status to set along with a reason why it was set offline, if applicable.
+	 * @param {{id: number}} server The server (or at least its numeric ID) which will have its status set.
+	 */
+	function updateStatus(status, server) {
+		const params = {
+			status: status.id,
+			offlineReason: status.offlineReason
+		};
+
+		serverService.updateStatus(server.id, params).then(
+			function(result) {
+				messageModel.setMessages(result.data.alerts, false);
+				$scope.refresh();
+			},
+			function(fault) {
+				messageModel.setMessages(fault.data.alerts, false);
+			}
+		);
+	};
+
+	$scope.confirmStatusUpdate = function(server, event) {
+		event.stopPropagation();
+
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/status/dialog.select.status.tpl.html',
 			controller: 'DialogSelectStatusController',
@@ -369,28 +397,18 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 					return server;
 				},
 				statuses: function() {
-					return $scope.statuses;
+					return statuses;
 				}
 			}
 		});
-		modalInstance.result.then(function(status) {
-			updateStatus(status, server);
-		}, function () {
-			// do nothing
-		});
-	};
-
-	var updateStatus = function(status, server) {
-		serverService.updateStatus(server.id, { status: status.id, offlineReason: status.offlineReason })
-			.then(
-				function(result) {
-					messageModel.setMessages(result.data.alerts, false);
-					$scope.refresh();
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		modalInstance.result.then(
+			function(status) {
+				updateStatus(status, server);
+			},
+			function () {
+				// this is just a cancel event from closing the dialog, do nothing
+			}
+		);
 	};
 
 	$scope.servers = servers.map(function(x){x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;});
