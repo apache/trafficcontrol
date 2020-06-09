@@ -379,6 +379,17 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		$scope.gridOptions.api.sizeColumnsToFit();
 	};
 
+	/** Downloads the table as a CSV */
+	$scope.exportCSV = function() {
+		// TODO: figure out how to reconcile clicking on a server taking you to it
+		// with row selection exports.
+		const params = {
+			allColumns: true,
+			fileName: "servers.csv",
+		};
+		$scope.gridOptions.api.exportDataAsCsv(params);
+	}
+
 
 	/**** Context menu functions ****/
 

@@ -161,3 +161,20 @@ menu[type="contextmenu"] {
         }
     }
 }
+
+button.menu-item-button {
+    color: #333333;
+    width: 100%;
+    background: transparent;
+    border: none;
+    text-align: inherit;
+    display: block;
+    clear: both;
+    padding: 3px 20px;
+    margin: 0;
+
+    &:hover {
+        color: #262626;
+        background-color: #f5f5f5;
+    }
+}
