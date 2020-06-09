@@ -103,18 +103,17 @@ func SnapshotGetMonitoringLegacyHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	convertedData := data.ToLegacyConfig()
-	convertedBytes, err := json.Marshal(convertedData)
+
+	type snapshotResponse struct {
+		Response tc.LegacyTrafficMonitorConfig
+	}
+	bytes, err := json.Marshal(snapshotResponse{Response: convertedData})
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
 	}
-
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	var response []byte
-	response = append(response, []byte(`{"response":`)...)
-	response = append(response, convertedBytes...)
-	response = append(response, []byte(`}`)...)
-	w.Write(response)
+	w.Write(bytes)
 }
 
 // SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
