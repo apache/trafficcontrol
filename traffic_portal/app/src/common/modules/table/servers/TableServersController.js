@@ -17,9 +17,272 @@
  * under the License.
  */
 
-var TableServersController = function(servers, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel) {
+
+var TableServersController = function(servers, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel) {
+
+    // browserify can't handle classes...
+    function SSHCellRenderer() {}
+    SSHCellRenderer.prototype.init = function(params) {
+        this.eGui = document.createElement("A");
+        this.eGui.href = "ssh://" + userModel.user.username + "@" + params.value;
+        this.eGui.setAttribute("target", "_blank");
+        this.eGui.textContent = params.value;
+    };
+    SSHCellRenderer.prototype.getGui = function() {return this.eGui;};
+
+    function UpdateCellRenderer() {}
+    UpdateCellRenderer.prototype.init = function(params) {
+        this.eGui = document.createElement("I");
+        this.eGui.setAttribute("aria-hidden", "true");
+        this.eGui.setAttribute("title", String(params.value));
+        this.eGui.classList.add("fa", "fa-lg");
+        if (params.value) {
+            this.eGui.classList.add("fa-check");
+        } else {
+            this.eGui.classList.add("fa-clock-o");
+        }
+    }
+    UpdateCellRenderer.prototype.getGui = function() {return this.eGui;};
+
+    function offlineReasonTooltip(params) {
+        if (!params.value || !serverUtils.isOffline(params.value)) {
+            return;
+        }
+        return params.data.offlineReason;
+    }
+
+    function dateCellFormatter(params) {
+        return dateUtils.getRelativeTime(params.value);
+    }
 
     let serversTable;
+
+    function editServer(params) {
+        $scope.editServer(params.data.id);
+        // Event is outside the digest cycle, so we need this to trigger one.
+        $scope.$apply();
+    }
+
+    const agColumns = [
+        {
+            headerName: "Cache Group",
+            field: "cachegroup",
+            hide: false,
+            searchable: true
+        },
+        {
+            headerName: "CDN",
+            field: "cdn",
+            hide: false,
+            searchable: true
+        },
+        {
+            headerName: "Domain",
+            field: "domainName",
+            hide: false,
+            searchable: true
+        },
+        {
+            headerName: "Host",
+            field: "hostName",
+            hide: false,
+            searchable: true
+        },
+        {
+            headerName: "HTTPS Port",
+            field: "httpsPort",
+            hide: true,
+            searchable: false,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "ID",
+            field: "id",
+            hide: true,
+            searchable: true,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "ILO IP Address",
+            field: "iloIpAddress",
+            hide: true,
+            searchable: true,
+            cellRenderer: "sshCellRenderer",
+            onCellClicked: null
+        },
+        {
+            headerName: "ILO IP Gateway",
+            field: "iloIpGateway",
+            hide: true,
+            searchable: false,
+            cellRenderer: "sshCellRenderer",
+            onCellClicked: null
+        },
+        {
+            headerName: "ILO IP Netmask",
+            field: "iloIpNetmask",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "ILO Username",
+            field: "iloUsername",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "Interface Name",
+            field: "interfaceName",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "IPv6 Address",
+            field: "ipv6Address",
+            hide: false,
+            searchable: true
+        },
+        {
+            headerName: "IPv6 Gateway",
+            field: "ipv6Gateway",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "Last Updated",
+            field: "lastUpdated",
+            hide: true,
+            searchable: false,
+            filter: "agDateColumnFilter",
+            valueFormatter: dateCellFormatter
+        },
+        {
+            headerName: "Mgmt IP Address",
+            field: "mgmtIpAddress",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "Mgmt IP Gateway",
+            field: "mgmtIpGateway",
+            hide: true,
+            searchable: false,
+            filter: true,
+            cellRenderer: "sshCellRenderer",
+            onCellClicked: null
+        },
+        {
+            headerName: "Mgmt IP Netmask",
+            field: "mgmtIpNetmask",
+            hide: true,
+            searchable: false,
+            filter: true,
+            cellRenderer: "sshCellRenderer",
+            onCellClicked: null
+        },
+        {
+            headerName: "Network Gateway",
+            field: "ipGateway",
+            hide: true,
+            searchable: true,
+            filter: true,
+            cellRenderer: "sshCellRenderer",
+            onCellClicked: null
+        },
+        {
+            headerName: "Network IP",
+            field: "ipAddress",
+            hide: false,
+            searchable: true,
+            filter: true,
+            cellRenderer: "sshCellRenderer",
+            onCellClicked: null
+        },
+        {
+            headerName: "Network MTU",
+            field: "interfaceMtu",
+            hide: true,
+            searchable: false,
+            filter: "agNumberColumnFilter"
+        },
+        {
+            headerName: "Network Subnet",
+            field: "ipNetmask",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "Offline Reason",
+            field: "offlineReason",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "Phys Location",
+            field: "physLocation",
+            hide: true,
+            searchable: true
+        },
+        {
+            headerName: "Profile",
+            field: "profile",
+            hide: false,
+            searchable: true
+        },
+        {
+            headerName: "Rack",
+            field: "rack",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "Reval Pending",
+            field: "revalPending",
+            hide: true,
+            searchable: false,
+            filter: true,
+            cellRenderer: "updateCellRenderer"
+        },
+        {
+            headerName: "Router Hostname",
+            field: "routerHostName",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "Router Port Name",
+            field: "routerPortName",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "Status",
+            field: "status",
+            hide: false,
+            searchable: true,
+            tooltip: offlineReasonTooltip
+        },
+        {
+            headerName: "TCP Port",
+            field: "tcpPort",
+            hide: true,
+            searchable: false
+        },
+        {
+            headerName: "Type",
+            field: "type",
+            hide: false,
+            searchable: true
+        },
+        {
+            headerName: "Update Pending",
+            field: "updPending",
+            hide: false,
+            searchable: true,
+            filter: true,
+            cellRenderer: "updateCellRenderer"
+        }
+    ];
 
     var getStatuses = function() {
         statusService.getStatuses()
@@ -128,114 +391,33 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
             );
     };
 
-    $scope.servers = servers;
+    console.time("server map");
+    $scope.servers = servers.map(function(x){x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;});
+    console.timeEnd("server map");
 
-    $scope.columns = [
-        { "name": "Cache Group", "visible": true, "searchable": true },
-        { "name": "CDN", "visible": true, "searchable": true },
-        { "name": "Domain", "visible": true, "searchable": true },
-        { "name": "Host", "visible": true, "searchable": true },
-        { "name": "HTTPS Port", "visible": false, "searchable": false },
-        { "name": "ID", "visible": false, "searchable": false },
-        { "name": "ILO IP Address", "visible": true, "searchable": true },
-        { "name": "ILO IP Gateway", "visible": false, "searchable": false },
-        { "name": "ILO IP Netmask", "visible": false, "searchable": false },
-        { "name": "ILO Username", "visible": false, "searchable": false },
-        { "name": "Interface Name", "visible": false, "searchable": false },
-        { "name": "IPv6 Address", "visible": true, "searchable": true },
-        { "name": "IPv6 Gateway", "visible": false, "searchable": false },
-        { "name": "Last Updated", "visible": false, "searchable": false },
-        { "name": "Mgmt IP Address", "visible": false, "searchable": false },
-        { "name": "Mgmt IP Gateway", "visible": false, "searchable": false },
-        { "name": "Mgmt IP Netmask", "visible": false, "searchable": false },
-        { "name": "Network Gateway", "visible": false, "searchable": false },
-        { "name": "Network IP", "visible": true, "searchable": true },
-        { "name": "Network MTU", "visible": false, "searchable": false },
-        { "name": "Network Subnet", "visible": false, "searchable": false },
-        { "name": "Offline Reason", "visible": false, "searchable": false },
-        { "name": "Phys Location", "visible": true, "searchable": true },
-        { "name": "Profile", "visible": true, "searchable": true },
-        { "name": "Rack", "visible": false, "searchable": false },
-        { "name": "Reval Pending", "visible": false, "searchable": false },
-        { "name": "Router Hostname", "visible": false, "searchable": false },
-        { "name": "Router Port Name", "visible": false, "searchable": false },
-        { "name": "Status", "visible": true, "searchable": true },
-        { "name": "TCP Port", "visible": false, "searchable": false },
-        { "name": "Type", "visible": true, "searchable": true },
-        { "name": "Update Pending", "visible": true, "searchable": true }
-    ];
+    $scope.columns = [];
 
     $scope.gridOptions = {
-        // columnDefs: [
-        //     { headerName: "Cache Group", field: "cachegroup"},
-        //     { headerName: "CDN", field: "cdnName"},
-        //     { headerName: "Domain", field: "domainName"},
-        //     { headerName: "Host", field: "hostName"},
-        //     { headerName: "HTTPS Port", field: "httpsPort"},
-        //     { headerName: "ID", field: "id"},
-        //     { headerName: "ILO IP Address", field: "iloIpAddress"},
-        //     { headerName: "ILO IP Gateway", field: "iloIpGateway"},
-        //     { headerName: "ILO IP Netmask", field: "iloIpNetmask"},
-        //     { headerName: "ILO Username", field: "iloUsername"},
-        //     { headerName: "Interface Name", field: "interfaceName"},
-        //     { headerName: "IPv6 Address", field: "ipv6Address"},
-        //     { headerName: "IPv6 Gateway", field: "ipv6Gateway"},
-        //     { headerName: "Last Updated", field: "lastUpdated"},
-        //     { headerName: "Mgmt IP Address", field: "mgmtIPAddress"},
-        //     { headerName: "Mgmt IP Gateway", field: "mgmtIPGateway"},
-        //     { headerName: "Mgmt IP Netmask", field: "mgmtIPNetmask"},
-        //     { headerName: "Network Gateway", field: "ipGateway"},
-        //     { headerName: "Network IP", field: "idAddress"},
-        //     { headerName: "Network MTU", field: "interfaceMtu"},
-        //     { headerName: "Network Subnet", field: "ipNetmask"},
-        //     { headerName: "Offline Reason", field: "offlineReason"},
-        //     { headerName: "Phys Location", field: "physLocation"},
-        //     { headerName: "Profile", field: "profile"},
-        //     { headerName: "Rack", field: "rack"},
-        //     { headerName: "Reval Pending", field: "revalPending"},
-        //     { headerName: "Router Hostname", field: "routerHostName"},
-        //     { headerName: "Router Port Name", field: "routerPortName"},
-        //     { headerName: "Status", field: "status"},
-        //     { headerName: "TCP Port", field: "tcpPort"},
-        //     { headerName: "Type", field: "type"},
-        //     { headerName: "Update Pending", field: "updPending" }
-        // ],
-        // rowData: servers.map(function(x) {
-        //     return {
-        //         cachegroup: x.cachegroup,
-        //         cdnName: x.cdnName,
-        //         domain: x.domainName,
-        //         hostName: x.hostName,
-        //         httpsPort: x.httpsPort,
-        //         id: x.id,
-        //         physLocation: x.physLocation,
-        //         profile: x.profile,
-        //         rack: "",
-        //         revalPending: x.revalPending,
-        //         routerHostName: "",
-        //         routerPortName: "",
-        //         status: x.status,
-        //         tcpPort: x.tcpPort,
-        //         type: x.type,
-        //         updPending: x.updPending
-        //     };
-        // }),
-        columnDefs:  [
-            {headerName: "Make", field: "make"},
-            {headerName: "Model", field: "model"},
-            {headerName: "Price", field: "price"}
-        ],
-        rowData: [
-            {make: "Toyota", model: "Celica", price: 35000},
-            {make: "Ford", model: "Mondeo", price: 32000},
-            {make: "Porsche", model: "Boxter", price: 72000}
-        ],
+        components: {
+            sshCellRenderer: SSHCellRenderer,
+            updateCellRenderer: UpdateCellRenderer
+        },
+        columnDefs: agColumns,
+        defaultColDef: {
+            filter: true,
+            onCellClicked: editServer,
+            sortable: true,
+            resizable: true
+        },
+        rowData: servers,
+        pagination: true,
+        rowBuffer: 0,
         onGridReady: function(params) {
             params.api.sizeColumnsToFit();
-        }
+        },
+        menuTabs: 'columnsMenuTab',
+        tooltipShowDelay: 500
     };
-
-    console.log(servers);
 
     $scope.contextMenuItems = [
         {
@@ -449,10 +631,16 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
         $state.reload(); // reloads all the resolves for the view
     };
 
-    $scope.toggleVisibility = function(colName) {
-        const col = serversTable.column(colName + ':name');
-        col.visible(!col.visible());
-        serversTable.rows().invalidate().draw();
+    $scope.toggleVisibility = function(col) {
+        const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
+        $scope.gridOptions.columnApi.setColumnVisible(col, !visible);
+        try {
+            colsVisible = $scope.gridOptions.columnApi.getAllColumns().map(function(x){return [x.colId, x.isVisible()]});
+            localStorage.setItem("servers_table_columns", JSON.stringify(colsVisible));
+        } catch (e) {
+            console.error("Failed to store column defs to local storage:", e);
+        }
+        $scope.gridOptions.api.sizeColumnsToFit();
     };
 
     $scope.ssh = serverUtils.ssh;
@@ -471,23 +659,23 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
     init();
 
     angular.element(document).ready(function () {
-        serversTable = $('#serversTable').DataTable({
-            "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": 25,
-            "aaSorting": [],
-            "columns": $scope.columns,
-            "initComplete": function(settings, json) {
-                try {
-                    // need to create the show/hide column checkboxes and bind to the current visibility
-                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_serversTable_/')).columns;
-                } catch (e) {
-                    console.error("Failure to retrieve required column info from localStorage (key=DataTables_serversTable_/):", e);
+        try {
+            // need to create the show/hide column checkboxes and bind to the current visibility
+            // TODO: figure out how to do this with getColumnState and setColumnState.
+            const colstates = JSON.parse(localStorage.getItem("servers_table_columns"));
+            if (colstates) {
+                for (let i = 0; i<colstates.length; ++i) {
+                    const colId = colstates[i][0];
+                    const isVisible = colstates[i][1];
+                    $scope.gridOptions.columnApi.setColumnVisible(colId, isVisible);
                 }
             }
-        });
+        } catch (e) {
+            console.error("Failure to retrieve required column info from localStorage (key=servers_table_columns):", e);
+        }
     });
 
 };
 
-TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel'];
+TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel"];
 module.exports = TableServersController;
