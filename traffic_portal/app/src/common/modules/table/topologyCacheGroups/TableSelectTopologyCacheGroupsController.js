@@ -59,10 +59,17 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	$scope.parent = parent;
 
 	$scope.cacheGroups = cacheGroups.filter(function(cg) {
-		// all cg types (ORG_LOC, MID_LOC, EDGE_LOC) can be added to the root of a topology
-		// but only EDGE_LOC and MID_LOC can be added farther down the topology tree
-		if (parent.type === 'ROOT') return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC');
-		return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC');
+		// displayed cache groups are filtered based on parent cache group type
+		if (parent.type === 'ROOT') {
+			// the topology root can have children of any kind (EDGE_LOC, MID_LOC, ORG_LOC)
+			return true;
+		} else if (parent.type === 'EDGE_LOC') {
+			// EDGE_LOC can only have EDGE_LOC children
+			return cg.typeName === 'EDGE_LOC';
+		} else {
+			// only EDGE_LOC and MID_LOC can be added farther down the topology tree (not root)
+			return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC');
+		}
 	});
 
 	$scope.selectAll = function($event) {
@@ -101,19 +108,22 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	$scope.submit = function() {
-		// cache groups that are eligible to be a secondary parent include cache groups that are:
+		/*  Cache groups that can act as a second parent include:
+			1. cache groups that are not currently acting as the primary parent
+			2. cache groups that exist currently in the topology
+		 */
 		let eligibleSecParentCandidates = cacheGroups.filter(function(cg) {
-			return cg.typeName !== 'EDGE_LOC' && // not an edge_loc cache group
-				(parent.cachegroup && parent.cachegroup !== cg.name) && // not the primary parent cache group
-				usedCacheGroupNames.includes(cg.name); // a cache group that exists in the topology
+			return (parent.cachegroup && parent.cachegroup !== cg.name) &&
+				usedCacheGroupNames.includes(cg.name);
 		});
+
 		if (eligibleSecParentCandidates.length === 0) {
 			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: parent.cachegroup, secParent: '' });
 			return;
 		}
 		let params = {
 			title: 'Assign secondary parent?',
-			message: 'Would you like to assign a secondary parent to the following cache groups?<br><br>primary parent = ' + parent.cachegroup + '<br><br>'
+			message: 'Primary parent = ' + parent.cachegroup + '<br>Secondary parent = null<br><br>Would you like to assign a secondary parent to the following cache groups? Note: secondary parent assignment is optional and can be done later.<br><br>'
 		};
 		params.message += selectedCacheGroups.map(function(cg) { return cg.name }).join('<br>') + '<br><br>';
 		let modalInstance = $uibModal.open({
@@ -131,7 +141,8 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 			let params = {
 				title: 'Select a secondary parent',
 				message: 'Please select a secondary parent that is part of the ' + topology.name + ' topology',
-				key: 'name'
+				key: 'name',
+				labelFunction: function(item) { return item['name'] + ' (' + item['typeName'] + ')' }
 			};
 			let modalInstance = $uibModal.open({
 				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',

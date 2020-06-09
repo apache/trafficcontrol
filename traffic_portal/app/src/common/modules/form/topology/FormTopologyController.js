@@ -74,10 +74,10 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 				return false;
 			}
 
-			// EDGE_LOC cannot have children
-			if (parent.type === 'EDGE_LOC') {
+			// EDGE_LOC can only have EDGE_LOC children
+			if (parent.type === 'EDGE_LOC' && node.type !== 'EDGE_LOC') {
 				$anchorScroll(); // scrolls window to top
-				messageModel.setMessages([ { level: 'error', text: 'Cache groups of EDGE_LOC type must not have children.' } ], false);
+				messageModel.setMessages([ { level: 'error', text: 'EDGE_LOC cache groups can only have EDGE_LOC children.' } ], false);
 				return false;
 			}
 
@@ -124,14 +124,17 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		buildCacheGroupNamesInTopology($scope.topologyTree, true);
 
 		/*  Cache groups that can act as a second parent include:
-			1. cache groups of type ORG_LOC or MID_LOC (not EDGE_LOC)
-			2. cache groups that are not currently acting as the primary parent
-			3. cache groups that exist currently in the topology
+			1. cache groups that are not the current cache group (you can't parent/sec parent yourself)
+			2. cache groups that are not currently acting as the primary parent (primary parent != sec parent)
+			3. cache groups that exist currently in the topology only
+			4a. any cache group types (ORG_LOC, MID_LOC, EDGE_LOC) if child cache group is EDGE_LOC
+			4b. only MID_LOC or ORG_LOC cache group types if child cache group is not EDGE_LOC
 		 */
 		let eligibleSecParentCandidates = cacheGroups.filter(function(cg) {
-			return cg.typeName !== 'EDGE_LOC' &&
+			return (node.cachegroup && node.cachegroup !== cg.name) &&
 				(node.parent && node.parent !== cg.name) &&
-				cacheGroupNamesInTopology.includes(cg.name);
+				cacheGroupNamesInTopology.includes(cg.name) &&
+				((node.type === 'EDGE_LOC') || (cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC'));
 		});
 
 		let params = {
@@ -139,7 +142,8 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 			message: 'Please select a secondary parent that is part of the ' + topology.name + ' topology',
 			key: 'name',
 			required: false,
-			selectedItemKeyValue: node.secParent
+			selectedItemKeyValue: node.secParent,
+			labelFunction: function(item) { return item['name'] + ' (' + item['typeName'] + ')' }
 		};
 		let modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
@@ -178,11 +182,20 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		scope.toggle();
 	};
 
-	$scope.hasNodeError = function(node) {
+	$scope.nodeError = function(node) {
+		// only EDGE_LOCs can serve as a leaf node on the topology
 		if (node.type !== 'EDGE_LOC' && node.children.length === 0) {
-			return true;
+			return node.type + ' requires 1+ child cache group';
 		}
-		return false;
+		return '';
+	};
+
+	$scope.nodeWarning = function(node) {
+		// only EDGE_LOCs with child EDGE_LOCs require special configuration
+		if (node.type === 'EDGE_LOC' && node.children.length > 0) {
+			return 'EDGE_LOC with EDGE_LOC children requires special config';
+		}
+		return '';
 	};
 
 	$scope.isOrigin = function(node) {
@@ -198,11 +211,6 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	};
 
 	$scope.addCacheGroups = function(parent, scope) {
-
-		if (parent.type === 'EDGE_LOC') {
-			// can't add children to EDGE_LOC. button should be hidden anyhow.
-			return;
-		}
 
 		// cache groups already in the topology cannot be selected again for addition
 		buildCacheGroupNamesInTopology($scope.topologyTree, true);
