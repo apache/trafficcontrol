@@ -17,7 +17,6 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.Inet4Address;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -812,10 +811,8 @@ public class TrafficRouter {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 			List<Cache> caches = selectCaches(request, ds, track);
 
-			try {
-				caches = editCacheListForIpVersion(InetAddress.getByName(request.getClientIP()) instanceof Inet4Address, caches);
-			} catch (UnknownHostException e) {
-				LOGGER.debug("Could not parse IP, accepting cache list as is.");
+			if (caches != null) {
+				caches = editCacheListForIpVersion(!request.getClientIP().contains(":"), caches);
 			}
 			// child Delivery Services can use their query parameters
 			final String pathToHash = steeringHash + ds.extractSignificantQueryParams(request);
@@ -862,7 +859,7 @@ public class TrafficRouter {
 	 * Creates a string to be used in consistent hashing.
 	 *<p>
 	 * This uses simply the request path by default, but will consider any and all Query Parameters
-	 * that are in deliveryService's {@link DeliveryService.consistentHashQueryParams} set as well.
+	 * that are in deliveryService's {@link DeliveryService} consistentHashQueryParam set as well.
 	 * It will also fall back on the request path if the query parameters are not UTF-8-encoded.
 	 *</p>
 	 * @param deliveryService The {@link DeliveryService} being requested
@@ -949,10 +946,8 @@ public class TrafficRouter {
 		routeResult.setDeliveryService(deliveryService);
 
 		List<Cache> caches = selectCaches(request, deliveryService, track);
-		try {
-			caches = editCacheListForIpVersion(InetAddress.getByName(request.getClientIP()) instanceof Inet4Address, caches);
-		} catch (UnknownHostException e) {
-			LOGGER.debug("Could not parse IP, accepting cache list as is.");
+		if (caches != null) {
+			caches = editCacheListForIpVersion(!request.getClientIP().contains(":"), caches);
 		}
 
 		if (caches == null || caches.isEmpty()) {
@@ -1491,8 +1486,6 @@ public class TrafficRouter {
 	 *            the caches that will considered
 	 * @param ds
 	 *            the delivery service for the request
-	 * @param request
-	 *            the request to consider for cache selection
 	 * @return the selected cache or null if none can be found
 	 */
 	private List<Cache> selectCaches(final CacheLocation location, final DeliveryService ds) {
