@@ -407,11 +407,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 
 	$scope.columns = [];
 
-	$scope.serverlink = "/#!/servers/";
-	$scope.server = null;
-	$scope.hostname = "";
-	$scope.domain = "";
-	$scope.serverID = -1;
+	$scope.chartsBase = propertiesModel.properties.servers.charts.baseUrl;
+	$scope.server = {
+		hostName: "",
+		domainName: "",
+		id: -1
+	};
 
 	$scope.gridOptions = {
 		components: {
@@ -442,8 +443,8 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			$scope.showMenu = true;
 			$scope.menuStyle.left = String(params.event.pageX) + "px";
 			$scope.menuStyle.top = String(params.event.pageY) + "px";
-			$scope.serverlink = "/#!/servers/" + String(params.data.id);
 			$scope.server = params.data;
+			$scope.chartslink = propertiesModel.properties.servers.charts.baseUrl + params.data.hostName;
 			$scope.$apply();
 		}
 	};
@@ -529,6 +530,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	$scope.isCache = serverUtils.isCache;
 	$scope.isEdge = serverUtils.isEdge;
 	$scope.isOrigin = serverUtils.isOrigin;
+	$scope.showCharts = propertiesModel.properties.servers.charts.show;
 
 	$scope.menuStyle = {
 		left: 0,

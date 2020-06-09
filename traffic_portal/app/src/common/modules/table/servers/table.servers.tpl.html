@@ -59,7 +59,7 @@ under the License.
 <menu class="dropdown-menu" ng-style="menuStyle" type="contextmenu" ng-show="showMenu" ng-click="$event.stopPropagation()">
     <ul>
         <li role="menuitem">
-            <a ng-href="{{serverlink}}" target="_blank">Open in New Tab</a>
+            <a ng-href="/#!/servers/{{server.id}}" target="_blank">Open in New Tab</a>
         </li>
         <hr class="divider"/>
         <li role="menuitem">
@@ -83,15 +83,15 @@ under the License.
             <button type="button" ng-click="clearServerUpdates(server, $event)" ng-disabled="!isCache(server) || !server.updPending">Clear Server Updates</button>
         </li>
         <hr class="divider"/>
-        <li role="menuitem">
-            <a href="">Show Charts</a>
+        <li role="menuitem" ng-if="showCharts">
+            <a ng-href="chartsBase{{server.hostName}}" target="_blank">Show Charts</a>
         </li>
         <hr class="divider"/>
-        <li role="menuitem">
-            <a href="">Manage Capabilities </a>
+        <li role="menuitem" ng-show="isCache(server)">
+            <a ng-href="/#!/servers/{{server.id}}/capabilities">Manage Capabilities</a>
         </li>
-        <li role="menuitem">
-            <a href="">Manage Delivery Services</a>
+        <li role="menuitem" ng-show="isEdge(server) || isOrigin(server)">
+            <a ng-href="#!/servers/{{server.id}}/delivery-services">Manage Delivery Services</a>
         </li>
     </ul>
 </menu>
