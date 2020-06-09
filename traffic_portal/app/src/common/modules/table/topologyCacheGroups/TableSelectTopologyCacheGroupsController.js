@@ -101,10 +101,13 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, select
 		/*  Cache groups that can act as a second parent include:
 			1. cache groups that are not currently acting as the primary parent
 			2. cache groups that exist currently in the topology
+			3a. any cache group types (ORG_LOC, MID_LOC, EDGE_LOC) if child cache group(s) are EDGE_LOC
+			3b. only MID_LOC or ORG_LOC cache group types if child cache group(s) are MID_LOC or ORG_LOC
 		 */
 		let eligibleSecParentCandidates = cacheGroups.filter(function(cg) {
 			return (parent.cachegroup && parent.cachegroup !== cg.name) &&
-				usedCacheGroupNames.includes(cg.name);
+				usedCacheGroupNames.includes(cg.name) &&
+				((selectedType === 'EDGE_LOC') || (cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC'));
 		});
 
 		if (eligibleSecParentCandidates.length === 0) {
