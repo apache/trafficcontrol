@@ -64,6 +64,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed audit logging from the `/jobs` APIs to bring them back to the same level of information provided by TO-Perl
 - Fixed #4541: traffic_ops_server.js searches based on which= and can find data for multiple servers
 - Fixed POST deliveryservices/request (designed to simple send an email) regression which erroneously required deep caching type and routing name. [Related github issue](https://github.com/apache/trafficcontrol/issues/4735)
+- Fixed slice plugin error in delivery service request view. [Related github issue](https://github.com/apache/trafficcontrol/issues/4770)
 - Fixed `maxRevalDurationDays` validation for `POST /api/1.x/user/current/jobs` and added that validation to the `/api/x/jobs` endpoints
 - Added Delivery Service Raw Remap `__RANGE_DIRECTIVE__` directive to allow inserting the Range Directive after the Raw Remap text. This allows Raw Remaps which manipulate the Range.
 
