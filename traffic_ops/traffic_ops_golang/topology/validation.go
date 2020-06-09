@@ -61,7 +61,7 @@ func checkForEdgeParents(nodes []tc.TopologyNode, cachegroups []tc.CacheGroupNul
 			errs = append(errs, fmt.Errorf("parent %d of cachegroup %s refers to a cachegroup at index %d, but no such cachegroup exists", parentIndex, node.Cachegroup, cachegroupIndex))
 			break
 		}
-		cacheGroupType := cachegroups[parentIndex].Type
+		cacheGroupType := cachegroups[cachegroupIndex].Type
 		if *cacheGroupType == tc.CacheGroupEdgeTypeName {
 			errs = append(errs, fmt.Errorf("cachegroup %v's type is %v; it cannot be a parent of %v", nodes[parentIndex].Cachegroup, tc.CacheGroupEdgeTypeName, node.Cachegroup))
 		}
