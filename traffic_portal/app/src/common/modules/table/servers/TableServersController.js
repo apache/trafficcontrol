@@ -326,12 +326,14 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			);
 	};
 
-	var confirmDelete = function(server) {
-		var params = {
-			title: 'Delete Server: ' + server.hostName,
-			key: server.hostName
+	$scope.confirmDelete = function(event) {
+		event.stopPropagation();
+
+		const params = {
+			title: 'Delete Server: ' + $scope.server.hostName,
+			key: $scope.server.hostName
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
 			controller: 'DialogDeleteController',
 			size: 'md',
@@ -341,19 +343,20 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 				}
 			}
 		});
-		modalInstance.result.then(function() {
-			deleteServer(server);
-		}, function () {
-			// do nothing
-		});
-	};
-
-	var deleteServer = function(server) {
-		serverService.deleteServer(server.id)
-			.then(function(result) {
-				messageModel.setMessages(result.alerts, false);
-				$scope.refresh();
-			});
+		modalInstance.result.then(
+			function() {
+				serverService.deleteServer($scope.server.id).then(
+					function(result) {
+						messageModel.setMessages(result.alerts, false);
+						$scope.refresh();
+					}
+				);
+			},
+			function (err) {
+				// TODO: use template strings once the build can handle them.
+				console.error("Error deleting server", $scope.hostname + "." + $scope.domain, "(#" + String($scope.serverID) + "):", err);
+			}
+		);
 	};
 
 	var confirmStatusUpdate = function(server) {
@@ -395,6 +398,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	$scope.columns = [];
 
 	$scope.serverlink = "/#!/servers/";
+	$scope.server = null;
 	$scope.hostname = "";
 	$scope.domain = "";
 	$scope.serverID = -1;
@@ -429,9 +433,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			$scope.menuStyle.left = String(params.event.pageX) + "px";
 			$scope.menuStyle.top = String(params.event.pageY) + "px";
 			$scope.serverlink = "/#!/servers/" + String(params.data.id);
-			$scope.hostname = params.data.hostName;
-			$scope.domain = params.data.domainName;
-			$scope.serverID = params.data.id;
+			$scope.server = params.data;
 			$scope.$apply();
 		}
 	};

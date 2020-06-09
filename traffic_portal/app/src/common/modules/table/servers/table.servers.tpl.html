@@ -16,12 +16,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-<style type="text/css">
-    menu[type="contextmenu"] li:hover {
-        color: #262626;
-        background-color: #f5f5f5;
-    }
-</style>
 
 <div class="x_panel">
     <div class="x_title">
@@ -59,13 +53,22 @@ under the License.
     </div>
     <div class="x_content">
         <div style="height: 740px;" ag-grid="gridOptions" class="ag-theme-alpine"></div>
-        <menu class="dropdown-menu" style="display: block; position: fixed; background-color: white; padding: 0; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175); border-radius: 3px;" ng-style="menuStyle" type="contextmenu" ng-show="showMenu">
-            <ul style="list-style: none; display: block; font-weight: normal; line-height: 1.428571429; white-space: nowrap; padding: 0; margin: 0;">
-                <li style="clear: both; display: block;" role="menuitem"><a style="color: #333333; text-decoration: none; padding: 7px 20px; display: block; clear: both;" ng-href="{{serverlink}}" target="_blank">Open in New Tab</a></li>
-                <hr class="divider" style="margin: 0"/>
-                <li style="clear: both; display: block;" role="menuitem"><a style="color: #333333; text-decoration: none; padding: 7px 20px; display: block; clear: both;" ng-href="http://{{hostname}}.{{domain}}" target="_blank">Navigate To Server FQDN</a></li>
-                <hr class="divider" style="margin: 0"/>
-                <li style="clear: both; display: block;" role="menuitem"><a style="color: #333333; text-decoration: none; padding: 7px 20px; display: block; clear: both;" ng-href="/#!/servers/{{serverID}}" target="_blank">Edit Server</a></li>
+        <menu class="dropdown-menu" ng-style="menuStyle" type="contextmenu" ng-show="showMenu" ng-click="$event.stopPropagation()">
+            <ul>
+                <li role="menuitem">
+                    <a ng-href="{{serverlink}}" target="_blank">Open in New Tab</a>
+                </li>
+                <hr class="divider"/>
+                <li role="menuitem">
+                    <a ng-href="http://{{server.hostName}}.{{server.domainName}}" target="_blank">Navigate To Server FQDN</a>
+                </li>
+                <hr class="divider"/>
+                <li role="menuitem">
+                    <a ng-href="/#!/servers/{{server.id}}" target="_blank">Edit</a>
+                </li>
+                <li role="divider">
+                    <button type="button" ng-click="confirmDelete($event)">Delete</button>
+                </li>
             </ul>
         </menu>
     </div>
