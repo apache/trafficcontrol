@@ -1,5 +1,24 @@
 package monitoring
 
+import (
+	"context"
+	"reflect"
+	"sort"
+	"strconv"
+	"testing"
+	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
+	"github.com/lib/pq"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	"github.com/jmoiron/sqlx"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,21 +38,168 @@ package monitoring
  * under the License.
  */
 
-import (
-	"context"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
-	"reflect"
-	"sort"
-	"strconv"
-	"testing"
-	"time"
+func createMockMonitor() Monitor {
+	return Monitor{
+		BasicServer: BasicServer{Profile: "monitorProfile",
+			Status:     "monitorStatus",
+			IP:         "1.2.3.4",
+			IP6:        "2001::4",
+			Port:       8081,
+			Cachegroup: "monitorCachegroup",
+			HostName:   "monitorHost",
+			FQDN:       "monitorFqdn.me",
+		},
+	}
+}
 
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-)
+func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router Router, cache Cache, cacheID uint64, cdn string) {
+
+	serverRows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "ip", "ip6", "profile", "type", "hashId", "serverID"})
+	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, MonitorType, "noHash", 2)
+	serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.IP, cache.IP6, cache.Profile, cache.Type, cache.HashID, cacheID)
+	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, "noIp", "noIp6", router.Profile, RouterType, "noHashid", 3)
+
+	interfaceRows := sqlmock.NewRows([]string{"name", "max_bandwidth", "mtu", "monitor", "server"})
+	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "server", "interface"})
+	for _, interf := range cache.Interfaces {
+		interfaceRows = interfaceRows.AddRow(interf.Name, interf.MaxBandwidth, interf.MTU, interf.Monitor, cacheID)
+		for _, ip := range interf.IPAddresses {
+			ipAddressRows = ipAddressRows.AddRow(ip.Address, ip.Gateway, ip.ServiceAddress, cacheID, interf.Name)
+		}
+	}
+	mock.ExpectQuery("SELECT (.+) FROM interface i (.+)").WithArgs(cdn).WillReturnRows(interfaceRows)
+	mock.ExpectQuery("SELECT (.+) FROM ip_address ip (.+)").WillReturnRows(ipAddressRows)
+	mock.ExpectQuery("SELECT (.+) FROM server me (.+)").WithArgs(cdn).WillReturnRows(serverRows)
+}
+
+func TestGetMonitoringServers(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	cdn := "mycdn"
+
+	monitor := createMockMonitor()
+	router := createMockRouter()
+	cache := createMockCache()
+	cacheID := uint64(1)
+
+	mock.ExpectBegin()
+	setupMockGetMonitoringServers(mock, monitor, router, cache, cacheID, cdn)
+
+	dbCtx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+
+	monitors, caches, routers, err := getMonitoringServers(tx, cdn)
+	if err != nil {
+		t.Fatalf("getMonitoringServers expected: nil error, actual: %v", err)
+	}
+
+	if len(caches) != 1 {
+		t.Fatalf("got %v caches, expecting 1", len(caches))
+	}
+
+	cacheServer := caches[0]
+	if len(cacheServer.Interfaces) != 2 {
+		t.Errorf("got %v caches, expecting 2", len(cacheServer.Interfaces))
+	}
+
+	for _, interf := range cache.Interfaces {
+		if len(interf.IPAddresses) != 2 {
+			t.Errorf("cache: %v, interface: %v, expected 2 ip addresses, got %v", cache.HostName, interf.Name, len(interf.IPAddresses))
+		}
+	}
+
+	if len(monitors) != 1 {
+		t.Fatalf("getMonitoringServers expected: len(monitors) == 1, actual: %v", len(monitors))
+	}
+	sqlMonitor := monitors[0]
+	if sqlMonitor != monitor {
+		t.Errorf("getMonitoringServers expected: monitor == %+v, actual: %+v", monitor, sqlMonitor)
+	}
+
+	if len(routers) != 1 {
+		t.Errorf("getMonitoringServers expected: len(routers) == 1, actual: %v", len(routers))
+	}
+	sqlRouter := routers[0]
+	if sqlRouter != router {
+		t.Errorf("getMonitoringServers expected: router == %+v, actual: %+v", router, sqlRouter)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
+}
+
+func createMockCache() Cache {
+	return Cache{
+		BasicServer: BasicServer{
+			Profile:    "cacheProfile",
+			Status:     "cacheStatus",
+			IP:         "1.2.3.4",
+			IP6:        "2001::4",
+			Port:       8081,
+			Cachegroup: "cacheCachegroup",
+			HostName:   "cacheHost",
+			FQDN:       "cacheFqdn.me",
+		},
+		Interfaces: []tc.ServerInterfaceInfo{
+			{
+				IPAddresses: []tc.ServerIPAddress{
+					{
+						Address:        "5.6.7.8",
+						Gateway:        util.StrPtr("5.6.7.0/24"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "2020::4",
+						Gateway:        util.StrPtr("fd53::9"),
+						ServiceAddress: true,
+					},
+				},
+				MaxBandwidth: util.UInt64Ptr(2500),
+				Monitor:      true,
+				MTU:          util.UInt64Ptr(1500),
+				Name:         "interfaceName",
+			},
+			{
+				IPAddresses: []tc.ServerIPAddress{
+					{
+						Address:        "6.7.8.9",
+						Gateway:        util.StrPtr("6.7.8.0/24"),
+						ServiceAddress: true,
+					},
+					{
+						Address:        "2021::4",
+						Gateway:        util.StrPtr("fd54::9"),
+						ServiceAddress: true,
+					},
+				},
+				MaxBandwidth: util.UInt64Ptr(1500),
+				Monitor:      false,
+				MTU:          util.UInt64Ptr(1500),
+				Name:         "interfaceName2",
+			},
+		},
+		Type:   "EDGE",
+		HashID: "cacheHash",
+	}
+}
+
+func createMockRouter() Router {
+	return Router{
+		Type:    RouterType,
+		Profile: "routerProfile",
+	}
+}
 
 func ExpectedGetParams() []parameter.TOParameter {
 	name := "peers.polling.interval"
@@ -64,7 +230,7 @@ func TestGetProfileWithParams(t *testing.T) {
 	cdn := "mycdn"
 	mock.ExpectBegin()
 	expected := ExpectedGetParams()
-	MockGetParams(mock, expected, cdn)
+	mockGetParams(mock, expected, cdn)
 	mock.ExpectCommit()
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
@@ -90,7 +256,7 @@ func TestGetProfileWithParams(t *testing.T) {
 	}
 }
 
-func MockGetParams(mock sqlmock.Sqlmock, expected []parameter.TOParameter, cdn string) {
+func mockGetParams(mock sqlmock.Sqlmock, expected []parameter.TOParameter, cdn string) {
 	rows := sqlmock.NewRows([]string{"name", "value"})
 	for _, param := range expected {
 		n := param.Name
@@ -98,100 +264,6 @@ func MockGetParams(mock sqlmock.Sqlmock, expected []parameter.TOParameter, cdn s
 		rows = rows.AddRow(*n, *v)
 	}
 	mock.ExpectQuery("SELECT").WithArgs(tc.MonitorProfilePrefix+"%%", MonitorConfigFile, cdn).WillReturnRows(rows)
-}
-
-func TestGetMonitoringServers(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer mockDB.Close()
-
-	db := sqlx.NewDb(mockDB, "sqlmock")
-	defer db.Close()
-
-	cdn := "mycdn"
-
-	monitor := Monitor{
-		BasicServer: BasicServer{Profile: "monitorProfile",
-			Status:     "monitorStatus",
-			IP:         "1.2.3.4",
-			IP6:        "2001::4",
-			Port:       8081,
-			Cachegroup: "monitorCachegroup",
-			HostName:   "monitorHost",
-			FQDN:       "monitorFqdn.me",
-		},
-	}
-
-	cacheType := "EDGE"
-	cache := Cache{
-		BasicServer: BasicServer{
-			Profile:    "cacheProfile",
-			Status:     "cacheStatus",
-			IP:         "1.2.3.4",
-			IP6:        "2001::4",
-			Port:       8081,
-			Cachegroup: "cacheCachegroup",
-			HostName:   "cacheHost",
-			FQDN:       "cacheFqdn.me",
-		},
-		InterfaceName: "cacheInterface",
-		Type:          cacheType,
-		HashID:        "cacheHash",
-	}
-
-	router := Router{
-		Type:    RouterType,
-		Profile: "routerProfile",
-	}
-
-	mock.ExpectBegin()
-	rows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "ip", "ip6", "profile", "interfaceName", "type", "hashId"})
-	rows = rows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, "noInterface", MonitorType, "noHash")
-	rows = rows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.IP, cache.IP6, cache.Profile, cache.InterfaceName, cache.Type, cache.HashID)
-	rows = rows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, "noIp", "noIp6", router.Profile, "noInterface", RouterType, "noHashid")
-
-	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
-
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTx(dbCtx, nil)
-	if err != nil {
-		t.Fatalf("creating transaction: %v", err)
-	}
-
-	monitors, caches, routers, err := getMonitoringServers(tx, cdn)
-	if err != nil {
-		t.Errorf("getMonitoringServers expected: nil error, actual: %v", err)
-	}
-
-	if len(monitors) != 1 {
-		t.Errorf("getMonitoringServers expected: len(monitors) == 1, actual: %v", len(monitors))
-	}
-	sqlMonitor := monitors[0]
-	if sqlMonitor != monitor {
-		t.Errorf("getMonitoringServers expected: monitor == %+v, actual: %+v", monitor, sqlMonitor)
-	}
-
-	if len(caches) != 1 {
-		t.Errorf("getMonitoringServers expected: len(caches) == 1, actual: %v", len(caches))
-	}
-	sqlCache := caches[0]
-	if sqlCache != cache {
-		t.Errorf("getMonitoringServers expected: cache == %+v, actual: %+v", cache, sqlCache)
-	}
-
-	if len(routers) != 1 {
-		t.Errorf("getMonitoringServers expected: len(routers) == 1, actual: %v", len(routers))
-	}
-	sqlRouter := routers[0]
-	if sqlRouter != router {
-		t.Errorf("getMonitoringServers expected: router == %+v, actual: %+v", router, sqlRouter)
-	}
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expections: %s", err)
-	}
 }
 
 func TestGetCachegroups(t *testing.T) {
@@ -339,29 +411,11 @@ func TestGetProfiles(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	cache := Cache{
-		BasicServer: BasicServer{
-			Profile:    "cacheProfile",
-			Status:     "cacheStatus",
-			IP:         "1.2.3.4",
-			IP6:        "2001::4",
-			Port:       8081,
-			Cachegroup: "cacheCachegroup",
-			HostName:   "cacheHost",
-			FQDN:       "cacheFqdn.me",
-		},
-		InterfaceName: "cacheInterface",
-		Type:          "EDGE",
-		HashID:        "cacheHash",
-	}
-
-	router := Router{
-		Type:    RouterType,
-		Profile: "routerProfile",
-	}
+	cache := createMockCache()
+	router := createMockRouter()
 
 	profiles := []Profile{
-		Profile{
+		{
 			Name: router.Profile,
 			Type: RouterType,
 			Parameters: map[string]interface{}{
@@ -369,7 +423,7 @@ func TestGetProfiles(t *testing.T) {
 				"param1": "param1Val",
 			},
 		},
-		Profile{
+		{
 			Name: cache.Profile,
 			Type: "myType2",
 			Parameters: map[string]interface{}{
@@ -552,49 +606,11 @@ func TestGetMonitoringJSON(t *testing.T) {
 
 	mock.ExpectBegin()
 	{
-		//
-		// getMonitoringServers
-		//
-		monitor := Monitor{
-			BasicServer: BasicServer{Profile: "monitorProfile",
-				Status:     "monitorStatus",
-				IP:         "1.2.3.4",
-				IP6:        "2001::4",
-				Port:       8081,
-				Cachegroup: "monitorCachegroup",
-				HostName:   "monitorHost",
-				FQDN:       "monitorFqdn.me",
-			},
-		}
+		monitor := createMockMonitor()
+		cache := createMockCache()
+		router := createMockRouter()
 
-		cacheType := "EDGE"
-		cache := Cache{
-			BasicServer: BasicServer{
-				Profile:    "cacheProfile",
-				Status:     "cacheStatus",
-				IP:         "1.2.3.4",
-				IP6:        "2001::4",
-				Port:       8081,
-				Cachegroup: "cacheCachegroup",
-				HostName:   "cacheHost",
-				FQDN:       "cacheFqdn.me",
-			},
-			InterfaceName: "cacheInterface",
-			Type:          cacheType,
-			HashID:        "cacheHash",
-		}
-
-		router := Router{
-			Type:    RouterType,
-			Profile: "routerProfile",
-		}
-
-		rows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "ip", "ip6", "profile", "interfaceName", "type", "hashId"})
-		rows = rows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, "noInterface", MonitorType, "noHash")
-		rows = rows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.IP, cache.IP6, cache.Profile, cache.InterfaceName, cache.Type, cache.HashID)
-		rows = rows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, "noIp", "noIp6", router.Profile, "noInterface", RouterType, "noHashid")
-
-		mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
+		setupMockGetMonitoringServers(mock, monitor, router, cache, 1, cdn)
 		resp.Response.TrafficServers = []Cache{cache}
 		resp.Response.TrafficMonitors = []Monitor{monitor}
 	}
@@ -620,26 +636,8 @@ func TestGetMonitoringJSON(t *testing.T) {
 		//
 		// getProfiles
 		//
-		cache := Cache{
-			BasicServer: BasicServer{
-				Profile:    "cacheProfile",
-				Status:     "cacheStatus",
-				IP:         "1.2.3.4",
-				IP6:        "2001::4",
-				Port:       8081,
-				Cachegroup: "cacheCachegroup",
-				HostName:   "cacheHost",
-				FQDN:       "cacheFqdn.me",
-			},
-			InterfaceName: "cacheInterface",
-			Type:          "EDGE",
-			HashID:        "cacheHash",
-		}
-
-		router := Router{
-			Type:    RouterType,
-			Profile: "routerProfile",
-		}
+		cache := createMockCache()
+		router := createMockRouter()
 
 		profiles := []Profile{
 			Profile{
@@ -679,10 +677,7 @@ func TestGetMonitoringJSON(t *testing.T) {
 		//
 		// getDeliveryServices
 		//
-		router := Router{
-			Type:    RouterType,
-			Profile: "routerProfile",
-		}
+		router := createMockRouter()
 
 		deliveryservice := DeliveryService{
 			XMLID:              "myDsid",

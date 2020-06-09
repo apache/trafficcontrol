@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
@@ -56,11 +58,18 @@ type Monitor struct {
 	BasicServer
 }
 
-type Cache struct {
+type LegacyCache struct {
 	BasicServer
 	InterfaceName string `json:"interfacename"`
 	Type          string `json:"type"`
 	HashID        string `json:"hashid"`
+}
+
+type Cache struct {
+	BasicServer
+	Interfaces []tc.ServerInterfaceInfo `json:"interfaces"`
+	Type       string                   `json:"type"`
+	HashID     string                   `json:"hashid"`
 }
 
 type Cachegroup struct {
@@ -79,6 +88,15 @@ type Profile struct {
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
+type LegacyMonitoring struct {
+	TrafficServers   []LegacyCache          `json:"trafficServers"`
+	TrafficMonitors  []Monitor              `json:"trafficMonitors"`
+	Cachegroups      []Cachegroup           `json:"cacheGroups"`
+	Profiles         []Profile              `json:"profiles"`
+	DeliveryServices []DeliveryService      `json:"deliveryServices"`
+	Config           map[string]interface{} `json:"config"`
+}
+
 type Monitoring struct {
 	TrafficServers   []Cache                `json:"trafficServers"`
 	TrafficMonitors  []Monitor              `json:"trafficMonitors"`
@@ -86,6 +104,10 @@ type Monitoring struct {
 	Profiles         []Profile              `json:"profiles"`
 	DeliveryServices []DeliveryService      `json:"deliveryServices"`
 	Config           map[string]interface{} `json:"config"`
+}
+
+type LegacyMonitoringResponse struct {
+	Response LegacyMonitoring `json:"response"`
 }
 
 type MonitoringResponse struct {
@@ -151,27 +173,100 @@ func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
 }
 
 func getMonitoringServers(tx *sql.Tx, cdn string) ([]Monitor, []Cache, []Router, error) {
-	query := `SELECT
-me.host_name as hostName,
-CONCAT(me.host_name, '.', me.domain_name) as fqdn,
-status.name as status,
-cachegroup.name as cachegroup,
-me.tcp_port as port,
-me.ip_address as ip,
-me.ip6_address as ip6,
-profile.name as profile,
-me.interface_name as interfaceName,
-type.name as type,
-me.xmpp_id as hashID
+	serversQuery := `
+SELECT
+	me.host_name as hostName,
+	CONCAT(me.host_name, '.', me.domain_name) as fqdn,
+	status.name as status,
+	cachegroup.name as cachegroup,
+	me.tcp_port as port,
+	me.ip_address as ip,
+	me.ip6_address as ip6,
+	profile.name as profile,
+	type.name as type,
+	me.xmpp_id as hashID
 FROM server me
 JOIN type type ON type.id = me.type
 JOIN status status ON status.id = me.status
 JOIN cachegroup cachegroup ON cachegroup.id = me.cachegroup
 JOIN profile profile ON profile.id = me.profile
 JOIN cdn cdn ON cdn.id = me.cdn_id
-WHERE cdn.name = $1`
+WHERE cdn.name = $1
+`
 
-	rows, err := tx.Query(query, cdn)
+	interfacesQuery := `
+SELECT 
+   i.name, i.max_bandwidth, i.mtu, i.monitor, i.server
+FROM interface i
+WHERE i.server in (
+	SELECT 
+		s.id 
+	FROM "server" s 
+	JOIN cdn c 
+		on c.id = s.cdn_id 
+	WHERE c.name = $1
+)`
+
+	ipAddressQuery := `
+SELECT 
+	ip.address, ip.gateway, ip.service_address, ip.server, ip.interface
+FROM ip_address ip
+JOIN server s 
+	ON s.id = ip.server
+JOIN cdn cdn 
+	ON cdn.id = s.cdn_id
+WHERE ip.server = ANY($1)
+AND ip.interface = ANY($2)
+AND cdn.name = $3
+`
+
+	interfaceRows, err := tx.Query(interfacesQuery, cdn)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer interfaceRows.Close()
+
+	//For constant time lookup of which interface/server belongs to the ipAddress
+	var interfaceIndexByCompoundKey = make(map[tc.ServerIPAddressCompoundKey]int)
+	var interfaces []tc.ServerInterfaceInfo
+	var serverIDs []int
+	var interfaceNames []string
+	for interfaceRows.Next() {
+		interf := tc.ServerInterfaceInfo{}
+		ipAddressCompoundKey := tc.ServerIPAddressCompoundKey{}
+		if err := interfaceRows.Scan(&interf.Name, &interf.MaxBandwidth, &interf.MTU, &interf.Monitor, &ipAddressCompoundKey.ServerID); err != nil {
+			return nil, nil, nil, err
+		}
+		interfaces = append(interfaces, interf)
+		ipAddressCompoundKey.InterfaceName = interf.Name
+		interfaceIndexByCompoundKey[ipAddressCompoundKey] = len(interfaces) - 1
+		serverIDs = append(serverIDs, ipAddressCompoundKey.ServerID)
+		interfaceNames = append(interfaceNames, interf.Name)
+	}
+
+	ipAddressRows, err := tx.Query(ipAddressQuery, pq.Array(serverIDs), pq.Array(interfaceNames), cdn)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	for ipAddressRows.Next() {
+		address := tc.ServerIPAddress{}
+		key := tc.ServerIPAddressCompoundKey{}
+		if err := ipAddressRows.Scan(&address.Address, &address.Gateway, &address.ServiceAddress, &key.ServerID, &key.InterfaceName); err != nil {
+			return nil, nil, nil, err
+		}
+		interfaceIndex, found := interfaceIndexByCompoundKey[key]
+		if !found {
+			log.Errorf("ip_address exists without corresponding interface; server: %v, interfaceName: %v!", key.ServerID, key.InterfaceName)
+			continue
+		}
+		if len(interfaces) < interfaceIndex || interfaces == nil {
+			log.Errorf("interface index out of bounds; server: %v, interfaceName: %v!", key.ServerID, key.InterfaceName)
+			continue
+		}
+		interfaces[interfaceIndex].IPAddresses = append(interfaces[interfaceIndex].IPAddresses, address)
+	}
+
+	rows, err := tx.Query(serversQuery, cdn)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -190,11 +285,10 @@ WHERE cdn.name = $1`
 		var ip sql.NullString
 		var ip6 sql.NullString
 		var profile sql.NullString
-		var interfaceName sql.NullString
 		var ttype sql.NullString
 		var hashID sql.NullString
 
-		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &interfaceName, &ttype, &hashID); err != nil {
+		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &ttype, &hashID); err != nil {
 			return nil, nil, nil, err
 		}
 
@@ -212,7 +306,7 @@ WHERE cdn.name = $1`
 				},
 			})
 		} else if strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID") {
-			caches = append(caches, Cache{
+			cache := Cache{
 				BasicServer: BasicServer{
 					Profile:    profile.String,
 					Status:     status.String,
@@ -223,10 +317,11 @@ WHERE cdn.name = $1`
 					HostName:   hostName.String,
 					FQDN:       fqdn.String,
 				},
-				InterfaceName: interfaceName.String,
-				Type:          ttype.String,
-				HashID:        hashID.String,
-			})
+				Interfaces: interfaces,
+				Type:       ttype.String,
+				HashID:     hashID.String,
+			}
+			caches = append(caches, cache)
 		} else if ttype.String == tc.RouterTypeName {
 			routers = append(routers, Router{
 				Type:    ttype.String,

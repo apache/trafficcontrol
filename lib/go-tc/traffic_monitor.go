@@ -41,6 +41,33 @@ type TrafficMonitorConfig struct {
 	Profiles         []TMProfile            `json:"profiles,omitempty"`
 }
 
+func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
+	var servers []LegacyTrafficServer
+	for _, s := range tmc.TrafficServers {
+		servers = append(servers, s.ToLegacyServer())
+	}
+
+	legacy := LegacyTrafficMonitorConfig{
+		CacheGroups:      tmc.CacheGroups,
+		Config:           tmc.Config,
+		TrafficMonitors:  tmc.TrafficMonitors,
+		Profiles:         tmc.Profiles,
+		DeliveryServices: tmc.DeliveryServices,
+		TrafficServers:   servers,
+	}
+	return legacy
+}
+
+// LegacyTrafficMonitorConfig ...
+type LegacyTrafficMonitorConfig struct {
+	TrafficServers   []LegacyTrafficServer  `json:"trafficServers,omitempty"`
+	CacheGroups      []TMCacheGroup         `json:"cacheGroups,omitempty"`
+	Config           map[string]interface{} `json:"config,omitempty"`
+	TrafficMonitors  []TrafficMonitor       `json:"trafficMonitors,omitempty"`
+	DeliveryServices []TMDeliveryService    `json:"deliveryServices,omitempty"`
+	Profiles         []TMProfile            `json:"profiles,omitempty"`
+}
+
 // TrafficMonitorConfigMap ...
 type TrafficMonitorConfigMap struct {
 	TrafficServer   map[string]TrafficServer

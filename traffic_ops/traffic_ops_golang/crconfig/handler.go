@@ -21,6 +21,7 @@ package crconfig
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
@@ -76,6 +77,44 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write([]byte(`{"response":` + snapshot + `}`))
+}
+
+func SnapshotGetMonitoringLegacyHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	snapshot, cdnExists, err := GetSnapshotMonitoring(inf.Tx.Tx, inf.Params["cdn"])
+
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	}
+	if !cdnExists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
+		return
+	}
+	var data tc.TrafficMonitorConfig
+	if err := json.Unmarshal([]byte(snapshot), &data); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	}
+	convertedData := data.ToLegacyConfig()
+	convertedBytes, err := json.Marshal(convertedData)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	}
+
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	var response []byte
+	response = append(response, []byte(`{"response":`)...)
+	response = append(response, convertedBytes...)
+	response = append(response, []byte(`}`)...)
+	w.Write(response)
 }
 
 // SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
