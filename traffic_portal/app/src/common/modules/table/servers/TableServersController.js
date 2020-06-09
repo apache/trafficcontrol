@@ -290,13 +290,9 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		);
 	};
 
-	var queueServerUpdates = function(server) {
-		serverService.queueServerUpdates(server.id)
-			.then(
-				function() {
-					$scope.refresh();
-				}
-			);
+	$scope.queueServerUpdates = function(server, event) {
+		event.stopPropagation();
+		serverService.queueServerUpdates(server.id).then($scope.refresh);
 	};
 
 	var clearServerUpdates = function(server) {
@@ -533,6 +529,10 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			}
 		];
 	}
+
+	$scope.isCache = serverUtils.isCache;
+	$scope.isEdge = serverUtils.isEdge;
+	$scope.isOrigin = serverUtils.isOrigin;
 
 	$scope.menuStyle = {
 		left: 0,

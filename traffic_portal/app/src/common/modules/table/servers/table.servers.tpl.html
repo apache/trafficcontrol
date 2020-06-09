@@ -76,6 +76,22 @@ under the License.
         <li role="menuitem">
             <button type="button" ng-click="confirmStatusUpdate(server, $event)">Update Status</button>
         </li>
-
+        <li role="menuitem">
+            <button type="button" ng-click="queueServerUpdates(server, $event)" ng-disabled="!isCache(server) || server.updPending">Queue Server Updates</button>
+        </li>
+        <li role="menuitem">
+            <button>Clear Server Updates</button>
+        </li>
+        <hr class="divider"/>
+        <li role="menuitem">
+            <a href="">Show Charts</a>
+        </li>
+        <hr class="divider"/>
+        <li role="menuitem">
+            <a href="">Manage Capabilities </a>
+        </li>
+        <li role="menuitem">
+            <a href="">Manage Delivery Services</a>
+        </li>
     </ul>
 </menu>
