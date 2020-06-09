@@ -17,6 +17,7 @@ package v3
 
 import (
 	"net/http"
+	"net/url"
 	"testing"
 )
 
@@ -103,16 +104,23 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatal("setting cachegroup delivery services returned success, but no servers set")
 	}
 
+	params := url.Values{}
 	for _, serverName := range resp.Response.ServerNames {
-		servers, _, err := TOSession.GetServerByHostName(string(serverName))
+		params.Set("hostName", string(serverName))
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
 			t.Fatalf("getting server: %v", err)
 		}
+		servers := resp.Response
 		if len(servers) != 1 {
 			t.Fatalf("getting servers: expected 1 got %v", len(servers))
 		}
 		server := servers[0]
-		serverID := server.ID
+		if server.ID == nil {
+			t.Errorf("Server %s had nil ID", serverName)
+			continue
+		}
+		serverID := *server.ID
 
 		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(serverID)
 

@@ -16,9 +16,8 @@ package v3
 */
 
 import (
+	"net/url"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestServers(t *testing.T) {
@@ -30,9 +29,12 @@ func TestServers(t *testing.T) {
 }
 
 func CreateTestServers(t *testing.T) {
-
 	// loop through servers, assign FKs and create
 	for _, server := range testData.Servers {
+		if server.HostName == nil {
+			t.Errorf("found server with nil hostname: %+v", server)
+			continue
+		}
 		resp, _, err := TOSession.CreateServer(server)
 		t.Log("Response: ", server.HostName, " ", resp)
 		if err != nil {
@@ -43,11 +45,18 @@ func CreateTestServers(t *testing.T) {
 }
 
 func GetTestServers(t *testing.T) {
-
+	params := url.Values{}
 	for _, server := range testData.Servers {
-		resp, _, err := TOSession.GetServerByHostName(server.HostName)
+		if server.HostName == nil {
+			t.Errorf("found server with nil hostname: %+v", server)
+			continue
+		}
+		params.Set("hostName", *server.HostName)
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
-			t.Errorf("cannot GET Server by name: %v - %v", err, resp)
+			t.Errorf("cannot GET Server by name '%s': %v - %v", *server.HostName, err, resp.Alerts)
+		} else if resp.Summary.Count != 1 {
+			t.Errorf("incorrect server count, expected: 1, actual: %d", resp.Summary.Count)
 		}
 	}
 }
@@ -55,7 +64,11 @@ func GetTestServers(t *testing.T) {
 func GetTestServersDetails(t *testing.T) {
 
 	for _, server := range testData.Servers {
-		resp, _, err := TOSession.GetServerDetailsByHostName(server.HostName)
+		if server.HostName == nil {
+			t.Errorf("found server with nil hostname: %+v", server)
+			continue
+		}
+		resp, _, err := TOSession.GetServerDetailsByHostName(*server.HostName)
 		if err != nil {
 			t.Errorf("cannot GET Server Details by name: %v - %v", err, resp)
 		}
@@ -63,38 +76,92 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func UpdateTestServers(t *testing.T) {
+	if len(testData.Servers) < 1 {
+		t.Fatal("Need at least one server to test updating")
+	}
 
 	firstServer := testData.Servers[0]
-	hostName := firstServer.HostName
-	// Retrieve the server by hostname so we can get the id for the Update
-	resp, _, err := TOSession.GetServerByHostName(hostName)
-
-	if err != nil {
-		t.Errorf("cannot GET Server by hostname: %v - %v", firstServer.HostName, err)
+	if firstServer.HostName == nil {
+		t.Fatalf("First test server had nil hostname: %+v", firstServer)
 	}
-	remoteServer := resp[0]
+
+	hostName := *firstServer.HostName
+	params := url.Values{}
+	params.Add("hostName", hostName)
+
+	// Retrieve the server by hostname so we can get the id for the Update
+	resp, _, err := TOSession.GetServers(&params)
+	if err != nil {
+		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
+	}
+	if len(resp.Response) > 1 {
+		t.Errorf("Expected exactly one server to exist by hostname '%s' - actual: %d", hostName, len(resp.Response))
+		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+	}
+
+	remoteServer := resp.Response[0]
+	if remoteServer.ID == nil {
+		t.Fatalf("Got null ID for server '%s'", hostName)
+	}
+
+	infs := remoteServer.Interfaces
+	if len(infs) < 1 {
+		t.Fatalf("Expected server '%s' to have at least one network interface", hostName)
+	}
+	inf := infs[0]
+
 	updatedServerInterface := "bond1"
 	updatedServerRack := "RR 119.03"
 
 	// update rack and interfaceName values on server
-	remoteServer.InterfaceName = updatedServerInterface
-	remoteServer.Rack = updatedServerRack
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
+	inf.Name = updatedServerInterface
+	infs[0] = inf
+	remoteServer.Interfaces = infs
+	remoteServer.Rack = &updatedServerRack
+
+	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
 	if err != nil {
-		t.Errorf("cannot UPDATE Server by hostname: %v - %v", err, alert)
+		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
 	}
 
 	// Retrieve the server to check rack and interfaceName values were updated
-	resp, _, err = TOSession.GetServerByID(remoteServer.ID)
+	resp, _, err = TOSession.GetServers(&params)
 	if err != nil {
 		t.Errorf("cannot GET Server by ID: %v - %v", remoteServer.HostName, err)
 	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
+	}
+	if len(resp.Response) > 1 {
+		t.Errorf("Expected exactly one server to exist by hostname '%s' - actual: %d", hostName, len(resp.Response))
+		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+	}
 
-	respServer := resp[0]
-	if respServer.InterfaceName != updatedServerInterface || respServer.Rack != updatedServerRack {
-		t.Errorf("results do not match actual: %s, expected: %s", respServer.InterfaceName, updatedServerInterface)
-		t.Errorf("results do not match actual: %s, expected: %s", respServer.Rack, updatedServerRack)
+	respServer := resp.Response[0]
+	infs = respServer.Interfaces
+	found := false
+	for _, inf = range infs {
+		if inf.Name == updatedServerInterface {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("Expected server '%s' to have an interface named '%s' after update", hostName, updatedServerInterface)
+		t.Logf("Actual interfaces: %+v", infs)
+	}
+
+	if respServer.Rack == nil {
+		t.Errorf("results do not match actual: null, expected: '%s'", updatedServerRack)
+	} else if *respServer.Rack != updatedServerRack {
+		t.Errorf("results do not match actual: '%s', expected: '%s'", *respServer.Rack, updatedServerRack)
+	}
+
+	if remoteServer.TypeID == nil {
+		t.Fatalf("Cannot test server type change update; server '%s' had nil type ID", hostName)
 	}
 
 	// Assign server to DS and then attempt to update to a different type
@@ -114,48 +181,69 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatal("GET Server Types returned less then 2 types, must have at least 2 to test invalid type server update")
 	}
 	for _, t := range serverTypes {
-		if t.ID != remoteServer.TypeID {
-			remoteServer.TypeID = t.ID
+		if t.ID != *remoteServer.TypeID {
+			remoteServer.TypeID = &t.ID
 			break
 		}
 	}
 
 	// Assign server to DS
-	_, _, err = TOSession.CreateDeliveryServiceServers(*dses[0].ID, []int{remoteServer.ID}, true)
+	_, _, err = TOSession.CreateDeliveryServiceServers(*dses[0].ID, []int{*remoteServer.ID}, true)
 	if err != nil {
 		t.Fatalf("POST delivery service servers: %v", err)
 	}
 
 	// Attempt Update - should fail
-	_, _, err = TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
+	alerts, _, err = TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
 	if err == nil {
 		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
+	} else {
+		t.Logf("type change update alerts: %+v", alerts)
 	}
 
 }
 
 func DeleteTestServers(t *testing.T) {
+	params := url.Values{}
 
 	for _, server := range testData.Servers {
-		resp, _, err := TOSession.GetServerByHostName(server.HostName)
-		if err != nil {
-			t.Errorf("cannot GET Server by hostname: %v - %v", server.HostName, err)
+		if server.HostName == nil {
+			t.Errorf("found server with nil hostname: %+v", server)
+			continue
 		}
-		if len(resp) > 0 {
-			respServer := resp[0]
 
-			delResp, _, err := TOSession.DeleteServerByID(respServer.ID)
+		params.Set("hostName", *server.HostName)
+
+		resp, _, err := TOSession.GetServers(&params)
+		if err != nil {
+			t.Errorf("cannot GET Server by hostname '%s': %v - %v", *server.HostName, err, resp.Alerts)
+			continue
+		}
+		if len(resp.Response) > 0 {
+			if len(resp.Response) > 1 {
+				t.Errorf("Expected exactly one server by hostname '%s' - actual: %d", *server.HostName, len(resp.Response))
+				t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+			}
+			respServer := resp.Response[0]
+
+			if respServer.ID == nil {
+				t.Errorf("Server '%s' had nil ID", *server.HostName)
+				continue
+			}
+
+			delResp, _, err := TOSession.DeleteServerByID(*respServer.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE Server by ID: %v - %v", err, delResp)
+				t.Errorf("cannot DELETE Server by ID %d: %v - %v", *respServer.ID, err, delResp)
+				continue
 			}
 
 			// Retrieve the Server to see if it got deleted
-			serv, _, err := TOSession.GetServerByHostName(server.HostName)
+			resp, _, err := TOSession.GetServers(&params)
 			if err != nil {
-				t.Errorf("error deleting Server hostname: %s", err.Error())
+				t.Errorf("error deleting Server hostname '%s': %v - %v", *server.HostName, err, resp.Alerts)
 			}
-			if len(serv) > 0 {
-				t.Errorf("expected Server hostname: %s to be deleted", server.HostName)
+			if len(resp.Response) > 0 {
+				t.Errorf("expected Server hostname: %s to be deleted", *server.HostName)
 			}
 		}
 	}

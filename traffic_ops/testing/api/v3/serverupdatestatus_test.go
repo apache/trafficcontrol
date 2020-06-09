@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -27,15 +28,18 @@ import (
 
 func TestServerUpdateStatus(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
-		edge1cdn1 := tc.Server{}
-		edge2cdn1 := tc.Server{}
-		mid1cdn1 := tc.Server{}
-		edge1cdn2 := tc.Server{}
+		//TODO: DON'T hard-code server hostnames!
+		var edge1cdn1 tc.ServerNullable
+		var edge2cdn1 tc.ServerNullable
+		var mid1cdn1 tc.ServerNullable
+		var edge1cdn2 tc.ServerNullable
+
+		params := url.Values{}
 
 		getServers := func() {
 			for _, s := range []struct {
 				name   string
-				server *tc.Server
+				server *tc.ServerNullable
 			}{
 				{
 					"atlanta-edge-01",
@@ -54,29 +58,45 @@ func TestServerUpdateStatus(t *testing.T) {
 					&edge1cdn2,
 				},
 			} {
-				resp, _, err := TOSession.GetServerByHostName(s.name)
+				params.Set("hostName", s.name)
+				resp, _, err := TOSession.GetServers(&params)
 				if err != nil {
-					t.Errorf("cannot GET Server by hostname: %v - %v", s.name, err)
+					t.Errorf("cannot GET Server by hostname '%s': %v - %v", s.name, err, resp.Alerts)
 				}
-				*s.server = resp[0]
+				if len(resp.Response) < 1 {
+					t.Fatalf("Expected a server named '%s' to exist", s.name)
+				}
+				if len(resp.Response) > 1 {
+					t.Errorf("Expected exactly one server named '%s' to exist - actual: %d", s.name, len(resp.Response))
+					t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+				}
+				*s.server = resp.Response[0]
+				if s.server.ID == nil {
+					t.Fatalf("server '%s' was returned with nil ID", s.name)
+				}
+				if s.server.HostName == nil {
+					t.Fatalf("server '%s' was returned with nil HostName", s.name)
+				}
 			}
 		}
 		getServers()
 
 		// assert that servers don't have updates pending
-		for _, s := range []tc.Server{
+		for _, s := range []tc.ServerNullable{
 			edge1cdn1,
 			edge2cdn1,
 			mid1cdn1,
 			edge1cdn2,
 		} {
-			if s.UpdPending {
+			if s.UpdPending == nil {
+				t.Error("expected UpdPending: false, actual: null")
+			} else if *s.UpdPending {
 				t.Error("expected UpdPending: false, actual: true")
 			}
 		}
 
 		// update status of MID server to OFFLINE
-		_, _, err := TOSession.UpdateServerStatus(mid1cdn1.ID, tc.ServerPutStatus{
+		_, _, err := TOSession.UpdateServerStatus(*mid1cdn1.ID, tc.ServerPutStatus{
 			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
 			OfflineReason: util.StrPtr("testing")})
 		if err != nil {
@@ -85,17 +105,27 @@ func TestServerUpdateStatus(t *testing.T) {
 
 		// assert that updates were queued for the proper EDGE servers
 		getServers()
-		if !edge1cdn1.UpdPending {
-			t.Errorf("expected: child %s to have updates pending, actual: no updates pending", edge1cdn1.HostName)
+		if edge1cdn1.UpdPending == nil {
+			t.Errorf("expected: child %s (%d) to have updates pending, actual: property was null (or missing)", *edge1cdn1.HostName, *edge1cdn1.ID)
+		} else if !*edge1cdn1.UpdPending {
+			t.Errorf("expected: child %s (%d) to have updates pending, actual: no updates pending", *edge1cdn1.HostName, *edge1cdn1.ID)
 		}
-		if !edge2cdn1.UpdPending {
-			t.Errorf("expected: child %s to have updates pending, actual: no updates pending", edge2cdn1.HostName)
+
+		if edge2cdn1.UpdPending == nil {
+			t.Errorf("expected: child %s (%d) to have updates pending, actual: property was null (or missing)", *edge2cdn1.HostName, *edge2cdn1.ID)
+		} else if !*edge2cdn1.UpdPending {
+			t.Errorf("expected: child %s (%d) to have updates pending, actual: no updates pending", *edge2cdn1.HostName, *edge2cdn1.ID)
 		}
-		if mid1cdn1.UpdPending {
-			t.Errorf("expected: server %s with updated status to have no updates pending, actual: updates pending", mid1cdn1.HostName)
+		if mid1cdn1.UpdPending == nil {
+			t.Errorf("expected: server %s (%d) with updated status to have no updates pending, actual: property was null (or missing)", *mid1cdn1.HostName, *mid1cdn1.ID)
+		} else if *mid1cdn1.UpdPending {
+			t.Errorf("expected: server %s (%d) with updated status to have no updates pending, actual: updates pending", *mid1cdn1.HostName, *mid1cdn1.ID)
 		}
-		if edge1cdn2.UpdPending {
-			t.Errorf("expected: server %s in different CDN than server with updated status to have no updates pending, actual: updates pending", edge2cdn1.HostName)
+
+		if edge1cdn2.UpdPending == nil {
+			t.Errorf("expected: server %s (%d) in different CDN than server with updated status to have no updates pending, actual: updates pending", *edge1cdn2.HostName, *edge1cdn2.ID)
+		} else if *edge1cdn2.UpdPending {
+			t.Errorf("expected: server %s (%d) in different CDN than server with updated status to have no updates pending, actual: updates pending", *edge1cdn2.HostName, *edge1cdn2.ID)
 		}
 
 		// update status of MID server to OFFLINE via status ID
@@ -104,7 +134,7 @@ func TestServerUpdateStatus(t *testing.T) {
 			t.Fatalf("cannot GET status by name: %v", err)
 		}
 		_, _, err = TOSession.UpdateServerStatus(
-			mid1cdn1.ID,
+			*mid1cdn1.ID,
 			tc.ServerPutStatus{
 				Status:        util.JSONNameOrIDStr{ID: util.IntPtr(status[0].ID)},
 				OfflineReason: util.StrPtr("testing"),
@@ -129,7 +159,7 @@ func TestServerUpdateStatus(t *testing.T) {
 
 		// status does not exist
 		_, _, err = TOSession.UpdateServerStatus(
-			mid1cdn1.ID,
+			*mid1cdn1.ID,
 			tc.ServerPutStatus{
 				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("NOT_A_REAL_STATUS")},
 				OfflineReason: util.StrPtr("testing"),
@@ -141,7 +171,7 @@ func TestServerUpdateStatus(t *testing.T) {
 
 		// offlineReason required for OFFLINE status
 		_, _, err = TOSession.UpdateServerStatus(
-			mid1cdn1.ID,
+			*mid1cdn1.ID,
 			tc.ServerPutStatus{
 				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
 				OfflineReason: nil,
@@ -153,7 +183,7 @@ func TestServerUpdateStatus(t *testing.T) {
 
 		// offlineReason required for ADMIN_DOWN status
 		_, _, err = TOSession.UpdateServerStatus(
-			mid1cdn1.ID,
+			*mid1cdn1.ID,
 			tc.ServerPutStatus{
 				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("ADMIN_DOWN")},
 				OfflineReason: nil,
@@ -167,6 +197,7 @@ func TestServerUpdateStatus(t *testing.T) {
 
 func TestServerQueueUpdate(t *testing.T) {
 	WithObjs(t, []TCObj{Divisions, Regions, PhysLocations, Statuses, Types, CacheGroups, CDNs, Profiles, Servers}, func() {
+		// TODO: DON'T hard-code server hostnames!
 		const serverName = "atlanta-edge-01"
 
 		queueUpdateActions := map[bool]string{
@@ -174,26 +205,42 @@ func TestServerQueueUpdate(t *testing.T) {
 			true:  "queue",
 		}
 
-		var s tc.Server
-		resp, _, err := TOSession.GetServerByHostName(serverName)
+		var s tc.ServerNullable
+		params := url.Values{}
+		params.Add("hostName", serverName)
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
-			t.Fatalf("failed to GET Server by hostname: %v - %v", serverName, err)
+			t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
 		}
-		s = resp[0]
+		if len(resp.Response) < 1 {
+			t.Fatalf("Expected a server named '%s' to exist", serverName)
+		}
+		if len(resp.Response) > 1 {
+			t.Errorf("Expected exactly one server named '%s' to exist", serverName)
+			t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+		}
+		s = resp.Response[0]
 
 		// assert that servers don't have updates pending
-		if got, want := s.UpdPending, false; got != want {
+		if s.UpdPending == nil {
+			t.Fatalf("Server '%s' had null (or missing) updPending property", serverName)
+		}
+		if got, want := *s.UpdPending, false; got != want {
 			t.Fatalf("unexpected UpdPending, got: %v, want: %v", got, want)
+		}
+
+		if s.ID == nil {
+			t.Fatalf("Server '%s' had nil ID", serverName)
 		}
 
 		for _, setVal := range [...]bool{true, false} {
 			t.Run(fmt.Sprint(setVal), func(t *testing.T) {
 				// queue update and check response
-				quResp, _, err := TOSession.SetServerQueueUpdate(s.ID, setVal)
+				quResp, _, err := TOSession.SetServerQueueUpdate(*s.ID, setVal)
 				if err != nil {
 					t.Fatalf("failed to set queue update for server with ID %v to %v: %v", s.ID, setVal, err)
 				}
-				if got, want := int(quResp.Response.ServerID), s.ID; got != want {
+				if got, want := int(quResp.Response.ServerID), *s.ID; got != want {
 					t.Errorf("wrong serverId in response, got: %v, want: %v", got, want)
 				}
 				if got, want := quResp.Response.Action, queueUpdateActions[setVal]; got != want {
@@ -201,12 +248,22 @@ func TestServerQueueUpdate(t *testing.T) {
 				}
 
 				// assert that the server has updates queued
-				resp, _, err = TOSession.GetServerByID(s.ID)
+				resp, _, err = TOSession.GetServers(&params)
 				if err != nil {
-					t.Fatalf("failed to GET Server by ID: %v - %v", s.ID, err)
+					t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
 				}
-				s = resp[0]
-				if got, want := s.UpdPending, setVal; got != want {
+				if len(resp.Response) < 1 {
+					t.Fatalf("Expected a server named '%s' to exist", serverName)
+				}
+				if len(resp.Response) > 1 {
+					t.Errorf("Expected exactly one server named '%s' to exist", serverName)
+					t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+				}
+				s = resp.Response[0]
+				if s.UpdPending == nil {
+					t.Fatalf("Server '%s' had null (or missing) updPending property", serverName)
+				}
+				if got, want := *s.UpdPending, setVal; got != want {
 					t.Errorf("unexpected UpdPending, got: %v, want: %v", got, want)
 				}
 			})
@@ -224,7 +281,9 @@ func TestServerQueueUpdate(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to encode request body: %v", err)
 			}
-			path := fmt.Sprintf(TestAPIBase+"/servers/%d/queue_update", s.ID)
+
+			// TODO: don't construct URLs like this, nor use "RawRequest"
+			path := fmt.Sprintf(TestAPIBase+"/servers/%d/queue_update", *s.ID)
 			httpResp, _, err := TOSession.RawRequest(http.MethodPost, path, req)
 			if err != nil {
 				t.Fatalf("POST request failed: %v", err)
@@ -242,42 +301,65 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 			t.Fatal("cannot GET Server: no test data")
 		}
 		testServer := testData.Servers[0]
+		if testServer.HostName == nil {
+			t.Fatalf("First test server had nil hostname: %+v", testServer)
+		}
 
+		params := url.Values{}
+		params.Add("hostName", *testServer.HostName)
 		testVals := func(queue *bool, reval *bool) {
-			existingServer, _, err := TOSession.GetServerByHostName(testServer.HostName)
+			resp, _, err := TOSession.GetServers(&params)
 			if err != nil {
-				t.Errorf("cannot GET Server by name: %v - %v", err, existingServer)
-			} else if len(existingServer) != 1 {
-				t.Fatalf("GET Server expected 1, actual %v", len(existingServer))
+				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
+			} else if len(resp.Response) != 1 {
+				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
 			}
 
-			if _, err := TOSession.SetUpdateServerStatuses(testServer.HostName, queue, reval); err != nil {
+			existingServer := resp.Response
+
+			if existingServer[0].UpdPending == nil {
+				t.Fatalf("Server '%s' had nil UpdPending before update status change", *testServer.HostName)
+			}
+			if existingServer[0].RevalPending == nil {
+				t.Fatalf("Server '%s' had nil RevalPending before update status change", *testServer.HostName)
+			}
+
+			if _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, queue, reval); err != nil {
 				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v", err)
 			}
 
-			newServer, _, err := TOSession.GetServerByHostName(testServer.HostName)
+			resp, _, err = TOSession.GetServers(&params)
 			if err != nil {
-				t.Errorf("cannot GET Server by name: %v - %v", err, existingServer)
-			} else if len(newServer) != 1 {
-				t.Fatalf("GET Server expected 1, actual %v", len(newServer))
+				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
+			} else if len(resp.Response) != 1 {
+				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
+			}
+
+			newServer := resp.Response
+
+			if newServer[0].UpdPending == nil {
+				t.Fatalf("Server '%s' had nil UpdPending after update status change", *testServer.HostName)
+			}
+			if newServer[0].RevalPending == nil {
+				t.Fatalf("Server '%s' had nil RevalPending after update status change", *testServer.HostName)
 			}
 
 			if queue != nil {
-				if newServer[0].UpdPending != *queue {
-					t.Errorf("set queue update pending to %v, but then got server %v", *queue, newServer[0].UpdPending)
+				if *newServer[0].UpdPending != *queue {
+					t.Errorf("set queue update pending to %v, but then got server %v", *queue, *newServer[0].UpdPending)
 				}
 			} else {
-				if newServer[0].UpdPending != existingServer[0].UpdPending {
-					t.Errorf("set queue update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", newServer[0].UpdPending, existingServer[0].UpdPending)
+				if *newServer[0].UpdPending != *existingServer[0].UpdPending {
+					t.Errorf("set queue update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", *newServer[0].UpdPending, *existingServer[0].UpdPending)
 				}
 			}
 			if reval != nil {
-				if newServer[0].RevalPending != *reval {
-					t.Errorf("set reval update pending to %v, but then got server %v", *reval, newServer[0].RevalPending)
+				if *newServer[0].RevalPending != *reval {
+					t.Errorf("set reval update pending to %v, but then got server %v", *reval, *newServer[0].RevalPending)
 				}
 			} else {
-				if newServer[0].RevalPending != existingServer[0].RevalPending {
-					t.Errorf("set reval update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", newServer[0].RevalPending, existingServer[0].RevalPending)
+				if *newServer[0].RevalPending != *existingServer[0].RevalPending {
+					t.Errorf("set reval update pending with nil (don't update), but then got server %v which didn't match pre-update value %v", *newServer[0].RevalPending, *existingServer[0].RevalPending)
 				}
 			}
 		}
@@ -290,7 +372,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 		testVals(util.BoolPtr(true), nil)
 		testVals(util.BoolPtr(false), nil)
 
-		if _, err := TOSession.SetUpdateServerStatuses(testServer.HostName, nil, nil); err == nil {
+		if _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, nil, nil); err == nil {
 			t.Errorf("UpdateServerStatuses with (nil,nil) expected error, actual nil")
 		}
 	})

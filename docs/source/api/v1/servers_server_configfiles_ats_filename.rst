@@ -21,6 +21,9 @@
 
 .. seealso:: The :ref:`to-api-v1-servers-server-configfiles-ats` endpoint
 
+.. deprecated:: 1.4
+	Using the API to retrieve generated configuration files for servers is deprecated, and unavailable in more recent API versions. Also, in ATC version 4.x and higher, it is not guaranteed that configuration files will be output correctly, or even successfully. Instead, configuration file generation is now the responsibility of :ref:`atstccfg`.
+
 ``GET``
 =======
 Returns the requested configuration file for download.

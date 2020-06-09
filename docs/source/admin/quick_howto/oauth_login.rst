@@ -26,7 +26,7 @@ An opt-in configuration for SSO using OAuth is supported and can be configured t
 
 .. Note:: The ``POST`` from the API to the OAuth provider to exchange the code for a token expects the response to have the token in JSON format with `access_token` as the desired field (and can include other fields).  It also supports a response with just the token itself as the body.  Further development work will need to be done to allow other resposne forms or other response fields.
 
-.. Note:: Users must exist in both Traffic Ops as well as in the OAuth provider's system.  The user's rights are defined by the :term:`role` assigned to the user.
+.. Note:: Users must exist in both Traffic Ops as well as in the OAuth provider's system.  The user's rights are defined by the :term:`Role` assigned to the user.
 
 To configure OAuth login:
 

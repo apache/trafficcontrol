@@ -52,7 +52,7 @@ func GetUnknown(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params, err := GetServerParams(inf.Tx.Tx, serverName, inf.Params["file"])
+	params, err := ats.GetServerParams(inf.Tx.Tx, serverName, inf.Params["file"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server '"+string(serverName)+"' + package parameters: "+err.Error()))
 		return

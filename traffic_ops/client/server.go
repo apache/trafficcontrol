@@ -34,158 +34,142 @@ const (
 	API_SERVER_ASSIGN_DELIVERY_SERVICES = API_SERVER_DELIVERY_SERVICES + "?replace=%t"
 )
 
-// CreateServer creates a Server.
-func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
+func needAndCanFetch(id *int, name *string) bool {
+	return (id == nil || *id == 0) && name != nil && *name != ""
+}
 
+// CreateServer creates a Server.
+func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, error) {
+
+	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
-	if server.CachegroupID == 0 && server.Cachegroup != "" {
-		cg, _, err := to.GetCacheGroupNullableByName(server.Cachegroup)
+	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
+		cg, _, err := to.GetCacheGroupNullableByName(*server.Cachegroup)
 		if err != nil {
-			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + server.Cachegroup + ":" + err.Error())
+			return alerts, reqInf, fmt.Errorf("no cachegroup named %s: %v", *server.Cachegroup, err)
 		}
 		if len(cg) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + server.Cachegroup)
+			return alerts, reqInf, fmt.Errorf("no cachegroup named %s", *server.Cachegroup)
 		}
 		if cg[0].ID == nil {
-			return tc.Alerts{}, ReqInf{}, errors.New("Cachegroup named " + server.Cachegroup + " has a nil ID")
+			return alerts, reqInf, fmt.Errorf("Cachegroup named %s has a nil ID", *server.Cachegroup)
 		}
-		server.CachegroupID = *cg[0].ID
+		server.CachegroupID = cg[0].ID
 	}
-	if server.CDNID == 0 && server.CDNName != "" {
-		c, _, err := to.GetCDNByName(server.CDNName)
+	if needAndCanFetch(server.CDNID, server.CDNName) {
+		c, _, err := to.GetCDNByName(*server.CDNName)
 		if err != nil {
-			return tc.Alerts{}, ReqInf{}, errors.New("no CDN named " + server.CDNName + ":" + err.Error())
+			return alerts, reqInf, fmt.Errorf("no CDN named %s: %v", *server.CDNName, err)
 		}
 		if len(c) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no CDN named " + server.CDNName)
+			return alerts, reqInf, fmt.Errorf("no CDN named %s", *server.CDNName)
 		}
-		server.CDNID = c[0].ID
+		server.CDNID = &c[0].ID
 	}
-	if server.PhysLocationID == 0 && server.PhysLocation != "" {
-		ph, _, err := to.GetPhysLocationByName(server.PhysLocation)
+	if needAndCanFetch(server.PhysLocationID, server.PhysLocation) {
+		ph, _, err := to.GetPhysLocationByName(*server.PhysLocation)
 		if err != nil {
-			return tc.Alerts{}, ReqInf{}, errors.New("no physlocation named " + server.PhysLocation + ":" + err.Error())
+			return alerts, reqInf, fmt.Errorf("no physlocation named %s: %v", *server.PhysLocation, err)
 		}
 		if len(ph) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no physlocation named " + server.PhysLocation)
+			return alerts, reqInf, fmt.Errorf("no physlocation named %s", *server.PhysLocation)
 		}
-		server.PhysLocationID = ph[0].ID
+		server.PhysLocationID = &ph[0].ID
 	}
-	if server.ProfileID == 0 && server.Profile != "" {
-		pr, _, err := to.GetProfileByName(server.Profile)
+	if needAndCanFetch(server.ProfileID, server.Profile) {
+		pr, _, err := to.GetProfileByName(*server.Profile)
 		if err != nil {
-			return tc.Alerts{}, ReqInf{}, errors.New("no profile named " + server.Profile + ":" + err.Error())
+			return alerts, reqInf, fmt.Errorf("no profile named %s: %v", *server.Profile, err)
 		}
 		if len(pr) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no profile named " + server.Profile)
+			return alerts, reqInf, fmt.Errorf("no profile named %s", *server.Profile)
 		}
-		server.ProfileID = pr[0].ID
+		server.ProfileID = &pr[0].ID
 	}
-	if server.StatusID == 0 && server.Status != "" {
-		st, _, err := to.GetStatusByName(server.Status)
+	if needAndCanFetch(server.StatusID, server.Status) {
+		st, _, err := to.GetStatusByName(*server.Status)
 		if err != nil {
-			return tc.Alerts{}, ReqInf{}, errors.New("no status named " + server.Status + ":" + err.Error())
+			return alerts, reqInf, fmt.Errorf("no status named %s: %v", *server.Status, err)
 		}
 		if len(st) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no status named " + server.Status)
+			return alerts, reqInf, fmt.Errorf("no status named %s", *server.Status)
 		}
-		server.StatusID = st[0].ID
+		server.StatusID = &st[0].ID
 	}
-	if server.TypeID == 0 && server.Type != "" {
+	if (server.TypeID == nil || *server.TypeID == 0) && server.Type != "" {
 		ty, _, err := to.GetTypeByName(server.Type)
 		if err != nil {
-			return tc.Alerts{}, ReqInf{}, errors.New("no type named " + server.Type + ":" + err.Error())
+			return alerts, reqInf, fmt.Errorf("no type named %s: %v", server.Type, err)
 		}
 		if len(ty) == 0 {
-			return tc.Alerts{}, ReqInf{}, errors.New("no type named " + server.Type)
+			return alerts, reqInf, fmt.Errorf("no type named %s", server.Type)
 		}
-		server.TypeID = ty[0].ID
+		server.TypeID = &ty[0].ID
 	}
+
 	reqBody, err := json.Marshal(server)
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return alerts, reqInf, err
 	}
 
 	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody)
+	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return alerts, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
 
 // UpdateServerByID updates a Server by ID.
-func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf, error) {
-
+func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts, ReqInf, error) {
+	var alerts tc.Alerts
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(server)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+
+	reqBody, err := json.Marshal(server)
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return alerts, reqInf, err
 	}
+
 	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return alerts, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
 
 // GetServers returns a list of Servers.
-func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_SERVERS, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
+// The 'params' parameter can be used to optionally pass URL "query string
+// parameters" in the request.
+// It returns, in order, the API response that Traffic Ops returned, a request
+// info object, and any error that occurred.
+func (to *Session) GetServers(params *url.Values) (tc.ServersV3Response, ReqInf, error) {
+	route := API_SERVERS
+	if params != nil {
+		route += "?" + params.Encode()
 	}
-	defer resp.Body.Close()
 
-	var data tc.ServersResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
-}
+	var data tc.ServersV3Response
 
-// GetServerByID GETs a Server by the Server ID.
-func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_SERVERS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, reqInf, err
+		return data, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.ServersResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-// GetServerByHostName GETs Servers by the Server hostname.
-func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, error) {
-	url := fmt.Sprintf("%s?hostName=%s", API_SERVERS, hostName)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.ServersResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data, reqInf, err
 }
 
 // GetServerDetailsByHostName GETs Servers by the Server hostname.
@@ -223,70 +207,58 @@ func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// GetServersByType returns all servers that match the given query parameter filters, NOT
-// - as the name might imply - all servers of a specific type (though type can be specified
-// in the query parameters).
-func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, error) {
-	url := fmt.Sprintf("%s?%s", API_SERVERS, qparams.Encode())
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.ServersResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-// GetServerFQDN returns the Fully Qualified Domain Name (FQDN) of the first server found to
-// have the Host Name 'n'.
-func (to *Session) GetServerFQDN(n string) (string, ReqInf, error) {
+// GetServerFQDN returns the Fully Qualified Domain Name (FQDN) of the first
+// server found to have the Host Name 'n'.
+func (to *Session) GetServerFQDN(n string) (string, tc.Alerts, ReqInf, error) {
 	// TODO fix to only request one server
-	fdn := ""
-	servers, reqInf, err := to.GetServers()
+	params := url.Values{}
+	params.Add("hostName", n)
+
+	resp, reqInf, err := to.GetServers(&params)
 	if err != nil {
-		return "Error", reqInf, err
+		return "", resp.Alerts, reqInf, err
 	}
 
-	for _, server := range servers {
-		if server.HostName == n {
-			fdn = fmt.Sprintf("%s.%s", server.HostName, server.DomainName)
+	var fdn string
+	for _, server := range resp.Response {
+		if server.HostName != nil && server.DomainName != nil {
+			fdn = fmt.Sprintf("%s.%s", *server.HostName, *server.DomainName)
 		}
 	}
+
 	if fdn == "" {
-		return "Error", reqInf, fmt.Errorf("No Server %s found", n)
+		err = fmt.Errorf("No Server %s found", n)
 	}
-	return fdn, reqInf, nil
+
+	return fdn, resp.Alerts, reqInf, err
 }
 
-// GetServersShortNameSearch returns all of the Host Names of servers that contain 'shortname'.
-func (to *Session) GetServersShortNameSearch(shortname string) ([]string, ReqInf, error) {
+// GetServersShortNameSearch returns all of the Host Names of servers that
+// contain 'shortname'.
+func (to *Session) GetServersShortNameSearch(shortname string) ([]string, tc.Alerts, ReqInf, error) {
 	var serverlst []string
-	servers, reqInf, err := to.GetServers()
+	resp, reqInf, err := to.GetServers(nil)
 	if err != nil {
-		serverlst = append(serverlst, "N/A")
-		return serverlst, reqInf, err
+		return serverlst, resp.Alerts, reqInf, err
 	}
-	for _, server := range servers {
-		if strings.Contains(server.HostName, shortname) {
-			serverlst = append(serverlst, server.HostName)
+
+	for _, server := range resp.Response {
+		if server.HostName != nil && strings.Contains(*server.HostName, shortname) {
+			serverlst = append(serverlst, *server.HostName)
 		}
 	}
+
 	if len(serverlst) == 0 {
-		serverlst = append(serverlst, "N/A")
-		return serverlst, reqInf, fmt.Errorf("No Servers Found")
+		err = errors.New("No Servers Found")
 	}
-	return serverlst, reqInf, nil
+
+	return serverlst, resp.Alerts, reqInf, err
 }
 
-// AssignDeliveryServiceIDsToServerID assigns a set of Delivery Services to a single server, optionally
-// replacing any and all existing assignments. 'server' should be the requested server's ID, 'dsIDs'
-// should be a slice of the requested Delivery Services' IDs. If 'replace' is 'true', existing
+// AssignDeliveryServiceIDsToServerID assigns a set of Delivery Services to a
+// single server, optionally replacing any and all existing assignments.
+// 'server' should be the requested server's ID, 'dsIDs' should be a slice of
+// the requested Delivery Services' IDs. If 'replace' is 'true', existing
 // assignments to the server will be replaced.
 func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, replace bool) (tc.Alerts, ReqInf, error) {
 	// datatypes here match the library tc.Server's and tc.DeliveryService's ID fields

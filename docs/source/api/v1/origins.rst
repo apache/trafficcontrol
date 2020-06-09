@@ -22,7 +22,7 @@
 
 ``GET``
 =======
-Gets all requested :term:`origins`.
+Gets all requested :term:`Origins`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -35,22 +35,22 @@ Request Structure
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| Name            | Required | Description                                                                                                                                                       |
 	+=================+==========+===================================================================================================================================================================+
-	| cachegroup      | no       | Return only :term:`origins` within the :term:`Cache Group` that has this :ref:`cache-group-id`                                                                    |
+	| cachegroup      | no       | Return only :term:`Origins` within the :term:`Cache Group` that has this :ref:`cache-group-id`                                                                    |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| coordinate      | no       | Return only :term:`origins` located at the geographic coordinates identified by this integral, unique identifier                                                  |
+	| coordinate      | no       | Return only :term:`Origins` located at the geographic coordinates identified by this integral, unique identifier                                                  |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| deliveryservice | no       | Return only :term:`origins` that belong to the :term:`Delivery Service` identified by this integral, unique identifier                                            |
+	| deliveryservice | no       | Return only :term:`Origins` that belong to the :term:`Delivery Service` identified by this integral, unique identifier                                            |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| id              | no       | Return only the :term:`origin` that has this integral, unique identifier                                                                                          |
+	| id              | no       | Return only the :term:`Origin` that has this integral, unique identifier                                                                                          |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| name            | no       | Return only :term:`origins` by this name                                                                                                                          |
+	| name            | no       | Return only :term:`Origins` by this name                                                                                                                          |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| profileId       | no       | Return only :term:`origins` which use the :term:`Profile` that has this :ref:`profile-id`                                                                         |
+	| profileId       | no       | Return only :term:`Origins` which use the :term:`Profile` that has this :ref:`profile-id`                                                                         |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| primary         | no       | If ``true``, return only :term:`origins` which are the the primary :term:`origin` of the :term:`Delivery Service` to which they belong - if ``false`` return only |
-	|                 |          | :term:`origins` which are *not* the primary :term:`origin` of the :term:`Delivery Service` to which they belong                                                   |
+	| primary         | no       | If ``true``, return only :term:`Origins` which are the the primary :term:`Origin` of the :term:`Delivery Service` to which they belong - if ``false`` return only |
+	|                 |          | :term:`Origins` which are *not* the primary :term:`Origin` of the :term:`Delivery Service` to which they belong                                                   |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant          | no       | Return only :term:`origins` belonging to the tenant identified by this integral, unique identifier                                                                |
+	| tenant          | no       | Return only :term:`Origins` belonging to the tenant identified by this integral, unique identifier                                                                |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| orderby         | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                                                     |
 	|                 |          | array                                                                                                                                                             |
@@ -78,25 +78,25 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`origin` belongs
-:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`origin` belongs
+:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`Origin` belongs
+:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`Origin` belongs
 :coordinate:        The name of a coordinate pair that defines the origin's geographic location
-:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
-:deliveryService:   A string that is the :ref:`ds-xmlid` of the :term:`Delivery Service` to which the :term:`origin` belongs
-:deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`origin` belongs
-:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
-:id:                An integral, unique identifier for this :term:`origin`
+:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`Origin`'s geographic location
+:deliveryService:   A string that is the :ref:`ds-xmlid` of the :term:`Delivery Service` to which the :term:`Origin` belongs
+:deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`Origin` belongs
+:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`Origin`
+:id:                An integral, unique identifier for this :term:`Origin`
 :ip6Address:        The IPv6 address of the :term:`Origin`
 :ipAddress:         The IPv4 address of the :term:`Origin`
-:isPrimary:         A boolean value which, when ``true`` specifies this :term:`origin` as the 'primary' :term:`origin` served by ``deliveryService``
-:lastUpdated:       The date and time at which this :term:`origin` was last modified
-:name:              The name of the :term:`origin`
-:port:              The TCP port on which the :term:`origin` listens
-:profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`origin`
-:profileId:         The :ref:`profile-id` of the :term:`Profile` used by this :term:`origin`
+:isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
+:lastUpdated:       The date and time at which this :term:`Origin` was last modified
+:name:              The name of the :term:`Origin`
+:port:              The TCP port on which the :term:`Origin` listens
+:profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
+:profileId:         The :ref:`profile-id` of the :term:`Profile` used by this :term:`Origin`
 :protocol:          The protocol used by this origin - will be one of 'http' or 'https'
-:tenant:            The name of the :term:`Tenant` that owns this :term:`origin`
-:tenantId:          An integral, unique identifier for the :term:`Tenant` that owns this :term:`origin`
+:tenant:            The name of the :term:`Tenant` that owns this :term:`Origin`
+:tenantId:          An integral, unique identifier for the :term:`Tenant` that owns this :term:`Origin`
 
 .. code-block:: http
 	:caption: Response Example
@@ -149,21 +149,21 @@ Creates a new origin definition.
 
 Request Structure
 -----------------
-:cachegroupId:      An optional, integer which, if present, should be the :ref:`Cache Group ID <cache-group-id>` that identifies a :term:`Cache Group` to which the new :term:`origin` shall belong
-:coordinateId:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
-:deliveryServiceId: The integral, unique identifier of the :term:`Delivery Service` to which the new :term:`origin` shall belong
-:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
-:ip6Address:        An optional string containing the IPv6 address of the :term:`origin`
-:ipAddress:         An optional string containing the IPv4 address of the :term:`origin`
-:isPrimary:         An optional boolean which, if ``true`` will set this :term:`origin` as the 'primary' :term:`origin` served by the :term:`Delivery Service` identified by ``deliveryServiceID``
+:cachegroupId:      An optional, integer which, if present, should be the :ref:`Cache Group ID <cache-group-id>` that identifies a :term:`Cache Group` to which the new :term:`Origin` shall belong
+:coordinateId:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`Origin`'s geographic location
+:deliveryServiceId: The integral, unique identifier of the :term:`Delivery Service` to which the new :term:`Origin` shall belong
+:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`Origin`
+:ip6Address:        An optional string containing the IPv6 address of the :term:`Origin`
+:ipAddress:         An optional string containing the IPv4 address of the :term:`Origin`
+:isPrimary:         An optional boolean which, if ``true`` will set this :term:`Origin` as the 'primary' :term:`Origin` served by the :term:`Delivery Service` identified by ``deliveryServiceID``
 
 	.. note:: Though not specifying this field in this request will leave it as ``null`` in the output, Traffic Ops will silently coerce that to its default value: ``false``.
 
 :name:      A human-friendly name of the :term:`Origin`
-:port:      An optional port number on which the :term:`origin` listens for incoming TCP connections
-:profileId: An optional :ref:`profile-id` ofa :term:`Profile` that shall be used by this :term:`origin`
+:port:      An optional port number on which the :term:`Origin` listens for incoming TCP connections
+:profileId: An optional :ref:`profile-id` ofa :term:`Profile` that shall be used by this :term:`Origin`
 :protocol:  The protocol used by the origin - must be one of 'http' or 'https'
-:tenantId:  An optional\ [1]_, integral, unique identifier for the :term:`Tenant` which shall own the new :term:`origin`
+:tenantId:  An optional\ [1]_, integral, unique identifier for the :term:`Tenant` which shall own the new :term:`Origin`
 
 .. code-block:: http
 	:caption: Request Example
@@ -189,25 +189,25 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`origin` belongs
-:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`origin` belongs
+:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`Origin` belongs
+:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`Origin` belongs
 :coordinate:        The name of a coordinate pair that defines the origin's geographic location
-:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
-:deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`origin` belongs
-:deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`origin` belongs
-:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
-:id:                An integral, unique identifier for this :term:`origin`
+:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`Origin`'s geographic location
+:deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`Origin` belongs
+:deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`Origin` belongs
+:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`Origin`
+:id:                An integral, unique identifier for this :term:`Origin`
 :ip6Address:        The IPv6 address of the :term:`Origin`
 :ipAddress:         The IPv4 address of the :term:`Origin`
-:isPrimary:         A boolean value which, when ``true`` specifies this :term:`origin` as the 'primary' :term:`origin` served by ``deliveryService``
-:lastUpdated:       The date and time at which this :term:`origin` was last modified
-:name:              The name of the :term:`origin`
-:port:              The TCP port on which the :term:`origin` listens
-:profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`origin`
-:profileId:         The :ref:`profile-id` the :term:`Profile` used by this :term:`origin`
+:isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
+:lastUpdated:       The date and time at which this :term:`Origin` was last modified
+:name:              The name of the :term:`Origin`
+:port:              The TCP port on which the :term:`Origin` listens
+:profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
+:profileId:         The :ref:`profile-id` the :term:`Profile` used by this :term:`Origin`
 :protocol:          The protocol used by this origin - will be one of 'http' or 'https'
-:tenant:            The name of the :term:`Tenant` that owns this :term:`origin`
-:tenantId:          An integral, unique identifier for the :term:`Tenant` that owns this :term:`origin`
+:tenant:            The name of the :term:`Tenant` that owns this :term:`Origin`
+:tenantId:          An integral, unique identifier for the :term:`Tenant` that owns this :term:`Origin`
 
 .. code-block:: http
 	:caption: Response Example
@@ -254,7 +254,7 @@ Response Structure
 
 ``PUT``
 =======
-Updates an :term:`origin` definition.
+Updates an :term:`Origin` definition.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -267,21 +267,21 @@ Request Structure
 	+------+----------+-------------------------------------------------------------------------------+
 	| Name | Required | Description                                                                   |
 	+======+==========+===============================================================================+
-	| id   | yes      | The integral, unique identifier of the :term:`origin` definition being edited |
+	| id   | yes      | The integral, unique identifier of the :term:`Origin` definition being edited |
 	+------+----------+-------------------------------------------------------------------------------+
 
-:cachegroupId:      An optional, integer which, if present, should be the :ref:`Cache Group ID <cache-group-id>` that identifies a :term:`Cache Group` to which the new :term:`origin` shall belong
-:coordinateId:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
-:deliveryServiceId: The integral, unique identifier of the :term:`Delivery Service` to which the :term:`origin` shall belong
-:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
-:ip6Address:        An optional string containing the IPv6 address of the :term:`origin`
-:ipAddress:         An optional string containing the IPv4 address of the :term:`origin`
-:isPrimary:         An optional boolean which, if ``true`` will set this :term:`origin` as the 'primary' origin served by the :term:`Delivery Service` identified by ``deliveryServiceID``
+:cachegroupId:      An optional, integer which, if present, should be the :ref:`Cache Group ID <cache-group-id>` that identifies a :term:`Cache Group` to which the new :term:`Origin` shall belong
+:coordinateId:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`Origin`'s geographic location
+:deliveryServiceId: The integral, unique identifier of the :term:`Delivery Service` to which the :term:`Origin` shall belong
+:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`Origin`
+:ip6Address:        An optional string containing the IPv6 address of the :term:`Origin`
+:ipAddress:         An optional string containing the IPv4 address of the :term:`Origin`
+:isPrimary:         An optional boolean which, if ``true`` will set this :term:`Origin` as the 'primary' origin served by the :term:`Delivery Service` identified by ``deliveryServiceID``
 :name:              A human-friendly name of the :term:`Origin`
-:port:              An optional port number on which the :term:`origin` listens for incoming TCP connections
-:profileId:         An optional :ref:`profile-id` of the :term:`Profile` that shall be used by this :term:`origin`
-:protocol:          The protocol used by the :term:`origin` - must be one of 'http' or 'https'
-:tenantId:          An optional\ [1]_, integral, unique identifier for the :term:`Tenant` which shall own the new :term:`origin`
+:port:              An optional port number on which the :term:`Origin` listens for incoming TCP connections
+:profileId:         An optional :ref:`profile-id` of the :term:`Profile` that shall be used by this :term:`Origin`
+:protocol:          The protocol used by the :term:`Origin` - must be one of 'http' or 'https'
+:tenantId:          An optional\ [1]_, integral, unique identifier for the :term:`Tenant` which shall own the new :term:`Origin`
 
 .. code-block:: http
 	:caption: Request Example
@@ -307,25 +307,25 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`origin` belongs
-:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`origin` belongs
+:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`Origin` belongs
+:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`Origin` belongs
 :coordinate:        The name of a coordinate pair that defines the origin's geographic location
-:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
-:deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`origin` belongs
-:deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`origin` belongs
-:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
-:id:                An integral, unique identifier for this :term:`origin`
+:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`Origin`'s geographic location
+:deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`Origin` belongs
+:deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`Origin` belongs
+:fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`Origin`
+:id:                An integral, unique identifier for this :term:`Origin`
 :ip6Address:        The IPv6 address of the :term:`Origin`
 :ipAddress:         The IPv4 address of the :term:`Origin`
-:isPrimary:         A boolean value which, when ``true`` specifies this :term:`origin` as the 'primary' :term:`origin` served by ``deliveryService``
-:lastUpdated:       The date and time at which this :term:`origin` was last modified
-:name:              The name of the :term:`origin`
-:port:              The TCP port on which the :term:`origin` listens
-:profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`origin`
-:profileId:         The :ref:`profile-id` the :term:`Profile` used by this :term:`origin`
+:isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
+:lastUpdated:       The date and time at which this :term:`Origin` was last modified
+:name:              The name of the :term:`Origin`
+:port:              The TCP port on which the :term:`Origin` listens
+:profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
+:profileId:         The :ref:`profile-id` the :term:`Profile` used by this :term:`Origin`
 :protocol:          The protocol used by this origin - will be one of 'http' or 'https'
-:tenant:            The name of the :term:`Tenant` that owns this :term:`origin`
-:tenantId:          An integral, unique identifier for the :term:`Tenant` that owns this :term:`origin`
+:tenant:            The name of the :term:`Tenant` that owns this :term:`Origin`
+:tenantId:          An integral, unique identifier for the :term:`Tenant` that owns this :term:`Origin`
 
 .. code-block:: http
 	:caption: Response Example
@@ -372,7 +372,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes an :term:`origin` definition.
+Deletes an :term:`Origin` definition.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -385,7 +385,7 @@ Request Structure
 	+------+----------+--------------------------------------------------------------------------------+
 	| Name | Required | Description                                                                    |
 	+======+==========+================================================================================+
-	|  id  | yes      | The integral, unique identifier of the :term:`origin` definition being deleted |
+	|  id  | yes      | The integral, unique identifier of the :term:`Origin` definition being deleted |
 	+------+----------+--------------------------------------------------------------------------------+
 
 .. code-block:: http

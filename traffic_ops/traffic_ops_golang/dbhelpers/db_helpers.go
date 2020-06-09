@@ -519,6 +519,52 @@ WHERE s.id = $1
 	return row, true, nil
 }
 
+// GetServerInterfaces, given the ID of a server, returns all of its network
+// interfaces, or an error if one occurs during retrieval.
+func GetServerInterfaces(id int, tx *sql.Tx) ([]tc.ServerInterfaceInfo, error) {
+	q := `
+	SELECT (
+		json_build_object (
+			'ipAddresses',
+			ARRAY (
+				SELECT (
+					json_build_object (
+						'address', ip_address.address,
+						'gateway', ip_address.gateway,
+						'service_address', ip_address.service_address
+					)
+				)
+				FROM ip_address
+				WHERE ip_address.interface = interface.name
+				AND ip_address.server = $1
+			),
+			'max_bandwidth', interface.max_bandwidth,
+			'monitor', interface.monitor,
+			'mtu', interface.mtu,
+			'name', interface.name
+		)
+	)
+	FROM interface
+	WHERE interface.server = $1
+	`
+	rows, err := tx.Query(q, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	infs := []tc.ServerInterfaceInfo{}
+	for rows.Next() {
+		var inf tc.ServerInterfaceInfo
+		if err = rows.Scan(&inf); err != nil {
+			return nil, err
+		}
+		infs = append(infs, inf)
+	}
+
+	return infs, nil
+}
+
 // GetStatusByID returns a Status struct, a bool for whether or not a status of the given ID exists, and an error (if one occurs).
 func GetStatusByID(id int, tx *sql.Tx) (tc.StatusNullable, bool, error) {
 	q := `

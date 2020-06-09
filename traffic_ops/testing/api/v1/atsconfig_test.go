@@ -53,12 +53,9 @@ func GetTestATSConfigs(t *testing.T) {
 	}
 
 	serverConfigs := []string{
-		"ip_allow.config",
 		"hosting.config",
 		"packages",
 		"chkconfig",
-		"remap.config",
-		"parent.config",
 	}
 	for _, serverConfig := range serverConfigs {
 		if _, _, err = TOSession.GetATSServerConfig(server.ID, serverConfig); err != nil {
@@ -106,5 +103,83 @@ func GetTestATSConfigs(t *testing.T) {
 		if _, _, err = TOSession.GetATSCDNConfigByName(server.CDNName, cdnConfig); err != nil {
 			t.Errorf("Getting cdn by name '" + server.CDNName + "' config '" + cdnConfig + "': " + err.Error() + "\n")
 		}
+	}
+}
+
+func CreateTestDeliveryServiceServers(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServices()
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServices: %v", err)
+	}
+	if len(dses) < 1 {
+		t.Error("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
+	}
+
+	servers, _, err := TOSession.GetServers()
+	if err != nil {
+		t.Errorf("cannot GET Servers: %v", err)
+	}
+	if len(servers) < 1 {
+		t.Error("GET Servers returned no servers, must have at least 1 to test ds-servers")
+	}
+
+	for _, ds := range dses {
+		serverIDs := make([]int, 0, len(servers))
+		for _, server := range servers {
+			if server.Type == "EDGE" && server.CDNName == ds.CDNName {
+				serverIDs = append(serverIDs, server.ID)
+			}
+		}
+
+		if len(serverIDs) > 0 {
+			_, err = TOSession.CreateDeliveryServiceServers(ds.ID, serverIDs, true)
+			if err != nil {
+				t.Errorf("POST delivery service servers: %v", err)
+			}
+		}
+	}
+}
+
+// DeleteTestDeliveryServiceServersCreated deletes the dss assignments created by CreateTestDeliveryServiceServers.
+func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
+	// You gotta do this because TOSession.GetDeliveryServiceServers doesn't fetch the complete response.......
+	dssLen := len(testData.Servers) * len(testData.DeliveryServices)
+	dsServers, _, err := TOSession.GetDeliveryServiceServersN(dssLen)
+	if err != nil {
+		t.Fatalf("GET delivery service servers: %v", err)
+	}
+
+	for _, dss := range dsServers.Response {
+		if dss.DeliveryService == nil {
+			t.Error("Found ds-to-server assignment with nil Delivery Service")
+			continue
+		}
+		if dss.Server == nil {
+			t.Error("Found ds-to-server assignment with nil Server")
+			continue
+		}
+
+		_, _, err := TOSession.DeleteDeliveryServiceServer(*dss.DeliveryService, *dss.Server)
+		if err != nil {
+			t.Errorf("Failed to remove assignment of server #%d to DS #%d: %v", *dss.Server, *dss.DeliveryService, err)
+		}
+	}
+
+	dsServers, _, err = TOSession.GetDeliveryServiceServersN(dssLen)
+	if err != nil {
+		t.Fatalf("GET delivery service servers: %v", err)
+	}
+
+	for _, dss := range dsServers.Response {
+		if dss.DeliveryService == nil {
+			t.Error("Found ds-to-server assignment (after supposed deletion) with nil DeliveryService")
+			continue
+		}
+		if dss.Server == nil {
+			t.Error("Found ds-to-server assignment (after supposed deletion) with nil Server")
+			continue
+		}
+
+		t.Errorf("Found ds-to-server assignment {DSID: %d, Server: %d} after deletion", *dss.DeliveryService, *dss.Server)
 	}
 }
