@@ -13,6 +13,8 @@
 .. limitations under the License.
 ..
 
+.. _dev-traffic-portal:
+
 **************
 Traffic Portal
 **************
@@ -33,6 +35,8 @@ To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly us
 	* `Bower 1.7.9 or above <https://www.npmjs.com/package/bower>`_
 	* `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
 	* Access to a working instance of Traffic Ops
+
+.. _dev-tp-global-npm:
 
 Install Global NPM Packages
 ---------------------------

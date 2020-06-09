@@ -85,7 +85,7 @@ If the ``pkg`` script fails, ``docker-compose`` can still be used to build the p
 
 Build the RPMs Natively
 =======================
-A developer may end up building the RPMs several times to test or :ref:`debug <dev-debugging-ciab>` code changes, so it can be desirable to build the RPMs quickly for this purpose. Natively building the RPMs has the lowest build time of any method.
+A developer may end up building the RPMs several times to test or :ref:`debug <dev-debugging-ciab>` code changes, so it can be desirable to build the RPMs quickly for this purpose. Natively building the RPMs has the lowest build time of any building method.
 
 Install the Dependencies
 ------------------------
@@ -117,7 +117,7 @@ Install the Dependencies
 	|                                    | - rpm-build         |                            |                        | - make                    |                           |                          |          |                              |                          |
 	|                                    | - rsync             |                            |                        | - gcc-g++                 |                           |                          |          |                              |                          |
 	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Windows (chocolatey_)              |                     | - golang                   | - golang               | - nodejs                  | - openjdk8                | - golang                 | - golang | - golang                     | - python                 |
+	| Windows (chocolatey_)\ [6]_        |                     | - golang                   | - golang               | - nodejs                  | - openjdk8                | - golang                 | - golang | - golang                     | - python                 |
 	|                                    |                     |                            |                        |                           | - maven                   |                          |          |                              | - pip                    |
 	|                                    |                     |                            |                        |                           |                           |                          |          |                              | - make                   |
 	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
@@ -141,14 +141,14 @@ Install the Dependencies
 
 After installing the packages using your platform's package manager,
 
-	- Install the :ref:`global NPM packages <dev-tp-global-npm>` and :ref:`Compass <dev-tp-compass>`.. to build Traffic Portal.
+	- Install the :ref:`global NPM packages <dev-tp-global-npm>` and :ref:`Compass <dev-tp-compass>` to build Traffic Portal.
 
 	- Install the Python 3 modules used to :ref:`build the documentation <docs-build>`.
 
 Run ``build/clean_build.sh`` directly
 -------------------------------------
 
-In a terminal, nativate to the root directory of the repository. You can run ``build/clean_build.sh`` with no arguments to build all components.
+In a terminal, navigate to the root directory of the repository. You can run ``build/clean_build.sh`` with no arguments to build all components.
 
 .. code-block:: shell
 	:caption: ``build/clean_build.sh`` with no arguments
@@ -174,4 +174,4 @@ Each Traffic Control component can be individually built, and the instructions f
 
 Building This Documentation
 ---------------------------
-To build the documentation, see :ref:`docs-build`.
+See instructions for :ref:`building the documentation <docs-build>`.
