@@ -80,7 +80,7 @@ under the License.
             <button type="button" ng-click="queueServerUpdates(server, $event)" ng-disabled="!isCache(server) || server.updPending">Queue Server Updates</button>
         </li>
         <li role="menuitem">
-            <button>Clear Server Updates</button>
+            <button type="button" ng-click="clearServerUpdates(server, $event)" ng-disabled="!isCache(server) || !server.updPending">Clear Server Updates</button>
         </li>
         <hr class="divider"/>
         <li role="menuitem">

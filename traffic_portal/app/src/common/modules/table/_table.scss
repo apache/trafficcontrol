@@ -148,6 +148,11 @@ menu[type="contextmenu"] {
                 border: none;
                 width: 100%;
                 text-align: left;
+
+                &[disabled] {
+                    color: gray;
+                    background-color: #f5f5f5;
+                }
             }
         }
 

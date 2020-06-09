@@ -295,13 +295,9 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		serverService.queueServerUpdates(server.id).then($scope.refresh);
 	};
 
-	var clearServerUpdates = function(server) {
-		serverService.clearServerUpdates(server.id)
-			.then(
-				function() {
-					$scope.refresh();
-				}
-			);
+	$scope.clearServerUpdates = function(server, event) {
+		event.stopPropagation();
+		serverService.clearServerUpdates(server.id).then($scope.refresh);
 	};
 
 	var queueCDNServerUpdates = function(cdnId) {
