@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServersController = function(servers, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel) {
+var TableServersController = function(servers, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel, $document) {
 
 	// browserify can't handle classes...
 	function SSHCellRenderer() {}
@@ -395,6 +395,9 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	$scope.columns = [];
 
 	$scope.serverlink = "/#!/servers/";
+	$scope.hostname = "";
+	$scope.domain = "";
+	$scope.serverID = -1;
 
 	$scope.gridOptions = {
 		components: {
@@ -423,7 +426,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			params.event.preventDefault();
 			console.log(params);
 			$scope.showMenu = true;
+			$scope.menuStyle.left = String(params.event.pageX) + "px";
+			$scope.menuStyle.top = String(params.event.pageY) + "px";
 			$scope.serverlink = "/#!/servers/" + String(params.data.id);
+			$scope.hostname = params.data.hostName;
+			$scope.domain = params.data.domainName;
+			$scope.serverID = params.data.id;
 			$scope.$apply();
 		}
 	};
@@ -659,7 +667,13 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		}
 	});
 
+	$document.bind("click", function(e) {
+		$scope.showMenu = false;
+		e.stopPropagation();
+		$scope.$apply();
+	});
+
 };
 
-TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel"];
+TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel", "$document"];
 module.exports = TableServersController;
