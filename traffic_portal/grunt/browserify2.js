@@ -94,7 +94,7 @@ module.exports = {
                         cwd: '<%= globalConfig.app %>/bower_components/',
                         src:
                             [
-                                // 'angular/angular.js',
+                                'angular/angular.js',
                                 'angular-animate/angular-animate.js',
                                 'angular-bootstrap-contextmenu/contextMenu.js',
                                 'angular-bootstrap/ui-bootstrap.js',
@@ -110,11 +110,6 @@ module.exports = {
                                 'jquery/jquery.js',
                                 'json3/lib/json3.js'
                             ]
-                    },
-                    {
-                        cwd: "<%= globalConfig.importdir %>",
-                        src: ["angular/angular.min.js"],
-                        rename: function() {return "angular/angular.js";}
                     },
                     {
                         cwd: '<%= globalConfig.app %>/bower_components/',
