@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheGroups, usedCacheGroupNames, $scope, $uibModal, $uibModalInstance, serverService) {
+var TableSelectTopologyCacheGroupsController = function(parent, topology, selectedType, cacheGroups, usedCacheGroupNames, $scope, $uibModal, $uibModalInstance, serverService) {
 
 	let selectedCacheGroups = [],
 		usedCacheGroupCount = 0;
@@ -59,17 +59,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	$scope.parent = parent;
 
 	$scope.cacheGroups = cacheGroups.filter(function(cg) {
-		// displayed cache groups are filtered based on parent cache group type
-		if (parent.type === 'ROOT') {
-			// the topology root can have children of any kind (EDGE_LOC, MID_LOC, ORG_LOC)
-			return true;
-		} else if (parent.type === 'EDGE_LOC') {
-			// EDGE_LOC can only have EDGE_LOC children
-			return cg.typeName === 'EDGE_LOC';
-		} else {
-			// only EDGE_LOC and MID_LOC can be added farther down the topology tree (not root)
-			return (cg.typeName === 'EDGE_LOC' || cg.typeName === 'MID_LOC');
-		}
+		return cg.typeName === selectedType;
 	});
 
 	$scope.selectAll = function($event) {
@@ -201,5 +191,5 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 
 };
 
-TableSelectTopologyCacheGroupsController.$inject = ['parent', 'topology', 'cacheGroups', 'usedCacheGroupNames', '$scope', '$uibModal', '$uibModalInstance', 'serverService'];
+TableSelectTopologyCacheGroupsController.$inject = ['parent', 'topology', 'selectedType', 'cacheGroups', 'usedCacheGroupNames', '$scope', '$uibModal', '$uibModalInstance', 'serverService'];
 module.exports = TableSelectTopologyCacheGroupsController;

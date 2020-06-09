@@ -215,42 +215,75 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		// cache groups already in the topology cannot be selected again for addition
 		buildCacheGroupNamesInTopology($scope.topologyTree, true);
 
+		// the types of child cache groups you can add depends on the parent cache group's type
+		let eligibleChildrenTypes = [ { name: 'EDGE_LOC' } ];
+		if (parent.type === 'ROOT') {
+			eligibleChildrenTypes.push({ name: 'MID_LOC' });
+			eligibleChildrenTypes.push({ name: 'ORG_LOC' });
+		} else if (parent.type === 'MID_LOC' || parent.type === 'ORG_LOC') {
+			eligibleChildrenTypes.push({ name: 'MID_LOC' });
+		}
+
+		let parentName = (parent.cachegroup) ? parent.cachegroup : 'ROOT';
+		let params = {
+			title: 'Select a child cache group type',
+			message: 'Please select the type of child cache group(s) you would like to add to ' + parentName,
+			key: 'name',
+		};
 		let modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/table/topologyCacheGroups/table.selectTopologyCacheGroups.tpl.html',
-			controller: 'TableSelectTopologyCacheGroupsController',
-			size: 'lg',
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
 			resolve: {
-				parent: function() {
-					return parent;
+				params: function () {
+					return params;
 				},
-				topology: function() {
-					return topology;
-				},
-				cacheGroups: function(cacheGroupService) {
-					return cacheGroupService.getCacheGroups();
-				},
-				usedCacheGroupNames: function() {
-					return cacheGroupNamesInTopology;
+				collection: function() {
+					return eligibleChildrenTypes;
 				}
 			}
 		});
-		modalInstance.result.then(function(result) {
-			let nodeData = scope.$modelValue,
-				cacheGroupNodes = result.selectedCacheGroups.map(function(cg) {
-					return {
-						id: cg.id,
-						cachegroup: cg.name,
-						type: cg.typeName,
-						parent: (result.parent) ? result.parent : '',
-						secParent: result.secParent,
-						children: []
+		modalInstance.result.then(function(type) {
+			modalInstance = $uibModal.open({
+				templateUrl: 'common/modules/table/topologyCacheGroups/table.selectTopologyCacheGroups.tpl.html',
+				controller: 'TableSelectTopologyCacheGroupsController',
+				size: 'lg',
+				resolve: {
+					parent: function() {
+						return parent;
+					},
+					topology: function() {
+						return topology;
+					},
+					selectedType: function() {
+						return type.name;
+					},
+					cacheGroups: function(cacheGroupService) {
+						return cacheGroupService.getCacheGroups();
+					},
+					usedCacheGroupNames: function() {
+						return cacheGroupNamesInTopology;
 					}
-				});
-			cacheGroupNodes.forEach(function(node) {
-				nodeData.children.unshift(node);
+				}
 			});
-			// marks the form as dirty thus enabling the save btn
-			$scope.topologyForm.dirty.$setDirty();
+			modalInstance.result.then(function(result) {
+				let nodeData = scope.$modelValue,
+					cacheGroupNodes = result.selectedCacheGroups.map(function(cg) {
+						return {
+							id: cg.id,
+							cachegroup: cg.name,
+							type: cg.typeName,
+							parent: (result.parent) ? result.parent : '',
+							secParent: result.secParent,
+							children: []
+						}
+					});
+				cacheGroupNodes.forEach(function(node) {
+					nodeData.children.unshift(node);
+				});
+				// marks the form as dirty thus enabling the save btn
+				$scope.topologyForm.dirty.$setDirty();
+			});
 		});
 	};
 
