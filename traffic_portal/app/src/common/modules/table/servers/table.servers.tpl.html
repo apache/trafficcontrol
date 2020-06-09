@@ -53,5 +53,10 @@ under the License.
     </div>
     <div class="x_content">
         <div style="height: 500px;" ag-grid="gridOptions" class="ag-theme-alpine"></div>
+        <menu ng-style="menuStyle" type="contextmenu" ng-show="showMenu">
+            <ul>
+                <li role="menuitem"><a ng-href="{{serverlink}}" target="_blank">Open in New Tab</a></li>
+            </ul>
+        </menu>
     </div>
 </div>

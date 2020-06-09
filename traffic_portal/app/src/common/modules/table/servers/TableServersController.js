@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 var TableServersController = function(servers, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel) {
 
 	// browserify can't handle classes...
@@ -391,13 +390,11 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			);
 	};
 
-	console.time("server map");
 	$scope.servers = servers.map(function(x){x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;});
-	console.timeEnd("server map");
 
 	$scope.columns = [];
 
-	let menu = false;
+	$scope.serverlink = "/#!/servers/";
 
 	$scope.gridOptions = {
 		components: {
@@ -421,7 +418,14 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		tooltipShowDelay: 500,
 		getContextMenuItems: getContextMenu,
 		allowContextMenuWithControlKey: true,
-		preventDefaultContextMenu: true
+		preventDefaultOnContextMenu: true,
+		onCellContextMenu: function(params) {
+			params.event.preventDefault();
+			console.log(params);
+			$scope.showMenu = true;
+			$scope.serverlink = "/#!/servers/" + String(params.data.id);
+			$scope.$apply();
+		}
 	};
 
 	function getContextMenu(params) {
@@ -501,6 +505,13 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			}
 		];
 	}
+
+	$scope.menuStyle = {
+		left: 0,
+		top: 0,
+	};
+
+	$scope.showMenu = false;
 
 	$scope.createServer = function() {
 		locationUtils.navigateToPath('/servers/new');
