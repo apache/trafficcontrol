@@ -31,8 +31,8 @@ func TestValidateDSSAssignments(t *testing.T) {
 		ID:    0,
 		CDNID: &cdnID,
 	}
-	var servers []dbhelpers.ServerHostNameCdnIdAndType
-	server := dbhelpers.ServerHostNameCdnIdAndType{
+	var servers []dbhelpers.ServerHostNameCDNIDAndType
+	server := dbhelpers.ServerHostNameCDNIDAndType{
 		HostName: "serverHost",
 		CDNID:    0,
 		Type:     "",

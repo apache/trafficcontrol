@@ -444,7 +444,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ValidateDSSAssignments returns an error if the given servers cannot be assigned to the given delivery service.
-func ValidateDSSAssignments(ds DSInfo, servers []dbhelpers.ServerHostNameCdnIdAndType) error {
+func ValidateDSSAssignments(ds DSInfo, servers []dbhelpers.ServerHostNameCDNIDAndType) error {
 	if ds.Topology == nil {
 		for _, s := range servers {
 			if ds.CDNID != nil && s.CDNID != *ds.CDNID {
@@ -462,7 +462,7 @@ func ValidateDSSAssignments(ds DSInfo, servers []dbhelpers.ServerHostNameCdnIdAn
 }
 
 // ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
-func ValidateServerCapabilities(dsID int, serverNamesAndTypes []dbhelpers.ServerHostNameCdnIdAndType, tx *sql.Tx) (error, error, int) {
+func ValidateServerCapabilities(dsID int, serverNamesAndTypes []dbhelpers.ServerHostNameCDNIDAndType, tx *sql.Tx) (error, error, int) {
 	nonOriginServerNames := []string{}
 	for _, s := range serverNamesAndTypes {
 		if strings.HasPrefix(s.Type, tc.EdgeTypePrefix) {

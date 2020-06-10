@@ -598,14 +598,14 @@ func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
 	return name, true, nil
 }
 
-type ServerHostNameCdnIdAndType struct {
+type ServerHostNameCDNIDAndType struct {
 	HostName string
 	CDNID    int
 	Type     string
 }
 
 // GetServerHostNamesAndTypesFromIDs returns the server's hostname, cdn ID and associated type name
-func GetServerHostNamesAndTypesFromIDs(tx *sql.Tx, ids []int) ([]ServerHostNameCdnIdAndType, error) {
+func GetServerHostNamesAndTypesFromIDs(tx *sql.Tx, ids []int) ([]ServerHostNameCDNIDAndType, error) {
 	qry := `
 SELECT
   s.host_name,
@@ -622,9 +622,9 @@ WHERE
 	}
 	defer log.Close(rows, "error closing rows")
 
-	servers := []ServerHostNameCdnIdAndType{}
+	servers := []ServerHostNameCDNIDAndType{}
 	for rows.Next() {
-		s := ServerHostNameCdnIdAndType{}
+		s := ServerHostNameCDNIDAndType{}
 		if err := rows.Scan(&s.HostName, &s.CDNID, &s.Type); err != nil {
 			return nil, errors.New("scanning server host name and type: " + err.Error())
 		}
@@ -634,7 +634,7 @@ WHERE
 }
 
 // GetServerTypesCdnIdFromHostNames returns the host names, server cdn and types of the given server host names or an error if any occur.
-func GetServerTypesCdnIdFromHostNames(tx *sql.Tx, hostNames []string) ([]ServerHostNameCdnIdAndType, error) {
+func GetServerTypesCdnIdFromHostNames(tx *sql.Tx, hostNames []string) ([]ServerHostNameCDNIDAndType, error) {
 	qry := `
 SELECT
   s.host_name,
@@ -651,9 +651,9 @@ WHERE
 	}
 	defer log.Close(rows, "error closing rows")
 
-	servers := []ServerHostNameCdnIdAndType{}
+	servers := []ServerHostNameCDNIDAndType{}
 	for rows.Next() {
-		s := ServerHostNameCdnIdAndType{}
+		s := ServerHostNameCDNIDAndType{}
 		if err := rows.Scan(&s.HostName, &s.CDNID, &s.Type); err != nil {
 			return nil, errors.New("scanning server host name and type: " + err.Error())
 		}
