@@ -237,6 +237,8 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 			server.Server.Ip6 = new(string)
 		}
 
+		server.Server.InterfaceName = legacyNet.InterfaceName
+
 		hostToServerMap[server.Host] = server.Server
 	}
 
