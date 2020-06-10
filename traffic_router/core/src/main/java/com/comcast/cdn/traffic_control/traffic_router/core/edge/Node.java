@@ -46,10 +46,8 @@ public class Node extends DefaultHashable {
 	private List<InetRecord> ipAddresses;
 	private List<InetRecord> unavailableIpAddresses;
 	private int port;
-	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
+	private final Map<String, Cache.DeliveryServiceReference> deliveryServices = new HashMap<>();
 	private final Set<String> capabilities = new HashSet<>();
-	private final Geolocation geolocation;
-	private final Hashable hashable = new DefaultHashable();
 	private int httpsPort = 443;
 
 	public Node(final String id) {
@@ -136,8 +134,8 @@ public class Node extends DefaultHashable {
 		return this.capabilities;
 	}
 
-	public void setDeliveryServices(final Collection<DeliveryServiceReference> deliveryServices) {
-		for (final DeliveryServiceReference deliveryServiceReference : deliveryServices) {
+	public void setDeliveryServices(final Collection<Cache.DeliveryServiceReference> deliveryServices) {
+		for (final Cache.DeliveryServiceReference deliveryServiceReference : deliveryServices) {
 			this.deliveryServices.put(deliveryServiceReference.getDeliveryServiceId(), deliveryServiceReference);
 		}
 	}
