@@ -143,7 +143,7 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 	defer rows.Close()
 
 	servers := map[int]ServerAndHost{}
-
+	ids := []int{}
 	for rows.Next() {
 		var port sql.NullInt64
 		var hashId sql.NullString
@@ -156,6 +156,8 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 		if err := rows.Scan(&id, &s.Host, &s.Server.CacheGroup, &s.Server.Fqdn, &hashId, &httpsPort, &port, &s.Server.Profile, &s.Server.RoutingDisabled, &status, &s.Server.ServerType); err != nil {
 			return nil, errors.New("Error scanning server: " + err.Error())
 		}
+
+		ids = append(ids, id)
 
 		s.Server.LocationId = s.Server.CacheGroup
 
@@ -203,11 +205,21 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 		return nil, errors.New("Error iterating router param rows: " + err.Error())
 	}
 
+	interfaces, err := dbhelpers.GetServersInterfaces(ids, tx)
+	if err != nil {
+		return nil, fmt.Errorf("getting interfaces for servers: %v", err)
+	}
+
 	hostToServerMap := make(map[string]ServerUnion, len(servers))
 	for id, server := range servers {
-		infs, err := dbhelpers.GetServerInterfaces(id, tx)
-		if err != nil {
-			return nil, fmt.Errorf("Error getting interfaces for serve '%s' (#%d): %v", server.Host, id, err)
+		ifaces, ok := interfaces[id]
+		if !ok {
+			return nil, fmt.Errorf("server '%s' (#%d) has no interfaces", server.Host, id)
+		}
+
+		infs := make([]tc.ServerInterfaceInfo, 0, len(ifaces))
+		for _, inf := range ifaces {
+			infs = append(infs, inf)
 		}
 
 		legacyNet, err := tc.InterfaceInfoToLegacyInterfaces(infs)

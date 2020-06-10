@@ -612,12 +612,21 @@ func GetServerInfo(tx *sql.Tx, qry string, qryParams []interface{}) (*atscfg.Ser
 		return nil, false, errors.New("querying server info: " + err.Error())
 	}
 
-	infs, err := dbhelpers.GetServerInterfaces(s.ID, tx)
+	infs, err := dbhelpers.GetServersInterfaces([]int{s.ID}, tx)
 	if err != nil {
 		return nil, false, fmt.Errorf("querying server info interfaces: %v", err)
 	}
 
-	legacyInfo, err := tc.InterfaceInfoToLegacyInterfaces(infs)
+	interfaces, ok := infs[s.ID]
+	if !ok || len(interfaces) < 1 {
+		return nil, false, fmt.Errorf("server #%d has no interfaces", s.ID)
+	}
+
+	ifaces := make([]tc.ServerInterfaceInfo, 0, len(interfaces))
+	for _, inf := range interfaces {
+		ifaces = append(ifaces, inf)
+	}
+	legacyInfo, err := tc.InterfaceInfoToLegacyInterfaces(ifaces)
 	if err != nil {
 		return nil, false, fmt.Errorf("converting server info interfaces to legacy: %v", err)
 	}

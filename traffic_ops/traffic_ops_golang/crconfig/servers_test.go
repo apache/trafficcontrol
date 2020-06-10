@@ -171,11 +171,13 @@ func ExpectedGetAllServers(params map[string]ServerParams, ipIsService bool, ip6
 }
 
 func MockGetAllServers(mock sqlmock.Sqlmock, expected map[string]ServerUnion, cdn string, ipIsService bool, ip6IsService bool) {
-	rows := sqlmock.NewRows([]string{"host_name", "cachegroup", "fqdn", "hashid", "https_port", "interface_name", "ip_address_is_service", "ip6_address_is_service", "ip_address", "ip6_address", "tcp_port", "profile_name", "routing_disabled", "status", "type"})
+	serverRows := sqlmock.NewRows([]string{"host_name", "cachegroup", "fqdn", "hashid", "https_port", "interface_name", "ip_address_is_service", "ip6_address_is_service", "ip_address", "ip6_address", "tcp_port", "profile_name", "routing_disabled", "status", "type"})
 	for name, s := range expected {
-		rows = rows.AddRow(name, *s.CacheGroup, *s.Fqdn, *s.HashId, *s.HttpsPort, *s.InterfaceName, ipIsService, ip6IsService, *s.Ip, *s.Ip6, *s.Port, *s.Profile, s.RoutingDisabled, *s.ServerStatus, *s.ServerType)
+		serverRows = serverRows.AddRow(name, *s.CacheGroup, *s.Fqdn, *s.HashId, *s.HttpsPort, *s.InterfaceName, ipIsService, ip6IsService, *s.Ip, *s.Ip6, *s.Port, *s.Profile, s.RoutingDisabled, *s.ServerStatus, *s.ServerType)
+
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT")
 }
 
 func TestGetAllServers(t *testing.T) {
