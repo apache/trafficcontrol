@@ -25,11 +25,6 @@ module.exports = {
             expose: {
                 files: [
                     {
-                        cwd: "<%= globalConfig.importdir %>",
-                        src: ["ag-grid-community/dist/ag-grid-community.min.js"],
-                        rename: function () { return "ag-grid-community-min.js"; }
-                    },
-                    {
                         cwd: '<%= globalConfig.app %>/bower_components/',
                         src:
                             [
