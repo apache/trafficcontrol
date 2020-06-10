@@ -437,11 +437,11 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing HttpsPort field\n", name)
 		}
-		//if len(srv.Interfaces) < 1 {
-		//	log.Warnf("Creating monitor config: CRConfig server %s missing Interfaces", name)
-		//} else {
-		//	s.Interfaces = srv.Interfaces
-		//}
+		if len(srv.Interfaces) < 1 {
+			log.Warnf("Creating monitor config: CRConfig server %s missing Interfaces", name)
+		} else {
+			s.Interfaces = srv.Interfaces
+		}
 		mc.TrafficServer[name] = s
 	}
 
