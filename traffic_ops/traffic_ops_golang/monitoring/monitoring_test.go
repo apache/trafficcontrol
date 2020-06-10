@@ -54,10 +54,10 @@ func createMockMonitor() Monitor {
 
 func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router Router, cache Cache, cacheID uint64, cdn string) {
 
-	serverRows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "ip", "ip6", "profile", "type", "hashId", "serverID"})
-	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, MonitorType, "noHash", 2)
-	serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.IP, cache.IP6, cache.Profile, cache.Type, cache.HashID, cacheID)
-	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, "noIp", "noIp6", router.Profile, RouterType, "noHashid", 3)
+	serverRows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "ip", "ip6", "profile", "type", "hashId"})
+	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, MonitorType, "noHash")
+	serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.IP, cache.IP6, cache.Profile, cache.Type, cache.HashID)
+	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, "noIp", "noIp6", router.Profile, RouterType, "noHashid")
 
 	interfaceRows := sqlmock.NewRows([]string{"name", "max_bandwidth", "mtu", "monitor", "server"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "server", "interface"})
