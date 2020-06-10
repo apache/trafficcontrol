@@ -323,8 +323,8 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		rowData: servers,
 		pagination: true,
 		rowBuffer: 0,
-		onGridReady: function(params) {
-			params.api.sizeColumnsToFit();
+		onColumnResized: function(params) {
+			localStorage.setItem("servers_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
 		},
 		menuTabs: 'columnsMenuTab',
 		tooltipShowDelay: 500,
@@ -369,13 +369,6 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	$scope.toggleVisibility = function(col) {
 		const visible = $scope.gridOptions.columnApi.getColumn(col).isVisible();
 		$scope.gridOptions.columnApi.setColumnVisible(col, !visible);
-		try {
-			colStates = $scope.gridOptions.columnApi.getColumnState();
-			localStorage.setItem("servers_table_columns", JSON.stringify(colStates));
-		} catch (e) {
-			console.error("Failed to store column defs to local storage:", e);
-		}
-		$scope.gridOptions.api.sizeColumnsToFit();
 	};
 
 	/** Downloads the table as a CSV */
@@ -591,8 +584,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		try {
 			// need to create the show/hide column checkboxes and bind to the current visibility
 			const colstates = JSON.parse(localStorage.getItem("servers_table_columns"));
-			if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
-				console.error("Failed to load stored column state: one or more columns not found");
+			if (colstates) {
+				if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
+					console.error("Failed to load stored column state: one or more columns not found");
+				}
+			} else {
+				$scope.gridOptions.api.sizeColumnsToFit();
 			}
 		} catch (e) {
 			console.error("Failure to retrieve required column info from localStorage (key=servers_table_columns):", e);
@@ -620,12 +617,18 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			localStorage.setItem("servers_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
 		});
 
-		$scope.gridOptions.api.addEventListener("columnResized", function() {
+		$scope.gridOptions.api.addEventListener("columnMoved", function() {
 			localStorage.setItem("servers_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
 		});
 
-		$scope.gridOptions.api.addEventListener("columnMoved", function() {
-			localStorage.setItem("servers_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+		$scope.gridOptions.api.addEventListener("columnVisible", function() {
+			$scope.gridOptions.api.sizeColumnsToFit();
+			try {
+				colStates = $scope.gridOptions.columnApi.getColumnState();
+				localStorage.setItem("servers_table_columns", JSON.stringify(colStates));
+			} catch (e) {
+				console.error("Failed to store column defs to local storage:", e);
+			}
 		});
 
 		// clicks outside the context menu will hide it
