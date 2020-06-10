@@ -128,17 +128,6 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
         )
     };
 
-    this.getServerConfigFile = function(url) {
-        return $http.get(url).then(
-            function(result) {
-                return result.data;
-            },
-            function(err) {
-                throw err;
-            }
-        );
-    };
-
     this.getEligibleDeliveryServiceServers = function(dsId) {
         return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/servers/eligible').then(
             function (result) {
