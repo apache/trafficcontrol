@@ -150,7 +150,7 @@ type LegacyTrafficServer struct {
 	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
 }
 
-// GetDefaultAddress returns the ipv4 and ipv6 service address' of the interface
+// GetDefaultAddress returns the ipv4 and ipv6 service addresses of the interface
 func (i *InterfaceInfo) GetDefaultAddress() (string, string) {
 	var ipv4 string
 	var ipv6 string
