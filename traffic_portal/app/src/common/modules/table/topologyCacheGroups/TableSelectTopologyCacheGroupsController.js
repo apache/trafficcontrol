@@ -31,10 +31,8 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 			if (cg['used'] === true) {
 				return cg;
 			}
-			if (selected && visibleCacheGroupIds.includes(cg.id)) {
-				cg['selected'] = true;
-			} else {
-				cg['selected'] = false;
+			if (visibleCacheGroupIds.includes(cg.id)) {
+				cg['selected'] = selected;
 			}
 			return cg;
 		});
@@ -54,12 +52,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	};
 
 	let updateSelectedCount = function() {
-		let visibleCacheGroupIds = $('#availableCacheGroupsTable tr.cg-row').map(
-			function() {
-				return parseInt($(this).attr('id'));
-			}).get();
-
-		selectedCacheGroups = $scope.cacheGroups.filter(function(cg) { return visibleCacheGroupIds.includes(cg.id) && cg['selected'] === true && !cg['used'] } );
+		selectedCacheGroups = $scope.cacheGroups.filter(function(cg) { return cg['selected'] === true && !cg['used'] } );
 		$('div.selected-count').html('<strong><span class="text-success">' + selectedCacheGroups.length + ' selected</span><span> | ' + usedCacheGroupCount + ' already used in topology</span></strong>');
 	};
 
@@ -174,7 +167,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 	angular.element(document).ready(function () {
 		decorateCacheGroups();
 
-		$('#availableCacheGroupsTable').DataTable({
+		let availableCacheGroupsTable = $('#availableCacheGroupsTable').DataTable({
 			"scrollY": "60vh",
 			"paging": false,
 			"order": [[ 1, 'asc' ]],
@@ -190,6 +183,9 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, cacheG
 			],
 			"stateSave": false
 		});
+		availableCacheGroupsTable.on( 'search.dt', function () {
+			$("#selectAllCB").removeAttr("checked"); // uncheck the all box when filtering
+		} );
 	});
 
 };

@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Gets all associations of :term:`Server Capabilities` to :term:`Cache Servers`.
+Gets all associations of :term:`Server Capabilities` to :term:`cache servers`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -113,7 +113,7 @@ Request Structure
 :serverId:         The integral, unique identifier of a server to be associated with a :term:`Server Capability`
 :serverCapability: The :term:`Server Capability`'s name to associate
 
-.. note:: The server referenced must be either an :term:`Edge-tier` or :term:`Mid-tier Cache Server`.
+.. note:: The server referenced must be either an :term:`Edge-tier` or :term:`Mid-tier cache server`.
 
 .. code-block:: http
 	:caption: Request Example

@@ -55,7 +55,7 @@ func GetHostingDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	multiParams, err := GetServerParams(inf.Tx.Tx, serverName, atscfg.HostingConfigParamConfigFile)
+	multiParams, err := ats.GetServerParams(inf.Tx.Tx, serverName, atscfg.HostingConfigParamConfigFile)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server '"+string(serverName)+"' + hosting parameters: "+err.Error()))
 		return

@@ -23,7 +23,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation.LocalizationMethod;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +42,7 @@ import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import org.powermock.reflect.Whitebox;
 
@@ -160,7 +160,7 @@ public class ConfigHandlerTest {
 
         CacheRegister register = PowerMockito.mock(CacheRegister.class);
 
-        when(register.getDeliveryService(any(HTTPRequest.class), anyBoolean())).thenReturn(null);
+        when(register.getDeliveryService(any(HTTPRequest.class))).thenReturn(null);
 
         Whitebox.invokeMethod(handler, "initGeoFailedRedirect", dsMap, register);
         assertThat(urlType[0], equalTo("NOT_DS_URL"));
@@ -202,7 +202,7 @@ public class ConfigHandlerTest {
         when(ds.getId()).thenReturn(anotherId);
         CacheRegister register = PowerMockito.mock(CacheRegister.class);
 
-        when(register.getDeliveryService(any(HTTPRequest.class), anyBoolean())).thenReturn(anotherDs);
+        when(register.getDeliveryService(any(HTTPRequest.class))).thenReturn(anotherDs);
 
         Whitebox.invokeMethod(handler, "initGeoFailedRedirect", dsMap, register);
         assertThat(urlType[0], equalTo("NOT_DS_URL"));
@@ -241,7 +241,7 @@ public class ConfigHandlerTest {
 
         CacheRegister register = PowerMockito.mock(CacheRegister.class);
 
-        when(register.getDeliveryService(any(HTTPRequest.class), anyBoolean())).thenReturn(ds);
+        when(register.getDeliveryService(any(HTTPRequest.class))).thenReturn(ds);
 
         Whitebox.invokeMethod(handler, "initGeoFailedRedirect", dsMap, register);
         assertThat(urlType[0], equalTo("DS_URL"));

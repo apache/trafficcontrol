@@ -3,6 +3,7 @@ package tc
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -29,7 +30,17 @@ import (
  * under the License.
  */
 
-// ServersResponse is a list of Servers as a response.
+// ServersV3Response is the format of a response to a GET request for /servers.
+type ServersV3Response struct {
+	Response []ServerNullable `json:"response"`
+	Summary  struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
+	Alerts
+}
+
+// ServersResponse is a list of Servers as a response to an API v2 request.
+// This can't change because it will break ORT. Unfortunately.
 type ServersResponse struct {
 	Response []Server `json:"response"`
 	Alerts
@@ -70,23 +81,23 @@ type ServersV3DetailResponse struct {
 	Alerts
 }
 
-// ServerIpAddress is the data associated with a server's interface's IP address.
-type ServerIpAddress struct {
+// ServerIPAddress is the data associated with a server's interface's IP address.
+type ServerIPAddress struct {
 	Address        string  `json:"address" db:"address"`
 	Gateway        *string `json:"gateway" db:"gateway"`
-	ServiceAddress bool    `json:"service_address" db:"service_address"`
+	ServiceAddress bool    `json:"serviceAddress" db:"service_address"`
 }
 
 // ServerInterfaceInfo is the data associated with a server's interface.
 type ServerInterfaceInfo struct {
-	IpAddresses  []ServerIpAddress `json:"ipAddresses" db:"ipAddresses"`
-	MaxBandwidth *int64            `json:"maxBandwidth" db:"max_bandwidth"`
+	IPAddresses  []ServerIPAddress `json:"ipAddresses" db:"ip_addresses"`
+	MaxBandwidth *uint64           `json:"maxBandwidth" db:"max_bandwidth"`
 	Monitor      bool              `json:"monitor" db:"monitor"`
 	MTU          *uint64           `json:"mtu" db:"mtu"`
 	Name         string            `json:"name" db:"name"`
 }
 
-// Value implements the database/sql/driver.Valuer interface.
+// Value implements the driver.Valuer interface
 // marshals struct to json to pass back as a json.RawMessage
 func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
 	b, err := json.Marshal(sii)
@@ -115,6 +126,61 @@ type LegacyInterfaceDetails struct {
 	IPNetmask     *string `json:"ipNetmask" db:"ip_netmask"`
 }
 
+// ToInterfaces converts a LegacyInterfaceDetails to a slice of
+// ServerInterfaceInfo structures. No interfaces will be marked for monitoring,
+// and it will generate service addresses according to the passed indicators
+// for each address family.
+func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService bool) ([]ServerInterfaceInfo, error) {
+	var iface ServerInterfaceInfo
+	if lid.InterfaceMtu == nil {
+		return nil, errors.New("interfaceMtu is null")
+	}
+	mtu := uint64(*lid.InterfaceMtu)
+	iface.MTU = &mtu
+
+	if lid.InterfaceName == nil {
+		return nil, errors.New("interfaceName is null")
+	}
+	iface.Name = *lid.InterfaceName
+
+	var ips []ServerIPAddress
+	if lid.IPAddress != nil && *lid.IPAddress != "" {
+		if lid.IPGateway != nil && *lid.IPGateway == "" {
+			lid.IPGateway = nil
+		}
+
+		ipStr := *lid.IPAddress
+		if lid.IPNetmask != nil && *lid.IPNetmask != "" {
+			mask := net.ParseIP(*lid.IPNetmask).To4()
+			if mask == nil {
+				return nil, fmt.Errorf("Failed to parse netmask '%s'", *lid.IPNetmask)
+			}
+			cidr, _ := net.IPv4Mask(mask[0], mask[1], mask[2], mask[3]).Size()
+			ipStr = fmt.Sprintf("%s/%d", ipStr, cidr)
+		}
+
+		ips = append(ips, ServerIPAddress{
+			Address:        ipStr,
+			Gateway:        lid.IPGateway,
+			ServiceAddress: ipv4IsService,
+		})
+	}
+
+	if lid.IP6Address != nil && *lid.IP6Address != "" {
+		if lid.IP6Gateway != nil && *lid.IP6Gateway == "" {
+			lid.IP6Gateway = nil
+		}
+		ips = append(ips, ServerIPAddress{
+			Address:        *lid.IP6Address,
+			Gateway:        lid.IP6Gateway,
+			ServiceAddress: ipv6IsService,
+		})
+	}
+
+	iface.IPAddresses = ips
+	return []ServerInterfaceInfo{iface}, nil
+}
+
 // InterfaceInfoToLegacyInterfaces converts a ServerInterfaceInfo to an
 // equivalent LegacyInterfaceDetails structure. It does this by creating the
 // IP address fields using the "service" interface's IP addresses. All others
@@ -123,13 +189,8 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 	var legacyDetails LegacyInterfaceDetails
 
 	for _, intFace := range serverInterfaces {
-		if intFace.MTU != nil {
-			legacyDetails.InterfaceMtu = util.IntPtr(int(*intFace.MTU))
-		}
 
-		legacyDetails.InterfaceName = &intFace.Name
-
-		for _, addr := range intFace.IpAddresses {
+		for _, addr := range intFace.IPAddresses {
 			if !addr.ServiceAddress {
 				continue
 			}
@@ -137,18 +198,40 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 			address := addr.Address
 			gateway := addr.Gateway
 
-			parsedIp, mask, err := net.ParseCIDR(address)
+			var parsedIp net.IP
+			var mask *net.IPNet
+			var err error
+			parsedIp, mask, err = net.ParseCIDR(address)
 			if err != nil {
-				return legacyDetails, fmt.Errorf("Failed to parse '%s' as network or CIDR string: %v", address, err)
+				parsedIp = net.ParseIP(address)
+				if parsedIp == nil {
+					return legacyDetails, fmt.Errorf("Failed to parse '%s' as network or CIDR string: %v", address, err)
+				}
 			}
 
 			if parsedIp.To4() == nil {
 				legacyDetails.IP6Address = &address
 				legacyDetails.IP6Gateway = gateway
-			} else {
+			} else if mask != nil {
 				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
 				legacyDetails.IPGateway = gateway
 				legacyDetails.IPNetmask = util.StrPtr(fmt.Sprintf("%d.%d.%d.%d", mask.Mask[0], mask.Mask[1], mask.Mask[2], mask.Mask[3]))
+			} else {
+				legacyDetails.IPAddress = util.StrPtr(parsedIp.String())
+				legacyDetails.IPGateway = gateway
+				legacyDetails.IPNetmask = new(string)
+			}
+
+			if intFace.MTU != nil {
+				legacyDetails.InterfaceMtu = util.IntPtr(int(*intFace.MTU))
+			}
+
+			legacyDetails.InterfaceName = &intFace.Name
+
+			// we can jump out here since servers can only legally have one
+			// IPv4 and one IPv6 service address
+			if legacyDetails.IPAddress != nil && *legacyDetails.IPAddress != "" && legacyDetails.IP6Address != nil && *legacyDetails.IP6Address != "" {
+				return legacyDetails, nil
 			}
 		}
 	}
@@ -256,7 +339,9 @@ type ServerV1 struct {
 	XMPPPasswd       string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-type ServerNullableV11 struct {
+// CommonServerProperties is just the collection of properties which are
+// shared by all servers across API versions.
+type CommonServerProperties struct {
 	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
@@ -274,13 +359,6 @@ type ServerNullableV11 struct {
 	ILOIPNetmask     *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
 	ILOPassword      *string              `json:"iloPassword" db:"ilo_password"`
 	ILOUsername      *string              `json:"iloUsername" db:"ilo_username"`
-	InterfaceMtu     *int                 `json:"interfaceMtu" db:"interface_mtu"`
-	InterfaceName    *string              `json:"interfaceName" db:"interface_name"`
-	IP6Address       *string              `json:"ip6Address" db:"ip6_address"`
-	IP6Gateway       *string              `json:"ip6Gateway" db:"ip6_gateway"`
-	IPAddress        *string              `json:"ipAddress" db:"ip_address"`
-	IPGateway        *string              `json:"ipGateway" db:"ip_gateway"`
-	IPNetmask        *string              `json:"ipNetmask" db:"ip_netmask"`
 	LastUpdated      *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
 	MgmtIPAddress    *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
 	MgmtIPGateway    *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
@@ -305,10 +383,46 @@ type ServerNullableV11 struct {
 	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-type ServerNullable struct {
+// ServerNullableV11 is a server as it appeared in API version 1.1.
+type ServerNullableV11 struct {
+	LegacyInterfaceDetails
+	CommonServerProperties
+}
+
+// ServerNullableV2 is a server as it appeared in API v2.
+type ServerNullableV2 struct {
 	ServerNullableV11
 	IPIsService  *bool `json:"ipIsService" db:"ip_address_is_service"`
 	IP6IsService *bool `json:"ip6IsService" db:"ip6_address_is_service"`
+}
+
+// ServerNullable represents an ATC server, as returned by the TO API.
+type ServerNullable struct {
+	CommonServerProperties
+	Interfaces []ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
+}
+
+// ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
+// if possible. If the conversion could not be performed, an error is returned.
+func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
+	legacyServer := ServerNullableV2{
+		ServerNullableV11: ServerNullableV11{
+			CommonServerProperties: s.CommonServerProperties,
+		},
+		IPIsService:  new(bool),
+		IP6IsService: new(bool),
+	}
+
+	var err error
+	legacyServer.LegacyInterfaceDetails, err = InterfaceInfoToLegacyInterfaces(s.Interfaces)
+	if err != nil {
+		return legacyServer, err
+	}
+
+	*legacyServer.IPIsService = legacyServer.LegacyInterfaceDetails.IPAddress != nil && *legacyServer.LegacyInterfaceDetails.IPAddress != ""
+	*legacyServer.IP6IsService = legacyServer.LegacyInterfaceDetails.IP6Address != nil && *legacyServer.LegacyInterfaceDetails.IP6Address != ""
+
+	return legacyServer, nil
 }
 
 type ServerUpdateStatus struct {

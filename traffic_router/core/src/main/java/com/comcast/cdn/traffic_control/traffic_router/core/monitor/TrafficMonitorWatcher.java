@@ -297,7 +297,7 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 				String hostList = System.getenv("TRAFFIC_MONITOR_HOSTS");
 
 				if (hostList != null && !hostList.isEmpty()) {
-					LOGGER.warn("hostlist initialized to '" + hostList + "' from env var 'TRAFFIC_MONITOR_HOSTS");
+					LOGGER.warn("hostlist initialized to '" + hostList + "' from env var 'TRAFFIC_MONITOR_HOSTS'");
 				}
 
 				if (hostList == null || hostList.isEmpty()) {

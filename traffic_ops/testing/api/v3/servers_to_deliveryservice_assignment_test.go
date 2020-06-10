@@ -16,6 +16,7 @@ package v3
 
 import (
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -30,13 +31,28 @@ func TestAssignments(t *testing.T) {
 }
 
 func AssignTestDeliveryService(t *testing.T) {
-	rs, _, err := TOSession.GetServerByHostName(testData.Servers[0].HostName)
+	if len(testData.Servers) < 1 {
+		t.Fatal("Need at least one test server to test delivery service assignment")
+	}
+
+	server := testData.Servers[0]
+	if server.HostName == nil {
+		t.Fatalf("First server had nil hostname: %+v", server)
+	}
+
+	params := url.Values{}
+	params.Add("hostName", *server.HostName)
+
+	rs, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
-	} else if len(rs) == 0 {
+	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
-	firstServer := rs[0]
+	firstServer := rs.Response[0]
+	if firstServer.ID == nil {
+		t.Fatalf("Server '%s' had nil ID", *server.HostName)
+	}
 
 	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*testData.DeliveryServices[0].XMLID)
 	if err != nil {
@@ -49,13 +65,13 @@ func AssignTestDeliveryService(t *testing.T) {
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(firstServer.ID, []int{*firstDS.ID}, true)
+	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*firstServer.ID, []int{*firstDS.ID}, true)
 	if err != nil {
 		t.Errorf("Couldn't assign DS '%+v' to server '%+v': %v (alerts: %v)", firstDS, firstServer, err, alerts)
 	}
 	t.Logf("alerts: %+v", alerts)
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(firstServer.ID)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*firstServer.ID)
 	t.Logf("response: %+v", response)
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", firstServer, err)
@@ -75,24 +91,33 @@ func AssignTestDeliveryService(t *testing.T) {
 }
 
 func AssignIncorrectTestDeliveryService(t *testing.T) {
-	var server *tc.Server
+	var server *tc.ServerNullable
 	for _, s := range testData.Servers {
-		if s.CDNName == "cdn2" {
+		if s.CDNName != nil && *s.CDNName == "cdn2" {
 			server = &s
 			break
 		}
 	}
 	if server == nil {
-		t.Fatalf("Couldn't find a server in CDN 'cdn2'!")
+		t.Fatal("Couldn't find a server in CDN 'cdn2'!")
 	}
+	if server.HostName == nil {
+		t.Fatalf("Server found with nil hostname: %+v", *server)
+	}
+	hostname := *server.HostName
 
-	rs, _, err := TOSession.GetServerByHostName(server.HostName)
+	params := url.Values{}
+	params.Add("hostName", hostname)
+	rs, _, err := TOSession.GetServers(&params)
 	if err != nil {
-		t.Fatalf("Failed to fetch server information: %v", err)
-	} else if len(rs) == 0 {
+		t.Fatalf("Failed to fetch server information: %v - %v", err, rs.Alerts)
+	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
-	server = &rs[0]
+	server = &rs.Response[0]
+	if server.ID == nil {
+		t.Fatalf("Server '%s' has nil ID", hostname)
+	}
 
 	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*testData.DeliveryServices[0].XMLID)
 	if err != nil {
@@ -105,12 +130,12 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(server.ID, []int{*firstDS.ID}, false)
+	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false)
 	if err == nil {
 		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
 	}
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(server.ID)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID)
 	t.Logf("response: %+v", response)
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *server, err)
@@ -131,24 +156,29 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 }
 
 func AssignTopologyBasedDeliveryService(t *testing.T) {
-	var server *tc.Server
+	var server *tc.ServerNullable
 	for _, s := range testData.Servers {
-		if s.CDNName == "cdn1" && s.Type == string(tc.CacheTypeEdge) {
+		if s.CDNName != nil && *s.CDNName == "cdn1" && s.Type == string(tc.CacheTypeEdge) {
 			server = &s
 			break
 		}
 	}
-	if server == nil {
+	if server == nil || server.HostName == nil {
 		t.Fatalf("Couldn't find an EDGE server in CDN 'cdn1'!")
 	}
 
-	rs, _, err := TOSession.GetServerByHostName(server.HostName)
+	params := url.Values{}
+	params.Add("hostName", *server.HostName)
+	rs, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
-	} else if len(rs) == 0 {
+	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
-	server = &rs[0]
+	server = &rs.Response[0]
+	if server.ID == nil {
+		t.Fatal("Server had nil ID")
+	}
 
 	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top")
 	if err != nil {
@@ -161,7 +191,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(server.ID, []int{*firstDS.ID}, false)
+	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false)
 	if err == nil {
 		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
 	}
@@ -169,7 +199,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatalf("assigning Topology-based delivery service to server - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(server.ID)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID)
 	t.Logf("response: %+v", response)
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *server, err)

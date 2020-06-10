@@ -71,12 +71,21 @@ WHERE type in ( SELECT id
 AND status=(SELECT id FROM status WHERE name='ONLINE')
 `
 
+type APIResponse struct {
+	Response interface{} `json:"response"`
+}
+
+type APIResponseWithSummary struct {
+	Response interface{} `json:"response"`
+	Summary  struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
+}
+
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
-	resp := struct {
-		Response interface{} `json:"response"`
-	}{v}
+	resp := APIResponse{v}
 	WriteRespRaw(w, r, resp)
 }
 
@@ -96,6 +105,18 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write(append(bts, '\n'))
+}
+
+// WriteRespWithSummary writes a JSON-encoded representation of an arbitrary
+// object to the provided writer, and cleans up the corresponding request
+// object. It also provides a "summary" section to the response object that
+// contains the given "count".
+func WriteRespWithSummary(w http.ResponseWriter, r *http.Request, v interface{}, count uint64) {
+	var resp APIResponseWithSummary
+	resp.Response = v
+	resp.Summary.Count = count
+
+	WriteRespRaw(w, r, resp)
 }
 
 // WriteRespVals is like WriteResp, but also takes a map of root-level values to write. The API most commonly needs these for meta-parameters, like size, limit, and orderby.

@@ -44,7 +44,7 @@ done
 
 cat conf.js
 
-protractor conf.js --params.adminUser 'admin' --params.adminPassword 'twelve'
+protractor conf.js --params.adminUser "$TO_ADMIN_USER" --params.adminPassword "$TO_ADMIN_PASSWORD"
 rc=$?
 
 cp /portaltestresults/* /junit/

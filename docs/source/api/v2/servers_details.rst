@@ -53,56 +53,56 @@ Request Structure
 
 Response Structure
 ------------------
-:limit:		The maximum size of the ``response`` array, also indicative of the number of results per page using the pagination requested by the query parameters (if any) - this should be the same as the ``limit`` query parameter (if given)
-:orderby:	A string that names the field by which the elements of the ``response`` array are ordered - should be the same as the ``orderby`` request query parameter (if given)
-:response:	An array of objects, each of which represents the details of a given :ref:`Server <tp-configure-servers>`.
+:limit:         The maximum size of the ``response`` array, also indicative of the number of results per page using the pagination requested by the query parameters (if any) - this should be the same as the ``limit`` query parameter (if given)
+:orderby:       A string that names the field by which the elements of the ``response`` array are ordered - should be the same as the ``orderby`` request query parameter (if given)
+:response:      An array of objects, each of which represents the details of a given :ref:`Server <tp-configure-servers>`.
 
-	:cachegroup:		A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
-	:cdnName:		Name of the CDN to which the server belongs
-	:deliveryservices:	An array of integral, unique identifiers for :term:`Delivery Services` to which this server belongs
-	:domainName:		The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-	:guid:			An identifier used to uniquely identify the server
+	:cachegroup:            A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+	:cdnName:               Name of the CDN to which the server belongs
+	:deliveryservices:      An array of integral, unique identifiers for :term:`Delivery Services` to which this server belongs
+	:domainName:            The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+	:guid:                  An identifier used to uniquely identify the server
 
-		.. note::	This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+		.. note::       This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
 
-	:hostName:		The (short) hostname of the server
-	:httpsPort:		The port on which the server listens for incoming HTTPS connections/requests
-	:id:			An integral, unique identifier for this server
-	:iloIpAddress:		The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-	:iloIpGateway:		The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-	:iloIpNetmask:		The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-	:iloPassword:		The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
-	:iloUsername:		The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
-	:interfaceMtu:		The :abbr:`MTU (Maximum Transmission Unit)` to configured on ``interfaceName``
-	:interfaceName:		The name of the primary network interface used by the server
-	:ip6Address:		The IPv6 address and subnet mask of ``interfaceName``
-	:ip6Gateway:		The IPv6 address of the gateway used by ``interfaceName``
-	:ipAddress:		The IPv4 address of ``interfaceName``
-	:ipGateway:		The IPv4 address of the gateway used by ``interfaceName``
-	:ipNetmask:		The IPv4 subnet mask used by ``interfaceName``
+	:hostName:              The (short) hostname of the server
+	:httpsPort:             The port on which the server listens for incoming HTTPS connections/requests
+	:id:                    An integral, unique identifier for this server
+	:iloIpAddress:          The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+	:iloIpGateway:          The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+	:iloIpNetmask:          The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+	:iloPassword:           The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [1]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
+	:iloUsername:           The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [1]_
+	:interfaceMtu:          The :abbr:`MTU (Maximum Transmission Unit)` to configured on ``interfaceName``
+	:interfaceName:         The name of the primary network interface used by the server
+	:ip6Address:            The IPv6 address and subnet mask of ``interfaceName``
+	:ip6Gateway:            The IPv6 address of the gateway used by ``interfaceName``
+	:ipAddress:             The IPv4 address of ``interfaceName``
+	:ipGateway:             The IPv4 address of the gateway used by ``interfaceName``
+	:ipNetmask:             The IPv4 subnet mask used by ``interfaceName``
 	:mgmtIpAddress:  The IPv4 address of the server's management port
 	:mgmtIpGateway:  The IPv4 gateway of the server's management port
 	:mgmtIpNetmask:  The IPv4 subnet mask of the server's management port
-	:offlineReason:		A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-	:physLocation:		The name of the physical location where the server resides
-	:profile:		The :ref:`profile-name` of the :term:`Profile` used by this server
-	:profileDesc:		A :ref:`profile-description` of the :term:`Profile` used by this server
-	:rack:	A string indicating "server rack" location
-	:routerHostName:	The human-readable name of the router responsible for reaching this server
-	:routerPortName:	The human-readable name of the port used by the router responsible for reaching this server
-	:status:		The status of the server
+	:offlineReason:         A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
+	:physLocation:          The name of the physical location where the server resides
+	:profile:               The :ref:`profile-name` of the :term:`Profile` used by this server
+	:profileDesc:           A :ref:`profile-description` of the :term:`Profile` used by this server
+	:rack:  A string indicating "server rack" location
+	:routerHostName:        The human-readable name of the router responsible for reaching this server
+	:routerPortName:        The human-readable name of the port used by the router responsible for reaching this server
+	:status:                The status of the server
 
-		.. seealso::	:ref:`health-proto`
+		.. seealso::    :ref:`health-proto`
 
 	:tcpPort: The port on which this server listens for incoming TCP connections
 
-		.. note::	This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
+		.. note::       This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
 
-	:type:			The name of the 'type' of this server
-	:xmppId:		An identifier to be used in XMPP communications with the server - in nearly all cases this will be the same as ``hostName``
-	:xmppPasswd:		The password used in XMPP communications with the server
+	:type:                  The name of the 'type' of this server
+	:xmppId:                An identifier to be used in XMPP communications with the server - in nearly all cases this will be the same as ``hostName``
+	:xmppPasswd:            The password used in XMPP communications with the server
 
-:size:		The page number - if pagination was requested in the query parameters, else ``0`` to indicate no pagination - of the results represented by the ``response`` array. This is named "size" for legacy reasons
+:size:          The page number - if pagination was requested in the query parameters, else ``0`` to indicate no pagination - of the results represented by the ``response`` array. This is named "size" for legacy reasons
 
 .. code-block:: http
 	:caption: Response Example

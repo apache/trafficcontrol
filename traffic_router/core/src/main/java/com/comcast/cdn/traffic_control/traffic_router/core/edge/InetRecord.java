@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.cache;
+package com.comcast.cdn.traffic_control.traffic_router.core.edge;
+
+import org.xbill.DNS.Type;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -24,18 +26,28 @@ public class InetRecord {
 	
 	final private InetAddress ad;
 	final private long ttl;
-	final private String alias;
-	
+	final private int type;
+	final private String target;
+
 	public InetRecord(final InetAddress ad, final long ttl) {
 		this.ad = ad;
 		this.ttl = ttl;
-		this.alias = null;
+		this.target = null;
+		this.type = (ad instanceof Inet4Address) ? Type.A : Type.AAAA;
 	}
 
 	public InetRecord(final String alias, final long ttl) {
 		this.ad = null;
 		this.ttl = ttl;
-		this.alias = alias;
+		this.target = alias;
+		this.type = Type.CNAME;
+	}
+
+	public InetRecord(final String target, final long ttl, final int type) {
+		this.ad = null;
+		this.target = target;
+		this.ttl = ttl;
+		this.type = type;
 	}
 
 	public boolean isInet4() {
@@ -58,16 +70,25 @@ public class InetRecord {
 		return "InetRecord{" +
 			"ad=" + ad +
 			", ttl=" + ttl +
-			", alias='" + alias + '\'' +
+			", target='" + target + '\'' +
+			", type=" + Type.string(type) +
 			'}';
 	}
 
 	public boolean isAlias() {
-		return (alias != null);
+		return (target != null && type == Type.CNAME);
 	}
 
 	public String getAlias() {
-		return alias;
+		return target;
+	}
+
+	public String getTarget() {
+		return target;
+	}
+
+	public int getType() {
+		return type;
 	}
 
 	@Override
@@ -78,9 +99,9 @@ public class InetRecord {
 
 		final InetRecord that = (InetRecord) o;
 
-		if (ttl != that.ttl) return false;
+		if (ttl != that.ttl || type != that.type) return false;
 		if (ad != null ? !ad.equals(that.ad) : that.ad != null) return false;
-		return !(alias != null ? !alias.equals(that.alias) : that.alias != null);
+		return !(target != null ? !target.equals(that.target) : that.target != null);
 
 	}
 
@@ -88,7 +109,8 @@ public class InetRecord {
 	public int hashCode() {
 		int result = ad != null ? ad.hashCode() : 0;
 		result = 31 * result + (int) (ttl ^ (ttl >>> 32));
-		result = 31 * result + (alias != null ? alias.hashCode() : 0);
+		result = 31 * result + (int) (type ^ (type >>> 32));
+		result = 31 * result + (target != null ? target.hashCode() : 0);
 		return result;
 	}
 }

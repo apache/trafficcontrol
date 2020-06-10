@@ -25,7 +25,9 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
 
 func GetChkconfig(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +47,7 @@ func GetChkconfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params, err := GetServerParams(inf.Tx.Tx, serverName, atscfg.ChkconfigParamConfigFile)
+	params, err := ats.GetServerParams(inf.Tx.Tx, serverName, atscfg.ChkconfigParamConfigFile)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server '"+string(serverName)+"' + chkconfig parameters: "+err.Error()))
 		return

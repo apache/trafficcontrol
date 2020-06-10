@@ -32,9 +32,9 @@ Glossary
 	cache servers
 		The main function of a CDN is to proxy requests from clients to :term:`origin servers` and cache the results. To proxy, in the CDN context, is to obtain content using HTTP from an :term:`origin server` on behalf of a client. To cache is to store the results so they can be reused when other clients are requesting the same content. There are three types of proxies in use on the Internet today:
 
-		- :term:`Reverse Proxy`: Used by Traffic Control for Edge-tier :dfn:`cache servers`.
-		- :term:`Forward Proxy`: Used by Traffic Control for Mid-tier :dfn:`cache servers`.
-		- Transparent Proxy: These are not used by Traffic Control. If you are interested you can learn more about transparent proxies on `wikipedia <http://en.wikipedia.org/wiki/Proxy_server#Transparent_proxy>`_.
+		- :term:`reverse proxy`: Used by Traffic Control for Edge-tier :dfn:`cache servers`.
+		- :term:`forward proxy`: Used by Traffic Control for Mid-tier :dfn:`cache servers`.
+		- transparent proxy: These are not used by Traffic Control. If you are interested you can learn more about transparent proxies on `wikipedia <http://en.wikipedia.org/wiki/Proxy_server#Transparent_proxy>`_.
 
 	Cache Group
 	Cache Groups
@@ -110,6 +110,10 @@ Glossary
 
 		.. seealso:: See :ref:`delivery-services` for a more in-depth explanation of :dfn:`Delivery Services`.
 
+	Delivery Service Request
+	DSR
+		A :dfn:`Delivery Service Request` is the result of attempting to modify a :term:`Delivery Service` when ``dsRequests.enabled`` is set to ``true`` in ``traffic_portal_properties.json``. See :ref:`ds_requests` for more information.
+
 	Delivery Service required capabilities
 		:dfn:`Delivery Services required capabilities` are capabilities, which correlate to server capabilities, that are required in order to assign a server to a delivery service.`
 
@@ -129,7 +133,7 @@ Glossary
 	Federations
 		:dfn:`Federations` allow for other ("federated") CDNs (e.g. at a different :abbr:`ISP (Internet Service Provider)`) to add a list of DNS resolvers and an :abbr:`FQDN (Fully Qualified Domain Name)` to be used in a DNS CNAME record for a :term:`Delivery Service`. When a request is made from one of the federated CDN's clients, Traffic Router will return the CNAME record configured from the federation mapping. This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs. For example, if the external CDN was actually another :abbr:`ATC (Apache Traffic Control)`-managed CDN, then a federation mapping to direct clients toward it should use the :abbr:`FQDN (Fully Qualified Domain Name)` of a :term:`Delivery Service` on the external CDN.
 
-		Federations only have meaning to DNS-routed :term:`Delivery Services` - HTTP-routed Delivery services should instead treat the external :abbr:`FQDN (Fully Qualified Domain Name)` as an :term:`origin` to achieve the same effect.
+		Federations only have meaning to DNS-routed :term:`Delivery Services` - HTTP-routed Delivery services should instead treat the external :abbr:`FQDN (Fully Qualified Domain Name)` as an :term:`Origin` to achieve the same effect.
 
 		.. seealso:: Federations are currently only manageable by directly using the :ref:`to-api`. The endpoints related to federations are :ref:`to-api-federations`, :ref:`to-api-federation_resolvers`, :ref:`to-api-federations-id-deliveryservices`, :ref:`to-api-federations-id-deliveryservices-id`, :ref:`to-api-federations-id-federation_resolvers`, :ref:`to-api-federations-id-users`, and :ref:`to-api-federations-id-users-id`.
 
@@ -153,10 +157,10 @@ Glossary
 
 		#. The proxy verifies whether the response for ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` is already in the cache. If it is not in the cache:
 
-			#. The proxy sends the HTTP request to the :term:`origin`.
+			#. The proxy sends the HTTP request to the :term:`Origin`.
 
 				.. code-block:: http
-					:caption: The :dfn:`Forward Proxy` Requests Content from the :term:`Origin Server`
+					:caption: The :dfn:`Forward Proxy` Requests Content from the :term:`origin server`
 
 					GET /foo/bar/fun.html HTTP/1.1
 					Host: www.origin.com
@@ -164,7 +168,7 @@ Glossary
 			#. The :term:`origin server` responds with the requested content.
 
 				.. code-block:: http
-					:caption: The :term:`Origin Server`'s Response
+					:caption: The :term:`origin server`'s Response
 
 					HTTP/1.1 200 OK
 					Date: Sun, 14 Dec 2014 23:22:44 GMT
@@ -230,10 +234,10 @@ Glossary
 	Mid-tier caches
 	Mid-tier cache server
 	Mid-tier cache servers
-		The tier above the edge tier. The mid tier does not directly serves the end-user and is used as an additional layer between the edge and the :term:`origin`. In a Traffic Control CDN the basic function of the mid cache is that of a :term:`forward proxy`.
+		The tier above the edge tier. The mid tier does not directly serves the end-user and is used as an additional layer between the edge and the :term:`Origin`. In a Traffic Control CDN the basic function of the mid cache is that of a :term:`forward proxy`.
 
-	origin
-	origins
+	Origin
+	Origins
 	origin server
 	origin servers
 		The source of content for the CDN. Usually a redundant HTTP/1.1 webserver.
@@ -259,7 +263,7 @@ Glossary
 
 	Profile
 	Profiles
-		A :dfn:`Profile` is, most generally, a group of :term:`Parameters` that will be applied to a server. :dfn:`Profiles` are typically re-used by all :term:`Edge-Tier cache servers` within a CDN or :term:`Cache Group`. A :dfn:`Profile` will, in addition to configuration :term:`Parameters`, define the CDN to which a server belongs and the :ref:`"Type" <profile-type>` of the Profile - which determines some behaviors of Traffic Control components. The allowed :ref:`"Types" <profile-type>` of :dfn:`Profiles` are **not** the same as :term:`Types`, and are maintained as a PostgreSQL "Enum" in :atc-file:`traffic_ops/app/db/create_tables.sql`.
+		A :dfn:`Profile` is, most generally, a group of :term:`Parameters` that will be applied to a server. :dfn:`Profiles` are typically re-used by all :term:`Edge-tier cache servers` within a CDN or :term:`Cache Group`. A :dfn:`Profile` will, in addition to configuration :term:`Parameters`, define the CDN to which a server belongs and the :ref:`"Type" <profile-type>` of the Profile - which determines some behaviors of Traffic Control components. The allowed :ref:`"Types" <profile-type>` of :dfn:`Profiles` are **not** the same as :term:`Types`, and are maintained as a PostgreSQL "Enum" in :atc-file:`traffic_ops/app/db/create_tables.sql`.
 
 		.. tip:: A :dfn:`Profile` of the wrong type assigned to a Traffic Control component *will* (in general) cause it to function incorrectly, regardless of the :term:`Parameters` assigned to it.
 
@@ -284,11 +288,11 @@ Glossary
 
 	reverse proxy
 	reverse proxies
-		A :dfn:`reverse proxy` acts on behalf of the :term:`origin server` such that the client is (potentially) unaware it is not communicating directly with the :term:`origin`. All Edge-tier :term:`cache servers` in a Traffic Control CDN are :dfn:`reverse proxies`. To the end user a Traffic Control-based CDN appears as a :dfn:`reverse proxy` since it retrieves content from the :term:`origin server`, acting on behalf of that :term:`origin server`. The client requests a URL that has a hostname which resolves to the :dfn:`reverse proxy`'s IP address and, in compliance with the HTTP 1.1 specification (:rfc:`2616`), the client sends a ``Host:`` header to the :dfn:`reverse proxy` that matches the hostname in the URL. The proxy looks up this hostname in a list of mappings to find the :term:`origin` hostname; if the hostname of the ``Host:`` header is not found in the list, the proxy will send an error (usually either ``404 Not Found`` or ``503 Service Unavailable`` as appropriate) to the client. If the supplied hostname is found in this list of mappings, the proxy checks its cache, and when the content is not already present, connects to the :term:`origin` to which the requested ``Host:`` maps requests the path of the original URL, providing the :term:`origin` hostname in the ``Host`` header. The proxy then stores the URL in its cache and serves the contents to the client. When there are subsequent requests for the same URL, a caching proxy serves the content out of its cache - provided :ref:`cache-revalidation` are satisfied - thereby reducing latency and network traffic.
+		A :dfn:`reverse proxy` acts on behalf of the :term:`origin server` such that the client is (potentially) unaware it is not communicating directly with the :term:`Origin`. All Edge-tier :term:`cache servers` in a Traffic Control CDN are :dfn:`reverse proxies`. To the end user a Traffic Control-based CDN appears as a :dfn:`reverse proxy` since it retrieves content from the :term:`origin server`, acting on behalf of that :term:`origin server`. The client requests a URL that has a hostname which resolves to the :dfn:`reverse proxy`'s IP address and, in compliance with the HTTP 1.1 specification (:rfc:`2616`), the client sends a ``Host:`` header to the :dfn:`reverse proxy` that matches the hostname in the URL. The proxy looks up this hostname in a list of mappings to find the :term:`Origin` hostname; if the hostname of the ``Host:`` header is not found in the list, the proxy will send an error (usually either ``404 Not Found`` or ``503 Service Unavailable`` as appropriate) to the client. If the supplied hostname is found in this list of mappings, the proxy checks its cache, and when the content is not already present, connects to the :term:`Origin` to which the requested ``Host:`` maps requests the path of the original URL, providing the :term:`Origin` hostname in the ``Host`` header. The proxy then stores the URL in its cache and serves the contents to the client. When there are subsequent requests for the same URL, a caching proxy serves the content out of its cache - provided :ref:`cache-revalidation` are satisfied - thereby reducing latency and network traffic.
 
 		.. seealso:: `The Apache Traffic Server documentation on reverse proxy <https://docs.trafficserver.apache.org/en/latest/admin/reverse-proxy-http-redirects.en.html#http-reverse-proxy>`_.
 
-		To insert a :dfn:`reverse proxy` into a typical HTTP 1.1 request and response flow, the :dfn:`reverse proxy` needs to be told where the :term:`origin server` can be reached (and which :term:`origin` to use for a given request when it's configured to proxy requests for multiple :term:`origins`). In :abbr:`ATS (Apache Traffic Server)` this is handled by adding rules to `the remap.config configuration file <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/remap.config.en.html>`_. The content owner must inform the clients, by updating the URL, to receive the content from the cache and not from the :term:`origin server` directly. For example, clients might be instructed to request content from ``http://www-origin-cache.cdn.com`` which points to a :dfn:`reverse proxy` for the actual :term:`origin` located at ``http://www.origin.com``.
+		To insert a :dfn:`reverse proxy` into a typical HTTP 1.1 request and response flow, the :dfn:`reverse proxy` needs to be told where the :term:`origin server` can be reached (and which :term:`Origin` to use for a given request when it's configured to proxy requests for multiple :term:`Origins`). In :abbr:`ATS (Apache Traffic Server)` this is handled by adding rules to `the remap.config configuration file <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/remap.config.en.html>`_. The content owner must inform the clients, by updating the URL, to receive the content from the cache and not from the :term:`origin server` directly. For example, clients might be instructed to request content from ``http://www-origin-cache.cdn.com`` which points to a :dfn:`reverse proxy` for the actual :term:`Origin` located at ``http://www.origin.com``.
 
 		Now, if the client requests ``/foo/bar/fun.html`` from the :dfn:`reverse proxy` the sequence of events is as follows. is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` (note the different hostname) and when attempting to obtain that URL, the following occurs:
 
@@ -302,14 +306,14 @@ Glossary
 				GET /foo/bar/fun.html HTTP/1.1
 				Host: www-origin-cache.cdn.com
 
-		#. The :dfn:`reverse proxy` finds out the URL of the true :term:`origin` - in the case of :abbr:`ATS (Apache Traffic Server)` this is done by looking up ``www-origin-cache.cdn.com`` in its remap rules - and finds that it is ``www.origin.com``.
+		#. The :dfn:`reverse proxy` finds out the URL of the true :term:`Origin` - in the case of :abbr:`ATS (Apache Traffic Server)` this is done by looking up ``www-origin-cache.cdn.com`` in its remap rules - and finds that it is ``www.origin.com``.
 		#. The proxy checks its cache to see if the response for ``GET /foo/bar/fun.html HTTP/1.1`` from ``www.origin.com`` is already in the cache.
 		#. If the response is not in the cache:
 
-			#. The proxy sends the request to the actual :term:`origin`
+			#. The proxy sends the request to the actual :term:`Origin`
 
 				.. code-block:: http
-					:caption: :dfn:`Reverse Proxy` Requests Content from the :term:`Origin Server`
+					:caption: :dfn:`Reverse Proxy` Requests Content from the :term:`origin server`
 
 					GET /foo/bar/fun.html HTTP/1.1
 					Host: www.origin.com
@@ -317,7 +321,7 @@ Glossary
 			#. The :term:`origin server` responds with the requested content
 
 				.. code-block:: http
-					:caption: Response from the :term:`Origin Server`
+					:caption: Response from the :term:`origin server`
 
 					HTTP/1.1 200 OK
 					Date: Sun, 14 Dec 2014 23:22:44 GMT
@@ -372,7 +376,7 @@ Glossary
 
 	Server Capability
 	Server Capabilities
-		A :dfn:`Server Capability` (not to be confused with a "Capability") expresses the capacity of a :term:`cache server` to serve a particular kind of traffic. For example, a :dfn:`Server Capability` could be created named "RAM" to be assigned to :term:`cache servers` that have RAM-disks allocated for content caching. :dfn:`Server Capabilities` can also be required by :term:`Delivery Services`, which will prevent :term:`cache servers` without that :dfn:`Server Capability` from being assigned to them. It also prevents :term:`Mid-tier Cache Servers` without said :term:`Server Capability` from being selected to serve upstream requests from those :term:`Edge-tier Cache Servers` assigned to the requiring :term:`Delivery Services`.
+		A :dfn:`Server Capability` (not to be confused with a "Capability") expresses the capacity of a :term:`cache server` to serve a particular kind of traffic. For example, a :dfn:`Server Capability` could be created named "RAM" to be assigned to :term:`cache servers` that have RAM-disks allocated for content caching. :dfn:`Server Capabilities` can also be required by :term:`Delivery Services`, which will prevent :term:`cache servers` without that :dfn:`Server Capability` from being assigned to them. It also prevents :term:`Mid-tier cache servers` without said :term:`Server Capability` from being selected to serve upstream requests from those :term:`Edge-tier cache servers` assigned to the requiring :term:`Delivery Services`.
 
 	Snapshot
 	Snapshots
