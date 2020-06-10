@@ -82,7 +82,7 @@ under the License.
         <div ng-if="nodeWarning(node)" class="error-msg">{{nodeWarning(node)}}</div>
         <div class="pull-right">
             <a ng-show="node.cachegroup && node.parent" title="Set Secondary Parent Cache Group for {{::node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="editSecParent(node)" style="margin-right: 8px;">
-                2nd: {{(node.secParent) ? node.secParent : 'None'}}
+                2nd Parent: {{(node.secParent.name) ? node.secParent.name : ''}} [{{node.secParent.type}}]
             </a>
             <a ng-if="node.cachegroup" title="View Servers Assigned to {{::node.cachegroup}}" class="btn btn-primary btn-xs" data-nodrag ng-click="viewCacheGroupServers(node)" style="margin-right: 8px;">
                 <i class="fa fa-server"></i>

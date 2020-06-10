@@ -111,7 +111,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, select
 		});
 
 		if (eligibleSecParentCandidates.length === 0) {
-			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: parent.cachegroup, secParent: '' });
+			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: { name: parent.cachegroup, type: parent.type }, secParent: { name: '', type: ''} });
 			return;
 		}
 		let params = {
@@ -153,14 +153,14 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, select
 			});
 			modalInstance.result.then(function(cg) {
 				// user selected a secondary parent
-				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: parent.cachegroup, secParent: cg.name });
+				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: { name: parent.cachegroup, type: parent.type }, secParent: { name: cg.name, type: cg.typeName } });
 			}, function () {
 				// user apparently changed their mind and doesn't want to select a secondary parent
-				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: parent.cachegroup, secParent: '' });
+				$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: { name: parent.cachegroup, type: parent.type }, secParent: { name: '', type: ''} });
 			});
 		}, function () {
 			// user doesn't want to select a secondary parent
-			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: parent.cachegroup, secParent: '' });
+			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: { name: parent.cachegroup, type: parent.type }, secParent: { name: '', type: ''} });
 		});
 	};
 

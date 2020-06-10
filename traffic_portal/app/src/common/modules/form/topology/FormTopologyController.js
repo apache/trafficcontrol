@@ -32,8 +32,8 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	let removeSecParentReferences = function(topologyTree, secParentName) {
 		// when a cache group is removed, any references to the cache group as a secParent need to be removed
 		topologyTree.forEach(function(node) {
-			if (node.secParent && node.secParent === secParentName) {
-				node.secParent = '';
+			if (node.secParent && node.secParent.name === secParentName) {
+				node.secParent = { name: '', type: '' };
 			}
 			if (node.children && node.children.length > 0) {
 				removeSecParentReferences(node.children, secParentName);
@@ -83,15 +83,16 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 
 			// update the parent and secParent fields of the node on successful drop
 			if (parent.cachegroup) {
-				node.parent = parent.cachegroup; // change the node parent based on where the node is dropped
-				if (node.parent === node.secParent) {
+				// change the node parent based on where the node is dropped
+				node.parent = { name: parent.cachegroup, type: parent.type };
+				if (node.parent.name === node.secParent.name) {
 					// node parent and secParent cannot be the same
-					node.secParent = "";
+					node.secParent = { name: '', type: '' };
 				}
 			} else {
 				// the node was dropped at the root of the topology. no parents.
-				node.parent = "";
-				node.secParent = "";
+				node.parent = { name: '', type: '' };
+				node.secParent = { name: '', type: '' };
 			}
 			// marks the form as dirty thus enabling the save btn
 			$scope.topologyForm.dirty.$setDirty();
@@ -132,7 +133,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		 */
 		let eligibleSecParentCandidates = cacheGroups.filter(function(cg) {
 			return (node.cachegroup && node.cachegroup !== cg.name) &&
-				(node.parent && node.parent !== cg.name) &&
+				(node.parent && node.parent.name !== cg.name) &&
 				cacheGroupNamesInTopology.includes(cg.name) &&
 				((node.type === 'EDGE_LOC') || (cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC'));
 		});
@@ -142,7 +143,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 			message: 'Please select a secondary parent that is part of the ' + topology.name + ' topology',
 			key: 'name',
 			required: false,
-			selectedItemKeyValue: node.secParent,
+			selectedItemKeyValue: node.secParent.name,
 			labelFunction: function(item) { return item['name'] + ' (' + item['typeName'] + ')' }
 		};
 		let modalInstance = $uibModal.open({
@@ -160,9 +161,9 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		});
 		modalInstance.result.then(function(selectedSecParent) {
 			if (selectedSecParent) {
-				node.secParent = selectedSecParent.name;
+				node.secParent = { name: selectedSecParent.name, type: selectedSecParent.typeName };
 			} else {
-				node.secParent = '';
+				node.secParent = { name: '', type: '' };
 			}
 			// marks the form as dirty thus enabling the save btn
 			$scope.topologyForm.dirty.$setDirty();
@@ -191,9 +192,12 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	};
 
 	$scope.nodeWarning = function(node) {
-		// only EDGE_LOCs with child EDGE_LOCs require special configuration
-		if (node.type === 'EDGE_LOC' && node.children.length > 0) {
-			return 'EDGE_LOC with EDGE_LOC children requires special config';
+		// EDGE_LOCs with parent/secondary parent EDGE_LOCs require special configuration
+		if (node.parent) {
+			console.log(node.parent);
+		}
+		if ((node.parent && node.parent.type === 'EDGE_LOC') || (node.secParent && node.secParent.type === 'EDGE_LOC')) {
+			return 'Special Configuration Required';
 		}
 		return '';
 	};
@@ -273,7 +277,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 							id: cg.id,
 							cachegroup: cg.name,
 							type: cg.typeName,
-							parent: (result.parent) ? result.parent : '',
+							parent: result.parent,
 							secParent: result.secParent,
 							children: []
 						}
