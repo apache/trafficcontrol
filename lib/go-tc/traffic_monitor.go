@@ -41,6 +41,7 @@ type TrafficMonitorConfig struct {
 	Profiles         []TMProfile            `json:"profiles,omitempty"`
 }
 
+// ToLegacyConfig converts TrafficMonitorConfig to LegacyTrafficMonitorConfig
 func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
 	var servers []LegacyTrafficServer
 	for _, s := range tmc.TrafficServers {
@@ -58,7 +59,7 @@ func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
 	return legacy
 }
 
-// LegacyTrafficMonitorConfig ...
+// LegacyTrafficMonitorConfig represents TrafficMonitorConfig for ATC versions before 5.0
 type LegacyTrafficMonitorConfig struct {
 	TrafficServers   []LegacyTrafficServer  `json:"trafficServers,omitempty"`
 	CacheGroups      []TMCacheGroup         `json:"cacheGroups,omitempty"`

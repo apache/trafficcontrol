@@ -97,7 +97,7 @@ type ServerInterfaceInfo struct {
 	Name         string            `json:"name" db:"name"`
 }
 
-// ServerIPAddressCompoundKey represents the fo
+// ServerIPAddressCompoundKey represents the relationship between ipAddresses and servers/interfaces
 type ServerIPAddressCompoundKey struct {
 	ServerID      int
 	InterfaceName string
