@@ -276,10 +276,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.Customer, validation.Required),
 		validation.Field(&details.DeepCachingType, validation.By(
 			func(t interface{}) error {
-				if t == (*DeepCachingType)(nil) {
-					return errors.New("deepCachingType: required")
-				}
-				if *t.(*DeepCachingType) == DeepCachingTypeInvalid {
+				if t != (*DeepCachingType)(nil) && *t.(*DeepCachingType) == DeepCachingTypeInvalid {
 					return errors.New("deepCachingType: invalid Deep Caching Type")
 				}
 				return nil
@@ -339,7 +336,6 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.PeakTPSEstimate, validation.Required),
 		validation.Field(&details.QueryStringHandling, validation.Required),
 		validation.Field(&details.RangeRequestHandling, validation.Required),
-		validation.Field(&details.RoutingName, validation.Required),
 		validation.Field(&details.RoutingType, validation.By(
 			func(t interface{}) error {
 				if t == (*DSType)(nil) || *(t.(*DSType)) == "" {
