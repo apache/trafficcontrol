@@ -37,15 +37,13 @@ under the License.
                 <th>Name</th>
                 <th>Location</th>
                 <th>Scope</th>
-                <th></th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="view(c.fnameOnDisk, c.apiUri)" ng-repeat="c in ::configFiles">
+            <tr ng-repeat="c in ::configFiles">
                 <td data-search="^{{::c.fnameOnDisk}}$">{{::c.fnameOnDisk}}</td>
                 <td data-search="^{{::c.location}}$">{{::c.location}}</td>
                 <td data-search="^{{::c.scope}}$">{{::c.scope}}</td>
-                <td><a title="Download {{::c.fnameOnDisk}}" ng-click="download(c.fnameOnDisk, c.apiUri, $event)"><i class="fa fa-download" aria-hidden="true"></i></a></td>
             </tr>
             </tbody>
         </table>

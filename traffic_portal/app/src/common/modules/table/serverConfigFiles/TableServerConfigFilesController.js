@@ -27,45 +27,6 @@ var TableServerConfigFilesController = function(server, serverConfigFiles, $scop
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.view = function(name, url) {
-		var params = {
-			title: name
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/text/dialog.text.tpl.html',
-			controller: 'DialogTextController',
-			windowClass: 'dialog-90',
-			resolve: {
-				params: function () {
-					return params;
-				},
-				text: function(serverService) {
-					return serverService.getServerConfigFile(url);
-				}
-			}
-		});
-		modalInstance.result.then(function() {}, function() {}); // do nothing on modal close
-
-	};
-
-	$scope.download = function(name, url, $event) {
-		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-
-		// we're going to trick the browser into opening a download dialog
-		// generate a temp <a> tag
-		var link = document.createElement("a");
-		link.href = url;
-
-		// keep it hidden
-		link.style = "visibility:hidden";
-		link.download = name;
-
-		// briefly append the <a> tag and remove it after auto click
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-	};
-
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -73,10 +34,6 @@ var TableServerConfigFilesController = function(server, serverConfigFiles, $scop
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"aaSorting": [],
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 3 },
-				{ "width": "5%", "targets": 3 }
-			]
 		});
 	});
 
