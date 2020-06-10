@@ -116,7 +116,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.activeInactive = [
         { value: true, label: 'Active' },
         { value: false, label: 'Not Active'}
-    ]
+    ];
 
     $scope.signingAlgos = [
         { value: null, label: 'None' },
@@ -175,7 +175,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.deepCachingTypes = [
         { value: 'NEVER', label: 'NEVER' },
         { value: 'ALWAYS', label: 'ALWAYS' }
-    ]
+    ];
 
     $scope.dispersions = [
         { value: 1, label: '1 - OFF' },
@@ -193,7 +193,8 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.rrhs = [
         { value: 0, label: "Don't cache Range Requests" },
         { value: 1, label: "Use the background_fetch plugin" },
-        { value: 2, label: "Use the cache_range_requests plugin" }
+        { value: 2, label: "Use the cache_range_requests plugin" },
+        { value: 3, label: "Use the slice plugin" }
     ];
 
     $scope.msoAlgos = [
