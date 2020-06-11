@@ -1091,3 +1091,116 @@ WHERE
 	}
 	return dsCaps, nil
 }
+
+func GetTopologies(tx *sql.Tx) ([]tc.Topology, error) {
+	// TODO if this sticks around, abstract topology/topologies.go to de-duplicate.
+	// TO-side config files should be going away soon.
+	qry := `
+SELECT t.name, t.description, t.last_updated,
+tc.id, tc.cachegroup,
+	(SELECT COALESCE (ARRAY_AGG (CAST (tcp.parent as INT) ORDER BY tcp.rank ASC)) AS parents
+	FROM topology_cachegroup tc2
+	JOIN topology_cachegroup_parents tcp ON tc2.id = tcp.child
+	WHERE tc2.topology = tc.topology
+	AND tc2.cachegroup = tc.cachegroup
+	)
+FROM topology t
+JOIN topology_cachegroup tc on t.name = tc.topology
+`
+	rows, err := tx.Query(qry)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	topologies := map[string]*tc.Topology{}
+	for rows.Next() {
+		tp := tc.Topology{}
+		tn := tc.TopologyNode{}
+		parents := pq.Int64Array{}
+		if err = rows.Scan(&tp.Name, &tp.Description, &tp.LastUpdated, &tn.Id, &tn.Cachegroup, &parents); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		for _, id := range parents {
+			tn.Parents = append(tn.Parents, int(id))
+		}
+		if _, exists := topologies[tp.Name]; !exists {
+			topologies[tp.Name] = &tp
+		} else {
+			tp = *topologies[tp.Name]
+		}
+		tp.Nodes = append(tp.Nodes, tn)
+		topologies[tp.Name] = &tp
+	}
+
+	tops := []tc.Topology{}
+	for _, topology := range topologies {
+		nodeMap := map[int]int{}
+		for index, node := range topology.Nodes {
+			nodeMap[node.Id] = index
+		}
+		for _, node := range topology.Nodes {
+			for parentIndex := 0; parentIndex < len(node.Parents); parentIndex++ {
+				node.Parents[parentIndex] = nodeMap[node.Parents[parentIndex]]
+			}
+		}
+		tops = append(tops, *topology)
+	}
+	return tops, nil
+}
+
+func GetServerCacheGroup(tx *sql.Tx, server tc.CacheName) (tc.CacheGroupName, error) {
+	qry := `
+SELECT
+  cg.name
+FROM
+  cachegroup cg
+  JOIN server s on s.cachegroup = cg.id
+WHERE
+  s.host_name = $1
+`
+	cg := tc.CacheGroupName("")
+	if err := tx.QueryRow(qry, server).Scan(&cg); err != nil {
+		if err == sql.ErrNoRows {
+			return "", errors.New("not found")
+		}
+		return "", errors.New("querying: " + err.Error())
+	}
+	return cg, nil
+}
+
+func GetConfigFileParams(tx *sql.Tx, configFile string) ([]tc.Parameter, error) {
+	qry := `
+SELECT
+  p.config_file,
+  p.id,
+  p.last_updated,
+  p.name,
+  p.value,
+  p.secure,
+  COALESCE(array_to_json(array_agg(pr.name) FILTER (WHERE pr.name IS NOT NULL)), '[]') AS profiles
+FROM
+  parameter p
+  LEFT JOIN profile_parameter pp ON p.id = pp.parameter
+  LEFT JOIN profile pr ON pp.profile = pr.id
+WHERE
+  p.config_file = $1
+GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure
+`
+	rows, err := tx.Query(qry, configFile)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	params := []tc.Parameter{}
+	for rows.Next() {
+		p := tc.Parameter{}
+		if err = rows.Scan(&p.ConfigFile, &p.ID, &p.LastUpdated, &p.Name, &p.Value, &p.Secure, &p.Profiles); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		params = append(params, p)
+	}
+
+	return params, nil
+}

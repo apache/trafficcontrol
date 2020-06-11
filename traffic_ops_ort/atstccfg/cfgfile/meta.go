@@ -160,7 +160,7 @@ func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
 			if ds.XMLID == nil {
 				continue // TODO log?
 			}
-			if _, ok := dssMap[*ds.ID]; !ok {
+			if _, ok := dssMap[*ds.ID]; !ok && ds.Topology == nil {
 				continue
 			}
 			dses[tc.DeliveryServiceName(*ds.XMLID)] = ds

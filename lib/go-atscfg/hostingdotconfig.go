@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -35,14 +36,20 @@ const LineCommentHostingDotConfig = LineCommentHash
 const ParamDrivePrefix = "Drive_Prefix"
 const ParamRAMDrivePrefix = "RAM_Drive_Prefix"
 
+const ServerHostingDotConfigMidIncludeInactive = false
+const ServerHostingDotConfigEdgeIncludeInactive = true
+
 func MakeHostingDotConfig(
-	serverName tc.CacheName,
+	server tc.Server,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	params map[string]string, // map[name]value - config file should always be storage.config
-	origins []string, // origins of delivery services assigned to this server. Should only include LIVE and LIVE_NATNL for Edges, and only LIVE_NATNL for Mids.
+	dses []tc.DeliveryServiceNullable,
+	topologies []tc.Topology,
 ) string {
-	text := GenericHeaderComment(string(serverName), toToolName, toURL)
+	text := GenericHeaderComment(server.HostName, toToolName, toURL)
+
+	dsTopologies := hostingMakeDSTopologies(dses, topologies)
 
 	lines := []string{}
 	if _, ok := params[ParamRAMDrivePrefix]; ok {
@@ -56,10 +63,21 @@ func MakeHostingDotConfig(
 		text += `# TRAFFIC OPS NOTE: volume ` + strconv.Itoa(ramVolume) + ` is the RAM volume` + "\n"
 
 		seenOrigins := map[string]struct{}{}
-		for _, origin := range origins {
+		for _, ds := range dses {
+			if ds.OrgServerFQDN == nil || ds.XMLID == nil || ds.Active == nil {
+				continue // TODO warn?
+			}
+
+			origin := *ds.OrgServerFQDN
 			if _, ok := seenOrigins[origin]; ok {
 				continue
 			}
+
+			topology, hasTopology := dsTopologies[tc.DeliveryServiceName(*ds.XMLID)]
+			if hasTopology && !topologyIncludesServer(topology, server) {
+				continue
+			}
+
 			seenOrigins[origin] = struct{}{}
 			origin = strings.TrimPrefix(origin, `http://`)
 			origin = strings.TrimPrefix(origin, `https://`)
@@ -73,4 +91,23 @@ func MakeHostingDotConfig(
 	sort.Strings(lines)
 	text += strings.Join(lines, "")
 	return text
+}
+
+func hostingMakeDSTopologies(dses []tc.DeliveryServiceNullable, topologies []tc.Topology) map[tc.DeliveryServiceName]tc.Topology {
+	dsTops := map[tc.DeliveryServiceName]tc.Topology{}
+	topNames := map[string]tc.Topology{}
+	for _, to := range topologies {
+		topNames[to.Name] = to
+	}
+	for _, ds := range dses {
+		if ds.Topology == nil || ds.XMLID == nil {
+			continue
+		}
+		if to, ok := topNames[*ds.Topology]; ok {
+			dsTops[tc.DeliveryServiceName(*ds.XMLID)] = to
+		} else if *ds.Topology != "" {
+			log.Errorln("Making remap.config for Delivery Service '" + *ds.XMLID + "': has topology '" + *ds.Topology + "', but that topology doesn't exist! Treating as if DS has no Topology!")
+		}
+	}
+	return dsTops
 }

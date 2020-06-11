@@ -39,8 +39,9 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/torequtil"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 )
 
 type TOClient struct {
@@ -94,4 +95,29 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 		return nil, false, errors.New("getting delivery services: " + err.Error())
 	}
 	return deliveryServices, false, nil
+}
+
+func (cl *TOClient) GetTopologies() ([]tc.Topology, bool, error) {
+	topologies := []tc.Topology{}
+	unsupported := false
+	err := torequtil.GetRetry(cl.NumRetries, "topologies", &topologies, func(obj interface{}) error {
+		toTopologies, reqInf, err := cl.C.GetTopologies()
+		if err != nil {
+			if errStr := strings.ToLower(err.Error()); strings.Contains(errStr, "not found") || strings.Contains(errStr, "not impl") {
+				unsupported = true
+				return nil
+			}
+			return errors.New("getting topologies from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		topologies := obj.(*[]tc.Topology)
+		*topologies = toTopologies
+		return nil
+	})
+	if unsupported {
+		return nil, true, nil
+	}
+	if err != nil {
+		return nil, false, errors.New("getting topologies: " + err.Error())
+	}
+	return topologies, false, nil
 }

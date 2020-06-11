@@ -86,6 +86,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 
 	serverInfo := atscfg.ServerInfo{
 		CacheGroupID:                  toData.Server.CachegroupID,
+		CacheGroupName:                toData.Server.Cachegroup,
 		CDN:                           tc.CDNName(toData.Server.CDNName),
 		CDNID:                         toData.Server.CDNID,
 		DomainName:                    toData.Server.DomainName,
@@ -197,7 +198,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 		return "", "", "", errors.New("getting ATS major version from version parameter (profile '" + toData.Server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
 	}
 
-	parentConfigParamsWithProfiles, err := TCParamsToParamsWithProfiles(toData.ParentConfigParams)
+	parentConfigParamsWithProfiles, err := atscfg.TCParamsToParamsWithProfiles(toData.ParentConfigParams)
 	if err != nil {
 		return "", "", "", errors.New("unmarshalling parent.config parameters profiles: " + err.Error())
 	}
@@ -301,11 +302,6 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 		}
 	}
 
-	allDSes := []int{}
-	for ds, _ := range allDSMap {
-		allDSes = append(allDSes, int(ds))
-	}
-
 	parentConfigDSes := []atscfg.ParentConfigDSTopLevel{}
 	for _, tcDS := range toData.DeliveryServices {
 		if tcDS.ID == nil {
@@ -313,7 +309,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 		}
 
 		if !serverInfo.IsTopLevelCache() {
-			if _, ok := parentServerDSes[toData.Server.ID][*tcDS.ID]; !ok {
+			if _, ok := parentServerDSes[toData.Server.ID][*tcDS.ID]; !ok && tcDS.Topology == nil {
 				continue // skip DSes not assigned to this server.
 			}
 		}
@@ -336,6 +332,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 		multiSiteOrigin := false
 		originShield := ""
 		dsType := tc.DSTypeFromString("")
+		dsTopology := ""
 		if tcDS.QStringIgnore != nil {
 			qStringIgnore = *tcDS.QStringIgnore
 		}
@@ -348,6 +345,9 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 		if tcDS.Type != nil {
 			dsType = *tcDS.Type
 		}
+		if tcDS.Topology != nil {
+			dsTopology = *tcDS.Topology
+		}
 
 		ds := atscfg.ParentConfigDSTopLevel{
 			ParentConfigDS: atscfg.ParentConfigDS{
@@ -357,6 +357,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 				MultiSiteOrigin: multiSiteOrigin,
 				OriginShield:    originShield,
 				Type:            dsType,
+				Topology:        dsTopology,
 			},
 		}
 
@@ -455,7 +456,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 
 	parentInfos := atscfg.MakeParentInfo(&serverInfo, serverCDNDomain, profileCaches, originServers)
 
-	return atscfg.MakeParentDotConfig(&serverInfo, atsMajorVer, toData.TOToolName, toData.TOURL, parentConfigDSes, serverParams, parentInfos), atscfg.ContentTypeParentDotConfig, atscfg.LineCommentParentDotConfig, nil
+	return atscfg.MakeParentDotConfig(&serverInfo, atsMajorVer, toData.TOToolName, toData.TOURL, parentConfigDSes, serverParams, parentInfos, toData.Server, toData.Servers, toData.Topologies, toData.ParentConfigParams, toData.ServerCapabilities), atscfg.ContentTypeParentDotConfig, atscfg.LineCommentParentDotConfig, nil
 }
 
 // GetDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI.

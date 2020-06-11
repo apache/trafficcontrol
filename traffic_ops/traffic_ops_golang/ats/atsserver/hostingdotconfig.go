@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
@@ -73,13 +74,41 @@ func GetHostingDotConfig(w http.ResponseWriter, r *http.Request) {
 		params[name] = vals[0]
 	}
 
-	origins, err := GetServerHostingOrigins(inf.Tx.Tx, serverName, serverType)
+	origins, dsNames, err := GetServerHostingOrigins(inf.Tx.Tx, serverName, serverType)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server '"+string(serverName)+"' hosting origins: "+err.Error()))
 		return
+	} else if len(origins) != len(dsNames) {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server '"+string(serverName)+"' hosting origins: mismatched origins and ds names!")) // should never happen
+		return
 	}
 
-	txt := atscfg.MakeHostingDotConfig(serverName, toToolName, toURL, params, origins)
+	topologies, err := ats.GetTopologies(inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting topologies: "+err.Error()))
+		return
+	}
+
+	cg, err := ats.GetServerCacheGroup(inf.Tx.Tx, serverName)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server cachegroup: "+err.Error()))
+		return
+	}
+
+	// TODO this is risky, because it will cause generation errors if atscfg is changed to use more data from Server or DS.
+	// But it would require a lot of abstraction to add the generic server and DS loading from the rest of TO, so new fields aren't missed.
+	// But, this endpoint is legacy and should never be used.
+	// If TO config gen sticks around, we should add that abstraction, to prevent future bugs.
+	server := tc.Server{HostName: string(serverName), Cachegroup: string(cg)}
+	dses := []tc.DeliveryServiceNullable{}
+	for i := 0; i < len(origins); i++ {
+		ds := tc.DeliveryServiceNullable{}
+		ds.OrgServerFQDN = util.StrPtr(origins[i])
+		ds.XMLID = util.StrPtr(string(dsNames[i]))
+		dses = append(dses, ds)
+	}
+
+	txt := atscfg.MakeHostingDotConfig(server, toToolName, toURL, params, dses, topologies)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(txt))
@@ -87,10 +116,11 @@ func GetHostingDotConfig(w http.ResponseWriter, r *http.Request) {
 
 // GetServerHostingOrigins returns the list of origins on delivery services assigned to the given server, to be used in the ATS config file.
 // It returns only LIVE_NATNL delivery services, for mids; and only LIVE and LIVE_NATNL services for edges.
-func GetServerHostingOrigins(tx *sql.Tx, serverName tc.CacheName, serverType tc.CacheType) ([]string, error) {
+func GetServerHostingOrigins(tx *sql.Tx, serverName tc.CacheName, serverType tc.CacheType) ([]string, []tc.DeliveryServiceName, error) {
 	qry := `
 SELECT
-  DISTINCT(SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')) as org_server_fqdn
+  DISTINCT(SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')) as org_server_fqdn,
+  ds.xml_id as ds_name
 FROM
   deliveryservice ds
   JOIN deliveryservice_server dss on dss.deliveryservice = ds.id
@@ -118,17 +148,20 @@ WHERE
 
 	rows, err := tx.Query(qry, serverName)
 	if err != nil {
-		return nil, errors.New("querying: " + err.Error())
+		return nil, nil, errors.New("querying: " + err.Error())
 	}
 	defer rows.Close()
 
 	origins := []string{}
+	dses := []tc.DeliveryServiceName{}
 	for rows.Next() {
 		origin := ""
-		if err := rows.Scan(&origin); err != nil {
-			return nil, errors.New("scanning: " + err.Error())
+		ds := tc.DeliveryServiceName("")
+		if err := rows.Scan(&origin, &ds); err != nil {
+			return nil, nil, errors.New("scanning: " + err.Error())
 		}
 		origins = append(origins, origin)
+		dses = append(dses, ds)
 	}
-	return origins, nil
+	return origins, dses, nil
 }

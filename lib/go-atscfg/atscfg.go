@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"sort"
 	"strconv"
@@ -43,6 +44,7 @@ type ServerCapability string
 
 type ServerInfo struct {
 	CacheGroupID                  int
+	CacheGroupName                string
 	CDN                           tc.CDNName
 	CDNID                         int
 	DomainName                    string
@@ -133,4 +135,65 @@ const ConfigSuffix = ".config"
 
 func GetConfigFile(prefix string, xmlId string) string {
 	return prefix + xmlId + ConfigSuffix
+}
+
+// topologyIncludesServer returns whether the given topology includes the given server
+func topologyIncludesServer(topology tc.Topology, server tc.Server) bool {
+	_, inTopology := serverTopologyTier(server, topology)
+	return inTopology
+}
+
+// serverTopologyTier returns whether the server is the last tier in the topology, and whether the server is in the topology at all.
+func serverTopologyTier(server tc.Server, topology tc.Topology) (bool, bool) {
+	serverNode := tc.TopologyNode{}
+	for _, node := range topology.Nodes {
+		if node.Cachegroup == server.Cachegroup {
+			serverNode = node
+			break
+		}
+	}
+	if serverNode.Cachegroup == "" {
+		return false, false
+	}
+
+	return len(serverNode.Parents) == 0, true
+}
+
+type ParameterWithProfiles struct {
+	tc.Parameter
+	ProfileNames []string
+}
+
+type ParameterWithProfilesMap struct {
+	tc.Parameter
+	ProfileNames map[string]struct{}
+}
+
+// TCParamsToParamsWithProfiles unmarshals the Profiles that the tc struct doesn't.
+func TCParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]ParameterWithProfiles, error) {
+	params := make([]ParameterWithProfiles, 0, len(tcParams))
+	for _, tcParam := range tcParams {
+		param := ParameterWithProfiles{Parameter: tcParam}
+
+		profiles := []string{}
+		if err := json.Unmarshal(tcParam.Profiles, &profiles); err != nil {
+			return nil, errors.New("unmarshalling JSON from parameter '" + strconv.Itoa(param.ID) + "': " + err.Error())
+		}
+		param.ProfileNames = profiles
+		param.Profiles = nil
+		params = append(params, param)
+	}
+	return params, nil
+}
+
+func ParameterWithProfilesToMap(tcParams []ParameterWithProfiles) []ParameterWithProfilesMap {
+	params := []ParameterWithProfilesMap{}
+	for _, tcParam := range tcParams {
+		param := ParameterWithProfilesMap{Parameter: tcParam.Parameter, ProfileNames: map[string]struct{}{}}
+		for _, profile := range tcParam.ProfileNames {
+			param.ProfileNames[profile] = struct{}{}
+		}
+		params = append(params, param)
+	}
+	return params
 }

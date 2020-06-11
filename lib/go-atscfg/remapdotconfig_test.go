@@ -52,7 +52,7 @@ func TestMakeRemapDotConfig(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -97,7 +97,9 @@ func TestMakeRemapDotConfig(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -153,7 +155,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -198,7 +200,9 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -236,7 +240,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -281,7 +285,9 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -333,7 +339,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -378,7 +384,9 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -416,7 +424,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -461,7 +469,9 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -499,7 +509,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -572,7 +582,9 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -610,7 +622,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -655,7 +667,9 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -716,7 +730,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -761,7 +775,9 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -813,7 +829,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -858,7 +874,9 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -917,7 +935,7 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -962,7 +980,9 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1024,7 +1044,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -1069,7 +1089,9 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1132,7 +1154,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -1177,7 +1199,9 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1232,7 +1256,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -1278,7 +1302,9 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1334,7 +1360,7 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -1407,7 +1433,9 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1445,7 +1473,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -1518,7 +1546,9 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1567,7 +1597,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -1892,7 +1922,9 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1931,7 +1963,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -1976,7 +2008,9 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2032,7 +2066,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2077,7 +2111,9 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2133,7 +2169,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2178,7 +2214,9 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2234,7 +2272,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2279,7 +2317,9 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2335,7 +2375,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2380,7 +2420,9 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2432,7 +2474,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2477,7 +2519,9 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2529,7 +2573,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2574,7 +2618,9 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2626,7 +2672,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2671,7 +2717,9 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2727,7 +2775,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2772,7 +2820,9 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2828,7 +2878,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2873,7 +2923,9 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2929,7 +2981,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -2974,7 +3026,9 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3025,7 +3079,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3070,7 +3124,9 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3121,7 +3177,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3166,7 +3222,9 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3217,7 +3275,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3262,7 +3320,9 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3313,7 +3373,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3358,7 +3418,9 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3409,7 +3471,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3454,7 +3516,9 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3503,7 +3567,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3548,7 +3612,9 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3601,7 +3667,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3646,7 +3712,9 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3698,7 +3766,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3743,7 +3811,9 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3791,7 +3861,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3836,7 +3906,9 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3891,7 +3963,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -3936,7 +4008,9 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3995,7 +4069,7 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4040,7 +4114,9 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4096,7 +4172,7 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4141,7 +4217,9 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4192,7 +4270,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4237,7 +4315,9 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4300,7 +4380,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4345,7 +4425,9 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4400,7 +4482,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4445,7 +4527,9 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4496,7 +4580,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4541,7 +4625,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4596,7 +4682,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4641,7 +4727,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4696,7 +4784,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4741,7 +4829,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4796,7 +4886,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4842,7 +4932,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4901,7 +4993,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -4947,7 +5039,9 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5019,7 +5113,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -5065,7 +5159,9 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5131,7 +5227,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -5176,7 +5272,9 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5231,7 +5329,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -5276,7 +5374,9 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5327,7 +5427,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -5372,7 +5472,9 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5423,7 +5525,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -5468,7 +5570,9 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5519,7 +5623,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -5564,7 +5668,9 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5619,7 +5725,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -5664,7 +5770,9 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5715,7 +5823,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -5760,7 +5868,9 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5801,7 +5911,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 		CDN:                           "mycdn",
 		CDNID:                         43,
 		DomainName:                    "mydomain",
-		HostName:                      "myhost",
+		HostName:                      string(serverName),
 		HTTPSPort:                     12443,
 		ID:                            44,
 		IP:                            "192.168.2.4",
@@ -5846,7 +5956,9 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(serverName, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData)
+	server := serverInfoToServer(serverInfo)
+	topologies := []tc.Topology{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5858,4 +5970,167 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 		t.Fatalf("expected no remaps for DS with nil regex type, actual: '%v' count %v", txt, len(txtLines))
 	}
 
+}
+
+func TestMakeRemapDotConfigTopologies(t *testing.T) {
+	serverName := tc.CacheName("server0")
+	toToolName := "to0"
+	toURL := "trafficops.example.net"
+	atsMajorVersion := 7
+
+	cacheURLConfigParams := map[string]string{
+		"not_location": "notinconfig",
+	}
+
+	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
+		46: map[string]string{
+			"cachekeykey": "cachekeyval",
+		},
+	}
+
+	serverPackageParamData := map[string]string{
+		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
+	}
+
+	serverInfo := &ServerInfo{
+		CacheGroupID:                  42,
+		CDN:                           "mycdn",
+		CDNID:                         43,
+		DomainName:                    "mydomain",
+		HostName:                      string(serverName),
+		HTTPSPort:                     12443,
+		ID:                            44,
+		IP:                            "192.168.2.4",
+		ParentCacheGroupID:            45,
+		ParentCacheGroupType:          "CGType4",
+		ProfileID:                     46,
+		ProfileName:                   "MyProfile",
+		Port:                          12080,
+		SecondaryParentCacheGroupID:   47,
+		SecondaryParentCacheGroupType: "MySecondaryParentCG",
+		Type:                          "EDGE",
+	}
+
+	remapDSData := []RemapConfigDSData{
+		RemapConfigDSData{
+			ID:                       48,
+			Type:                     "HTTP_LIVE",
+			OriginFQDN:               util.StrPtr("origin0.example.test"),
+			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
+			CacheURL:                 util.StrPtr("mycacheurl"),
+			RangeRequestHandling:     util.IntPtr(0),
+			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
+			RemapText:                util.StrPtr("myremaptext"),
+			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
+			SigningAlgorithm:         util.StrPtr("url_sig"),
+			Name:                     "mydsname0",
+			QStringIgnore:            util.IntPtr(0),
+			RegexRemap:               util.StrPtr("myregexremap"),
+			FQPacingRate:             util.IntPtr(0),
+			DSCP:                     0,
+			RoutingName:              util.StrPtr("myroutingname"),
+			MultiSiteOrigin:          util.StrPtr("mymso"),
+			Pattern:                  util.StrPtr("myregexpattern"),
+			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
+			Domain:                   util.StrPtr("mydomain"),
+			RegexSetNumber:           util.StrPtr("myregexsetnum"),
+			OriginShield:             util.StrPtr("myoriginshield"),
+			ProfileID:                util.IntPtr(49),
+			Protocol:                 util.IntPtr(0),
+			AnonymousBlockingEnabled: util.BoolPtr(false),
+			Active:                   true,
+			Topology:                 "t0",
+		},
+		RemapConfigDSData{
+			ID:                       48,
+			Type:                     "HTTP_LIVE",
+			OriginFQDN:               util.StrPtr("origin1.example.test"),
+			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
+			CacheURL:                 util.StrPtr("mycacheurl"),
+			RangeRequestHandling:     util.IntPtr(0),
+			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
+			RemapText:                util.StrPtr("myremaptext"),
+			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
+			SigningAlgorithm:         util.StrPtr("url_sig"),
+			Name:                     "mydsname1",
+			QStringIgnore:            util.IntPtr(0),
+			RegexRemap:               util.StrPtr("myregexremap"),
+			FQPacingRate:             util.IntPtr(0),
+			DSCP:                     0,
+			RoutingName:              util.StrPtr("myroutingname"),
+			MultiSiteOrigin:          util.StrPtr("mymso"),
+			Pattern:                  util.StrPtr("myregexpattern"),
+			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
+			Domain:                   util.StrPtr("mydomain"),
+			RegexSetNumber:           util.StrPtr("myregexsetnum"),
+			OriginShield:             util.StrPtr("myoriginshield"),
+			ProfileID:                util.IntPtr(49),
+			Protocol:                 util.IntPtr(0),
+			AnonymousBlockingEnabled: util.BoolPtr(false),
+			Active:                   true,
+			Topology:                 "t1",
+		},
+	}
+
+	server := serverInfoToServer(serverInfo)
+	server.Cachegroup = "edgeCG"
+
+	topologies := []tc.Topology{
+		tc.Topology{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+		tc.Topology{
+			Name: "t1",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "otherEdgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+	}
+
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, string(serverName), toToolName, toURL)
+
+	if !strings.Contains(txt, "origin0") {
+		t.Errorf("expected to contain DS with edge in topology, actual '%v'", txt)
+	}
+
+	if strings.Contains(txt, "origin1") {
+		t.Errorf("expected to not contain DS with edge not in topology, actual '%v'", txt)
+	}
+}
+
+// serverInfoToServer is for tests, and does NOT copy all data, do NOT use for real code.
+func serverInfoToServer(si *ServerInfo) tc.Server {
+	return tc.Server{
+		CachegroupID: si.CacheGroupID,
+		CDNName:      string(si.CDN),
+		CDNID:        si.CDNID,
+		DomainName:   si.DomainName,
+		HostName:     si.HostName,
+		HTTPSPort:    si.HTTPSPort,
+		ID:           si.ID,
+		IPAddress:    si.IP,
+		ProfileID:    int(si.ProfileID),
+		Profile:      si.ProfileName,
+		TCPPort:      si.Port,
+		Type:         si.Type,
+	}
 }
