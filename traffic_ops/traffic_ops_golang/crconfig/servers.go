@@ -214,7 +214,12 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 	for id, server := range servers {
 		ifaces, ok := interfaces[id]
 		if !ok {
-			return nil, fmt.Errorf("server '%s' (#%d) has no interfaces", server.Host, id)
+			log.Warnf("server '%s' (#%d) has no interfaces", server.Host, id)
+			server.Server.InterfaceName = new(string)
+			server.Server.Ip = new(string)
+			server.Server.Ip6 = new(string)
+			hostToServerMap[server.Host] = server.Server
+			continue
 		}
 
 		infs := make([]tc.ServerInterfaceInfo, 0, len(ifaces))
@@ -238,6 +243,10 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 		}
 
 		server.Server.InterfaceName = legacyNet.InterfaceName
+		if server.Server.InterfaceName == nil {
+			server.Server.InterfaceName = new(string)
+			log.Warnf("Server %s (#%d) had no service-address-containing interfaces", server.Host, id)
+		}
 
 		hostToServerMap[server.Host] = server.Server
 	}
