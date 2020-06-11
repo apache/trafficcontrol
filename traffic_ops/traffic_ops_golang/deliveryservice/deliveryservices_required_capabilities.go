@@ -197,6 +197,7 @@ func (rc *RequiredCapability) getTenantIDs() ([]int, error) {
 }
 
 func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, useIMS bool) ([]tc.DeliveryServicesRequiredCapability, error, error, int, *time.Time) {
+	var maxTime time.Time
 	var results []tc.DeliveryServicesRequiredCapability
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
 	if len(errs) > 0 {
@@ -204,8 +205,8 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
-	runSecond, maxTime := ims.TryIfModifiedSinceQuery(rc.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQueryRC(where, orderBy, pagination))
 	if useIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(rc.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQueryRC(where, orderBy, pagination))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return results, nil, nil, http.StatusNotModified, &maxTime

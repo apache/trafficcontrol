@@ -141,8 +141,8 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	runSecond, maxTime := ims.TryIfModifiedSinceQuery(param.APIInfo().Tx, h, queryValues, param.SelectMaxLastUpdatedQuery(where, orderBy, pagination, "parameter"))
 	if useIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(param.APIInfo().Tx, h, queryValues, param.SelectMaxLastUpdatedQuery(where, orderBy, pagination, "parameter"))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime

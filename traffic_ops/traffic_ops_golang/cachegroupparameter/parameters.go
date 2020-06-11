@@ -87,8 +87,8 @@ func (cgparam *TOCacheGroupParameter) Read(h http.Header, useIMS bool) ([]interf
 	}
 
 	params := []interface{}{}
-	runSecond, maxTime := ims.TryIfModifiedSinceQuery(cgparam.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(cgparam.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return params, nil, nil, http.StatusNotModified, &maxTime

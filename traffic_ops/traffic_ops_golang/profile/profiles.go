@@ -104,6 +104,7 @@ func (prof *TOProfile) Validate() error {
 }
 
 func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -127,8 +128,8 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
-	runSecond, maxTime := ims.TryIfModifiedSinceQuery(prof.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(prof.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime

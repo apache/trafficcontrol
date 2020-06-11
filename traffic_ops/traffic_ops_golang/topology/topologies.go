@@ -175,13 +175,14 @@ func (topology *TOTopology) Create() (error, error, int) {
 
 // Read is a requirement of the api.Reader interface and is called by api.ReadHandler().
 func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
 	var interfaces []interface{}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(topology.ReqInfo.Params, topology.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	runSecond, maxTime := ims.TryIfModifiedSinceQuery(topology.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(topology.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return interfaces, nil, nil, http.StatusNotModified, &maxTime

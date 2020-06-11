@@ -591,7 +591,7 @@ JOIN type t ON s.type = t.id ` + where + orderBy + pagination +
 }
 
 func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.ServerNullable, uint64, error, error, int, *time.Time) {
-
+	var maxTime time.Time
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -659,8 +659,8 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	}
 
 	serversList := []tc.ServerNullable{}
-	runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return serversList, 0, nil, nil, http.StatusNotModified, &maxTime

@@ -79,6 +79,7 @@ func (req TODeliveryServiceRequest) GetType() string {
 
 // Read implements the api.Reader interface
 func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
 	deliveryServiceRequests := []interface{}{}
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
@@ -111,8 +112,8 @@ func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interfa
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
 
-	runSecond, maxTime := ims.TryIfModifiedSinceQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return deliveryServiceRequests, nil, nil, http.StatusNotModified, &maxTime

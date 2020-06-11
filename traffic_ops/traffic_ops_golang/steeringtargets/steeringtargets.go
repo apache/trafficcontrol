@@ -110,6 +110,7 @@ func (st *TOSteeringTargetV11) Read(h http.Header, useIMS bool) ([]interface{}, 
 }
 
 func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser, useIMS bool) ([]tc.SteeringTargetNullable, error, error, int, *time.Time) {
+	var maxTime time.Time
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"deliveryservice": dbhelpers.WhereColumnInfo{"st.deliveryservice", api.IsInt},
 		"target":          dbhelpers.WhereColumnInfo{"st.target", api.IsInt},
@@ -119,8 +120,8 @@ func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.C
 		return nil, nil, util.JoinErrs(errs), http.StatusBadRequest, nil
 	}
 
-	runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []tc.SteeringTargetNullable{}, nil, nil, http.StatusNotModified, &maxTime

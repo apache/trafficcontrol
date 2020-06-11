@@ -148,6 +148,7 @@ func (origin *TOOrigin) Read(h http.Header, useIMS bool) ([]interface{}, error, 
 func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.Origin, error, error, int, *time.Time) {
 	var rows *sqlx.Rows
 	var err error
+	var maxTime time.Time
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
@@ -166,8 +167,8 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 	if useIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []tc.Origin{}, nil, nil, http.StatusNotModified, &maxTime
