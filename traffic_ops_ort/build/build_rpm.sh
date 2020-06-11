@@ -60,7 +60,7 @@ function initBuildArea() {
 	cp -p traffic_ops_ort.pl "$dest";
 	cp -p supermicro_udev_mapper.pl "$dest";
 	mkdir -p "${dest}/atstccfg";
-	cp -Rp atstccfg/* "${dest}/atstccfg";
+	cp -a atstccfg/* "${dest}/atstccfg";
 	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$dest");
 	cp build/traffic_ops_ort.spec "$RPMBUILD"/SPECS/.;
 
