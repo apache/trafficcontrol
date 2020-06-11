@@ -69,10 +69,15 @@ func (topology *TOTopology) checkForEdgeParents(cacheGroups []tc.CacheGroupNulla
 		}
 		switch cacheGroupType := *cacheGroups[nodeIndex].Type; cacheGroupType {
 		case tc.CacheGroupEdgeTypeName:
+			parentTerm := "parent"
+			if parentIndex == 1 {
+				parentTerm = "secondary " + parentTerm
+			}
 			topology.Alerts.AddNewAlert(tc.WarnLevel, fmt.Sprintf(
-				"%s-typed cachegroup %s is a parent of %s, unexpected behavior may result",
+				"%s-typed cachegroup %s is a %s of %s, unexpected behavior may result",
 				parentCacheGroupType,
 				topology.Nodes[parentCacheGroupIndex].Cachegroup,
+				parentTerm,
 				node.Cachegroup))
 			break
 		case tc.CacheGroupMidTypeName:
