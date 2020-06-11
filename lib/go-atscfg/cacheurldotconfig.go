@@ -27,6 +27,7 @@ import (
 )
 
 const ContentTypeCacheURLDotConfig = ContentTypeTextASCII
+const LineCommentCacheURLDotConfig = LineCommentHash
 
 type CacheURLDS struct {
 	OrgServerFQDN string

@@ -16,6 +16,7 @@ package v3
 */
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -23,7 +24,7 @@ import (
 )
 
 func TestServerServerCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
 		GetTestServerServerCapabilities(t)
 	})
 }
@@ -32,21 +33,27 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	// Valid POSTs
 
 	// loop through server ServerCapabilities, assign FKs and create
+	params := url.Values{}
 	for _, ssc := range testData.ServerServerCapabilities {
-		servResp, _, err := TOSession.GetServerByHostName(*ssc.Server)
-		if err != nil {
-			t.Fatalf("cannot GET Server by hostname: %v - %v", *ssc.Server, err)
+		if ssc.Server == nil {
+			t.Fatalf("server-server-capability structure had nil server")
 		}
+		params.Set("hostName", *ssc.Server)
+		resp, _, err := TOSession.GetServers(&params)
+		if err != nil {
+			t.Fatalf("cannot GET Server by hostname '%s': %v - %v", *ssc.Server, err, resp.Alerts)
+		}
+		servResp := resp.Response
 		if len(servResp) != 1 {
 			t.Fatalf("cannot GET Server by hostname: %v. Response did not include record.", *ssc.Server)
 		}
 		server := servResp[0]
-		ssc.ServerID = &server.ID
-		resp, _, err := TOSession.CreateServerServerCapability(ssc)
+		ssc.ServerID = server.ID
+		createResp, _, err := TOSession.CreateServerServerCapability(ssc)
 		if err != nil {
 			t.Errorf("could not POST the server capability %v to server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
 		}
-		t.Log("Response: ", server.HostName, " ", resp)
+		t.Log("Response: ", *ssc.Server, " ", createResp)
 	}
 
 	// Invalid POSTs
@@ -98,16 +105,19 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Attempt to assign a server capability to a non MID/EDGE server
-	servers, _, err := TOSession.GetServerByHostName("riak")
+	// TODO: DON'T hard-code server hostnames!
+	params.Set("hostName", "riak")
+	resp, _, err := TOSession.GetServers(&params)
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname: %v - %v", *ssc.Server, err)
+		t.Fatalf("cannot GET Server by hostname 'riak': %v - %v", err, resp.Alerts)
 	}
+	servers := resp.Response
 	if len(servers) < 1 {
 		t.Fatal("need at least one server to test invalid server type assignment")
 	}
 
 	sscInvalidType := tc.ServerServerCapability{
-		ServerID:         &servers[0].ID,
+		ServerID:         servers[0].ID,
 		ServerCapability: ssc.ServerCapability,
 	}
 	_, _, err = TOSession.CreateServerServerCapability(sscInvalidType)
@@ -186,7 +196,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		dsReqCap := dsReqCapResp[0]
 
 		// Assign server to ds
-		_, err = TOSession.CreateDeliveryServiceServers(*dsReqCap.DeliveryServiceID, []int{*ssc.ServerID}, false)
+		_, _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap.DeliveryServiceID, []int{*ssc.ServerID}, false)
 		if err != nil {
 			t.Fatalf("cannot CREATE server delivery service assignment: %v", err)
 		}

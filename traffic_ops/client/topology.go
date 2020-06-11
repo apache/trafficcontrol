@@ -18,16 +18,15 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"net"
 	"net/http"
 	"net/url"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const (
-	ApiTopologies = apiBase + "/topologies"
-)
+const ApiTopologies = apiBase + "/topologies"
 
 // CreateTopology creates a topology and returns the response.
 func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf, error) {
@@ -38,6 +37,9 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 		return nil, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, ApiTopologies, reqBody)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -53,6 +55,9 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, ApiTopologies, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -71,6 +76,9 @@ func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -97,10 +105,14 @@ func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyRespo
 	}
 	route := fmt.Sprintf("%s?name=%s", ApiTopologies, name)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer log.Close(resp.Body, "unable to close response")
+
 	var response = new(tc.TopologyResponse)
 	err = json.NewDecoder(resp.Body).Decode(response)
 	return response, reqInf, err
@@ -111,10 +123,14 @@ func (to *Session) DeleteTopology(name string) (tc.Alerts, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodDelete, reqUrl, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
 	defer log.Close(resp.Body, "unable to close response")
+
 	var alerts tc.Alerts
 	if err = json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
 		return tc.Alerts{}, reqInf, err

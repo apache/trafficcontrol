@@ -42,7 +42,7 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	servers, err := getDetailServers(inf.Tx.Tx, inf.User, inf.Params["hostName"], -1, "", 0)
+	servers, err := getDetailServers(inf.Tx.Tx, inf.User, inf.Params["hostName"], -1, "", 0, *inf.Version)
 	if err != nil {
 		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting detail servers: "+err.Error()), &alt)
 		return
@@ -52,6 +52,23 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	server := servers[0]
+	if inf.Version.Major < 3 {
+		v11server := tc.ServerDetailV11{}
+		v11server.ServerDetail = server.ServerDetail
+
+		interfaces := *server.ServerInterfaces
+		legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+			return
+		}
+		v11server.LegacyInterfaceDetails = legacyInterface
+
+		server := v11server
+		alerts := api.CreateDeprecationAlerts(&alt)
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
+		return
+	}
 	alerts := api.CreateDeprecationAlerts(&alt)
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 }
@@ -92,52 +109,72 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	servers, err := getDetailServers(inf.Tx.Tx, inf.User, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit)
+	servers, err := getDetailServers(inf.Tx.Tx, inf.User, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit, *inf.Version)
 	respVals := map[string]interface{}{
 		"orderby": orderBy,
 		"limit":   limit,
 		"size":    len(servers),
 	}
+
+	if inf.Version.Major < 3 {
+		v11ServerList := []tc.ServerDetailV11{}
+		for _, server := range servers {
+			v11server := tc.ServerDetailV11{}
+			v11server.ServerDetail = server.ServerDetail
+
+			interfaces := *server.ServerInterfaces
+			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				return
+			}
+			v11server.LegacyInterfaceDetails = legacyInterface
+
+			v11ServerList = append(v11ServerList, v11server)
+		}
+		api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(v11ServerList, err)
+		return
+	}
 	api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(servers, err)
 }
 
-func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int) ([]tc.ServerDetail, error) {
+func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV30, error) {
 	allowedOrderByCols := map[string]string{
 		"":                 "",
-		"cachegroup":       "s.cachegroup",
+		"cachegroup":       "server.cachegroup",
 		"cdn_name":         "cdn.name",
-		"domain_name":      "s.domain_name",
-		"guid":             "s.guid",
-		"host_name":        "s.host_name",
-		"https_port":       "s.https_port",
-		"id":               "s.id",
-		"ilo_ip_address":   "s.ilo_ip_address",
-		"ilo_ip_gateway":   "s.ilo_ip_gateway",
-		"ilo_ip_netmask":   "s.ilo_ip_netmask",
-		"ilo_password":     "s.ilo_password",
-		"ilo_username":     "s.ilo_username",
+		"domain_name":      "server.domain_name",
+		"guid":             "server.guid",
+		"host_name":        "server.host_name",
+		"https_port":       "server.https_port",
+		"id":               "server.id",
+		"ilo_ip_address":   "server.ilo_ip_address",
+		"ilo_ip_gateway":   "server.ilo_ip_gateway",
+		"ilo_ip_netmask":   "server.ilo_ip_netmask",
+		"ilo_password":     "server.ilo_password",
+		"ilo_username":     "server.ilo_username",
 		"interface_mtu":    "interface_mtu",
-		"interface_name":   "s.interface_name",
-		"ip6_address":      "s.ip6_address",
-		"ip6_gateway":      "s.ip6_gateway",
-		"ip_address":       "s.ip_address",
-		"ip_gateway":       "s.ip_gateway",
-		"ip_netmask":       "s.ip_netmask",
-		"mgmt_ip_address":  "s.mgmt_ip_address",
-		"mgmt_ip_gateway":  "s.mgmt_ip_gateway",
-		"mgmt_ip_netmask":  "s.mgmt_ip_netmask",
-		"offline_reason":   "s.offline_reason",
+		"interface_name":   "server.interface_name",
+		"ip6_address":      "server.ip6_address",
+		"ip6_gateway":      "server.ip6_gateway",
+		"ip_address":       "server.ip_address",
+		"ip_gateway":       "server.ip_gateway",
+		"ip_netmask":       "server.ip_netmask",
+		"mgmt_ip_address":  "server.mgmt_ip_address",
+		"mgmt_ip_gateway":  "server.mgmt_ip_gateway",
+		"mgmt_ip_netmask":  "server.mgmt_ip_netmask",
+		"offline_reason":   "server.offline_reason",
 		"phys_location":    "pl.name",
 		"profile":          "p.name",
 		"profile_desc":     "p.description",
-		"rack":             "s.rack",
-		"router_host_name": "s.router_host_name",
-		"router_port_name": "s.router_port_name",
+		"rack":             "server.rack",
+		"router_host_name": "server.router_host_name",
+		"router_port_name": "server.router_port_name",
 		"status":           "st.name",
-		"tcp_port":         "s.tcp_port",
+		"tcp_port":         "server.tcp_port",
 		"server_type":      "t.name",
-		"xmpp_id":          "s.xmpp_id",
-		"xmpp_passwd":      "s.xmpp_passwd",
+		"xmpp_id":          "server.xmpp_id",
+		"xmpp_passwd":      "server.xmpp_passwd",
 	}
 	orderBy, ok := allowedOrderByCols[orderBy]
 	if !ok {
@@ -146,48 +183,42 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 	const JumboFrameBPS = 9000
 	q := `
 SELECT
-cg.name as cachegroup,
-cdn.name as cdn_name,
-ARRAY(select deliveryservice from deliveryservice_server where server = s.id),
-s.domain_name,
-s.guid,
-s.host_name,
-s.https_port,
-s.id,
-s.ilo_ip_address,
-s.ilo_ip_gateway,
-s.ilo_ip_netmask,
-s.ilo_password,
-s.ilo_username,
-COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-s.interface_name,
-s.ip6_address,
-s.ip6_gateway,
-s.ip_address,
-s.ip_gateway,
-s.ip_netmask,
-s.mgmt_ip_address,
-s.mgmt_ip_gateway,
-s.mgmt_ip_netmask,
-s.offline_reason,
-pl.name as phys_location,
-p.name as profile,
-p.description as profile_desc,
-s.rack,
-s.router_host_name,
-s.router_port_name,
-st.name as status,
-s.tcp_port,
-t.name as server_type,
-s.xmpp_id,
-s.xmpp_passwd
-FROM server as s
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id
+	cg.name AS cachegroup,
+	cdn.name AS cdn_name,
+	ARRAY(select deliveryservice from deliveryservice_server where server = server.id),
+	server.domain_name,
+	server.guid,
+	server.host_name,
+	server.https_port,
+	server.id,
+	server.ilo_ip_address,
+	server.ilo_ip_gateway,
+	server.ilo_ip_netmask,
+	server.ilo_password,
+	server.ilo_username,
+	` + InterfacesArray + ` AS interfaces,
+	server.mgmt_ip_address,
+	server.mgmt_ip_gateway,
+	server.mgmt_ip_netmask,
+	server.offline_reason,
+	pl.name as phys_location,
+	p.name as profile,
+	p.description as profile_desc,
+	server.rack,
+	server.router_host_name,
+	server.router_port_name,
+	st.name as status,
+	server.tcp_port,
+	t.name as server_type,
+	server.xmpp_id,
+	server.xmpp_passwd
+FROM server
+JOIN cachegroup cg ON server.cachegroup = cg.id
+JOIN cdn ON server.cdn_id = cdn.id
+JOIN phys_location pl ON server.phys_location = pl.id
+JOIN profile p ON server.profile = p.id
+JOIN status st ON server.status = st.id
+JOIN type t ON server.type = t.id
 `
 	limitStr := ""
 	if limit != 0 {
@@ -200,13 +231,13 @@ JOIN type t ON s.type = t.id
 	rows := (*sql.Rows)(nil)
 	err := error(nil)
 	if hostName != "" && physLocationID != -1 {
-		q += ` WHERE s.host_name = $1::text AND s.phys_location = $2::bigint` + orderByStr + limitStr
+		q += ` WHERE server.host_name = $1::text AND server.phys_location = $2::bigint` + orderByStr + limitStr
 		rows, err = tx.Query(q, hostName, physLocationID)
 	} else if hostName != "" {
-		q += ` WHERE s.host_name = $1::text` + orderByStr + limitStr
+		q += ` WHERE server.host_name = $1::text` + orderByStr + limitStr
 		rows, err = tx.Query(q, hostName)
 	} else if physLocationID != -1 {
-		q += ` WHERE s.phys_location = $1::int` + orderByStr + limitStr
+		q += ` WHERE server.phys_location = $1::int` + orderByStr + limitStr
 		rows, err = tx.Query(q, physLocationID)
 	} else {
 		q += orderByStr + limitStr
@@ -217,12 +248,15 @@ JOIN type t ON s.type = t.id
 	}
 	defer rows.Close()
 	sIDs := []int{}
-	servers := []tc.ServerDetail{}
+	servers := []tc.ServerDetailV30{}
+	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 	for rows.Next() {
-		s := tc.ServerDetail{}
-		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &s.InterfaceMTU, &s.InterfaceName, &s.IP6Address, &s.IP6Gateway, &s.IPAddress, &s.IPGateway, &s.IPNetmask, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		s := tc.ServerDetailV30{}
+		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
+
+		s.ServerInterfaces = &serverInterfaceInfo
 
 		hiddenField := "********"
 		if user.PrivLevel < auth.PrivLevelOperations {

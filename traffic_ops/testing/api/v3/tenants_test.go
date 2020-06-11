@@ -26,9 +26,15 @@ import (
 )
 
 func TestTenants(t *testing.T) {
-	WithObjs(t, []TCObj{Parameters, Tenants}, func() {
+	WithObjs(t, []TCObj{Tenants}, func() {
 		GetTestTenants(t)
 		UpdateTestTenants(t)
+	})
+}
+
+func TestTenantsActive(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, CacheGroups, Topologies, DeliveryServices, Users}, func() {
+		UpdateTestTenantsActive(t)
 	})
 }
 
@@ -158,38 +164,6 @@ func DeleteTestTenants(t *testing.T) {
 			t.Fatal("could not delete tenants: not tenant without an existing child found (cycle?)")
 		}
 	}
-}
-
-func TestTenantsActive(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestParameters(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestServers(t)
-	CreateTestDeliveryServices(t)
-	CreateTestUsers(t)
-
-	UpdateTestTenantsActive(t)
-
-	ForceDeleteTestUsers(t)
-	DeleteTestDeliveryServices(t)
-	DeleteTestServers(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestParameters(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
 }
 
 func ExtractXMLID(ds *tc.DeliveryServiceNullable) string {

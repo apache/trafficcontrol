@@ -15,19 +15,53 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.request;
 
-public class DNSRequest extends Request {
-	private int qtype;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Zone;
 
-	public int getQtype() {
-		return qtype;
+public class DNSRequest extends Request {
+	private final Name name;
+	private final String zoneName;
+	private final int queryType;
+	private boolean dnssec = false;
+
+	public DNSRequest(final String zoneName, final Name name, final int queryType) {
+		super();
+
+		this.queryType = queryType;
+		this.name = name;
+		this.zoneName = zoneName;
 	}
 
-	public void setQtype(final int qtype) {
-		this.qtype = qtype;
+	public DNSRequest(final Zone zone, final Name name, final int queryType) {
+		super();
+
+		this.queryType = queryType;
+		this.name = name;
+		this.zoneName = zone.getOrigin().toString().toLowerCase();
+	}
+
+	public int getQueryType() {
+		return queryType;
 	}
 
 	@Override
 	public String getType() {
 		return "dns";
+	}
+
+	public boolean isDnssec() {
+		return dnssec;
+	}
+
+	public void setDnssec(final boolean dnssec) {
+		this.dnssec = dnssec;
+	}
+
+	public Name getName() {
+		return name;
+	}
+
+	public String getZoneName() {
+		return zoneName;
 	}
 }

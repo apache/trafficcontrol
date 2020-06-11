@@ -18,4 +18,5 @@
  */
 
 module.exports = angular.module('trafficPortal.table.topologyCacheGroups', [])
+	.controller('TableTopologyCacheGroupsController', require('./TableTopologyCacheGroupsController'))
 	.controller('TableSelectTopologyCacheGroupsController', require('./TableSelectTopologyCacheGroupsController'));

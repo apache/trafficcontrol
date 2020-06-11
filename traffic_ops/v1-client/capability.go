@@ -62,7 +62,7 @@ func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
 
 // GetCapability retrieves only the capability named 'c'
 func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
-	var v url.Values
+	v := url.Values{}
 	v.Add("name", c)
 	endpoint := API_v14_CAPABILITIES + "?" + v.Encode()
 	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil)

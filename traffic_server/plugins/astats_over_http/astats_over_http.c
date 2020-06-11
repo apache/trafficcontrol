@@ -40,6 +40,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+typedef enum {
+	JSON_OUTPUT,
+	CSV_OUTPUT
+} output_format;
+
 typedef struct {
 	unsigned int recordTypes;
 	char *stats_path;
@@ -82,6 +87,7 @@ typedef struct stats_state_t {
 	char *interfaceName;
 	char *query;
 	unsigned int recordTypes;
+	output_format output;
 } stats_state;
 
 int configReloadRequests = 0;
@@ -193,14 +199,25 @@ stats_add_data_to_resp_buffer(const char *s, stats_state *my_state) {
 	return s_len;
 }
 
-static const char RESP_HEADER[] = "HTTP/1.0 200 Ok\r\nContent-Type: text/javascript\r\nCache-Control: no-cache\r\n\r\n";
+static const char RESP_HEADER_JSON[] = "HTTP/1.0 200 Ok\r\nContent-Type: text/json\r\nCache-Control: no-cache\r\n\r\n";
+static const char RESP_HEADER_CSV[] = "HTTP/1.0 200 Ok\r\nContent-Type: text/csv\r\nCache-Control: no-cache\r\n\r\n";
 
 static void
 stats_process_read(TSCont contp, TSEvent event, stats_state *my_state) {
 	TSDebug(PLUGIN_TAG, "stats_process_read(%d)", event);
 
 	if (event == TS_EVENT_VCONN_READ_READY) {
-		my_state->output_bytes = stats_add_data_to_resp_buffer(RESP_HEADER, my_state);
+		switch (my_state->output) {
+			case JSON_OUTPUT:
+				my_state->output_bytes = stats_add_data_to_resp_buffer(RESP_HEADER_JSON, my_state);
+				break;
+			case CSV_OUTPUT:
+				my_state->output_bytes = stats_add_data_to_resp_buffer(RESP_HEADER_CSV, my_state);
+				break;
+			default:
+				TSError("stats_process_read: Unknown output format\n");
+				break;
+		}
 		TSVConnShutdown(my_state->net_vc, 1, 0);
 		my_state->write_vio = TSVConnWrite(my_state->net_vc, contp, my_state->resp_reader, INT64_MAX);
 	}
@@ -218,9 +235,16 @@ stats_process_read(TSCont contp, TSEvent event, stats_state *my_state) {
 }
 
 #define APPEND(a) my_state->output_bytes += stats_add_data_to_resp_buffer(a, my_state)
-#define APPEND_STAT(a, fmt, v) do { \
+#define APPEND_STAT_JSON(a, fmt, v) do { \
 		char b[3048]; \
 		int nbytes = snprintf(b, sizeof(b), "   \"%s\": " fmt ",\n", a, v); \
+		if (0 < nbytes && nbytes < (int)sizeof(b)) \
+			APPEND(b); \
+} while(0)
+
+#define APPEND_STAT_CSV(a, fmt, v) do { \
+		char b[3048]; \
+		int nbytes = snprintf(b, sizeof(b), "%s," fmt "\n", a, v); \
 		if (0 < nbytes && nbytes < (int)sizeof(b)) \
 			APPEND(b); \
 } while(0)
@@ -245,13 +269,46 @@ json_out_stat(TSRecordType rec_type, void *edata, int registered, const char *na
 
 	switch(data_type) {
 	case TS_RECORDDATATYPE_COUNTER:
-		APPEND_STAT(name, "%" PRIu64, datum->rec_counter); break;
+		APPEND_STAT_JSON(name, "%" PRIu64, datum->rec_counter); break;
 	case TS_RECORDDATATYPE_INT:
-		APPEND_STAT(name, "%" PRIu64, datum->rec_int); break;
+		APPEND_STAT_JSON(name, "%" PRIu64, datum->rec_int); break;
 	case TS_RECORDDATATYPE_FLOAT:
-		APPEND_STAT(name, "%f", datum->rec_float); break;
+		APPEND_STAT_JSON(name, "%f", datum->rec_float); break;
 	case TS_RECORDDATATYPE_STRING:
-		APPEND_STAT(name, "\"%s\"", datum->rec_string); break;
+		APPEND_STAT_JSON(name, "\"%s\"", datum->rec_string); break;
+	default:
+		TSDebug(PLUGIN_TAG, "unkown type for %s: %d", name, data_type);
+		break;
+	}
+}
+
+static void
+csv_out_stat(TSRecordType rec_type, void *edata, int registered, const char *name, TSRecordDataType data_type, TSRecordData *datum) {
+	stats_state *my_state = edata;
+	int found = 0;
+	int i;
+
+	if (my_state->globals_cnt) {
+		for (i = 0; i < my_state->globals_cnt; i++) {
+			if (strstr(name, my_state->globals[i])) {
+				found = 1;
+				break;
+			}
+		}
+
+		if (!found)
+			return; // skip
+	}
+
+	switch(data_type) {
+	case TS_RECORDDATATYPE_COUNTER:
+		APPEND_STAT_CSV(name, "%" PRIu64, datum->rec_counter); break;
+	case TS_RECORDDATATYPE_INT:
+		APPEND_STAT_CSV(name, "%" PRIu64, datum->rec_int); break;
+	case TS_RECORDDATATYPE_FLOAT:
+		APPEND_STAT_CSV(name, "%f", datum->rec_float); break;
+	case TS_RECORDDATATYPE_STRING:
+		APPEND_STAT_CSV(name, "%s", datum->rec_string); break;
 	default:
 		TSDebug(PLUGIN_TAG, "unkown type for %s: %d", name, data_type);
 		break;
@@ -297,18 +354,18 @@ static int getSpeed(char *inf, char *buffer, int bufferSize) {
 	return speed;
 }
 
-static void appendSystemState(stats_state *my_state) {
+static void appendSystemStateJson(stats_state *my_state) {
 	char *interface = my_state->interfaceName;
 	char buffer[16384];
 	char *str;
 	char *end;
 	int speed = 0;
 
-	APPEND_STAT("inf.name", "\"%s\"", interface);
+	APPEND_STAT_JSON("inf.name", "\"%s\"", interface);
 
 	speed = getSpeed(interface, buffer, sizeof(buffer));
 
-	APPEND_STAT("inf.speed", "%d", speed);
+	APPEND_STAT_JSON("inf.speed", "%d", speed);
 
 	str = getFile("/proc/net/dev", buffer, sizeof(buffer));
 	if (str && interface) {
@@ -317,7 +374,7 @@ static void appendSystemState(stats_state *my_state) {
 			end = strstr(str, "\n");
 			if (end)
 				*end = 0;
-			APPEND_STAT("proc.net.dev", "\"%s\"", str);
+			APPEND_STAT_JSON("proc.net.dev", "\"%s\"", str);
 		}
 	}
 
@@ -326,7 +383,40 @@ static void appendSystemState(stats_state *my_state) {
 		end = strstr(str, "\n");
 		if (end)
 			*end = 0;
-		APPEND_STAT("proc.loadavg", "\"%s\"", str);
+		APPEND_STAT_JSON("proc.loadavg", "\"%s\"", str);
+	}
+}
+
+static void appendSystemStateCsv(stats_state *my_state) {
+	char *interface = my_state->interfaceName;
+	char buffer[16384];
+	char *str;
+	char *end;
+	int speed = 0;
+
+	APPEND_STAT_CSV("inf.name", "%s", interface);
+
+	speed = getSpeed(interface, buffer, sizeof(buffer));
+
+	APPEND_STAT_CSV("inf.speed", "%d", speed);
+
+	str = getFile("/proc/net/dev", buffer, sizeof(buffer));
+	if (str && interface) {
+		str = strstr(str, interface);
+		if (str) {
+			end = strstr(str, "\n");
+			if (end)
+				*end = 0;
+			APPEND_STAT_CSV("proc.net.dev", "%s", str);
+		}
+	}
+
+	str = getFile("/proc/loadavg", buffer, sizeof(buffer));
+	if (str) {
+		end = strstr(str, "\n");
+		if (end)
+			*end = 0;
+		APPEND_STAT_CSV("proc.loadavg", "%s", str);
 	}
 }
 
@@ -343,12 +433,12 @@ static void json_out_stats(stats_state *my_state) {
 
 	if (my_state->recordTypes & SYSTEM_RECORD_TYPE) {
 		APPEND(",\n \"system\": {\n");
-		appendSystemState(my_state);
-		APPEND_STAT("configReloadRequests", "%d", configReloadRequests);
-		APPEND_STAT("lastReloadRequest", "%" PRIu64, lastReloadRequest);
-		APPEND_STAT("configReloads", "%d", configReloads);
-		APPEND_STAT("lastReload", "%" PRIu64, lastReload);
-		APPEND_STAT("astatsLoad", "%" PRIu64, astatsLoad);
+		appendSystemStateJson(my_state);
+		APPEND_STAT_JSON("configReloadRequests", "%d", configReloadRequests);
+		APPEND_STAT_JSON("lastReloadRequest", "%" PRIu64, lastReloadRequest);
+		APPEND_STAT_JSON("configReloads", "%d", configReloads);
+		APPEND_STAT_JSON("lastReload", "%" PRIu64, lastReload);
+		APPEND_STAT_JSON("astatsLoad", "%" PRIu64, astatsLoad);
 		APPEND("\"something\": \"here\"");
 		APPEND("\n  }");
 	}
@@ -356,12 +446,41 @@ static void json_out_stats(stats_state *my_state) {
 	APPEND("\n}\n");
 }
 
+static void csv_out_stats(stats_state *my_state) {
+	const char *version;
+	TSDebug(PLUGIN_TAG, "recordTypes: '0x%x'", my_state->recordTypes);
+    TSRecordDump(my_state->recordTypes, csv_out_stat, my_state);
+	version = TSTrafficServerVersionGet();
+	//APPEND("version","%s",version);
+	APPEND_STAT_CSV("version","%s", version);
+	if (my_state->recordTypes & SYSTEM_RECORD_TYPE) {
+		//APPEND(",\n \"system\": {\n");
+		appendSystemStateCsv(my_state);
+		APPEND_STAT_CSV("configReloadRequests", "%d", configReloadRequests);
+		APPEND_STAT_CSV("lastReloadRequest", "%" PRIu64, lastReloadRequest);
+		APPEND_STAT_CSV("configReloads", "%d", configReloads);
+		APPEND_STAT_CSV("lastReload", "%" PRIu64, lastReload);
+		APPEND_STAT_CSV("astatsLoad", "%" PRIu64, astatsLoad);
+		APPEND("something,here\n");
+	}
+}
+
 static void stats_process_write(TSCont contp, TSEvent event, stats_state *my_state) {
 	if (event == TS_EVENT_VCONN_WRITE_READY) {
 		if (my_state->body_written == 0) {
 			TSDebug(PLUGIN_TAG, "plugin adding response body");
 			my_state->body_written = 1;
-			json_out_stats(my_state);
+			switch (my_state->output) {
+				case JSON_OUTPUT:
+					json_out_stats(my_state);
+					break;
+				case CSV_OUTPUT:
+					csv_out_stats(my_state);
+					break;
+				default:
+					TSError("stats_process_write: Unknown output type\n");
+					break;
+			}
 			TSVIONBytesSet(my_state->write_vio, my_state->output_bytes);
 		}
 		TSVIOReenable(my_state->write_vio);
@@ -398,7 +517,7 @@ static int astats_origin(TSCont cont, TSEvent event, void *edata) {
 	config_t* config;
 	TSHttpTxn txnp = (TSHttpTxn) edata;
 	TSMBuffer reqp;
-	TSMLoc hdr_loc = NULL, url_loc = NULL;
+	TSMLoc hdr_loc = NULL, url_loc = NULL, accept_field = NULL;
 	TSEvent reenable = TS_EVENT_HTTP_CONTINUE;
 	config = get_config(cont);
 
@@ -416,7 +535,6 @@ static int astats_origin(TSCont cont, TSEvent event, void *edata) {
 	TSDebug(PLUGIN_TAG,"Path: %.*s",path_len,path);
 
 	if (!(path_len == config->stats_path_len && !memcmp(path, config->stats_path, config->stats_path_len))) {
-//		TSDebug(PLUGIN_TAG, "not right path: %.*s",path_len,path);
 		goto notforme;
 	}
 
@@ -425,7 +543,6 @@ static int astats_origin(TSCont cont, TSEvent event, void *edata) {
 		TSDebug(PLUGIN_TAG, "not right ip");
 		goto notforme;
 	}
-//	TSDebug(PLUGIN_TAG,"Path...: %.*s",path_len,path);
 
 	int query_len;
 	char *query = (char*)TSUrlHttpQueryGet(reqp,url_loc,&query_len);
@@ -439,6 +556,21 @@ static int astats_origin(TSCont cont, TSEvent event, void *edata) {
 	icontp = TSContCreate(stats_dostuff, TSMutexCreate());
 	my_state = (stats_state *) TSmalloc(sizeof(*my_state));
 	memset(my_state, 0, sizeof(*my_state));
+
+	accept_field = TSMimeHdrFieldFind(reqp, hdr_loc, TS_MIME_FIELD_ACCEPT, TS_MIME_LEN_ACCEPT);
+	my_state->output = JSON_OUTPUT; // default to json output
+	// accept header exists, use it to determine response type
+	if (accept_field != TS_NULL_MLOC) {
+		int len = -1;
+		const char* str = TSMimeHdrFieldValueStringGet(reqp, hdr_loc, accept_field, -1, &len);
+
+		// Parse the Accept header, default to JSON output unless its another supported format
+		if (!strncasecmp(str, "text/csv", len)) {
+			my_state->output = CSV_OUTPUT;
+		} else {
+			my_state->output = JSON_OUTPUT;
+		}
+	}
 
 	my_state->recordTypes = config->recordTypes;
 	if (query_len) {
@@ -463,6 +595,8 @@ static int astats_origin(TSCont cont, TSEvent event, void *edata) {
 		TSHandleMLocRelease(reqp, hdr_loc, url_loc);
 	if (hdr_loc)
 		TSHandleMLocRelease(reqp, TS_NULL_MLOC, hdr_loc);
+	if (accept_field)
+		TSHandleMLocRelease(reqp, TS_NULL_MLOC, accept_field);
 
 	TSHttpTxnReenable(txnp, reenable);
 
@@ -677,7 +811,6 @@ static config_t* new_config(TSFile fh) {
         config->allowIps6 = 0;
         config->ip6Count = 0;
         config->recordTypes = DEFAULT_RECORD_TYPES;
-	//	TSmalloc(6);
 
 	if(!fh) {
 		config->stats_path = nstr("_astats");

@@ -1195,7 +1195,7 @@
       "matchsets": [{
         "protocol": "DNS",
         "matchlist": [{
-          "regex": ".*\\.http-only-test\\..*",
+          "regex": ".*\\.http-dns-test\\..*",
           "match-type": "HOST"
         }]
       }],
@@ -1251,6 +1251,16 @@
       "latitude": 36.0
     }
   },
+  "trafficRouterLocations": {
+    "location-0": {
+      "longitude": -84.0,
+      "latitude": 33.0
+    },
+    "location-9": {
+      "longitude": -87.0,
+      "latitude": 41.0
+    }
+  },
   "config": {
     "federationmapping.polling.url": "http://${toHostname}/api/2.0/federations/all",
     "certificate.api.url": "http://${toHostname}/api/2.0/cdns/name/${cdnName}/sslkeys",
@@ -1292,3 +1302,4 @@
     "dnssec.enabled": "false"
   }
 }
+

@@ -72,8 +72,13 @@ func (region TORegion) DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo {
 }
 
 func (region *TORegion) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	region.ID = i
+	//this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	if id, exists := keys["id"].(int); exists {
+		region.ID = id
+	}
+	if name, exists := keys["name"].(string); exists {
+		region.Name = name
+	}
 }
 
 func (region *TORegion) GetAuditName() string {

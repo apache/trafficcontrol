@@ -306,7 +306,6 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM api_capability;
 	DELETE FROM deliveryservices_required_capability;
 	DELETE FROM server_server_capability;
-	DELETE FROM server_server_capability;
 	DELETE FROM server_capability;
 	DELETE FROM to_extension;
 	DELETE FROM staticdnsentry;
@@ -325,6 +324,8 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM deliveryservice_server;
 	DELETE FROM deliveryservice;
 	DELETE FROM origin;
+	DELETE FROM ip_address;
+	DELETE FROM interface;
 	DELETE FROM server;
 	DELETE FROM phys_location;
 	DELETE FROM region;

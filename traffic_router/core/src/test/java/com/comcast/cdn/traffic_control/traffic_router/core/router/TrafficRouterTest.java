@@ -15,12 +15,11 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation.LocalizationMethod;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
@@ -34,6 +33,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import org.junit.Before;
 import org.junit.Test;
+import org.xbill.DNS.Name;
 import org.xbill.DNS.Type;
 
 import java.util.ArrayList;
@@ -84,7 +84,7 @@ public class TrafficRouterTest {
         trafficRouter = mock(TrafficRouter.class);
 
         CacheRegister cacheRegister = mock(CacheRegister.class);
-        when(cacheRegister.getDeliveryService(any(HTTPRequest.class), eq(true))).thenReturn(deliveryService);
+        when(cacheRegister.getDeliveryService(any(HTTPRequest.class))).thenReturn(deliveryService);
 
         setInternalState(trafficRouter, "cacheRegister", cacheRegister);
         setInternalState(trafficRouter, "federationRegistry", federationRegistry);
@@ -94,19 +94,21 @@ public class TrafficRouterTest {
         when(trafficRouter.route(any(DNSRequest.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.route(any(HTTPRequest.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.singleRoute(any(HTTPRequest.class), any(Track.class))).thenCallRealMethod();
-        when(trafficRouter.selectDeliveryService(any(Request.class), anyBoolean())).thenReturn(deliveryService);
+        when(trafficRouter.selectDeliveryService(any(Request.class))).thenReturn(deliveryService);
         when(trafficRouter.consistentHashDeliveryService(any(DeliveryService.class), any(HTTPRequest.class), anyString())).thenCallRealMethod();
     }
 
     @Test
     public void itCreatesDnsResultsFromFederationMappingHit() throws Exception {
-        DNSRequest request = new DNSRequest();
+        final Name name = Name.fromString("edge.example.com");
+        DNSRequest request = new DNSRequest("example.com", name, Type.A);
         request.setClientIP("192.168.10.11");
-        request.setHostname("edge.example.com");
+        request.setHostname(name.relativize(Name.root).toString());
 
         Track track = spy(StatTracker.getTrack());
 
         when(deliveryService.getRoutingName()).thenReturn("edge");
+        when(deliveryService.isDns()).thenReturn(true);
 
         DNSRouteResult result = trafficRouter.route(request, track);
 
@@ -144,7 +146,7 @@ public class TrafficRouterTest {
         when(trafficRouter.getClientLocation(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenReturn(new Geolocation(40, -100));
         when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
-        when(trafficRouter.orderCacheLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
+        when(trafficRouter.orderLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
 
         HTTPRouteResult httpRouteResult = trafficRouter.route(httpRequest, track);
 
@@ -178,7 +180,7 @@ public class TrafficRouterTest {
 
         when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.filterEnabledLocations(any(List.class), any(LocalizationMethod.class))).thenCallRealMethod();
-        when(trafficRouter.orderCacheLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
+        when(trafficRouter.orderLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
         when(trafficRouter.getSupportingCaches(any(List.class), any(DeliveryService.class))).thenCallRealMethod();
 
         HTTPRequest httpRequest = new HTTPRequest();
@@ -194,13 +196,13 @@ public class TrafficRouterTest {
         assertThat(track.getResultLocation(), equalTo(new Geolocation(50, 50)));
 
         when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(null);
-        when(deliveryService.getRoutingName()).thenReturn("ccr");
+        when(deliveryService.getRoutingName()).thenReturn("edge");
+        when(deliveryService.isDns()).thenReturn(true);
 
-        DNSRequest dnsRequest = new DNSRequest();
-        dnsRequest.setClientIP("192.168.1.2");
+        final Name name = Name.fromString("edge.example.com");
+        DNSRequest dnsRequest = new DNSRequest("example.com", name, Type.A);
         dnsRequest.setClientIP("10.10.10.10");
-        dnsRequest.setHostname("ccr.example.com");
-        dnsRequest.setQtype(Type.A);
+        dnsRequest.setHostname(name.relativize(Name.root).toString());
 
         track = StatTracker.getTrack();
         trafficRouter.route(dnsRequest, track);

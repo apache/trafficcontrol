@@ -62,6 +62,9 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 							origin: function () {
 								return [{}];
 							},
+							topologies: function(topologyService) {
+								return topologyService.getTopologies();
+							},
 							type: function ($stateParams) {
 								return $stateParams.type;
 							},

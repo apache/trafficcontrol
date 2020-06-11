@@ -24,7 +24,7 @@ import (
 )
 
 func TestDeliveryServicesRegexes(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, DeliveryServicesRegexes}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, DeliveryServicesRegexes}, func() {
 		QueryDSRegexTest(t)
 	})
 }

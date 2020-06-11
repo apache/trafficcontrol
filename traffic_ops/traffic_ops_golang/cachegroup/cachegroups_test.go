@@ -21,6 +21,7 @@ package cachegroup
 
 import (
 	"errors"
+	"net/http"
 	"reflect"
 	"strings"
 	"testing"
@@ -270,5 +271,75 @@ func TestValidate(t *testing.T) {
 	err = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)
+	}
+}
+
+func TestBadTypeParamCacheGroups(t *testing.T) {
+	detail := `cachegroup read: converting cachegroup type to integer strconv.Atoi: parsing "wrong": invalid syntax`
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	testCGs := getTestCacheGroups()
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"name",
+		"short_name",
+		"latitude",
+		"longitude",
+		"localization_methods",
+		"parent_cachegroup_id",
+		"parent_cachegroup_name",
+		"secondary_parent_cachegroup_id",
+		"secondary_parent_cachegroup_name",
+		"type_name",
+		"type_id",
+		"last_updated",
+		"fallbacks",
+		"fallbackToClosest",
+	})
+
+	for _, ts := range testCGs {
+		rows = rows.AddRow(
+			ts.ID,
+			ts.Name,
+			ts.ShortName,
+			ts.Latitude,
+			ts.Longitude,
+			[]byte("{DEEP_CZ,CZ,GEO}"),
+			ts.ParentCachegroupID,
+			ts.ParentName,
+			ts.SecondaryParentCachegroupID,
+			ts.SecondaryParentName,
+			ts.Type,
+			ts.TypeID,
+			ts.LastUpdated,
+			[]byte("{cachegroup2,cachegroup3}"),
+			ts.FallbackToClosest,
+		)
+	}
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"type": "wrong"}}
+	obj := TOCacheGroup{
+		api.APIInfoImpl{&reqInfo},
+		tc.CacheGroupNullable{},
+	}
+	_, userErr, _, sc, _ := obj.Read(nil, false)
+	if sc != http.StatusBadRequest {
+		t.Errorf("Read expected status code: Bad Request, actual: %v ", sc)
+	}
+	if userErr == nil {
+		t.Fatalf("Read expected: user error with details %v, actual: nil", detail)
+	}
+	if userErr.Error() != detail {
+		t.Fatalf("Read expected: user error with details %v, actual: %v", detail, userErr.Error())
 	}
 }

@@ -21,9 +21,11 @@ package v3
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 type topologyTestCase struct {
@@ -86,10 +88,22 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "parentCachegroup", Parents: []int{2}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{1}},
 		}}},
+		{reasonToFail: "a nonexistent cache group", Topology: tc.Topology{Name: "nonexistent-cg", Description: "Invalid because it references a cache group that does not exist", Nodes: []tc.TopologyNode{
+			{Cachegroup: "legitcachegroup", Parents: []int{0}},
+		}}},
+		{reasonToFail: "an out-of-bounds parent index", Topology: tc.Topology{Name: "oob-parent", Description: "Invalid because it contains a parent", Nodes: []tc.TopologyNode{
+			{Cachegroup: "cachegroup1", Parents: []int{7}},
+		}}},
 	}
+	var statusCode int
 	for _, testCase := range invalidTopologyTestCases {
-		if _, _, err := TOSession.CreateTopology(testCase.Topology); err == nil {
+		_, reqInf, err := TOSession.CreateTopology(testCase.Topology)
+		if err == nil {
 			t.Fatalf("expected POST with %v to return an error, actual: nil", testCase.reasonToFail)
+		}
+		statusCode = reqInf.StatusCode
+		if statusCode < 400 || statusCode >= 500 {
+			t.Fatalf("Expected a 400-level status code for topology %s but got %d", testCase.Topology.Name, statusCode)
 		}
 	}
 }
@@ -128,6 +142,16 @@ func DeleteTestTopologies(t *testing.T) {
 		delResp, _, err := TOSession.DeleteTopology(top.Name)
 		if err != nil {
 			t.Fatalf("cannot DELETE topology: %v - %v", err, delResp)
+		}
+		deleteLog, _, err := TOSession.GetLogsByLimit(1)
+		if err != nil {
+			t.Fatalf("unable to get latest audit log entry")
+		}
+		if len(deleteLog) != 1 {
+			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog))
+		}
+		if !strings.Contains(*deleteLog[0].Message, top.Name) {
+			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, *deleteLog[0].Message)
 		}
 
 		topology, _, err := TOSession.GetTopology(top.Name)

@@ -17,6 +17,7 @@ package v3
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -25,7 +26,7 @@ import (
 )
 
 func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		InvalidDeliveryServicesRequiredCapabilityAddition(t)
 		GetTestDeliveryServicesRequiredCapabilities(t)
 	})
@@ -181,16 +182,24 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// First assign current capabilities to edge server so we can assign it to the DS
-	servers, _, err := TOSession.GetServerByHostName("atlanta-edge-01")
+	// TODO: DON'T hard-code hostnames!
+	params := url.Values{}
+	params.Add("hostName", "atlanta-edge-01")
+	resp, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname: %v", err)
 	}
+	servers := resp.Response
 	if len(servers) < 1 {
 		t.Fatal("need at least one server to test invalid ds required capability assignment")
 	}
 
+	if servers[0].ID == nil {
+		t.Fatal("server 'atlanta-edge-01' had nil ID")
+	}
+
 	dsID := capabilities[0].DeliveryServiceID
-	sID := servers[0].ID
+	sID := *servers[0].ID
 	serverCaps := []tc.ServerServerCapability{}
 
 	for _, cap := range capabilities {
@@ -206,7 +215,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// Assign server to ds
-	_, err = TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false)
+	_, _, err = TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false)
 	if err != nil {
 		t.Fatalf("cannot CREATE server delivery service assignement: %v", err)
 	}

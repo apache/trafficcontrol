@@ -16,6 +16,8 @@ package v3
 */
 
 import (
+	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -24,9 +26,10 @@ import (
 )
 
 func TestJobs(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		CreateTestJobs(t)
 		CreateTestInvalidationJobs(t)
+		CreateTestInvalidJob(t)
 		GetTestJobsQueryParams(t)
 		GetTestJobs(t)
 		GetTestInvalidationJobs(t)
@@ -79,6 +82,47 @@ func CreateTestInvalidationJobs(t *testing.T) {
 		if _, _, err := TOSession.CreateInvalidationJob(job); err != nil {
 			t.Errorf("could not CREATE job: %v", err)
 		}
+	}
+}
+
+func CreateTestInvalidJob(t *testing.T) {
+	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
+	}
+	dsNameIDs := map[string]int64{}
+	for _, ds := range toDSes {
+		dsNameIDs[*ds.XMLID] = int64(*ds.ID)
+	}
+
+	job := testData.InvalidationJobs[0]
+	_, ok := dsNameIDs[(*job.DeliveryService).(string)]
+	if !ok {
+		t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DeliveryService)
+	}
+	maxRevalDays := 0
+	foundMaxRevalDays := false
+	for _, p := range testData.Parameters {
+		if p.Name != "maxRevalDurationDays" {
+			continue
+		}
+		maxRevalDays, err = strconv.Atoi(p.Value)
+		if err != nil {
+			t.Fatalf("unable to parse maxRevalDurationDays value '%s' to int", p.Value)
+		}
+		foundMaxRevalDays = true
+	}
+	if !foundMaxRevalDays {
+		t.Fatalf("expected: parameter named maxRevalDurationDays, actual: not found")
+	}
+	tooHigh := interface{}((maxRevalDays * 24) + 1)
+	job.TTL = &tooHigh
+	_, reqInf, err := TOSession.CreateInvalidationJob(job)
+	if err == nil {
+		t.Error("creating invalid job (TTL higher than maxRevalDurationDays) - expected: error, actual: nil error")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Errorf("creating invalid job (TTL higher than maxRevalDurationDays) - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 }
 

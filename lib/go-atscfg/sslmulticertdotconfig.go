@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -27,6 +28,7 @@ import (
 )
 
 const ContentTypeSSLMultiCertDotConfig = ContentTypeTextASCII
+const LineCommentSSLMultiCertDotConfig = LineCommentHash
 const SSLMultiCertConfigFileName = `ssl_multicert.config`
 
 type SSLMultiCertDS struct {
@@ -58,15 +60,17 @@ func MakeSSLMultiCertDotConfig(
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	dses map[tc.DeliveryServiceName]SSLMultiCertDS,
 ) string {
-	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
+	hdr := GenericHeaderComment(string(cdnName), toToolName, toURL)
 
 	dses = GetSSLMultiCertDotConfigDeliveryServices(dses)
 
+	lines := []string{}
 	for dsName, ds := range dses {
 		cerName, keyName := GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
-		text += `ssl_cert_name=` + cerName + "\t" + ` ssl_key_name=` + keyName + "\n"
+		lines = append(lines, `ssl_cert_name=`+cerName+"\t"+` ssl_key_name=`+keyName+"\n")
 	}
-	return text
+	sort.Strings(lines)
+	return hdr + strings.Join(lines, "")
 }
 
 // GetSSLMultiCertDotConfigCertAndKeyName returns the cert file name and key file name for the given delivery service.

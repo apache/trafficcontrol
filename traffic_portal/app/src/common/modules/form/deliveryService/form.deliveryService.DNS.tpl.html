@@ -59,7 +59,7 @@ under the License.
                     <li role="menuitem"><a ng-click="viewOrigins()">Manage Origins</a></li>
                     <li role="menuitem"><a ng-click="viewRegexes()">Manage Regexes</a></li>
                     <li role="menuitem"><a ng-click="viewCapabilities()">Manage Required Server Capabilities</a></li>
-                    <li role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
+                    <li ng-if="::(!deliveryService.topology)" role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
                     <li role="menuitem"><a ng-click="viewStaticDnsEntries()">Manage Static DNS Entries</a></li>
                 </ul>
             </div>
@@ -225,6 +225,22 @@ under the License.
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.protocol != dsCurrent.protocol">
                                 <h3>Current Value</h3>
                                 <pre>{{magicNumberLabel(protocols, dsCurrent.protocol)}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.topology), 'has-feedback': hasError(generalConfig.topology)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="topology">Topology<div class="helptooltip">
+                            <div class="helptext">A topology is used to determine the caching layers and path to a delivery service's origin.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="topology" name="topology" class="form-control" ng-model="deliveryService.topology" ng-options="topology.name as topology.name for topology in topologies">
+                                <option selected value="">None</option>
+                            </select>
+                            <small ng-show="deliveryService.topology"><a href="/#!/topologies/edit?name={{deliveryService.topology}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.topology !== dsCurrent.topology">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.topology}}</pre>
                             </aside>
                         </div>
                     </div>

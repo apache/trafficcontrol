@@ -25,15 +25,22 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
-	"github.com/jmoiron/sqlx"
 
+	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestServers() []tc.Server {
-	servers := []tc.Server{}
+type ServerAndInterfaces struct {
+	Server    tc.Server
+	Interface tc.ServerInterfaceInfo
+}
+
+func getTestServers() []ServerAndInterfaces {
+	servers := []ServerAndInterfaces{}
 	testServer := tc.Server{
 		Cachegroup:     "Cachegroup",
 		CachegroupID:   1,
@@ -81,19 +88,78 @@ func getTestServers() []tc.Server {
 		XMPPID:         "xmppId",
 		XMPPPasswd:     "xmppPasswd",
 	}
-	servers = append(servers, testServer)
+
+	mtu := uint64(testServer.InterfaceMtu)
+
+	iface := tc.ServerInterfaceInfo{
+		IPAddresses: []tc.ServerIPAddress{
+			tc.ServerIPAddress{
+				Address: testServer.IPAddress,
+				Gateway: nil,
+				ServiceAddress: true,
+			},
+		},
+		MaxBandwidth: nil,
+		Monitor: true,
+		MTU: &mtu,
+		Name: testServer.InterfaceName,
+	}
+
+	servers = append(servers, ServerAndInterfaces{Server: testServer, Interface: iface})
 
 	testServer2 := testServer
 	testServer2.Cachegroup = "cachegroup2"
 	testServer2.HostName = "server2"
-	servers = append(servers, testServer2)
+	testServer2.ID = 2
+	servers = append(servers, ServerAndInterfaces{Server: testServer2, Interface: iface})
 
 	testServer3 := testServer
 	testServer3.Cachegroup = "cachegroup3"
 	testServer3.HostName = "server3"
-	servers = append(servers, testServer2)
+	testServer3.ID = 3
+	servers = append(servers, ServerAndInterfaces{Server: testServer3, Interface: iface})
 
 	return servers
+}
+
+// Test to make sure that updating the "cdn" of a server already assigned to a DS fails
+func TestUpdateServer(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	testServers := getTestServers()
+
+	rows := sqlmock.NewRows([]string{"type", "cdn_id"})
+	// note here that the cdnid is 5, which is not the same as the initial cdnid of the fist traffic server
+	rows.AddRow(testServers[0].Server.TypeID, 5)
+	// Make it return a list of atleast one associated ds
+	dsrows := sqlmock.NewRows([]string{"array"})
+	dsrows.AddRow("{3}")
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT ARRAY").WillReturnRows(dsrows)
+
+	s := tc.CommonServerProperties{
+		CDNID:    &testServers[0].Server.CDNID,
+		FqdnTime: time.Time{},
+		TypeID:   &testServers[0].Server.TypeID,
+		ID:       &testServers[0].Server.ID,
+	}
+
+	userErr, _, errCode := checkTypeChangeSafety(s, db.MustBegin())
+	if errCode != 409 {
+		t.Errorf("Update servers: Expected error code of %v, but got %v", 409, errCode)
+	}
+	expectedErr := "server cdn can not be updated when it is currently assigned to delivery services"
+	if userErr == nil {
+		t.Errorf("Update expected error: %v, but got no error with status: %s", expectedErr, http.StatusText(errCode))
+	}
 }
 
 func TestGetServersByCachegroup(t *testing.T) {
@@ -107,12 +173,22 @@ func TestGetServersByCachegroup(t *testing.T) {
 	defer db.Close()
 
 	testServers := getTestServers()
-	cols := test.ColsFromStructByTag("db", tc.Server{})
+
+	unfilteredCols := []string{"count"}
+	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
+
+	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
+	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server"}
 	rows := sqlmock.NewRows(cols)
+	interfaceRows := sqlmock.NewRows(interfaceCols)
+
+	ipCols := []string{"address", "gateway", "service_address", "server", "interface"}
+	ipRows := sqlmock.NewRows(ipCols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
 	//                    or by CSV if types get in the way
-	for _, ts := range testServers {
+	for _, srv := range testServers {
+		ts := srv.Server
 		rows = rows.AddRow(
 			ts.Cachegroup,
 			ts.CachegroupID,
@@ -128,15 +204,6 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.ILOIPNetmask,
 			ts.ILOPassword,
 			ts.ILOUsername,
-			ts.InterfaceMtu,
-			ts.InterfaceName,
-			ts.IP6Address,
-			ts.IP6IsService,
-			ts.IP6Gateway,
-			ts.IPAddress,
-			ts.IPIsService,
-			ts.IPNetmask,
-			ts.IPGateway,
 			ts.LastUpdated,
 			ts.MgmtIPAddress,
 			ts.MgmtIPGateway,
@@ -160,14 +227,36 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.XMPPID,
 			ts.XMPPPasswd,
 		)
+		interfaceRows = interfaceRows.AddRow(
+			srv.Interface.MaxBandwidth,
+			srv.Interface.Monitor,
+			srv.Interface.MTU,
+			srv.Interface.Name,
+			ts.ID,
+		)
+
+		for _, ip := range srv.Interface.IPAddresses {
+			ipRows = ipRows.AddRow(
+				ip.Address,
+				ip.Gateway,
+				ip.ServiceAddress,
+				ts.ID,
+				srv.Interface.Name,
+			)
+		}
 	}
+
 	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT COUNT\\(s.id\\) FROM s").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(ipRows)
+
 	v := map[string]string{"cachegroup": "2"}
 
 	user := auth.CurrentUser{}
 
-	servers, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false)
+	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
@@ -175,7 +264,6 @@ func TestGetServersByCachegroup(t *testing.T) {
 	if len(servers) != 3 {
 		t.Errorf("getServers expected: len(servers) == 3, actual: %v", len(servers))
 	}
-
 }
 
 func TestGetMidServers(t *testing.T) {
@@ -191,14 +279,23 @@ func TestGetMidServers(t *testing.T) {
 	testServers := getTestServers()
 	testServers = testServers[0:2]
 
-	testServers[1].Cachegroup = "parentCacheGroup"
-	testServers[1].CachegroupID = 2
-	testServers[1].Type = "MID"
+	testServers[1].Server.Cachegroup = "parentCacheGroup"
+	testServers[1].Server.CachegroupID = 2
+	testServers[1].Server.Type = "MID"
 
-	cols := test.ColsFromStructByTag("db", tc.Server{})
+	unfilteredCols := []string{"count"}
+	unfilteredRows := sqlmock.NewRows(unfilteredCols).AddRow(len(testServers))
+
+	cols := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
+	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server"}
 	rows := sqlmock.NewRows(cols)
+	interfaceRows := sqlmock.NewRows(interfaceCols)
 
-	for _, ts := range testServers {
+	ipCols := []string{"address", "gateway", "service_address", "server", "interface"}
+	ipRows := sqlmock.NewRows(ipCols)
+
+	for _, srv := range testServers {
+		ts := srv.Server
 		rows = rows.AddRow(
 			ts.Cachegroup,
 			ts.CachegroupID,
@@ -214,15 +311,6 @@ func TestGetMidServers(t *testing.T) {
 			ts.ILOIPNetmask,
 			ts.ILOPassword,
 			ts.ILOUsername,
-			ts.InterfaceMtu,
-			ts.InterfaceName,
-			ts.IP6Address,
-			ts.IP6IsService,
-			ts.IP6Gateway,
-			ts.IPAddress,
-			ts.IPIsService,
-			ts.IPNetmask,
-			ts.IPGateway,
 			ts.LastUpdated,
 			ts.MgmtIPAddress,
 			ts.MgmtIPGateway,
@@ -246,20 +334,39 @@ func TestGetMidServers(t *testing.T) {
 			ts.XMPPID,
 			ts.XMPPPasswd,
 		)
+		interfaceRows = interfaceRows.AddRow(
+			srv.Interface.MaxBandwidth,
+			srv.Interface.Monitor,
+			srv.Interface.MTU,
+			srv.Interface.Name,
+			ts.ID,
+		)
+
+		for _, ip := range srv.Interface.IPAddresses {
+			ipRows = ipRows.AddRow(
+				ip.Address,
+				ip.Gateway,
+				ip.ServiceAddress,
+				ts.ID,
+				srv.Interface.Name,
+			)
+		}
 	}
 	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT COUNT\\(s.id\\) FROM s").WillReturnRows(unfilteredRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WillReturnRows(interfaceRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(ipRows)
 	v := map[string]string{}
 
 	user := auth.CurrentUser{}
-
-	servers, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false)
+	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false)
 
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
 
-	cols2 := test.ColsFromStructByTag("db", tc.Server{})
+	cols2 := test.ColsFromStructByTag("db", tc.CommonServerProperties{})
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}
@@ -305,7 +412,18 @@ func TestGetMidServers(t *testing.T) {
 	}
 	cgs = append(cgs, testCG2)
 
+	serverMap := make(map[int]tc.ServerNullable, len(servers))
+	serverIDs := make([]int, 0, len(servers))
+	for _, server := range servers {
+		if server.ID == nil {
+			t.Fatal("Found server with nil ID")
+		}
+		serverIDs = append(serverIDs, *server.ID)
+		serverMap[*server.ID] = server
+	}
+
 	ts := servers[1]
+	*ts.ID = *ts.ID + 1
 	rows2 = rows2.AddRow(
 		ts.Cachegroup,
 		ts.CachegroupID,
@@ -321,15 +439,6 @@ func TestGetMidServers(t *testing.T) {
 		ts.ILOIPNetmask,
 		ts.ILOPassword,
 		ts.ILOUsername,
-		ts.InterfaceMtu,
-		ts.InterfaceName,
-		ts.IP6Address,
-		ts.IP6IsService,
-		ts.IP6Gateway,
-		ts.IPAddress,
-		ts.IPIsService,
-		ts.IPNetmask,
-		ts.IPGateway,
 		ts.LastUpdated,
 		ts.MgmtIPAddress,
 		ts.MgmtIPGateway,
@@ -356,7 +465,7 @@ func TestGetMidServers(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
-	mid, userErr, sysErr, errCode := getMidServers(servers, db.MustBegin())
+	mid, userErr, sysErr, errCode := getMidServers(serverIDs, serverMap, db.MustBegin())
 
 	if userErr != nil || sysErr != nil {
 		t.Fatalf("getMidServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
@@ -364,10 +473,191 @@ func TestGetMidServers(t *testing.T) {
 	if len(mid) != 1 {
 		t.Fatalf("getMidServers expected: len(mid) == 1, actual: %v", len(mid))
 	}
-	if mid[0].Type != "MID" || *(mid[0].CachegroupID) != 2 || *(mid[0].Cachegroup) != "parentCacheGroup" {
-		t.Fatalf("getMidServers expected: Type == MID, actual: %v", mid[0].Type)
-		t.Fatalf("getMidServers expected: CachegroupID == 2, actual: %v", *(mid[0].CachegroupID))
-		t.Fatalf("getMidServers expected: Cachegroup == parentCacheGroup, actual: %v", *(mid[0].Cachegroup))
+	if serverMap[mid[0]].Type != "MID" {
+		t.Errorf("getMidServers expected: Type == MID, actual: %v", serverMap[mid[0]].Type)
+	}
+
+	if serverMap[mid[0]].Cachegroup == nil {
+		t.Error("getMidServers expected: Cachegroup == parentCacheGroup, actual: nil")
+	} else if *(serverMap[mid[0]].Cachegroup) != "parentCacheGroup" {
+		t.Errorf("getMidServers expected: Cachegroup == parentCacheGroup, actual: %v", *(serverMap[mid[0]].Cachegroup))
+	}
+
+	if serverMap[mid[0]].CachegroupID == nil {
+		t.Error("getMidServers expected: CachegroupID == 2, actual: nil")
+	} else if *(serverMap[mid[0]].CachegroupID) != 2  {
+		t.Errorf("getMidServers expected: CachegroupID == 2, actual: %v", *(serverMap[mid[0]].CachegroupID))
+	}
+}
+
+func TestV3Validations(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	goodInterface := tc.ServerInterfaceInfo{
+		IPAddresses: []tc.ServerIPAddress{
+			tc.ServerIPAddress{
+				Address:        "127.0.0.1/32",
+				Gateway:        nil,
+				ServiceAddress: true,
+			},
+		},
+		MaxBandwidth: nil,
+		Monitor:      true,
+		MTU:          nil,
+		Name:         "eth0",
+	}
+
+	testServer := tc.ServerNullable{
+		CommonServerProperties: tc.CommonServerProperties{
+			CDNID:          util.IntPtr(1),
+			HostName:       util.StrPtr("test"),
+			DomainName:     util.StrPtr("quest"),
+			PhysLocationID: new(int),
+			ProfileID:      new(int),
+			StatusID:       new(int),
+			TypeID:         new(int),
+			UpdPending:     new(bool),
+			CachegroupID:   new(int),
+		},
+		Interfaces: []tc.ServerInterfaceInfo{goodInterface},
+	}
+
+	typeCols := []string{"name", "use_in_table"}
+	cdnCols := []string{"cdn"}
+	typeRows := sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows := sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	tx := db.MustBegin().Tx
+
+	_, err = validateV3(&testServer, tx)
+	if err != nil {
+		t.Errorf("Unexpected error validating test server: %v", err)
+	}
+
+	testServer.Interfaces = []tc.ServerInterfaceInfo{}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(&testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with no interfaces to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with no interfaces: %v", err)
+	}
+
+	testServer.Interfaces = nil
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(&testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with nil interfaces to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with nil interfaces: %v", err)
+	}
+
+	badIface := goodInterface
+	var badMTU uint64 = 1279
+	badIface.MTU = &badMTU
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(&testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server an MTU < 1280 to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with an MTU < 1280: %v", err)
+	}
+
+	badIface.MTU = nil
+	badIface.IPAddresses = []tc.ServerIPAddress{}
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(&testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with no IP addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with no IP addresses: %v", err)
+	}
+
+	badIface.IPAddresses = nil
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(&testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with nil IP addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with nil IP addresses: %v", err)
+	}
+
+	badIface = goodInterface
+	badIP := tc.ServerIPAddress{
+		Address:        "127.0.0.1/32",
+		Gateway:        nil,
+		ServiceAddress: false,
+	}
+	badIface.IPAddresses = []tc.ServerIPAddress{badIP}
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(&testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with no service addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with no service addresses: %v", err)
+	}
+
+	testServer.Interfaces = []tc.ServerInterfaceInfo{goodInterface, goodInterface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(&testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with too many interfaces with service addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with too many interfaces with service addresses: %v", err)
+	}
+
+	badIface = goodInterface
+	badIface.IPAddresses = append(badIface.IPAddresses, tc.ServerIPAddress{
+		Address:        "1.2.3.4/1",
+		Gateway:        nil,
+		ServiceAddress: true,
+	})
+	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
+
+	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+
+	_, err = validateV3(&testServer, tx)
+	if err == nil {
+		t.Errorf("Expected a server with no service addresses to be invalid")
+	} else {
+		t.Logf("Got expected error validating server with no service addresses: %v", err)
 	}
 }
 

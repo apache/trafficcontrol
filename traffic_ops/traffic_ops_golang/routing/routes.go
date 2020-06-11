@@ -295,6 +295,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodDelete, `deliveryserviceserver/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 25321845233, noPerlBypass},
 		{api.Version{3, 0}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 24281812063, noPerlBypass},
 		{api.Version{3, 0}, http.MethodGet, `servers/{id}/deliveryservices$`, api.ReadHandler(&dsserver.TODSSDeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 2331154113, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler, auth.PrivLevelOperations, Authenticated, nil, 2801282533, noPerlBypass},
 		{api.Version{3, 0}, http.MethodGet, `deliveryservices/{id}/servers$`, dsserver.GetReadAssigned, auth.PrivLevelReadOnly, Authenticated, nil, 23451212233, noPerlBypass},
 		{api.Version{3, 0}, http.MethodPost, `deliveryservices/request`, deliveryservicerequests.Request, auth.PrivLevelPortal, Authenticated, nil, 2408752993, noPerlBypass},
 
@@ -314,12 +315,14 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Server status
 		{api.Version{3, 0}, http.MethodPut, `servers/{id}/status$`, server.UpdateStatusHandler, auth.PrivLevelOperations, Authenticated, nil, 2766638513, noPerlBypass},
 		{api.Version{3, 0}, http.MethodPost, `servers/{id}/queue_update$`, server.QueueUpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 21894713, noPerlBypass},
+		{api.Version{3, 0}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2384515993, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPost, `servers/{id-or-name}/update$`, server.UpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 143813233, noPerlBypass},
 
 		//Server: CRUD
-		{api.Version{3, 0}, http.MethodGet, `servers/?$`, api.ReadHandler(&server.TOServer{}), auth.PrivLevelReadOnly, Authenticated, nil, 27209592853, noPerlBypass},
-		{api.Version{3, 0}, http.MethodPut, `servers/{id}$`, api.UpdateHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil, 2586341033, noPerlBypass},
-		{api.Version{3, 0}, http.MethodPost, `servers/?$`, api.CreateHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil, 22255580613, noPerlBypass},
-		{api.Version{3, 0}, http.MethodDelete, `servers/{id}$`, api.DeleteHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil, 2923222333, noPerlBypass},
+		{api.Version{3, 0}, http.MethodGet, `servers/?$`, server.Read, auth.PrivLevelReadOnly, Authenticated, nil, 27209592853, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPut, `servers/{id}$`, server.Update, auth.PrivLevelOperations, Authenticated, nil, 2586341033, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPost, `servers/?$`, server.Create, auth.PrivLevelOperations, Authenticated, nil, 22255580613, noPerlBypass},
+		{api.Version{3, 0}, http.MethodDelete, `servers/{id}$`, server.Delete, auth.PrivLevelOperations, Authenticated, nil, 2923222333, noPerlBypass},
 
 		//Server Capability
 		{api.Version{3, 0}, http.MethodGet, `server_capabilities$`, api.ReadHandler(&servercapability.TOServerCapability{}), auth.PrivLevelReadOnly, Authenticated, nil, 2104073913, noPerlBypass},
@@ -415,11 +418,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodPut, `deliveryservices/{dsid}/regexes/{regexid}?$`, deliveryservicesregexes.Put, auth.PrivLevelOperations, Authenticated, nil, 22483396913, noPerlBypass},
 		{api.Version{3, 0}, http.MethodDelete, `deliveryservices/{dsid}/regexes/{regexid}?$`, deliveryservicesregexes.Delete, auth.PrivLevelOperations, Authenticated, nil, 22467316633, noPerlBypass},
 
-		//Servers
-		{api.Version{3, 0}, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler, auth.PrivLevelOperations, Authenticated, nil, 2801282533, noPerlBypass},
-		{api.Version{3, 0}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2384515993, noPerlBypass},
-		{api.Version{3, 0}, http.MethodPost, `servers/{id-or-name}/update$`, server.UpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 143813233, noPerlBypass},
-
 		//StaticDNSEntries
 		{api.Version{3, 0}, http.MethodGet, `staticdnsentries/?$`, api.ReadHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelReadOnly, Authenticated, nil, 2289394773, noPerlBypass},
 		{api.Version{3, 0}, http.MethodPut, `staticdnsentries/?$`, api.UpdateHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelOperations, Authenticated, nil, 2424571113, noPerlBypass},
@@ -472,8 +470,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		////DeliveryServices
 		{api.Version{3, 0}, http.MethodGet, `deliveryservices/?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 22383172943, noPerlBypass},
-		{api.Version{3, 0}, http.MethodPost, `deliveryservices/?$`, deliveryservice.CreateV15, auth.PrivLevelOperations, Authenticated, nil, 2064314323, noPerlBypass},
-		{api.Version{3, 0}, http.MethodPut, `deliveryservices/{id}/?$`, deliveryservice.UpdateV15, auth.PrivLevelOperations, Authenticated, nil, 27665675273, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPost, `deliveryservices/?$`, deliveryservice.CreateV30, auth.PrivLevelOperations, Authenticated, nil, 2064314323, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPut, `deliveryservices/{id}/?$`, deliveryservice.UpdateV30, auth.PrivLevelOperations, Authenticated, nil, 27665675273, noPerlBypass},
 		{api.Version{3, 0}, http.MethodPut, `deliveryservices/{id}/safe/?$`, deliveryservice.UpdateSafe, auth.PrivLevelOperations, Authenticated, nil, 2472109313, perlBypass},
 		{api.Version{3, 0}, http.MethodDelete, `deliveryservices/{id}/?$`, api.DeleteHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelOperations, Authenticated, nil, 2226420743, noPerlBypass},
 		{api.Version{3, 0}, http.MethodGet, `deliveryservices/{id}/servers/eligible/?$`, deliveryservice.GetServersEligible, auth.PrivLevelReadOnly, Authenticated, nil, 2747615843, noPerlBypass},
@@ -661,6 +659,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodDelete, `deliveryserviceserver/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 2532184523, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 2428181206, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `servers/{id}/deliveryservices$`, api.ReadHandler(&dsserver.TODSSDeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 233115411, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler, auth.PrivLevelOperations, Authenticated, nil, 280128253, noPerlBypass},
 		{api.Version{2, 0}, http.MethodGet, `deliveryservices/{id}/servers$`, dsserver.GetReadAssigned, auth.PrivLevelReadOnly, Authenticated, nil, 2345121223, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `deliveryservices/request`, deliveryservicerequests.Request, auth.PrivLevelPortal, Authenticated, nil, 240875299, noPerlBypass},
 
@@ -680,12 +679,14 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Server status
 		{api.Version{2, 0}, http.MethodPut, `servers/{id}/status$`, server.UpdateStatusHandler, auth.PrivLevelOperations, Authenticated, nil, 276663851, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPost, `servers/{id}/queue_update$`, server.QueueUpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 2189471, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler, auth.PrivLevelReadOnly, Authenticated, nil, 238451599, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPost, `servers/{id-or-name}/update$`, server.UpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 14381323, noPerlBypass},
 
 		//Server: CRUD
-		{api.Version{2, 0}, http.MethodGet, `servers/?$`, api.ReadHandler(&server.TOServer{}), auth.PrivLevelReadOnly, Authenticated, nil, 2720959285, noPerlBypass},
-		{api.Version{2, 0}, http.MethodPut, `servers/{id}$`, api.UpdateHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil, 258634103, noPerlBypass},
-		{api.Version{2, 0}, http.MethodPost, `servers/?$`, api.CreateHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil, 2225558061, noPerlBypass},
-		{api.Version{2, 0}, http.MethodDelete, `servers/{id}$`, api.DeleteHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil, 292322233, noPerlBypass},
+		{api.Version{2, 0}, http.MethodGet, `servers/?$`, server.Read, auth.PrivLevelReadOnly, Authenticated, nil, 2720959285, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPut, `servers/{id}$`, server.Update, auth.PrivLevelOperations, Authenticated, nil, 258634103, noPerlBypass},
+		{api.Version{2, 0}, http.MethodPost, `servers/?$`, server.Create, auth.PrivLevelOperations, Authenticated, nil, 2225558061, noPerlBypass},
+		{api.Version{2, 0}, http.MethodDelete, `servers/{id}$`, server.Delete, auth.PrivLevelOperations, Authenticated, nil, 292322233, noPerlBypass},
 
 		//Server Capability
 		{api.Version{2, 0}, http.MethodGet, `server_capabilities$`, api.ReadHandler(&servercapability.TOServerCapability{}), auth.PrivLevelReadOnly, Authenticated, nil, 210407391, noPerlBypass},
@@ -780,11 +781,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{2, 0}, http.MethodPost, `deliveryservices/{dsid}/regexes/?$`, deliveryservicesregexes.Post, auth.PrivLevelOperations, Authenticated, nil, 212737800, noPerlBypass},
 		{api.Version{2, 0}, http.MethodPut, `deliveryservices/{dsid}/regexes/{regexid}?$`, deliveryservicesregexes.Put, auth.PrivLevelOperations, Authenticated, nil, 2248339691, noPerlBypass},
 		{api.Version{2, 0}, http.MethodDelete, `deliveryservices/{dsid}/regexes/{regexid}?$`, deliveryservicesregexes.Delete, auth.PrivLevelOperations, Authenticated, nil, 2246731663, noPerlBypass},
-
-		//Servers
-		{api.Version{2, 0}, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler, auth.PrivLevelOperations, Authenticated, nil, 280128253, noPerlBypass},
-		{api.Version{2, 0}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler, auth.PrivLevelReadOnly, Authenticated, nil, 238451599, noPerlBypass},
-		{api.Version{2, 0}, http.MethodPost, `servers/{id-or-name}/update$`, server.UpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 14381323, noPerlBypass},
 
 		//StaticDNSEntries
 		{api.Version{2, 0}, http.MethodGet, `staticdnsentries/?$`, api.ReadHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelReadOnly, Authenticated, nil, 228939477, noPerlBypass},
@@ -1058,6 +1054,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil, 429799788, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 1428181206, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `servers/{id}/deliveryservices?(\/.json)?$`, api.ReadHandler(&dsserver.TODSSDeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 133115411, noPerlBypass},
+		{api.Version{1, 3}, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler, auth.PrivLevelOperations, Authenticated, nil, 880128253, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/{id}/servers$`, dsserver.GetReadAssigned, auth.PrivLevelReadOnly, Authenticated, nil, 1345121223, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/{id}/unassigned_servers$`, dsserver.GetReadUnassigned, auth.PrivLevelReadOnly, Authenticated, nil, 2023944221, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `deliveryservices/request`, deliveryservicerequests.Request, auth.PrivLevelPortal, Authenticated, nil, 740875299, perlBypass},
@@ -1080,13 +1077,14 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Server status
 		{api.Version{1, 1}, http.MethodPut, `servers/{id}/status$`, server.UpdateStatusHandler, auth.PrivLevelOperations, Authenticated, nil, 776663851, perlBypass},
 		{api.Version{1, 1}, http.MethodPost, `servers/{id}/queue_update$`, server.QueueUpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 9189471, perlBypass},
+		{api.Version{1, 3}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler, auth.PrivLevelReadOnly, Authenticated, nil, 438451599, noPerlBypass},
 
 		//Server: CRUD
-		{api.Version{1, 1}, http.MethodGet, `servers/?(\.json)?$`, api.ReadHandler(&server.TOServer{}), auth.PrivLevelReadOnly, Authenticated, nil, 1720959285, noPerlBypass},
-		{api.Version{1, 1}, http.MethodGet, `servers/{id}$`, api.DeprecatedReadHandler(&server.TOServer{}, util.StrPtr("GET /servers with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 1543122028, noPerlBypass},
-		{api.Version{1, 1}, http.MethodPut, `servers/{id}$`, api.UpdateHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil, 958634103, noPerlBypass},
-		{api.Version{1, 1}, http.MethodPost, `servers/?$`, api.CreateHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil, 2025558061, noPerlBypass},
-		{api.Version{1, 1}, http.MethodDelete, `servers/{id}$`, api.DeleteHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil, 192322233, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `servers/?(\.json)?$`, server.Read, auth.PrivLevelReadOnly, Authenticated, nil, 1720959285, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `servers/{id}$`, server.ReadID, auth.PrivLevelReadOnly, Authenticated, nil, 1543122028, noPerlBypass},
+		{api.Version{1, 1}, http.MethodPut, `servers/{id}$`, server.Update, auth.PrivLevelOperations, Authenticated, nil, 958634103, noPerlBypass},
+		{api.Version{1, 1}, http.MethodPost, `servers/?$`, server.Create, auth.PrivLevelOperations, Authenticated, nil, 2025558061, noPerlBypass},
+		{api.Version{1, 1}, http.MethodDelete, `servers/{id}$`, server.Delete, auth.PrivLevelOperations, Authenticated, nil, 192322233, noPerlBypass},
 
 		//Server Capability
 		{api.Version{1, 4}, http.MethodGet, `server_capabilities$`, api.ReadHandler(&servercapability.TOServerCapability{}), auth.PrivLevelReadOnly, Authenticated, nil, 610407391, noPerlBypass},
@@ -1190,10 +1188,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodPut, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Put, auth.PrivLevelOperations, Authenticated, nil, 1248339691, noPerlBypass},
 		{api.Version{1, 1}, http.MethodDelete, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Delete, auth.PrivLevelOperations, Authenticated, nil, 2046731663, noPerlBypass},
 
-		//Servers
-		{api.Version{1, 3}, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler, auth.PrivLevelOperations, Authenticated, nil, 880128253, noPerlBypass},
-		{api.Version{1, 3}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler, auth.PrivLevelReadOnly, Authenticated, nil, 438451599, noPerlBypass},
-
 		//StaticDNSEntries
 		{api.Version{1, 1}, http.MethodGet, `staticdnsentries/?(\.json)?$`, api.ReadHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelReadOnly, Authenticated, nil, 258939477, noPerlBypass},
 		{api.Version{1, 3}, http.MethodGet, `staticdnsentries/?$`, api.ReadHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelReadOnly, Authenticated, nil, 1116932668, noPerlBypass},
@@ -1257,11 +1251,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/volume\.config/?$`, atsprofile.GetVolume, auth.PrivLevelOperations, Authenticated, nil, 792704719, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/{file}/?$`, atsprofile.GetUnknown, auth.PrivLevelOperations, Authenticated, nil, 1651257268, perlBypass},
 
-		{api.Version{1, 1}, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/parent\.config/?(\.json)?$`, atsserver.GetParentDotConfig, auth.PrivLevelOperations, Authenticated, nil, 645056066, perlBypass},
-		{api.Version{1, 1}, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/remap\.config/?(\.json)?$`, atsserver.GetServerConfigRemap, auth.PrivLevelOperations, Authenticated, nil, 2038454899, perlBypass},
-
 		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/cache\.config/?(\.json)?$`, atsserver.GetCacheDotConfig, auth.PrivLevelOperations, Authenticated, nil, 34686861, perlBypass},
-		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/ip_allow\.config/?(\.json)?$`, atsserver.GetIPAllowDotConfig, auth.PrivLevelOperations, Authenticated, nil, 724651786, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/hosting\.config/?(\.json)?$`, atsserver.GetHostingDotConfig, auth.PrivLevelOperations, Authenticated, nil, 1387459113, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/packages/?(\.json)?$`, atsserver.GetPackages, auth.PrivLevelOperations, Authenticated, nil, 245024839, perlBypass},
 		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/chkconfig/?(\.json)?$`, atsserver.GetChkconfig, auth.PrivLevelOperations, Authenticated, nil, 1012457987, perlBypass},

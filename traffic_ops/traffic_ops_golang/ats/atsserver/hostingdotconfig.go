@@ -55,7 +55,7 @@ func GetHostingDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	multiParams, err := GetServerParams(inf.Tx.Tx, serverName, atscfg.HostingConfigParamConfigFile)
+	multiParams, err := ats.GetServerParams(inf.Tx.Tx, serverName, atscfg.HostingConfigParamConfigFile)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server '"+string(serverName)+"' + hosting parameters: "+err.Error()))
 		return
@@ -78,9 +78,6 @@ func GetHostingDotConfig(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server '"+string(serverName)+"' hosting origins: "+err.Error()))
 		return
 	}
-
-	log.Errorf("hosting config DEBUG params %+v\n", params)
-	log.Errorf("hosting config DEBUG multiParams %+v\n", multiParams)
 
 	txt := atscfg.MakeHostingDotConfig(serverName, toToolName, toURL, params, origins)
 
@@ -118,8 +115,6 @@ WHERE
 `
 	}
 	// Note the 'ds.cdn_id = s.cdn_id' in the query shouldn't be necessary, but it is, because there's no DB constraint.
-
-	log.Errorln("hosting config DEBUG qry QQ" + qry + "QQ")
 
 	rows, err := tx.Query(qry, serverName)
 	if err != nil {

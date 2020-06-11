@@ -118,20 +118,24 @@ func (topology *TOTopology) Validate() error {
 		}
 	}
 	rules["duplicate cachegroup name"] = checkUniqueCacheGroupNames(topology.Nodes)
+	if !cacheGroupsExist {
+		return util.JoinErrs(tovalidate.ToErrors(rules))
+	}
 
-	if cacheGroupsExist {
-		for index, node := range topology.Nodes {
-			rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = checkForEdgeParents(topology.Nodes, cacheGroups, index)
-		}
+	for index, node := range topology.Nodes {
+		rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = checkForEdgeParents(topology.Nodes, cacheGroups, index)
+	}
+	/* Only perform further checks if everything so far is valid */
+	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
+		return err
+	}
 
-		for _, leafMid := range checkForLeafMids(topology.Nodes, cacheGroups) {
-			rules[fmt.Sprintf("node %v leaf mid", leafMid.Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 child)", leafMid.Cachegroup, tc.CacheGroupMidTypeName)
-		}
+	for _, leafMid := range checkForLeafMids(topology.Nodes, cacheGroups) {
+		rules[fmt.Sprintf("node %v leaf mid", leafMid.Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 child)", leafMid.Cachegroup, tc.CacheGroupMidTypeName)
 	}
 	rules["topology cycles"] = checkForCycles(topology.Nodes)
 
-	errs := tovalidate.ToErrors(rules)
-	return util.JoinErrs(errs)
+	return util.JoinErrs(tovalidate.ToErrors(rules))
 }
 
 // Implementation of the Identifier, Validator interface functions

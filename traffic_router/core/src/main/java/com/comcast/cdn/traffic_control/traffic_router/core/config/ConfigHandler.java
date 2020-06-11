@@ -49,10 +49,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.TrafficRouterLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type;
@@ -221,6 +224,8 @@ public class ConfigHandler {
 
 				parseDeliveryServiceMatchSets(deliveryServicesJson, deliveryServiceMap, cacheRegister);
 				parseLocationConfig(JsonUtils.getJsonNode(jo, "edgeLocations"), cacheRegister);
+
+				parseEdgeTrafficRouterLocations(jo, cacheRegister);
 				parseCacheConfig(JsonUtils.getJsonNode(jo, "contentServers"), cacheRegister);
 				parseMonitorConfig(JsonUtils.getJsonNode(jo, "monitors"));
 
@@ -247,8 +252,8 @@ public class ConfigHandler {
 				 * similarly to the non-deep instance. However, instead of clearing a NetworkNode's CacheLocation, only the
 				 * Caches are cleared from the CacheLocation then lazily loaded at request time.
 				 */
-				NetworkNode.getInstance().clearCacheLocations();
-				NetworkNode.getDeepInstance().clearCacheLocations(true);
+				NetworkNode.getInstance().clearLocations();
+				NetworkNode.getDeepInstance().clearLocations(true);
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
 				isProcessing.set(false);
@@ -455,8 +460,9 @@ public class ConfigHandler {
 	}
 
 	private void parseDeliveryServiceMatchSets(final JsonNode allDeliveryServices, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) throws JsonUtilsException {
-		final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<>();
-		final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<>();
+		final TreeSet<DeliveryServiceMatcher> deliveryServiceMatchers = new TreeSet<>();
+		final JsonNode config = cacheRegister.getConfig();
+		final boolean regexSuperhackEnabled = JsonUtils.optBoolean(config, "confighandler.regex.superhack.enabled", true);
 
 		final Iterator<String> deliveryServiceIds = allDeliveryServices.fieldNames();
 		while (deliveryServiceIds.hasNext()) {
@@ -465,29 +471,31 @@ public class ConfigHandler {
 			final JsonNode matchsets = JsonUtils.getJsonNode(deliveryServiceJson, "matchsets");
 			final DeliveryService deliveryService = deliveryServiceMap.get(deliveryServiceId);
 
-			for (final JsonNode matchset : matchsets) {
-				final String protocol = JsonUtils.getString(matchset, "protocol");
-
+			for (int i = 0; i < matchsets.size(); i++) {
+				final JsonNode matchset = matchsets.get(i);
 				final DeliveryServiceMatcher deliveryServiceMatcher = new DeliveryServiceMatcher(deliveryService);
+				deliveryServiceMatchers.add(deliveryServiceMatcher);
 
-				if ("HTTP".equals(protocol)) {
-					httpServiceMatchers.add(deliveryServiceMatcher);
-				} else if ("DNS".equals(protocol)) {
-					dnsServiceMatchers.add(deliveryServiceMatcher);
-				}
-
-				for (final JsonNode matcherJo : JsonUtils.getJsonNode(matchset, "matchlist")) {
+				final JsonNode list = JsonUtils.getJsonNode(matchset, "matchlist");
+				for (int j = 0; j < list.size(); j++) {
+					final JsonNode matcherJo = list.get(j);
 					final Type type = Type.valueOf(JsonUtils.getString(matcherJo, "match-type"));
 					final String target = JsonUtils.optString(matcherJo, "target");
-					deliveryServiceMatcher.addMatch(type, JsonUtils.getString(matcherJo, "regex"), target);
+
+					String regex = JsonUtils.getString(matcherJo, "regex");
+
+					if (regexSuperhackEnabled && i == 0 && j == 0 && type.equals(Type.HOST)) {
+						regex = regex.replaceFirst("^\\.\\*\\\\\\.", "(.*\\\\.|^)");
+					}
+
+					deliveryServiceMatcher.addMatch(type, regex, target);
 				}
 
 			}
 		}
 
 		cacheRegister.setDeliveryServiceMap(deliveryServiceMap);
-		cacheRegister.setDnsDeliveryServiceMatchers(dnsServiceMatchers);
-		cacheRegister.setHttpDeliveryServiceMatchers(httpServiceMatchers);
+		cacheRegister.setDeliveryServiceMatchers(deliveryServiceMatchers);
 		initGeoFailedRedirect(deliveryServiceMap, cacheRegister);
 	}
 
@@ -516,7 +524,7 @@ public class ConfigHandler {
 
 				ds.setGeoRedirectFile(url.getFile());
 				//try select the ds by the redirect fake HTTPRequest
-				final DeliveryService rds = cacheRegister.getDeliveryService(req, true);
+				final DeliveryService rds = cacheRegister.getDeliveryService(req);
 				if (rds == null || rds.getId() != ds.getId()) {
 					//the redirect url not belongs to this ds
 					ds.setGeoRedirectUrlType("NOT_DS_URL");
@@ -857,5 +865,84 @@ public class ConfigHandler {
 
 	public boolean isProcessingConfig() {
 		return isProcessing.get();
+	}
+
+	private Map<String, Location> getEdgeTrafficRouterLocationMap(final JsonNode jo) {
+		final Map<String, Location> locations = new HashMap<>(jo.size());
+		final Iterator<String> locs = jo.fieldNames();
+		while (locs.hasNext()) {
+			final String loc = locs.next();
+			try {
+				final JsonNode locJo = JsonUtils.getJsonNode(jo, loc);
+				locations.put(loc, new Location(loc, new Geolocation(JsonUtils.getDouble(locJo, "latitude"), JsonUtils.getDouble(locJo, "longitude"))));
+			} catch (JsonUtilsException e) {
+				LOGGER.warn(e, e);
+			}
+		}
+
+		return locations;
+	}
+
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	private void parseEdgeTrafficRouterLocations(final JsonNode jo, final CacheRegister cacheRegister) throws JsonUtilsException {
+		final String locationKey = "location";
+		final JsonNode trafficRouterJo = JsonUtils.getJsonNode(jo, "contentRouters");
+		final Map<Geolocation, TrafficRouterLocation> locations = new HashMap<>();
+		final JsonNode trafficRouterLocJo = jo.get("trafficRouterLocations");
+
+		if (trafficRouterLocJo == null) {
+			LOGGER.warn("No trafficRouterLocations key found in configuration; unable to configure localized traffic routers");
+			return;
+		}
+
+		final Map<String, Location> allLocations = getEdgeTrafficRouterLocationMap(trafficRouterLocJo);
+
+		for (final Iterator<String> trafficRouterNames = trafficRouterJo.fieldNames(); trafficRouterNames.hasNext();) {
+    		final String trafficRouterName = trafficRouterNames.next();
+			final JsonNode trafficRouter = trafficRouterJo.get(trafficRouterName);
+
+			// define here to log invalid ip/ip6 input on catch below
+			String ip = null;
+			String ip6 = null;
+
+			try {
+				final String trLoc = JsonUtils.getString(trafficRouter, locationKey);
+				final Location cl = allLocations.get(trLoc);
+
+				if (cl != null) {
+					TrafficRouterLocation trafficRouterLocation = locations.get(cl.getGeolocation());
+
+					if (trafficRouterLocation == null) {
+						trafficRouterLocation = new TrafficRouterLocation(trLoc, cl.getGeolocation());
+						locations.put(cl.getGeolocation(), trafficRouterLocation);
+					}
+
+					final JsonNode status = trafficRouter.get("status");
+
+					if (status == null || (!"ONLINE".equals(status.asText()) && !"REPORTED".equals(status.asText()))) {
+						LOGGER.warn(String.format("Skipping Edge Traffic Router %s due to %s status", trafficRouterName, status));
+						continue;
+					} else {
+						LOGGER.info(String.format("Edge Traffic Router %s %s @ %s; %s", status, trafficRouterName, trLoc, cl.getGeolocation().toString()));
+					}
+
+					final Node edgeTrafficRouter = new Node(trafficRouterName, trafficRouterName, JsonUtils.optInt(jo, "hashCount"));
+					ip = JsonUtils.getString(trafficRouter, "ip");
+					ip6 = JsonUtils.optString(trafficRouter, "ip6");
+					edgeTrafficRouter.setFqdn(JsonUtils.getString(trafficRouter, "fqdn"));
+					edgeTrafficRouter.setPort(JsonUtils.getInt(trafficRouter, "port"));
+					edgeTrafficRouter.setIpAddress(ip, ip6, 0);
+					trafficRouterLocation.addTrafficRouter(trafficRouterName, edgeTrafficRouter);
+				} else {
+					LOGGER.error("No Location found for " + trLoc + "; unable to use Edge Traffic Router " + trafficRouterName);
+				}
+			} catch (JsonUtilsException e) {
+				LOGGER.warn(e, e);
+			} catch (UnknownHostException ex) {
+				LOGGER.warn(String.format("%s; input was ip=%s, ip6=%s", ex, ip, ip6), ex);
+			}
+		}
+
+		cacheRegister.setEdgeTrafficRouterLocations(locations.values());
 	}
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
 
 func GetPackages(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +46,7 @@ func GetPackages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params, err := GetServerParams(inf.Tx.Tx, serverName, atscfg.PackagesParamConfigFile)
+	params, err := ats.GetServerParams(inf.Tx.Tx, serverName, atscfg.PackagesParamConfigFile)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server '"+string(serverName)+"' + package parameters: "+err.Error()))
 		return

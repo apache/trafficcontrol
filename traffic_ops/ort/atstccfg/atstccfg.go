@@ -50,6 +50,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -108,7 +109,7 @@ func main() {
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	configs, err := cfgfile.GetAllConfigs(tccfg, toData)
+	configs, err := cfgfile.GetAllConfigs(toData, tccfg.RevalOnly)
 	if err != nil {
 		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
@@ -116,6 +117,8 @@ func main() {
 
 	modifyFilesData := plugin.ModifyFilesData{Cfg: tccfg, TOData: toData, Files: configs}
 	configs = plugins.ModifyFiles(modifyFilesData)
+
+	sort.Sort(config.ATSConfigFiles(configs))
 
 	if err := cfgfile.WriteConfigs(configs, os.Stdout); err != nil {
 		log.Errorln("Writing configs for '" + cfg.CacheHostName + "': " + err.Error())

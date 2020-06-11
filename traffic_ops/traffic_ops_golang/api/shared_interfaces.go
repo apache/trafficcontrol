@@ -94,6 +94,7 @@ type OptionsDeleter interface {
 	OptionsDelete() (error, error, int)
 	APIInfoer
 	Identifier
+	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 }
 
 type Validator interface {
@@ -102,10 +103,6 @@ type Validator interface {
 
 type Tenantable interface {
 	IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
-}
-
-type HasDeleteKeyOptions interface {
-	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 }
 
 // APIInfoer is an interface that guarantees the existance of a variable through its setters and getters.

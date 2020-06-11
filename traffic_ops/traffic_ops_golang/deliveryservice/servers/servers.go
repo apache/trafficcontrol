@@ -369,17 +369,18 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	serverNames := []string{}
-	for _, s := range servers {
-		name, _, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, s)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
-			return
-		}
-		serverNames = append(serverNames, name)
+	serverNamesCdnIdAndTypes, err := dbhelpers.GetServerHostNamesAndTypesFromIDs(inf.Tx.Tx, servers)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		return
+	}
+	userErr = ValidateDSSAssignments(ds, serverNamesCdnIdAndTypes)
+	if userErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, userErr, nil)
+		return
 	}
 
-	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNamesCdnIdAndTypes, inf.Tx.Tx)
 	if usrErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
 		return
@@ -449,7 +450,19 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	payload.XmlId = dsName
 	serverNames := payload.ServerNames
 
-	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	serverNamesCdnIdAndTypes, err := dbhelpers.GetServerTypesCdnIdFromHostNames(inf.Tx.Tx, serverNames)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		return
+	}
+
+	userErr = ValidateDSSAssignments(ds, serverNamesCdnIdAndTypes)
+	if userErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, userErr, nil)
+		return
+	}
+
+	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNamesCdnIdAndTypes, inf.Tx.Tx)
 	if usrErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
 		return
@@ -480,24 +493,31 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
 }
 
-// ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
-func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (error, error, int) {
-	nonOriginServerNames := []string{}
-	nonOriginTypeQuery := `
-	SELECT ARRAY(
-		SELECT s.host_name
-		FROM server s
-		JOIN type t ON s.type = t.id
-		WHERE t.name LIKE 'EDGE%' AND s.host_name = ANY($1)
-	)`
-
-	serverNamePqArray := pq.Array(serverNames)
-
-	if err := tx.QueryRow(nonOriginTypeQuery, serverNamePqArray).Scan(pq.Array(&nonOriginServerNames)); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil, http.StatusOK
+// ValidateDSSAssignments returns an error if the given servers cannot be assigned to the given delivery service.
+func ValidateDSSAssignments(ds DSInfo, servers []dbhelpers.ServerHostNameCDNIDAndType) error {
+	if ds.Topology == nil {
+		for _, s := range servers {
+			if ds.CDNID != nil && s.CDNID != *ds.CDNID {
+				return errors.New("server and delivery service CDNs do not match")
+			}
 		}
-		return nil, err, http.StatusInternalServerError
+		return nil
+	}
+	for _, s := range servers {
+		if s.Type != tc.OriginTypeName {
+			return errors.New("only servers of type ORG may be assigned to topology-based delivery services")
+		}
+	}
+	return nil
+}
+
+// ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
+func ValidateServerCapabilities(dsID int, serverNamesAndTypes []dbhelpers.ServerHostNameCDNIDAndType, tx *sql.Tx) (error, error, int) {
+	nonOriginServerNames := []string{}
+	for _, s := range serverNamesAndTypes {
+		if strings.HasPrefix(s.Type, tc.EdgeTypePrefix) {
+			nonOriginServerNames = append(nonOriginServerNames, s.HostName)
+		}
 	}
 
 	var sCaps []string
@@ -732,6 +752,8 @@ type DSInfo struct {
 	SigningAlgorithm     *string
 	CacheURL             *string
 	MaxOriginConnections *int
+	Topology             *string
+	CDNID                *int
 }
 
 // GetDSInfo loads the DeliveryService fields needed by Delivery Service Servers from the database, from the ID. Returns the data, whether the delivery service was found, and any error.
@@ -745,7 +767,9 @@ SELECT
   ds.regex_remap,
   ds.signing_algorithm,
   ds.cacheurl,
-  ds.max_origin_connections
+  ds.max_origin_connections,
+  ds.topology,
+  ds.cdn_id
 FROM
   deliveryservice ds
   JOIN type tp ON ds.type = tp.id
@@ -753,7 +777,7 @@ WHERE
   ds.id = $1
 `
 	di := DSInfo{ID: id}
-	if err := tx.QueryRow(qry, id).Scan(&di.Name, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.CacheURL, &di.MaxOriginConnections); err != nil {
+	if err := tx.QueryRow(qry, id).Scan(&di.Name, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.CacheURL, &di.MaxOriginConnections, &di.Topology, &di.CDNID); err != nil {
 		if err == sql.ErrNoRows {
 			return DSInfo{}, false, nil
 		}
@@ -774,7 +798,9 @@ SELECT
   ds.regex_remap,
   ds.signing_algorithm,
   ds.cacheurl,
-  ds.max_origin_connections
+  ds.max_origin_connections,
+  ds.topology,
+  ds.cdn_id
 FROM
   deliveryservice ds
   JOIN type tp ON ds.type = tp.id
@@ -782,7 +808,7 @@ WHERE
   ds.xml_id = $1
 `
 	di := DSInfo{Name: dsName}
-	if err := tx.QueryRow(qry, dsName).Scan(&di.ID, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.CacheURL, &di.MaxOriginConnections); err != nil {
+	if err := tx.QueryRow(qry, dsName).Scan(&di.ID, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.CacheURL, &di.MaxOriginConnections, &di.Topology, &di.CDNID); err != nil {
 		if err == sql.ErrNoRows {
 			return DSInfo{}, false, nil
 		}

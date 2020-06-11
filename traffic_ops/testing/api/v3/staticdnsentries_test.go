@@ -18,12 +18,13 @@ package v3
 import (
 	"testing"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"reflect"
+
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestStaticDNSEntries(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, StaticDNSEntries}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, StaticDNSEntries}, func() {
 		GetTestStaticDNSEntries(t)
 		UpdateTestStaticDNSEntries(t)
 		UpdateTestStaticDNSEntriesInvalidAddress(t)

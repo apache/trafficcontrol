@@ -86,16 +86,16 @@ func TestServerUpdateStatus(t *testing.T) {
 		// assert that updates were queued for the proper EDGE servers
 		getServers()
 		if !edge1cdn1.UpdPending {
-			t.Errorf("expected: child %s to have updates pending, actual: no updates pending", edge1cdn1.HostName)
+			t.Errorf("expected: child %s (%d) to have updates pending, actual: no updates pending", edge1cdn1.HostName, edge1cdn1.ID)
 		}
 		if !edge2cdn1.UpdPending {
-			t.Errorf("expected: child %s to have updates pending, actual: no updates pending", edge2cdn1.HostName)
+			t.Errorf("expected: child %s (%d) to have updates pending, actual: no updates pending", edge2cdn1.HostName, edge2cdn1.ID)
 		}
 		if mid1cdn1.UpdPending {
-			t.Errorf("expected: server %s with updated status to have no updates pending, actual: updates pending", mid1cdn1.HostName)
+			t.Errorf("expected: server %s (%d) with updated status to have no updates pending, actual: updates pending", mid1cdn1.HostName, mid1cdn1.ID)
 		}
 		if edge1cdn2.UpdPending {
-			t.Errorf("expected: server %s in different CDN than server with updated status to have no updates pending, actual: updates pending", edge2cdn1.HostName)
+			t.Errorf("expected: server %s (%d) in different CDN than server with updated status to have no updates pending, actual: updates pending", edge1cdn2.HostName, edge1cdn2.ID)
 		}
 
 		// update status of MID server to OFFLINE via status ID

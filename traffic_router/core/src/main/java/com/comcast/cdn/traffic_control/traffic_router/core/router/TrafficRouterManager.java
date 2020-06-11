@@ -25,7 +25,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistr
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;

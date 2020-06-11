@@ -597,11 +597,11 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'deliveryservices/dnsseckeys/generate', ('2.0',))
+	@api_request('post', 'cnds/dnsseckeys/generate', ('2.0',))
 	def create_cdn_dns_sec_keys(self, data=None):
 		"""
 		Generates ZSK and KSK keypairs for a CDN and all associated Delivery Services
-		:ref:`to-api-deliveryservices-dnsseckeys-generate`
+		:ref:`to-api-v2-cdns-dnsseckeys-generate`
 		:param data: The parameter data to use for cachegroup creation.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]

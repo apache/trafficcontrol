@@ -26,6 +26,7 @@ import (
 
 func TestCacheGroups(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, Topologies}, func() {
+		GetTestCacheGroups(t)
 		GetTestCacheGroupsByName(t)
 		GetTestCacheGroupsByShortName(t)
 		GetTestCacheGroupsByTopology(t)
@@ -44,6 +45,7 @@ func CreateTestCacheGroups(t *testing.T) {
 		resp, _, err = TOSession.CreateCacheGroupNullable(cg)
 		if err != nil {
 			t.Errorf("could not CREATE cachegroups: %v, request: %v", err, cg)
+			continue
 		}
 
 		// Testing 'join' fields during create
@@ -63,6 +65,28 @@ func CreateTestCacheGroups(t *testing.T) {
 			t.Error("Fallbacks are null")
 		}
 
+	}
+}
+
+func GetTestCacheGroups(t *testing.T) {
+	resp, _, err := TOSession.GetCacheGroupsByQueryParams(url.Values{})
+	if err != nil {
+		t.Errorf("cannot GET CacheGroups %v - %v", err, resp)
+	}
+	expectedCachegroups := make(map[string]struct{})
+	for _, cg := range testData.CacheGroups {
+		expectedCachegroups[*cg.Name] = struct{}{}
+	}
+	foundCachegroups := make(map[string]struct{})
+	for _, cg := range resp {
+		if _, expected := expectedCachegroups[*cg.Name]; !expected {
+			t.Errorf("got unexpected cachegroup: %s", *cg.Name)
+		}
+		if _, found := foundCachegroups[*cg.Name]; !found {
+			foundCachegroups[*cg.Name] = struct{}{}
+		} else {
+			t.Errorf("GET returned duplicate cachegroup: %s", *cg.Name)
+		}
 	}
 }
 

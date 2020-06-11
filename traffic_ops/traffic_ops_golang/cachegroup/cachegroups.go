@@ -451,8 +451,20 @@ func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, 
 	} else {
 		log.Debugln("Non IMS request")
 	}
-
-	query := SelectQuery() + where + orderBy + pagination
+	baseSelect := SelectQuery()
+	if _, ok := cg.ReqInfo.Params["topology"]; ok {
+		baseSelect += `
+LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
+`
+	}
+	// If the type cannot be converted to an int, return 400
+	if cgType, ok := cg.ReqInfo.Params["type"]; ok {
+		_, err := strconv.Atoi(cgType)
+		if err != nil {
+			return nil, errors.New("cachegroup read: converting cachegroup type to integer " + err.Error()), nil, http.StatusBadRequest, nil
+		}
+	}
+	query := baseSelect + where + orderBy + pagination
 	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError, nil
@@ -688,7 +700,6 @@ LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id
-LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
 `
 }
 

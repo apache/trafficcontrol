@@ -24,7 +24,7 @@ import (
 )
 
 func TestCRConfig(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
 		UpdateTestCRConfigSnapshot(t)
 		SnapshotTestCDNbyName(t)
 		SnapshotTestCDNbyInvalidName(t)
@@ -51,14 +51,15 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 
 	// create an ANY_MAP DS assignment to verify that it doesn't show up in the CRConfig
-	servers, _, err := TOSession.GetServers()
+	resp, _, err := TOSession.GetServers(nil)
 	if err != nil {
-		t.Errorf("GetServers err expected nil, actual %+v", err)
+		t.Fatalf("GetServers err expected nil, actual %+v", err)
 	}
+	servers := resp.Response
 	serverID := 0
 	for _, server := range servers {
-		if server.Type == "EDGE" && server.CDNName == "cdn1" {
-			serverID = server.ID
+		if server.Type == "EDGE" && server.CDNName != nil && *server.CDNName == "cdn1" && server.ID != nil {
+			serverID = *server.ID
 			break
 		}
 	}
@@ -76,7 +77,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Error("GetDeliveryServiceByXMLIDNullable got unknown delivery service id")
 	}
 	anymapDSID := *res[0].ID
-	_, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
+	_, _, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
 	if err != nil {
 		t.Errorf("POST delivery service servers: %v", err)
 	}

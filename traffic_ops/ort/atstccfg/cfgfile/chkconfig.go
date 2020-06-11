@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg/config"
 )
 
-func GetConfigFileServerChkconfig(toData *config.TOData) (string, string, error) {
+func GetConfigFileServerChkconfig(toData *config.TOData) (string, string, string, error) {
 	fileParams := map[string][]string{}
 	for _, param := range toData.ServerParams {
 		if param.ConfigFile != atscfg.ChkconfigParamConfigFile {
@@ -33,5 +33,5 @@ func GetConfigFileServerChkconfig(toData *config.TOData) (string, string, error)
 		fileParams[param.Name] = append(fileParams[param.Name], param.Value)
 	}
 
-	return atscfg.MakeChkconfig(fileParams), atscfg.ContentTypeChkconfig, nil
+	return atscfg.MakeChkconfig(fileParams), atscfg.ContentTypeChkconfig, atscfg.LineCommentChkconfig, nil
 }

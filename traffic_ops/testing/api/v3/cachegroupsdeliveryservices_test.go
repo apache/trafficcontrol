@@ -16,11 +16,13 @@ package v3
 */
 
 import (
+	"net/http"
+	"net/url"
 	"testing"
 )
 
 func TestCacheGroupsDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, CacheGroupsDeliveryServices}, func() {})
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, CacheGroupsDeliveryServices}, func() {})
 }
 
 // TODO this is the name hard-coded in the create servers test; change to be dynamic
@@ -58,14 +60,29 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	}
 	cgID := *clientCG.ID
 
-	dsIDs := []int64{}
+	dsIDs := []int{}
+	topologyDsIDs := []int{}
 	for _, ds := range dses {
-		if *ds.CDNName == "cdn1" {
-			dsIDs = append(dsIDs, int64(*ds.ID))
+		if *ds.CDNName == "cdn1" && ds.Topology == nil {
+			dsIDs = append(dsIDs, *ds.ID)
+		} else if *ds.CDNName == "cdn1" && ds.Topology != nil {
+			topologyDsIDs = append(topologyDsIDs, *ds.ID)
 		}
 	}
 	if len(dsIDs) < 1 {
 		t.Fatal("No Delivery Services found in CDN 'cdn1', cannot continue.")
+	}
+
+	if len(topologyDsIDs) < 1 {
+		t.Fatal("No Topology-based Delivery Services found in CDN 'cdn1', cannot continue.")
+	}
+
+	_, reqInf, err := TOSession.SetCachegroupDeliveryServices(cgID, topologyDsIDs)
+	if err == nil {
+		t.Fatal("assigning Topology-based delivery service to cachegroup - expected: error, actual: nil")
+	}
+	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
+		t.Fatalf("assigning Topology-based delivery service to cachegroup - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
 	resp, _, err := TOSession.SetCachegroupDeliveryServices(cgID, dsIDs)
@@ -87,16 +104,23 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatal("setting cachegroup delivery services returned success, but no servers set")
 	}
 
+	params := url.Values{}
 	for _, serverName := range resp.Response.ServerNames {
-		servers, _, err := TOSession.GetServerByHostName(string(serverName))
+		params.Set("hostName", string(serverName))
+		resp, _, err := TOSession.GetServers(&params)
 		if err != nil {
 			t.Fatalf("getting server: %v", err)
 		}
+		servers := resp.Response
 		if len(servers) != 1 {
 			t.Fatalf("getting servers: expected 1 got %v", len(servers))
 		}
 		server := servers[0]
-		serverID := server.ID
+		if server.ID == nil {
+			t.Errorf("Server %s had nil ID", serverName)
+			continue
+		}
+		serverID := *server.ID
 
 		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(serverID)
 

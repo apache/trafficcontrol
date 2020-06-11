@@ -41,10 +41,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
@@ -551,7 +552,7 @@ public class DeliveryService {
 		return isAvailable;
 	}
 
-	public boolean isLocationAvailable(final CacheLocation cl) {
+	public boolean isLocationAvailable(final Location cl) {
 		if(cl==null) {
 			return false;
 		}

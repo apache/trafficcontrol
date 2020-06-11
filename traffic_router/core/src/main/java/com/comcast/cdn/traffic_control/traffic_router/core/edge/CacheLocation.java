@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.cache;
+package com.comcast.cdn.traffic_control.traffic_router.core.edge;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,12 +32,9 @@ import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 /**
  * A physical location that has caches.
  */
-public class CacheLocation {
+public class CacheLocation extends Location {
 
 	public static final Logger LOGGER = Logger.getLogger(CacheLocation.class);
-
-	private final String id;
-	private final Geolocation geolocation;
 
 	private final Map<String, Cache> caches;
 	private List<String> backupCacheGroups = null;
@@ -87,8 +84,7 @@ public class CacheLocation {
 			final boolean useClosestGeoOnBackupFailure,
 			final Set<LocalizationMethod> enabledLocalizationMethods
 	) {
-		this.id = id;
-		this.geolocation = geolocation;
+		super(id, geolocation);
 		this.backupCacheGroups = backupCacheGroups;
 		this.useClosestGeoOnBackupFailure = useClosestGeoOnBackupFailure;
 		this.enabledLocalizationMethods = enabledLocalizationMethods;
@@ -169,15 +165,6 @@ public class CacheLocation {
 	}
 
 	/**
-	 * Gets geolocation.
-	 * 
-	 * @return the geolocation
-	 */
-	public Geolocation getGeolocation() {
-		return geolocation;
-	}
-
-	/**
 	 * Gets backupCacheGroups.
 	 * 
 	 * @return the backupCacheGroups
@@ -196,16 +183,6 @@ public class CacheLocation {
 	}
 
 	/**
-	 * Gets id.
-	 * 
-	 * @return the id
-	 */
-	public String getId() {
-		return id;
-	}
-
-
-	/**
 	 * Determines if the specified {@link Cache} exists at this location.
 	 * 
 	 * @param id
@@ -221,11 +198,5 @@ public class CacheLocation {
 		return new HashCodeBuilder(1, 31)
 		.append(getId())
 		.toHashCode();
-	}
-
-	public Map<String,String> getProperties() {
-		final Map<String,String> map = geolocation.getProperties();
-		map.put("id", id);
-		return map;
 	}
 }
