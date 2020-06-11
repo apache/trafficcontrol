@@ -134,8 +134,8 @@ func TestGetEligibleServers(t *testing.T) {
 		t.Fatalf("servers.read expected len(srvInts) == 1, actual = %v", len(srvInts))
 	}
 
-	if len(srvInts[0].IpAddresses) != 1 {
-		t.Fatalf("servers.read expected len(srvInts[0].IpAddresses) == 1, actual = %v", len(srvInts[0].IpAddresses))
+	if len(srvInts[0].IPAddresses) != 1 {
+		t.Fatalf("servers.read expected len(srvInts[0].IPAddresses) == 1, actual = %v", len(srvInts[0].IPAddresses))
 	}
 }
 
