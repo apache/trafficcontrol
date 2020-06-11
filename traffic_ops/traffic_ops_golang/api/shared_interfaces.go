@@ -20,6 +20,7 @@ package api
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
@@ -32,6 +33,11 @@ type CRUDer interface {
 	APIInfoer
 	Identifier
 	Validator
+}
+
+type AlertsResponse interface {
+	// GetAlerts retrieves an array of alerts that were generated over the course of handling an endpoint.
+	GetAlerts() tc.Alerts
 }
 
 type Identifier interface {
