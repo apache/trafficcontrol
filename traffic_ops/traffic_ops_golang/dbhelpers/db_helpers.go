@@ -644,15 +644,18 @@ func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
 	return name, true, nil
 }
 
-type ServerHostNameAndType struct {
+type ServerHostNameCDNIDAndType struct {
 	HostName string
+	CDNID    int
 	Type     string
 }
 
-func GetServerHostNamesAndTypesFromIDs(tx *sql.Tx, ids []int) ([]ServerHostNameAndType, error) {
+// GetServerHostNamesAndTypesFromIDs returns the server's hostname, cdn ID and associated type name
+func GetServerHostNamesAndTypesFromIDs(tx *sql.Tx, ids []int) ([]ServerHostNameCDNIDAndType, error) {
 	qry := `
 SELECT
   s.host_name,
+  s.cdn_id,
   t.name
 FROM
   server s JOIN type t ON s.type = t.id
@@ -665,10 +668,10 @@ WHERE
 	}
 	defer log.Close(rows, "error closing rows")
 
-	servers := []ServerHostNameAndType{}
+	servers := []ServerHostNameCDNIDAndType{}
 	for rows.Next() {
-		s := ServerHostNameAndType{}
-		if err := rows.Scan(&s.HostName, &s.Type); err != nil {
+		s := ServerHostNameCDNIDAndType{}
+		if err := rows.Scan(&s.HostName, &s.CDNID, &s.Type); err != nil {
 			return nil, errors.New("scanning server host name and type: " + err.Error())
 		}
 		servers = append(servers, s)
@@ -676,11 +679,12 @@ WHERE
 	return servers, nil
 }
 
-// GetServerTypesFromHostNames returns the host names and types of the given server host names or an error if any occur.
-func GetServerTypesFromHostNames(tx *sql.Tx, hostNames []string) ([]ServerHostNameAndType, error) {
+// GetServerTypesCdnIdFromHostNames returns the host names, server cdn and types of the given server host names or an error if any occur.
+func GetServerTypesCdnIdFromHostNames(tx *sql.Tx, hostNames []string) ([]ServerHostNameCDNIDAndType, error) {
 	qry := `
 SELECT
   s.host_name,
+  s.cdn_id,
   t.name
 FROM
   server s JOIN type t ON s.type = t.id
@@ -693,10 +697,10 @@ WHERE
 	}
 	defer log.Close(rows, "error closing rows")
 
-	servers := []ServerHostNameAndType{}
+	servers := []ServerHostNameCDNIDAndType{}
 	for rows.Next() {
-		s := ServerHostNameAndType{}
-		if err := rows.Scan(&s.HostName, &s.Type); err != nil {
+		s := ServerHostNameCDNIDAndType{}
+		if err := rows.Scan(&s.HostName, &s.CDNID, &s.Type); err != nil {
 			return nil, errors.New("scanning server host name and type: " + err.Error())
 		}
 		servers = append(servers, s)
