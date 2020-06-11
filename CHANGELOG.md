@@ -50,6 +50,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - `ip_allow.config`
   - `parent.config`
   - `remap.config`
+- Removed from Traffic Portal the ability to view cache server config files as the contents are no longer reliable through the TO API due to the introduction of atstccfg.
+
 
 ## [4.1.0] - 2020-04-23
 ### Added
