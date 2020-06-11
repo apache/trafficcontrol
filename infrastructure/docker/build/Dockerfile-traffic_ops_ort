@@ -22,7 +22,6 @@ VOLUME /trafficcontrol
 
 ### Common for all sub-component builds
 RUN	yum -y install \
-		epel-release \
 		git \
 		rpm-build && \
 	yum -y clean all
