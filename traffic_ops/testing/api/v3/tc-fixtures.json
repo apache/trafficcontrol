@@ -2403,7 +2403,7 @@
         },
         {
             "name": "secondary-parents",
-            "description": "A cachegroup with secondary parents",
+            "description": "A topology with secondary parents",
             "nodes": [
                 {
                     "cachegroup": "parentCachegroup",
