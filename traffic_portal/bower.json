@@ -13,6 +13,6 @@
         "flot.tooltip": "0.8.7",
         "flot-axislabels": "release-2.0.1",
         "font-awesome": "4.5.0",
-        "jquery": "2.0.0",
+        "jquery": "2.0.0"
     }
 }
