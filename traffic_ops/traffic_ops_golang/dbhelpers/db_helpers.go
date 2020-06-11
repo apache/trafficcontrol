@@ -565,6 +565,7 @@ func GetServersInterfaces(ids []int, tx *sql.Tx) (map[int]map[string]tc.ServerIn
 	if err != nil {
 		return nil, err
 	}
+	defer ipRows.Close()
 
 	for ipRows.Next() {
 		var ip tc.ServerIPAddress
