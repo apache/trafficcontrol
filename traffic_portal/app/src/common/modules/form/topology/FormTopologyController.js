@@ -136,7 +136,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 				(node.parent && node.parent.name !== cg.name) &&
 				cacheGroupNamesInTopology.includes(cg.name) &&
 				((node.type === 'EDGE_LOC') || (cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC'));
-		});
+		}).sort(function(a,b) { return [a.name, b.name].sort().indexOf(b.name) === 0 ? 1 : -1; });
 
 		let params = {
 			title: 'Select a secondary parent',

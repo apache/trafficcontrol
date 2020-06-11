@@ -108,7 +108,7 @@ var TableSelectTopologyCacheGroupsController = function(parent, topology, select
 			return (parent.cachegroup && parent.cachegroup !== cg.name) &&
 				usedCacheGroupNames.includes(cg.name) &&
 				((selectedType === 'EDGE_LOC') || (cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC'));
-		});
+		}).sort(function(a,b) { return [a.name, b.name].sort().indexOf(b.name) === 0 ? 1 : -1; });
 
 		if (eligibleSecParentCandidates.length === 0) {
 			$uibModalInstance.close({ selectedCacheGroups: selectedCacheGroups, parent: { name: parent.cachegroup, type: parent.type }, secParent: { name: '', type: ''} });
