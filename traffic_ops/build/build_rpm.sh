@@ -70,13 +70,7 @@ function initBuildArea() {
                 { echo "Could not build convert_profile binary"; exit 1; }
 	popd
 
-	# compile atstccfg
-	pushd ort/atstccfg
-	"${go_build[@]}" -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=${TC_VERSION}" || \
-                { echo "Could not build atstccfg binary"; exit 1; }
-	popd
-
-	rsync -av doc etc install "$dest"/ || \
+	rsync -av etc install "$dest"/ || \
 		 { echo "Could not copy to $dest: $?"; exit 1; }
 	rsync -av app/{bin,conf,cpanfile,db,lib,public,script,templates} "$dest"/app/ || \
 		 { echo "Could not copy to $dest/app: $?"; exit 1; }
