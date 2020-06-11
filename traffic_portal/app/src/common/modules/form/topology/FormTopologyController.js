@@ -193,11 +193,11 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 
 	$scope.nodeWarning = function(node) {
 		// EDGE_LOCs with parent/secondary parent EDGE_LOCs require special configuration
-		if (node.parent) {
-			console.log(node.parent);
-		}
-		if ((node.parent && node.parent.type === 'EDGE_LOC') || (node.secParent && node.secParent.type === 'EDGE_LOC')) {
-			return 'Special Configuration Required';
+		let msg = 'Special Configuration Required';
+		if (node.parent && node.parent.type === 'EDGE_LOC') {
+			return msg + ' [EDGE_LOC Parent]';
+		} else if (node.secParent && node.secParent.type === 'EDGE_LOC') {
+			return msg + ' [EDGE_LOC 2nd Parent]';
 		}
 		return '';
 	};
