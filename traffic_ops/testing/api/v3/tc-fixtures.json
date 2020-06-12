@@ -2580,12 +2580,14 @@
             "description": "another topology",
             "nodes": [
                 {
-                  "cachegroup": "parentCachegroup",
-                  "parents": []
+                    "cachegroup": "parentCachegroup",
+                    "parents": []
                 },
                 {
                     "cachegroup": "cachegroup1",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "secondaryCachegroup",
@@ -2593,7 +2595,89 @@
                 },
                 {
                     "cachegroup": "cachegroup2",
-                    "parents": [2]
+                    "parents": [
+                        2
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "secondary-parents",
+            "description": "A topology with secondary parents",
+            "nodes": [
+                {
+                    "cachegroup": "parentCachegroup",
+                    "parent": "",
+                    "secParent": "",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "cachegroup1",
+                    "parent": "parentCachegroup",
+                    "secParent": "secondaryCachegroup",
+                    "parents": [
+                        0,
+                        2
+                    ]
+                },
+                {
+                    "cachegroup": "secondaryCachegroup",
+                    "parent": "",
+                    "secParent": "",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "fallback1",
+                    "parent": "secondaryCachegroup",
+                    "secParent": "parentCachegroup",
+                    "parents": [
+                        2,
+                        0
+                    ]
+                },
+                {
+                    "cachegroup": "fallback2",
+                    "parent": "secondaryCachegroup",
+                    "secParent": "parentCachegroup",
+                    "parents": [
+                        2,
+                        0
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "4-tiers",
+            "description": "A 4-tier topology",
+            "nodes": [
+                {
+                    "cachegroup": "parentCachegroup",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "parentCachegroup2",
+                    "parents": [
+                        0
+                    ]
+                },
+                {
+                    "cachegroup": "cachegroup1",
+                    "parents": [
+                        1
+                    ]
+                },
+                {
+                    "cachegroup": "secondaryCachegroup",
+                    "parents": [
+                        1,
+                        0
+                    ]
+                },
+                {
+                    "cachegroup": "fallback1",
+                    "parents": [
+                        3
+                    ]
                 }
             ]
         }
