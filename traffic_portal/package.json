@@ -35,7 +35,6 @@
     "ag-grid-community": "^23.2.0",
     "angular": "^1.8.0",
     "angular-animate": "^1.8.0",
-    "angular-bootstrap": "^0.12.2",
     "angular-bootstrap-contextmenu": "^1.2.1",
     "angular-jwt": "^0.1.11"
   }
