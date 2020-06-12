@@ -163,13 +163,15 @@ func TryIfModifiedSinceQuery(val GenericReader, h http.Header, where string, ord
 			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
 			return runSecond, max
 		}
-		max = v.LatestTime.Time
-		// The request IMS time is later than the max of (lastUpdated, deleted_time)
-		if imsDate.After(v.LatestTime.Time) {
-			return dontRunSecond, max
+		if v.LatestTime != nil {
+			max = v.LatestTime.Time
+			// The request IMS time is later than the max of (lastUpdated, deleted_time)
+			if imsDate.After(v.LatestTime.Time) {
+				return dontRunSecond, max
+			}
 		}
 	}
-	return dontRunSecond, max
+	return runSecond, max
 }
 
 func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
@@ -183,6 +185,7 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 	if useIMS {
 		runSecond, maxTime := TryIfModifiedSinceQuery(val, h, where, orderBy, pagination, queryValues)
 		if !runSecond {
+			fmt.Println("IMS HIT!!")
 			log.Debugln("IMS HIT")
 			code = http.StatusNotModified
 			return vals, nil, nil, code, &maxTime

@@ -74,12 +74,14 @@ func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]
 				log.Warnf("Failed to parse the max time stamp into a struct %v", err)
 				return runSecond, maxTime
 			}
-			maxTime = v.LatestTime.Time
-			// The request IMS time is later than the max of (lastUpdated, deleted_time)
-			if v.LatestTime != nil && imsDate.After(v.LatestTime.Time) {
-				return dontRunSecond, maxTime
+			if v.LatestTime != nil {
+				maxTime = v.LatestTime.Time
+				// The request IMS time is later than the max of (lastUpdated, deleted_time)
+				if imsDate.After(v.LatestTime.Time) {
+					return dontRunSecond, maxTime
+				}
 			}
 		}
 	}
-	return dontRunSecond, maxTime
+	return runSecond, maxTime
 }
