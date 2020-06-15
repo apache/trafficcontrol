@@ -144,14 +144,14 @@ under the License.
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address-gateway], 'pattern')">Invalid gateway</small>
                                 <label for="{{inf.name}}-{{ip.address}}-serviceAddress">Is a Service Address</label>
                                 <input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" ng-model="ip.serviceAddress"/>
-                                <button type="button" title="delete this IP address" class="btn btn-danger" ng-click="deleteIP(inf, ip)">-</button>
+                                <button type="button" title="delete this IP address" class="btn btn-danger" ng-click="deleteIP(inf, ip)">Remove IP Address</button>
                             </li>
                         </ul>
-                        <button type="button" title="add new IP Address" class="btn btn-success right-button" ng-click="addIP(inf)">+</button>
+                        <button type="button" title="add new IP Address" class="btn btn-success right-button" ng-click="addIP(inf)">Add IP Address</button>
                     </fieldset>
-                    <button class="btn btn-danger right-button" type="button" title="delete this interface" ng-click="deleteInterface(inf)">-</button>
+                    <button class="btn btn-danger right-button" type="button" title="delete this interface" ng-click="deleteInterface(inf)">Remove Interface</button>
                 </fieldset>
-                <button class="btn btn-success right-button" type="button" title="add a new interface" ng-click="addInterface()">+</button>
+                <button class="btn btn-success right-button" type="button" title="add a new interface" ng-click="addInterface()">Add Interface</button>
             </fieldset>
 
 
