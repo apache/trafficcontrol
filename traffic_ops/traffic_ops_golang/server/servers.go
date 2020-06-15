@@ -51,6 +51,12 @@ import (
 const serverCountQuery = `
 SELECT COUNT(s.id)
 FROM server AS s
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id
 `
 
 const selectQuery = `
