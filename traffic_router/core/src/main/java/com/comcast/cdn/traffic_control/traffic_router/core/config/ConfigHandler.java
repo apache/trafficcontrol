@@ -491,18 +491,19 @@ public class ConfigHandler {
 
 		deliveryServiceMap.forEach((xmlId, ds) -> {
 			final List<DeliveryServiceReference> dsReferences = new ArrayList<>();
-			try {
-				dsReferences.add(new DeliveryServiceReference(ds.getId(), ds.getDomain()));
-			} catch (ParseException e) {
-				LOGGER.error("Unable to create a DeliveryServiceReference from DeliveryService '" + ds.getId() + "'", e);
-				return;
-			}
 			Stream.of(ds.getTopology())
 					.filter((topologyName) -> !Objects.isNull(topologyName) && topologyMap.containsKey(topologyName))
 					.flatMap((topologyName) -> topologyMap.get(topologyName).stream())
 					.flatMap((node) -> cacheRegister.getCacheLocation(node).getCaches().stream())
 					.filter((cache) -> ds.hasRequiredCapabilities(cache.getCapabilities()))
-					.forEach((cache) -> cache.setDeliveryServices(dsReferences));
+					.forEach((cache) -> {
+						cache.setDeliveryServices(dsReferences);
+						try {
+							dsReferences.add(new DeliveryServiceReference(ds.getId(), cache.getId() + "." + ds.getDomain()));
+						} catch (ParseException e) {
+							LOGGER.error("Unable to create a DeliveryServiceReference from DeliveryService '" + ds.getId() + "'", e);
+						}
+					});
 		});
 	}
 
