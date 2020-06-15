@@ -58,7 +58,7 @@ type Monitor struct {
 	BasicServer
 }
 
-// LegacyCache represents a Cache for ATC versions before 5.0
+// LegacyCache represents a Cache for ATC versions before 5.0.
 type LegacyCache struct {
 	BasicServer
 	InterfaceName string `json:"interfacename"`
