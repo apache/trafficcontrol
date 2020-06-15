@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableStatusServersController = function(status, servers, $controller, $scope, serverUtils) {
+var TableStatusServersController = function(status, servers, $controller, $scope) {
 
 	// extends the TableParentServersController to inherit common methods
 	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
@@ -51,5 +51,5 @@ var TableStatusServersController = function(status, servers, $controller, $scope
 
 };
 
-TableStatusServersController.$inject = ['status', 'servers', '$controller', '$scope', 'serverUtils'];
+TableStatusServersController.$inject = ['status', 'servers', '$controller', '$scope'];
 module.exports = TableStatusServersController;
