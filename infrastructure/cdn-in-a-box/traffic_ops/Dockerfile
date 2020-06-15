@@ -41,7 +41,7 @@ RUN mkdir /etc/cron.d && \
         postgresql96 && \
     yum clean all
 
-FROM trafficops-common-deps
+FROM trafficops-common-deps as trafficops-perl-deps
 
 EXPOSE 443
 ENV MOJO_MODE production
@@ -84,6 +84,7 @@ RUN cpanm -l ./local Carton && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile
 RUN ./install_goose.sh
 
+FROM trafficops-perl-deps
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 ADD $TRAFFIC_OPS_RPM /
