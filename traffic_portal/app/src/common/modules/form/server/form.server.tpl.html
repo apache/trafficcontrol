@@ -115,46 +115,6 @@ under the License.
                 <small ng-show="server.profileId"><a ng-href="/#!/profiles/{{server.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
             </div>
 
-            <fieldset>
-                <legend>Interfaces</legend>
-                <fieldset ng-repeat="inf in server.interfaces">
-                    <legend><input my-directive type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}"/></legend>
-
-                    <div>
-                        <label for="{{inf.name}}-monitor">Monitor this interface</label>
-                        <input id="{{inf.name}}-monitor" name="{{inf.name}}-monitor" type="checkbox" ng-model="inf.monitor"/>
-                        <label for="{{inf.name}}-mtu" ng-class="{'has-error': hasError(serverForm[inf.name+'-mtu'])}"><abbr title="Maximum Transmission Unit">MTU</abbr></label>
-                        <input id="{{inf.name}}-mtu" ng-class="{'has-error': hasError(serverForm[inf.name+'-mtu'])}" name="{{inf.name}}-mtu" type="number" min="1500" max="9000" step="7500" ng-model="inf.mtu"/>
-                        <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-mtu'], 'min') || hasPropertyError(serverForm[inf.name+'-mtu'], 'max') || hasPropertyError(serverForm[inf.name+'-mtu'], 'step')">Invalid MTU - must be 1500 or 9000</small>
-                        <label for="{{inf.name}}-max-bandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}">Maximum Bandwidth</label>
-                        <input id="{{inf.name}}-max-bandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
-                        <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-max-bandwidth'], 'min')">Cannot be negative</small>
-                    </div>
-
-                    <fieldset>
-                        <legend>IP Addresses</legend>
-                        <ul>
-                            <li ng-repeat="ip in inf.ipAddresses" ng-class="{'bordered-item': !$last}">
-                                <label for="{{inf.name}}-{{ip.address}}" ng-class="{'has-error': hasError(serverForm[inf.name+'-'+ip.address])}">Address</label>
-                                <input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" type="text" ng-model="ip.address" ng-pattern="IPWithCIDRPattern" required/>
-                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'pattern')">Invalid address</small>
-                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'required')">Required</small>
-                                <label for="{{inf.name}}-{{ip.address}}-gateway">Gateway</label>
-                                <input type="text" id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" ng-model="ip.gateway" ng-pattern="IPPattern"/>
-                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address-gateway], 'pattern')">Invalid gateway</small>
-                                <label for="{{inf.name}}-{{ip.address}}-serviceAddress">Is a Service Address</label>
-                                <input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" ng-model="ip.serviceAddress"/>
-                                <button type="button" title="delete this IP address" class="btn btn-danger" ng-click="deleteIP(inf, ip)">Remove IP Address</button>
-                            </li>
-                        </ul>
-                        <button type="button" title="add new IP Address" class="btn btn-success right-button" ng-click="addIP(inf)">Add IP Address</button>
-                    </fieldset>
-                    <button class="btn btn-danger right-button" type="button" title="delete this interface" ng-click="deleteInterface(inf)">Remove Interface</button>
-                </fieldset>
-                <button class="btn btn-success right-button" type="button" title="add a new interface" ng-click="addInterface()">Add Interface</button>
-            </fieldset>
-
-
             <label for="physLocation" ng-class="{'has-error': hasError(serverForm.physLocation)}">Physical Location *</label>
             <div ng-class="{'has-error': hasError(serverForm.physLocation), 'has-feedback': hasError(serverForm.physLocation)}">
                 <select id="physLocation" name="physLocation" class="form-control" ng-model="server.physLocationId" ng-options="physLocation.id as physLocation.name for physLocation in physLocations" required>
@@ -280,6 +240,45 @@ under the License.
                 <small class="input-error" ng-show="hasPropertyError(serverForm.routerPortName, 'maxlength')">Too Long</small>
                 <span ng-show="hasError(serverForm.routerPortName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
             </div>
+
+            <fieldset>
+                <legend>Interfaces</legend>
+                <fieldset ng-repeat="inf in server.interfaces">
+                    <legend><input my-directive type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}"/></legend>
+
+                    <div>
+                        <label for="{{inf.name}}-monitor">Monitor this interface</label>
+                        <input id="{{inf.name}}-monitor" name="{{inf.name}}-monitor" type="checkbox" ng-model="inf.monitor"/>
+                        <label for="{{inf.name}}-mtu" ng-class="{'has-error': hasError(serverForm[inf.name+'-mtu'])}"><abbr title="Maximum Transmission Unit">MTU</abbr></label>
+                        <input id="{{inf.name}}-mtu" ng-class="{'has-error': hasError(serverForm[inf.name+'-mtu'])}" name="{{inf.name}}-mtu" type="number" min="1500" max="9000" step="7500" ng-model="inf.mtu"/>
+                        <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-mtu'], 'min') || hasPropertyError(serverForm[inf.name+'-mtu'], 'max') || hasPropertyError(serverForm[inf.name+'-mtu'], 'step')">Invalid MTU - must be 1500 or 9000</small>
+                        <label for="{{inf.name}}-max-bandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}">Maximum Bandwidth</label>
+                        <input id="{{inf.name}}-max-bandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
+                        <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-max-bandwidth'], 'min')">Cannot be negative</small>
+                    </div>
+
+                    <fieldset>
+                        <legend>IP Addresses</legend>
+                        <ul>
+                            <li ng-repeat="ip in inf.ipAddresses" ng-class="{'bordered-item': !$last}">
+                                <label for="{{inf.name}}-{{ip.address}}" ng-class="{'has-error': hasError(serverForm[inf.name+'-'+ip.address])}">Address</label>
+                                <input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" type="text" ng-model="ip.address" ng-pattern="IPWithCIDRPattern" required/>
+                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'pattern')">Invalid address</small>
+                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'required')">Required</small>
+                                <label for="{{inf.name}}-{{ip.address}}-gateway">Gateway</label>
+                                <input type="text" id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" ng-model="ip.gateway" ng-pattern="IPPattern"/>
+                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address-gateway], 'pattern')">Invalid gateway</small>
+                                <label for="{{inf.name}}-{{ip.address}}-serviceAddress">Is a Service Address</label>
+                                <input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" ng-model="ip.serviceAddress"/>
+                                <button type="button" title="delete this IP address" class="btn btn-danger" ng-click="deleteIP(inf, ip)">Remove IP Address</button>
+                            </li>
+                        </ul>
+                        <button type="button" title="add new IP Address" class="btn btn-success right-button" ng-click="addIP(inf)">Add IP Address</button>
+                    </fieldset>
+                    <button class="btn btn-danger right-button" type="button" title="delete this interface" ng-click="deleteInterface(inf)">Remove Interface</button>
+                </fieldset>
+                <button class="btn btn-success right-button" type="button" title="add a new interface" ng-click="addInterface()">Add Interface</button>
+            </fieldset>
 
             <div class="modal-footer" style="grid-column: 1 / span 2;">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(server)">Delete</button>
