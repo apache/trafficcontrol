@@ -22,8 +22,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +34,6 @@ import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
