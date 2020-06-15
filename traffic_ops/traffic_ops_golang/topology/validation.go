@@ -79,7 +79,6 @@ func (topology *TOTopology) checkForEdgeParents(cacheGroups []tc.CacheGroupNulla
 				topology.Nodes[parentCacheGroupIndex].Cachegroup,
 				parentTerm,
 				node.Cachegroup))
-			break
 		case tc.CacheGroupMidTypeName:
 		default:
 			errs = append(errs, fmt.Errorf(
