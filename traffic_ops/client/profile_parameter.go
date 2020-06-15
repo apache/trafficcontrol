@@ -39,7 +39,7 @@ func (to *Session) CreateProfileParameter(pp tc.ProfileParameter) (tc.Alerts, Re
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_PROFILE_PARAMETERS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PROFILE_PARAMETERS, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -58,7 +58,7 @@ func (to *Session) CreateMultipleProfileParameters(pps []tc.ProfileParameter) (t
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_PROFILE_PARAMETERS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PROFILE_PARAMETERS, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -70,7 +70,7 @@ func (to *Session) CreateMultipleProfileParameters(pps []tc.ProfileParameter) (t
 
 // Returns a list of Profile Parameters
 func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILE_PARAMETERS, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILE_PARAMETERS, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -85,7 +85,7 @@ func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error)
 // GET a Profile Parameter by the Parameter
 func (to *Session) GetProfileParameterByQueryParams(queryParams string) ([]tc.ProfileParameter, ReqInf, error) {
 	URI := API_PROFILE_PARAMETERS + queryParams
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -103,7 +103,7 @@ func (to *Session) GetProfileParameterByQueryParams(queryParams string) ([]tc.Pr
 // DELETE a Parameter by Parameter
 func (to *Session) DeleteParameterByProfileParameter(profile int, parameter int) (tc.Alerts, ReqInf, error) {
 	URI := fmt.Sprintf("%s/%d/%d", API_PROFILE_PARAMETERS, profile, parameter)
-	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

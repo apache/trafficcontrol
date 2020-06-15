@@ -83,7 +83,7 @@ func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf,
 	}
 
 	var resp *http.Response
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+"/user/current", reqBody)
+	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+"/user/current", reqBody, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -131,7 +131,7 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 		return nil, reqInf, err
 	}
 	route := apiBase + "/users"
-	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -151,7 +151,7 @@ func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, R
 		return nil, reqInf, err
 	}
 	route := apiBase + "/users/" + strconv.Itoa(id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -164,7 +164,7 @@ func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, R
 // DeleteUserByID updates user with the given id
 func (to *Session) DeleteUserByID(id int) (tc.Alerts, ReqInf, error) {
 	route := apiBase + "/users/" + strconv.Itoa(id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -190,7 +190,7 @@ func (to *Session) RegisterNewUser(tenantID uint, roleID uint, email rfc.EmailAd
 		return alerts, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+"/users/register", reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+"/users/register", reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err

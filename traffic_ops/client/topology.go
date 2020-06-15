@@ -36,7 +36,7 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 	if err != nil {
 		return nil, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, ApiTopologies, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, ApiTopologies, reqBody, nil)
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
 	}
@@ -53,7 +53,7 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 
 // GetTopologies returns all topologies.
 func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, ApiTopologies, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, ApiTopologies, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
@@ -74,7 +74,7 @@ func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
 // GetTopology returns the given topology by name.
 func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
@@ -104,7 +104,7 @@ func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyRespo
 		return nil, reqInf, err
 	}
 	route := fmt.Sprintf("%s?name=%s", ApiTopologies, name)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
 	}
@@ -121,7 +121,7 @@ func (to *Session) UpdateTopology(name string, t tc.Topology) (*tc.TopologyRespo
 // DeleteTopology deletes the given topology by name.
 func (to *Session) DeleteTopology(name string) (tc.Alerts, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodDelete, reqUrl, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, reqUrl, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode

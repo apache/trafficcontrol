@@ -93,7 +93,7 @@ func (to *Session) GetFederationDeliveryServices(federationID int) ([]tc.Federat
 // DeleteFederationDeliveryService Deletes a given Delivery Service from a Federation
 func (to *Session) DeleteFederationDeliveryService(federationID, deliveryServiceID int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/federations/%v/deliveryservices/%v", apiBase, federationID, deliveryServiceID)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -131,7 +131,7 @@ func (to *Session) GetFederationUsers(federationID int) ([]tc.FederationUser, Re
 // DeleteFederationUser Deletes a given User from a Federation
 func (to *Session) DeleteFederationUser(federationID, userID int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/federations/%v/users/%v", apiBase, federationID, userID)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -155,7 +155,7 @@ func (to *Session) AddFederationResolverMappingsForCurrentUser(mappings tc.Deliv
 		return alerts, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+"/federations", bts)
+	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+"/federations", bts, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err
@@ -173,7 +173,7 @@ func (to *Session) DeleteFederationResolverMappingsForCurrentUser() (tc.Alerts, 
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 	var alerts tc.Alerts
 
-	resp, remoteAddr, err := to.request(http.MethodDelete, apiBase+"/federations", nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, apiBase+"/federations", nil, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err
@@ -199,7 +199,7 @@ func (to *Session) ReplaceFederationResolverMappingsForCurrentUser(mappings tc.D
 		return alerts, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPut, apiBase+"/federations", bts)
+	resp, remoteAddr, err := to.request(http.MethodPut, apiBase+"/federations", bts, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err

@@ -31,7 +31,7 @@ func TestCacheGroupParameters(t *testing.T) {
 func CreateTestCacheGroupParameters(t *testing.T) {
 	// Get Cache Group to assign parameter to
 	firstCacheGroup := testData.CacheGroups[0]
-	cacheGroupResp, _, err := TOSession.GetCacheGroupNullableByName(*firstCacheGroup.Name)
+	cacheGroupResp, _, err := TOSession.GetCacheGroupNullableByName(*firstCacheGroup.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Cache Group by name: %v - %v", firstCacheGroup.Name, err)
 	}

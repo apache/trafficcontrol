@@ -23,7 +23,7 @@ import (
 )
 
 func (to *Session) Steering() ([]tc.Steering, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering`, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering`, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

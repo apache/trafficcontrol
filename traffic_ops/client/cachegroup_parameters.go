@@ -41,7 +41,7 @@ func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryP
 
 func (to *Session) getCacheGroupParameters(route, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
 	r := fmt.Sprintf("%s%s", route, queryParams)
-	resp, remoteAddr, err := to.request(http.MethodGet, r, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, r, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -58,7 +58,7 @@ func (to *Session) getCacheGroupParameters(route, queryParams string) ([]tc.Cach
 // GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
 func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersResponseNullable, ReqInf, error) {
 	route := fmt.Sprintf("%s/", API_CACHEGROUPPARAMETERS)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -75,7 +75,7 @@ func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersRespon
 // DeleteCacheGroupParameter Deassociates a Parameter with a Cache Group
 func (to *Session) DeleteCacheGroupParameter(cacheGroupID, parameterID int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/%d", API_CACHEGROUPPARAMETERS, cacheGroupID, parameterID)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -99,7 +99,7 @@ func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int) (*tc
 	if err != nil {
 		return nil, ReqInf{}, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_CACHEGROUPPARAMETERS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_CACHEGROUPPARAMETERS, reqBody, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

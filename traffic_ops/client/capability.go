@@ -25,7 +25,7 @@ const API_CAPABILITIES = apiBase + "/capabilities"
 
 // GetCapabilities retrieves all capabilities.
 func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_CAPABILITIES, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_CAPABILITIES, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -42,7 +42,7 @@ func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
 	v := url.Values{}
 	v.Add("name", c)
 	endpoint := API_CAPABILITIES + "?" + v.Encode()
-	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Capability{}, reqInf, err

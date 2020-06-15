@@ -87,7 +87,7 @@ func (to *Session) CreateFederationResolver(fr tc.FederationResolver) (tc.Alerts
 	}
 
 	var resp *http.Response
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPost, apiBase+"/federation_resolvers", req)
+	resp, reqInf.RemoteAddr, err = to.request(http.MethodPost, apiBase+"/federation_resolvers", req, nil)
 	if err != nil {
 		return alerts, reqInf, err
 	}
@@ -105,7 +105,7 @@ func (to *Session) DeleteFederationResolver(id uint) (tc.Alerts, ReqInf, error) 
 	var path = fmt.Sprintf("%s/federation_resolvers?id=%d", apiBase, id)
 	var resp *http.Response
 	var err error
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodDelete, path, nil)
+	resp, reqInf.RemoteAddr, err = to.request(http.MethodDelete, path, nil, nil)
 	if err != nil {
 		return alerts, reqInf, err
 	}

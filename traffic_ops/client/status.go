@@ -37,7 +37,7 @@ func (to *Session) CreateStatusNullable(status tc.StatusNullable) (tc.Alerts, Re
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_STATUSES, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_STATUSES, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -57,7 +57,7 @@ func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, ReqInf
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_STATUSES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -69,7 +69,7 @@ func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, ReqInf
 
 // GetStatuses returns a list of Statuses.
 func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_STATUSES, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_STATUSES, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -84,7 +84,7 @@ func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
 // GetStatusByID GETs a Status by the Status ID.
 func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_STATUSES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -102,7 +102,7 @@ func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
 // GetStatusByName GETs a Status by the Status name.
 func (to *Session) GetStatusByName(name string) ([]tc.Status, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_STATUSES, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -120,7 +120,7 @@ func (to *Session) GetStatusByName(name string) ([]tc.Status, ReqInf, error) {
 // DeleteStatusByID DELETEs a Status by ID.
 func (to *Session) DeleteStatusByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_STATUSES, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

@@ -45,7 +45,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
-	clientCGs, _, err := TOSession.GetCacheGroupNullableByName(TestEdgeServerCacheGroupName)
+	clientCGs, _, err := TOSession.GetCacheGroupNullableByName(TestEdgeServerCacheGroupName, nil)
 	if err != nil {
 		t.Fatalf("getting cachegroup: %v", err)
 	}

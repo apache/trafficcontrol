@@ -185,7 +185,6 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 	if useIMS {
 		runSecond, maxTime := TryIfModifiedSinceQuery(val, h, where, orderBy, pagination, queryValues)
 		if !runSecond {
-			fmt.Println("IMS HIT!!")
 			log.Debugln("IMS HIT")
 			code = http.StatusNotModified
 			return vals, nil, nil, code, &maxTime

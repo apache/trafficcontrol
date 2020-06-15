@@ -59,7 +59,7 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 		return tc.Alerts{}, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, API_PROFILES, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PROFILES, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -82,7 +82,7 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 	}
 
 	route := fmt.Sprintf("%s/%d", API_PROFILES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -98,7 +98,7 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 // GetParametersByProfileName gets all of the Parameters assigned to the Profile named 'profileName'.
 func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Parameter, ReqInf, error) {
 	url := fmt.Sprintf(API_PROFILES_NAME_PARAMETERS, profileName)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -117,7 +117,7 @@ func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Paramete
 func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
-	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILES, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILES, nil, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return nil, reqInf, err
@@ -133,7 +133,7 @@ func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 // GetProfileByID GETs a Profile by the Profile ID.
 func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_PROFILES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -149,7 +149,7 @@ func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
 // GetProfileByName GETs a Profile by the Profile name.
 func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?name=%s", API_PROFILES, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -165,7 +165,7 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
 // GetProfileByParameter GETs a Profile by the Profile "param".
 func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?param=%s", API_PROFILES, url.QueryEscape(param))
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -181,7 +181,7 @@ func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, er
 // GetProfileByCDNID GETs a Profile by the Profile CDN ID.
 func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?cdn=%s", API_PROFILES, strconv.Itoa(cdnID))
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -197,7 +197,7 @@ func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
 // DeleteProfileByID DELETEs a Profile by ID.
 func (to *Session) DeleteProfileByID(id int) (tc.Alerts, ReqInf, error) {
 	URI := fmt.Sprintf("%s/%d", API_PROFILES, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -213,7 +213,7 @@ func (to *Session) DeleteProfileByID(id int) (tc.Alerts, ReqInf, error) {
 // ExportProfile Returns an exported Profile.
 func (to *Session) ExportProfile(id int) (*tc.ProfileExportResponse, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/export", API_PROFILES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -236,7 +236,7 @@ func (to *Session) ImportProfile(importRequest *tc.ProfileImportRequest) (*tc.Pr
 		return nil, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return nil, reqInf, err
@@ -262,7 +262,7 @@ func (to *Session) CopyProfile(p tc.ProfileCopy) (tc.ProfileCopyResponse, ReqInf
 		return tc.ProfileCopyResponse{}, ReqInf{}, err
 	}
 
-	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody)
+	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return tc.ProfileCopyResponse{}, reqInf, err

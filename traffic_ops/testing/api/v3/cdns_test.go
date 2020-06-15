@@ -16,16 +16,68 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"testing"
+	"time"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCDNs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters}, func() {
+		GetTestCDNsIMS(t)
+		currentTime := time.Now().Add(-1 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestCDNs(t)
 		GetTestCDNs(t)
+		GetTestCDNsIMSAfterChange(t, header)
 	})
+}
+
+func GetTestCDNsIMSAfterChange(t *testing.T, header http.Header) {
+	for _, cdn := range testData.CDNs {
+		_, reqInf, err := TOSession.GetCDNByNameIMS(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, cdn := range testData.CDNs {
+		_, reqInf, err := TOSession.GetCDNByNameIMS(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestCDNsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	for _, cdn := range testData.CDNs {
+		futureTime := time.Now().AddDate(0,0,1)
+		time := futureTime.Format(time.RFC1123)
+		header.Set(rfc.IfModifiedSince, time)
+		_, reqInf, err := TOSession.GetCDNByNameIMS(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestCDNs(t *testing.T) {

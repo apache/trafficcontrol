@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/grove/web"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -124,7 +125,7 @@ func (to *Session) login() (net.Addr, error) {
 	}
 
 	path := apiBase + "/user/login"
-	resp, remoteAddr, err := to.RawRequest("POST", path, credentials)
+	resp, remoteAddr, err := to.RawRequest("POST", path, credentials, nil)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {
 		return remoteAddr, errors.New("requesting: " + err.Error())
@@ -153,7 +154,7 @@ func (to *Session) login() (net.Addr, error) {
 
 func (to *Session) loginWithToken(token []byte) (net.Addr, error) {
 	path := apiBase + "/user/login/token"
-	resp, remoteAddr, err := to.RawRequest(http.MethodPost, path, token)
+	resp, remoteAddr, err := to.RawRequest(http.MethodPost, path, token, nil)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {
 		return remoteAddr, fmt.Errorf("requesting: %v", err)
@@ -182,7 +183,7 @@ func (to *Session) logout() (net.Addr, error) {
 	}
 
 	path := apiBase + "/user/logout"
-	resp, remoteAddr, err := to.RawRequest("POST", path, credentials)
+	resp, remoteAddr, err := to.RawRequest("POST", path, credentials, nil)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {
 		return remoteAddr, errors.New("requesting: " + err.Error())
@@ -314,7 +315,7 @@ func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err err
 	if err != nil {
 		return resp, remoteAddr, err
 	}
-	if resp.StatusCode < 300 {
+	if resp.StatusCode < 300 || resp.StatusCode == 304 {
 		return resp, remoteAddr, err
 	}
 
@@ -336,8 +337,8 @@ func (to *Session) getURL(path string) string { return to.URL + path }
 // request performs the HTTP request to Traffic Ops, trying to refresh the cookie if an Unauthorized or Forbidden code is received. It only tries once. If the login fails, the original Unauthorized/Forbidden response is returned. If the login succeeds and the subsequent re-request fails, the re-request's response is returned even if it's another Unauthorized/Forbidden.
 // Returns the response, the remote address of the Traffic Ops instance used, and any error.
 // The returned net.Addr is guaranteed to be either nil or valid, even if the returned error is not nil. Callers are encouraged to check and use the net.Addr if an error is returned, and use the remote address in their own error messages. This violates the Go idiom that a non-nil error implies all other values are undefined, but it's more straightforward than alternatives like typecasting.
-func (to *Session) request(method, path string, body []byte) (*http.Response, net.Addr, error) {
-	r, remoteAddr, err := to.RawRequest(method, path, body)
+func (to *Session) request(method, path string, body []byte, header http.Header) (*http.Response, net.Addr, error) {
+	r, remoteAddr, err := to.RawRequest(method, path, body, header)
 	if err != nil {
 		return r, remoteAddr, err
 	}
@@ -349,14 +350,59 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, ne
 	}
 
 	// return second request, even if it's another Unauthorized or Forbidden.
-	r, remoteAddr, err = to.RawRequest(method, path, body)
+	r, remoteAddr, err = to.RawRequest(method, path, body, header)
 	return to.ErrUnlessOK(r, remoteAddr, err, path)
+}
+
+func (to *Session) requestIMS(method, path string, header http.Header) (*http.Response, net.Addr, error) {
+	r, remoteAddr, err := to.RawGetRequestIMS(method, path, header)
+	if err != nil {
+		return r, remoteAddr, err
+	}
+	if r.StatusCode != http.StatusUnauthorized && r.StatusCode != http.StatusForbidden {
+		return to.ErrUnlessOK(r, remoteAddr, err, path)
+	}
+	if _, lerr := to.login(); lerr != nil {
+		return to.ErrUnlessOK(r, remoteAddr, err, path) // if re-logging-in fails, return the original request's response
+	}
+
+	// return second request, even if it's another Unauthorized or Forbidden.
+	r, remoteAddr, err = to.RawGetRequestIMS(method, path, header)
+	return to.ErrUnlessOK(r, remoteAddr, err, path)
+}
+
+func (to *Session) RawGetRequestIMS(method, path string, header http.Header) (*http.Response, net.Addr, error) {
+	url := to.getURL(path)
+
+	var req *http.Request
+	var err error
+	remoteAddr := net.Addr(nil)
+
+	req, err = http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, remoteAddr, err
+	}
+
+	trace := &httptrace.ClientTrace{
+		GotConn: func(connInfo httptrace.GotConnInfo) {
+			remoteAddr = connInfo.Conn.RemoteAddr()
+		},
+	}
+	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
+	web.CopyHeaderTo(header, &req.Header)
+	req.Header.Set("User-Agent", to.UserAgentStr)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := to.Client.Do(req)
+	if err != nil {
+		return resp, remoteAddr, err
+	}
+	return resp, remoteAddr, nil
 }
 
 // RawRequest performs the actual HTTP request to Traffic Ops, simply, without trying to refresh the cookie if an Unauthorized code is returned.
 // Returns the response, the remote address of the Traffic Ops instance used, and any error.
 // The returned net.Addr is guaranteed to be either nil or valid, even if the returned error is not nil. Callers are encouraged to check and use the net.Addr if an error is returned, and use the remote address in their own error messages. This violates the Go idiom that a non-nil error implies all other values are undefined, but it's more straightforward than alternatives like typecasting.
-func (to *Session) RawRequest(method, path string, body []byte) (*http.Response, net.Addr, error) {
+func (to *Session) RawRequest(method, path string, body []byte, header http.Header) (*http.Response, net.Addr, error) {
 	url := to.getURL(path)
 
 	var req *http.Request
@@ -382,7 +428,7 @@ func (to *Session) RawRequest(method, path string, body []byte) (*http.Response,
 		},
 	}
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
-
+	web.CopyHeaderTo(header, &req.Header)
 	req.Header.Set("User-Agent", to.UserAgentStr)
 
 	resp, err := to.Client.Do(req)
@@ -486,7 +532,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, ReqInf, erro
 // GetBytes - get []bytes array for a certain path on the to session.
 // returns the raw body, the remote address the Traffic Ops URL resolved to, or any error. If the error is not nil, the RemoteAddr may or may not be nil, depending whether the error occurred before the request was executed.
 func (to *Session) getBytes(path string) ([]byte, net.Addr, error) {
-	resp, remoteAddr, err := to.request("GET", path, nil)
+	resp, remoteAddr, err := to.request("GET", path, nil, nil)
 	if err != nil {
 		return nil, remoteAddr, err
 	}

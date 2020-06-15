@@ -38,7 +38,7 @@ func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_TYPES, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_TYPES, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -58,7 +58,7 @@ func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_TYPES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -76,7 +76,7 @@ func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 		return nil, ReqInf{}, errors.New("Please pass in a single value for the 'useInTable' parameter")
 	}
 
-	resp, remoteAddr, err := to.request("GET", API_TYPES, nil)
+	resp, remoteAddr, err := to.request("GET", API_TYPES, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -105,7 +105,7 @@ func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 // GetTypeByID GETs a Type by the Type ID.
 func (to *Session) GetTypeByID(id int) ([]tc.Type, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_TYPES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -123,7 +123,7 @@ func (to *Session) GetTypeByID(id int) ([]tc.Type, ReqInf, error) {
 // GetTypeByName GET a Type by the Type name.
 func (to *Session) GetTypeByName(name string) ([]tc.Type, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_TYPES, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -141,7 +141,7 @@ func (to *Session) GetTypeByName(name string) ([]tc.Type, ReqInf, error) {
 // DeleteTypeByID DELETEs a Type by ID.
 func (to *Session) DeleteTypeByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_TYPES, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

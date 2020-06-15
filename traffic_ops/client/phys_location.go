@@ -48,7 +48,7 @@ func (to *Session) CreatePhysLocation(pl tc.PhysLocation) (tc.Alerts, ReqInf, er
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_PHYS_LOCATIONS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PHYS_LOCATIONS, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -68,7 +68,7 @@ func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_PHYS_LOCATIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -81,7 +81,7 @@ func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts
 // Returns a list of PhysLocations with optional query parameters applied
 func (to *Session) GetPhysLocations(params map[string]string) ([]tc.PhysLocation, ReqInf, error) {
 	path := API_PHYS_LOCATIONS + mapToQueryParameters(params)
-	resp, remoteAddr, err := to.request(http.MethodGet, path, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -96,7 +96,7 @@ func (to *Session) GetPhysLocations(params map[string]string) ([]tc.PhysLocation
 // GET a PhysLocation by the PhysLocation ID
 func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_PHYS_LOCATIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -114,7 +114,7 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 // GET a PhysLocation by the PhysLocation name
 func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_PHYS_LOCATIONS, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -132,7 +132,7 @@ func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf
 // DELETE a PhysLocation by ID
 func (to *Session) DeletePhysLocationByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_PHYS_LOCATIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

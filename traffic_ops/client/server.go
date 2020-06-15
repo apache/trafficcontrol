@@ -46,7 +46,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
-		cg, _, err := to.GetCacheGroupNullableByName(*server.Cachegroup)
+		cg, _, err := to.GetCacheGroupNullableByName(*server.Cachegroup, nil)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no cachegroup named %s: %v", *server.Cachegroup, err)
 		}
@@ -114,7 +114,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 		return alerts, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVERS, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err
@@ -137,7 +137,7 @@ func (to *Session) UpdateServerByID(id int, server tc.ServerNullable) (tc.Alerts
 	}
 
 	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err
@@ -161,7 +161,7 @@ func (to *Session) GetServers(params *url.Values) (tc.ServersV3Response, ReqInf,
 
 	var data tc.ServersV3Response
 
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return data, reqInf, err
@@ -178,7 +178,7 @@ func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetai
 	v.Add("hostName", hostName)
 	url := API_SERVERS_DETAILS + "?" + v.Encode()
 
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -196,7 +196,7 @@ func (to *Session) GetServerDetailsByHostName(hostName string) ([]tc.ServerDetai
 // DeleteServerByID DELETEs a Server by ID.
 func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_SERVERS, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -273,7 +273,7 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 		return tc.Alerts{}, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, endpoint, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, endpoint, reqBody, nil)
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
 	}
@@ -292,7 +292,7 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 func (to *Session) GetServerIDDeliveryServices(server int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	endpoint := fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, server)
 
-	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -307,7 +307,7 @@ func (to *Session) GetServerIDDeliveryServices(server int) ([]tc.DeliveryService
 // GetServerUpdateStatus GETs the Server Update Status by the Server hostname.
 func (to *Session) GetServerUpdateStatus(hostName string) (tc.ServerUpdateStatus, ReqInf, error) {
 	path := API_SERVERS + `/` + hostName + `/update_status`
-	resp, remoteAddr, err := to.request(http.MethodGet, path, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.ServerUpdateStatus{}, reqInf, err

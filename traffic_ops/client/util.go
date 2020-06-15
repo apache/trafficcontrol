@@ -40,7 +40,7 @@ func del(to *Session, endpoint string, respStruct interface{}) (ReqInf, error) {
 }
 
 func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) (ReqInf, error) {
-	resp, remoteAddr, err := to.request(method, endpoint, body) // TODO change to getBytesWithTTL
+	resp, remoteAddr, err := to.request(method, endpoint, body, nil) // TODO change to getBytesWithTTL
 	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
