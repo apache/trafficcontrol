@@ -401,6 +401,11 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing Profile field\n", name)
 		}
+		if srv.Ip != nil {
+			s.IP = *srv.Ip
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing IP field\n", name)
+		}
 		if srv.ServerStatus != nil {
 			s.ServerStatus = string(*srv.ServerStatus)
 		} else {
@@ -410,6 +415,11 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 			s.CacheGroup = *srv.CacheGroup
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing CacheGroup field\n", name)
+		}
+		if srv.Ip6 != nil {
+			s.IP6 = *srv.Ip6
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing IP6 field\n", name)
 		}
 		if srv.Port != nil {
 			s.Port = *srv.Port
@@ -421,6 +431,11 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 			s.FQDN = *srv.Fqdn
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing FQDN field\n", name)
+		}
+		if srv.InterfaceName != nil {
+			s.InterfaceName = *srv.InterfaceName
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing InterfaceName field\n", name)
 		}
 		if srv.ServerType != nil {
 			s.Type = *srv.ServerType

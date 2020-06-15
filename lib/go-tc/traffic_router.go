@@ -20,10 +20,7 @@ package tc
  */
 
 import (
-	net "net"
 	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 // SOA (Start of Authority record) defines the SOA record for the CDN's

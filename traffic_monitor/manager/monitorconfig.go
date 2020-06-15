@@ -339,13 +339,10 @@ func createServerHealthPollURLs(pollingURLStr string, srv tc.TrafficServer) (str
 	pollingURL4Str := ""
 	pollingURL6Str := ""
 
-	vipInterface := tc.GetVIPInterface(srv)
-	ip4, ip6 := vipInterface.GetDefaultAddress()
-
-	if ip4 != "" {
+	if srv.IP != "" {
 		pollingURL4Str = strings.NewReplacer(
-			"${hostname}", ip4,
-			"${interface_name}", vipInterface.Name,
+			"${hostname}", srv.IP,
+			"${interface_name}", srv.InterfaceName,
 			"application=plugin.remap", "application=system",
 			"application=", "application=system",
 		).Replace(pollingURLStr)
@@ -353,10 +350,10 @@ func createServerHealthPollURLs(pollingURLStr string, srv tc.TrafficServer) (str
 		pollingURL4Str = insertPorts(pollingURL4Str, srv)
 	}
 
-	if ip6 != "" {
+	if srv.IP6 != "" {
 		r := strings.NewReplacer(
-			"${hostname}", "["+ipv6CIDRStrToAddr(ip6)+"]",
-			"${interface_name}", vipInterface.Name,
+			"${hostname}", "["+ipv6CIDRStrToAddr(srv.IP6)+"]",
+			"${interface_name}", srv.InterfaceName,
 			"application=plugin.remap", "application=system",
 			"application=", "application=system",
 		)
