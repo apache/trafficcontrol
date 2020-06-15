@@ -89,7 +89,7 @@ type Profile struct {
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
-// LegacyMonitoring represents Monitoring for ATC versions before 5.0
+// LegacyMonitoring represents Monitoring for ATC versions before 5.0.
 type LegacyMonitoring struct {
 	TrafficServers   []LegacyCache          `json:"trafficServers"`
 	TrafficMonitors  []Monitor              `json:"trafficMonitors"`
@@ -108,7 +108,7 @@ type Monitoring struct {
 	Config           map[string]interface{} `json:"config"`
 }
 
-// LegacyMonitoringResponse represents MontiroingResponse for ATC versions before 5.0
+// LegacyMonitoringResponse represents MontiroingResponse for ATC versions before 5.0.
 type LegacyMonitoringResponse struct {
 	Response LegacyMonitoring `json:"response"`
 }

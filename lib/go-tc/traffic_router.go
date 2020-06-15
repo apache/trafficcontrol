@@ -133,7 +133,7 @@ type StaticDNS struct {
 	Type  string `json:"type"`
 }
 
-// TrafficServer ...
+// LegacyTrafficServer ...
 type LegacyTrafficServer struct {
 	Profile          string              `json:"profile"`
 	IP               string              `json:"ip"`
@@ -150,7 +150,7 @@ type LegacyTrafficServer struct {
 	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
 }
 
-// GetDefaultAddress returns the ipv4 and ipv6 service addresses of the interface
+// GetDefaultAddress returns the ipv4 and ipv6 service addresses of the interface.
 func (i *InterfaceInfo) GetDefaultAddress() (string, string) {
 	var ipv4 string
 	var ipv6 string
@@ -187,7 +187,7 @@ func GetVIPInterface(ts TrafficServer) InterfaceInfo {
 	return InterfaceInfo{}
 }
 
-// ToLegacyServer converts a TrafficServer to LegacyTrafficServer
+// ToLegacyServer converts a TrafficServer to LegacyTrafficServer.
 func (ts *TrafficServer) ToLegacyServer() LegacyTrafficServer {
 	vipInterface := GetVIPInterface(*ts)
 	ipv4, ipv6 := vipInterface.GetDefaultAddress()
