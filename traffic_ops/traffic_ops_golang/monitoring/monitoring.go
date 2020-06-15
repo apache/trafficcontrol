@@ -251,6 +251,7 @@ AND cdn.name = $3
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	defer ipAddressRows.Close()
 	for ipAddressRows.Next() {
 		address := tc.ServerIPAddress{}
 		key := tc.ServerIPAddressCompoundKey{}
