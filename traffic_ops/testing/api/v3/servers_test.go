@@ -77,10 +77,6 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	if len(testData.DeliveryServices) < 1 {
-		t.Fatal("Need at least one server to test getting servers with query parameters")
-	}
-
 	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
@@ -101,6 +97,64 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
 	params.Del("dsId")
+
+	if len(testData.Servers) < 1 {
+		t.Fatal("Need at least one server to test getting servers with query parameters")
+	}
+
+	server := testData.Servers[0]
+	if server.HostName == nil {
+		t.Fatal("Test server had nil hostname")
+	}
+
+	params.Add("hostName", *server.HostName)
+	resp, _, err := TOSession.GetServers(nil)
+	if err != nil {
+		t.Fatalf("Failed to get server '%s': %v", *server.HostName, err)
+	}
+	params.Del("hostName")
+
+	if len(resp.Response) < 1 {
+		t.Fatalf("Failed to get at least one server with hostname '%s'", *server.HostName)
+	}
+
+	s := resp.Response[0]
+
+	params.Add("type", s.Type)
+	if _, _, err := TOSession.GetServers(&params); err != nil {
+		t.Errorf("Error getting servers by type: %v", err)
+	}
+	params.Del("type")
+
+	if s.CachegroupID == nil {
+		t.Error("Found server with no Cache Group ID")
+	} else {
+		params.Add("cachegroup", strconv.Itoa(*s.CachegroupID))
+		if _, _, err := TOSession.GetServers(&params); err != nil {
+			t.Errorf("Error getting servers by Cache Group ID: %v", err)
+		}
+		params.Del("cachegroup")
+	}
+
+	if s.Status == nil {
+		t.Error("Found server with no status")
+	} else {
+		params.Add("status", *s.Status)
+		if _, _, err := TOSession.GetServers(&params); err != nil {
+			t.Errorf("Error getting servers by status: %v", err)
+		}
+		params.Del("status")
+	}
+
+	if s.ProfileID == nil {
+		t.Error("Found server with no Profile ID")
+	} else {
+		params.Add("profileId", strconv.Itoa(*s.ProfileID))
+		if _, _, err := TOSession.GetServers(&params); err != nil {
+			t.Errorf("Error getting servers by Profile ID: %v", err)
+		}
+		params.Del("profileId")
+	}
 }
 
 func UpdateTestServers(t *testing.T) {
