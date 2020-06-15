@@ -500,6 +500,7 @@ public class ConfigHandler {
 						cache.setDeliveryServices(dsReferences);
 						try {
 							dsReferences.add(new DeliveryServiceReference(ds.getId(), cache.getId() + "." + ds.getDomain()));
+							cache.setDeliveryServices(dsReferences);
 						} catch (ParseException e) {
 							LOGGER.error("Unable to create a DeliveryServiceReference from DeliveryService '" + ds.getId() + "'", e);
 						}
