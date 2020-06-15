@@ -598,7 +598,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
-			return nil, 0, errors.New("forbidden"), sysErr, http.StatusForbidden
+			return nil, 0, errors.New("Forbidden"), sysErr, http.StatusForbidden
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
 		queryAddition = `
@@ -1092,8 +1092,8 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
@@ -1147,8 +1147,8 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
@@ -1292,9 +1292,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if inf.Version.Major <= 1 {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2.ServerNullableV11)
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2.ServerNullableV11)
 		} else {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2)
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2)
 		}
 	}
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
