@@ -24,8 +24,6 @@ var TableProfileServersController = function(profile, servers, $controller, $sco
 
 	let profileServersTable;
 
-	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
-
 	$scope.profile = profile;
 
 	$scope.toggleVisibility = function(colName) {

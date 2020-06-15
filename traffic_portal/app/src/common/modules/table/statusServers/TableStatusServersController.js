@@ -24,8 +24,6 @@ var TableStatusServersController = function(status, servers, $controller, $scope
 
 	let statusServersTable;
 
-	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
-
 	$scope.status = status;
 
 	$scope.toggleVisibility = function(colName) {

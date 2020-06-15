@@ -24,8 +24,6 @@ var TableTypeServersController = function(type, servers, $controller, $scope, se
 
 	let typeServersTable;
 
-	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
-
 	$scope.type = type;
 
 	$scope.toggleVisibility = function(colName) {

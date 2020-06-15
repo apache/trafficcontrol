@@ -24,8 +24,6 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 	let dsServersTable;
 
-	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
-
 	var removeServer = function(serverId) {
 		deliveryServiceService.deleteDeliveryServiceServer($scope.deliveryService.id, serverId)
 			.then(

@@ -24,8 +24,6 @@ var TablePhysLocationServersController = function(physLocation, servers, $contro
 
 	let physLocServersTable;
 
-	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
-
 	$scope.physLocation = physLocation;
 
 	$scope.toggleVisibility = function(colName) {
