@@ -640,7 +640,7 @@ SELECT ( json_build_object (
 SELECT ( json_build_object (
 'address', ip_address.address,
 'gateway', ip_address.gateway,
-'service_address', ip_address.service_address
+'serviceAddress', ip_address.service_address
 ))
 FROM ip_address
 WHERE ip_address.interface = interface.name
