@@ -90,7 +90,6 @@ type CRConfigTrafficOpsServer struct {
 	HashCount        *int                  `json:"hashCount,omitempty"`
 	HashId           *string               `json:"hashId,omitempty"`
 	HttpsPort        *int                  `json:"httpsPort"`
-	Interfaces       []InterfaceInfo       `json:"interfaces"`
 	InterfaceName    *string               `json:"interfaceName"`
 	Ip               *string               `json:"ip,omitempty"`
 	Ip6              *string               `json:"ip6,omitempty"`
