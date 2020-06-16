@@ -19,8 +19,8 @@
 
 var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $controller, $uibModal, $window, locationUtils, serverService, messageModel) {
 
-	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	// extends the TableParentServersController to inherit common methods
+	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
 
 	var removeCapability = function(serverId) {
 		serverService.removeServerCapability(serverId, serverCapability.name)

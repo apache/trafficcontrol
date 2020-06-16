@@ -19,8 +19,8 @@
 
 var TableDeliveryServiceServersController = function(deliveryService, servers, $controller, $scope, $uibModal, deliveryServiceService, serverUtils) {
 
-	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	// extends the TableParentServersController to inherit common methods
+	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
 
 	let dsServersTable;
 
