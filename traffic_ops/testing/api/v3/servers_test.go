@@ -98,24 +98,13 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 	params.Del("dsId")
 
-	if len(testData.Servers) < 1 {
-		t.Fatal("Need at least one server to test getting servers with query parameters")
-	}
-
-	server := testData.Servers[0]
-	if server.HostName == nil {
-		t.Fatal("Test server had nil hostname")
-	}
-
-	params.Add("hostName", *server.HostName)
 	resp, _, err := TOSession.GetServers(nil)
 	if err != nil {
-		t.Fatalf("Failed to get server '%s': %v", *server.HostName, err)
+		t.Fatalf("Failed to get servers: %v", err)
 	}
-	params.Del("hostName")
 
 	if len(resp.Response) < 1 {
-		t.Fatalf("Failed to get at least one server with hostname '%s'", *server.HostName)
+		t.Fatalf("Failed to get at least one server")
 	}
 
 	s := resp.Response[0]
@@ -282,7 +271,6 @@ func UpdateTestServers(t *testing.T) {
 	} else {
 		t.Logf("type change update alerts: %+v", alerts)
 	}
-
 }
 
 func DeleteTestServers(t *testing.T) {
