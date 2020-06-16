@@ -75,7 +75,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		},
 		{
 			headerName: "CDN",
-			field: "cdn",
+			field: "cdnName",
 			hide: false,
 			searchable: true
 		},
