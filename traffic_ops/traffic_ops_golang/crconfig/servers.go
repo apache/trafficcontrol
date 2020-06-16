@@ -102,7 +102,7 @@ type ServerUnion struct {
 
 type ServerAndHost struct {
 	Server ServerUnion
-	Host string
+	Host   string
 }
 
 const DefaultWeightMultiplier = 1000.0

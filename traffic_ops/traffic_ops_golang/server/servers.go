@@ -62,7 +62,6 @@ const serverCountQuery = `
 SELECT COUNT(s.id)
 ` + serversFromAndJoin
 
-
 const selectQuery = `
 SELECT
 	cg.name AS cachegroup,
@@ -714,7 +713,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 			return nil, serverCount, nil, fmt.Errorf("getting server interfaces: %v", err), http.StatusInternalServerError
 		}
 
-		if _, ok := servers[server]; !ok  {
+		if _, ok := servers[server]; !ok {
 			continue
 		}
 
