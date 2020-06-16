@@ -20,10 +20,6 @@
 module.exports = {
     which_ruby: {
         cmd: "which",
-        args: ["ruby"]
+        args: ["ruby", "compass"]
     },
-    which_compass: {
-        cmd: "which",
-        args: ["compass"]
-    }
 };

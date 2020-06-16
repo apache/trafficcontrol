@@ -75,7 +75,6 @@ module.exports = function (grunt) {
 
     grunt.registerTask('build-css-dev', [
         'run:which_ruby',
-        'run:which_compass',
         'compass:dev'
     ]);
 
