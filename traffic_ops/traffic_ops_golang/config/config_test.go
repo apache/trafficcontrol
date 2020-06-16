@@ -23,13 +23,14 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
-	"github.com/basho/riak-go-client"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/basho/riak-go-client"
 )
 
 const (
@@ -277,56 +278,48 @@ func TestValidateRoutingBlacklist(t *testing.T) {
 	testCases := []testCase{
 		{
 			Input: RoutingBlacklist{
-				PerlRoutes:     nil,
 				DisabledRoutes: nil,
 			},
 			ExpectErr: false,
 		},
 		{
 			Input: RoutingBlacklist{
-				PerlRoutes:     []int{1, 2, 3},
 				DisabledRoutes: []int{4, 5, 6},
 			},
 			ExpectErr: false,
 		},
 		{
 			Input: RoutingBlacklist{
-				PerlRoutes:     nil,
 				DisabledRoutes: []int{4, 5, 6},
 			},
 			ExpectErr: false,
 		},
 		{
 			Input: RoutingBlacklist{
-				PerlRoutes:     []int{4, 5, 6},
 				DisabledRoutes: nil,
 			},
 			ExpectErr: false,
 		},
 		{
 			Input: RoutingBlacklist{
-				PerlRoutes:     []int{1, 1, 3},
 				DisabledRoutes: []int{2, 2, 4},
 			},
 			ExpectErr: true,
 		},
 		{
 			Input: RoutingBlacklist{
-				PerlRoutes:     []int{1, 1, 3},
 				DisabledRoutes: []int{4, 5, 6},
 			},
 			ExpectErr: true,
 		},
 		{
 			Input: RoutingBlacklist{
-				PerlRoutes:     []int{1, 2, 3},
 				DisabledRoutes: []int{4, 4, 6},
 			},
 			ExpectErr: true,
 		},
 		{
 			Input: RoutingBlacklist{
-				PerlRoutes:     []int{1, 2, 3},
 				DisabledRoutes: []int{1, 4, 5},
 			},
 			ExpectErr: true,
