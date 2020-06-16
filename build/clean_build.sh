@@ -56,7 +56,7 @@ fi
 
 cd "$tc_dir"
 # In case the mirrored repo already exists, remove gitignored files
-git clean -fX
+git clean -fdX
 
 rm -rf "dist"
 mkdir -p "${tc_volume}/dist"
