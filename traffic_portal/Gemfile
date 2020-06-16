@@ -17,6 +17,5 @@
 
 source 'https://rubygems.org'
 
-# Bundler requires >2.3.0 even though CentOS 7 only supports 2.0.0
-ruby ">= 2.3.0"
+ruby ">= 2.0.0"
 gem "compass", ">= 1.0.0"
