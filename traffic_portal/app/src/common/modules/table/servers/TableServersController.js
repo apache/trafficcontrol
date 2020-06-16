@@ -423,7 +423,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	$scope.confirmStatusUpdate = function(server, event) {
 		event.stopPropagation();
 
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/status/dialog.select.status.tpl.html',
 			controller: 'DialogSelectStatusController',
 			size: 'md',
