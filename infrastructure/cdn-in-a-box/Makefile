@@ -42,8 +42,7 @@ SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-$(BUILD_NUMBER).$(RHEL_
 
 TO_SOURCE := $(wildcard ../../traffic_ops/**/*)
 TO_SOURCE += $(wildcard ../../traffic_ops_db/**/*)
-ORT_SOURCE:= $(wildcard ../../traffic_ops/ort/atstccfg/**/*.go)
-ORT_SOURCE+= $(wildcard ../../traffic_ops/client/*.go)
+ORT_SOURCE:= $(wildcard ../../traffic_ops_ort/atstccfg/**/*.go)
 ORT_SOURCE+= $(wildcard ../../lib/**/*.go)
 TM_SOURCE := $(wildcard ../../traffic_monitor/**/*)
 TP_SOURCE := $(wildcard ../../traffic_portal/**/*)
@@ -75,8 +74,8 @@ traffic_router/tomcat.rpm: ../../dist/tomcat-$(SPECIAL_SEASONING)
 	cp -f $? $@
 traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
 	cp -f $? $@
-../../traffic_ops/ort/atstccfg/atstccfg: $(ORT_SOURCE)
-	go build -o $@ ../../traffic_ops/ort/atstccfg
+cache/traffic_ops_ort.rpm: ../../dist/traffic_ops_ort-$(SPECIAL_SAUCE)
+	cp -f $? $@
 
 # Dist rpms
 ../../dist/traffic_monitor-$(SPECIAL_SAUCE): $(TM_SOURCE)
@@ -94,8 +93,11 @@ traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
 ../../dist/traffic_stats-$(SPECIAL_SAUCE): $(TS_SOURCE)
 	../../pkg $(PKG_FLAGS) traffic_stats_build
 
+../../dist/traffic_ops_ort-$(SPECIAL_SAUCE): $(ORT_SOURCE)
+	../../pkg $(PKG_FLAGS) traffic_ops_ort_build
+
 clean:
-	$(RM) traffic_monitor/traffic_monitor.rpm traffic_ops/traffic_ops.rpm traffic_portal/traffic_portal.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm edge/traffic_ops_ort.rpm mid/traffic_ops_ort.rpm traffic_stats/traffic_stats.rpm
+	$(RM) traffic_monitor/traffic_monitor.rpm traffic_ops/traffic_ops.rpm traffic_portal/traffic_portal.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm cache/traffic_ops_ort.rpm traffic_stats/traffic_stats.rpm
 
 very-clean: clean
 	$(warning This will destroy ALL OUTPUT RPMS IN 'dist'. Please be sure this is what you want)
