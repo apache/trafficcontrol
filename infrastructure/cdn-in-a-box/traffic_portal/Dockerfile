@@ -26,7 +26,6 @@ RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash -
 
 # Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
 ARG TRAFFIC_PORTAL_RPM=traffic_portal/traffic_portal.rpm
-ADD $TRAFFIC_PORTAL_RPM /
 
 ARG TO_HOST=$TO_HOST
 
@@ -39,11 +38,13 @@ RUN yum install -y \
       openssl \
       gettext \
       bind-utils \
-      net-tools \
-      /$(basename $TRAFFIC_PORTAL_RPM) && \
-    rm /$(basename $TRAFFIC_PORTAL_RPM) && \
+      net-tools && \
     yum clean all || \
     echo "ERROR INSTALLING PACKAGES"
+
+ADD $TRAFFIC_PORTAL_RPM /
+RUN yum install -y /$(basename $TRAFFIC_PORTAL_RPM) && \
+    rm /$(basename $TRAFFIC_PORTAL_RPM)
 
 ADD enroller/server_template.json \
     traffic_portal/run.sh \
