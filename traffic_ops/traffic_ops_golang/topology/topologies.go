@@ -37,7 +37,13 @@ import (
 // TOTopology is a type alias on which we can define functions.
 type TOTopology struct {
 	api.APIInfoImpl `json:"-"`
+	Alerts          tc.Alerts `json:"-"`
 	tc.Topology
+}
+
+// GetAlerts implements the AlertsResponse interface.
+func (topology *TOTopology) GetAlerts() tc.Alerts {
+	return topology.Alerts
 }
 
 // DeleteQueryBase holds a delete query with no WHERE clause and is a
@@ -121,7 +127,8 @@ func (topology *TOTopology) Validate() error {
 	}
 
 	for index, node := range topology.Nodes {
-		rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = checkForEdgeParents(topology.Nodes, cacheGroups, index)
+		rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = topology.checkForEdgeParents(cacheGroups, index)
+
 	}
 	/* Only perform further checks if everything so far is valid */
 	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
@@ -184,7 +191,7 @@ func (topology *TOTopology) Read() ([]interface{}, error, error, int) {
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
-	var interfaces []interface{}
+	interfaces := make([]interface{}, 0)
 	topologies := map[string]*tc.Topology{}
 	indices := map[int]int{}
 	for index := 0; rows.Next(); index++ {
