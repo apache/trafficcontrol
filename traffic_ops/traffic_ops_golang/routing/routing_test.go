@@ -295,8 +295,8 @@ func TestCreateRouteMap(t *testing.T) {
 	route4Handler := routeMap["GET"][3].Handler
 	w = httptest.NewRecorder()
 	route4Handler(w, r)
-	if bytes.Compare(w.Body.Bytes(), []byte("catchall")) != 0 {
-		t.Errorf("Expected: 'catchall', actual: %s", w.Body.Bytes())
+	if bytes.Compare(w.Body.Bytes(), []byte("path4")) != 0 {
+		t.Errorf("Expected: 'path4', actual: %s", w.Body.Bytes())
 	}
 
 	// request should be handled by DisabledRouteHandler

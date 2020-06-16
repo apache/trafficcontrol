@@ -308,19 +308,7 @@ func TestValidateRoutingBlacklist(t *testing.T) {
 		},
 		{
 			Input: RoutingBlacklist{
-				DisabledRoutes: []int{4, 5, 6},
-			},
-			ExpectErr: true,
-		},
-		{
-			Input: RoutingBlacklist{
 				DisabledRoutes: []int{4, 4, 6},
-			},
-			ExpectErr: true,
-		},
-		{
-			Input: RoutingBlacklist{
-				DisabledRoutes: []int{1, 4, 5},
 			},
 			ExpectErr: true,
 		},
