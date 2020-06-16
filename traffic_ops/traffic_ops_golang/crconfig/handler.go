@@ -102,8 +102,7 @@ func SnapshotGetMonitoringLegacyHandler(w http.ResponseWriter, r *http.Request) 
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
 	}
-	convertedData := data.ToLegacyConfig()
-	api.WriteResp(w, r, convertedData)
+	api.WriteResp(w, r, data)
 }
 
 // SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
