@@ -623,7 +623,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 
 	// TODO there's probably a cleaner way to do this by preparing a NamedStmt first and using its QueryRow method
 	var serverCount uint64
-	countRows, err := tx.NamedQuery(serverCountQuery+where, queryValues)
+	countRows, err := tx.NamedQuery(serverCountQuery+queryAddition+where, queryValues)
 	if err != nil {
 		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError
 	}
