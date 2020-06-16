@@ -40,7 +40,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apicapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats/atsserver"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroupparameter"
@@ -1218,9 +1217,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodGet, `cdns/{cdn}/snapshot/new/?$`, crconfig.Handler, auth.PrivLevelReadOnly, Authenticated, nil, 676716889, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandlerDeprecated, auth.PrivLevelOperations, Authenticated, nil, 854424150, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandlerDeprecated, auth.PrivLevelOperations, Authenticated, nil, 1969911829, noPerlBypass},
-
-		// ATS config files
-		{api.Version{1, 1}, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/?(\.json)?$`, atsserver.GetConfigMetaData, auth.PrivLevelOperations, Authenticated, nil, 1755842214, perlBypass},
 
 		// Federations
 		{api.Version{1, 4}, http.MethodGet, `federations/all/?(\.json)?$`, federations.GetAll, auth.PrivLevelAdmin, Authenticated, nil, 61059986, noPerlBypass},
