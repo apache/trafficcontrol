@@ -48,7 +48,8 @@ import (
 	"github.com/lib/pq"
 )
 
-const serversJoin = `
+const serversFromAndJoin = `
+FROM server AS s
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
@@ -59,8 +60,7 @@ JOIN type t ON s.type = t.id
 
 const serverCountQuery = `
 SELECT COUNT(s.id)
-FROM server AS s
-` + serversJoin
+` + serversFromAndJoin
 
 
 const selectQuery = `
@@ -101,8 +101,7 @@ SELECT
 	s.upd_pending AS upd_pending,
 	s.xmpp_id,
 	s.xmpp_passwd
-FROM server AS s
-` + serversJoin
+` + serversFromAndJoin
 
 const InterfacesArray = `
 ARRAY ( SELECT (
