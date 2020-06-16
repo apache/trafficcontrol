@@ -37,9 +37,9 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		this.eGui.setAttribute("title", String(params.value));
 		this.eGui.classList.add("fa", "fa-lg");
 		if (params.value) {
-			this.eGui.classList.add("fa-check");
-		} else {
 			this.eGui.classList.add("fa-clock-o");
+		} else {
+			this.eGui.classList.add("fa-check");
 		}
 	}
 	UpdateCellRenderer.prototype.getGui = function() {return this.eGui;};
@@ -381,7 +381,6 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		};
 		$scope.gridOptions.api.exportDataAsCsv(params);
 	}
-
 
 	/**** Context menu functions ****/
 
