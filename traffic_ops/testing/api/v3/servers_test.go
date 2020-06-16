@@ -144,6 +144,23 @@ func GetTestServersQueryParameters(t *testing.T) {
 		}
 		params.Del("profileId")
 	}
+
+	cgs, _, err := TOSession.GetCacheGroupsNullable()
+	if err != nil {
+		t.Fatalf("Failed to get Cache Groups: %v", err)
+	}
+	if len(cgs) < 1 {
+		t.Fatal("Failed to get at least one Cache Group")
+	}
+	if cgs[0].ID == nil {
+		t.Fatal("Cache Group found with no ID")
+	}
+
+	params.Add("parentCacheGroup", strconv.Itoa(*cgs[0].ID))
+	if _, _, err = TOSession.GetServers(&params); err != nil {
+		t.Errorf("Error getting servers by parentCacheGroup: %v", err)
+	}
+	params.Del("parentCacheGroup")
 }
 
 func UpdateTestServers(t *testing.T) {
