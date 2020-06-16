@@ -17,6 +17,7 @@ package v3
 
 import (
 	"net/url"
+	"strconv"
 	"testing"
 )
 
@@ -25,6 +26,7 @@ func TestServers(t *testing.T) {
 		UpdateTestServers(t)
 		GetTestServersDetails(t)
 		GetTestServers(t)
+		GetTestServersQueryParameters(t)
 	})
 }
 
@@ -41,7 +43,6 @@ func CreateTestServers(t *testing.T) {
 			t.Errorf("could not CREATE servers: %v", err)
 		}
 	}
-
 }
 
 func GetTestServers(t *testing.T) {
@@ -73,6 +74,33 @@ func GetTestServersDetails(t *testing.T) {
 			t.Errorf("cannot GET Server Details by name: %v - %v", err, resp)
 		}
 	}
+}
+
+func GetTestServersQueryParameters(t *testing.T) {
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one server to test getting servers with query parameters")
+	}
+
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("Failed to get Delivery Services: %v", err)
+	}
+	if len(dses) < 1 {
+		t.Fatal("Failed to get at least one Delivery Service")
+	}
+
+	ds := dses[0]
+	if ds.ID == nil {
+		t.Fatal("Got Delivery Service with nil ID")
+	}
+
+	params := url.Values{}
+	params.Add("dsId", strconv.Itoa(*ds.ID))
+	_, _, err = TOSession.GetServers(&params)
+	if err != nil {
+		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
+	}
+	params.Del("dsId")
 }
 
 func UpdateTestServers(t *testing.T) {
