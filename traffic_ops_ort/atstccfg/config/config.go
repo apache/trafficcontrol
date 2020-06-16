@@ -137,6 +137,10 @@ func GetCfg() (Cfg, error) {
 	if toUser == "" {
 		toUser = os.Getenv("TO_USER")
 	}
+
+	// TO_PASSWORD is preferred over TO_PASS, as it's the one commonly used by
+	// Traffic Control tools. Hopefully, we'll be able to get rid of TO_PASS
+	// entirely in the near future, to make this less confusing.
 	if toPass == "" {
 		toPass = os.Getenv("TO_PASS")
 	}
