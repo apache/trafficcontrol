@@ -149,7 +149,7 @@ func TestGetCacheGroupByName(t *testing.T) {
 }
 
 // CreateServerInterfaces takes in a cache id and creates the interfaces/ipaddresses for it
-func CreateServerIntefaces(cacheID int) []tc.ServerInterfaceInfo {
+func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfo {
 	return []tc.ServerInterfaceInfo{
 		{
 			IPAddresses: []tc.ServerIPAddress{
@@ -210,7 +210,7 @@ func CreateServerIntefaces(cacheID int) []tc.ServerInterfaceInfo {
 	}
 }
 
-func MockServerInteraces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfo) {
+func mockServerInterfaces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfo) {
 	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "interface", "server"})
 	for _, interf := range serverInterfaces {
@@ -234,9 +234,9 @@ func TestGetServerInterfaces(t *testing.T) {
 	defer db.Close()
 
 	cacheID := 1
-	serverInterfaces := CreateServerIntefaces(cacheID)
+	serverInterfaces := createServerIntefaces(cacheID)
 	mock.ExpectBegin()
-	MockServerInteraces(mock, cacheID, serverInterfaces)
+	mockServerInterfaces(mock, cacheID, serverInterfaces)
 
 	dbCtx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
 	tx, err := db.BeginTx(dbCtx, nil)
