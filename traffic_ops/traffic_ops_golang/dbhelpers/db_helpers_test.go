@@ -20,10 +20,18 @@ package dbhelpers
  */
 
 import (
+	"context"
 	"errors"
+	"reflect"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 	"unicode"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -138,7 +146,133 @@ func TestGetCacheGroupByName(t *testing.T) {
 			}
 		})
 	}
+}
 
+// CreateServerInterfaces takes in a cache id and creates the interfaces/ipaddresses for it
+func CreateServerIntefaces(cacheID int) []tc.ServerInterfaceInfo {
+	return []tc.ServerInterfaceInfo{
+		{
+			IPAddresses: []tc.ServerIPAddress{
+				{
+					Address:        "5.6.7.8",
+					Gateway:        util.StrPtr("5.6.7.0/24"),
+					ServiceAddress: true,
+				},
+				{
+					Address:        "2020::4",
+					Gateway:        util.StrPtr("fd53::9"),
+					ServiceAddress: true,
+				},
+				{
+					Address:        "5.6.7.9",
+					Gateway:        util.StrPtr("5.6.7.0/24"),
+					ServiceAddress: false,
+				},
+				{
+					Address:        "2021::4",
+					Gateway:        util.StrPtr("fd53::9"),
+					ServiceAddress: false,
+				},
+			},
+			MaxBandwidth: util.Uint64Ptr(2500),
+			Monitor:      true,
+			MTU:          util.Uint64Ptr(1500),
+			Name:         "interfaceName" + strconv.Itoa(cacheID),
+		},
+		{
+			IPAddresses: []tc.ServerIPAddress{
+				{
+					Address:        "6.7.8.9",
+					Gateway:        util.StrPtr("6.7.8.0/24"),
+					ServiceAddress: true,
+				},
+				{
+					Address:        "2021::4",
+					Gateway:        util.StrPtr("fd54::9"),
+					ServiceAddress: true,
+				},
+				{
+					Address:        "6.6.7.9",
+					Gateway:        util.StrPtr("6.6.7.0/24"),
+					ServiceAddress: false,
+				},
+				{
+					Address:        "2022::4",
+					Gateway:        util.StrPtr("fd53::9"),
+					ServiceAddress: false,
+				},
+			},
+			MaxBandwidth: util.Uint64Ptr(1500),
+			Monitor:      false,
+			MTU:          util.Uint64Ptr(1500),
+			Name:         "interfaceName2" + strconv.Itoa(cacheID),
+		},
+	}
+}
+
+func MockServerInteraces(mock sqlmock.Sqlmock, cacheID int, serverInterfaces []tc.ServerInterfaceInfo) {
+	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server"})
+	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "interface", "server"})
+	for _, interf := range serverInterfaces {
+		interfaceRows = interfaceRows.AddRow(*interf.MaxBandwidth, interf.Monitor, *interf.MTU, interf.Name, cacheID)
+		for _, ip := range interf.IPAddresses {
+			ipAddressRows = ipAddressRows.AddRow(ip.Address, *ip.Gateway, ip.ServiceAddress, interf.Name, cacheID)
+		}
+	}
+
+	mock.ExpectQuery("SELECT (.+) FROM interface").WillReturnRows(interfaceRows)
+	mock.ExpectQuery("SELECT (.+) FROM ip_address").WillReturnRows(ipAddressRows)
+}
+
+func TestGetServerInterfaces(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("unable to open mock db: %v", err)
+	}
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	cacheID := 1
+	serverInterfaces := CreateServerIntefaces(cacheID)
+	mock.ExpectBegin()
+	MockServerInteraces(mock, cacheID, serverInterfaces)
+
+	dbCtx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+
+	serversMap, err := GetServersInterfaces([]int{cacheID}, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(serversMap) != 1 {
+		t.Fatalf("expected to get a single server, got %v", len(serversMap))
+	}
+	if interfacesMap, ok := serversMap[cacheID]; ok {
+		if len(interfacesMap) != len(serverInterfaces) {
+			t.Fatalf("expected cache %v to have %v interfaces, got %v", cacheID, len(serverInterfaces), len(interfacesMap))
+		}
+
+		for _, interf := range serverInterfaces {
+			if calculatedInterface, ok := interfacesMap[interf.Name]; ok {
+				if !reflect.DeepEqual(calculatedInterface, interf) {
+					t.Fatalf("expected %v to match %v", calculatedInterface, interf)
+				}
+
+			} else {
+				t.Fatalf("expected map to contain interface %v, but did not", interf.Name)
+			}
+		}
+	} else {
+		t.Fatalf("Cache %v not found in servers map", cacheID)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
 }
 
 func TestGetDSIDAndCDNFromName(t *testing.T) {
