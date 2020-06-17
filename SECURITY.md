@@ -7,9 +7,9 @@
 | < 2.2   | :x:                |
 | 2.2.x   | :x:                |
 | 3.0.x   | :x:                |
-| 3.1.x   | :white_checkmark:  |
-| 4.0.x   | :white_checkmark:  |
-| 4.1.x   | :white_checkmark:  |
+| 3.1.x   | :white_check_mark: |
+| 4.0.x   | :white_check_mark: |
+| 4.1.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 Contact the [Apache Software Foundation Security Team](mailto:security@trafficcontrol.apache.org)
