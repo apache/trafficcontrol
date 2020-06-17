@@ -87,10 +87,8 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, servers)
 }
 
-const JumboFrameBPS = 9000
-
 func getEligibleServers(tx *sql.Tx, dsID int) ([]tc.DSServer, error) {
-	baseQueryString := `
+	queryFormatString := `
 WITH ds_id as (SELECT $1::bigint as v)
 SELECT
 s.id
@@ -143,7 +141,7 @@ s.upd_pending as upd_pending,
 ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities,
 ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities
 `
-	idRows, err := tx.Query(fmt.Sprintf(baseQueryString, "", queryWhereClause), dsID)
+	idRows, err := tx.Query(fmt.Sprintf(queryFormatString, "", queryWhereClause), dsID)
 	if err != nil {
 		return nil, errors.New("querying delivery service eligible servers: " + err.Error())
 	}
@@ -162,7 +160,7 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 		return nil, errors.New("unable to get server interfaces: " + err.Error())
 	}
 
-	rows, err := tx.Query(fmt.Sprintf(baseQueryString, dataFetchQuery, queryWhereClause), dsID)
+	rows, err := tx.Query(fmt.Sprintf(queryFormatString, dataFetchQuery, queryWhereClause), dsID)
 	if err != nil {
 		return nil, errors.New("querying delivery service eligible servers: " + err.Error())
 	}
