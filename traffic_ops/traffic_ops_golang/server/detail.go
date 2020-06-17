@@ -22,8 +22,11 @@ package server
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -138,6 +141,22 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 	api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(servers, err)
 }
 
+func AddWhereClauseAndQuery(tx *sql.Tx, q string, hostName string, physLocationID int, orderByStr string, limitStr string) (*sql.Rows, error) {
+	if hostName != "" && physLocationID != -1 {
+		q += ` WHERE server.host_name = $1::text AND server.phys_location = $2::bigint` + orderByStr + limitStr
+		return tx.Query(q, hostName, physLocationID)
+	} else if hostName != "" {
+		q += ` WHERE server.host_name = $1::text` + orderByStr + limitStr
+		return tx.Query(q, hostName)
+	} else if physLocationID != -1 {
+		q += ` WHERE server.phys_location = $1::int` + orderByStr + limitStr
+		return tx.Query(q, physLocationID)
+	} else {
+		q += orderByStr + limitStr
+		return tx.Query(q) // Should never happen for API <1.3, which don't allow querying without hostName or physLocation
+	}
+}
+
 func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int, reqVersion api.Version) ([]tc.ServerDetailV30, error) {
 	allowedOrderByCols := map[string]string{
 		"":                 "",
@@ -153,13 +172,6 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 		"ilo_ip_netmask":   "server.ilo_ip_netmask",
 		"ilo_password":     "server.ilo_password",
 		"ilo_username":     "server.ilo_username",
-		"interface_mtu":    "interface_mtu",
-		"interface_name":   "server.interface_name",
-		"ip6_address":      "server.ip6_address",
-		"ip6_gateway":      "server.ip6_gateway",
-		"ip_address":       "server.ip_address",
-		"ip_gateway":       "server.ip_gateway",
-		"ip_netmask":       "server.ip_netmask",
 		"mgmt_ip_address":  "server.mgmt_ip_address",
 		"mgmt_ip_gateway":  "server.mgmt_ip_gateway",
 		"mgmt_ip_netmask":  "server.mgmt_ip_netmask",
@@ -180,38 +192,40 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 	if !ok {
 		return nil, errors.New("orderBy '" + orderBy + "' not permitted")
 	}
-	const JumboFrameBPS = 9000
-	q := `
+
+	dataFetchQuery := `,
+cg.name AS cachegroup,
+cdn.name AS cdn_name,
+ARRAY(select deliveryservice from deliveryservice_server where server = server.id),
+server.domain_name,
+server.guid,
+server.host_name,
+server.https_port,
+server.ilo_ip_address,
+server.ilo_ip_gateway,
+server.ilo_ip_netmask,
+server.ilo_password,
+server.ilo_username,
+server.mgmt_ip_address,
+server.mgmt_ip_gateway,
+server.mgmt_ip_netmask,
+server.offline_reason,
+pl.name as phys_location,
+p.name as profile,
+p.description as profile_desc,
+server.rack,
+server.router_host_name,
+server.router_port_name,
+st.name as status,
+server.tcp_port,
+t.name as server_type,
+server.xmpp_id,
+server.xmpp_passwd
+`
+	queryFormatString := `
 SELECT
-	cg.name AS cachegroup,
-	cdn.name AS cdn_name,
-	ARRAY(select deliveryservice from deliveryservice_server where server = server.id),
-	server.domain_name,
-	server.guid,
-	server.host_name,
-	server.https_port,
-	server.id,
-	server.ilo_ip_address,
-	server.ilo_ip_gateway,
-	server.ilo_ip_netmask,
-	server.ilo_password,
-	server.ilo_username,
-	` + InterfacesArray + ` AS interfaces,
-	server.mgmt_ip_address,
-	server.mgmt_ip_gateway,
-	server.mgmt_ip_netmask,
-	server.offline_reason,
-	pl.name as phys_location,
-	p.name as profile,
-	p.description as profile_desc,
-	server.rack,
-	server.router_host_name,
-	server.router_port_name,
-	st.name as status,
-	server.tcp_port,
-	t.name as server_type,
-	server.xmpp_id,
-	server.xmpp_passwd
+	server.id
+	%v
 FROM server
 JOIN cachegroup cg ON server.cachegroup = cg.id
 JOIN cdn ON server.cdn_id = cdn.id
@@ -228,35 +242,43 @@ JOIN type t ON server.type = t.id
 	if orderBy != "" {
 		orderByStr = " ORDER BY " + orderBy
 	}
-	rows := (*sql.Rows)(nil)
-	err := error(nil)
-	if hostName != "" && physLocationID != -1 {
-		q += ` WHERE server.host_name = $1::text AND server.phys_location = $2::bigint` + orderByStr + limitStr
-		rows, err = tx.Query(q, hostName, physLocationID)
-	} else if hostName != "" {
-		q += ` WHERE server.host_name = $1::text` + orderByStr + limitStr
-		rows, err = tx.Query(q, hostName)
-	} else if physLocationID != -1 {
-		q += ` WHERE server.phys_location = $1::int` + orderByStr + limitStr
-		rows, err = tx.Query(q, physLocationID)
-	} else {
-		q += orderByStr + limitStr
-		rows, err = tx.Query(q) // Should never happen for API <1.3, which don't allow querying without hostName or physLocation
+	idRows, err := AddWhereClauseAndQuery(tx, fmt.Sprintf(queryFormatString, ""), hostName, physLocationID, orderByStr, limitStr)
+	if err != nil {
+		return nil, errors.New("querying delivery service eligible servers: " + err.Error())
 	}
+	defer idRows.Close()
+	var serverIDs []int
+	for idRows.Next() {
+		var serverID *int
+		err := idRows.Scan(&serverID)
+		if err != nil {
+			return nil, errors.New("querying delivery service eligible server ids: " + err.Error())
+		}
+		serverIDs = append(serverIDs, *serverID)
+	}
+	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx)
+	if err != nil {
+		return nil, errors.New("unable to get server interfaces: " + err.Error())
+	}
+	rows, err := AddWhereClauseAndQuery(tx, fmt.Sprintf(queryFormatString, dataFetchQuery), hostName, physLocationID, orderByStr, limitStr)
 	if err != nil {
 		return nil, errors.New("Error querying detail servers: " + err.Error())
 	}
+
 	defer rows.Close()
 	sIDs := []int{}
 	servers := []tc.ServerDetailV30{}
-	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 	for rows.Next() {
 		s := tc.ServerDetailV30{}
-		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
-
-		s.ServerInterfaces = &serverInterfaceInfo
+		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}
+		if interfacesMap, ok := serversMap[*s.ID]; ok {
+			for _, interfaceInfo := range interfacesMap {
+				*s.ServerInterfaces = append(*s.ServerInterfaces, interfaceInfo)
+			}
+		}
 
 		hiddenField := "********"
 		if user.PrivLevel < auth.PrivLevelOperations {
