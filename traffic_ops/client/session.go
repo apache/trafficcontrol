@@ -126,7 +126,7 @@ func (to *Session) login() (net.Addr, error) {
 
 	path := apiBase + "/user/login"
 	resp, remoteAddr, err := to.RawRequest("POST", path, credentials, nil)
-	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
+	resp, remoteAddr, err = to.ErrUnlessOKOrNotModified(resp, remoteAddr, err, path)
 	if err != nil {
 		return remoteAddr, errors.New("requesting: " + err.Error())
 	}
@@ -155,7 +155,7 @@ func (to *Session) login() (net.Addr, error) {
 func (to *Session) loginWithToken(token []byte) (net.Addr, error) {
 	path := apiBase + "/user/login/token"
 	resp, remoteAddr, err := to.RawRequest(http.MethodPost, path, token, nil)
-	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
+	resp, remoteAddr, err = to.ErrUnlessOKOrNotModified(resp, remoteAddr, err, path)
 	if err != nil {
 		return remoteAddr, fmt.Errorf("requesting: %v", err)
 	}
@@ -184,7 +184,7 @@ func (to *Session) logout() (net.Addr, error) {
 
 	path := apiBase + "/user/logout"
 	resp, remoteAddr, err := to.RawRequest("POST", path, credentials, nil)
-	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
+	resp, remoteAddr, err = to.ErrUnlessOKOrNotModified(resp, remoteAddr, err, path)
 	if err != nil {
 		return remoteAddr, errors.New("requesting: " + err.Error())
 	}
@@ -308,10 +308,10 @@ func NewNoAuthSession(toURL string, insecure bool, userAgent string, useCache bo
 	}, useCache)
 }
 
-// ErrUnlessOk returns the response, the remote address, and an error if the given Response's status code is anything
-// but 200 OK. This includes reading the Response.Body and Closing it. Otherwise, the given response, the remote
+// ErrUnlessOKOrNotModified returns the response, the remote address, and an error if the given Response's status code is anything
+// but 200 OK/ 304 Not Modified. This includes reading the Response.Body and Closing it. Otherwise, the given response, the remote
 // address, and a nil error are returned.
-func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err error, path string) (*http.Response, net.Addr, error) {
+func (to *Session) ErrUnlessOKOrNotModified(resp *http.Response, remoteAddr net.Addr, err error, path string) (*http.Response, net.Addr, error) {
 	if err != nil {
 		return resp, remoteAddr, err
 	}
@@ -343,60 +343,15 @@ func (to *Session) request(method, path string, body []byte, header http.Header)
 		return r, remoteAddr, err
 	}
 	if r.StatusCode != http.StatusUnauthorized && r.StatusCode != http.StatusForbidden {
-		return to.ErrUnlessOK(r, remoteAddr, err, path)
+		return to.ErrUnlessOKOrNotModified(r, remoteAddr, err, path)
 	}
 	if _, lerr := to.login(); lerr != nil {
-		return to.ErrUnlessOK(r, remoteAddr, err, path) // if re-logging-in fails, return the original request's response
+		return to.ErrUnlessOKOrNotModified(r, remoteAddr, err, path) // if re-logging-in fails, return the original request's response
 	}
 
 	// return second request, even if it's another Unauthorized or Forbidden.
 	r, remoteAddr, err = to.RawRequest(method, path, body, header)
-	return to.ErrUnlessOK(r, remoteAddr, err, path)
-}
-
-func (to *Session) requestIMS(method, path string, header http.Header) (*http.Response, net.Addr, error) {
-	r, remoteAddr, err := to.RawGetRequestIMS(method, path, header)
-	if err != nil {
-		return r, remoteAddr, err
-	}
-	if r.StatusCode != http.StatusUnauthorized && r.StatusCode != http.StatusForbidden {
-		return to.ErrUnlessOK(r, remoteAddr, err, path)
-	}
-	if _, lerr := to.login(); lerr != nil {
-		return to.ErrUnlessOK(r, remoteAddr, err, path) // if re-logging-in fails, return the original request's response
-	}
-
-	// return second request, even if it's another Unauthorized or Forbidden.
-	r, remoteAddr, err = to.RawGetRequestIMS(method, path, header)
-	return to.ErrUnlessOK(r, remoteAddr, err, path)
-}
-
-func (to *Session) RawGetRequestIMS(method, path string, header http.Header) (*http.Response, net.Addr, error) {
-	url := to.getURL(path)
-
-	var req *http.Request
-	var err error
-	remoteAddr := net.Addr(nil)
-
-	req, err = http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil, remoteAddr, err
-	}
-
-	trace := &httptrace.ClientTrace{
-		GotConn: func(connInfo httptrace.GotConnInfo) {
-			remoteAddr = connInfo.Conn.RemoteAddr()
-		},
-	}
-	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
-	web.CopyHeaderTo(header, &req.Header)
-	req.Header.Set("User-Agent", to.UserAgentStr)
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := to.Client.Do(req)
-	if err != nil {
-		return resp, remoteAddr, err
-	}
-	return resp, remoteAddr, nil
+	return to.ErrUnlessOKOrNotModified(r, remoteAddr, err, path)
 }
 
 // RawRequest performs the actual HTTP request to Traffic Ops, simply, without trying to refresh the cookie if an Unauthorized code is returned.

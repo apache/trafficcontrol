@@ -186,7 +186,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 	dsServers := []tc.DeliveryServiceServer{}
 	for _, ssc := range sscs {
 
-		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, ssc.ServerCapability)
+		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, ssc.ServerCapability, nil)
 		if err != nil {
 			t.Fatalf("cannot GET delivery service required capabilities: %v", err)
 		}

@@ -25,31 +25,31 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func (to *Session) Federations() ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
+func (to *Session) Federations(header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	type FederationResponse struct {
 		Response []tc.AllDeliveryServiceFederationsMapping `json:"response"`
 	}
 	data := FederationResponse{}
-	inf, err := get(to, apiBase+"/federations", &data)
+	inf, err := get(to, apiBase+"/federations", &data, header)
 	return data.Response, inf, err
 }
 
-func (to *Session) AllFederations() ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
+func (to *Session) AllFederations(header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	type FederationResponse struct {
 		Response []tc.AllDeliveryServiceFederationsMapping `json:"response"`
 	}
 	data := FederationResponse{}
-	inf, err := get(to, apiBase+"/federations/all", &data)
+	inf, err := get(to, apiBase+"/federations/all", &data, header)
 	return data.Response, inf, err
 }
 
-func (to *Session) AllFederationsForCDN(cdnName string) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
+func (to *Session) AllFederationsForCDN(cdnName string, header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	// because the Federations JSON array is heterogeneous (array members may be a AllFederation or AllFederationCDN), we have to try decoding each separately.
 	type FederationResponse struct {
 		Response []json.RawMessage `json:"response"`
 	}
 	data := FederationResponse{}
-	inf, err := get(to, apiBase+"/federations/all?cdnName="+cdnName, &data)
+	inf, err := get(to, apiBase+"/federations/all?cdnName="+cdnName, &data, header)
 	if err != nil {
 		return nil, inf, err
 	}
@@ -76,17 +76,17 @@ func (to *Session) CreateFederationDeliveryServices(federationID int, deliverySe
 		return ReqInf{CacheHitStatus: CacheHitStatusMiss}, err
 	}
 	resp := map[string]interface{}{}
-	inf, err := makeReq(to, http.MethodPost, apiBase+`/federations/`+strconv.Itoa(federationID)+`/deliveryservices`, jsonReq, &resp)
+	inf, err := makeReq(to, http.MethodPost, apiBase+`/federations/`+strconv.Itoa(federationID)+`/deliveryservices`, jsonReq, &resp, nil)
 	return inf, err
 }
 
 // GetFederationDeliveryServices Returns a given Federation's Delivery Services
-func (to *Session) GetFederationDeliveryServices(federationID int) ([]tc.FederationDeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetFederationDeliveryServices(federationID int, header http.Header) ([]tc.FederationDeliveryServiceNullable, ReqInf, error) {
 	type FederationDSesResponse struct {
 		Response []tc.FederationDeliveryServiceNullable `json:"response"`
 	}
 	data := FederationDSesResponse{}
-	inf, err := get(to, fmt.Sprintf("%s/federations/%v/deliveryservices", apiBase, federationID), &data)
+	inf, err := get(to, fmt.Sprintf("%s/federations/%v/deliveryservices", apiBase, federationID), &data, header)
 	return data.Response, inf, err
 }
 
@@ -114,17 +114,17 @@ func (to *Session) CreateFederationUsers(federationID int, userIDs []int, replac
 		return tc.Alerts{}, ReqInf{CacheHitStatus: CacheHitStatusMiss}, err
 	}
 	var alerts tc.Alerts
-	inf, err := makeReq(to, http.MethodPost, fmt.Sprintf("%s/federations/%v/users", apiBase, federationID), jsonReq, &alerts)
+	inf, err := makeReq(to, http.MethodPost, fmt.Sprintf("%s/federations/%v/users", apiBase, federationID), jsonReq, &alerts, nil)
 	return alerts, inf, err
 }
 
 // GetFederationUsers Returns a given Federation's Users
-func (to *Session) GetFederationUsers(federationID int) ([]tc.FederationUser, ReqInf, error) {
+func (to *Session) GetFederationUsers(federationID int, header http.Header) ([]tc.FederationUser, ReqInf, error) {
 	type FederationUsersResponse struct {
 		Response []tc.FederationUser `json:"response"`
 	}
 	data := FederationUsersResponse{}
-	inf, err := get(to, fmt.Sprintf("%s/federations/%v/users", apiBase, federationID), &data)
+	inf, err := get(to, fmt.Sprintf("%s/federations/%v/users", apiBase, federationID), &data, header)
 	return data.Response, inf, err
 }
 

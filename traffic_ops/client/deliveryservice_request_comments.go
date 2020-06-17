@@ -69,9 +69,15 @@ func (to *Session) UpdateDeliveryServiceRequestCommentByID(id int, comment tc.De
 }
 
 // Returns a list of delivery service request comments
-func (to *Session) GetDeliveryServiceRequestComments() ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_DELIVERY_SERVICE_REQUEST_COMMENTS, nil, nil)
+func (to *Session) GetDeliveryServiceRequestComments(header http.Header) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_DELIVERY_SERVICE_REQUEST_COMMENTS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.DeliveryServiceRequestComment{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -83,10 +89,16 @@ func (to *Session) GetDeliveryServiceRequestComments() ([]tc.DeliveryServiceRequ
 }
 
 // GET a delivery service request comment by ID
-func (to *Session) GetDeliveryServiceRequestCommentByID(id int) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
+func (to *Session) GetDeliveryServiceRequestCommentByID(id int, header http.Header) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DELIVERY_SERVICE_REQUEST_COMMENTS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.DeliveryServiceRequestComment{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

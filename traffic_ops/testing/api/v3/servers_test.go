@@ -165,7 +165,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Assign server to DS and then attempt to update to a different type
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
 	}

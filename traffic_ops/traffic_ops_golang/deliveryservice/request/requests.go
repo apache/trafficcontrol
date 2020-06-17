@@ -106,12 +106,6 @@ func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interfa
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-	tenantIDs, err := tenant.GetUserTenantIDListTx(req.APIInfo().Tx.Tx, req.APIInfo().User.TenantID)
-	if err != nil {
-		return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError, nil
-	}
-	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
-
 	if useIMS {
 		runSecond, maxTime := ims.TryIfModifiedSinceQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
 		if !runSecond {
@@ -122,6 +116,12 @@ func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interfa
 	} else {
 		log.Debugln("Non IMS request")
 	}
+	tenantIDs, err := tenant.GetUserTenantIDListTx(req.APIInfo().Tx.Tx, req.APIInfo().User.TenantID)
+	if err != nil {
+		return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError, nil
+	}
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
+
 	query := selectDeliveryServiceRequestsQuery() + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
@@ -147,7 +147,7 @@ func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) 
 		SELECT max(r.last_updated) as t FROM deliveryservice_request r
 	JOIN tm_user a ON r.author_id = a.id
 	LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
-	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where + orderBy + pagination +
+	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_request') as res`
 }

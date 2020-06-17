@@ -17,8 +17,11 @@ package v3
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -26,6 +29,7 @@ import (
 func TestDeliveryServicesRegexes(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, DeliveryServicesRegexes}, func() {
 		QueryDSRegexTest(t)
+		QueryDSRegexTestIMS(t)
 	})
 }
 
@@ -103,7 +107,7 @@ func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 	}
 	test.Type = dsTypes[0].ID
 
-	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(test.DSName)
+	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(test.DSName, nil)
 	if err != nil {
 		t.Fatalf("unable to ds by xmlid %v: %v", test.DSName, err)
 	}
@@ -113,8 +117,23 @@ func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 	test.DSID = *dses[0].ID
 }
 
+func QueryDSRegexTestIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1", header)
+	if err != nil {
+		t.Fatalf("could not GET delivery services regex: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
+
 func QueryDSRegexTest(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1")
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1", nil)
 	if err != nil {
 		t.Fatalf("unable to get ds ds1: %v", err)
 	}

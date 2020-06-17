@@ -68,9 +68,15 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Al
 }
 
 // Returns a list of Coordinates
-func (to *Session) GetCoordinates() ([]tc.Coordinate, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_COORDINATES, nil, nil)
+func (to *Session) GetCoordinates(header http.Header) ([]tc.Coordinate, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_COORDINATES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Coordinate{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -82,10 +88,16 @@ func (to *Session) GetCoordinates() ([]tc.Coordinate, ReqInf, error) {
 }
 
 // GET a Coordinate by the Coordinate id
-func (to *Session) GetCoordinateByID(id int) ([]tc.Coordinate, ReqInf, error) {
+func (to *Session) GetCoordinateByID(id int, header http.Header) ([]tc.Coordinate, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Coordinate{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -100,10 +112,16 @@ func (to *Session) GetCoordinateByID(id int) ([]tc.Coordinate, ReqInf, error) {
 }
 
 // GET a Coordinate by the Coordinate name
-func (to *Session) GetCoordinateByName(name string) ([]tc.Coordinate, ReqInf, error) {
+func (to *Session) GetCoordinateByName(name string, header http.Header) ([]tc.Coordinate, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_COORDINATES, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Coordinate{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

@@ -19,6 +19,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"reflect"
 	"strconv"
 	"testing"
@@ -31,17 +33,45 @@ import (
 
 func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
+		currentTime := time.Now().Add(-1 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
 		UpdateDeliveryServiceWithInvalidRemapText(t)
 		UpdateDeliveryServiceWithInvalidSliceRangeRequest(t)
 		UpdateDeliveryServiceWithInvalidTopology(t)
+		GetTestDeliveryServicesIMSAfterChange(t, header)
 		GetTestDeliveryServices(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
 		PostDeliveryServiceTest(t)
 	})
+}
+
+func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
+	_, reqInf, err := TOSession.GetDeliveryServicesNullable(header)
+	if err != nil {
+		t.Fatalf("could not GET Delivery Services: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+	currentTime := time.Now()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	_, reqInf, err = TOSession.GetDeliveryServicesNullable(header)
+	if err != nil {
+		t.Fatalf("could not GET Delivery Services: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func PostDeliveryServiceTest(t *testing.T) {
@@ -76,8 +106,23 @@ func CreateTestDeliveryServices(t *testing.T) {
 	}
 }
 
+func GetTestDeliveryServicesIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err := TOSession.GetDeliveryServicesNullable(header)
+	if err != nil {
+		t.Fatalf("could not GET Delivery Services: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
+
 func GetTestDeliveryServices(t *testing.T) {
-	actualDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	actualDSes, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, actualDSes)
 	}
@@ -106,7 +151,7 @@ func GetTestDeliveryServices(t *testing.T) {
 func UpdateTestDeliveryServices(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Errorf("cannot GET Delivery Services: %v", err)
 	}
@@ -137,7 +182,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	}
 
 	// Retrieve the server to check rack and interfaceName values were updated
-	resp, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID))
+	resp, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), nil)
 	if err != nil {
 		t.Errorf("cannot GET Delivery Service by ID: %v - %v", remoteDS.XMLID, err)
 	}
@@ -155,7 +200,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 func UpdateNullableTestDeliveryServices(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
@@ -186,7 +231,7 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 	}
 
 	// Retrieve the server to check rack and interfaceName values were updated
-	resp, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID))
+	resp, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Service by ID: %v - %v", remoteDS.XMLID, err)
 	}
@@ -207,7 +252,7 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 
 // UpdateDeliveryServiceWithInvalidTopology ensures that a topology cannot be assigned to (CLIENT_)STEERING delivery services.
 func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
@@ -231,7 +276,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 func UpdateDeliveryServiceWithInvalidRemapText(t *testing.T) {
 	firstDS := testData.DeliveryServices[0]
 
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
@@ -274,7 +319,7 @@ func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
 		t.Fatal("no HTTP or DNS Delivery Services to test with")
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}
@@ -390,7 +435,7 @@ func getByTenants(tenantID int, expectedCount int) error {
 }
 
 func DeleteTestDeliveryServices(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Errorf("cannot GET deliveryservices: %v", err)
 	}
@@ -414,7 +459,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		}
 
 		// Retrieve the Server to see if it got deleted
-		foundDS, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*ds.ID))
+		foundDS, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*ds.ID), nil)
 		if err == nil && foundDS != nil {
 			t.Errorf("expected Delivery Service: %s to be deleted", *ds.XMLID)
 		}
@@ -436,7 +481,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("expected XMLID: ds-test-minor-versions, actual: %s", *testDS.XMLID)
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
@@ -503,7 +548,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 }
 
 func DeliveryServiceTenancyTest(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Errorf("cannot GET deliveryservices: %v", err)
 	}
@@ -525,7 +570,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
 	}
 
-	dsesReadableByTenant4, _, err := tenant4TOClient.GetDeliveryServicesNullable()
+	dsesReadableByTenant4, _, err := tenant4TOClient.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Error("tenant4user cannot GET deliveryservices")
 	}

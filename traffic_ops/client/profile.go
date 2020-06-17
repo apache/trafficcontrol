@@ -35,7 +35,7 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
 	if pl.CDNID == 0 && pl.CDNName != "" {
-		cdns, _, err := to.GetCDNByName(pl.CDNName)
+		cdns, _, err := to.GetCDNByName(pl.CDNName, nil)
 		if err != nil {
 			return tc.Alerts{}, ReqInf{}, err
 		}

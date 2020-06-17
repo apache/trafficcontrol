@@ -54,7 +54,7 @@ func AssignTestDeliveryService(t *testing.T) {
 		t.Fatalf("Server '%s' had nil ID", *server.HostName)
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*testData.DeliveryServices[0].XMLID, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)
 	} else if len(rd) == 0 {
@@ -119,7 +119,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 		t.Fatalf("Server '%s' has nil ID", hostname)
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(*testData.DeliveryServices[0].XMLID, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)
 	} else if len(rd) == 0 {
@@ -180,7 +180,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatal("Server had nil ID")
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top")
+	rd, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top", nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)
 	} else if len(rd) == 0 {

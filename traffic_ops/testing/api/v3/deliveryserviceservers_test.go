@@ -41,7 +41,7 @@ func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 }
 
 func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top")
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top", nil)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service 'ds-top': %s", err.Error())
 	}
@@ -158,7 +158,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 }
 
 func CreateTestMSODSServerWithReqCap(t *testing.T) {
-	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("msods1"), nil)
+	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("msods1"), nil, nil)
 	if err != nil {
 		t.Fatalf("GET delivery service required capabilites: %v", err)
 	}
@@ -195,7 +195,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Is origin included in eligible servers even though it doesnt have required capability
-	eServers, _, err := TOSession.GetDeliveryServicesEligible(*dsReqCap[0].DeliveryServiceID)
+	eServers, _, err := TOSession.GetDeliveryServicesEligible(*dsReqCap[0].DeliveryServiceID, nil)
 	if err != nil {
 		t.Fatalf("GET delivery service msods1 eligible servers: %v", err)
 	}
@@ -291,7 +291,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 }
 
 func getServersAndDSes(t *testing.T) ([]tc.DeliveryServiceNullable, []tc.ServerNullable) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
 	}

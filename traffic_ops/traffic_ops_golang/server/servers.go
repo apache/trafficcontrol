@@ -480,7 +480,6 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 	return serviceInterface, util.JoinErrs(errs)
 }
 
-
 func Read(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -741,7 +740,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 			return nil, serverCount, nil, fmt.Errorf("getting server interfaces: %v", err), http.StatusInternalServerError, nil
 		}
 
-		if _, ok := servers[server]; !ok  {
+		if _, ok := servers[server]; !ok {
 			continue
 		}
 

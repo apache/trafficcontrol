@@ -21,7 +21,14 @@ package federation_resolvers
  * under the License.
  */
 
-import "database/sql"
+import (
+	"database/sql"
+	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+	"github.com/jmoiron/sqlx"
+	"time"
+)
 import "encoding/json"
 import "fmt"
 import "net/http"
@@ -127,6 +134,25 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query := readQuery + where + orderBy + pagination
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+	if useIMS {
+		runSecond, _ := TryIfModifiedSinceQuery(r.Header, inf.Tx, where, orderBy, pagination, queryValues)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			w.WriteHeader(http.StatusNotModified)
+			api.WriteResp(w, r, []tc.FederationResolver{})
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
@@ -155,6 +181,59 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteResp(w, r, resolvers)
+}
+
+func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, orderBy string, pagination string, queryValues map[string]interface{}) (bool, time.Time) {
+	var max time.Time
+	var imsDate time.Time
+	var ok bool
+	imsDateHeader := []string{}
+	runSecond := true
+	dontRunSecond := false
+	if header == nil {
+		return runSecond, max
+	}
+	imsDateHeader = header[rfc.IfModifiedSince]
+	if len(imsDateHeader) == 0 {
+		return runSecond, max
+	}
+	if imsDate, ok = web.ParseHTTPDate(imsDateHeader[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
+		return runSecond, max
+	}
+	query := SelectMaxLastUpdatedQuery(where, orderBy, pagination, "federation_resolver")
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		log.Warnf("Couldn't get the max last updated time: %v", err)
+		return runSecond, max
+	}
+	if err == sql.ErrNoRows {
+		return dontRunSecond, max
+	}
+	defer rows.Close()
+	// This should only ever contain one row
+	if rows.Next() {
+		v := &ims.LatestTimestamp{}
+		if err = rows.StructScan(v); err != nil || v == nil {
+			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
+			return runSecond, max
+		}
+		if v.LatestTime != nil {
+			max = v.LatestTime.Time
+			// The request IMS time is later than the max of (lastUpdated, deleted_time)
+			if imsDate.After(v.LatestTime.Time) {
+				return dontRunSecond, max
+			}
+		}
+	}
+	return runSecond, max
+}
+
+func SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
 // Delete is the handler for DELETE requests to /federation_resolvers.

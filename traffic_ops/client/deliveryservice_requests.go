@@ -36,7 +36,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	if dsr.AssigneeID == 0 && dsr.Assignee != "" {
-		res, reqInf, err := to.GetUserByUsername(dsr.Assignee)
+		res, reqInf, err := to.GetUserByUsername(dsr.Assignee, nil)
 		if err != nil {
 			return alerts, reqInf, err
 		}
@@ -47,7 +47,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	}
 
 	if dsr.AuthorID == 0 && dsr.Author != "" {
-		res, reqInf, err := to.GetUserByUsername(dsr.Author)
+		res, reqInf, err := to.GetUserByUsername(dsr.Author, nil)
 		if err != nil {
 			return alerts, reqInf, err
 		}
@@ -66,7 +66,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	}
 
 	if dsr.DeliveryService.CDNID == 0 && dsr.DeliveryService.CDNName != "" {
-		cdns, reqInf, err := to.GetCDNByName(dsr.DeliveryService.CDNName)
+		cdns, reqInf, err := to.GetCDNByName(dsr.DeliveryService.CDNName, nil)
 		if err != nil || len(cdns) == 0 {
 			return alerts, reqInf, errors.New("no CDN named " + dsr.DeliveryService.CDNName)
 		}
@@ -111,10 +111,16 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 }
 
 // GetDeliveryServiceRequests retrieves all deliveryservices available to session user.
-func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_DS_REQUESTS, nil, nil)
+func (to *Session) GetDeliveryServiceRequests(header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_DS_REQUESTS, nil, header)
 
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.DeliveryServiceRequest{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -131,11 +137,17 @@ func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, Re
 }
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest XMLID
-func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
+func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string, header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, url.QueryEscape(XMLID))
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.DeliveryServiceRequest{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -152,10 +164,16 @@ func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.Delivery
 }
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest id
-func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
+func (to *Session) GetDeliveryServiceRequestByID(id int, header http.Header) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.DeliveryServiceRequest{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

@@ -75,7 +75,7 @@ func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, se
 	resp := struct {
 		Response []tc.ServerServerCapability `json:"response"`
 	}{}
-	reqInf, err := get(to, queryURL, &resp)
+	reqInf, err := get(to, queryURL, &resp, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}

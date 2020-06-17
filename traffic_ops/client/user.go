@@ -29,40 +29,40 @@ import (
 )
 
 // GetUsers returns all users accessible from current user
-func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
+func (to *Session) GetUsers(header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users", apiBase)
-	inf, err := get(to, route, &data)
+	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
 // GetUsersByRole returns all users accessible from current user for a given role
-func (to *Session) GetUsersByRole(roleName string) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUsersByRole(roleName string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users?role=%s", apiBase, url.QueryEscape(roleName))
-	inf, err := get(to, route, &data)
+	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
-func (to *Session) GetUserByID(id int) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUserByID(id int, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users/%d", apiBase, id)
-	inf, err := get(to, route, &data)
+	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
-func (to *Session) GetUserByUsername(username string) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUserByUsername(username string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users?username=%s", apiBase, username)
-	inf, err := get(to, route, &data)
+	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
 // GetUserCurrent gets information about the current user
-func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
+func (to *Session) GetUserCurrent(header http.Header) (*tc.UserCurrent, ReqInf, error) {
 	route := apiBase + `/user/current`
 	resp := tc.UserCurrentResponse{}
-	reqInf, err := get(to, route, &resp)
+	reqInf, err := get(to, route, &resp, header)
 	if err != nil {
 		return nil, reqInf, err
 	}

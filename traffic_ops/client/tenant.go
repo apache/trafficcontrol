@@ -30,7 +30,7 @@ const API_TENANT_ID = API_TENANTS + "/%v"
 // Tenants gets an array of Tenants.
 func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := get(to, API_TENANTS, &data)
+	reqInf, err := get(to, API_TENANTS, &data, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -42,7 +42,7 @@ func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 // must be passed as a string.
 func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := get(to, fmt.Sprintf("%s?id=%v", API_TENANTS, id), &data)
+	reqInf, err := get(to, fmt.Sprintf("%s?id=%v", API_TENANTS, id), &data, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -54,7 +54,7 @@ func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
 	query := API_TENANTS + "?name=" + url.QueryEscape(name)
-	reqInf, err := get(to, query, &data)
+	reqInf, err := get(to, query, &data, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}

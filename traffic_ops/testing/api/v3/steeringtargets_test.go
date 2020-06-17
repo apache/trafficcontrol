@@ -70,7 +70,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 			st.TypeID = util.IntPtr(respTypes[0].ID)
 		}
 		{
-			respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
+			respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService), nil)
 			if err != nil {
 				t.Fatalf("creating steering target: getting ds: %v", err)
 			} else if len(respDS) < 1 {
@@ -82,7 +82,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 			st.DeliveryServiceID = &dsID
 		}
 		{
-			respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.Target))
+			respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.Target), nil)
 			if err != nil {
 				t.Fatalf("creating steering target: getting target ds: %v", err)
 			} else if len(respTarget) < 1 {
@@ -114,7 +114,7 @@ func UpdateTestSteeringTargets(t *testing.T) {
 		t.Fatal("updating steering target: test data missing target")
 	}
 
-	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
+	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService), nil)
 	if err != nil {
 		t.Fatalf("updating steering target: getting ds: %v", err)
 	}
@@ -201,7 +201,7 @@ func GetTestSteeringTargets(t *testing.T) {
 		t.Fatal("updating steering target: test data missing ds")
 	}
 
-	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
+	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService), nil)
 	if err != nil {
 		t.Fatalf("creating steering target: getting ds: %v", err)
 	} else if len(respDS) < 1 {
@@ -260,7 +260,7 @@ func DeleteTestSteeringTargets(t *testing.T) {
 			t.Fatal("deleting steering target: test data missing target")
 		}
 
-		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
+		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService), nil)
 		if err != nil {
 			t.Fatalf("deleting steering target: getting ds: %v", err)
 		} else if len(respDS) < 1 {
@@ -273,7 +273,7 @@ func DeleteTestSteeringTargets(t *testing.T) {
 
 		dsIDs = append(dsIDs, dsID)
 
-		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.Target))
+		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.Target), nil)
 		if err != nil {
 			t.Fatalf("deleting steering target: getting target ds: %v", err)
 		} else if len(respTarget) < 1 {

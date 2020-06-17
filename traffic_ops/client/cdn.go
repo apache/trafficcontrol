@@ -69,9 +69,15 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) 
 }
 
 // GetCDNs eturns a list of CDNs.
-func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_CDNS, nil, nil)
+func (to *Session) GetCDNs(header http.Header) ([]tc.CDN, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_CDNS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.CDN{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -83,32 +89,15 @@ func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 }
 
 // GetCDNByID a CDN by the CDN ID.
-func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
+func (to *Session) GetCDNByID(id int, header http.Header) ([]tc.CDN, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%v", API_CDNS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.CDNsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-func (to *Session) GetCDNByNameIMS(name string, header http.Header) ([]tc.CDN, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_CDNS, url.QueryEscape(name))
-	resp, remoteAddr, err := to.requestIMS(http.MethodGet, url, header)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
-	}
-	if resp.StatusCode == http.StatusNotModified {
-		return nil, reqInf, nil
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.CDN{}, reqInf, nil
+		}
 	}
 	if err != nil {
 		return nil, reqInf, err
@@ -124,10 +113,16 @@ func (to *Session) GetCDNByNameIMS(name string, header http.Header) ([]tc.CDN, R
 }
 
 // GetCDNByName gets a CDN by the CDN name.
-func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
+func (to *Session) GetCDNByName(name string, header http.Header) ([]tc.CDN, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_CDNS, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.CDN{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -155,10 +150,16 @@ func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
+func (to *Session) GetCDNSSLKeys(name string, header http.Header) ([]tc.CDNSSLKeys, ReqInf, error) {
 	url := fmt.Sprintf("%s/name/%s/sslkeys", API_CDNS, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.CDNSSLKeys{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

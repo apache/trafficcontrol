@@ -125,7 +125,7 @@ func OpsUpdateAdminTest(t *testing.T) {
 		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
 	}
 
-	resp, _, err := TOSession.GetUserByUsername("admin")
+	resp, _, err := TOSession.GetUserByUsername("admin", nil)
 	if err != nil {
 		t.Errorf("cannot GET user by name: 'admin', %v", err)
 	}
@@ -176,7 +176,7 @@ func UserSelfUpdateTest(t *testing.T) {
 		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
 	}
 
-	resp, _, err := TOSession.GetUserByUsername("opsuser")
+	resp, _, err := TOSession.GetUserByUsername("opsuser", nil)
 	if err != nil {
 		t.Fatalf("cannot GET user by name: 'opsuser', %v\n", err)
 	}
@@ -199,7 +199,7 @@ func UserSelfUpdateTest(t *testing.T) {
 	}
 
 	// Make sure it got updated
-	resp2, _, err := TOSession.GetUserByID(*user.ID)
+	resp2, _, err := TOSession.GetUserByID(*user.ID, nil)
 	if err != nil {
 		t.Fatalf("cannot GET user by id: '%d', %v\n", *user.ID, err)
 	}
@@ -229,7 +229,7 @@ func UserSelfUpdateTest(t *testing.T) {
 	}
 
 	// Make sure it got updated
-	resp2, _, err = TOSession.GetUserByID(*user.ID)
+	resp2, _, err = TOSession.GetUserByID(*user.ID, nil)
 	if err != nil {
 		t.Fatalf("error getting user #%d: %v", *user.ID, err)
 	}
@@ -259,7 +259,7 @@ func UserSelfUpdateTest(t *testing.T) {
 	}
 
 	// Ensure it wasn't actually updated
-	resp2, _, err = TOSession.GetUserByID(*user.ID)
+	resp2, _, err = TOSession.GetUserByID(*user.ID, nil)
 	if err != nil {
 		t.Fatalf("error getting user #%d: %v", *user.ID, err)
 	}
@@ -276,7 +276,7 @@ func UserSelfUpdateTest(t *testing.T) {
 }
 
 func UserUpdateOwnRoleTest(t *testing.T) {
-	resp, _, err := TOSession.GetUserByUsername(SessionUserName)
+	resp, _, err := TOSession.GetUserByUsername(SessionUserName, nil)
 	if err != nil {
 		t.Errorf("cannot GET user by name: '%s', %v", SessionUserName, err)
 	}
@@ -291,7 +291,7 @@ func UserUpdateOwnRoleTest(t *testing.T) {
 
 func UpdateTestUsers(t *testing.T) {
 	firstUsername := *testData.Users[0].Username
-	resp, _, err := TOSession.GetUserByUsername(firstUsername)
+	resp, _, err := TOSession.GetUserByUsername(firstUsername, nil)
 	if err != nil {
 		t.Errorf("cannot GET user by name: '%s', %v", firstUsername, err)
 	}
@@ -306,7 +306,7 @@ func UpdateTestUsers(t *testing.T) {
 	}
 
 	// Make sure it got updated
-	resp2, _, err := TOSession.GetUserByID(*user.ID)
+	resp2, _, err := TOSession.GetUserByID(*user.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET user by id: '%d', %v", *user.ID, err)
 	}
@@ -317,14 +317,14 @@ func UpdateTestUsers(t *testing.T) {
 }
 
 func GetTestUsers(t *testing.T) {
-	_, _, err := TOSession.GetUsers()
+	_, _, err := TOSession.GetUsers(nil)
 	if err != nil {
 		t.Errorf("cannot GET users: %v", err)
 	}
 }
 
 func GetTestUserCurrent(t *testing.T) {
-	user, _, err := TOSession.GetUserCurrent()
+	user, _, err := TOSession.GetUserCurrent(nil)
 	if err != nil {
 		t.Errorf("cannot GET current user: %v", err)
 	}
@@ -337,7 +337,7 @@ func GetTestUserCurrent(t *testing.T) {
 }
 
 func UserTenancyTest(t *testing.T) {
-	users, _, err := TOSession.GetUsers()
+	users, _, err := TOSession.GetUsers(nil)
 	if err != nil {
 		t.Errorf("cannot GET users: %v", err)
 	}
@@ -369,7 +369,7 @@ func UserTenancyTest(t *testing.T) {
 		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
 	}
 
-	usersReadableByTenant4, _, err := tenant4TOClient.GetUsers()
+	usersReadableByTenant4, _, err := tenant4TOClient.GetUsers(nil)
 	if err != nil {
 		t.Error("tenant4user cannot GET users")
 	}
@@ -442,7 +442,7 @@ func ForceDeleteTestUsers(t *testing.T) {
 func DeleteTestUsers(t *testing.T) {
 	for _, user := range testData.Users {
 
-		resp, _, err := TOSession.GetUserByUsername(*user.Username)
+		resp, _, err := TOSession.GetUserByUsername(*user.Username, nil)
 		if err != nil {
 			t.Errorf("cannot GET user by name: %v - %v", *user.Username, err)
 		}
@@ -456,7 +456,7 @@ func DeleteTestUsers(t *testing.T) {
 			}
 
 			// Make sure it got deleted
-			resp, _, err := TOSession.GetUserByUsername(*user.Username)
+			resp, _, err := TOSession.GetUserByUsername(*user.Username, nil)
 			if err != nil {
 				t.Errorf("error deleting user by name: %s", err.Error())
 			}

@@ -40,7 +40,7 @@ func TestCDNs(t *testing.T) {
 
 func GetTestCDNsIMSAfterChange(t *testing.T, header http.Header) {
 	for _, cdn := range testData.CDNs {
-		_, reqInf, err := TOSession.GetCDNByNameIMS(cdn.Name, header)
+		_, reqInf, err := TOSession.GetCDNByName(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -53,7 +53,7 @@ func GetTestCDNsIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, cdn := range testData.CDNs {
-		_, reqInf, err := TOSession.GetCDNByNameIMS(cdn.Name, header)
+		_, reqInf, err := TOSession.GetCDNByName(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -70,7 +70,7 @@ func GetTestCDNsIMS(t *testing.T) {
 		futureTime := time.Now().AddDate(0,0,1)
 		time := futureTime.Format(time.RFC1123)
 		header.Set(rfc.IfModifiedSince, time)
-		_, reqInf, err := TOSession.GetCDNByNameIMS(cdn.Name, header)
+		_, reqInf, err := TOSession.GetCDNByName(cdn.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -96,7 +96,7 @@ func UpdateTestCDNs(t *testing.T) {
 
 	firstCDN := testData.CDNs[0]
 	// Retrieve the CDN by name so we can get the id for the Update
-	resp, _, err := TOSession.GetCDNByName(firstCDN.Name)
+	resp, _, err := TOSession.GetCDNByName(firstCDN.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
 	}
@@ -110,7 +110,7 @@ func UpdateTestCDNs(t *testing.T) {
 	}
 
 	// Retrieve the CDN to check CDN name got updated
-	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID)
+	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: '$%s', %v", firstCDN.Name, err)
 	}
@@ -124,7 +124,7 @@ func UpdateTestCDNs(t *testing.T) {
 func GetTestCDNs(t *testing.T) {
 
 	for _, cdn := range testData.CDNs {
-		resp, _, err := TOSession.GetCDNByName(cdn.Name)
+		resp, _, err := TOSession.GetCDNByName(cdn.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET CDN by name: %v - %v", err, resp)
 		}
@@ -135,7 +135,7 @@ func DeleteTestCDNs(t *testing.T) {
 
 	for _, cdn := range testData.CDNs {
 		// Retrieve the CDN by name so we can get the id for the Update
-		resp, _, err := TOSession.GetCDNByName(cdn.Name)
+		resp, _, err := TOSession.GetCDNByName(cdn.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET CDN by name: %v - %v", cdn.Name, err)
 		}
@@ -148,7 +148,7 @@ func DeleteTestCDNs(t *testing.T) {
 			}
 
 			// Retrieve the CDN to see if it got deleted
-			cdns, _, err := TOSession.GetCDNByName(cdn.Name)
+			cdns, _, err := TOSession.GetCDNByName(cdn.Name, nil)
 			if err != nil {
 				t.Errorf("error deleting CDN name: %s", err.Error())
 			}
