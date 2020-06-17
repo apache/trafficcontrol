@@ -48,10 +48,19 @@ import (
 	"github.com/lib/pq"
 )
 
+const serversFromAndJoin = `
+FROM server AS s
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id
+`
+
 const serverCountQuery = `
 SELECT COUNT(s.id)
-FROM server AS s
-`
+` + serversFromAndJoin
 
 const selectQuery = `
 SELECT
@@ -91,14 +100,8 @@ SELECT
 	s.upd_pending AS upd_pending,
 	s.xmpp_id,
 	s.xmpp_passwd
-FROM server AS s
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id
-`
+` + serversFromAndJoin
+
 const InterfacesArray = `
 ARRAY ( SELECT (
 		json_build_object (
@@ -710,7 +713,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 			return nil, serverCount, nil, fmt.Errorf("getting server interfaces: %v", err), http.StatusInternalServerError
 		}
 
-		if _, ok := servers[server]; !ok  {
+		if _, ok := servers[server]; !ok {
 			continue
 		}
 
