@@ -79,8 +79,8 @@ func TestGetMonitoringServers(t *testing.T) {
 	}
 
 	for _, interf := range cache.Interfaces {
-		if len(interf.IPAddresses) != 2 {
-			t.Errorf("cache: %v, interface: %v, expected 2 ip addresses, got %v", cache.HostName, interf.Name, len(interf.IPAddresses))
+		if len(interf.IPAddresses) != 4 {
+			t.Errorf("cache: %v, interface: %v, expected 4 ip addresses, got %v", cache.HostName, interf.Name, len(interf.IPAddresses))
 		}
 	}
 
@@ -660,6 +660,7 @@ func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router
 	interfaceRows = interfaceRows.AddRow("none", nil, 1500, false, 0)
 	for _, interf := range cache.Interfaces {
 		interfaceRows = interfaceRows.AddRow(interf.Name, interf.MaxBandwidth, interf.MTU, interf.Monitor, cacheID)
+
 		for _, ip := range interf.IPAddresses {
 			ipAddressRows = ipAddressRows.AddRow(ip.Address, ip.Gateway, ip.ServiceAddress, cacheID, interf.Name)
 			//Create two orphaned records
@@ -707,6 +708,16 @@ func createMockCache() Cache {
 						Gateway:        util.StrPtr("fd53::9"),
 						ServiceAddress: true,
 					},
+					{
+						Address:        "5.6.7.9",
+						Gateway:        util.StrPtr("5.6.7.0/24"),
+						ServiceAddress: false,
+					},
+					{
+						Address:        "2021::4",
+						Gateway:        util.StrPtr("fd53::9"),
+						ServiceAddress: false,
+					},
 				},
 				MaxBandwidth: util.UInt64Ptr(2500),
 				Monitor:      true,
@@ -724,6 +735,16 @@ func createMockCache() Cache {
 						Address:        "2021::4",
 						Gateway:        util.StrPtr("fd54::9"),
 						ServiceAddress: true,
+					},
+					{
+						Address:        "6.6.7.9",
+						Gateway:        util.StrPtr("6.6.7.0/24"),
+						ServiceAddress: false,
+					},
+					{
+						Address:        "2022::4",
+						Gateway:        util.StrPtr("fd53::9"),
+						ServiceAddress: false,
 					},
 				},
 				MaxBandwidth: util.UInt64Ptr(1500),
