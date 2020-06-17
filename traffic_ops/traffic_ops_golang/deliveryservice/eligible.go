@@ -22,12 +22,14 @@ package deliveryservice
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/lib/pq"
 )
@@ -88,9 +90,24 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 const JumboFrameBPS = 9000
 
 func getEligibleServers(tx *sql.Tx, dsID int) ([]tc.DSServer, error) {
-	q := `
+	baseQueryString := `
 WITH ds_id as (SELECT $1::bigint as v)
 SELECT
+s.id
+%s
+FROM server s
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id
+%s`
+	queryWhereClause := `
+WHERE s.cdn_id = (SELECT cdn_id from deliveryservice where id = (select v from ds_id))
+	AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
+`
+	dataFetchQuery := `, 
 cg.name as cachegroup,
 s.cachegroup as cachegroup_id,
 s.cdn_id,
@@ -99,32 +116,11 @@ s.domain_name,
 s.guid,
 s.host_name,
 s.https_port,
-s.id,
 s.ilo_ip_address,
 s.ilo_ip_gateway,
 s.ilo_ip_netmask,
 s.ilo_password,
 s.ilo_username,
-	ARRAY (
-SELECT ( json_build_object (
-'ipAddresses', ARRAY (
-SELECT ( json_build_object (
-'address', ip_address.address,
-'gateway', ip_address.gateway,
-'serviceAddress', ip_address.service_address
-))
-FROM ip_address
-WHERE ip_address.interface = interface.name
-AND ip_address.server = s.id
-),
-'max_bandwidth', interface.max_bandwidth,
-'monitor', interface.monitor,
-'mtu', COALESCE (interface.mtu, 9000),
-'name', interface.name
-))
-FROM interface
-WHERE interface.server = s.id
-) AS interfaces,
 s.last_updated,
 s.mgmt_ip_address,
 s.mgmt_ip_gateway,
@@ -146,17 +142,27 @@ s.type as server_type_id,
 s.upd_pending as upd_pending,
 ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities,
 ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities
-FROM server s
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id
-WHERE s.cdn_id = (SELECT cdn_id from deliveryservice where id = (select v from ds_id))
-AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 `
-	rows, err := tx.Query(q, dsID)
+	idRows, err := tx.Query(fmt.Sprintf(baseQueryString, "", queryWhereClause), dsID)
+	if err != nil {
+		return nil, errors.New("querying delivery service eligible servers: " + err.Error())
+	}
+	defer idRows.Close()
+	var serverIDs []int
+	for idRows.Next() {
+		var serverID *int
+		err := idRows.Scan(&serverID)
+		if err != nil {
+			return nil, errors.New("querying delivery service eligible server ids: " + err.Error())
+		}
+		serverIDs = append(serverIDs, *serverID)
+	}
+	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx)
+	if err != nil {
+		return nil, errors.New("unable to get server interfaces: " + err.Error())
+	}
+
+	rows, err := tx.Query(fmt.Sprintf(baseQueryString, dataFetchQuery, queryWhereClause), dsID)
 	if err != nil {
 		return nil, errors.New("querying delivery service eligible servers: " + err.Error())
 	}
@@ -164,9 +170,9 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 
 	servers := []tc.DSServer{}
 	for rows.Next() {
-		serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 		s := tc.DSServer{}
 		err := rows.Scan(
+			&s.ID,
 			&s.Cachegroup,
 			&s.CachegroupID,
 			&s.CDNID,
@@ -175,13 +181,11 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 			&s.GUID,
 			&s.HostName,
 			&s.HTTPSPort,
-			&s.ID,
 			&s.ILOIPAddress,
 			&s.ILOIPGateway,
 			&s.ILOIPNetmask,
 			&s.ILOPassword,
 			&s.ILOUsername,
-			pq.Array(&serverInterfaceInfo),
 			&s.LastUpdated,
 			&s.MgmtIPAddress,
 			&s.MgmtIPGateway,
@@ -207,7 +211,15 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 		if err != nil {
 			return nil, errors.New("scanning delivery service eligible servers: " + err.Error())
 		}
-		s.ServerInterfaces = &serverInterfaceInfo
+		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}
+		if interfacesMap, ok := serversMap[*s.ID]; ok {
+			for _, interfaceInfo := range interfacesMap {
+				*s.ServerInterfaces = append(*s.ServerInterfaces, interfaceInfo)
+			}
+		}
+		if len(*s.ServerInterfaces) == 0 {
+			return nil, errors.New(fmt.Sprintf("no interfaces found on eligible server"))
+		}
 
 		eligible := true
 
