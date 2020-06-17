@@ -109,6 +109,7 @@ func (to *Session) CreateServer(server tc.ServerNullable) (tc.Alerts, ReqInf, er
 		server.TypeID = &ty[0].ID
 	}
 
+	
 	reqBody, err := json.Marshal(server)
 	if err != nil {
 		return alerts, reqInf, err
