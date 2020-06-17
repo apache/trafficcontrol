@@ -18,4 +18,5 @@
  */
 
 module.exports = angular.module('trafficPortal.table.servers', [])
-    .controller('TableServersController', require('./TableServersController'));
+    .controller('TableServersController', require('./TableServersController'))
+    .controller('TableParentServersController', require('./TableParentServersController'));
