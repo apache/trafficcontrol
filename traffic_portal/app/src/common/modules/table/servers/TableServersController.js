@@ -130,12 +130,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		},
 		{
 			headerName: "IPv6 Address",
-			field: "ipv6Address",
+			field: "ip6Address",
 			hide: false,
 		},
 		{
 			headerName: "IPv6 Gateway",
-			field: "ipv6Gateway",
+			field: "ip6Gateway",
 			hide: true,
 		},
 		{
