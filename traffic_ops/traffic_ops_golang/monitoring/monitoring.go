@@ -187,7 +187,8 @@ SELECT
 	me.ip6_address as ip6,
 	profile.name as profile,
 	type.name as type,
-	me.xmpp_id as hashID
+	me.xmpp_id as hashID,
+    me.id as serverID
 FROM server me
 JOIN type type ON type.id = me.type
 JOIN status status ON status.id = me.status
@@ -291,8 +292,9 @@ AND cdn.name = $3
 		var profile sql.NullString
 		var ttype sql.NullString
 		var hashID sql.NullString
+		var serverID sql.NullInt64
 
-		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &ttype, &hashID); err != nil {
+		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &ttype, &hashID, &serverID); err != nil {
 			return nil, nil, nil, err
 		}
 
@@ -310,6 +312,21 @@ AND cdn.name = $3
 				},
 			})
 		} else if strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID") {
+			key := tc.ServerIPAddressCompoundKey{
+				ServerID: int(serverID.Int64),
+			}
+			cacheInterfaces := []tc.ServerInterfaceInfo{}
+			for _, interf := range interfaces {
+				key.InterfaceName = interf.Name
+				interfaceIndex, found := interfaceIndexByCompoundKey[key]
+				if !found {
+					continue
+				}
+				cacheInterfaces = append(cacheInterfaces, interfaces[interfaceIndex])
+			}
+			if len(cacheInterfaces) == 0 {
+				log.Errorf("cache with hashID: %v, has no interfaces!", hashID.String)
+			}
 			cache := Cache{
 				BasicServer: BasicServer{
 					Profile:    profile.String,
@@ -321,7 +338,7 @@ AND cdn.name = $3
 					HostName:   hostName.String,
 					FQDN:       fqdn.String,
 				},
-				Interfaces: interfaces,
+				Interfaces: cacheInterfaces,
 				Type:       ttype.String,
 				HashID:     hashID.String,
 			}
