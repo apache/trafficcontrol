@@ -38,7 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -548,13 +548,80 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.
 }
 
 func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServer, error) {
-	where := `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
+	queryDataString :=
+		`,
+cg.name as cachegroup,
+s.cachegroup as cachegroup_id,
+s.cdn_id,
+cdn.name as cdn_name,
+s.domain_name,
+s.guid,
+s.host_name,
+s.https_port,
+s.ilo_ip_address,
+s.ilo_ip_gateway,
+s.ilo_ip_netmask,
+s.ilo_password,
+s.ilo_username,
+s.last_updated,
+s.mgmt_ip_address,
+s.mgmt_ip_gateway,
+s.mgmt_ip_netmask,
+s.offline_reason,
+pl.name as phys_location,
+s.phys_location as phys_location_id,
+p.name as profile,
+p.description as profile_desc,
+s.profile as profile_id,
+s.rack,
+s.router_host_name,
+s.router_port_name,
+st.name as status,
+s.status as status_id,
+s.tcp_port,
+t.name as server_type,
+s.type as server_type_id,
+s.upd_pending as upd_pending
+`
+
+	queryFormatString := `
+SELECT
+	s.id
+	%v
+FROM server s
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id `
 	if unassigned {
-		where = `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
+		queryFormatString += `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
+	} else {
+		queryFormatString += `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
 	}
-	query := dssSelectQuery() + where
-	log.Debugln("Query is ", query)
-	rows, err := tx.Queryx(query, dsID)
+
+	idRows, err := tx.Queryx(fmt.Sprintf(queryFormatString, ""), dsID)
+	if err != nil {
+		return nil, errors.New("error querying dss ids: " + err.Error())
+	}
+	var serverIDs []int
+	for idRows.Next() {
+		var serverID int
+		err := idRows.Scan(&serverID)
+		if err != nil {
+			return nil, errors.New("error scanning dss id rows: " + err.Error())
+		}
+
+		serverIDs = append(serverIDs, serverID)
+	}
+
+	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx.Tx)
+	if err != nil {
+		return nil, errors.New("unable to get server interfaces: " + err.Error())
+	}
+
+	rows, err := tx.Queryx(fmt.Sprintf(queryFormatString, queryDataString), dsID)
 	if err != nil {
 		return nil, errors.New("error querying dss rows: " + err.Error())
 	}
@@ -562,9 +629,9 @@ func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.
 
 	servers := []tc.DSServer{}
 	for rows.Next() {
-		serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 		s := tc.DSServer{}
 		err := rows.Scan(
+			&s.ID,
 			&s.Cachegroup,
 			&s.CachegroupID,
 			&s.CDNID,
@@ -573,13 +640,11 @@ func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.
 			&s.GUID,
 			&s.HostName,
 			&s.HTTPSPort,
-			&s.ID,
 			&s.ILOIPAddress,
 			&s.ILOIPGateway,
 			&s.ILOIPNetmask,
 			&s.ILOPassword,
 			&s.ILOUsername,
-			pq.Array(&serverInterfaceInfo),
 			&s.LastUpdated,
 			&s.MgmtIPAddress,
 			&s.MgmtIPGateway,
@@ -603,7 +668,12 @@ func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.
 		if err != nil {
 			return nil, errors.New("error scanning dss rows: " + err.Error())
 		}
-		s.ServerInterfaces = &serverInterfaceInfo
+		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}
+		if interfacesMap, ok := serversMap[*s.ID]; ok {
+			for _, interfaceInfo := range interfacesMap {
+				*s.ServerInterfaces = append(*s.ServerInterfaces, interfaceInfo)
+			}
+		}
 
 		if user.PrivLevel < auth.PrivLevelAdmin {
 			s.ILOPassword = util.StrPtr("")
@@ -611,77 +681,6 @@ func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.
 		servers = append(servers, s)
 	}
 	return servers, nil
-}
-
-func dssSelectQuery() string {
-
-	const JumboFrameBPS = 9000
-
-	// COALESCE is needed to default values that are nil in the database
-	// because Go does not allow that to marshal into the struct
-	selectStmt := `SELECT
-	cg.name as cachegroup,
-	s.cachegroup as cachegroup_id,
-	s.cdn_id,
-	cdn.name as cdn_name,
-	s.domain_name,
-	s.guid,
-	s.host_name,
-	s.https_port,
-	s.id,
-	s.ilo_ip_address,
-	s.ilo_ip_gateway,
-	s.ilo_ip_netmask,
-	s.ilo_password,
-	s.ilo_username,
-	ARRAY (
-SELECT ( json_build_object (
-'ipAddresses', ARRAY (
-SELECT ( json_build_object (
-'address', ip_address.address,
-'gateway', ip_address.gateway,
-'serviceAddress', ip_address.service_address
-))
-FROM ip_address
-WHERE ip_address.interface = interface.name
-AND ip_address.server = s.id
-),
-'max_bandwidth', interface.max_bandwidth,
-'monitor', interface.monitor,
-'mtu', COALESCE (interface.mtu, 9000),
-'name', interface.name
-))
-FROM interface
-WHERE interface.server = s.id
-) AS interfaces,
-	s.last_updated,
-	s.mgmt_ip_address,
-	s.mgmt_ip_gateway,
-	s.mgmt_ip_netmask,
-	s.offline_reason,
-	pl.name as phys_location,
-	s.phys_location as phys_location_id,
-	p.name as profile,
-	p.description as profile_desc,
-	s.profile as profile_id,
-	s.rack,
-	s.router_host_name,
-	s.router_port_name,
-	st.name as status,
-	s.status as status_id,
-	s.tcp_port,
-	t.name as server_type,
-	s.type as server_type_id,
-	s.upd_pending as upd_pending
-	FROM server s
-	JOIN cachegroup cg ON s.cachegroup = cg.id
-	JOIN cdn cdn ON s.cdn_id = cdn.id
-	JOIN phys_location pl ON s.phys_location = pl.id
-	JOIN profile p ON s.profile = p.id
-	JOIN status st ON s.status = st.id
-	JOIN type t ON s.type = t.id `
-
-	return selectStmt
 }
 
 type TODSSDeliveryService struct {
