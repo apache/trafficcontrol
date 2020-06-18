@@ -68,19 +68,18 @@ div.sub-table-indicator {
 	border-width: 0 4px 4px 0;
 	display: inline-block;
 	padding: 5px;
+	cursor: pointer;
 
-	/* for animation */
-	-webkit-transition-duration: 0.4s;
 	transition-duration: 0.4s;
-}
-div.sub-table-indicator.right {
 	transform: rotate(-45deg);
-	-webkit-transform: rotate(-45deg);
+}
+
+div.sub-table-indicator.hidden {
+	display: none;
 }
 
 div.sub-table-indicator.down {
 	transform: rotate(45deg);
-	-webkit-transform: rotate(45deg);
 }
 
 .error {
@@ -98,12 +97,16 @@ div.sub-table-indicator.down {
 	text-align: right;
 }
 
-tr.encompassing-row.hidden {
+tr.encompassing-row {
 	visibility: collapse;
+    opacity: 0;
+
+	transition: opacity 0.30s ease-in;
 }
 
 tr.encompassing-row.visible {
-	visibility: visible;
+    visibility: visible;
+	opacity: 1;
 }
 
 #event-log td:last-child,

@@ -185,7 +185,9 @@ function getCacheStates() {
 
 		// Sort by key (server name) so order doesn't change 'randomly'
 		servers[Symbol.iterator] = function* () {
-			yield *[...this.entries()].sort((serverCoupleA, serverCoupleB) => serverCoupleA[0] < serverCoupleB[0]);
+			yield *[...this.entries()].sort((serverCoupleA, serverCoupleB) => {
+				return serverCoupleA[0] < serverCoupleB[0];
+			});
 		};
 
 		const oldtable = document.getElementById("cache-states");
@@ -226,16 +228,20 @@ function getCacheStates() {
 			cacheRowChildren[13].textContent = server.connection_count || "N/A";
 			table.prepend(row);
 
+			const encompassingRow = table.insertRow(1);
+			encompassingRow.classList.add("encompassing-row");
+			const encompassingCell = encompassingRow.insertCell(0);
+			const interfaceTable = interfaceTableTemplate.cloneNode(true);
+			encompassingCell.colSpan = 14;
 			// Add interfaces
 			if (Object.prototype.hasOwnProperty.call(server, "interfaces")) {
 				server.interfaces = new Map(Object.entries(server.interfaces));
 				// Sort by key (interface name) so order doesn't change 'randomly'
 				server.interfaces[Symbol.iterator] = function*() {
-					yield *[...this.entries()].sort((interfaceA, interfaceB) => {
+					yield *[...this.entries()].sort(function (interfaceA, interfaceB) {
 						return interfaceA < interfaceB;
 					});
 				};
-				const interfaceTable = interfaceTableTemplate.cloneNode(true);
 				interfaceTable.removeAttribute("id");
 				// To determine what cache this interface table belongs to
 				// used to ensure servers that were expanded remain expanded when refreshing the data.
@@ -256,31 +262,25 @@ function getCacheStates() {
 
 					interfaceBody.prepend(interfaceRow);
 				}
-				const encompassingRow = table.insertRow(1);
-				encompassingRow.classList.add("encompassing-row");
-				const encompassingCell = encompassingRow.insertCell(0);
-				encompassingCell.appendChild(interfaceTable);
-				encompassingCell.colSpan = 14;
 				row.onclick = function() {
-					if(encompassingRow.classList.contains("hidden")) {
-						encompassingRow.classList.remove("hidden");
-						encompassingRow.classList.add("visible");
-						indicatorDiv.classList.remove("right");
-						indicatorDiv.classList.add("down");
-					}
-					else {
-						encompassingRow.classList.add("hidden");
+					if(encompassingRow.classList.contains("visible")) {
 						encompassingRow.classList.remove("visible");
-						indicatorDiv.classList.add("right");
 						indicatorDiv.classList.remove("down");
 					}
+					else {
+						encompassingRow.classList.add("visible");
+						indicatorDiv.classList.add("down");
+					}
 				};
+			}
+			else {
+				indicatorDiv.classList.add("hidden");
+			}
 
-				// Hide row by default
+			encompassingCell.appendChild(interfaceTable);
+			// Row was unhidden previously
+			if(openCachesByName.indexOf(serverName) > -1) {
 				row.click();
-				if(openCachesByName.indexOf(serverName) > -1) {
-					row.click();
-				}
 			}
 		}
 
