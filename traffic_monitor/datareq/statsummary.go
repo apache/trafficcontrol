@@ -31,8 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 type StatSummary struct {
@@ -70,8 +69,12 @@ func createStatSummary(statResultHistory threadsafe.ResultStatHistory, filter ca
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 	}
 
-	statResultHistory.Range(func(cacheName tc.CacheName, stats threadsafe.ResultStatValHistory) bool {
+	statResultHistory.Range(func(cacheName tc.CacheName, interf string, stats threadsafe.ResultStatValHistory) bool {
 		if !filter.UseCache(cacheName) {
+			return true
+		}
+		// for now only look at aggregate stats
+		if interf != tc.CacheInterfacesAggregate {
 			return true
 		}
 		ssStats := map[string]StatSummaryStat{}

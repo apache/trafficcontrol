@@ -129,6 +129,20 @@ func (result *Result) HasStat(stat string) bool {
 	return false
 }
 
+// Returns the names of all interfaces including the aggregate
+func (result *Result) InterfacesNames() []string {
+	interfaceNames := []string{tc.CacheInterfacesAggregate}
+	for name, _ := range result.Statistics.Interfaces {
+		interfaceNames = append(interfaceNames, name)
+	}
+	return interfaceNames
+}
+
+// Returns the interfaces assigned to this result
+func (result *Result) Interfaces() map[string]Interface {
+	return result.Statistics.Interfaces
+}
+
 // Vitals is the vitals data returned from a cache.
 type Vitals struct {
 	// LoadAvg is the one-minute "loadavg" of the cache server.
@@ -148,7 +162,7 @@ type Stat struct {
 // Stats is designed for returning via the API. It contains result history for each cache, as well as common API data.
 type Stats struct {
 	srvhttp.CommonAPIData
-	Caches map[tc.CacheName]map[string][]ResultStatVal `json:"caches"`
+	Caches map[tc.CacheName]map[string]map[string][]ResultStatVal `json:"caches"`
 }
 
 // Filter filters whether stats and caches should be returned from a data set.
@@ -168,7 +182,6 @@ func ComputedStats() map[string]StatComputeFunc {
 		"availableBandwidthInKbps": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut
 		},
-
 		"availableBandwidthInMbps": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return (info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut) / 1000
 		},
