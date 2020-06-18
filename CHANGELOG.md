@@ -80,6 +80,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - The `/servers` and `/servers/{{ID}}}` TO API endpoints have been updated to use and reflect multi-interface servers.
     - Updated `/cdns/{{name}}/configs/monitoring` TO API endpoint to return multi-interface data.
     - CDN Snapshots now use a server's "service addresses" to provide its IP addresses.
+    - Changed the `Cache States` tab of the Traffic Monitor UI to properly handle multiple interfaces.
     - Changed the `/publish/CacheStats` in Traffic Monitor to support multiple interfaces.
     - Changed the CDN-in-a-Box server enrollment template to support multiple interfaces.
 
