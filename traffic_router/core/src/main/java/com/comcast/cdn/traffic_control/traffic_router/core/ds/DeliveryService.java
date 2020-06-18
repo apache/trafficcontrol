@@ -76,6 +76,8 @@ public class DeliveryService {
 	@JsonIgnore
 	private final String domain;
 	@JsonIgnore
+	private final String tld;
+	@JsonIgnore
 	private final JsonNode bypassDestination;
 	@JsonIgnore
 	private final JsonNode soa;
@@ -131,6 +133,7 @@ public class DeliveryService {
 		this.bypassDestination = dsJo.get("bypassDestination");
 		this.routingName = JsonUtils.getString(dsJo, "routingName").toLowerCase();
 		this.domain = getDomainFromJson(dsJo.get("domains"));
+		this.tld = this.domain.replaceAll("^.*?\\.", "");
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
 		this.ecsEnabled = JsonUtils.optBoolean(dsJo, "ecsEnabled");
@@ -376,6 +379,16 @@ public class DeliveryService {
 		uri.append(getPortString(request, cache));
 		uri.append(alternatePath);
 		return uri.toString();
+	}
+
+	public String getRemap(final String pattern) {
+		if (!pattern.contains(".*")) {
+			return pattern;
+		}
+		final String host = pattern.replaceAll("^\\(\\.\\*\\\\\\.\\|\\^\\)|^\\.\\*\\\\\\.|\\\\\\.\\.\\*", "") + "." + tld;
+		return this.isDns()
+				? this.getId() + "." + host
+				: host;
 	}
 
 	private String getFQDN(final Cache cache) {

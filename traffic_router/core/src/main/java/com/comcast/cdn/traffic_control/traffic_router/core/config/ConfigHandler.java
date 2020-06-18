@@ -416,17 +416,9 @@ public class ConfigHandler {
 									}
 
 									final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name");
-
-									if (name.endsWith(tld)) {
-										final String reName = name.replaceAll("^.*?\\.", "");
-
-										if (!dsNames.contains(reName)) {
-											dsNames.add(reName);
-										}
-									} else {
-										if (!dsNames.contains(name)) {
-											dsNames.add(name);
-										}
+									final String dsName = getDsName( name, tld);
+									if (!dsNames.contains(dsName)) {
+										dsNames.add(dsName);
 									}
 
 									i++;
@@ -481,8 +473,16 @@ public class ConfigHandler {
 		return deliveryServiceMap;
 	}
 
+	private String getDsName(final String name, final String tld) {
+	    return name.endsWith(tld)
+				? name.replaceAll("^.*?\\.", "")
+				: name;
+	}
+
 	private void parseTopologyConfig(final JsonNode allTopologies, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) {
 		final Map<String, List<String>> topologyMap = new HashMap<>();
+		final Map<String, List<String>> statMap = new HashMap<>();
+		final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name");
 		allTopologies.fieldNames().forEachRemaining((String topologyName) -> {
 			final List<String> nodes = new ArrayList<>();
 			allTopologies.get(topologyName).get("nodes").forEach((JsonNode cache) -> nodes.add(cache.textValue()));
@@ -491,21 +491,36 @@ public class ConfigHandler {
 
 		deliveryServiceMap.forEach((xmlId, ds) -> {
 			final List<DeliveryServiceReference> dsReferences = new ArrayList<>();
+			final List<String> dsNames = new ArrayList<>(); // for stats
 			Stream.of(ds.getTopology())
 					.filter(topologyName -> !Objects.isNull(topologyName) && topologyMap.containsKey(topologyName))
-					.flatMap(topologyName -> topologyMap.get(topologyName).stream())
+					.flatMap(topologyName -> {
+						statMap.put(ds.getId(), dsNames);
+						return topologyMap.get(topologyName).stream();
+					})
 					.flatMap(node -> cacheRegister.getCacheLocation(node).getCaches().stream())
 					.filter(cache -> ds.hasRequiredCapabilities(cache.getCapabilities()))
 					.forEach(cache -> {
+					    cacheRegister.getDeliveryServiceMatchers(ds).stream()
+								.flatMap(deliveryServiceMatcher -> deliveryServiceMatcher.getRequestMatchers().stream())
+								.map(requestMatcher -> requestMatcher.getPattern().pattern())
+								.forEach(pattern -> {
+									final String remap = ds.getRemap(pattern);
+									final String fqdn = pattern.contains(".*") && !ds.isDns()
+											? cache.getId() + "." + remap
+											: remap;
+									dsNames.add(getDsName(fqdn, tld));
+									try {
+										dsReferences.add(new DeliveryServiceReference(ds.getId(), fqdn));
+									} catch (ParseException e) {
+										LOGGER.error("Unable to create a DeliveryServiceReference from DeliveryService '" + ds.getId() + "'", e);
+									}
+								});
 						cache.setDeliveryServices(dsReferences);
-						try {
-							dsReferences.add(new DeliveryServiceReference(ds.getId(), cache.getId() + "." + ds.getDomain()));
-							cache.setDeliveryServices(dsReferences);
-						} catch (ParseException e) {
-							LOGGER.error("Unable to create a DeliveryServiceReference from DeliveryService '" + ds.getId() + "'", e);
-						}
 					});
+
 		});
+		statTracker.initialize(statMap, cacheRegister);
 	}
 
 	private void parseDeliveryServiceMatchSets(final JsonNode allDeliveryServices, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) throws JsonUtilsException {
