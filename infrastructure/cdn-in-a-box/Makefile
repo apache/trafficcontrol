@@ -51,7 +51,7 @@ TP_SOURCE := $(wildcard ../../traffic_portal/**/*)
 TR_SOURCE := $(wildcard ../../traffic_router/**/*)
 TS_SOURCE := $(wildcard ../../traffic_stats/**/*)
 
-.PHONY: clean very-clean all nearly-all debug
+.PHONY: clean very-clean all nearly-all debug native
 
 # Default target; builds all pre-requisite rpms from source trees
 all: cache/traffic_ops_ort.rpm traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_ops/traffic_ops.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm traffic_stats/traffic_stats.rpm
