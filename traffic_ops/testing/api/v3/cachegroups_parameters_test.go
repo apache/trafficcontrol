@@ -45,7 +45,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 	// Get Parameter to assign to Cache Group
 	firstParameter := testData.Parameters[0]
-	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}

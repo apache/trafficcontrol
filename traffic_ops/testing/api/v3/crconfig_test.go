@@ -51,7 +51,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 
 	// create an ANY_MAP DS assignment to verify that it doesn't show up in the CRConfig
-	resp, _, err := TOSession.GetServers(nil)
+	resp, _, err := TOSession.GetServers(nil, nil)
 	if err != nil {
 		t.Fatalf("GetServers err expected nil, actual %+v", err)
 	}
@@ -125,7 +125,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Errorf("GetCRConfig crc.Stats.Path expected: '"+tmURLExpected+"', actual: %+v", *crc.Stats.TMHost)
 	}
 
-	paramResp, _, err := TOSession.GetParameterByName(tmURLParamName)
+	paramResp, _, err := TOSession.GetParameterByName(tmURLParamName, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Parameter by name: %v - %v", tmURLParamName, err)
 	}

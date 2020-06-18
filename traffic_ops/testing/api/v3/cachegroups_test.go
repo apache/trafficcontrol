@@ -232,7 +232,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg.ShortName = &expectedShortName
 
 	// fix the type id for test
-	typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID)
+	typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID, nil)
 	if err != nil {
 		t.Error("could not lookup a typeID for this cachegroup")
 	}

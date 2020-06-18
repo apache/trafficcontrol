@@ -106,9 +106,9 @@ func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, er
 }
 func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from server_capability sc ` + where + orderBy + pagination +
+		SELECT max(sc.last_updated) as t from server_capability sc ` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='server_capability') as res`
+	select max(l.last_updated) as t from last_deleted l where l.table_name='server_capability') as res`
 }
 
 func (v *TOServerCapability) Create() (error, error, int) { return api.GenericCreateNameBasedID(v) }

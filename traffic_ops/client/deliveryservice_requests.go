@@ -58,7 +58,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	}
 
 	if dsr.DeliveryService.TypeID == 0 && dsr.DeliveryService.Type.String() != "" {
-		ty, reqInf, err := to.GetTypeByName(dsr.DeliveryService.Type.String())
+		ty, reqInf, err := to.GetTypeByName(dsr.DeliveryService.Type.String(), nil)
 		if err != nil || len(ty) == 0 {
 			return alerts, reqInf, errors.New("no type named " + dsr.DeliveryService.Type.String())
 		}
@@ -74,7 +74,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	}
 
 	if dsr.DeliveryService.ProfileID == 0 && dsr.DeliveryService.ProfileName != "" {
-		profiles, reqInf, err := to.GetProfileByName(dsr.DeliveryService.ProfileName)
+		profiles, reqInf, err := to.GetProfileByName(dsr.DeliveryService.ProfileName, nil)
 		if err != nil || len(profiles) == 0 {
 			return alerts, reqInf, errors.New("no Profile named " + dsr.DeliveryService.ProfileName)
 		}
@@ -82,7 +82,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	}
 
 	if dsr.DeliveryService.TenantID == 0 && dsr.DeliveryService.Tenant != "" {
-		ten, reqInf, err := to.TenantByName(dsr.DeliveryService.Tenant)
+		ten, reqInf, err := to.TenantByName(dsr.DeliveryService.Tenant, nil)
 		if err != nil || ten == nil {
 			return alerts, reqInf, errors.New("no Tenant named " + dsr.DeliveryService.Tenant)
 		}

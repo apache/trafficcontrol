@@ -146,7 +146,8 @@ func TryIfModifiedSinceQuery(val GenericReader, h http.Header, where string, ord
 		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
 		return runSecond, max
 	}
-	query := val.SelectMaxLastUpdatedQuery(where, orderBy, pagination, val.GetType())
+	// ToDo: Remove orderBy, pagination from all the implementations, and eventually remove it from the function definition
+	query := val.SelectMaxLastUpdatedQuery(where, "", "", val.GetType())
 	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Warnf("Couldn't get the max last updated time: %v", err)

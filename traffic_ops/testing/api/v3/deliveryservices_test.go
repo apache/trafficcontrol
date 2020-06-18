@@ -408,7 +408,7 @@ func GetAccessibleToTest(t *testing.T) {
 	}
 
 	//First and only child tenant, no access to root
-	childTenant, _, err := TOSession.TenantByName("tenant1")
+	childTenant, _, err := TOSession.TenantByName("tenant1", nil)
 	if err != nil {
 		t.Fatal("unable to get tenant " + err.Error())
 	}
@@ -466,7 +466,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 	}
 
 	// clean up parameter created in CreateTestDeliveryServices()
-	params, _, err := TOSession.GetParameterByNameAndConfigFile("location", "remap.config")
+	params, _, err := TOSession.GetParameterByNameAndConfigFile("location", "remap.config", nil)
 	for _, param := range params {
 		deleted, _, err := TOSession.DeleteParameterByID(param.ID)
 		if err != nil {

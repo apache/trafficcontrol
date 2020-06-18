@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"net/url"
 	"strconv"
 
@@ -56,7 +57,7 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 
 // GetServerServerCapabilities retrieves a list of Server Capabilities that are assigned to a Server
 // Callers can filter the results by server id, server host name and/or server capability via the optional parameters
-func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string) ([]tc.ServerServerCapability, ReqInf, error) {
+func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string, header http.Header) ([]tc.ServerServerCapability, ReqInf, error) {
 	v := url.Values{}
 	if serverID != nil {
 		v.Add("serverId", strconv.Itoa(*serverID))
@@ -75,7 +76,7 @@ func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, se
 	resp := struct {
 		Response []tc.ServerServerCapability `json:"response"`
 	}{}
-	reqInf, err := get(to, queryURL, &resp, nil)
+	reqInf, err := get(to, queryURL, &resp, header)
 	if err != nil {
 		return nil, reqInf, err
 	}

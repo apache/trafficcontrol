@@ -96,10 +96,16 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 }
 
 // GetParametersByProfileName gets all of the Parameters assigned to the Profile named 'profileName'.
-func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Parameter, ReqInf, error) {
+func (to *Session) GetParametersByProfileName(profileName string, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	url := fmt.Sprintf(API_PROFILES_NAME_PARAMETERS, profileName)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Parameter{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -114,11 +120,17 @@ func (to *Session) GetParametersByProfileName(profileName string) ([]tc.Paramete
 }
 
 // GetProfiles returns a list of Profiles.
-func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
+func (to *Session) GetProfiles(header http.Header) ([]tc.Profile, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
-	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILES, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILES, nil, header)
 	reqInf.RemoteAddr = remoteAddr
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Profile{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -131,10 +143,16 @@ func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 }
 
 // GetProfileByID GETs a Profile by the Profile ID.
-func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
+func (to *Session) GetProfileByID(id int, header http.Header) ([]tc.Profile, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_PROFILES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Profile{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -147,10 +165,16 @@ func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
 }
 
 // GetProfileByName GETs a Profile by the Profile name.
-func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
+func (to *Session) GetProfileByName(name string, header http.Header) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?name=%s", API_PROFILES, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Profile{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -163,10 +187,16 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
 }
 
 // GetProfileByParameter GETs a Profile by the Profile "param".
-func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, error) {
+func (to *Session) GetProfileByParameter(param string, header http.Header) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?param=%s", API_PROFILES, url.QueryEscape(param))
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Profile{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -179,10 +209,16 @@ func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, er
 }
 
 // GetProfileByCDNID GETs a Profile by the Profile CDN ID.
-func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
+func (to *Session) GetProfileByCDNID(cdnID int, header http.Header) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?cdn=%s", API_PROFILES, strconv.Itoa(cdnID))
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Profile{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

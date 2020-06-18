@@ -33,6 +33,7 @@ import (
 )
 
 func GetAll(w http.ResponseWriter, r *http.Request) {
+	var maxTime *time.Time
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -55,8 +56,13 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 
 	if cdnParam, ok := inf.Params["cdnName"]; ok {
 		cdnName := tc.CDNName(cdnParam)
-		feds, err, code = getAllFederationsForCDN(inf.Tx.Tx, cdnName, useIMS, r.Header)
+		feds, err, code, maxTime = getAllFederationsForCDN(inf.Tx.Tx, cdnName, useIMS, r.Header)
 		if code == http.StatusNotModified {
+			if maxTime != nil {
+				// RFC1123
+				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+				w.Header().Add(rfc.LastModified, date)
+			}
 			w.WriteHeader(code)
 			api.WriteResp(w, r, tc.AllFederationCDN{})
 			return
@@ -67,8 +73,13 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		}
 		allFederations = append(allFederations, tc.AllFederationCDN{CDNName: &cdnName})
 	} else {
-		feds, err, code = getAllFederations(inf.Tx.Tx, useIMS, r.Header)
+		feds, err, code, maxTime = getAllFederations(inf.Tx.Tx, useIMS, r.Header)
 		if code == http.StatusNotModified {
+			if maxTime != nil {
+				// RFC1123
+				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+				w.Header().Add(rfc.LastModified, date)
+			}
 			w.WriteHeader(code)
 			api.WriteResp(w, r, tc.AllFederationCDN{})
 			return
@@ -79,8 +90,13 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fedsResolvers, err, code := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds), useIMS, r.Header)
+	fedsResolvers, err, code, maxTime := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds), useIMS, r.Header)
 	if code == http.StatusNotModified {
+		if maxTime != nil {
+			// RFC1123
+			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			w.Header().Add(rfc.LastModified, date)
+		}
 		w.WriteHeader(code)
 		api.WriteResp(w, r, []tc.IAllFederation{})
 		return
@@ -94,7 +110,9 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, allFederations)
 }
 
-func getAllFederations(tx *sql.Tx, useIMS bool, header http.Header) ([]FedInfo, error, int) {
+func getAllFederations(tx *sql.Tx, useIMS bool, header http.Header) ([]FedInfo, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
 	qry := `
 SELECT
   fds.federation,
@@ -117,10 +135,10 @@ ORDER BY
 	select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
 
 	if useIMS {
-		runSecond, _ := tryIfModifiedSinceQuery(header, tx, "", imsQuery)
+		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, "", imsQuery)
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []FedInfo{}, nil, http.StatusNotModified
+			return []FedInfo{}, nil, http.StatusNotModified, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -129,7 +147,7 @@ ORDER BY
 
 	rows, err := tx.Query(qry)
 	if err != nil {
-		return nil, errors.New("all federations querying: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("all federations querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -137,14 +155,16 @@ ORDER BY
 	for rows.Next() {
 		f := FedInfo{}
 		if err := rows.Scan(&f.ID, &f.TTL, &f.CName, &f.DS); err != nil {
-			return nil, errors.New("all federations scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, errors.New("all federations scanning: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		feds = append(feds, f)
 	}
-	return feds, nil, http.StatusOK
+	return feds, nil, http.StatusOK, &maxTime
 }
 
-func getAllFederationsForCDN(tx *sql.Tx, cdn tc.CDNName, useIMS bool, header http.Header) ([]FedInfo, error, int) {
+func getAllFederationsForCDN(tx *sql.Tx, cdn tc.CDNName, useIMS bool, header http.Header) ([]FedInfo, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
 	qry := `
 SELECT
   fds.federation,
@@ -172,10 +192,10 @@ ORDER BY
 	select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
 
 	if useIMS {
-		runSecond, _ := tryIfModifiedSinceQuery(header, tx, string(cdn), imsQuery)
+		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, string(cdn), imsQuery)
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return []FedInfo{}, nil, http.StatusNotModified
+			return []FedInfo{}, nil, http.StatusNotModified, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -184,7 +204,7 @@ ORDER BY
 
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
-		return nil, errors.New("all federations for cdn querying: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("all federations for cdn querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -192,11 +212,11 @@ ORDER BY
 	for rows.Next() {
 		f := FedInfo{}
 		if err := rows.Scan(&f.ID, &f.TTL, &f.CName, &f.DS); err != nil {
-			return nil, errors.New("all federations for cdn scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, errors.New("all federations for cdn scanning: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		feds = append(feds, f)
 	}
-	return feds, nil, http.StatusOK
+	return feds, nil, http.StatusOK, &maxTime
 }
 
 func tryIfModifiedSinceQuery(header http.Header, tx *sql.Tx, param string, imsQuery string) (bool, time.Time) {

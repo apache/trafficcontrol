@@ -16,16 +16,85 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"net/url"
 	"testing"
+	"time"
 )
 
 func TestServers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Topologies, DeliveryServices, Servers}, func() {
+		GetTestServersIMS(t)
+		currentTime := time.Now().Add(-1 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestServers(t)
 		GetTestServersDetails(t)
 		GetTestServers(t)
+		GetTestServersIMSAfterChange(t, header)
 	})
+}
+
+func GetTestServersIMSAfterChange(t *testing.T, header http.Header) {
+	params := url.Values{}
+	for _, server := range testData.Servers {
+		if server.HostName == nil {
+			t.Errorf("found server with nil hostname: %+v", server)
+			continue
+		}
+		params.Set("hostName", *server.HostName)
+		_, reqInf, err := TOSession.GetServers(&params, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, server := range testData.Servers {
+		if server.HostName == nil {
+			t.Errorf("found server with nil hostname: %+v", server)
+			continue
+		}
+		params.Set("hostName", *server.HostName)
+		_, reqInf, err := TOSession.GetServers(&params, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestServersIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	params := url.Values{}
+	for _, server := range testData.Servers {
+		if server.HostName == nil {
+			t.Errorf("found server with nil hostname: %+v", server)
+			continue
+		}
+		params.Set("hostName", *server.HostName)
+		_, reqInf, err := TOSession.GetServers(&params, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestServers(t *testing.T) {
@@ -52,7 +121,7 @@ func GetTestServers(t *testing.T) {
 			continue
 		}
 		params.Set("hostName", *server.HostName)
-		resp, _, err := TOSession.GetServers(&params)
+		resp, _, err := TOSession.GetServers(&params, nil)
 		if err != nil {
 			t.Errorf("cannot GET Server by name '%s': %v - %v", *server.HostName, err, resp.Alerts)
 		} else if resp.Summary.Count != 1 {
@@ -68,7 +137,7 @@ func GetTestServersDetails(t *testing.T) {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
-		resp, _, err := TOSession.GetServerDetailsByHostName(*server.HostName)
+		resp, _, err := TOSession.GetServerDetailsByHostName(*server.HostName, nil)
 		if err != nil {
 			t.Errorf("cannot GET Server Details by name: %v - %v", err, resp)
 		}
@@ -90,7 +159,7 @@ func UpdateTestServers(t *testing.T) {
 	params.Add("hostName", hostName)
 
 	// Retrieve the server by hostname so we can get the id for the Update
-	resp, _, err := TOSession.GetServers(&params)
+	resp, _, err := TOSession.GetServers(&params, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
 	}
@@ -128,7 +197,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Retrieve the server to check rack and interfaceName values were updated
-	resp, _, err = TOSession.GetServers(&params)
+	resp, _, err = TOSession.GetServers(&params, nil)
 	if err != nil {
 		t.Errorf("cannot GET Server by ID: %v - %v", remoteServer.HostName, err)
 	}
@@ -173,7 +242,7 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test invalid type server update")
 	}
 
-	serverTypes, _, err := TOSession.GetTypes("server")
+	serverTypes, _, err := TOSession.GetTypes(nil, "server")
 	if err != nil {
 		t.Fatalf("cannot GET Server Types: %v", err)
 	}
@@ -214,7 +283,7 @@ func DeleteTestServers(t *testing.T) {
 
 		params.Set("hostName", *server.HostName)
 
-		resp, _, err := TOSession.GetServers(&params)
+		resp, _, err := TOSession.GetServers(&params, nil)
 		if err != nil {
 			t.Errorf("cannot GET Server by hostname '%s': %v - %v", *server.HostName, err, resp.Alerts)
 			continue
@@ -238,7 +307,7 @@ func DeleteTestServers(t *testing.T) {
 			}
 
 			// Retrieve the Server to see if it got deleted
-			resp, _, err := TOSession.GetServers(&params)
+			resp, _, err := TOSession.GetServers(&params, nil)
 			if err != nil {
 				t.Errorf("error deleting Server hostname '%s': %v - %v", *server.HostName, err, resp.Alerts)
 			}

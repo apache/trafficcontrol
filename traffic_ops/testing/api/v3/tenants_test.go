@@ -52,7 +52,7 @@ func CreateTestTenants(t *testing.T) {
 }
 
 func GetTestTenants(t *testing.T) {
-	resp, _, err := TOSession.Tenants()
+	resp, _, err := TOSession.Tenants(nil)
 	if err != nil {
 		t.Errorf("cannot GET all tenants: %v - %v", err, resp)
 		return
@@ -83,12 +83,12 @@ func UpdateTestTenants(t *testing.T) {
 	// Retrieve the Tenant by name so we can get the id for the Update
 	name := "tenant2"
 	parentName := "tenant1"
-	modTenant, _, err := TOSession.TenantByName(name)
+	modTenant, _, err := TOSession.TenantByName(name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
 	}
 
-	newParent, _, err := TOSession.TenantByName(parentName)
+	newParent, _, err := TOSession.TenantByName(parentName, nil)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
 	}
@@ -100,7 +100,7 @@ func UpdateTestTenants(t *testing.T) {
 	}
 
 	// Retrieve the Tenant to check Tenant parent name got updated
-	respTenant, _, err := TOSession.Tenant(strconv.Itoa(modTenant.ID))
+	respTenant, _, err := TOSession.Tenant(strconv.Itoa(modTenant.ID), nil)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %v - %v", name, err)
 	}
@@ -113,7 +113,7 @@ func UpdateTestTenants(t *testing.T) {
 func DeleteTestTenants(t *testing.T) {
 
 	t1 := "tenant1"
-	tenant1, _, err := TOSession.TenantByName(t1)
+	tenant1, _, err := TOSession.TenantByName(t1, nil)
 
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %v - %v", t1, err)
@@ -147,7 +147,7 @@ func DeleteTestTenants(t *testing.T) {
 				continue
 			}
 
-			toTenant, _, err := TOSession.TenantByName(tn.Name)
+			toTenant, _, err := TOSession.TenantByName(tn.Name, nil)
 			if err != nil {
 				t.Fatalf("getting tenant %s: %v", tn.Name, err)
 			}
@@ -174,7 +174,7 @@ func ExtractXMLID(ds *tc.DeliveryServiceNullable) string {
 }
 
 func UpdateTestTenantsActive(t *testing.T) {
-	originalTenants, _, err := TOSession.Tenants()
+	originalTenants, _, err := TOSession.Tenants(nil)
 	if err != nil {
 		t.Fatalf("getting tenants error expected: nil, actual: %+v", err)
 	}
@@ -275,7 +275,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 }
 
 func setTenantActive(t *testing.T, name string, active bool) {
-	tn, _, err := TOSession.TenantByName(name)
+	tn, _, err := TOSession.TenantByName(name, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Tenant by name: %s - %v", name, err)
 	}

@@ -491,8 +491,8 @@ RETURNING t.name, t.description, t.last_updated
 }
 
 func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
-	return `SELECT max(t) from (
-		SELECT max(tp.last_updated) as t from topology tp JOIN topology_cachegroup tc on tp.name = tc.topology` + where + orderBy + pagination +
+	return `SELECT max(ti) from (
+		SELECT max(t.last_updated) as ti from topology t JOIN topology_cachegroup tc on t.name = tc.topology` + where + orderBy + pagination +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='topology') as res`
+	select max(last_updated) as ti from last_deleted l where l.table_name='topology') as res`
 }

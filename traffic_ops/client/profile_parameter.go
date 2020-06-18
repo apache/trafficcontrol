@@ -69,9 +69,15 @@ func (to *Session) CreateMultipleProfileParameters(pps []tc.ProfileParameter) (t
 }
 
 // Returns a list of Profile Parameters
-func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILE_PARAMETERS, nil, nil)
+func (to *Session) GetProfileParameters(header http.Header) ([]tc.ProfileParameter, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILE_PARAMETERS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.ProfileParameter{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -83,10 +89,16 @@ func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error)
 }
 
 // GET a Profile Parameter by the Parameter
-func (to *Session) GetProfileParameterByQueryParams(queryParams string) ([]tc.ProfileParameter, ReqInf, error) {
+func (to *Session) GetProfileParameterByQueryParams(queryParams string, header http.Header) ([]tc.ProfileParameter, ReqInf, error) {
 	URI := API_PROFILE_PARAMETERS + queryParams
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.ProfileParameter{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

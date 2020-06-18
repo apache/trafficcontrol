@@ -151,7 +151,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 			t.Fatal("testData Federation Resolver has nil Type")
 		}
 
-		tid, _, err := TOSession.GetTypeByName(*fr.Type)
+		tid, _, err := TOSession.GetTypeByName(*fr.Type, nil)
 		if err != nil {
 			t.Fatalf("Couldn't get an ID for type %s", *fr.Type)
 		}

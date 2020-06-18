@@ -181,7 +181,7 @@ func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string, header http.H
 // CreateDeliveryServiceNullable creates the DeliveryService it's passed.
 func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable) (*tc.CreateDeliveryServiceNullableResponse, error) {
 	if ds.TypeID == nil && ds.Type != nil {
-		ty, _, err := to.GetTypeByName(ds.Type.String())
+		ty, _, err := to.GetTypeByName(ds.Type.String(), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +203,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
-		profiles, _, err := to.GetProfileByName(*ds.ProfileName)
+		profiles, _, err := to.GetProfileByName(*ds.ProfileName, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -214,7 +214,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {
-		ten, _, err := to.TenantByName(*ds.Tenant)
+		ten, _, err := to.TenantByName(*ds.Tenant, nil)
 		if err != nil {
 			return nil, err
 		}

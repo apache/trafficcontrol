@@ -97,7 +97,7 @@ func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf,
 // CreateUser creates a user
 func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
-		tenant, _, err := to.TenantByName(*user.Tenant)
+		tenant, _, err := to.TenantByName(*user.Tenant, nil)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
@@ -111,7 +111,7 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 	}
 
 	if user.RoleName != nil && *user.RoleName != "" {
-		roles, _, _, err := to.GetRoleByName(*user.RoleName)
+		roles, _, _, err := to.GetRoleByName(*user.RoleName, nil)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}

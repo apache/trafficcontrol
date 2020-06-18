@@ -52,8 +52,8 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 }
 
 // GetTopologies returns all topologies.
-func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, ApiTopologies, nil, nil)
+func (to *Session) GetTopologies(header http.Header) ([]tc.Topology, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, ApiTopologies, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
@@ -72,9 +72,9 @@ func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
 }
 
 // GetTopology returns the given topology by name.
-func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
+func (to *Session) GetTopology(name string, header http.Header) (*tc.Topology, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode

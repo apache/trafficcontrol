@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net"
 	"net/http"
@@ -481,6 +482,7 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 }
 
 func Read(w http.ResponseWriter, r *http.Request) {
+	var maxTime *time.Time
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -506,8 +508,17 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 
-	servers, serverCount, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
-
+	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
+	if maxTime != nil {
+		// RFC1123
+		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+		w.Header().Add(rfc.LastModified, date)
+	}
+	if errCode == http.StatusNotModified {
+		w.WriteHeader(errCode)
+		api.WriteResp(w, r, []tc.ServerNullableV2{})
+		return
+	}
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

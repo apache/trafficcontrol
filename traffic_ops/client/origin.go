@@ -54,7 +54,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {
-		profiles, _, err := to.GetProfileByName(*origin.Profile)
+		profiles, _, err := to.GetProfileByName(*origin.Profile, nil)
 		if err != nil {
 			return err
 		}
@@ -76,7 +76,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.TenantID == nil && origin.Tenant != nil {
-		tenant, _, err := to.TenantByName(*origin.Tenant)
+		tenant, _, err := to.TenantByName(*origin.Tenant, nil)
 		if err != nil {
 			return err
 		}

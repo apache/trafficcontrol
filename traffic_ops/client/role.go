@@ -73,9 +73,15 @@ func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, in
 }
 
 // GetRoles returns a list of roles.
-func (to *Session) GetRoles() ([]tc.Role, ReqInf, int, error) {
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodGet, API_ROLES, nil, nil)
+func (to *Session) GetRoles(header http.Header) ([]tc.Role, ReqInf, int, error) {
+	resp, remoteAddr, errClient := to.RawRequest(http.MethodGet, API_ROLES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Role{}, reqInf, http.StatusNotModified, nil
+		}
+	}
 	if resp != nil {
 		defer resp.Body.Close()
 
@@ -89,10 +95,16 @@ func (to *Session) GetRoles() ([]tc.Role, ReqInf, int, error) {
 }
 
 // GetRoleByID GETs a Role by the Role ID.
-func (to *Session) GetRoleByID(id int) ([]tc.Role, ReqInf, int, error) {
+func (to *Session) GetRoleByID(id int, header http.Header) ([]tc.Role, ReqInf, int, error) {
 	route := fmt.Sprintf("%s/?id=%d", API_ROLES, id)
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, errClient := to.RawRequest(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Role{}, reqInf, http.StatusNotModified, nil
+		}
+	}
 	if resp != nil {
 		defer resp.Body.Close()
 
@@ -106,10 +118,16 @@ func (to *Session) GetRoleByID(id int) ([]tc.Role, ReqInf, int, error) {
 }
 
 // GetRoleByName GETs a Role by the Role name.
-func (to *Session) GetRoleByName(name string) ([]tc.Role, ReqInf, int, error) {
+func (to *Session) GetRoleByName(name string, header http.Header) ([]tc.Role, ReqInf, int, error) {
 	route := fmt.Sprintf("%s?name=%s", API_ROLES, url.QueryEscape(name))
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, errClient := to.RawRequest(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Role{}, reqInf, http.StatusNotModified, nil
+		}
+	}
 	if resp != nil {
 		defer resp.Body.Close()
 
@@ -123,13 +141,19 @@ func (to *Session) GetRoleByName(name string) ([]tc.Role, ReqInf, int, error) {
 }
 
 // GetRoleByQueryParams gets a Role by the Role query parameters.
-func (to *Session) GetRoleByQueryParams(queryParams map[string]string) ([]tc.Role, ReqInf, int, error) {
+func (to *Session) GetRoleByQueryParams(queryParams map[string]string, header http.Header) ([]tc.Role, ReqInf, int, error) {
 	route := fmt.Sprintf("%s?", API_ROLES)
 	for param, val := range queryParams {
 		route += fmt.Sprintf("%s=%s&", url.QueryEscape(param), url.QueryEscape(val))
 	}
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, errClient := to.RawRequest(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Role{}, reqInf, http.StatusNotModified, nil
+		}
+	}
 	if resp != nil {
 		defer resp.Body.Close()
 

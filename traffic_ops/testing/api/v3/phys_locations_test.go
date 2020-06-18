@@ -16,19 +16,72 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"sort"
 	"testing"
+	"time"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestPhysLocations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Parameters, Divisions, Regions, PhysLocations}, func() {
+		GetTestPhysLocationsIMS(t)
 		GetDefaultSortPhysLocationsTest(t)
 		GetSortPhysLocationsTest(t)
+		currentTime := time.Now().Add(-1 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestPhysLocations(t)
 		GetTestPhysLocations(t)
+		GetTestPhysLocationsIMSAfterChange(t, header)
 	})
+}
+
+func GetTestPhysLocationsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, cdn := range testData.PhysLocations {
+		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+
+}
+
+func GetTestPhysLocationsIMSAfterChange(t *testing.T, header http.Header) {
+	for _, cdn := range testData.PhysLocations {
+		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, cdn := range testData.PhysLocations {
+		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestPhysLocations(t *testing.T) {
@@ -46,7 +99,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 
 	firstPhysLocation := testData.PhysLocations[0]
 	// Retrieve the PhysLocation by name so we can get the id for the Update
-	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name)
+	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
 	}
@@ -60,7 +113,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 	}
 
 	// Retrieve the PhysLocation to check PhysLocation name got updated
-	resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID)
+	resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: '$%s', %v", firstPhysLocation.Name, err)
 	}
@@ -74,7 +127,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 func GetTestPhysLocations(t *testing.T) {
 
 	for _, cdn := range testData.PhysLocations {
-		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name)
+		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET PhysLocation by name: %v - %v", err, resp)
 		}
@@ -83,7 +136,7 @@ func GetTestPhysLocations(t *testing.T) {
 }
 
 func GetSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(map[string]string{"orderby": "id"})
+	resp, _, err := TOSession.GetPhysLocations(map[string]string{"orderby": "id"}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -96,7 +149,7 @@ func GetSortPhysLocationsTest(t *testing.T) {
 }
 
 func GetDefaultSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(nil)
+	resp, _, err := TOSession.GetPhysLocations(nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -112,7 +165,7 @@ func DeleteTestPhysLocations(t *testing.T) {
 
 	for _, cdn := range testData.PhysLocations {
 		// Retrieve the PhysLocation by name so we can get the id for the Update
-		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name)
+		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET PhysLocation by name: %v - %v", cdn.Name, err)
 		}
@@ -125,7 +178,7 @@ func DeleteTestPhysLocations(t *testing.T) {
 			}
 
 			// Retrieve the PhysLocation to see if it got deleted
-			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name)
+			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
 			if err != nil {
 				t.Errorf("error deleting PhysLocation name: %s", err.Error())
 			}

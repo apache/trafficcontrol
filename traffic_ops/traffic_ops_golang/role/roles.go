@@ -169,6 +169,9 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	version := role.APIInfo().Version
 	vals, userErr, sysErr, errCode, maxTime := api.GenericRead(h, role, useIMS)
+	if errCode == http.StatusNotModified {
+		return []interface{}{}, nil, nil, errCode, maxTime
+	}
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, maxTime
 	}

@@ -68,9 +68,15 @@ func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, ReqInf
 }
 
 // GetStatuses returns a list of Statuses.
-func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_STATUSES, nil, nil)
+func (to *Session) GetStatuses(header http.Header) ([]tc.Status, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_STATUSES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Status{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -82,10 +88,16 @@ func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
 }
 
 // GetStatusByID GETs a Status by the Status ID.
-func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
+func (to *Session) GetStatusByID(id int, header http.Header) ([]tc.Status, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_STATUSES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Status{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -100,10 +112,16 @@ func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
 }
 
 // GetStatusByName GETs a Status by the Status name.
-func (to *Session) GetStatusByName(name string) ([]tc.Status, ReqInf, error) {
+func (to *Session) GetStatusByName(name string, header http.Header) ([]tc.Status, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_STATUSES, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Status{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

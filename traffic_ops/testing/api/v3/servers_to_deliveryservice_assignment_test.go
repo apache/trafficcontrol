@@ -43,7 +43,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	params := url.Values{}
 	params.Add("hostName", *server.HostName)
 
-	rs, _, err := TOSession.GetServers(&params)
+	rs, _, err := TOSession.GetServers(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {
@@ -71,7 +71,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	}
 	t.Logf("alerts: %+v", alerts)
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(*firstServer.ID)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*firstServer.ID, nil)
 	t.Logf("response: %+v", response)
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", firstServer, err)
@@ -108,7 +108,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("hostName", hostname)
-	rs, _, err := TOSession.GetServers(&params)
+	rs, _, err := TOSession.GetServers(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v - %v", err, rs.Alerts)
 	} else if len(rs.Response) == 0 {
@@ -135,7 +135,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
 	}
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID, nil)
 	t.Logf("response: %+v", response)
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *server, err)
@@ -169,7 +169,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("hostName", *server.HostName)
-	rs, _, err := TOSession.GetServers(&params)
+	rs, _, err := TOSession.GetServers(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {
@@ -199,7 +199,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatalf("assigning Topology-based delivery service to server - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID, nil)
 	t.Logf("response: %+v", response)
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *server, err)

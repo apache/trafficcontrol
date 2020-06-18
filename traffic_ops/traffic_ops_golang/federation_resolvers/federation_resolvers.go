@@ -111,6 +111,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 // Read is the handler for GET requests to /federation_resolvers (and /federation_resolvers/{{ID}}).
 func Read(w http.ResponseWriter, r *http.Request) {
+	var maxTime time.Time
 	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if sysErr != nil || userErr != nil {
@@ -142,11 +143,15 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 	if useIMS {
-		runSecond, _ := TryIfModifiedSinceQuery(r.Header, inf.Tx, where, orderBy, pagination, queryValues)
+		runSecond, maxTime := TryIfModifiedSinceQuery(r.Header, inf.Tx, where, orderBy, pagination, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
+			// RFC1123
+			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			w.Header().Add(rfc.LastModified, date)
 			w.WriteHeader(http.StatusNotModified)
 			api.WriteResp(w, r, []tc.FederationResolver{})
+			return
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -180,6 +185,9 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		resolvers = append(resolvers, resolver)
 	}
 
+	// RFC1123
+	date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+	w.Header().Add(rfc.LastModified, date)
 	api.WriteResp(w, r, resolvers)
 }
 

@@ -51,7 +51,7 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	if ds[0].Topology == nil {
 		t.Fatal("expected delivery service: 'ds-top' to have a non-nil Topology, actual: nil")
 	}
-	serversResp, _, err := TOSession.GetServers(nil)
+	serversResp, _, err := TOSession.GetServers(nil, nil)
 	servers := []tc.ServerNullable{}
 	for _, s := range serversResp.Response {
 		if s.CDNID != nil && *s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
@@ -123,7 +123,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		t.Run(ctc.description, func(t *testing.T) {
 			params := url.Values{}
 			params.Add("hostName", ctc.serverName)
-			resp, _, err := TOSession.GetServers(&params)
+			resp, _, err := TOSession.GetServers(&params, nil)
 			if err != nil {
 				t.Fatalf("cannot GET Server by hostname: %v", err)
 			}
@@ -171,7 +171,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	// TODO: DON'T hard-code server hostnames!
 	params := url.Values{}
 	params.Add("hostName", "denver-mso-org-01")
-	resp, _, err := TOSession.GetServers(&params)
+	resp, _, err := TOSession.GetServers(&params, nil)
 	if err != nil {
 		t.Fatalf("GET server denver-mso-org-01: %v", err)
 	}
@@ -186,7 +186,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Make sure server has no caps to ensure test correctness
-	sccs, _, err := TOSession.GetServerServerCapabilities(s.ID, nil, nil)
+	sccs, _, err := TOSession.GetServerServerCapabilities(s.ID, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("GET server server capabilities for denver-mso-org-01: %v", err)
 	}
@@ -299,7 +299,7 @@ func getServersAndDSes(t *testing.T) ([]tc.DeliveryServiceNullable, []tc.ServerN
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
-	resp, _, err := TOSession.GetServers(nil)
+	resp, _, err := TOSession.GetServers(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Servers: %v", err)
 	}

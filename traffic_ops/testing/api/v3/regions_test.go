@@ -16,18 +16,70 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestRegions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
+		GetTestRegionsIMS(t)
+		currentTime := time.Now().Add(-1 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestRegions(t)
 		GetTestRegions(t)
+		GetTestRegionsIMSAfterChange(t, header)
 		DeleteTestRegionsByName(t)
 	})
+}
+
+func GetTestRegionsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, region := range testData.Regions {
+		_, reqInf, err := TOSession.GetRegionByName(region.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestRegionsIMSAfterChange(t *testing.T, header http.Header) {
+	for _, region := range testData.Regions {
+		_, reqInf, err := TOSession.GetRegionByName(region.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, region := range testData.Regions {
+		_, reqInf, err := TOSession.GetRegionByName(region.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestRegions(t *testing.T) {
@@ -45,7 +97,7 @@ func UpdateTestRegions(t *testing.T) {
 
 	firstRegion := testData.Regions[0]
 	// Retrieve the Region by region so we can get the id for the Update
-	resp, _, err := TOSession.GetRegionByName(firstRegion.Name)
+	resp, _, err := TOSession.GetRegionByName(firstRegion.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
 	}
@@ -59,7 +111,7 @@ func UpdateTestRegions(t *testing.T) {
 	}
 
 	// Retrieve the Region to check region got updated
-	resp, _, err = TOSession.GetRegionByID(remoteRegion.ID)
+	resp, _, err = TOSession.GetRegionByID(remoteRegion.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
 	}
@@ -79,7 +131,7 @@ func UpdateTestRegions(t *testing.T) {
 
 func GetTestRegions(t *testing.T) {
 	for _, region := range testData.Regions {
-		resp, _, err := TOSession.GetRegionByName(region.Name)
+		resp, _, err := TOSession.GetRegionByName(region.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET Region by region: %v - %v", err, resp)
 		}
@@ -105,7 +157,7 @@ func DeleteTestRegionsByName(t *testing.T) {
 		}
 
 		// Retrieve the Region to see if it got deleted
-		regionResp, _, err := TOSession.GetRegionByName(region.Name)
+		regionResp, _, err := TOSession.GetRegionByName(region.Name, nil)
 		if err != nil {
 			t.Errorf("error deleting Region region: %s", err.Error())
 		}
@@ -121,7 +173,7 @@ func DeleteTestRegions(t *testing.T) {
 
 	for _, region := range testData.Regions {
 		// Retrieve the Region by name so we can get the id
-		resp, _, err := TOSession.GetRegionByName(region.Name)
+		resp, _, err := TOSession.GetRegionByName(region.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET Region by name: %v - %v", region.Name, err)
 		}
@@ -133,7 +185,7 @@ func DeleteTestRegions(t *testing.T) {
 		}
 
 		// Retrieve the Region to see if it got deleted
-		regionResp, _, err := TOSession.GetRegionByName(region.Name)
+		regionResp, _, err := TOSession.GetRegionByName(region.Name, nil)
 		if err != nil {
 			t.Errorf("error deleting Region region: %s", err.Error())
 		}

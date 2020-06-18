@@ -81,9 +81,15 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 }
 
 // GetRegions returns a list of regions.
-func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_REGIONS, nil, nil)
+func (to *Session) GetRegions(header http.Header) ([]tc.Region, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_REGIONS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Region{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -95,10 +101,16 @@ func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
 }
 
 // GetRegionByID GETs a Region by the Region ID.
-func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
+func (to *Session) GetRegionByID(id int, header http.Header) ([]tc.Region, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_REGIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Region{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -113,10 +125,16 @@ func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
 }
 
 // GetRegionByName GETs a Region by the Region name.
-func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
+func (to *Session) GetRegionByName(name string, header http.Header) ([]tc.Region, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_REGIONS, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Region{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

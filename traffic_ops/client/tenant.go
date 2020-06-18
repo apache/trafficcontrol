@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
@@ -28,9 +29,12 @@ const API_TENANTS = apiBase + "/tenants"
 const API_TENANT_ID = API_TENANTS + "/%v"
 
 // Tenants gets an array of Tenants.
-func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
+func (to *Session) Tenants(header http.Header) ([]tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := get(to, API_TENANTS, &data, nil)
+	reqInf, err := get(to, API_TENANTS, &data, header)
+	if reqInf.StatusCode == http.StatusNotModified {
+		return []tc.Tenant{}, reqInf, nil
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -40,9 +44,12 @@ func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 
 // Tenant gets the Tenant identified by the passed integral, unique identifer - which
 // must be passed as a string.
-func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
+func (to *Session) Tenant(id string, header http.Header) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := get(to, fmt.Sprintf("%s?id=%v", API_TENANTS, id), &data, nil)
+	reqInf, err := get(to, fmt.Sprintf("%s?id=%v", API_TENANTS, id), &data, header)
+	if reqInf.StatusCode == http.StatusNotModified {
+		return nil, reqInf, nil
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -51,10 +58,13 @@ func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 }
 
 // TenantByName gets the Tenant with the name it's passed.
-func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
+func (to *Session) TenantByName(name string, header http.Header) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
 	query := API_TENANTS + "?name=" + url.QueryEscape(name)
-	reqInf, err := get(to, query, &data, nil)
+	reqInf, err := get(to, query, &data, header)
+	if reqInf.StatusCode == http.StatusNotModified {
+		return nil, reqInf, nil
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -71,7 +81,7 @@ func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
 // CreateTenant creates the Tenant it's passed.
 func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	if t.ParentID == 0 && t.ParentName != "" {
-		tenant, _, err := to.TenantByName(t.ParentName)
+		tenant, _, err := to.TenantByName(t.ParentName, nil)
 		if err != nil {
 			return nil, err
 		}

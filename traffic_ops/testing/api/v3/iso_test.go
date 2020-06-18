@@ -78,7 +78,7 @@ func TestGetOSVersions(t *testing.T) {
 		}
 		// Cleanup DB entry
 		defer func() {
-			resp, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(p.Name, p.ConfigFile, p.Value)
+			resp, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(p.Name, p.ConfigFile, p.Value, nil)
 			if err != nil {
 				t.Fatalf("cannot GET Parameter by name: %v - %v\n", p.Name, err)
 			}

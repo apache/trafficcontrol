@@ -59,7 +59,7 @@ func TestServerUpdateStatus(t *testing.T) {
 				},
 			} {
 				params.Set("hostName", s.name)
-				resp, _, err := TOSession.GetServers(&params)
+				resp, _, err := TOSession.GetServers(&params, nil)
 				if err != nil {
 					t.Errorf("cannot GET Server by hostname '%s': %v - %v", s.name, err, resp.Alerts)
 				}
@@ -129,7 +129,7 @@ func TestServerUpdateStatus(t *testing.T) {
 		}
 
 		// update status of MID server to OFFLINE via status ID
-		status, _, err := TOSession.GetStatusByName("OFFLINE")
+		status, _, err := TOSession.GetStatusByName("OFFLINE", nil)
 		if err != nil {
 			t.Fatalf("cannot GET status by name: %v", err)
 		}
@@ -208,7 +208,7 @@ func TestServerQueueUpdate(t *testing.T) {
 		var s tc.ServerNullable
 		params := url.Values{}
 		params.Add("hostName", serverName)
-		resp, _, err := TOSession.GetServers(&params)
+		resp, _, err := TOSession.GetServers(&params, nil)
 		if err != nil {
 			t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
 		}
@@ -248,7 +248,7 @@ func TestServerQueueUpdate(t *testing.T) {
 				}
 
 				// assert that the server has updates queued
-				resp, _, err = TOSession.GetServers(&params)
+				resp, _, err = TOSession.GetServers(&params, nil)
 				if err != nil {
 					t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
 				}
@@ -308,7 +308,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 		params := url.Values{}
 		params.Add("hostName", *testServer.HostName)
 		testVals := func(queue *bool, reval *bool) {
-			resp, _, err := TOSession.GetServers(&params)
+			resp, _, err := TOSession.GetServers(&params, nil)
 			if err != nil {
 				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
 			} else if len(resp.Response) != 1 {
@@ -328,7 +328,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v", err)
 			}
 
-			resp, _, err = TOSession.GetServers(&params)
+			resp, _, err = TOSession.GetServers(&params, nil)
 			if err != nil {
 				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
 			} else if len(resp.Response) != 1 {

@@ -385,7 +385,6 @@ func (to *Session) RawRequest(method, path string, body []byte, header http.Head
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 	web.CopyHeaderTo(header, &req.Header)
 	req.Header.Set("User-Agent", to.UserAgentStr)
-
 	resp, err := to.Client.Do(req)
 	if err != nil {
 		return resp, remoteAddr, err
