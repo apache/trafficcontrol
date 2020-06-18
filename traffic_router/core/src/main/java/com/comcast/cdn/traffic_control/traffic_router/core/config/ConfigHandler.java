@@ -510,6 +510,9 @@ public class ConfigHandler {
 											? cache.getId() + "." + remap
 											: remap;
 									dsNames.add(getDsName(fqdn, tld));
+									if (!remap.equals(ds.getDomain())) {
+										return;
+									}
 									try {
 										dsReferences.add(new DeliveryServiceReference(ds.getId(), fqdn));
 									} catch (ParseException e) {
