@@ -83,6 +83,10 @@ func dsConfigFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficDSStatsConf
 	}
 	c.TrafficStatsConfig = statsConfig
 	c.MetricType = i.Params["metricType"]
+	if _, found := findMetric(i.Config.ConfigTrafficOpsGolang.SupportedDSMetrics, c.MetricType); !found {
+		e = fmt.Errorf("Metric is not supported: %s", c.MetricType)
+		return c, http.StatusBadRequest, e
+	}
 
 	var ok bool
 	if c.DeliveryService, ok = i.Params["deliveryServiceName"]; !ok {
@@ -377,3 +381,13 @@ func getDSSeries(client *influx.Client, conf *tc.TrafficDSStatsConfig, db string
 		})
 	return getSeries(db, q, client)
 }
+
+func findMetric(slice []string, val string) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
