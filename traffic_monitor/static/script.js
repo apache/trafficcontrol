@@ -181,14 +181,10 @@ function getCacheStates() {
 	}
 
 	ajax("/api/cache-statuses", function(r) {
-		const servers = new Map(Object.entries(JSON.parse(r)));
-
-		// Sort by key (server name) so order doesn't change 'randomly'
-		servers[Symbol.iterator] = function* () {
-			yield *[...this.entries()].sort((serverCoupleA, serverCoupleB) => {
-				return serverCoupleA[0] < serverCoupleB[0];
-			});
-		};
+		let serversArray = Object.entries(JSON.parse(r)).sort((serverTupleA, serverTupleB) => {
+			return -1*serverTupleA[0].localeCompare(serverTupleB[0]);
+		});
+		const servers = new Map(serversArray);
 
 		const oldtable = document.getElementById("cache-states");
 		const table = document.createElement('TBODY');
@@ -199,10 +195,10 @@ function getCacheStates() {
 
 		// Match visibility of interface tables based on previous table
 		const interfaceRows = oldtable.querySelectorAll(".encompassing-row");
-		let openCachesByName = [];
+		let openCachesByName = new Set();
 		for(const row of interfaceRows) {
 			if(row.classList.contains("visible")){
-				openCachesByName.push(row.querySelector(".sub-table").getAttribute("server-name"));
+				openCachesByName.add(row.querySelector(".sub-table").getAttribute("server-name"));
 			}
 		}
 
@@ -235,13 +231,10 @@ function getCacheStates() {
 			encompassingCell.colSpan = 14;
 			// Add interfaces
 			if (Object.prototype.hasOwnProperty.call(server, "interfaces")) {
-				server.interfaces = new Map(Object.entries(server.interfaces));
-				// Sort by key (interface name) so order doesn't change 'randomly'
-				server.interfaces[Symbol.iterator] = function*() {
-					yield *[...this.entries()].sort(function (interfaceA, interfaceB) {
-						return interfaceA < interfaceB;
-					});
-				};
+				let interfacesArray = Object.entries(server.interfaces).sort((interfaceTupleA, interfaceTupleB) => {
+					return -1 * interfaceTupleA[0].localeCompare(interfaceTupleB[0]);
+				});
+				server.interfaces = new Map(interfacesArray);
 				interfaceTable.removeAttribute("id");
 				// To determine what cache this interface table belongs to
 				// used to ensure servers that were expanded remain expanded when refreshing the data.
@@ -279,7 +272,7 @@ function getCacheStates() {
 
 			encompassingCell.appendChild(interfaceTable);
 			// Row was unhidden previously
-			if(openCachesByName.indexOf(serverName) > -1) {
+			if(openCachesByName.has(serverName)) {
 				row.click();
 			}
 		}
