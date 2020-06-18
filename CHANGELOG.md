@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated /servers/details to use multiple interfaces in API v3
 - Added [Edge Traffic Routing](https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#edge-traffic-routing) feature which allows Traffic Router to localize more DNS record types than just the routing name for DNS delivery services
 - Astats csv support - astats will now respond to `Accept: text/csv` and return a csv formatted stats list
+- Updated /deliveryservices/{{ID}}/servers to use multiple interfaces in API v3
+- Updated /deliveryservices/{{ID}}/servers/eligible to use multiple interfaces in API v3
 
 ### Fixed
 - Fixed the `GET /api/x/jobs` and `GET /api/x/jobs/:id` Traffic Ops API routes to allow falling back to Perl via the routing blacklist
@@ -41,6 +43,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - With the addition of multiple server interfaces, interface data is constructed from IP Address/Gateway/Netmask (and their IPv6 counterparts) and Interface Name and Interface MTU fields on services. These **MUST** have proper, valid data before attempting to upgrade or the upgrade **WILL** fail. In particular IP fields need to be valid IP addresses/netmasks, and MTU must only be positive integers of at least 1280.
 - The `/servers` and `/servers/{{ID}}}` API endpoints have been updated to use and reflect multi-interface servers.
 - CDN Snapshots now use a server's "service addresses" to provide its IP addresses
+- Traffic Ops and Traffic Ops ORT are now separate, independent builds
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.

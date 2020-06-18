@@ -19,8 +19,8 @@
 
 var TableTypeServersController = function(type, servers, $controller, $scope) {
 
-	// extends the TableServersController to inherit common methods
-	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+	// extends the TableParentServersController to inherit common methods
+	angular.extend(this, $controller('TableParentServersController', { servers: servers, $scope: $scope }));
 
 	let typeServersTable;
 

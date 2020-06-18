@@ -39,7 +39,13 @@ import (
 // TOTopology is a type alias on which we can define functions.
 type TOTopology struct {
 	api.APIInfoImpl `json:"-"`
+	Alerts          tc.Alerts `json:"-"`
 	tc.Topology
+}
+
+// GetAlerts implements the AlertsResponse interface.
+func (topology *TOTopology) GetAlerts() tc.Alerts {
+	return topology.Alerts
 }
 
 // DeleteQueryBase holds a delete query with no WHERE clause and is a
@@ -123,7 +129,8 @@ func (topology *TOTopology) Validate() error {
 	}
 
 	for index, node := range topology.Nodes {
-		rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = checkForEdgeParents(topology.Nodes, cacheGroups, index)
+		rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = topology.checkForEdgeParents(cacheGroups, index)
+
 	}
 	/* Only perform further checks if everything so far is valid */
 	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
@@ -176,7 +183,7 @@ func (topology *TOTopology) Create() (error, error, int) {
 // Read is a requirement of the api.Reader interface and is called by api.ReadHandler().
 func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
-	var interfaces []interface{}
+	interfaces := make([]interface{}, 0)
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(topology.ReqInfo.Params, topology.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
@@ -198,7 +205,6 @@ func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, err
 		return nil, nil, errors.New("topology read: querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer log.Close(rows, "unable to close DB connection")
-
 	topologies := map[string]*tc.Topology{}
 	indices := map[int]int{}
 	for index := 0; rows.Next(); index++ {

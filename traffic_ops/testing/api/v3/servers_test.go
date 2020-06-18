@@ -19,6 +19,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -35,6 +36,7 @@ func TestServers(t *testing.T) {
 		GetTestServersDetails(t)
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
+		GetTestServersQueryParameters(t)
 	})
 }
 
@@ -110,7 +112,6 @@ func CreateTestServers(t *testing.T) {
 			t.Errorf("could not CREATE servers: %v", err)
 		}
 	}
-
 }
 
 func GetTestServers(t *testing.T) {
@@ -142,6 +143,93 @@ func GetTestServersDetails(t *testing.T) {
 			t.Errorf("cannot GET Server Details by name: %v - %v", err, resp)
 		}
 	}
+}
+
+func GetTestServersQueryParameters(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("Failed to get Delivery Services: %v", err)
+	}
+	if len(dses) < 1 {
+		t.Fatal("Failed to get at least one Delivery Service")
+	}
+
+	ds := dses[0]
+	if ds.ID == nil {
+		t.Fatal("Got Delivery Service with nil ID")
+	}
+
+	params := url.Values{}
+	params.Add("dsId", strconv.Itoa(*ds.ID))
+	_, _, err = TOSession.GetServers(&params)
+	if err != nil {
+		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
+	}
+	params.Del("dsId")
+
+	resp, _, err := TOSession.GetServers(nil)
+	if err != nil {
+		t.Fatalf("Failed to get servers: %v", err)
+	}
+
+	if len(resp.Response) < 1 {
+		t.Fatalf("Failed to get at least one server")
+	}
+
+	s := resp.Response[0]
+
+	params.Add("type", s.Type)
+	if _, _, err := TOSession.GetServers(&params); err != nil {
+		t.Errorf("Error getting servers by type: %v", err)
+	}
+	params.Del("type")
+
+	if s.CachegroupID == nil {
+		t.Error("Found server with no Cache Group ID")
+	} else {
+		params.Add("cachegroup", strconv.Itoa(*s.CachegroupID))
+		if _, _, err := TOSession.GetServers(&params); err != nil {
+			t.Errorf("Error getting servers by Cache Group ID: %v", err)
+		}
+		params.Del("cachegroup")
+	}
+
+	if s.Status == nil {
+		t.Error("Found server with no status")
+	} else {
+		params.Add("status", *s.Status)
+		if _, _, err := TOSession.GetServers(&params); err != nil {
+			t.Errorf("Error getting servers by status: %v", err)
+		}
+		params.Del("status")
+	}
+
+	if s.ProfileID == nil {
+		t.Error("Found server with no Profile ID")
+	} else {
+		params.Add("profileId", strconv.Itoa(*s.ProfileID))
+		if _, _, err := TOSession.GetServers(&params); err != nil {
+			t.Errorf("Error getting servers by Profile ID: %v", err)
+		}
+		params.Del("profileId")
+	}
+
+	cgs, _, err := TOSession.GetCacheGroupsNullable()
+	if err != nil {
+		t.Fatalf("Failed to get Cache Groups: %v", err)
+	}
+	if len(cgs) < 1 {
+		t.Fatal("Failed to get at least one Cache Group")
+	}
+	if cgs[0].ID == nil {
+		t.Fatal("Cache Group found with no ID")
+	}
+
+	params.Add("parentCacheGroup", strconv.Itoa(*cgs[0].ID))
+	if _, _, err = TOSession.GetServers(&params); err != nil {
+		t.Errorf("Error getting servers by parentCacheGroup: %v", err)
+	}
+	params.Del("parentCacheGroup")
 }
 
 func UpdateTestServers(t *testing.T) {
@@ -269,7 +357,6 @@ func UpdateTestServers(t *testing.T) {
 	} else {
 		t.Logf("type change update alerts: %+v", alerts)
 	}
-
 }
 
 func DeleteTestServers(t *testing.T) {

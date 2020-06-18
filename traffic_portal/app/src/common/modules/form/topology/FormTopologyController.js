@@ -32,8 +32,8 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 	let removeSecParentReferences = function(topologyTree, secParentName) {
 		// when a cache group is removed, any references to the cache group as a secParent need to be removed
 		topologyTree.forEach(function(node) {
-			if (node.secParent && node.secParent === secParentName) {
-				node.secParent = '';
+			if (node.secParent && node.secParent.name === secParentName) {
+				node.secParent = { name: '', type: '' };
 			}
 			if (node.children && node.children.length > 0) {
 				removeSecParentReferences(node.children, secParentName);
@@ -74,24 +74,25 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 				return false;
 			}
 
-			// EDGE_LOC cannot have children
-			if (parent.type === 'EDGE_LOC') {
+			// EDGE_LOC can only have EDGE_LOC children
+			if (parent.type === 'EDGE_LOC' && node.type !== 'EDGE_LOC') {
 				$anchorScroll(); // scrolls window to top
-				messageModel.setMessages([ { level: 'error', text: 'Cache groups of EDGE_LOC type must not have children.' } ], false);
+				messageModel.setMessages([ { level: 'error', text: 'EDGE_LOC cache groups can only have EDGE_LOC children.' } ], false);
 				return false;
 			}
 
 			// update the parent and secParent fields of the node on successful drop
 			if (parent.cachegroup) {
-				node.parent = parent.cachegroup; // change the node parent based on where the node is dropped
-				if (node.parent === node.secParent) {
+				// change the node parent based on where the node is dropped
+				node.parent = { name: parent.cachegroup, type: parent.type };
+				if (node.parent.name === node.secParent.name) {
 					// node parent and secParent cannot be the same
-					node.secParent = "";
+					node.secParent = { name: '', type: '' };
 				}
 			} else {
 				// the node was dropped at the root of the topology. no parents.
-				node.parent = "";
-				node.secParent = "";
+				node.parent = { name: '', type: '' };
+				node.secParent = { name: '', type: '' };
 			}
 			// marks the form as dirty thus enabling the save btn
 			$scope.topologyForm.dirty.$setDirty();
@@ -124,22 +125,26 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		buildCacheGroupNamesInTopology($scope.topologyTree, true);
 
 		/*  Cache groups that can act as a second parent include:
-			1. cache groups of type ORG_LOC or MID_LOC (not EDGE_LOC)
-			2. cache groups that are not currently acting as the primary parent
-			3. cache groups that exist currently in the topology
+			1. cache groups that are not the current cache group (you can't parent/sec parent yourself)
+			2. cache groups that are not currently acting as the primary parent (primary parent != sec parent)
+			3. cache groups that exist currently in the topology only
+			4a. any cache group types (ORG_LOC, MID_LOC, EDGE_LOC) if child cache group is EDGE_LOC
+			4b. only MID_LOC or ORG_LOC cache group types if child cache group is not EDGE_LOC
 		 */
 		let eligibleSecParentCandidates = cacheGroups.filter(function(cg) {
-			return cg.typeName !== 'EDGE_LOC' &&
-				(node.parent && node.parent !== cg.name) &&
-				cacheGroupNamesInTopology.includes(cg.name);
-		});
+			return (node.cachegroup && node.cachegroup !== cg.name) &&
+				(node.parent && node.parent.name !== cg.name) &&
+				cacheGroupNamesInTopology.includes(cg.name) &&
+				((node.type === 'EDGE_LOC') || (cg.typeName === 'MID_LOC' || cg.typeName === 'ORG_LOC'));
+		}).sort(function(a,b) { return [a.name, b.name].sort().indexOf(b.name) === 0 ? 1 : -1; });
 
 		let params = {
 			title: 'Select a secondary parent',
 			message: 'Please select a secondary parent that is part of the ' + topology.name + ' topology',
 			key: 'name',
 			required: false,
-			selectedItemKeyValue: node.secParent
+			selectedItemKeyValue: node.secParent.name,
+			labelFunction: function(item) { return item['name'] + ' (' + item['typeName'] + ')' }
 		};
 		let modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
@@ -156,9 +161,9 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		});
 		modalInstance.result.then(function(selectedSecParent) {
 			if (selectedSecParent) {
-				node.secParent = selectedSecParent.name;
+				node.secParent = { name: selectedSecParent.name, type: selectedSecParent.typeName };
 			} else {
-				node.secParent = '';
+				node.secParent = { name: '', type: '' };
 			}
 			// marks the form as dirty thus enabling the save btn
 			$scope.topologyForm.dirty.$setDirty();
@@ -178,11 +183,23 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		scope.toggle();
 	};
 
-	$scope.hasNodeError = function(node) {
+	$scope.nodeError = function(node) {
+		// only EDGE_LOCs can serve as a leaf node on the topology
 		if (node.type !== 'EDGE_LOC' && node.children.length === 0) {
-			return true;
+			return node.type + ' requires 1+ child cache group';
 		}
-		return false;
+		return '';
+	};
+
+	$scope.nodeWarning = function(node) {
+		// EDGE_LOCs with parent/secondary parent EDGE_LOCs require special configuration
+		let msg = 'Special Configuration Required';
+		if (node.parent && node.parent.type === 'EDGE_LOC') {
+			return msg + ' [EDGE_LOC Parent]';
+		} else if (node.secParent && node.secParent.type === 'EDGE_LOC') {
+			return msg + ' [EDGE_LOC 2nd Parent]';
+		}
+		return '';
 	};
 
 	$scope.isOrigin = function(node) {
@@ -199,50 +216,78 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 
 	$scope.addCacheGroups = function(parent, scope) {
 
-		if (parent.type === 'EDGE_LOC') {
-			// can't add children to EDGE_LOC. button should be hidden anyhow.
-			return;
-		}
-
 		// cache groups already in the topology cannot be selected again for addition
 		buildCacheGroupNamesInTopology($scope.topologyTree, true);
 
+		// the types of child cache groups you can add depends on the parent cache group's type
+		let eligibleChildrenTypes = [ { name: 'EDGE_LOC' } ];
+		if (parent.type === 'ROOT') {
+			eligibleChildrenTypes.push({ name: 'MID_LOC' });
+			eligibleChildrenTypes.push({ name: 'ORG_LOC' });
+		} else if (parent.type === 'MID_LOC' || parent.type === 'ORG_LOC') {
+			eligibleChildrenTypes.push({ name: 'MID_LOC' });
+		}
+
+		let parentName = (parent.cachegroup) ? parent.cachegroup : 'ROOT';
+		let params = {
+			title: 'Select a child cache group type',
+			message: 'Please select the type of child cache group(s) you would like to add to ' + parentName,
+			key: 'name',
+		};
 		let modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/table/topologyCacheGroups/table.selectTopologyCacheGroups.tpl.html',
-			controller: 'TableSelectTopologyCacheGroupsController',
-			size: 'lg',
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
 			resolve: {
-				parent: function() {
-					return parent;
+				params: function () {
+					return params;
 				},
-				topology: function() {
-					return topology;
-				},
-				cacheGroups: function(cacheGroupService) {
-					return cacheGroupService.getCacheGroups();
-				},
-				usedCacheGroupNames: function() {
-					return cacheGroupNamesInTopology;
+				collection: function() {
+					return eligibleChildrenTypes;
 				}
 			}
 		});
-		modalInstance.result.then(function(result) {
-			let nodeData = scope.$modelValue,
-				cacheGroupNodes = result.selectedCacheGroups.map(function(cg) {
-					return {
-						id: cg.id,
-						cachegroup: cg.name,
-						type: cg.typeName,
-						parent: (result.parent) ? result.parent : '',
-						secParent: result.secParent,
-						children: []
+		modalInstance.result.then(function(type) {
+			modalInstance = $uibModal.open({
+				templateUrl: 'common/modules/table/topologyCacheGroups/table.selectTopologyCacheGroups.tpl.html',
+				controller: 'TableSelectTopologyCacheGroupsController',
+				size: 'lg',
+				resolve: {
+					parent: function() {
+						return parent;
+					},
+					topology: function() {
+						return topology;
+					},
+					selectedType: function() {
+						return type.name;
+					},
+					cacheGroups: function(cacheGroupService) {
+						return cacheGroupService.getCacheGroups();
+					},
+					usedCacheGroupNames: function() {
+						return cacheGroupNamesInTopology;
 					}
-				});
-			cacheGroupNodes.forEach(function(node) {
-				nodeData.children.unshift(node);
+				}
 			});
-			// marks the form as dirty thus enabling the save btn
-			$scope.topologyForm.dirty.$setDirty();
+			modalInstance.result.then(function(result) {
+				let nodeData = scope.$modelValue,
+					cacheGroupNodes = result.selectedCacheGroups.map(function(cg) {
+						return {
+							id: cg.id,
+							cachegroup: cg.name,
+							type: cg.typeName,
+							parent: result.parent,
+							secParent: result.secParent,
+							children: []
+						}
+					});
+				cacheGroupNodes.forEach(function(node) {
+					nodeData.children.unshift(node);
+				});
+				// marks the form as dirty thus enabling the save btn
+				$scope.topologyForm.dirty.$setDirty();
+			});
 		});
 	};
 
