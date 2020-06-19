@@ -22,11 +22,11 @@ var TableServiceCategoriesController = function(serviceCategories, $scope, $stat
     $scope.serviceCategories = serviceCategories;
 
     $scope.editServiceCategory = function(id) {
-        locationUtils.navigateToPath('/service_categories/' + id);
+        locationUtils.navigateToPath('/service-categories/' + id);
     };
 
     $scope.createServiceCategory = function() {
-        locationUtils.navigateToPath('/service_categories/new');
+        locationUtils.navigateToPath('/service-categories/new');
     };
 
     $scope.refresh = function() {

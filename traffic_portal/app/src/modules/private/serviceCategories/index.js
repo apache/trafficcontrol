@@ -21,7 +21,7 @@ module.exports = angular.module('trafficPortal.private.serviceCategories', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.serviceCategories', {
-                url: 'service_categories',
+                url: 'service-categories',
                 abstract: true,
                 views: {
                     privateContent: {

@@ -37,6 +37,7 @@ under the License.
                     <ul class="nav child_menu" style="display: none">
                         <li class="side-menu-category-item" ng-if="hasCapability('delivery-services-read')" ng-class="{'current-page': isState('trafficPortal.private.deliveryServices')}"><a href="/#!/delivery-services">Delivery Services</a></li>
                         <li class="side-menu-category-item" ng-if="::dsRequestsEnabled && hasCapability('delivery-service-requests-read')" ng-class="{'current-page': isState('trafficPortal.private.deliveryServiceRequests')}"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('service-categories-read')" ng-class="{'current-page': isState('trafficPortal.private.serviceCategories')}"><a href="/#!/service-categories">Service Categories</a></li>
                     </ul>
                 </li>
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Configure</span></a>
@@ -48,7 +49,6 @@ under the License.
                         <li class="side-menu-category-item" ng-if="hasCapability('params-read')" ng-class="{'current-page': isState('trafficPortal.private.parameters')}"><a href="/#!/parameters">Parameters</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('types-read')" ng-class="{'current-page': isState('trafficPortal.private.types')}"><a href="/#!/types">Types</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('statuses-read')" ng-class="{'current-page': isState('trafficPortal.private.statuses')}"><a href="/#!/statuses">Statuses</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('service-categories-read')" ng-class="{'current-page': isState('trafficPortal.private.serviceCategories')}"><a href="/#!/service_categories">Service Categories</a></li>
                     </ul>
                 </li>
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Topology</span></a>

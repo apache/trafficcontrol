@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	API_SERVICE_CATEGORIES = apiBase + "/service_categories"
+	API_SERVICE_CATEGORIES = apiBase + "/service-categories"
 )
 
 // CreateServiceCategory performs a post to create a service category.
