@@ -36,6 +36,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -77,6 +78,8 @@ public class DeliveryService {
 	private final String domain;
 	@JsonIgnore
 	private final String tld;
+	@JsonIgnore
+	private final Pattern wildcardPattern = Pattern.compile("^\\(\\.\\*\\\\\\.\\|\\^\\)|^\\.\\*\\\\\\.|\\\\\\.\\.\\*");
 	@JsonIgnore
 	private final JsonNode bypassDestination;
 	@JsonIgnore
@@ -381,11 +384,11 @@ public class DeliveryService {
 		return uri.toString();
 	}
 
-	public String getRemap(final String pattern) {
-		if (!pattern.contains(".*")) {
-			return pattern;
+	public String getRemap(final String dsPattern) {
+		if (!dsPattern.contains(".*")) {
+			return dsPattern;
 		}
-		final String host = pattern.replaceAll("^\\(\\.\\*\\\\\\.\\|\\^\\)|^\\.\\*\\\\\\.|\\\\\\.\\.\\*", "") + "." + tld;
+		final String host = wildcardPattern.matcher(dsPattern).replaceAll("") + "." + tld;
 		return this.isDns()
 				? this.routingName + "." + host
 				: host;
