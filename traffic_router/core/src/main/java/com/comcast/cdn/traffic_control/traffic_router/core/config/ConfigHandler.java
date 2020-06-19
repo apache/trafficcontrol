@@ -510,7 +510,7 @@ public class ConfigHandler {
 											? cache.getId() + "." + remap
 											: remap;
 									dsNames.add(getDsName(fqdn, tld));
-									if (!remap.equals(ds.getDomain())) {
+									if (!remap.equals(ds.isDns() ? ds.getRoutingName() + "." + ds.getDomain() : ds.getDomain())) {
 										return;
 									}
 									try {
