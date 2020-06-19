@@ -387,7 +387,7 @@ public class DeliveryService {
 		}
 		final String host = pattern.replaceAll("^\\(\\.\\*\\\\\\.\\|\\^\\)|^\\.\\*\\\\\\.|\\\\\\.\\.\\*", "") + "." + tld;
 		return this.isDns()
-				? this.getId() + "." + host
+				? this.routingName + "." + host
 				: host;
 	}
 
