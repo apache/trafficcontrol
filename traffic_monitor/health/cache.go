@@ -40,14 +40,26 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.LegacyT
 		return
 	}
 
+	if newResult.InterfaceVitals == nil {
+		newResult.InterfaceVitals = map[string]cache.Vitals{}
+	}
+
 	// proc.loadavg -- we're using the 1 minute average (!?)
 	newResult.Vitals.LoadAvg = newResult.Statistics.Loadavg.One
 
-	// We will use the average for vitality, this has the possibility of overflow
-	// however the code had a few overflow issues that has been in production for years
-	// at some point this will need to be chagned when Vitals is revisted
-	log.Infof("Cache '%s' has %d interfaces, we will use average (overflow possible) for vitality", newResult.ID, len(newResult.Statistics.Interfaces))
-	for _, iface := range newResult.Interfaces() {
+	for ifaceName, iface := range newResult.Interfaces() {
+		ifaceVitals := cache.Vitals{
+			BytesIn:    iface.BytesIn,
+			BytesOut:   iface.BytesOut,
+			MaxKbpsOut: iface.Speed * 1000,
+		}
+
+		if prevResult != nil && prevResult.InterfaceVitals != nil && prevResult.InterfaceVitals[ifaceName].BytesOut != 0 {
+			elapsedTimeInSecs := float64(newResult.Time.UnixNano()-prevResult.Time.UnixNano()) / 1000000000
+			ifaceVitals.KbpsOut = int64(float64((ifaceVitals.BytesOut-prevResult.InterfaceVitals[ifaceName].BytesOut)*8/1000) / elapsedTimeInSecs)
+		}
+		newResult.InterfaceVitals[ifaceName] = ifaceVitals
+
 		// Overflow possible
 		newResult.Vitals.BytesOut += iface.BytesOut
 		newResult.Vitals.BytesIn += iface.BytesIn
@@ -55,9 +67,6 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.LegacyT
 		newResult.Vitals.MaxKbpsOut += iface.Speed * 1000
 	}
 
-	newResult.Vitals.BytesOut = newResult.Vitals.BytesOut / uint64(len(newResult.Interfaces()))
-	newResult.Vitals.BytesIn = newResult.Vitals.BytesIn / uint64(len(newResult.Interfaces()))
-	newResult.Vitals.MaxKbpsOut = newResult.Vitals.MaxKbpsOut / int64(len(newResult.Interfaces()))
 	if prevResult != nil && prevResult.Vitals.BytesOut != 0 {
 		elapsedTimeInSecs := float64(newResult.Time.UnixNano()-prevResult.Time.UnixNano()) / 1000000000
 		newResult.Vitals.KbpsOut = int64(float64((newResult.Vitals.BytesOut-prevResult.Vitals.BytesOut)*8/1000) / elapsedTimeInSecs)
@@ -96,7 +105,7 @@ const UnavailableStr = "unavailable"
 // The availability of EvalCache MAY NOT be used to directly set the cache's local availability, because the threshold stats may not be part of the poller which produced the result. Rather, if the cache was previously unavailable from a threshold, it must be verified that threshold stat is in the results before setting the cache to available.
 // The resultStats may be nil, and if so, won't be checked for thresholds. For example, the Health poller doesn't have Stats.
 // TODO change to return a `cache.AvailableStatus`
-func EvalCache(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.LegacyTrafficMonitorConfigMap) (bool, bool, string, string) {
+func EvalCache(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.LegacyTrafficMonitorConfigMap, interfaceName string) (bool, bool, string, string) {
 	serverInfo, ok := mc.TrafficServer[string(result.ID)]
 	if !ok {
 		log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
@@ -125,7 +134,7 @@ func EvalCache(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHis
 		resultStat := interface{}(nil)
 		if computedStatF, ok := computedStats[stat]; ok {
 			dummyCombinedstate := tc.IsAvailable{} // the only stats which use combinedState are things like isAvailable, which don't make sense to ever be thresholds.
-			resultStat = computedStatF(result, serverInfo, serverProfile, dummyCombinedstate)
+			resultStat = computedStatF(result, serverInfo, serverProfile, dummyCombinedstate, interfaceName)
 		} else {
 			if resultStats == nil {
 				continue
@@ -151,7 +160,61 @@ func EvalCache(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHis
 	return avail, result.UsingIPv4, eventDescVal, eventMsg
 }
 
-// CalcAvailabilityWithStats calculates the availability of each cache in results.
+func EvalAggregate(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.TrafficMonitorConfigMap) (bool, bool, string, string) {
+	serverInfo, ok := mc.TrafficServer[string(result.ID)]
+	if !ok {
+		log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
+		return false, result.UsingIPv4, "ERROR - server missing in Traffic Ops monitor config", ""
+	}
+	status := tc.CacheStatusFromString(serverInfo.ServerStatus)
+	if status == tc.CacheStatusOnline {
+		// return here first, even though EvalCacheWithStatus checks online, because we later assume that if EvalCacheWithStatus returns true, to return false if thresholds are exceeded; but, if the cache is ONLINE, we don't want to check thresholds.
+		return true, result.UsingIPv4, eventDesc(status, AvailableStr), ""
+	}
+
+	serverProfile, ok := mc.Profile[serverInfo.Profile]
+	if !ok {
+		log.Errorf("Cache %v profile %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID, serverInfo.Profile)
+		return false, result.UsingIPv4, "ERROR - server profile missing in Traffic Ops monitor config", ""
+	}
+
+	avail, eventDescVal, eventMsg := EvalCacheWithStatusInfo(result, mc, status, serverInfo)
+	if !avail {
+		return avail, result.UsingIPv4, eventDescVal, eventMsg
+	}
+
+	computedAggregateStats := cache.ComputedAggregateStats()
+
+	for stat, threshold := range serverProfile.Parameters.AggregateThresholds {
+		resultStat := interface{}(nil)
+		if computedStatF, ok := computedAggregateStats[stat]; ok {
+			resultStat = computedStatF(result)
+		} else {
+			if resultStats == nil {
+				continue
+			}
+			resultStatHistory := resultStats.Load(stat)
+			if len(resultStatHistory) == 0 {
+				continue
+			}
+			resultStat = resultStatHistory[0].Val
+		}
+
+		resultStatNum, ok := util.ToNumeric(resultStat)
+		if !ok {
+			log.Errorf("health.EvalCache threshold stat %s was not a number: %v", stat, resultStat)
+			continue
+		}
+
+		if !inThreshold(threshold, resultStatNum) {
+			return false, result.UsingIPv4, eventDesc(status, exceedsThresholdMsg(stat, threshold, resultStatNum)), stat
+		}
+	}
+
+	return avail, result.UsingIPv4, eventDescVal, eventMsg
+}
+
+// CalcAvailability calculates the availability of each cache in results.
 // statResultHistory may be nil, in which case stats won't be used to calculate availability.
 func CalcAvailability(results []cache.Result, pollerName string, statResultHistory *threadsafe.ResultStatHistory, mc tc.LegacyTrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents, protocol config.PollingProtocol) {
 	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
@@ -198,7 +261,7 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 				t := (*statResultsVal)[interfaceName]
 				statResults = &t
 			}
-			isAvailable, usingIPv4, whyAvailable, unavailableStat := EvalCache(resultInfo, statResults, &mc)
+			isAvailable, usingIPv4, whyAvailable, unavailableStat := EvalCache(resultInfo, statResults, &mc, interfaceName)
 
 			// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
 			previousStatus, hasPreviousStatus := localCacheStatuses[tc.CacheName(result.ID)][interfaceName]
@@ -248,48 +311,68 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 			},
 			ProcessedAvailable: false,
 			LastCheckedIPv4:    false,
-			Status:             "",
+			Status:             mc.TrafficServer[string(result.ID)].ServerStatus,
 			Why:                "",
 			UnavailableStat:    "",
-			Poller:             "",
+			Poller:             pollerName,
 		}
-		for interfaceName, status := range localCacheStatuses[tc.CacheName(result.ID)] {
-			if interfaceName == tc.CacheInterfacesAggregate {
-				continue
-			}
-			aggregateStatus.Available.IPv4 = aggregateStatus.Available.IPv4 || status.Available.IPv4
-			aggregateStatus.Available.IPv6 = aggregateStatus.Available.IPv6 || status.Available.IPv6
 
-			// What does this mean on aggregated data?
-			// For now assume that if any interface was then the aggregate is
-			aggregateStatus.LastCheckedIPv4 = aggregateStatus.LastCheckedIPv4 || status.LastCheckedIPv4
+		aggIsAvailable, aggUsingIPv4, aggWhyAvailable, aggUnavailableStat := EvalAggregate(cache.ToInfo(result), statResults, &mc)
+		aggAvailableTuple := cache.AvailableTuple{}
+		aggAvailableTuple.SetAvailability(aggUsingIPv4, aggIsAvailable)
+		aggNewAvailableState := processAvailableTuple(aggAvailableTuple, serverInfo)
 
-			if status.Why != "" {
-				newWhyText := fmt.Sprintf("%s: %s", interfaceName, status.Why)
-				if aggregateStatus.Why != "" {
-					newWhyText = ", " + newWhyText
+		if !aggIsAvailable {
+			// If aggregate fails then Cache should be marked down
+			aggregateStatus.Available = aggAvailableTuple
+			aggregateStatus.ProcessedAvailable = aggNewAvailableState
+			aggregateStatus.LastCheckedIPv4 = aggUsingIPv4
+			aggregateStatus.Why = aggWhyAvailable
+			aggregateStatus.UnavailableStat = "aggregate." + aggUnavailableStat
+
+		} else {
+			for interfaceName, status := range localCacheStatuses[tc.CacheName(result.ID)] {
+				if interfaceName == tc.CacheInterfacesAggregate {
+					continue
 				}
-				aggregateStatus.Why += newWhyText
-			}
+				aggregateStatus.Available.IPv4 = aggregateStatus.Available.IPv4 || status.Available.IPv4
+				aggregateStatus.Available.IPv6 = aggregateStatus.Available.IPv6 || status.Available.IPv6
 
-			if status.UnavailableStat != "" {
-				newUnavailableText := fmt.Sprintf("%s: %s", interfaceName, status.UnavailableStat)
-				if aggregateStatus.UnavailableStat != "" {
-					newUnavailableText += ", " + newUnavailableText
+				// What does this mean on aggregated data?
+				// For now assume that if any interface was then the aggregate is
+				aggregateStatus.LastCheckedIPv4 = aggregateStatus.LastCheckedIPv4 || status.LastCheckedIPv4
+
+				if status.Why != "" {
+					newWhyText := fmt.Sprintf("%s: %s", interfaceName, status.Why)
+					if aggregateStatus.Why != "" {
+						newWhyText = ", " + newWhyText
+					}
+					aggregateStatus.Why += newWhyText
 				}
-				aggregateStatus.UnavailableStat = newUnavailableText
-			}
 
-			// What does this mean on aggregated data?
-			// For now use random status unless a REPORTED status is found
-			if tc.CacheStatus(aggregateStatus.Status) != tc.CacheStatusReported {
-				aggregateStatus.Status = status.Status
-			}
+				if status.UnavailableStat != "" {
+					newUnavailableText := fmt.Sprintf("%s: %s", interfaceName, status.UnavailableStat)
+					if aggregateStatus.UnavailableStat != "" {
+						newUnavailableText += ", " + newUnavailableText
+					}
+					aggregateStatus.UnavailableStat = newUnavailableText
+				}
 
-			// Each interface in a cache should always have the same poller
-			aggregateStatus.Poller = status.Poller
+				// What does this mean on aggregated data?
+				// For now use random status unless a REPORTED status is found
+				if tc.CacheStatus(aggregateStatus.Status) != tc.CacheStatusReported {
+					aggregateStatus.Status = status.Status
+				}
+
+				// Each interface in a cache should always have the same poller
+				aggregateStatus.Poller = status.Poller
+			}
 		}
 		aggregateStatus.ProcessedAvailable = processAvailableTuple(aggregateStatus.Available, serverInfo)
+
+		if _, ok := localCacheStatuses[tc.CacheName(result.ID)]; !ok {
+			localCacheStatuses[tc.CacheName(result.ID)] = make(map[string]cache.AvailableStatus)
+		}
 		localCacheStatuses[tc.CacheName(result.ID)][tc.CacheInterfacesAggregate] = aggregateStatus
 
 		localStates.SetCache(tc.CacheName(result.ID), tc.IsAvailable{
@@ -302,19 +385,19 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 			t := (*statResultsVal)[tc.CacheInterfacesAggregate]
 			statResults = &t
 		}
-		_, usingIPv4, whyAvailable, _ := EvalCache(resultInfo, statResults, &mc)
 		if available, ok := localStates.GetCache(tc.CacheName(result.ID)); !ok || available.IsAvailable != aggregateStatus.ProcessedAvailable {
 			protocol := "IPv4"
-			if !usingIPv4 {
+			if !aggregateStatus.LastCheckedIPv4 {
 				protocol = "IPv6"
 			}
 			log.Infof("Changing state for %s was: %t now: %t because %s poller: %v on protocol %v error: %v",
-				result.ID, available.IsAvailable, aggregateStatus.ProcessedAvailable, whyAvailable, pollerName, protocol, result.Error)
-			events.Add(Event{Time: Time(time.Now()), Description: "Protocol: (" + protocol + ") " + whyAvailable +
+				result.ID, available.IsAvailable, aggregateStatus.ProcessedAvailable, aggregateStatus.Why, pollerName, protocol, result.Error)
+			events.Add(Event{Time: Time(time.Now()), Description: "Protocol: (" + protocol + ") " + aggregateStatus.Why +
 				" (" + pollerName + ")", Name: result.ID, Hostname: result.ID,
 				Type: toData.ServerTypes[tc.CacheName(result.ID)].String(), Available: aggregateStatus.ProcessedAvailable,
 				IPv4Available: aggregateStatus.Available.IPv4, IPv6Available: aggregateStatus.Available.IPv6})
 		}
+		//}
 	}
 	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates, toData)
 	localCacheStatusThreadsafe.Set(localCacheStatuses)

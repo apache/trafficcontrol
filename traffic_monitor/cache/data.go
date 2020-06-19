@@ -172,28 +172,30 @@ type ResultInfoHistory map[tc.CacheName][]ResultInfo
 // any errors, the time of the poll, the request time duration, Astats System
 // (Vitals), Poll ID, and Availability.
 type ResultInfo struct {
-	Available   bool
-	Error       error
-	ID          string
-	PollID      uint64
-	RequestTime time.Duration
-	Statistics  Statistics
-	Time        time.Time
-	UsingIPv4   bool
-	Vitals      Vitals
+	Available       bool
+	Error           error
+	ID              string
+	PollID          uint64
+	RequestTime     time.Duration
+	Statistics      Statistics
+	Time            time.Time
+	UsingIPv4       bool
+	Vitals          Vitals
+	InterfaceVitals map[string]Vitals
 }
 
 func ToInfo(r Result) ResultInfo {
 	return ResultInfo{
-		Available:   r.Available,
-		Error:       r.Error,
-		ID:          r.ID,
-		PollID:      r.PollID,
-		RequestTime: r.RequestTime,
-		Statistics:  r.Statistics,
-		Time:        r.Time,
-		UsingIPv4:   r.UsingIPv4,
-		Vitals:      r.Vitals,
+		Available:       r.Available,
+		Error:           r.Error,
+		ID:              r.ID,
+		PollID:          r.PollID,
+		RequestTime:     r.RequestTime,
+		Statistics:      r.Statistics,
+		Time:            r.Time,
+		UsingIPv4:       r.UsingIPv4,
+		Vitals:          r.Vitals,
+		InterfaceVitals: r.InterfaceVitals,
 	}
 }
 

@@ -270,14 +270,14 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 					stats.Caches[id][tc.CacheInterfacesAggregate] = map[string][]cache.ResultStatVal{}
 				}
 				stats.Caches[id][tc.CacheInterfacesAggregate][stat] = append(stats.Caches[id][tc.CacheInterfacesAggregate][stat],
-					cache.ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache), Time: t, Span: 1})
+					cache.ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache, tc.CacheInterfacesAggregate), Time: t, Span: 1})
 				// Need to actually handle interfaces, needs vitals to be refactored
 				for infName, _ := range resultInfo.Statistics.Interfaces {
 					if _, ok := stats.Caches[id][infName]; !ok {
 						stats.Caches[id][infName] = map[string][]cache.ResultStatVal{}
 					}
 					stats.Caches[id][infName][stat] = append(stats.Caches[id][infName][stat],
-						cache.ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache), Time: t, Span: 1})
+						cache.ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache, infName), Time: t, Span: 1})
 				}
 			}
 		}
