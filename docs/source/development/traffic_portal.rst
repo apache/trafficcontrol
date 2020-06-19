@@ -44,20 +44,21 @@ Installing The Traffic Portal Developer Environment
 #. Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
 #. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
 #. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
-#. Make sure that compass is installed and functioning correctly by running ``compass version``. If ``compass`` is not running, you can install it on macOS as follows:
+#. Make sure that compass is installed and functioning correctly by running ``compass version``. If compass is not available, then it can be installed using ``gem``'s manually, or using ``bundle``
 
-    #. macOS comes with its own version of ruby built into it. In order to install compass, if you run a command like ``sudo gem install compass``, it will take the default ruby available in mac.
+    .. tip:: Bundle will automitcally install the correct version of the gems
 
-       In order to properly install ``compass``, here is what you should be doing:
-
-    #. ``brew install ruby``
+    #. ``brew install ruby``/``apt-get install ruby``/``yum install ruby``
 
     #. ``gem update --system``
 
-    #. ``gem install compass``
+    #. At this point, you can either manually install the gems or use bundler
 
-        .. tip:: You need to install ``sass`` before you install ``compass``. You can do that by running:
-                 ``gem install sass``
+       #. For manually: ``gem install sass compass``
+
+       #. For automatically: ``gem install bundle && bundle install``
+
+       .. note:: Bundle requires ruby versions > 2.3.0, so if you're using a version of ruby < 2.3.0 then this will not work.
 
     #. Make sure that ``compass`` and ``sass`` are part of your ``PATH`` environment variable.
 
