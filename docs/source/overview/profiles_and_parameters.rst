@@ -560,7 +560,12 @@ health.threshold.loadavg
 	.. caution:: If more than one Parameter with this :ref:`parameter-name` and Config File exist on the same :ref:`Profile <profiles>` with different :ref:`Values <parameter-value>`, the actual Value_ used by any given Traffic Monitor instance is undefined (though it will be the Value_ of one of those Parameters).
 
 health.threshold.availableBandwidthInKbps
-	The Value_ of this Parameter sets the amount of bandwidth (in kilobits per second) that Traffic Control will try to keep available on the :term:`cache server`. For example a Value_ of ">1500000" indicates that the :term:`cache server` will be marked "unhealthy" if its available remaining bandwidth on the network interface used by the caching proxy falls below 1.5Gbps.
+	The Value_ of this Parameter sets the amount of bandwidth (in kilobits per second) that Traffic Control will try to keep available on the :term:`cache server` for each interface. For example a Value_ of ">1500000" indicates that the :term:`cache server` will be marked "unhealthy" if its available remaining bandwidth on any of the network interfaces used by the caching proxy fall below 1.5Gbps.
+
+	.. caution:: If more than one Parameter with this :ref:`parameter-name` and Config File exist on the same :ref:`Profile <profiles>` with different :ref:`Values <parameter-value>`, the actual Value_ used by any given Traffic Monitor instance is undefined (though it will be the Value_ of one of those Parameters).
+
+health.threshold.aggregate.availableBandwidthInKbps
+	The Value_ of this Parameter sets the aggregate amount of bandwidth (in kilobits per second) that Traffic Control will try to keep available on the :term:`cache server`. For example a Value_ of ">1500000" indicates that the :term:`cache server` will be marked "unhealthy" if its aggregate available remaining bandwidth on all of the network interfaces used by the caching proxy falls below 1.5Gbps.
 
 	.. caution:: If more than one Parameter with this :ref:`parameter-name` and Config File exist on the same :ref:`Profile <profiles>` with different :ref:`Values <parameter-value>`, the actual Value_ used by any given Traffic Monitor instance is undefined (though it will be the Value_ of one of those Parameters).
 

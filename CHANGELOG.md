@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Astats csv support - astats will now respond to `Accept: text/csv` and return a csv formatted stats list
 - Updated /deliveryservices/{{ID}}/servers to use multiple interfaces in API v3
 - Updated /deliveryservices/{{ID}}/servers/eligible to use multiple interfaces in API v3
+- Added ability for Traffic Monitor to determine health of cache based on interface data and aggregate data.
 
 ### Fixed
 - Fixed #3661 - Anonymous Proxy ipv4 whitelist does not work

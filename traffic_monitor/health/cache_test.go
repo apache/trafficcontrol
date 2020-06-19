@@ -64,16 +64,21 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 		Time:            time.Now(),
 		RequestTime:     time.Second,
 		Vitals:          cache.Vitals{},
+		InterfaceVitals: map[string]cache.Vitals{},
 		PollID:          42,
 		PollFinished:    make(chan uint64, 1),
 		PrecomputedData: cache.PrecomputedData{},
 		Available:       true,
 	}
 	GetVitals(&result, nil, nil)
+	prevIV := map[string]cache.Vitals{}
+	prevIV["eth0"] = cache.Vitals{BytesOut: result.Vitals.BytesOut - 1250000000}  // 10 gigabits
+	prevIV["bond0"] = cache.Vitals{BytesOut: result.Vitals.BytesOut - 1250000000} // 10 gigabits
 
 	prevResult := cache.Result{
-		Time:   result.Time.Add(time.Second * -1),
-		Vitals: cache.Vitals{BytesOut: result.Vitals.BytesOut - 1250000000}, // 10 gigabits
+		Time:            result.Time.Add(time.Second * -1),
+		Vitals:          cache.Vitals{BytesOut: result.Vitals.BytesOut - 1250000000}, // 10 gigabits
+		InterfaceVitals: prevIV,
 	}
 	GetVitals(&result, &prevResult, nil)
 
@@ -93,6 +98,12 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 			Thresholds: map[string]tc.HealthThreshold{
 				"availableBandwidthInKbps": tc.HealthThreshold{
 					Val:        15000000,
+					Comparator: ">",
+				},
+			},
+			AggregateThresholds: map[string]tc.HealthThreshold{
+				"availableBandwidthInKbps": tc.HealthThreshold{
+					Val:        25000000,
 					Comparator: ">",
 				},
 			},
@@ -131,20 +142,28 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	}
 	for interfaceName, localCacheStatus := range localCacheStatuses[tc.CacheName(result.ID)] {
 		if interfaceName == tc.CacheInterfacesAggregate {
-			continue
+			if !strings.Contains(localCacheStatus.Why, "availableBandwidthInKbps too low") {
+				t.Fatalf("localCacheStatus.Why (%s) expected 'availableBandwidthInKbps too low' actual %v", interfaceName, localCacheStatus.Why)
+			} else if localCacheStatus.UnavailableStat != "aggregate.availableBandwidthInKbps" {
+				t.Fatalf("localCacheStatus.UnavailableStat (%s) expected %v actual %v", interfaceName, "aggregate.availableBandwidthInKbps", localCacheStatus.UnavailableStat)
+			}
+		} else {
+			if !strings.Contains(localCacheStatus.Why, "availableBandwidthInKbps too low") {
+				t.Fatalf("localCacheStatus.Why (%s) expected 'availableBandwidthInKbps too low' actual %v", interfaceName, localCacheStatus.Why)
+			} else if localCacheStatus.UnavailableStat != "availableBandwidthInKbps" {
+				t.Fatalf("localCacheStatus.UnavailableStat (%s) expected %v actual %v", interfaceName, "availableBandwidthInKbps", localCacheStatus.UnavailableStat)
+			}
 		}
+
 		if localCacheStatus.Available.IPv4 {
 			t.Fatalf("localCacheStatus.Available.IPv4 (%s) over kbps threshold expected: false, actual: true", interfaceName)
 		} else if localCacheStatus.Available.IPv6 {
 			t.Fatalf("localCacheStatus.Available.IPv6 (%s) over kbps threshold expected: false, actual: true", interfaceName)
 		} else if localCacheStatus.Status != string(tc.CacheStatusReported) {
 			t.Fatalf("localCacheStatus.Status (%s) expected %v actual %v", interfaceName, "todo", localCacheStatus.Status)
-		} else if localCacheStatus.UnavailableStat != "availableBandwidthInKbps" {
-			t.Fatalf("localCacheStatus.UnavailableStat (%s) expected %v actual %v", interfaceName, "availableBandwidthInKbps", localCacheStatus.UnavailableStat)
 		} else if localCacheStatus.Poller != pollerName {
 			t.Fatalf("localCacheStatus.Poller (%s) expected %v actual %v", interfaceName, pollerName, localCacheStatus.Poller)
-		} else if !strings.Contains(localCacheStatus.Why, "availableBandwidthInKbps too low") {
-			t.Fatalf("localCacheStatus.Why (%s) expected 'availableBandwidthInKbps too low' actual %v", interfaceName, localCacheStatus.Why)
+
 		}
 	}
 
@@ -162,18 +181,33 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	CalcAvailability(healthResults, healthPollerName, nil, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
 
 	localCacheStatuses = localCacheStatusThreadsafe.Get()
-	localCacheStatus := localCacheStatuses[tc.CacheName(result.ID)]["bond0"]
-	if localCacheStatus.Available.IPv4 {
-		t.Fatalf("localCacheStatus.Available.IPv4 over kbps threshold expected: false, actual: true")
-	} else if localCacheStatus.Available.IPv6 {
-		t.Fatalf("localCacheStatus.Available.IPv6 over kbps threshold expected: false, actual: true")
-	} else if localCacheStatus.Status != string(tc.CacheStatusReported) {
-		t.Fatalf("localCacheStatus.Status expected %v actual %v", "tc.CacheStatusReported", localCacheStatus.Status)
-	} else if localCacheStatus.UnavailableStat != "availableBandwidthInKbps" {
-		t.Fatalf("localCacheStatus.UnavailableStat expected %v actual %v", "availableBandwidthInKbps", localCacheStatus.UnavailableStat)
-	} else if localCacheStatus.Poller != healthPollerName {
-		t.Fatalf("localCacheStatus.Poller expected %v actual %v", healthPollerName, localCacheStatus.Poller)
-	} else if !strings.Contains(localCacheStatus.Why, "availableBandwidthInKbps too low") {
-		t.Fatalf("localCacheStatus.Why expected 'availableBandwidthInKbps too low' actual %v", localCacheStatus.Why)
+	if _, ok := localCacheStatuses[tc.CacheName(result.ID)]; !ok {
+		t.Fatalf("expected: localCacheStatus[cacheName], actual: missing")
+	}
+	for interfaceName, localCacheStatus := range localCacheStatuses[tc.CacheName(result.ID)] {
+		if interfaceName == tc.CacheInterfacesAggregate {
+			if !strings.Contains(localCacheStatus.Why, "availableBandwidthInKbps too low") {
+				t.Fatalf("localCacheStatus.Why (%s) expected 'availableBandwidthInKbps too low' actual %v", interfaceName, localCacheStatus.Why)
+			} else if localCacheStatus.UnavailableStat != "aggregate.availableBandwidthInKbps" {
+				t.Fatalf("localCacheStatus.UnavailableStat (%s) expected %v actual %v", interfaceName, "aggregate.availableBandwidthInKbps", localCacheStatus.UnavailableStat)
+			}
+		} else {
+			if !strings.Contains(localCacheStatus.Why, "availableBandwidthInKbps too low") {
+				t.Fatalf("localCacheStatus.Why (%s) expected 'availableBandwidthInKbps too low' actual %v", interfaceName, localCacheStatus.Why)
+			} else if localCacheStatus.UnavailableStat != "availableBandwidthInKbps" {
+				t.Fatalf("localCacheStatus.UnavailableStat (%s) expected %v actual %v", interfaceName, "availableBandwidthInKbps", localCacheStatus.UnavailableStat)
+			}
+		}
+
+		if localCacheStatus.Available.IPv4 {
+			t.Fatalf("localCacheStatus.Available.IPv4 (%s) over kbps threshold expected: false, actual: true", interfaceName)
+		} else if localCacheStatus.Available.IPv6 {
+			t.Fatalf("localCacheStatus.Available.IPv6 (%s) over kbps threshold expected: false, actual: true", interfaceName)
+		} else if localCacheStatus.Status != string(tc.CacheStatusReported) {
+			t.Fatalf("localCacheStatus.Status (%s) expected %v actual %v", interfaceName, "todo", localCacheStatus.Status)
+		} else if localCacheStatus.Poller != healthPollerName {
+			t.Fatalf("localCacheStatus.Poller (%s) expected %v actual %v", interfaceName, healthPollerName, localCacheStatus.Poller)
+
+		}
 	}
 }

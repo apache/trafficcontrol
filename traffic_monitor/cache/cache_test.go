@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
@@ -50,20 +51,45 @@ func (f DummyFilterNever) WithinStatHistoryMax(i int) bool {
 	return false
 }
 
+var AggregatedStats = Vitals{
+	KbpsOut:    1500000,
+	MaxKbpsOut: 2500000,
+	LoadAvg:    100000,
+}
+
+var StatToDesiredValue = map[string]float64{
+	"availableBandwidthInKbps": 1000000,
+	"availableBandwidthInMbps": 1000,
+	"bandwidth":                1500000,
+	"kbps":                     1500000,
+	"gbps":                     1.5,
+	"loadavg":                  100000,
+	"maxKbps":                  2500000,
+}
+
+func TestComputeAggregateStats(t *testing.T) {
+	computedStats := ComputedAggregateStats()
+
+	for stat, want := range StatToDesiredValue {
+		got := computedStats[stat](ResultInfo{Vitals: AggregatedStats})
+		if numGot, ok := util.ToNumeric(got); ok && numGot != want {
+			t.Errorf("ComputedAggregateStats[\"%v\"] return %v instead of %v", stat, got, want)
+		}
+	}
+}
+
 func TestComputeStatGbps(t *testing.T) {
 	serverInfo := tc.LegacyTrafficServer{}
 	serverProfile := tc.TMProfile{}
 	combinedState := tc.IsAvailable{}
 	computedStats := ComputedStats()
-	got := computedStats["gbps"](ResultInfo{Vitals: Vitals{KbpsOut: 1500000}}, serverInfo, serverProfile, combinedState)
-	want := 1.5
-	if got != want {
-		t.Errorf("ComputedStats[\"gbps\"] return %v instead of %v", got, want)
-	}
 
-	got = computedStats["gbps"](ResultInfo{Vitals: Vitals{KbpsOut: 1400000}}, serverInfo, serverProfile, combinedState)
-	want = 1.4
-	if got != want {
-		t.Errorf("ComputedStats[\"gbps\"] return %v instead of %v", got, want)
+	for stat, want := range StatToDesiredValue {
+		got := computedStats[stat](ResultInfo{InterfaceVitals: map[string]Vitals{
+			"eth0": AggregatedStats,
+		}}, serverInfo, serverProfile, combinedState, "eth0")
+		if numGot, ok := util.ToNumeric(got); ok && numGot != want {
+			t.Errorf("ComputedStats[\"%v\"] return %v instead of %v", stat, got, want)
+		}
 	}
 }

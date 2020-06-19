@@ -74,10 +74,11 @@ Response Structure
 	:name:       A string that is the :ref:`Profile's Name <profile-name>`
 	:parameters: An array of the :term:`Parameters` in this :term:`Profile` that relate to monitoring configuration. This can be ``null`` if the servers using this :term:`Profile` cannot be monitored (e.g. Traffic Routers)
 
-		:health.connection.timeout:                 A timeout value, in milliseconds, to wait before giving up on a health check request
-		:health.polling.url:                        A URL to request for polling health. Substitutions can be made in a shell-like syntax using the properties of an object from the ``"trafficServers"`` array
-		:health.threshold.availableBandwidthInKbps: The total amount of bandwidth that servers using this profile are allowed, in Kilobits per second. This is a string and using comparison operators to specify ranges, e.g. ">10" means "more than 10 kbps"
-		:health.threshold.loadavg:                  The UNIX loadavg at which the server should be marked "unhealthy"
+		:health.connection.timeout:                           A timeout value, in milliseconds, to wait before giving up on a health check request
+		:health.polling.url:                                  A URL to request for polling health. Substitutions can be made in a shell-like syntax using the properties of an object from the ``"trafficServers"`` array
+		:health.threshold.availableBandwidthInKbps:           The total amount of bandwidth that servers using this profile are allowed per network interface, in Kilobits per second. This is a string and using comparison operators to specify ranges, e.g. ">10" means "more than 10 kbps"
+		:health.threshold.aggregate.availableBandwidthInKbps: The total amount of bandwidth that servers using this profile are allowed as an aggreagate across all network interfaces, in Kilobits per second. This is a string and using comparison operators to specify ranges, e.g. ">10" means "more than 10 kbps"
+		:health.threshold.loadavg:                            The UNIX loadavg at which the server should be marked "unhealthy"
 
 			.. seealso:: :manpage:`uptime(1)`
 
@@ -241,6 +242,7 @@ Response Structure
 					"health.connection.timeout": 2000,
 					"health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
 					"health.threshold.availableBandwidthInKbps": ">1750000",
+					"health.threshold.aggregate.availableBandwidthInKbps": ">17500000",
 					"health.threshold.loadavg": "25.0",
 					"health.threshold.queryTime": 1000,
 					"history.count": 30
@@ -253,6 +255,7 @@ Response Structure
 					"health.connection.timeout": 2000,
 					"health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
 					"health.threshold.availableBandwidthInKbps": ">1750000",
+					"health.threshold.aggregate.availableBandwidthInKbps": ">17500000",
 					"health.threshold.loadavg": "25.0",
 					"health.threshold.queryTime": 1000,
 					"history.count": 30

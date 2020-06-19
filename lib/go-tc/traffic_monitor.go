@@ -143,7 +143,9 @@ type TMParameters struct {
 	HealthPollingType       string `json:"health.polling.type"`
 	HistoryCount            int    `json:"history.count"`
 	MinFreeKbps             int64
+	MinFreeKbpsAggregate    int64
 	Thresholds              map[string]HealthThreshold `json:"health_threshold"`
+	AggregateThresholds     map[string]HealthThreshold `json:"health_threshold_aggregate"`
 }
 
 const DefaultHealthThresholdComparator = "<"
@@ -219,13 +221,18 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 	}
 
 	params.Thresholds = map[string]HealthThreshold{}
+	params.AggregateThresholds = map[string]HealthThreshold{}
 	thresholdPrefix := "health.threshold."
+	thresholdAggregatePrefix := "health.threshold.aggregate."
 	for k, v := range raw {
 		if strings.HasPrefix(k, thresholdPrefix) {
 			stat := k[len(thresholdPrefix):]
 			vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
 			if t, err := strToThreshold(vStr); err != nil {
 				return fmt.Errorf("Unmarshalling TMParameters `health.threshold.` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v'", k, v)
+			} else if strings.HasPrefix(k, thresholdAggregatePrefix) {
+				stat = k[len(thresholdAggregatePrefix):]
+				params.AggregateThresholds[stat] = t
 			} else {
 				params.Thresholds[stat] = t
 			}
@@ -267,6 +274,8 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 	for _, profile := range tmConfig.Profiles {
 		bwThreshold := profile.Parameters.Thresholds["availableBandwidthInKbps"]
 		profile.Parameters.MinFreeKbps = int64(bwThreshold.Val)
+		bwThresholdAggregate := profile.Parameters.AggregateThresholds["availableBandwidthInKbps"]
+		profile.Parameters.MinFreeKbpsAggregate = int64(bwThresholdAggregate.Val)
 		tm.Profile[profile.Name] = profile
 	}
 
