@@ -245,7 +245,7 @@ under the License.
                 <legend>Interfaces<button class="btn btn-success right-button" type="button" title="add a new interface" ng-click="addInterface()">Add Interface</button></legend>
                 <fieldset ng-repeat="inf in server.interfaces">
                     <legend>
-                        <input my-directive type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}" placeholder="eth0"/>
+                        <input type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}" placeholder="eth0"/>
                         <button class="btn btn-danger right-button" type="button" title="delete this interface" ng-click="deleteInterface(inf)">Remove interface</button>
                     </legend>
 
