@@ -142,7 +142,7 @@ Glossary
 	First-tier caches
 	First-tier cache server
 	First-tier cache servers
-		Closest to the client or end-user. The first tier in a :term:`Topology` is the tier that serves the client, which is typically composed of :term:`edge caches`.
+		Closest to the client or end-user. The first tier in a :term:`Topology` is the tier that serves the client, similar to the :term:`Edge-tier`.
 
 	forward proxy
 	forward proxies
