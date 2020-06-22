@@ -117,6 +117,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	pollerName := "stat"
 	results := []cache.Result{result}
 
+	// Ensure that if the interfaces haven't been reported yet that CalcAvailability doesn't panic
 	original := results[0].Statistics.Interfaces
 	results[0].Statistics.Interfaces = make(map[string]cache.Interface)
 	CalcAvailability(results, pollerName, statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
