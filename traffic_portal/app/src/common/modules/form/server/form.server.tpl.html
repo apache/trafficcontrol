@@ -242,9 +242,12 @@ under the License.
             </div>
 
             <fieldset>
-                <legend>Interfaces</legend>
+                <legend>Interfaces<button class="btn btn-success right-button" type="button" title="add a new interface" ng-click="addInterface()">Add Interface</button></legend>
                 <fieldset ng-repeat="inf in server.interfaces">
-                    <legend><input my-directive type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}"/></legend>
+                    <legend>
+                        <input my-directive type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}"/>
+                        <button class="btn btn-danger right-button" type="button" title="delete this interface" ng-click="deleteInterface(inf)">Remove interface</button>
+                    </legend>
 
                     <div>
                         <label for="{{inf.name}}-monitor">Monitor this interface</label>
@@ -258,7 +261,7 @@ under the License.
                     </div>
 
                     <fieldset>
-                        <legend>IP Addresses</legend>
+                        <legend>IP Addresses<button type="button" title="add new IP Address" class="btn btn-success right-button" ng-click="addIP(inf)">Add IP Address</button></legend>
                         <ul>
                             <li ng-repeat="ip in inf.ipAddresses" ng-class="{'bordered-item': !$last}">
                                 <label for="{{inf.name}}-{{ip.address}}" ng-class="{'has-error': hasError(serverForm[inf.name+'-'+ip.address])}">Address</label>
@@ -273,11 +276,8 @@ under the License.
                                 <button type="button" title="delete this IP address" class="btn btn-danger" ng-click="deleteIP(inf, ip)">Remove IP Address</button>
                             </li>
                         </ul>
-                        <button type="button" title="add new IP Address" class="btn btn-success right-button" ng-click="addIP(inf)">Add IP Address</button>
                     </fieldset>
-                    <button class="btn btn-danger right-button" type="button" title="delete this interface" ng-click="deleteInterface(inf)">Remove Interface</button>
                 </fieldset>
-                <button class="btn btn-success right-button" type="button" title="add a new interface" ng-click="addInterface()">Add Interface</button>
             </fieldset>
 
             <div class="modal-footer" style="grid-column: 1 / span 2;">
