@@ -188,6 +188,10 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 			log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
 		}
 
+		if _, ok := localCacheStatuses[tc.CacheName(result.ID)]; !ok {
+			localCacheStatuses[tc.CacheName(result.ID)] = make(map[string]cache.AvailableStatus)
+		}
+
 		resultInfo := cache.ToInfo(result)
 		for interfaceName, _ := range result.Interfaces() {
 			if statResultsVal != nil {
@@ -224,10 +228,6 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 			}
 
 			newAvailableState := processAvailableTuple(availableTuple, serverInfo)
-
-			if _, ok := localCacheStatuses[tc.CacheName(result.ID)]; !ok {
-				localCacheStatuses[tc.CacheName(result.ID)] = make(map[string]cache.AvailableStatus)
-			}
 
 			localCacheStatuses[tc.CacheName(result.ID)][interfaceName] = cache.AvailableStatus{
 				Available:          availableTuple,

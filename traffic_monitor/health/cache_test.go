@@ -116,6 +116,12 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 
 	pollerName := "stat"
 	results := []cache.Result{result}
+
+	original := results[0].Statistics.Interfaces
+	results[0].Statistics.Interfaces = make(map[string]cache.Interface)
+	CalcAvailability(results, pollerName, statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
+	results[0].Statistics.Interfaces = original
+
 	CalcAvailability(results, pollerName, statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
 
 	localCacheStatuses := localCacheStatusThreadsafe.Get()
