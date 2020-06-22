@@ -50,6 +50,7 @@ Request Structure
 :dscp:                      A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
 :ecsEnabled:                A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 :edgeHeaderRewrite:         A set of :ref:`ds-edge-header-rw-rules`
+:firstHeaderRewrite:        A set of :ref:`ds-first-header-rw-rules`
 :fqPacingRate:              The :ref:`ds-fqpr`
 :geoLimit:                  An integer that defines the :ref:`ds-geo-limit`
 :geoLimitCountries:         A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
@@ -60,7 +61,9 @@ Request Structure
 :httpBypassFqdn:            A :ref:`ds-http-bypass-fqdn`
 :infoUrl:                   An :ref:`ds-info-url`
 :initialDispersion:         The :ref:`ds-initial-dispersion`
+:innerHeaderRewrite:        A set of :ref:`ds-inner-header-rw-rules`
 :ipv6RoutingEnabled:        A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastHeaderRewrite:         A set of :ref:`ds-last-header-rw-rules`
 :logsEnabled:               A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:                  The :ref:`ds-longdesc` of this :term:`Delivery Service`
 :longDesc1:                 An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
