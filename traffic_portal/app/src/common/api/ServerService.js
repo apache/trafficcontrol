@@ -33,12 +33,9 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     this.createServer = function(server) {
         return $http.post(ENV.api['root'] + 'servers', server).then(
             function(result) {
-                messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
-                locationUtils.navigateToPath('/servers');
                 return result;
             },
             function(err) {
-                messageModel.setMessages(err.data.alerts, false);
                 throw err;
             }
         );
@@ -48,11 +45,9 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     this.updateServer = function(server) {
         return $http.put(ENV.api['root'] + 'servers/' + server.id, server).then(
             function(result) {
-                messageModel.setMessages([ { level: 'success', text: 'Server updated' } ], false);
                 return result;
             },
             function(err) {
-                messageModel.setMessages(err.data.alerts, false);
                 throw err;
             }
         );
