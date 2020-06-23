@@ -79,6 +79,8 @@ public class DeliveryService {
 	@JsonIgnore
 	private final String tld;
 	@JsonIgnore
+	// Matches the beginning of a HOST_REGEXP pattern with or without confighandler.regex.superhack.enabled.
+	// ^\(\.\*\\\.\|\^\)|^\.\*\\\.|\\\.\.\*
 	private final Pattern wildcardPattern = Pattern.compile("^\\(\\.\\*\\\\\\.\\|\\^\\)|^\\.\\*\\\\\\.|\\\\\\.\\.\\*");
 	@JsonIgnore
 	private final JsonNode bypassDestination;
