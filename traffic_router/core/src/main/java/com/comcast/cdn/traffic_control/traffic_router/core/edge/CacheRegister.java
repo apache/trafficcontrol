@@ -132,7 +132,7 @@ public class CacheRegister {
 
 	public Set<DeliveryServiceMatcher> getDeliveryServiceMatchers(final DeliveryService deliveryService) {
 	    return this.deliveryServiceMatchers.stream()
-				.filter(deliveryServiceMatcher -> deliveryServiceMatcher.getDeliveryService() == deliveryService)
+				.filter(deliveryServiceMatcher -> deliveryServiceMatcher.getDeliveryService().getId().equals(deliveryService.getId()))
 				.collect(Collectors.toCollection(TreeSet::new));
 	}
 
