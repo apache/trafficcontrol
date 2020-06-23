@@ -231,8 +231,7 @@ AND cdn.name = $3
 	defer interfaceRows.Close()
 
 	//For constant time lookup of which interface/server belongs to the ipAddress
-	var interfaceIndexByCompoundKey = make(map[tc.ServerIPAddressCompoundKey]int)
-	var interfaces []tc.ServerInterfaceInfo
+	var interfacesByNameAndServer = make(map[int]map[string]tc.ServerInterfaceInfo)
 	var serverIDs []int
 	var interfaceNames []string
 	for interfaceRows.Next() {
@@ -241,9 +240,11 @@ AND cdn.name = $3
 		if err := interfaceRows.Scan(&interf.Name, &interf.MaxBandwidth, &interf.MTU, &interf.Monitor, &ipAddressCompoundKey.ServerID); err != nil {
 			return nil, nil, nil, err
 		}
-		interfaces = append(interfaces, interf)
 		ipAddressCompoundKey.InterfaceName = interf.Name
-		interfaceIndexByCompoundKey[ipAddressCompoundKey] = len(interfaces) - 1
+		if _, ok := interfacesByNameAndServer[ipAddressCompoundKey.ServerID]; !ok {
+			interfacesByNameAndServer[ipAddressCompoundKey.ServerID] = make(map[string]tc.ServerInterfaceInfo)
+		}
+		interfacesByNameAndServer[ipAddressCompoundKey.ServerID][interf.Name] = interf
 		serverIDs = append(serverIDs, ipAddressCompoundKey.ServerID)
 		interfaceNames = append(interfaceNames, interf.Name)
 	}
@@ -259,16 +260,21 @@ AND cdn.name = $3
 		if err := ipAddressRows.Scan(&address.Address, &address.Gateway, &address.ServiceAddress, &key.ServerID, &key.InterfaceName); err != nil {
 			return nil, nil, nil, err
 		}
-		interfaceIndex, found := interfaceIndexByCompoundKey[key]
+		found := false
+		var addresses []tc.ServerIPAddress
+		if _, ok := interfacesByNameAndServer[key.ServerID]; ok {
+			if _, ok := interfacesByNameAndServer[key.ServerID][key.InterfaceName]; ok {
+				addresses = append(addresses, address)
+				found = ok
+			}
+		}
 		if !found {
 			log.Errorf("ip_address exists without corresponding interface; server: %v, interfaceName: %v!", key.ServerID, key.InterfaceName)
 			continue
 		}
-		if len(interfaces) < interfaceIndex || interfaces == nil {
-			log.Errorf("interface index out of bounds; server: %v, interfaceName: %v!", key.ServerID, key.InterfaceName)
-			continue
-		}
-		interfaces[interfaceIndex].IPAddresses = append(interfaces[interfaceIndex].IPAddresses, address)
+		interf := interfacesByNameAndServer[key.ServerID][key.InterfaceName]
+		interf.IPAddresses = append(interf.IPAddresses, addresses...)
+		interfacesByNameAndServer[key.ServerID][key.InterfaceName] = interf
 	}
 
 	rows, err := tx.Query(serversQuery, cdn)
@@ -312,17 +318,11 @@ AND cdn.name = $3
 				},
 			})
 		} else if strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID") {
-			key := tc.ServerIPAddressCompoundKey{
-				ServerID: int(serverID.Int64),
-			}
-			cacheInterfaces := []tc.ServerInterfaceInfo{}
-			for _, interf := range interfaces {
-				key.InterfaceName = interf.Name
-				interfaceIndex, found := interfaceIndexByCompoundKey[key]
-				if !found {
-					continue
+			var cacheInterfaces []tc.ServerInterfaceInfo
+			if _, ok := interfacesByNameAndServer[int(serverID.Int64)]; ok {
+				for _, interf := range interfacesByNameAndServer[int(serverID.Int64)] {
+					cacheInterfaces = append(cacheInterfaces, interf)
 				}
-				cacheInterfaces = append(cacheInterfaces, interfaces[interfaceIndex])
 			}
 			if len(cacheInterfaces) == 0 {
 				log.Errorf("cache with hashID: %v, has no interfaces!", hashID.String)

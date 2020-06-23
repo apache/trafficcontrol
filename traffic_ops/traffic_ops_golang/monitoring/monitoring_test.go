@@ -52,11 +52,15 @@ func TestGetMonitoringServers(t *testing.T) {
 
 	monitor := createMockMonitor()
 	router := createMockRouter()
-	cache := createMockCache()
+	cache := createMockCache("test")
+	// Different caches with the 'same' interfaces (in value only)
+	otherCache := createMockCache("test")
+	otherCache.Type = "MID"
 	cacheID := uint64(1)
+	otherCacheID := uint64(2)
 
 	mock.ExpectBegin()
-	setupMockGetMonitoringServers(mock, monitor, router, cache, cacheID, cdn)
+	setupMockGetMonitoringServers(mock, monitor, router, []Cache{cache, otherCache}, []uint64{cacheID, otherCacheID}, cdn)
 
 	dbCtx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
 	tx, err := db.BeginTx(dbCtx, nil)
@@ -69,18 +73,25 @@ func TestGetMonitoringServers(t *testing.T) {
 		t.Fatalf("getMonitoringServers expected: nil error, actual: %v", err)
 	}
 
-	if len(caches) != 1 {
-		t.Fatalf("got %v caches, expecting 1", len(caches))
+	if len(caches) != 2 {
+		t.Fatalf("got %v caches, expecting 2", len(caches))
 	}
 
-	cacheServer := caches[0]
-	if len(cacheServer.Interfaces) != len(cache.Interfaces) {
-		t.Errorf("got %v caches, expecting %v", len(cacheServer.Interfaces), len(cache.Interfaces))
-	}
+	for _, cacheServer := range caches {
+		var testCache Cache
+		if cacheServer.Type == cache.Type {
+			testCache = cache
+		} else {
+			testCache = otherCache
+		}
+		if len(cacheServer.Interfaces) != len(testCache.Interfaces) {
+			t.Errorf("got %v caches, expecting %v", len(cacheServer.Interfaces), len(testCache.Interfaces))
+		}
 
-	for _, interf := range cache.Interfaces {
-		if len(interf.IPAddresses) != 4 {
-			t.Errorf("cache: %v, interface: %v, expected 4 ip addresses, got %v", cache.HostName, interf.Name, len(interf.IPAddresses))
+		for _, interf := range testCache.Interfaces {
+			if len(interf.IPAddresses) != 4 {
+				t.Errorf("cache: %v, interface: %v, expected 4 ip addresses, got %v", testCache.HostName, interf.Name, len(interf.IPAddresses))
+			}
 		}
 	}
 
@@ -201,7 +212,7 @@ func TestGetProfiles(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	cache := createMockCache()
+	cache := createMockCache("test")
 	router := createMockRouter()
 
 	profiles := []Profile{
@@ -397,10 +408,10 @@ func TestGetMonitoringJSON(t *testing.T) {
 	mock.ExpectBegin()
 	{
 		monitor := createMockMonitor()
-		cache := createMockCache()
+		cache := createMockCache("test")
 		router := createMockRouter()
 
-		setupMockGetMonitoringServers(mock, monitor, router, cache, 1, cdn)
+		setupMockGetMonitoringServers(mock, monitor, router, []Cache{cache}, []uint64{1}, cdn)
 		resp.Response.TrafficServers = []Cache{cache}
 		resp.Response.TrafficMonitors = []Monitor{monitor}
 	}
@@ -426,7 +437,7 @@ func TestGetMonitoringJSON(t *testing.T) {
 		//
 		// getProfiles
 		//
-		cache := createMockCache()
+		cache := createMockCache("test")
 		router := createMockRouter()
 
 		profiles := []Profile{
@@ -648,26 +659,27 @@ func createMockMonitor() Monitor {
 	}
 }
 
-func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router Router, cache Cache, cacheID uint64, cdn string) {
-
+func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router Router, caches []Cache, cacheIDs []uint64, cdn string) {
 	serverRows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "ip", "ip6", "profile", "type", "hashId", "serverID"})
-	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, MonitorType, "noHash", 2)
-	serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.IP, cache.IP6, cache.Profile, cache.Type, cache.HashID, cacheID)
-	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, "noIp", "noIp6", router.Profile, RouterType, "noHashid", 3)
-
 	interfaceRows := sqlmock.NewRows([]string{"name", "max_bandwidth", "mtu", "monitor", "server"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "server", "interface"})
-	interfaceRows = interfaceRows.AddRow("none", nil, 1500, false, 0)
-	for _, interf := range cache.Interfaces {
-		interfaceRows = interfaceRows.AddRow(interf.Name, interf.MaxBandwidth, interf.MTU, interf.Monitor, cacheID)
+	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, MonitorType, "noHash", 2)
+	for index, cache := range caches {
+		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.IP, cache.IP6, cache.Profile, cache.Type, cache.HashID, cacheIDs[index])
 
-		for _, ip := range interf.IPAddresses {
-			ipAddressRows = ipAddressRows.AddRow(ip.Address, ip.Gateway, ip.ServiceAddress, cacheID, interf.Name)
-			//Create two orphaned records
-			ipAddressRows = ipAddressRows.AddRow("0.0.0.0", "0.0.0.0", false, 0, interf.Name)
-			ipAddressRows = ipAddressRows.AddRow("0.0.0.0", "0.0.0.0", false, cacheID, "none")
+		interfaceRows = interfaceRows.AddRow("none", nil, 1500, false, 0)
+		for _, interf := range cache.Interfaces {
+			interfaceRows = interfaceRows.AddRow(interf.Name, interf.MaxBandwidth, interf.MTU, interf.Monitor, cacheIDs[index])
+
+			for _, ip := range interf.IPAddresses {
+				ipAddressRows = ipAddressRows.AddRow(ip.Address, ip.Gateway, ip.ServiceAddress, cacheIDs[index], interf.Name)
+				//Create two orphaned records
+				ipAddressRows = ipAddressRows.AddRow("0.0.0.0", "0.0.0.0", false, 0, interf.Name)
+				ipAddressRows = ipAddressRows.AddRow("0.0.0.0", "0.0.0.0", false, cacheIDs[index], "none")
+			}
 		}
 	}
+	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, "noIp", "noIp6", router.Profile, RouterType, "noHashid", 3)
 	mock.ExpectQuery("SELECT (.+) FROM interface i (.+)").WithArgs(cdn).WillReturnRows(interfaceRows)
 	mock.ExpectQuery("SELECT (.+) FROM ip_address ip (.+)").WillReturnRows(ipAddressRows)
 	mock.ExpectQuery("SELECT (.+) FROM server me (.+)").WithArgs(cdn).WillReturnRows(serverRows)
@@ -683,7 +695,7 @@ func mockGetParams(mock sqlmock.Sqlmock, expected []parameter.TOParameter, cdn s
 	mock.ExpectQuery("SELECT").WithArgs(tc.MonitorProfilePrefix+"%%", MonitorConfigFile, cdn).WillReturnRows(rows)
 }
 
-func createMockCache() Cache {
+func createMockCache(interfaceName string) Cache {
 	return Cache{
 		BasicServer: BasicServer{
 			Profile:    "cacheProfile",
@@ -722,7 +734,7 @@ func createMockCache() Cache {
 				MaxBandwidth: util.UInt64Ptr(2500),
 				Monitor:      true,
 				MTU:          util.UInt64Ptr(1500),
-				Name:         "interfaceName",
+				Name:         interfaceName + "1",
 			},
 			{
 				IPAddresses: []tc.ServerIPAddress{
@@ -750,7 +762,7 @@ func createMockCache() Cache {
 				MaxBandwidth: util.UInt64Ptr(1500),
 				Monitor:      false,
 				MTU:          util.UInt64Ptr(1500),
-				Name:         "interfaceName2",
+				Name:         interfaceName + "2",
 			},
 		},
 		Type:   "EDGE",
