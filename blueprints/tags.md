@@ -189,7 +189,7 @@ Content-Length: 52
 The request must be rejected with an appropriate HTTP Response code on the range
 [400, 500) if the request is not properly encoded as either a single Tag or an
 array thereof, any submitted Tag already exists, or any submitted Tag has a Name
-containing non-alphanumeric characters.
+containing characters that are not alphanumeric, <kbd>=</kbd>, or <kbd>\_</kbd>.
 
 **Response Structure**
 The response is an array - always, even if the request body contained only a
@@ -300,9 +300,9 @@ modified.
 The request must be rejected with an appropriate HTTP response code on the
 interval [400, 500) if the Tag named in the request path does not exist, the new
 name is the name of a pre-existing Tag (excluding the Tag itself, which should
-allow for successful completion as a no-op), the new name contains
-non-alphanumeric characters, or the request body cannot be understood as a JSON
-representation of a Tag.
+allow for successful completion as a no-op), the new name contains characters
+that are not alphanumeric, <kbd>=</kbd>, or <kbd>\_</kbd>, or the request body
+cannot be understood as a JSON representation of a Tag.
 
 *Response Example*
 ```http
