@@ -127,7 +127,7 @@ func TestGetDetailServers(t *testing.T) {
 	}
 
 	if len(srvInts[0].IPAddresses) != 1 {
-		t.Fatalf("servers.read expected len(srvInts[0].IpAddresses) == 1, actual = %v", len(srvInts[0].IPAddresses))
+		t.Fatalf("servers.read expected len(srvInts[0].IPAddresses) == 1, actual = %v", len(srvInts[0].IPAddresses))
 	}
 
 	if len(actualSrvs[0].HardwareInfo) != 3 {
@@ -135,7 +135,7 @@ func TestGetDetailServers(t *testing.T) {
 	}
 
 	if !srvInts[0].IPAddresses[0].ServiceAddress {
-		t.Fatalf("srvInts[0].IpAddresses[0].ServiceAddress expected to be true, actual = %v", srvInts[0].IPAddresses[0].ServiceAddress)
+		t.Fatalf("srvInts[0].IPAddresses[0].ServiceAddress expected to be true, actual = %v", srvInts[0].IPAddresses[0].ServiceAddress)
 	}
 }
 

@@ -282,7 +282,11 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was updated.", obj)
+		alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was updated.")
+		if alertsObj, hasAlerts := obj.(AlertsResponse); hasAlerts {
+			alerts.AddAlerts(alertsObj.GetAlerts())
+		}
+		WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
 	}
 }
 
@@ -573,11 +577,25 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 			}
 			if len(objSlice) == 0 {
 				WriteRespAlert(w, r, tc.SuccessLevel, "No objects were provided in request.")
-			} else if len(objSlice) == 1 {
-				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+" was created.", objSlice[0])
-			} else {
-				WriteRespAlertObj(w, r, tc.SuccessLevel, objSlice[0].GetType()+"s were created.", objSlice)
+				return
 			}
+			var (
+				responseObj interface{}
+				message     string
+			)
+			if len(objSlice) == 1 {
+				responseObj = objSlice[0]
+				message = objSlice[0].GetType() + " was created."
+			} else {
+				message = objSlice[0].GetType() + "s were created."
+			}
+			alerts := tc.CreateAlerts(tc.SuccessLevel, message)
+			if _, hasAlerts := objSlice[0].(AlertsResponse); hasAlerts {
+				for _, objElem := range objSlice {
+					alerts.AddAlerts(objElem.(AlertsResponse).GetAlerts())
+				}
+			}
+			WriteAlertsObj(w, r, http.StatusOK, alerts, responseObj)
 
 		} else {
 			err := decodeAndValidateRequestBody(r, obj)
@@ -608,7 +626,11 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 				return
 			}
-			WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was created.", obj)
+			alerts := tc.CreateAlerts(tc.SuccessLevel, obj.GetType()+" was created.")
+			if alertsObj, hasAlerts := obj.(AlertsResponse); hasAlerts {
+				alerts.AddAlerts(alertsObj.GetAlerts())
+			}
+			WriteAlertsObj(w, r, http.StatusOK, alerts, obj)
 		}
 	}
 }

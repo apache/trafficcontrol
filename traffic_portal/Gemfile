@@ -14,11 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-.tmp
-.sass-cache
-server/log/access.log
-node_modules
-app/bower_components
-app/dist
-Gemfile.lock
+
+source 'https://rubygems.org'
+
+ruby ">= 2.0.0"
+gem "compass", ">= 1.0.0"

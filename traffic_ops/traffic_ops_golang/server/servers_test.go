@@ -94,15 +94,15 @@ func getTestServers() []ServerAndInterfaces {
 	iface := tc.ServerInterfaceInfo{
 		IPAddresses: []tc.ServerIPAddress{
 			tc.ServerIPAddress{
-				Address: testServer.IPAddress,
-				Gateway: nil,
+				Address:        testServer.IPAddress,
+				Gateway:        nil,
 				ServiceAddress: true,
 			},
 		},
 		MaxBandwidth: nil,
-		Monitor: true,
-		MTU: &mtu,
-		Name: testServer.InterfaceName,
+		Monitor:      true,
+		MTU:          &mtu,
+		Name:         testServer.InterfaceName,
 	}
 
 	servers = append(servers, ServerAndInterfaces{Server: testServer, Interface: iface})
@@ -423,7 +423,13 @@ func TestGetMidServers(t *testing.T) {
 		serverMap[*server.ID] = server
 	}
 
-	ts := servers[1]
+	var ts tc.ServerNullable
+	for _, s := range servers {
+		if s.HostName != nil && *s.HostName == "server2" {
+			ts = s
+			break
+		}
+	}
 	*ts.ID = *ts.ID + 1
 	rows2 = rows2.AddRow(
 		ts.Cachegroup,
@@ -486,7 +492,7 @@ func TestGetMidServers(t *testing.T) {
 
 	if serverMap[mid[0]].CachegroupID == nil {
 		t.Error("getMidServers expected: CachegroupID == 2, actual: nil")
-	} else if *(serverMap[mid[0]].CachegroupID) != 2  {
+	} else if *(serverMap[mid[0]].CachegroupID) != 2 {
 		t.Errorf("getMidServers expected: CachegroupID == 2, actual: %v", *(serverMap[mid[0]].CachegroupID))
 	}
 }

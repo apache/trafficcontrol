@@ -40,8 +40,8 @@ var TopologyUtils = function() {
 
 	let addNodeIndexes = function() {
 		normalizedTopology.nodes.forEach(function(currentNode) {
-			let parentNodeIndex = _.findIndex(normalizedTopology.nodes, function(node) { return currentNode.parent === node.cachegroup });
-			let secParentNodeIndex = _.findIndex(normalizedTopology.nodes, function(node) { return currentNode.secParent === node.cachegroup });
+			let parentNodeIndex = _.findIndex(normalizedTopology.nodes, function(node) { return currentNode.parent.name === node.cachegroup });
+			let secParentNodeIndex = _.findIndex(normalizedTopology.nodes, function(node) { return currentNode.secParent.name === node.cachegroup });
 			if (parentNodeIndex > -1) {
 				currentNode.parents.push(parentNodeIndex);
 				if (secParentNodeIndex > -1) {
@@ -79,8 +79,8 @@ var TopologyUtils = function() {
 				item.children = []
 			}
 			if (item.parents.length === 0) {
-				item.parent = "";
-				item.secParent = "";
+				item.parent = { name: '', type: '' };
+				item.secParent = { name: '', type: '' };
 				roots.push(item)
 			} else if (item.parents[0] in all) {
 				let p = all[item.parents[0]]
@@ -89,10 +89,12 @@ var TopologyUtils = function() {
 				}
 				p.children.push(item);
 				// add parent to each node
-				item.parent = all[item.parents[0]].cachegroup;
+				item.parent = { name: all[item.parents[0]].cachegroup, type: all[item.parents[0]].type };
 				// add secParent to each node
 				if (item.parents.length === 2 && item.parents[1] in all) {
-					item.secParent = all[item.parents[1]].cachegroup;
+					item.secParent = { name: all[item.parents[1]].cachegroup, type: all[item.parents[1]].type };
+				} else {
+					item.secParent = { name: '', type: '' };
 				}
 			}
 		});

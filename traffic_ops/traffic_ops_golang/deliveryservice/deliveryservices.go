@@ -320,7 +320,11 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.TypeID,
 		&ds.XMLID,
 		&ds.EcsEnabled,
-		&ds.RangeSliceBlockSize)
+		&ds.RangeSliceBlockSize,
+		&ds.FirstHeaderRewrite,
+		&ds.InnerHeaderRewrite,
+		&ds.LastHeaderRewrite,
+	)
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -700,13 +704,19 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	// query the DB for existing 3.0 fields in order to "upgrade" this 1.5 request into a 3.0 request
 	query := `
 SELECT
-  ds.topology
+  ds.topology,
+  ds.first_header_rewrite,
+  ds.inner_header_rewrite,
+  ds.last_header_rewrite
 FROM
   deliveryservice ds
 WHERE
   ds.id = $1`
 	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
 		&dsV30.Topology,
+		&dsV30.FirstHeaderRewrite,
+		&dsV30.InnerHeaderRewrite,
+		&dsV30.LastHeaderRewrite,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV30.ID), nil
@@ -823,6 +833,9 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.EcsEnabled,
 		&ds.RangeSliceBlockSize,
 		&ds.Topology,
+		&ds.FirstHeaderRewrite,
+		&ds.InnerHeaderRewrite,
+		&ds.LastHeaderRewrite,
 		&ds.ID)
 
 	if err != nil {
@@ -1180,6 +1193,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.DSCP,
 			&ds.EcsEnabled,
 			&ds.EdgeHeaderRewrite,
+			&ds.FirstHeaderRewrite,
 			&ds.GeoLimitRedirectURL,
 			&ds.GeoLimit,
 			&ds.GeoLimitCountries,
@@ -1191,7 +1205,9 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.ID,
 			&ds.InfoURL,
 			&ds.InitialDispersion,
+			&ds.InnerHeaderRewrite,
 			&ds.IPV6RoutingEnabled,
+			&ds.LastHeaderRewrite,
 			&ds.LastUpdated,
 			&ds.LogsEnabled,
 			&ds.LongDesc,
@@ -1696,6 +1712,7 @@ ds.dns_bypass_ttl,
 ds.dscp,
 ds.ecs_enabled,
 ds.edge_header_rewrite,
+ds.first_header_rewrite,
 ds.geolimit_redirect_url,
 ds.geo_limit,
 ds.geo_limit_countries,
@@ -1707,7 +1724,9 @@ ds.http_bypass_fqdn,
 ds.id,
 ds.info_url,
 ds.initial_dispersion,
+ds.inner_header_rewrite,
 ds.ipv6_routing_enabled,
+ds.last_header_rewrite,
 ds.last_updated,
 ds.logs_enabled,
 ds.long_desc,
@@ -1815,8 +1834,11 @@ consistent_hash_regex=$51,
 max_origin_connections=$52,
 ecs_enabled=$53,
 range_slice_block_size=$54,
-topology=$55
-WHERE id=$56
+topology=$55,
+first_header_rewrite=$56,
+inner_header_rewrite=$57,
+last_header_rewrite=$58
+WHERE id=$59
 RETURNING last_updated
 `
 }
@@ -1878,9 +1900,12 @@ tr_response_headers,
 type,
 xml_id,
 ecs_enabled,
-range_slice_block_size
+range_slice_block_size,
+first_header_rewrite,
+inner_header_rewrite,
+last_header_rewrite
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58)
 RETURNING id, last_updated
 `
 }

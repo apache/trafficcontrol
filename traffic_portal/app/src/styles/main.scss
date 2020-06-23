@@ -220,5 +220,10 @@ input[type="checkbox"].dirty {
     background-color: #f2dede;
     border-color: #f5c6cb;
   }
+  .tree-node.warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+  }
 
 }

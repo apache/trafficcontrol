@@ -31,6 +31,10 @@ func UintPtr(u uint) *uint {
 	return &u
 }
 
+func Uint64Ptr(u uint64) *uint64 {
+	return &u
+}
+
 func Int64Ptr(i int64) *int64 {
 	return &i
 }

@@ -345,10 +345,10 @@ func (to *Session) GetDeliveryServiceMatches() ([]tc.DeliveryServicePatterns, Re
 	return resp.Response, reqInf, nil
 }
 
-func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServer, ReqInf, error) {
+func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServerV11, ReqInf, error) {
 	resp := struct {
-		Response []tc.DSServer `json:"response"`
-	}{Response: []tc.DSServer{}}
+		Response []tc.DSServerV11 `json:"response"`
+	}{Response: []tc.DSServerV11{}}
 	uri := apiBase + `/deliveryservices/` + strconv.Itoa(dsID) + `/servers/eligible`
 	reqInf, err := get(to, uri, &resp)
 	if err != nil {

@@ -37,6 +37,7 @@ func TestDeliveryServices(t *testing.T) {
 		UpdateDeliveryServiceWithInvalidRemapText(t)
 		UpdateDeliveryServiceWithInvalidSliceRangeRequest(t)
 		UpdateDeliveryServiceWithInvalidTopology(t)
+		UpdateDeliveryServiceTopologyHeaderRewriteFields(t)
 		GetTestDeliveryServices(t)
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
@@ -224,6 +225,46 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("expected at least one CLIENT_STEERING delivery service")
+	}
+}
+
+// UpdateDeliveryServiceTopologyHeaderRewriteFields ensures that a delivery service can only use firstHeaderRewrite,
+// innerHeaderRewrite, or lastHeadeRewrite if a topology is assigned.
+func UpdateDeliveryServiceTopologyHeaderRewriteFields(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("cannot GET Delivery Services: %v", err)
+	}
+	foundTopology := false
+	for _, ds := range dses {
+		if ds.Topology != nil {
+			foundTopology = true
+		}
+		ds.FirstHeaderRewrite = util.StrPtr("foo")
+		ds.InnerHeaderRewrite = util.StrPtr("bar")
+		ds.LastHeaderRewrite = util.StrPtr("baz")
+		_, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), &ds)
+		if ds.Topology != nil && err != nil {
+			t.Errorf("expected: no error updating topology-based header rewrite fields for topology-based DS, actual: %v", err)
+		}
+		if ds.Topology == nil && err == nil {
+			t.Errorf("expected: error updating topology-based header rewrite fields for non-topology-based DS, actual: nil")
+		}
+		ds.FirstHeaderRewrite = nil
+		ds.InnerHeaderRewrite = nil
+		ds.LastHeaderRewrite = nil
+		ds.EdgeHeaderRewrite = util.StrPtr("foo")
+		ds.MidHeaderRewrite = util.StrPtr("bar")
+		_, err = TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), &ds)
+		if ds.Topology != nil && err == nil {
+			t.Errorf("expected: error updating legacy header rewrite fields for topology-based DS, actual: nil")
+		}
+		if ds.Topology == nil && err != nil {
+			t.Errorf("expected: no error updating legacy header rewrite fields for non-topology-based DS, actual: %v", err)
+		}
+	}
+	if !foundTopology {
+		t.Errorf("expected: at least one topology-based delivery service, actual: none found")
 	}
 }
 

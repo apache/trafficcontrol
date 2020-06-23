@@ -17,6 +17,9 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.table.servers', [])
-    .controller('TableServersController', require('./TableServersController'))
-    .controller('TableParentServersController', require('./TableParentServersController'));
+module.exports = {
+    which_ruby: {
+        cmd: "which",
+        args: ["ruby", "compass"]
+    },
+};

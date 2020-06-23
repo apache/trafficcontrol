@@ -178,8 +178,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 }
 
 func DeleteTestDeliveryServiceServers(t *testing.T) {
-	dses, servers := getServersAndDSes(t)
-	ds, server := dses[0], servers[0]
+	ds, server := getServerAndDSofSameCDN(t)
 
 	_, err := TOSession.CreateDeliveryServiceServers(ds.ID, []int{server.ID}, true)
 	if err != nil {
@@ -223,7 +222,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 }
 
-func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.ServerV1) {
+func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryService, tc.ServerV1) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
@@ -240,5 +239,14 @@ func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.ServerV1) {
 		t.Fatal("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}
 
-	return dses, servers
+	for _, ds := range dses {
+		for _, s := range servers {
+			if ds.CDNName == s.CDNName {
+				return ds, s
+			}
+		}
+	}
+	t.Fatal("expected at least one delivery service and server in the same CDN")
+
+	return tc.DeliveryService{}, tc.ServerV1{}
 }

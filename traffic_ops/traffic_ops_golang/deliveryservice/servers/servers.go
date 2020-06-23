@@ -38,7 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -523,7 +523,28 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
-	api.WriteAlertsObj(w, r, 200, alerts, servers)
+
+	if inf.Version.Major < 3 {
+		v11ServerList := []tc.DSServerV11{}
+		for _, srv := range servers {
+			v11server := tc.DSServerV11{}
+			v11server.DSServerBase = srv.DSServerBase
+
+			interfaces := *srv.ServerInterfaces
+			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				return
+			}
+			v11server.LegacyInterfaceDetails = legacyInterface
+
+			v11ServerList = append(v11ServerList, v11server)
+		}
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v11ServerList)
+		return
+	}
+
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, servers)
 }
 
 func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServer, error) {
@@ -541,10 +562,49 @@ func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.
 
 	servers := []tc.DSServer{}
 	for rows.Next() {
+		serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 		s := tc.DSServer{}
-		if err = rows.StructScan(&s); err != nil {
+		err := rows.Scan(
+			&s.Cachegroup,
+			&s.CachegroupID,
+			&s.CDNID,
+			&s.CDNName,
+			&s.DomainName,
+			&s.GUID,
+			&s.HostName,
+			&s.HTTPSPort,
+			&s.ID,
+			&s.ILOIPAddress,
+			&s.ILOIPGateway,
+			&s.ILOIPNetmask,
+			&s.ILOPassword,
+			&s.ILOUsername,
+			pq.Array(&serverInterfaceInfo),
+			&s.LastUpdated,
+			&s.MgmtIPAddress,
+			&s.MgmtIPGateway,
+			&s.MgmtIPNetmask,
+			&s.OfflineReason,
+			&s.PhysLocation,
+			&s.PhysLocationID,
+			&s.Profile,
+			&s.ProfileDesc,
+			&s.ProfileID,
+			&s.Rack,
+			&s.RouterHostName,
+			&s.RouterPortName,
+			&s.Status,
+			&s.StatusID,
+			&s.TCPPort,
+			&s.Type,
+			&s.TypeID,
+			&s.UpdPending,
+		)
+		if err != nil {
 			return nil, errors.New("error scanning dss rows: " + err.Error())
 		}
+		s.ServerInterfaces = &serverInterfaceInfo
+
 		if user.PrivLevel < auth.PrivLevelAdmin {
 			s.ILOPassword = util.StrPtr("")
 		}
@@ -574,13 +634,26 @@ func dssSelectQuery() string {
 	s.ilo_ip_netmask,
 	s.ilo_password,
 	s.ilo_username,
-	COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-	s.interface_name,
-	s.ip6_address,
-	s.ip6_gateway,
-	s.ip_address,
-	s.ip_gateway,
-	s.ip_netmask,
+	ARRAY (
+SELECT ( json_build_object (
+'ipAddresses', ARRAY (
+SELECT ( json_build_object (
+'address', ip_address.address,
+'gateway', ip_address.gateway,
+'serviceAddress', ip_address.service_address
+))
+FROM ip_address
+WHERE ip_address.interface = interface.name
+AND ip_address.server = s.id
+),
+'max_bandwidth', interface.max_bandwidth,
+'monitor', interface.monitor,
+'mtu', COALESCE (interface.mtu, 9000),
+'name', interface.name
+))
+FROM interface
+WHERE interface.server = s.id
+) AS interfaces,
 	s.last_updated,
 	s.mgmt_ip_address,
 	s.mgmt_ip_gateway,

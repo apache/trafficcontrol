@@ -32,7 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // ResultStatHistory provides safe access for multiple goroutines readers and a single writer to a stored HistoryHistory object.
@@ -62,22 +62,38 @@ func (h *ResultInfoHistory) Set(v cache.ResultInfoHistory) {
 	h.m.Unlock()
 }
 
-type ResultStatHistory struct{ *sync.Map } // map[tc.CacheName]ResultStatValHistory
+type ResultStatHistory struct{ *sync.Map } // map[tc.CacheName]map[interfaceName]ResultStatValHistory
 
 func NewResultStatHistory() ResultStatHistory {
 	return ResultStatHistory{&sync.Map{}}
 }
 
-func (h ResultStatHistory) LoadOrStore(cache tc.CacheName) ResultStatValHistory {
+func (h ResultStatHistory) LoadOrStore(cache tc.CacheName) map[string]ResultStatValHistory {
 	// TODO change to use sync.Pool?
-	v, _ := h.Map.LoadOrStore(cache, NewResultStatValHistory())
-	return v.(ResultStatValHistory)
+	v, loaded := h.Map.LoadOrStore(cache, NewResultStatValHistory())
+	if !loaded {
+		v = map[string]ResultStatValHistory{}
+	}
+	if rv, ok := v.(ResultStatValHistory); ok {
+		v = map[string]ResultStatValHistory{tc.CacheInterfacesAggregate: rv}
+	}
+	return v.(map[string]ResultStatValHistory)
 }
 
 // Range behaves like sync.Map.Range. It calls f for every value in the map; if f returns false, the iteration is stopped.
-func (h ResultStatHistory) Range(f func(cache tc.CacheName, val ResultStatValHistory) bool) {
+func (h ResultStatHistory) Range(f func(cache tc.CacheName, interfaceName string, val ResultStatValHistory) bool) {
 	h.Map.Range(func(k, v interface{}) bool {
-		return f(k.(tc.CacheName), v.(ResultStatValHistory))
+		i, ok := v.(map[string]ResultStatValHistory)
+		if !ok {
+			log.Warnln("Cannot umarshal result stat val history")
+			return true
+		}
+		for a, b := range i {
+			if !f(k.(tc.CacheName), a, b) {
+				return false
+			}
+		}
+		return true
 	})
 }
 
@@ -89,11 +105,11 @@ func NewResultStatValHistory() ResultStatValHistory { return ResultStatValHistor
 
 // Load returns the []ResultStatVal for the given stat. If the given stat does not exist, nil is returned.
 func (h ResultStatValHistory) Load(stat string) []cache.ResultStatVal {
-	v, ok := h.Map.Load(stat)
+	i, ok := h.Map.Load(stat)
 	if !ok {
 		return nil
 	}
-	return v.([]cache.ResultStatVal)
+	return i.([]cache.ResultStatVal)
 }
 
 // Range behaves like sync.Map.Range. It calls f for every value in the map; if f returns false, the iteration is stopped.
@@ -104,7 +120,8 @@ func (h ResultStatValHistory) Range(f func(stat string, val []cache.ResultStatVa
 }
 
 // Store stores the given []ResultStatVal in the ResultStatValHistory for the given stat. Store is threadsafe for only one writer.
-// Specifically, if there are multiple writers, there's a race, that one writer could Load(), another writer could Store() underneath it, and the first writer would then Store() having lost values.
+// Specifically, if there are multiple writers, there's a race, that one writer could Load(), another writer could Store() underneath it,
+// and the first writer would then Store() having lost values.
 // To safely use ResultStatValHistory with multiple writers, a CompareAndSwap function would have to be added.
 func (h ResultStatValHistory) Store(stat string, vals []cache.ResultStatVal) {
 	h.Map.Store(stat, vals)
@@ -119,40 +136,42 @@ func (a ResultStatHistory) Add(r cache.Result, limit uint64) error {
 	}
 
 	for statName, statVal := range r.Miscellaneous {
-		statHistory := resultHistory.Load(statName)
-		if len(statHistory) == 0 {
-			statHistory = make([]cache.ResultStatVal, 0, limit) // initialize to the limit, to avoid multiple allocations. TODO put in .Load(statName, defaultSize)?
+		for interfaceName, _ := range resultHistory {
+			statHistory := resultHistory[interfaceName].Load(statName)
+			if len(statHistory) == 0 {
+				statHistory = make([]cache.ResultStatVal, 0, limit) // initialize to the limit, to avoid multiple allocations. TODO put in .Load(statName, defaultSize)?
+			}
+
+			// TODO check len(statHistory) == 0 before indexing, potential panic?
+
+			ok, err := newStatEqual(statHistory, statVal)
+
+			// If the new stat value is the same as the last, update the time and increment the span. Span is the number of polls the latest value has been the same, and hence the length of time it's been the same is span*pollInterval.
+			if err != nil {
+				errStrs += "cannot add stat " + statName + ": " + err.Error() + "; "
+			} else if ok {
+				statHistory[0].Time = r.Time
+				statHistory[0].Span++
+			} else {
+				resultVal := cache.ResultStatVal{
+					Val:  statVal,
+					Time: r.Time,
+					Span: 1,
+				}
+
+				if len(statHistory) > int(limit) {
+					statHistory = statHistory[:int(limit)]
+				} else if len(statHistory) < int(limit) {
+					statHistory = append(statHistory, cache.ResultStatVal{})
+				}
+				// shift all values to the right, in order to put the new val at the beginning. Faster than allocating memory again
+				for i := len(statHistory) - 1; i >= 1; i-- {
+					statHistory[i] = statHistory[i-1]
+				}
+				statHistory[0] = resultVal // new result at the beginning
+			}
+			resultHistory[interfaceName].Store(statName, statHistory)
 		}
-
-		// TODO check len(statHistory) == 0 before indexing, potential panic?
-
-		ok, err := newStatEqual(statHistory, statVal)
-
-		// If the new stat value is the same as the last, update the time and increment the span. Span is the number of polls the latest value has been the same, and hence the length of time it's been the same is span*pollInterval.
-		if err != nil {
-			errStrs += "cannot add stat " + statName + ": " + err.Error() + "; "
-		} else if ok {
-			statHistory[0].Time = r.Time
-			statHistory[0].Span++
-		} else {
-			resultVal := cache.ResultStatVal{
-				Val:  statVal,
-				Time: r.Time,
-				Span: 1,
-			}
-
-			if len(statHistory) > int(limit) {
-				statHistory = statHistory[:int(limit)]
-			} else if len(statHistory) < int(limit) {
-				statHistory = append(statHistory, cache.ResultStatVal{})
-			}
-			// shift all values to the right, in order to put the new val at the beginning. Faster than allocating memory again
-			for i := len(statHistory) - 1; i >= 1; i-- {
-				statHistory[i] = statHistory[i-1]
-			}
-			statHistory[0] = resultVal // new result at the beginning
-		}
-		resultHistory.Store(statName, statHistory)
 	}
 
 	if errStrs != "" {
@@ -187,7 +206,7 @@ func newStatEqual(history []cache.ResultStatVal, stat interface{}) (bool, error)
 func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInfoHistory, combinedStates tc.CRStates, monitorConfig tc.TrafficMonitorConfigMap, statMaxKbpses cache.Kbpses, filter cache.Filter, params url.Values) ([]byte, error) {
 	stats := cache.Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Caches:        map[tc.CacheName]map[string][]cache.ResultStatVal{},
+		Caches:        map[tc.CacheName]map[string]map[string][]cache.ResultStatVal{},
 	}
 
 	computedStats := cache.ComputedStats()
@@ -200,24 +219,30 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 		}
 
 		cacheStatResultHistory := statResultHistory.LoadOrStore(id)
-		cacheStatResultHistory.Range(func(stat string, vals []cache.ResultStatVal) bool {
-			stat = "ats." + stat // TM1 prefixes ATS stats with 'ats.'
-			if !filter.UseStat(stat) {
-				return true
-			}
-			historyCount := 1
-			for _, val := range vals {
-				if !filter.WithinStatHistoryMax(historyCount) {
-					break
+		for interfaceName, interfaceHistory := range cacheStatResultHistory {
+			interfaceHistory.Range(func(stat string, vals []cache.ResultStatVal) bool {
+				stat = "ats." + stat // TM1 prefixes ATS stats with 'ats.'
+				if !filter.UseStat(stat) {
+					return true
 				}
+				historyCount := 1
 				if _, ok := stats.Caches[id]; !ok {
-					stats.Caches[id] = map[string][]cache.ResultStatVal{}
+					stats.Caches[id] = map[string]map[string][]cache.ResultStatVal{}
 				}
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], val)
-				historyCount += int(val.Span)
-			}
-			return true
-		})
+				for _, val := range vals {
+					if !filter.WithinStatHistoryMax(historyCount) {
+						break
+					}
+					if _, ok := stats.Caches[id][interfaceName]; !ok {
+						stats.Caches[id][interfaceName] = map[string][]cache.ResultStatVal{}
+					}
+					stats.Caches[id][interfaceName][stat] = append(stats.Caches[id][interfaceName][stat], val)
+					// Todo add for each interface?
+					historyCount += int(val.Span)
+				}
+				return true
+			})
+		}
 
 		serverInfo, ok := monitorConfig.TrafficServer[string(id)]
 		if !ok {
@@ -234,7 +259,7 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 				break
 			}
 			if _, ok := stats.Caches[id]; !ok {
-				stats.Caches[id] = map[string][]cache.ResultStatVal{}
+				stats.Caches[id] = map[string]map[string][]cache.ResultStatVal{}
 			}
 
 			t := resultInfo.Time
@@ -243,7 +268,19 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 				if !filter.UseStat(stat) {
 					continue
 				}
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], cache.ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache), Time: t, Span: 1}) // combinedState will default to unavailable
+				if _, ok := stats.Caches[id][tc.CacheInterfacesAggregate]; !ok {
+					stats.Caches[id][tc.CacheInterfacesAggregate] = map[string][]cache.ResultStatVal{}
+				}
+				stats.Caches[id][tc.CacheInterfacesAggregate][stat] = append(stats.Caches[id][tc.CacheInterfacesAggregate][stat],
+					cache.ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache), Time: t, Span: 1})
+				// Need to actually handle interfaces, needs vitals to be refactored
+				for infName, _ := range resultInfo.Statistics.Interfaces {
+					if _, ok := stats.Caches[id][infName]; !ok {
+						stats.Caches[id][infName] = map[string][]cache.ResultStatVal{}
+					}
+					stats.Caches[id][infName][stat] = append(stats.Caches[id][infName][stat],
+						cache.ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache), Time: t, Span: 1})
+				}
 			}
 		}
 	}

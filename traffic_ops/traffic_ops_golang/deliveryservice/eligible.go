@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -63,6 +62,26 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting eligible servers: "+err.Error()))
 		return
 	}
+
+	if inf.Version.Major < 3 {
+		v11ServerList := []tc.DSServerV11{}
+		for _, srv := range servers {
+			v11server := tc.DSServerV11{}
+			v11server.DSServerBase = srv.DSServerBase
+
+			interfaces := *srv.ServerInterfaces
+			legacyInterface, err := tc.InterfaceInfoToLegacyInterfaces(interfaces)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("converting to server detail v11: "+err.Error()))
+				return
+			}
+			v11server.LegacyInterfaceDetails = legacyInterface
+
+			v11ServerList = append(v11ServerList, v11server)
+		}
+		api.WriteResp(w, r, v11ServerList)
+		return
+	}
 	api.WriteResp(w, r, servers)
 }
 
@@ -86,13 +105,26 @@ s.ilo_ip_gateway,
 s.ilo_ip_netmask,
 s.ilo_password,
 s.ilo_username,
-COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-s.interface_name,
-s.ip6_address,
-s.ip6_gateway,
-s.ip_address,
-s.ip_gateway,
-s.ip_netmask,
+	ARRAY (
+SELECT ( json_build_object (
+'ipAddresses', ARRAY (
+SELECT ( json_build_object (
+'address', ip_address.address,
+'gateway', ip_address.gateway,
+'serviceAddress', ip_address.service_address
+))
+FROM ip_address
+WHERE ip_address.interface = interface.name
+AND ip_address.server = s.id
+),
+'max_bandwidth', interface.max_bandwidth,
+'monitor', interface.monitor,
+'mtu', COALESCE (interface.mtu, 9000),
+'name', interface.name
+))
+FROM interface
+WHERE interface.server = s.id
+) AS interfaces,
 s.last_updated,
 s.mgmt_ip_address,
 s.mgmt_ip_gateway,
@@ -132,6 +164,7 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 
 	servers := []tc.DSServer{}
 	for rows.Next() {
+		serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 		s := tc.DSServer{}
 		err := rows.Scan(
 			&s.Cachegroup,
@@ -148,13 +181,7 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 			&s.ILOIPNetmask,
 			&s.ILOPassword,
 			&s.ILOUsername,
-			&s.InterfaceMtu,
-			&s.InterfaceName,
-			&s.IP6Address,
-			&s.IP6Gateway,
-			&s.IPAddress,
-			&s.IPGateway,
-			&s.IPNetmask,
+			pq.Array(&serverInterfaceInfo),
 			&s.LastUpdated,
 			&s.MgmtIPAddress,
 			&s.MgmtIPGateway,
@@ -180,6 +207,8 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 		if err != nil {
 			return nil, errors.New("scanning delivery service eligible servers: " + err.Error())
 		}
+		s.ServerInterfaces = &serverInterfaceInfo
+
 		eligible := true
 
 		if !strings.HasPrefix(s.Type, "ORG") {

@@ -54,16 +54,22 @@ Response Structure
 :iloIpNetmask:   The IPv4 subnet mask of the lights-out-management port\ [#ilowikipedia]_
 :iloPassword:    The password of the of the lights-out-management user - displays as ``******`` unless the requesting user has the 'admin' role)\ [#ilowikipedia]_
 :iloUsername:    The user name for lights-out-management\ [#ilowikipedia]_
-:interfaceMtu:   The :abbr:`MTU (Maximum Transmission Unit)` to configure for ``interfaceName``
+:interfaces:     An array of interface and IP address information
 
-	.. seealso:: `The Wikipedia article on Maximum Transmission Unit <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
+	:max_bandwidth:  The maximum allowed bandwidth for this interface to be considered "healthy" by Traffic Monitor. This has no effect if `monitor` is not true. Values are in kb/s. The value `null` means "no limit".
+	:monitor:        A boolean indicating if Traffic Monitor should monitor this interface
+	:mtu:            The :abbr:`MTU (Maximum Transmission Unit)` to configure for ``interfaceName``
 
-:interfaceName:  The network interface name used by the server
-:ip6Address:     The IPv6 address and subnet mask of the server - applicable for the interface ``interfaceName``
-:ip6Gateway:     The IPv6 gateway address of the server - applicable for the interface ``interfaceName``
-:ipAddress:      The IPv4 address of the server- applicable for the interface ``interfaceName``
-:ipGateway:      The IPv4 gateway of the server- applicable for the interface ``interfaceName``
-:ipNetmask:      The IPv4 subnet mask of the server- applicable for the interface ``interfaceName``
+		.. seealso:: `The Wikipedia article on Maximum Transmission Unit <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
+
+	:name:           The network interface name used by the server.
+
+	:ipAddresses:    An array of the IP address information for the interface
+
+		:address:       The IPv4 or IPv6 address and subnet mask of the server - applicable for the interface ``name``
+		:gateway:       The IPv4 or IPv6 gateway address of the server - applicable for the interface ``name``
+		:service_address:  A boolean determining if content will be routed to the IP address
+
 :lastUpdated:    The time and date at which this server was last updated, in an ISO-like format
 :mgmtIpAddress:  The IPv4 address of the server's management port
 :mgmtIpGateway:  The IPv4 gateway of the server's management port
@@ -121,13 +127,6 @@ Response Structure
 			"iloIpNetmask": "",
 			"iloPassword": "",
 			"iloUsername": "",
-			"interfaceMtu": 1500,
-			"interfaceName": "eth0",
-			"ip6Address": "fc01:9400:1000:8::100",
-			"ip6Gateway": "fc01:9400:1000:8::1",
-			"ipAddress": "172.16.239.100",
-			"ipGateway": "172.16.239.1",
-			"ipNetmask": "255.255.255.0",
 			"lastUpdated": "2018-11-14 21:08:44+00",
 			"mgmtIpAddress": "",
 			"mgmtIpGateway": "",
@@ -146,7 +145,25 @@ Response Structure
 			"tcpPort": 80,
 			"type": "EDGE",
 			"typeId": 11,
-			"updPending": false
+			"updPending": false,
+			"interfaces": [{
+				"ipAddresses": [
+					{
+						"address": "172.16.239.100",
+						"gateway": "172.16.239.1",
+						"service_address": true
+					},
+					{
+						"address": "fc01:9400:1000:8::100",
+						"gateway": "fc01:9400:1000:8::1",
+						"service_address": true
+					}
+				],
+				"max_bandwidth": 0,
+				"monitor": true,
+				"mtu": 1500,
+				"name": "eth0"
+			}]
 		}
 	]}
 
