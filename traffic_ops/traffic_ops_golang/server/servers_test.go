@@ -423,7 +423,13 @@ func TestGetMidServers(t *testing.T) {
 		serverMap[*server.ID] = server
 	}
 
-	ts := servers[1]
+	var ts tc.ServerNullable
+	for _, s := range servers {
+		if s.HostName != nil && *s.HostName == "server2" {
+			ts = s
+			break
+		}
+	}
 	*ts.ID = *ts.ID + 1
 	rows2 = rows2.AddRow(
 		ts.Cachegroup,
