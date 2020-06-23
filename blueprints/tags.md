@@ -40,94 +40,105 @@ objects:
 - Topologies as they appear in Traffic Ops API requests and responses
 - Users as they appear in Traffic Ops API requests and responses
 
-### Traffic Portal Impact
-<!--
-*How* will this impact Traffic Portal?
-What new UI changes will be required?
-Will entirely new pages/views be necessary?
-Will a new field be added to an existing form?
-How will the user interact with the new UI changes?
--->
+## Component Impact
+The only impacted components will be Traffic Ops and Traffic Portal, as other
+components are strictly not allowed to derive meaning from an object's Tags.
 
 ### Traffic Ops Impact
-<!--
-*How* will this impact Traffic Ops (at a high level)?
--->
+A new object will be added, the Tag, which will appear through the API like the
+following TypeScript interface.
 
-#### REST API Impact
-<!--
-*How* will this impact the Traffic Ops REST API?
+```typescript
+interface Tag {
+	name: string;
+}
+```
 
-What new endpoints will be required?
-How will existing endpoints be changed?
-What will the requests and responses look like?
-What fields are required or optional?
-What are the defaults for optional fields?
-What are the validation constraints?
--->
+Further, the aforementioned object types - which may be referred to as "taggable
+objects" - will all be augmented with a new property: Tags, which will be a set
+of Tag Names.
+
+```typescript
+interface Taggable {
+	tags: Set<string>;
+}
+```
+
+The Tags will be "shared" globally across all object types; that is, there are
+not separate "server tags" and "Delivery Service tags", only Tags.
+
+#### Database Specifics
+The suggested method for storing Tag data is with one table for storing what
+Tags exist, and separate tables for each Taggable object to be paired with zero
+or more Tags.
+
+The main Tag table ought to look like this:
+```text
+               Table "public.tag"
+ Column | Type | Collation | Nullable | Default
+--------+------+-----------+----------+---------
+ name   | text |           | not null |
+Indexes:
+    "tag_pkey" PRIMARY KEY, btree (name)
+```
+
+and as an example of an object-to-Tag relation table, the server-to-Tag relation
+table should resemble this:
+```text
+            Table "public.server_tag"
+ Column |  Type  | Collation | Nullable | Default
+--------+--------+-----------+----------+---------
+ tag    | text   |           | not null |
+ server | bigint |           | not null |
+Indexes:
+    "server_tag_pkey" PRIMARY KEY, btree (tag, server)
+Foreign-key constraints:
+    "server_tag_server_fkey" FOREIGN KEY (server) REFERENCES server(id) ON UPDATE CASCADE ON DELETE CASCADE
+    "server_tag_tag_fkey" FOREIGN KEY (tag) REFERENCES tag(name) ON UPDATE CASCADE ON DELETE CASCADE
+```
+
+#### API Impact
+The actual amount of work to add Tags to all Taggable objects is rather large,
+considering the number of endpoints that need to be changed, but each change is
+quite non-invasive, and can all be done atomically without breaking any
+functionality between them.
+
+The new Tags endpoint (`/tags`) shall support the HTTP request methods GET and
+POST. A further endpoint, `/tags/\{\{Tag Name\}\}` will also be added that
+supports GET, PUT and DELETE.
+
+##### `/tags`
+
+The GET method will retrieve representations of all Tag objects, and ought to
+support the standard pagination methods.
+
+The POST method will create new tags from a request payload. The payload may be
+either a single representation of a Tag, or a set thereof. In any case, no Tag
+may be created with a Name of a Tag that already exists. Also, the Name of a Tag
+is subject to the restrictions that it not be empty and contain only
+alphanumeric characters.
+
+The PUT method will edit (change the name) of an existing Tag
 
 #### Client Impact
-<!--
-*How* will this impact Traffic Ops REST API clients (Go, Python, Java)?
+The return data structures will change, but no code change to any Traffic Ops
+client should be necessary for the addition of Tags to existing objects.
+However, new methods/functions/procedures must be added to manipulate Tags
+themselves.
 
-If new endpoints are required, will corresponding client methods be added?
--->
-
-#### Data Model / Database Impact
-<!--
-*How* will this impact the Traffic Ops data model?
-*How* will this impact the Traffic Ops database schema?
-
-What changes to the lib/go-tc structs will be required?
-What new tables and columns will be required?
-How will existing tables and columns be changed?
-What are the column data types and modifiers?
-What are the FK references and constraints?
--->
-
-### ORT Impact
-<!--
-*How* will this impact ORT?
--->
-
-### Traffic Monitor Impact
-<!--
-*How* will this impact Traffic Monitor?
-
-Will new profile parameters be required?
--->
-
-### Traffic Router Impact
-<!--
-*How* will this impact Traffic Router?
-
-Will new profile parameters be required?
-How will the CRConfig be changed?
-How will changes in Traffic Ops data be reflected in the CRConfig?
-Will Traffic Router remain backwards-compatible with old CRConfigs?
-Will old Traffic Routers remain forwards-compatible with new CRConfigs?
--->
-
-### Traffic Stats Impact
-<!--
-*How* will this impact Traffic Stats?
--->
-
-### Traffic Vault Impact
-<!--
-*How* will this impact Traffic Vault?
-
-Will there be any new data stored in or removed from Riak?
-Will there be any changes to the Riak requests and responses?
--->
+### Traffic Portal Impact
+A new UI section, complete with tables and forms for editing and creation, will
+need to be added to accommodate the addition, editing and deletion of Tags.
+Also, existing tables and forms for now-taggable objects will need to be updated
+to accommodate the use of Tags. Each separate change can be done atomically, and
+since the new collections need not be required, they can be done in non-invasive
+fashion of arbitrary order (provided Tag manipulation itself is done first)
+without disrupting any existing processes or data.
 
 ### Documentation Impact
-<!--
-*How* will this impact the documentation?
-
-What new documentation will be required?
-What existing documentation will need to be updated?
--->
+Tags will need to be documented in the data model, both themselves and on the
+modeled objects which now contain them. Also, API endpoints will need to updated
+to reflect the new return structures, where applicable.
 
 ### Testing Impact
 <!--
