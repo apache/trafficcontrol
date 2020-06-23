@@ -242,11 +242,11 @@ under the License.
             </div>
 
             <fieldset>
-                <legend>Interfaces<button class="btn btn-success right-button" type="button" title="add a new interface" ng-click="addInterface()">Add Interface</button></legend>
+                <legend>Interfaces<button class="btn btn-primary right-button btn-xs" type="button" title="add a new interface" ng-click="addInterface()"><i class="fa fa-plus"></i></button></legend>
                 <fieldset ng-repeat="inf in server.interfaces">
                     <legend>
-                        <input type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}" placeholder="eth0"/>
-                        <button class="btn btn-danger right-button" type="button" title="delete this interface" ng-click="deleteInterface(inf)">Remove interface</button>
+                        <input type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}" placeholder="interface-name"/>
+                        <button class="btn btn-danger right-button btn-xs" type="button" title="delete this interface" ng-click="deleteInterface(inf)"><i class="fa fa-minus"></i></button>
                     </legend>
 
                     <div>
@@ -261,7 +261,7 @@ under the License.
                     </div>
 
                     <fieldset>
-                        <legend>IP Addresses<button type="button" title="add new IP Address" class="btn btn-success right-button" ng-click="addIP(inf)">Add IP Address</button></legend>
+                        <legend>IP Addresses<button type="button" title="add new IP Address" class="btn btn-primary right-button btn-xs" ng-click="addIP(inf)"><i class="fa fa-plus"></i></button></legend>
                         <ul>
                             <li ng-repeat="ip in inf.ipAddresses" ng-class="{'bordered-item': !$last}">
                                 <label for="{{inf.name}}-{{ip.address}}" ng-class="{'has-error': hasError(serverForm[inf.name+'-'+ip.address])}">Address</label>
@@ -273,7 +273,7 @@ under the License.
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address-gateway], 'pattern')">Invalid gateway</small>
                                 <label for="{{inf.name}}-{{ip.address}}-serviceAddress">Is a Service Address</label>
                                 <input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" ng-model="ip.serviceAddress"/>
-                                <button type="button" title="delete this IP address" class="btn btn-danger" ng-click="deleteIP(inf, ip)">Remove IP Address</button>
+                                <button type="button" title="delete this IP address" class="btn btn-danger btn-xs" style="justify-self: start;" ng-click="deleteIP(inf, ip)"><i class="fa fa-minus"></i></button>
                             </li>
                         </ul>
                     </fieldset>
