@@ -767,7 +767,10 @@
             "type": "HTTP_LIVE_NATNL",
             "xmlId": "ds-top",
             "anonymousBlockingEnabled": false,
-            "topology": "my-topology"
+            "topology": "my-topology",
+            "firstHeaderRewrite": "first header rewrite",
+            "innerHeaderRewrite": "inner header rewrite",
+            "lastHeaderRewrite": "last header rewrite"
         },
         {
             "active": true,

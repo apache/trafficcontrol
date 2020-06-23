@@ -137,6 +137,13 @@ Glossary
 
 		.. seealso:: Federations are currently only manageable by directly using the :ref:`to-api`. The endpoints related to federations are :ref:`to-api-federations`, :ref:`to-api-federation_resolvers`, :ref:`to-api-federations-id-deliveryservices`, :ref:`to-api-federations-id-deliveryservices-id`, :ref:`to-api-federations-id-federation_resolvers`, :ref:`to-api-federations-id-users`, and :ref:`to-api-federations-id-users-id`.
 
+	First-tier
+	First-tier cache
+	First-tier caches
+	First-tier cache server
+	First-tier cache servers
+		Closest to the client or end-user. The first tier in a :term:`Topology` is the tier that serves the client, similar to the :term:`Edge-tier`.
+
 	forward proxy
 	forward proxies
 		A forward proxy acts on behalf of the client such that the :term:`origin server` is (potentially) unaware of the proxy's existence. All Mid-tier :term:`cache servers` in a Traffic Control based CDN are :dfn:`forward proxies`. In a :dfn:`forward proxy` scenario, the client is explicitly configured to use the the proxy's IP address and port as a :dfn:`forward proxy`. The client always connects to the :dfn:`forward proxy` for content. The content provider does not have to change the URL the client obtains, and is (potentially) unaware of the proxy in the middle.
@@ -224,6 +231,20 @@ Glossary
 
  	Health Protocol
  		The protocol to monitor the health of all the caches. See :ref:`health-proto`.
+
+	Inner-tier
+	Inner-tier cache
+	Inner-tier caches
+	Inner-tier cache server
+	Inner-tier cache servers
+		The tier between the First tier and the Last tier. The inner tier in a :term:`Topology` is the tier that forwards requests from other caches to other caches, i.e. caches in this tier do not directly serve the end-user and do not make requests to :term:`Origins`.
+
+	Last-tier
+	Last-tier cache
+	Last-tier caches
+	Last-tier cache server
+	Last-tier cache servers
+		The tier above the First and Inner tiers. The last tier in a :term:`Topology` is the tier that forwards requests from other caches to :term:`Origins`.
 
  	localization
  		Finding location on the network, or on planet earth
