@@ -234,18 +234,18 @@ AND cdn.name = $3
 	var interfacesByNameAndServer = make(map[int]map[string]tc.ServerInterfaceInfo)
 	var serverIDs []int
 	var interfaceNames []string
+	var interfaceName string
+	var serverID int
 	for interfaceRows.Next() {
 		interf := tc.ServerInterfaceInfo{}
-		ipAddressCompoundKey := tc.ServerIPAddressCompoundKey{}
-		if err := interfaceRows.Scan(&interf.Name, &interf.MaxBandwidth, &interf.MTU, &interf.Monitor, &ipAddressCompoundKey.ServerID); err != nil {
+		if err := interfaceRows.Scan(&interf.Name, &interf.MaxBandwidth, &interf.MTU, &interf.Monitor, &serverID); err != nil {
 			return nil, nil, nil, err
 		}
-		ipAddressCompoundKey.InterfaceName = interf.Name
-		if _, ok := interfacesByNameAndServer[ipAddressCompoundKey.ServerID]; !ok {
-			interfacesByNameAndServer[ipAddressCompoundKey.ServerID] = make(map[string]tc.ServerInterfaceInfo)
+		if _, ok := interfacesByNameAndServer[serverID]; !ok {
+			interfacesByNameAndServer[serverID] = make(map[string]tc.ServerInterfaceInfo)
 		}
-		interfacesByNameAndServer[ipAddressCompoundKey.ServerID][interf.Name] = interf
-		serverIDs = append(serverIDs, ipAddressCompoundKey.ServerID)
+		interfacesByNameAndServer[serverID][interf.Name] = interf
+		serverIDs = append(serverIDs, serverID)
 		interfaceNames = append(interfaceNames, interf.Name)
 	}
 
@@ -256,25 +256,24 @@ AND cdn.name = $3
 	defer ipAddressRows.Close()
 	for ipAddressRows.Next() {
 		address := tc.ServerIPAddress{}
-		key := tc.ServerIPAddressCompoundKey{}
-		if err := ipAddressRows.Scan(&address.Address, &address.Gateway, &address.ServiceAddress, &key.ServerID, &key.InterfaceName); err != nil {
+		if err := ipAddressRows.Scan(&address.Address, &address.Gateway, &address.ServiceAddress, &serverID, &interfaceName); err != nil {
 			return nil, nil, nil, err
 		}
 		found := false
 		var addresses []tc.ServerIPAddress
-		if _, ok := interfacesByNameAndServer[key.ServerID]; ok {
-			if _, ok := interfacesByNameAndServer[key.ServerID][key.InterfaceName]; ok {
+		if _, ok := interfacesByNameAndServer[serverID]; ok {
+			if _, ok := interfacesByNameAndServer[serverID][interfaceName]; ok {
 				addresses = append(addresses, address)
 				found = ok
 			}
 		}
 		if !found {
-			log.Errorf("ip_address exists without corresponding interface; server: %v, interfaceName: %v!", key.ServerID, key.InterfaceName)
+			log.Errorf("ip_address exists without corresponding interface; server: %v, interfaceName: %v!", serverID, interfaceName)
 			continue
 		}
-		interf := interfacesByNameAndServer[key.ServerID][key.InterfaceName]
+		interf := interfacesByNameAndServer[serverID][interfaceName]
 		interf.IPAddresses = append(interf.IPAddresses, addresses...)
-		interfacesByNameAndServer[key.ServerID][key.InterfaceName] = interf
+		interfacesByNameAndServer[serverID][interfaceName] = interf
 	}
 
 	rows, err := tx.Query(serversQuery, cdn)

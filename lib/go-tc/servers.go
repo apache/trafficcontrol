@@ -97,12 +97,6 @@ type ServerInterfaceInfo struct {
 	Name         string            `json:"name" db:"name"`
 }
 
-// ServerIPAddressCompoundKey represents the relationship between ipAddresses and servers/interfaces.
-type ServerIPAddressCompoundKey struct {
-	ServerID      int
-	InterfaceName string
-}
-
 // Value implements the driver.Valuer interface
 // marshals struct to json to pass back as a json.RawMessage
 func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
