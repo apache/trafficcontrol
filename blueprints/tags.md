@@ -104,21 +104,269 @@ quite non-invasive, and can all be done atomically without breaking any
 functionality between them.
 
 The new Tags endpoint (`/tags`) shall support the HTTP request methods GET and
-POST. A further endpoint, `/tags/\{\{Tag Name\}\}` will also be added that
-supports GET, PUT and DELETE.
+POST. A further endpoint, `/tags/{{Tag Name}}` will also be added that
+supports GET, PUT and DELETE. These endpoints are herein specified.
 
 ##### `/tags`
+This endpoint deals with creating Tags and retrieving representations thereof.
 
-The GET method will retrieve representations of all Tag objects, and ought to
-support the standard pagination methods.
+###### GET
+Retrieves Tag representations.
 
-The POST method will create new tags from a request payload. The payload may be
-either a single representation of a Tag, or a set thereof. In any case, no Tag
-may be created with a Name of a Tag that already exists. Also, the Name of a Tag
-is subject to the restrictions that it not be empty and contain only
-alphanumeric characters.
+- *Required Roles* None
+- *Response Type* Array
 
-The PUT method will edit (change the name) of an existing Tag
+**Request Structure**
+This method of this endpoint implements the standard pagination query string
+parameters. It provides no additional query string parameters.
+
+*Request Example*
+```http
+GET /api/4.0/tags?limit=1 HTTP/1.1
+Host: trafficops.infra.ciab.test
+Accept: application/json, */*;q=0.9
+Cookie: mojolicious=...
+
+```
+
+**Response Structure**
+The response is an array of representations of Tags, each representation
+extended with the `lastUpdated` property containing the Date/Time at which
+the Tag was last modified.
+
+This method of this endpoint also implements the `count` property of the
+top-level `summary` object.
+
+*Response Example*
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Server: Traffic Ops/5.0
+Date: Tue, 23 Jun 2020 20:46:57 GMT
+Transfer-Encoding: chunked
+
+{ "response": [
+	{
+		"name": "Foo",
+		"lastUpdated": "2020-06-23T20:45:00.000Z"
+	}
+],
+"summary": {
+	"count": 347
+}}
+```
+
+###### POST
+Creates a new Tag or Tags.
+
+- *Required Roles* Operations or Admin
+- *Response Type* Array
+
+**Request Structure**
+This method of this endpoint provides no query string parameters.
+The request body of a POST request to `/tags` is either a representation of
+a Tag, or an array thereof.
+
+*Request Example*
+```http
+POST /api/4.0/tags HTTP/1.1
+Host: trafficops.infra.ciab.test
+Accept: application/json, */*;q=0.9
+Cookie: mojolicious=...
+Content-Type: application-json
+Content-Length: 52
+
+[
+	{
+		"name": "Test"
+	},
+	{
+		"name": "Quest"
+	}
+]
+```
+
+The request must be rejected with an appropriate HTTP Response code on the range
+[400, 500) if the request is not properly encoded as either a single Tag or an
+array thereof, any submitted Tag already exists, or any submitted Tag has a Name
+containing non-alphanumeric characters.
+
+**Response Structure**
+The response is an array - always, even if the request body contained only a
+single object - of representations of the Tag objects created.
+
+*Response Example*
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+Server: Traffic Ops/5.0
+Date: Tue, 23 Jun 2020 20:46:57 GMT
+Location: /api/4.0/tags?newerThan=2020-06-23T20:46:56.999Z&olderThan=2020-06-23T20:46:57.001Z
+Transfer-Encoding: chunked
+
+{ "alerts": [{
+	"level": "success",
+	"text": "Created 2 tags"
+}],
+"response": [
+	{
+		"name": "Test"
+	},
+	{
+		"name": "Quest"
+	}
+]}
+```
+
+##### `/tags/{{Tag Name}}`
+This endpoint deals with manipulations and representations of singular Tags.
+
+###### GET
+Retrieves a Tag's representation.
+
+- *Required Roles* None
+- *Response Type* Object
+
+**Request Structure**
+The single route parameter `Tag Name` must be the name of an existing
+Tag.
+
+This method of this endpoint provides no query string parameters.
+
+*Request Example*
+```http
+GET /api/4.0/tags/Test HTTP/1.1
+Host: trafficops.infra.ciab.test
+Accept: application/json, */*;q=0.9
+Cookie: mojolicious=...
+
+```
+
+**Response Structure**
+The response is a representation of the requested Tag, augmented with the
+`lastUpdated` property containing the Date/Time at which the Tag was last
+modified.
+
+*Response Example*
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Server: Traffic Ops/5.0
+Date: Tue, 23 Jun 2020 20:46:57 GMT
+Transfer-Encoding: chunked
+
+{ "response":
+	{
+		"name": "Test",
+		"lastUpdated": "2020-06-23T20:45:00.000Z"
+	}
+}
+```
+
+###### PUT
+Edits a Tag.
+
+- *Required Roles* Operations or Admin
+- *Response Type* Array
+
+**Request Structure**
+The single route parameter `Tag Name` must be the name of an existing
+Tag.
+
+This method of this endpoint provides no query string parameters.
+
+The request body of a PUT request to `/tags/{{Tag Name}}` is a representation of
+a Tag.
+
+*Request Example*
+```http
+POST /api/4.0/tags HTTP/1.1
+Host: trafficops.infra.ciab.test
+Accept: application/json, */*;q=0.9
+Cookie: mojolicious=...
+Content-Type: application-json
+Content-Length: 20
+
+{
+	"name": "Bar"
+}
+```
+
+**Response Structure**
+The response is a representation of the edited Tag, augmented with the
+`lastUpdated` property containing the Date/Time at which the Tag was last
+modified.
+
+The request must be rejected with an appropriate HTTP response code on the
+interval [400, 500) if the Tag named in the request path does not exist, the new
+name is the name of a pre-existing Tag (excluding the Tag itself, which should
+allow for successful completion as a no-op), the new name contains
+non-alphanumeric characters, or the request body cannot be understood as a JSON
+representation of a Tag.
+
+*Response Example*
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Server: Traffic Ops/5.0
+Date: Tue, 23 Jun 2020 20:46:57 GMT
+Transfer-Encoding: chunked
+
+{ "alerts": [{
+	"level": "success",
+	"text": "Edited Tag 'Test', name changed to 'Bar'"
+}]
+"response":
+	{
+		"name": "Bar",
+		"lastUpdated": "2020-06-23T20:46:57.000Z"
+	}
+}
+```
+
+###### DELETE
+Deletes a Tag.
+
+- *Required Roles* Operations or Admin
+- *Response Type* Object
+
+**Request Structure**
+The single route parameter `Tag Name` must be the name of an existing
+Tag.
+
+This method of this endpoint provides no query string parameters.
+
+*Request Example*
+```http
+DELETE /api/4.0/tags/Bar HTTP/1.1
+Host: trafficops.infra.ciab.test
+Accept: application/json, */*;q=0.9
+Cookie: mojolicious=...
+
+```
+
+**Response Structure**
+The response is a representation of the deleted Tag.
+
+*Response Example*
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Server: Traffic Ops/5.0
+Date: Tue, 23 Jun 2020 20:46:57 GMT
+Transfer-Encoding: chunked
+
+{ "alerts": [{
+	"level": "success",
+	"text": "Deleted Tag 'Bar'"
+}],
+"response":
+	{
+		"name": "Bar"
+	}
+}
+```
+
 
 #### Client Impact
 The return data structures will change, but no code change to any Traffic Ops
@@ -135,95 +383,39 @@ since the new collections need not be required, they can be done in non-invasive
 fashion of arbitrary order (provided Tag manipulation itself is done first)
 without disrupting any existing processes or data.
 
-### Documentation Impact
+## Documentation Impact
 Tags will need to be documented in the data model, both themselves and on the
 modeled objects which now contain them. Also, API endpoints will need to updated
 to reflect the new return structures, where applicable.
 
-### Testing Impact
-<!--
-*How* will this impact testing?
+## Testing Impact
+All new Traffic Ops client methods/functions/procedures will need to be
+accompanied by corresponding tests, and ideally some part of the route handlers
+will also be testable by unit tests.
 
-What is the high-level test plan?
-How should this be tested?
-Can this be tested within the existing test frameworks?
-How should the existing frameworks be enhanced in order to test this properly?
--->
+## Performance Impact
+For most objects this would merely add a column to the database query structure,
+so the performance impact is expected to be negligible.
 
-### Performance Impact
-<!--
-*How* will this impact performance?
+## Security Impact
+Tags have no implied functionality, and expose no sensitive data, so there is
+expected to be no security impact.
 
-Are the changes expected to improve performance in any way?
-Is there anything particularly CPU, network, or storage-intensive to be aware of?
-What are the known bottlenecks to be aware of that may need to be addressed?
--->
+## Upgrade Impact
+This will require probably multiple database migrations (or possibly one if the
+implementer is feeling brave), but should require no change to upgrade processes
+nor cause any problems on roll-back, as the only lost data would be the new Tags
+that would be inaccessible in an older version anyway.
 
-### Security Impact
-<!--
-*How* will this impact overall security?
+## Operations Impact
+Tags have no operational meaning, but operators may need to be made aware of
+Tags' existences and different organizations may place their own, proprietary
+importance on a Tag or Tags that they may then need to communicate to operators.
 
-Are there any security risks to be aware of?
-What privilege level is required for these changes?
-Do these changes increase the attack surface (e.g. new untrusted input)?
-How will untrusted input be validated?
-If these changes are used maliciously or improperly, what could go wrong?
-Will these changes adhere to multi-tenancy?
-Will data be protected in transit (e.g. via HTTPS or TLS)?
-Will these changes require sensitive data that should be encrypted at rest?
-Will these changes require handling of any secrets?
-Will new SQL queries properly use parameter binding?
--->
-
-### Upgrade Impact
-<!--
-*How* will this impact the upgrade of an existing system?
-
-Will a database migration be required?
-Do the various components need to be upgraded in a specific order?
-Will this affect the ability to rollback an upgrade?
-Are there any special steps to be followed before an upgrade can be done?
-Are there any special steps to be followed during the upgrade?
-Are there any special steps to be followed after the upgrade is complete?
--->
-
-### Operations Impact
-<!--
-*How* will this impact overall operation of the system?
-
-Will the changes make it harder to operate the system?
-Will the changes introduce new configuration that will need to be managed?
-Can the changes be easily automated?
-Do the changes have known limitations or risks that operators should be made aware of?
-Will the changes introduce new steps to be followed for existing operations?
--->
-
-### Developer Impact
-<!--
-*How* will this impact other developers?
-
-Will it make it easier to set up a development environment?
-Will it make the code easier to maintain?
-What do other developers need to know about these changes?
-Are the changes straightforward, or will new developer instructions be necessary?
--->
+## Developer Impact
+Developers should be fairly free from impact, but may just need to be aware that
+certain objects now have additional properties.
 
 ## Alternatives
-<!--
-What are some of the alternative solutions for this problem?
-What are the pros and cons of each approach?
-What design trade-offs were made and why?
--->
-
-## Dependencies
-<!--
-Are there any significant new dependencies that will be required?
-How were the dependencies assessed and chosen?
-How will the new dependencies be managed?
-Are the dependencies required at build-time, run-time, or both?
--->
-
-## References
-<!--
-Include any references to external links here.
--->
+There are no alternatives of which I'm aware, other than the obvious "just not
+doing tags".
