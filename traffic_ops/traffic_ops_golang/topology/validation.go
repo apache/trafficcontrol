@@ -79,10 +79,9 @@ func (topology *TOTopology) checkForEdgeParents(cacheGroups []tc.CacheGroupNulla
 				topology.Nodes[parentCacheGroupIndex].Cachegroup,
 				parentTerm,
 				node.Cachegroup))
-		case tc.CacheGroupMidTypeName:
 		default:
 			errs = append(errs, fmt.Errorf(
-				"cachegroup %s's type is %s; it cannot be a child of %s-typed cachegroup %s",
+				"cachegroup %s's type is %s; it cannot parent a %s-typed cachegroup %s",
 				topology.Nodes[parentCacheGroupIndex].Cachegroup,
 				parentCacheGroupType,
 				cacheGroupType,

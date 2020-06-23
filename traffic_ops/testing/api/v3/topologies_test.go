@@ -104,8 +104,9 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "cachegroup1", Parents: []int{0, 1, 2}},
 		}}},
 		{testCaseDescription: "an edge parenting a mid", Topology: tc.Topology{Name: "edge-parent-of-mid", Description: "Invalid because an edge is a parent of a mid", Nodes: []tc.TopologyNode{
-			{Cachegroup: "parentCachegroup", Parents: []int{1}},
-			{Cachegroup: "cachegroup1", Parents: []int{}},
+			{Cachegroup: "cachegroup1", Parents: []int{1}},
+			{Cachegroup: "parentCachegroup", Parents: []int{2}},
+			{Cachegroup: "cachegroup2", Parents: []int{}},
 		}}},
 		{testCaseDescription: "a leaf mid", Topology: tc.Topology{Name: "leaf-mid", Description: "Invalid because a mid is a leaf node", Nodes: []tc.TopologyNode{
 			{Cachegroup: "parentCachegroup", Parents: []int{1}},
