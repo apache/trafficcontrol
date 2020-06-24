@@ -36,14 +36,13 @@
 # TP_HOST
 #
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_PERL_HOST TO_PERL_PORT TO_PERL_SCHEME TO_HOST TO_PORT TP_HOST)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST)
 for v in $envvars
 do
 	if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
-until [[ -f "$X509_CA_ENV_FILE" ]]
-do
+until [[ -f "$X509_CA_ENV_FILE" ]]; do
   echo "Waiting on SSL certificate generation."
   sleep 2
 done
@@ -75,7 +74,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
 {
     "hypnotoad" : {
         "listen" : [
-            "$TO_PERL_SCHEME://$TO_PERL_FQDN:$TO_PERL_PORT?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+            "https://[::]?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
         ],
         "user" : "trafops",
         "group" : "trafops",
