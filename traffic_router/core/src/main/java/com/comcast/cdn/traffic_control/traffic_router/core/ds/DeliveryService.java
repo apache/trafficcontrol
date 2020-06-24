@@ -138,7 +138,9 @@ public class DeliveryService {
 		this.bypassDestination = dsJo.get("bypassDestination");
 		this.routingName = JsonUtils.getString(dsJo, "routingName").toLowerCase();
 		this.domain = getDomainFromJson(dsJo.get("domains"));
-		this.tld = this.domain.replaceAll("^.*?\\.", "");
+		this.tld = this.domain != null
+                ? this.domain.replaceAll("^.*?\\.", "")
+				: null;
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
 		this.ecsEnabled = JsonUtils.optBoolean(dsJo, "ecsEnabled");
