@@ -41,7 +41,7 @@ RUN set -o nounset -o errexit && \
 		use_repo='--repo=pgdg96'; \
 	fi; \
 	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${CENTOS_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
-	dnf -y $use_repo -- install postgresql96; \
+	dnf -y $use_repo -- install postgresql12; \
 	dnf -y install epel-release; \
 	dnf -y install      \
 		jq              \
@@ -49,6 +49,7 @@ RUN set -o nounset -o errexit && \
 		net-tools       \
 		gettext         \
 		perl-JSON-PP    \
+		perl-ScryptKDF  \
 		mkisofs         \
 		isomd5sum       \
 		nmap-ncat       \
@@ -65,7 +66,9 @@ ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffi
 
 WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/install/bin/install_goose.sh ./
-RUN ./install_goose.sh
+RUN ./install_goose.sh && rm /install_goose.sh
+
+ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 #
@@ -86,9 +89,13 @@ COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/traffic_ops/config.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
+	infrastructure/cdn-in-a-box/traffic_ops/set-to-ips-from-dns.sh \
+	infrastructure/cdn-in-a-box/traffic_ops/generate-certs.sh \
+	infrastructure/cdn-in-a-box/traffic_ops/adduser.pl \
+	infrastructure/cdn-in-a-box/traffic_ops/trafficops-init.sh \
+	infrastructure/cdn-in-a-box/variables.env \
 	/
 
-WORKDIR /opt/traffic_ops/app
 EXPOSE 443
 CMD /run-go.sh
 HEALTHCHECK --interval=10s --timeout=1s \
