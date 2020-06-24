@@ -21,9 +21,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -272,19 +275,32 @@ public class ConfigHandlerTest {
 
         /* Mock a DeliveryService and add it to our DeliveryService Map */
         final String dsId = "top-ds";
-        final String domain = "ds.cdn.com";
+        final String routingName = "cdn";
+        final String domain = "ds.site.com";
         final String topology = "foo";
+        final String superHackedRegexp = "(.*\\.|^)" + dsId + "\\..*";
         final DeliveryService ds = mock(DeliveryService.class);
         when(ds.getId()).thenReturn(dsId);
         when(ds.getDomain()).thenReturn(domain);
+        when(ds.getRemap(superHackedRegexp)).thenReturn(domain);
+        when(ds.getRoutingName()).thenReturn(routingName);
         when(ds.getTopology()).thenReturn(topology);
         when(ds.hasRequiredCapabilities(capabilities)).thenReturn(true);
+        when(ds.isDns()).thenReturn(false);
         final Map<String, DeliveryService> dsMap = new HashMap<>();
         dsMap.put(dsId, ds);
+
+        final DeliveryServiceMatcher dsMatcher = new DeliveryServiceMatcher(ds);
+        dsMatcher.addMatch(DeliveryServiceMatcher.Type.HOST, superHackedRegexp, "");
+        final TreeSet<DeliveryServiceMatcher> dsMatchers = new TreeSet<>();
+        dsMatchers.add(dsMatcher);
+        register.setDeliveryServiceMap(dsMap);
+        register.setDeliveryServiceMatchers(dsMatchers);
 
         /* Parse the Topologies config JSON */
         final ObjectMapper mapper = new ObjectMapper();
         final JsonNode allTopologiesJson = mapper.readTree("{\"" + topology + "\":{\"nodes\":[\"" + location + "\"]}}");
+        Whitebox.setInternalState(handler, "statTracker", new StatTracker());
         Whitebox.invokeMethod(handler, "parseTopologyConfig", allTopologiesJson, dsMap, register);
 
         /* Assert that the DeliveryService was assigned to the Cache */
