@@ -93,7 +93,10 @@ type Result struct {
 	Error error
 	// ID is the fully qualified domain name of the cache server being polled.
 	// (This is assumed to be unique even though that isn't necessarily true)
-	ID            string
+	ID string
+	// Miscellaneous contains the stats that were not directly gathered into
+	// Statistics, but were still found in the stats polling payload. Their
+	// contents are NOT guaranteed in ANY way.
 	Miscellaneous map[string]interface{}
 	// PollFinished is a channel to which data should be sent to indicate that
 	// polling has been completed and a Result has been produced.
