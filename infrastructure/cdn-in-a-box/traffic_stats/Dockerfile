@@ -23,18 +23,20 @@ FROM centos:7
 
 # Default values for RPM -- override with `docker build --build-arg RPM=...'
 ARG TRAFFIC_TS_RPM=traffic_stats/traffic_stats.rpm
-ADD $TRAFFIC_TS_RPM /
 
 RUN yum install -y epel-release && \
-    yum install -y /$(basename $TRAFFIC_TS_RPM) \
+    yum install -y \
         jq \
         nmap-ncat \
         net-tools \
         gettext \
         bind-utils \
         openssl && \
-    rm /$(basename $TRAFFIC_TS_RPM) && \
     yum clean all
+
+ADD $TRAFFIC_TS_RPM /
+RUN yum install -y /$(basename $TRAFFIC_TS_RPM) \
+    rm /$(basename $TRAFFIC_TS_RPM)
 
 ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
