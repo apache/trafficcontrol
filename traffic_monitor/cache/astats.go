@@ -38,7 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 func init() {
@@ -100,13 +100,13 @@ func astatsParse(cacheName string, rdr io.Reader) (Statistics, map[string]interf
 	stats.NotAvailable = astats.System.NotAvailable
 
 	// TODO: what's using these?? Can we get rid of them?
-	astats.Ats["system.astatsLoad"] = astats.System.AstatsLoad
-	astats.Ats["system.configReloadRequests"] = astats.System.ConfigLoadRequest
-	astats.Ats["system.configReloads"] = astats.System.ConfigReloads
+	astats.Ats["system.astatsLoad"] = float64(astats.System.AstatsLoad)
+	astats.Ats["system.configReloadRequests"] = float64(astats.System.ConfigLoadRequest)
+	astats.Ats["system.configReloads"] = float64(astats.System.ConfigReloads)
 	astats.Ats["system.inf.name"] = astats.System.InfName
-	astats.Ats["system.inf.speed"] = astats.System.InfSpeed
-	astats.Ats["system.lastReload"] = astats.System.LastReload
-	astats.Ats["system.lastReloadRequest"] = astats.System.LastReloadRequest
+	astats.Ats["system.inf.speed"] = float64(astats.System.InfSpeed)
+	astats.Ats["system.lastReload"] = float64(astats.System.LastReload)
+	astats.Ats["system.lastReloadRequest"] = float64(astats.System.LastReloadRequest)
 	astats.Ats["system.notAvailable"] = stats.NotAvailable
 	astats.Ats["system.proc.loadavg"] = astats.System.ProcLoadavg
 	astats.Ats["system.proc.net.dev"] = astats.System.ProcNetDev
@@ -153,8 +153,10 @@ func astatsProcessStat(server string, stats map[string]*DSStat, toData todata.TO
 	case "plugin":
 		return astatsProcessStatPlugin(server, stats, toData, stat, parts[1:], value)
 	case "proxy":
-		return stats, dsdata.ErrNotProcessedStat
+		fallthrough
 	case "server":
+		fallthrough
+	case "system":
 		return stats, dsdata.ErrNotProcessedStat
 	default:
 		return stats, fmt.Errorf("stat '%s' has unknown initial part '%s'", stat, parts[0])
