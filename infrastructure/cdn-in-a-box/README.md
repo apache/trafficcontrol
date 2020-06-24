@@ -138,7 +138,7 @@ show you the default UI for interacting with the CDN - Traffic Portal.
 > </tr>
 > <tr class="odd">
 > <td align="left">Traffic Ops</td>
-> <td align="left">Main API endpoints on port 6443, with a direct route to the Perl API on port 60443<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></td>
+> <td align="left">API on port 6443</td>
 > <td align="left"><code>TO_ADMIN_USER</code> in variables.env</td>
 > <td align="left"><code>TO_ADMIN_PASSWORD</code> in variables.env</td>
 > </tr>
@@ -168,12 +168,6 @@ show you the default UI for interacting with the CDN - Traffic Portal.
 > </tr>
 > </tbody>
 > </table>
-> <div class="footnotes">
-> <hr />
-> <ol>
-> <li id="fn1"><p>Please do NOT use the Perl endpoints directly. The CDN will only work properly if everything hits the Go API, which will proxy to the Perl endpoints as needed.<a href="#fnref1">↩</a></p></li>
-> </ol>
-> </div>
 >
 
 ## Host Ports
@@ -183,10 +177,6 @@ By default, `docker-compose.yml` does not expose ports to the host. This allows 
 To expose the ports of each service on the host, add the `docker-compose.expose-ports.yml` file. For example, `docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`.
 
 ## Common Pitfalls
-
-### Everything's "waiting for Traffic Ops" forever and nothing seems to be working
-
-If you scroll back through the output ( or use `docker-compose logs trafficops-perl | grep "User defined signal 2"` ) and see a line that says something like `/run.sh: line 79: 118 User defined signal 2 $TO_DIR/local/bin/hypnotoad script/cdn` then you've hit a mysterious known error. We don't know what this is or why it happens, but your best bet is to send up a quick prayer and restart the stack.
 
 ### Traffic Monitor is stuck waiting for a valid Snapshot
 
