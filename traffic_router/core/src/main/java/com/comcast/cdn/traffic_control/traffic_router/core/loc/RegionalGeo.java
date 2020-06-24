@@ -15,30 +15,33 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import java.io.File;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
-
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult.RegionalGeoResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.HTTPRouteResult;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import static com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult.RegionalGeoResultType.ALLOWED;
 import static com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult.RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE;
@@ -52,6 +55,7 @@ public final class RegionalGeo {
     public static final String HTTPS_SCHEME = "https://";
     private boolean fallback = false;
     private final Map<String, RegionalGeoDsvc> regionalGeoDsvcs = new HashMap<String, RegionalGeoDsvc>();
+    private ArrayList<RegionalGeoCoordinateRange> coordinateRanges = new ArrayList<>();
 
     private static RegionalGeo currentConfig = new RegionalGeo();
 
@@ -86,8 +90,8 @@ public final class RegionalGeo {
     }
 
     private boolean addRule(final String dsvcId, final String urlRegex,
-            final RegionalGeoRule.PostalsType postalsType, final Set<String> postals,
-            final NetworkNode networkRoot, final String alternateUrl, final boolean isSteeringDS) {
+                            final RegionalGeoRule.PostalsType postalsType, final Set<String> postals,
+                            final NetworkNode networkRoot, final String alternateUrl, final boolean isSteeringDS, ArrayList<RegionalGeoCoordinateRange> coordinateRanges) {
 
         // Loop check for alternateUrl with fqdn against the regex before adding
         Pattern urlRegexPattern;
@@ -122,7 +126,7 @@ public final class RegionalGeo {
         final RegionalGeoRule urlRule = new RegionalGeoRule(regionalGeoDsvc,
                 urlRegex, urlRegexPattern,
                 postalsType, postals,
-                networkRoot, alternateUrl);
+                networkRoot, alternateUrl, coordinateRanges);
 
         LOGGER.info("RegionalGeo: adding " + urlRule);
         regionalGeoDsvc.addRule(urlRule);
@@ -147,6 +151,18 @@ public final class RegionalGeo {
         }
 
         return root;
+    }
+
+    private static ArrayList<RegionalGeoCoordinateRange> parseLocationJsonCoordinateRange(final JsonNode locationJson) {
+        final ArrayList<RegionalGeoCoordinateRange> coordinateRange =  new ArrayList<>();
+        JsonNode coordinateRangeJson = locationJson.get("coordinateRange");
+        ObjectMapper mapper = new ObjectMapper();
+        RegionalGeoCoordinateRange cr = new RegionalGeoCoordinateRange();
+        for (final JsonNode cRange : coordinateRangeJson) {
+            cr  = mapper.convertValue(cRange, RegionalGeoCoordinateRange.class);
+            coordinateRange.add(cr);
+        }
+        return coordinateRange;
     }
 
     private static RegionalGeoRule.PostalsType parseLocationJson(final JsonNode locationJson,
@@ -219,6 +235,9 @@ public final class RegionalGeo {
                     LOGGER.error("RegionalGeo ERR: geoLocation empty");
                     return null;
                 }
+                // coordinate range
+                final ArrayList<RegionalGeoCoordinateRange> coordinateRanges = parseLocationJsonCoordinateRange(locationJson);
+                regionalGeo.setCoordinateRanges(coordinateRanges);
 
                 // white list
                 NetworkNode whiteListRoot = null;
@@ -230,7 +249,7 @@ public final class RegionalGeo {
 
 
                 // add the rule
-                if (!regionalGeo.addRule(dsvcId, urlRegex, postalsType, postals, whiteListRoot, redirectUrl, isSteeringDS)) {
+                if (!regionalGeo.addRule(dsvcId, urlRegex, postalsType, postals, whiteListRoot, redirectUrl, isSteeringDS, coordinateRanges)) {
                     LOGGER.error("RegionalGeo ERR: add rule failed on parsing json file");
                     return null;
                 }
@@ -273,7 +292,7 @@ public final class RegionalGeo {
 
 
     public static RegionalGeoResult enforce(final String dsvcId, final String url,
-        final String ip, final String postalCode) {
+                                            final String ip, final String postalCode, double lat, double lon) {
 
         final RegionalGeoResult result = new RegionalGeoResult();
         boolean allowed = false;
@@ -300,7 +319,7 @@ public final class RegionalGeo {
         } else {
             if (postalCode == null || postalCode.isEmpty()) {
                 LOGGER.warn("RegionalGeo: alternate a request with null or empty postal");
-                allowed = false;
+                allowed = rule.isAllowedCoordinates(lat, lon);
             } else {
                 allowed = rule.isAllowedPostal(postalCode);
             }
@@ -360,8 +379,15 @@ public final class RegionalGeo {
         }
 
         String postalCode = null;
+        double lat = 0.0;
+        double lon = 0.0;
+
         if (clientGeolocation != null) {
             postalCode = clientGeolocation.getPostalCode();
+            if (postalCode == null) {
+                lat = clientGeolocation.getLatitude();
+                lon = clientGeolocation.getLongitude();
+            }
 
             // Get the first 3 chars in the postal code. These 3 chars are called FSA in Canadian postal codes.
             if (postalCode != null && postalCode.length() > 3) {
@@ -371,7 +397,7 @@ public final class RegionalGeo {
 
         final HTTPRequest httpRequest = HTTPRequest.class.cast(request);
         final RegionalGeoResult result = enforce(deliveryService.getId(), httpRequest.getRequestedUrl(), 
-                                                 httpRequest.getClientIP(), postalCode);
+                                                 httpRequest.getClientIP(), postalCode, lat, lon);
 
         if (cache == null && result.getType() == ALTERNATE_WITH_CACHE) {
             LOGGER.debug("RegionalGeo: denied for dsvc " + deliveryService.getId() + ", url " + httpRequest.getRequestedUrl() + ", postal " + postalCode + ". Relative re-direct URLs not allowed for Multi Route Delivery Services.");
@@ -443,6 +469,14 @@ public final class RegionalGeo {
         }
 
         return "Denied"; // DENIED
+    }
+
+    public ArrayList<RegionalGeoCoordinateRange> getCoordinateRanges() {
+        return coordinateRanges;
+    }
+
+    public void setCoordinateRanges(ArrayList<RegionalGeoCoordinateRange> coordinateRanges) {
+        this.coordinateRanges = coordinateRanges;
     }
 }
 
