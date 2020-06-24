@@ -433,7 +433,7 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 		ruleName := fmt.Sprintf("interface '%s' ", iface.Name)
 		errs = append(errs, tovalidate.ToErrors(validation.Errors{
 			ruleName + "name":        validation.Validate(iface.Name, validation.Required),
-			ruleName + "mtu":         validation.Validate(iface.MaxBandwidth, validation.By(validateMTU)),
+			ruleName + "mtu":         validation.Validate(iface.MTU, validation.By(validateMTU)),
 			ruleName + "ipAddresses": validation.Validate(iface.IPAddresses, validation.Required),
 		})...)
 
@@ -475,6 +475,10 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 				}
 			}
 		}
+	}
+
+	if !serviceAddrV6Found && !serviceAddrV4Found {
+		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
 
 	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
