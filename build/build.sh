@@ -63,7 +63,7 @@ for p in ${projects}; do
 	if [ "$p" = docs ]; then
 		if isInGitTree; then
 			echo "-----  Building docs ..."
-			checkEnvironment -i python,sphinx-build,make, -e rpmbuild
+			checkEnvironment -i python3,make, -e rpmbuild
 			( cd docs
 			make html
 			)
