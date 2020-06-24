@@ -46,7 +46,6 @@ RUN set -o nounset -o errexit && \
         bind-utils      \
         net-tools       \
         gettext         \
-        perl-JSON-PP    \
         mkisofs         \
         isomd5sum       \
         nmap-ncat       \
