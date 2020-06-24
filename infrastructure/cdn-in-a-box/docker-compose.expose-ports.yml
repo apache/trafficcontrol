@@ -30,9 +30,6 @@ services:
   trafficops:
     ports:
       - "6443:443"
-  trafficops-perl:
-    ports:
-      - "60443:443"
   trafficportal:
     ports:
       - "443:443"
