@@ -44,10 +44,14 @@ const KilobitsPerMegabit = 1000
 const DeliveryServiceStatus = "REPORTED"
 
 type BasicServer struct {
+	CommonServerProperties
+	IP  string `json:"ip"`
+	IP6 string `json:"ip6"`
+}
+
+type CommonServerProperties struct {
 	Profile    string `json:"profile"`
 	Status     string `json:"status"`
-	IP         string `json:"ip"`
-	IP6        string `json:"ip6"`
 	Port       int    `json:"port"`
 	Cachegroup string `json:"cachegroup"`
 	HostName   string `json:"hostname"`
@@ -67,7 +71,7 @@ type LegacyCache struct {
 }
 
 type Cache struct {
-	BasicServer
+	CommonServerProperties
 	Interfaces []tc.ServerInterfaceInfo `json:"interfaces"`
 	Type       string                   `json:"type"`
 	HashID     string                   `json:"hashid"`
@@ -306,14 +310,16 @@ AND cdn.name = $3
 		if ttype.String == tc.MonitorTypeName {
 			monitors = append(monitors, Monitor{
 				BasicServer: BasicServer{
-					Profile:    profile.String,
-					Status:     status.String,
-					IP:         ip.String,
-					IP6:        ip6.String,
-					Port:       int(port.Int64),
-					Cachegroup: cachegroup.String,
-					HostName:   hostName.String,
-					FQDN:       fqdn.String,
+					CommonServerProperties: CommonServerProperties{
+						Profile:    profile.String,
+						Status:     status.String,
+						Port:       int(port.Int64),
+						Cachegroup: cachegroup.String,
+						HostName:   hostName.String,
+						FQDN:       fqdn.String,
+					},
+					IP:  ip.String,
+					IP6: ip6.String,
 				},
 			})
 		} else if strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID") {
@@ -327,11 +333,9 @@ AND cdn.name = $3
 				log.Errorf("cache with hashID: %v, has no interfaces!", hashID.String)
 			}
 			cache := Cache{
-				BasicServer: BasicServer{
+				CommonServerProperties: CommonServerProperties{
 					Profile:    profile.String,
 					Status:     status.String,
-					IP:         ip.String,
-					IP6:        ip6.String,
 					Port:       int(port.Int64),
 					Cachegroup: cachegroup.String,
 					HostName:   hostName.String,

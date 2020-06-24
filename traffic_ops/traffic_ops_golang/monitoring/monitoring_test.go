@@ -647,14 +647,17 @@ func sortDeliveryServices(p []DeliveryService) []DeliveryService {
 
 func createMockMonitor() Monitor {
 	return Monitor{
-		BasicServer: BasicServer{Profile: "monitorProfile",
-			Status:     "monitorStatus",
-			IP:         "1.2.3.4",
-			IP6:        "2001::4",
-			Port:       8081,
-			Cachegroup: "monitorCachegroup",
-			HostName:   "monitorHost",
-			FQDN:       "monitorFqdn.me",
+		BasicServer: BasicServer{
+			CommonServerProperties: CommonServerProperties{
+				Profile:    "monitorProfile",
+				Status:     "monitorStatus",
+				Port:       8081,
+				Cachegroup: "monitorCachegroup",
+				HostName:   "monitorHost",
+				FQDN:       "monitorFqdn.me",
+			},
+			IP:  "1.2.3.4",
+			IP6: "2001::4",
 		},
 	}
 }
@@ -665,7 +668,7 @@ func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "server", "interface"})
 	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, MonitorType, "noHash", 2)
 	for index, cache := range caches {
-		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.IP, cache.IP6, cache.Profile, cache.Type, cache.HashID, cacheIDs[index])
+		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, "127.0.0.1", "2001::4", cache.Profile, cache.Type, cache.HashID, cacheIDs[index])
 
 		interfaceRows = interfaceRows.AddRow("none", nil, 1500, false, 0)
 		for _, interf := range cache.Interfaces {
@@ -697,11 +700,9 @@ func mockGetParams(mock sqlmock.Sqlmock, expected []parameter.TOParameter, cdn s
 
 func createMockCache(interfaceName string) Cache {
 	return Cache{
-		BasicServer: BasicServer{
+		CommonServerProperties: CommonServerProperties{
 			Profile:    "cacheProfile",
 			Status:     "cacheStatus",
-			IP:         "1.2.3.4",
-			IP6:        "2001::4",
 			Port:       8081,
 			Cachegroup: "cacheCachegroup",
 			HostName:   "cacheHost",

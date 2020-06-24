@@ -26,19 +26,19 @@ import (
  * under the License.
  */
 
-func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, ReqInf, error) {
+func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.LegacyTrafficMonitorConfigMap, ReqInf, error) {
 	tmConfig, reqInf, err := to.GetTrafficMonitorConfig(cdn)
 	if err != nil {
 		return nil, reqInf, err
 	}
-	tmConfigMap, err := tc.TrafficMonitorTransformToMap(tmConfig)
+	tmConfigMap, err := tc.LegacyTrafficMonitorTransformToMap(tmConfig)
 	if err != nil {
 		return nil, reqInf, err
 	}
 	return tmConfigMap, reqInf, nil
 }
 
-func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {
+func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.LegacyTrafficMonitorConfig, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.3/cdns/%s/configs/monitoring.json", cdn)
 	resp, remoteAddr, err := to.request("GET", url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -47,7 +47,7 @@ func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig
 	}
 	defer resp.Body.Close()
 
-	var data tc.TMConfigResponse
+	var data tc.LegacyTMConfigResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}

@@ -22,7 +22,7 @@ import (
 )
 
 func TestMonitoring(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		AllCDNsCanSnapshot(t)
 	})
 }
@@ -42,20 +42,10 @@ func AllCDNsCanSnapshot(t *testing.T) {
 			continue
 		}
 
-		tmConfig, _, err := TOSession.GetTrafficMonitorConfigMap(cdn.Name)
+		_, _, err = TOSession.GetTrafficMonitorConfigMap(cdn.Name)
 		if err != nil {
 			t.Error(err)
 			continue
-		}
-
-		for hostName, server := range tmConfig.TrafficServer {
-			if _, ok := serversByHost[hostName]; !ok {
-				t.Errorf("Server %v not found in test data", hostName)
-				continue
-			}
-			if len(server.Interfaces) != len(serversByHost[hostName].Interfaces) {
-				t.Errorf("Server %v expected to get %v interfaces, got %v", hostName, len(server.Interfaces), len(serversByHost[hostName].Interfaces))
-			}
 		}
 	}
 }

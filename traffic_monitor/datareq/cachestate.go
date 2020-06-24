@@ -100,7 +100,7 @@ func createCacheStatuses(
 	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
-	servers map[string]tc.TrafficServer,
+	servers map[string]tc.LegacyTrafficServer,
 ) map[tc.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
 	statii := map[tc.CacheName]CacheStatus{}
@@ -221,7 +221,7 @@ func createCacheStatuses(
 
 //cacheStatusAndPoller returns the the reason why a cache is unavailable (or that is available), the poller, and 3 booleans in order:
 // IPv4 availability, IPv6 availability and Processed availability which is what the monitor reports based on the PollingProtocol chosen (ipv4only,ipv6only or both)
-func cacheStatusAndPoller(server tc.CacheName, interfaceName string, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
+func cacheStatusAndPoller(server tc.CacheName, interfaceName string, serverInfo tc.LegacyTrafficServer, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
 	switch status := tc.CacheStatusFromString(serverInfo.ServerStatus); status {
 	case tc.CacheStatusAdminDown:
 		fallthrough

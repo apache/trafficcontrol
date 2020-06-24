@@ -78,8 +78,8 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	GetVitals(&result, &prevResult, nil)
 
 	statResultHistory := (*threadsafe.ResultStatHistory)(nil)
-	mc := tc.TrafficMonitorConfigMap{
-		TrafficServer: map[string]tc.TrafficServer{
+	mc := tc.LegacyTrafficMonitorConfigMap{
+		TrafficServer: map[string]tc.LegacyTrafficServer{
 			string(result.ID): {
 				ServerStatus: string(tc.CacheStatusReported),
 				Profile:      "myProfileName",
