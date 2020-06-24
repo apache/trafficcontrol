@@ -36,6 +36,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -76,6 +77,12 @@ public class DeliveryService {
 	@JsonIgnore
 	private final String domain;
 	@JsonIgnore
+	private final String tld;
+	@JsonIgnore
+	// Matches the beginning of a HOST_REGEXP pattern with or without confighandler.regex.superhack.enabled.
+	// ^\(\.\*\\\.\|\^\)|^\.\*\\\.|\\\.\.\*
+	private final Pattern wildcardPattern = Pattern.compile("^\\(\\.\\*\\\\\\.\\|\\^\\)|^\\.\\*\\\\\\.|\\\\\\.\\.\\*");
+	@JsonIgnore
 	private final JsonNode bypassDestination;
 	@JsonIgnore
 	private final JsonNode soa;
@@ -83,6 +90,8 @@ public class DeliveryService {
 	private final JsonNode props;
 	private boolean isDns;
 	private final String routingName;
+	private String topology;
+	private final Set<String> requiredCapabilities;
 	private final boolean shouldAppendQueryString;
 	private final Geolocation missLocation;
 	private final Dispersion dispersion;
@@ -129,9 +138,30 @@ public class DeliveryService {
 		this.bypassDestination = dsJo.get("bypassDestination");
 		this.routingName = JsonUtils.getString(dsJo, "routingName").toLowerCase();
 		this.domain = getDomainFromJson(dsJo.get("domains"));
+		this.tld = this.domain != null
+                ? this.domain.replaceAll("^.*?\\.", "")
+				: null;
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
 		this.ecsEnabled = JsonUtils.optBoolean(dsJo, "ecsEnabled");
+
+		if (dsJo.has("topology")) {
+			this.topology = JsonUtils.optString(dsJo, "topology");
+		}
+		this.requiredCapabilities = new HashSet<>();
+		if (dsJo.has("requiredCapabilities")) {
+			final JsonNode requiredCapabilitiesNode = dsJo.get("requiredCapabilities");
+			if (!requiredCapabilitiesNode.isArray()) {
+				LOGGER.error("Delivery Service '" + id + "' has malformed requiredCapabilities. Disregarding.");
+			} else {
+				requiredCapabilitiesNode.forEach((requiredCapabilityNode) -> {
+					final String requiredCapability = requiredCapabilityNode.asText();
+					if (!requiredCapability.isEmpty()) {
+						this.requiredCapabilities.add(requiredCapability);
+					}
+				});
+			}
+		}
 
 		this.consistentHashQueryParams = new HashSet<String>();
 		if (dsJo.has("consistentHashQueryParams")) {
@@ -356,6 +386,16 @@ public class DeliveryService {
 		uri.append(getPortString(request, cache));
 		uri.append(alternatePath);
 		return uri.toString();
+	}
+
+	public String getRemap(final String dsPattern) {
+		if (!dsPattern.contains(".*")) {
+			return dsPattern;
+		}
+		final String host = wildcardPattern.matcher(dsPattern).replaceAll("") + "." + tld;
+		return this.isDns()
+				? this.routingName + "." + host
+				: host;
 	}
 
 	private String getFQDN(final Cache cache) {
@@ -589,6 +629,14 @@ public class DeliveryService {
 
 	public String getRoutingName() {
 		return routingName;
+	}
+
+	public String getTopology() {
+		return topology;
+	}
+
+	public boolean hasRequiredCapabilities(final Set<String> serverCapabilities) {
+		return serverCapabilities.containsAll(requiredCapabilities);
 	}
 
 	public Dispersion getDispersion() {

@@ -20,9 +20,11 @@ This module contains functionality for dealing with the Traffic Ops ReST API.
 It extends the class provided by the official Apache Traffic Control Client.
 """
 
-import typing
+import json
 import logging
 import re
+import subprocess
+import typing
 
 from munch import Munch
 from requests.compat import urljoin
@@ -31,20 +33,19 @@ from requests.exceptions import RequestException
 from trafficops.tosession import TOSession
 from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 
-from . import packaging
+from . import packaging, utils
+from .config_files import ConfigFile
 from .configuration import Configuration
 
 class API(TOSession):
 	"""
 	This class extends :class:`trafficops.tosession.TOSession` to provide some ease-of-use
 	functionality for getting things needed by :term:`ORT`.
-
-	TODO: update to 2.0 if/when atstccfg support is integrated.
 	"""
 
 	#: This should always be the latest API version supported - note this breaks compatability with
 	#: older ATC versions. Go figure.
-	VERSION = "1.4"
+	VERSION = "2.0"
 
 	def __init__(self, conf:Configuration):
 		"""
@@ -70,6 +71,25 @@ class API(TOSession):
 			raise LoginError("Failed to log in to Traffic Ops, retries exceeded.")
 
 		self.hostname = conf.shortHostname
+
+		self.atstccfg_cmd = [
+			"atstccfg",
+			"--traffic-ops-url=http{}://{}:{}".format("s" if conf.useSSL else "", conf.toHost, conf.toPort),
+			"--cache-host-name={}".format(self.hostname),
+			"--traffic-ops-user={}".format(conf.username),
+			"--traffic-ops-password={}".format(conf.password),
+			"--log-location-error=stderr",
+			"--log-location-warning=stderr",
+			"--log-location-info=stderr"
+		]
+
+		if conf.timeout is not None and conf.timeout >= 0:
+			self.atstccfg_cmd.append("--traffic-ops-timeout-milliseconds={}".format(conf.timeout))
+		if conf.rev_proxy_disable:
+			self.atstccfg_cmd.append("--traffic-ops-disable-proxy")
+		if not conf.verify:
+			self.atstccfg_cmd.append("--traffic-ops-insecure")
+
 
 	def __enter__(self):
 		"""
@@ -104,6 +124,25 @@ class API(TOSession):
 
 		return r.text
 
+	def get_statuses(self) -> typing.List[dict]:
+		"""
+		Retrieves all statuses from the Traffic Ops instance - using atstccfg.
+
+		:returns: Representations of status objects
+		:raises: ConnectionError if fetching the statuses fails for any reason
+		"""
+		for _ in range(self.retries):
+			try:
+				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=statuses"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw response: %s", proc.stdout.decode())
+				if proc.stderr.decode():
+					logging.error(proc.stderr.decode())
+				if proc.returncode == 0:
+					return json.loads(proc.stdout.decode())
+			except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
+				logging.error("status fetch failure: %s", e)
+		raise ConnectionError("Failed to fetch statuses from atstccfg")
+
 	def getMyPackages(self) -> typing.List[packaging.Package]:
 		"""
 		Fetches a list of the packages specified by Traffic Ops that should exist on this server.
@@ -113,37 +152,21 @@ class API(TOSession):
 		"""
 		logging.info("Fetching this server's package list from Traffic Ops")
 
-		# Ah, read-only properties that gut functionality, my favorite.
-		tmp = self.api_base_url
-		self._api_base_url = urljoin(self._server_url, '/').rstrip('/') + '/'
-
-		packagesPath = '/'.join(("ort", self.hostname, "packages"))
+		atstccfg_cmd = self.atstccfg_cmd + ["--get-data=packages"]
 		for _ in range(self.retries):
 			try:
-				myPackages = self.get(packagesPath)
-				break
-			except (LoginError, OperationError, InvalidJSONError, RequestException) as e:
+				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw output: %s", proc.stdout.decode())
+				if proc.stderr.decode():
+					logging.error("proc.stderr.decode()")
+				if proc.returncode == 0:
+					return [packaging.Package(p) for p in json.loads(proc.stdout.decode())]
+			except (ValueError, IndexError, json.JSONDecodeError, OSError, subprocess.SubprocessError) as e:
 				logging.debug("package fetch failure: %r", e, stack_info=True, exc_info=True)
-		else:
-			self._api_base_url = tmp
-			raise ConnectionError("Failed to get a response for packages")
 
-		self._api_base_url = tmp
+		raise ConnectionError("Failed to get a response for packages")
 
-		logging.debug("Raw package response: %s", myPackages[1].text)
-
-		try:
-			return [packaging.Package(p) for p in myPackages[0]]
-		except ValueError:
-			raise ConnectionError
-
-	def setConfigFileAPIVersion(self, files: Munch) -> None:
-		match_api_base = re.compile(r'^(/api/)\d+\.\d+(/)')
-		api_base_replacement = r'\g<1>%s\2' % API.VERSION
-		for configFile in files.configFiles:
-			configFile.apiUri = match_api_base.sub(api_base_replacement, configFile.apiUri)
-
-	def getMyConfigFiles(self, conf:Configuration) -> typing.List[dict]:
+	def getMyConfigFiles(self, conf:Configuration) -> typing.List[ConfigFile]:
 		"""
 		Fetches configuration files constructed by Traffic Ops for this server
 
@@ -156,31 +179,21 @@ class API(TOSession):
 		:raises ConnectionError: when something goes wrong communicating with Traffic Ops
 		"""
 		logging.info("Fetching list of configuration files from Traffic Ops")
+		atstccfg_cmd = self.atstccfg_cmd
+		if conf.mode is Configuration.Modes.REVALIDATE:
+			atstccfg_cmd = self.atstccfg_cmd + ["--revalidate-only"]
 		for _ in range(self.retries):
 			try:
-				# The API function decorator confuses pylint into thinking this doesn't return
-				#pylint: disable=E1111
-				myFiles = self.get_server_config_files(host_name=self.hostname)
-				#pylint: enable=E1111
-				break
-			except (InvalidJSONError, LoginError, OperationError, RequestException) as e:
+				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw response: %s", proc.stdout.decode())
+				if proc.stderr.decode():
+					logging.error(proc.stderr.decode())
+				if proc.returncode == 0:
+					return [ConfigFile(tsroot=conf.tsroot, contents=x[0], path=x[1]) for x in utils.parse_multipart(proc.stdout.decode())]
+			except (subprocess.SubprocessError, ValueError, OSError) as e:
 				logging.debug("config file fetch failure: %r", e, exc_info=True, stack_info=True)
-		else:
-			raise ConnectionError("Failed to fetch configuration files from Traffic Ops")
 
-		logging.debug("Raw response from Traffic Ops: %s", myFiles[1].text)
-		myFiles = myFiles[0]
-		self.setConfigFileAPIVersion(myFiles)
-
-		try:
-			conf.serverInfo = ServerInfo(myFiles.info)
-			# if there's a reverse proxy, switch urls.
-			if conf.serverInfo.toRevProxyUrl and not conf.rev_proxy_disable:
-				self._server_url = conf.serverInfo.toRevProxyUrl
-				self._api_base_url = urljoin(self._server_url, '/api/%s' % self.VERSION).rstrip('/') + '/'
-			return myFiles.configFiles
-		except (KeyError, AttributeError, ValueError) as e:
-			raise ConnectionError("Malformed response from Traffic Ops to update status request!") from e
+		raise ConnectionError("Failed to fetch configuration files from Traffic Ops")
 
 	def updateTrafficOps(self, mode:Configuration.Modes):
 		"""
@@ -199,22 +212,18 @@ class API(TOSession):
 		if mode is Configuration.Modes.REPORT:
 			return
 
-		payload = {"updated": False, "reval_updated": False}
-
+		atstccfgCmd = self.atstccfg_cmd + ["--set-queue-status=false", "--set-reval-status=false"]
 		for _ in range(self.retries):
 			try:
-				response = self._session.post('/'.join((self._server_url.rstrip('/'),
-				                                        "update",
-				                                        self.hostname)
-				                             ), data=payload)
-				break
+				proc = subprocess.run(atstccfgCmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.info(proc.stdout.decode())
+				logging.error(proc.stderr.decode())
+				if proc.returncode == 0:
+					break
 			except (LoginError, InvalidJSONError, OperationError, RequestException) as e:
-				logging.debug("TO update failure: %r", e, exc_info=True, stack_info=True)
+				logging.error("TO update failure: %r", e, exc_info=True, stack_info=True)
 		else:
 			raise ConnectionError("Failed to update Traffic Ops - connection was lost")
-
-		if response.text:
-			logging.info("Traffic Ops response: %s", response.text)
 
 	def getMyChkconfig(self) -> typing.List[dict]:
 		"""
@@ -224,29 +233,19 @@ class API(TOSession):
 		:raises ConnectionError: when something goes wrong communicating with Traffic Ops
 		"""
 
-
-		# Ah, read-only properties that gut functionality, my favorite.
-		tmp = self.api_base_url
-		self._api_base_url = urljoin(self._server_url, '/').rstrip('/') + '/'
-
-		uri = "ort/%s/chkconfig" % self.hostname
-		logging.info("Fetching chkconfig from %s", uri)
+		logging.info("Fetching chkconfig")
 
 		for _ in range(self.retries):
 			try:
-				r = self.get(uri)
-				break
-			except (InvalidJSONError, OperationError, LoginError, RequestException) as e:
+				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=chkconfig"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw response: %s", proc.stdout.decode())
+				logging.error(proc.stderr.decode())
+				if proc.returncode == 0:
+					return json.loads(proc.stdout.decode())
+			except (json.JSONDecodeError, OSError, subprocess.SubprocessError) as e:
 				logging.debug("chkconfig fetch failure: %r", e, exc_info=True, stack_info=True)
-		else:
-			self._api_base_url = tmp
-			raise ConnectionError("Failed to fetch 'chkconfig' from Traffic Ops - connection lost")
 
-		self._api_base_url = tmp
-
-		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
-
-		return r[0]
+		raise ConnectionError("Failed to fetch 'chkconfig' from Traffic Ops - connection lost")
 
 	def getMyUpdateStatus(self) -> dict:
 		"""
@@ -258,19 +257,15 @@ class API(TOSession):
 		logging.info("Fetching update status from Traffic Ops")
 		for _ in range(self.retries):
 			try:
-				# The API function decorator confuses pylint into thinking this doesn't return
-				#pylint: disable=E1111
-				r = self.get_server_update_status(server_name=self.hostname)
-				#pylint: enable=E1111
-				break
-			except (InvalidJSONError, LoginError, OperationError, RequestException) as e:
+				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=update-status"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("Raw response: %s", proc.stdout.decode())
+				logging.error(proc.stderr.decode())
+				if proc.returncode == 0:
+					return json.loads(proc.stdout.decode())
+			except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
 				logging.debug("update status fetch failure: %r", e, exc_info=True, stack_info=True)
-		else:
-			raise ConnectionError("Failed to fetch update status - connection was lost")
 
-		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
-
-		return r[0]
+		raise ConnectionError("Failed to fetch update status - connection was lost")
 
 	def getMyStatus(self) -> str:
 		"""
