@@ -147,7 +147,9 @@ func (topology *TOTopology) Validate() error {
 func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
 	baseError := errors.New("unable to verify that there are no cycles across all topologies")
 	where := `WHERE name != $1`
-	query := selectQueryWithParentNames() + where
+	query := selectQueryWithParentNames() + where +
+		` UNION ` + selectNonTopologyCacheGroupsQuery() +
+		` UNION ` + selectNonTopologyParentCacheGroupsQuery()
 	rows, err := topology.ReqInfo.Tx.Query(query, topology.Name)
 	if err != nil {
 		return nil, nil, baseError
@@ -543,6 +545,44 @@ SELECT t.name, tc.cachegroup,
 	)
 FROM topology t
 JOIN topology_cachegroup tc on t.name = tc.topology
+`
+	return query
+}
+
+func selectNonTopologyCacheGroupsQuery() string {
+	query := `
+SELECT 'non-topology cachegroups' AS name, c."name" AS cachegroup,
+	(SELECT COALESCE (ARRAY_AGG (pc."name")) AS parents
+	FROM cachegroup pc
+	WHERE pc.id = c.parent_cachegroup_id
+	OR pc.id = c.secondary_parent_cachegroup_id
+	)
+FROM cachegroup c
+JOIN "type" t ON c."type" = t.id
+WHERE (t.name = 'EDGE_LOC'
+OR t.name = 'MID_LOC')
+AND (c.parent_cachegroup_id IS NOT NULL
+OR c.secondary_parent_cachegroup_id IS NOT NULL)
+`
+	return query
+}
+
+func selectNonTopologyParentCacheGroupsQuery() string {
+	query := `
+SELECT 'non-topology cachegroups' AS name, pc2."name" AS cachegroup,
+	(SELECT COALESCE (ARRAY_AGG (pc."name")) AS parents
+	FROM cachegroup pc
+	WHERE pc.id = pc2.parent_cachegroup_id
+	OR pc.id = pc2.secondary_parent_cachegroup_id
+	)
+FROM cachegroup c
+JOIN "type" t ON c."type" = t.id
+JOIN cachegroup pc2 ON c.parent_cachegroup_id = pc2.id
+	OR c.secondary_parent_cachegroup_id = pc2.id
+WHERE (t.name = 'EDGE_LOC'
+OR t.name = 'MID_LOC')
+AND (c.parent_cachegroup_id IS NOT NULL
+OR c.secondary_parent_cachegroup_id IS NOT NULL)
 `
 	return query
 }

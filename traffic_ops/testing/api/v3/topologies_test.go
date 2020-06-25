@@ -122,6 +122,10 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "parentCachegroup2", Parents: []int{}},
 			{Cachegroup: "cachegroup1", Parents: []int{0}},
 		}}},
+		{testCaseDescription: "a cycle across cache groups", Topology: tc.Topology{Name: "cycle-with-non-topology-cachegroups", Description: "Invalid because it contains a cycle when combined with a topology constructed from cache group parentage", Nodes: []tc.TopologyNode{
+			{Cachegroup: "edge-parent1", Parents: []int{1}},
+			{Cachegroup: "has-edge-parent1", Parents: []int{}},
+		}}},
 		{testCaseDescription: "a nonexistent cache group", Topology: tc.Topology{Name: "nonexistent-cg", Description: "Invalid because it references a cache group that does not exist", Nodes: []tc.TopologyNode{
 			{Cachegroup: "legitcachegroup", Parents: []int{0}},
 		}}},
