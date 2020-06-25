@@ -28,7 +28,7 @@ import (
 
 func TestCreateServerHealthPollURL(t *testing.T) {
 	tmpl := `http://${hostname}/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", InterfaceName: "george"}
+	srv := tc.LegacyTrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", InterfaceName: "george"}
 
 	expectedV4 := `http://` + srv.IP + `/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + `]/_astats?application=system&inf.name=` + srv.InterfaceName
@@ -45,7 +45,7 @@ func TestCreateServerHealthPollURL(t *testing.T) {
 
 func TestCreateServerHealthPollURLTemplatePort(t *testing.T) {
 	tmpl := `http://${hostname}:1234/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", InterfaceName: "george"}
+	srv := tc.LegacyTrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", InterfaceName: "george"}
 
 	expectedV4 := `http://` + srv.IP + `:1234/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + `]:1234/_astats?application=system&inf.name=` + srv.InterfaceName
@@ -62,7 +62,7 @@ func TestCreateServerHealthPollURLTemplatePort(t *testing.T) {
 
 func TestCreateServerHealthPollURLServerPort(t *testing.T) {
 	tmpl := `http://${hostname}/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
+	srv := tc.LegacyTrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
 
 	expectedV4 := `http://` + srv.IP + ":" + strconv.Itoa(srv.Port) + `/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + "]:" + strconv.Itoa(srv.Port) + `/_astats?application=system&inf.name=` + srv.InterfaceName
@@ -79,7 +79,7 @@ func TestCreateServerHealthPollURLServerPort(t *testing.T) {
 
 func TestCreateServerHealthPollURLServerPortHTTPS(t *testing.T) {
 	tmpl := `hTTps://${hostname}/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
+	srv := tc.LegacyTrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
 
 	expectedV4 := `https://` + srv.IP + ":" + strconv.Itoa(srv.HTTPSPort) + `/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `https://[` + srv.IP6 + "]:" + strconv.Itoa(srv.HTTPSPort) + `/_astats?application=system&inf.name=` + srv.InterfaceName
@@ -99,7 +99,7 @@ func TestCreateServerHealthPollURLTemplateAndServerPort(t *testing.T) {
 	// if both template and server ports exist, template takes precedence
 
 	tmpl := `http://${hostname}:1234/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
+	srv := tc.LegacyTrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", Port: 5678, HTTPSPort: 910, InterfaceName: "george"}
 
 	expectedV4 := `http://` + srv.IP + `:1234/_astats?application=system&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + `]:1234/_astats?application=system&inf.name=` + srv.InterfaceName
@@ -116,7 +116,7 @@ func TestCreateServerHealthPollURLTemplateAndServerPort(t *testing.T) {
 
 func TestCreateServerStatPollURL(t *testing.T) {
 	tmpl := `http://${hostname}/_astats?application=&inf.name=${interface_name}`
-	srv := tc.TrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", InterfaceName: "george"}
+	srv := tc.LegacyTrafficServer{IP: "192.0.2.42", IP6: "1::3:3:7", InterfaceName: "george"}
 
 	expectedV4 := `http://` + srv.IP + `/_astats?application=&inf.name=` + srv.InterfaceName
 	expectedV6 := `http://[` + srv.IP6 + `]/_astats?application=&inf.name=` + srv.InterfaceName

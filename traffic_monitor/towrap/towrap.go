@@ -31,16 +31,16 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	"github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // ITrafficOpsSession provides an interface to the Traffic Ops client, so it may be wrapped or mocked.
 type ITrafficOpsSession interface {
 	CRConfigRaw(cdn string) ([]byte, error)
 	LastCRConfig(cdn string) ([]byte, time.Time, error)
-	TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error)
+	TrafficMonitorConfigMap(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error)
 	Set(session *client.Session)
 	CRConfigHistory() []CRConfigStat
 	BackupFileExists() bool
@@ -221,7 +221,7 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 	return nil
 }
 
-func MonitorConfigValid(cfg *tc.TrafficMonitorConfigMap) error {
+func MonitorConfigValid(cfg *tc.LegacyTrafficMonitorConfigMap) error {
 	if cfg == nil {
 		return errors.New("MonitorConfig is nil")
 	}
@@ -324,8 +324,8 @@ func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time
 	return crConfig, crConfigTime, nil
 }
 
-// TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `TrafficMonitorConfigMap`. This is safe for multiple goroutines.
-func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+// TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple goroutines.
+func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
@@ -365,8 +365,8 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	return configMap, err
 }
 
-// TrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
-func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+// LegacyTrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
+func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error) {
 	mc, err := s.trafficMonitorConfigMapRaw(cdn)
 	if err != nil {
 		return nil, fmt.Errorf("getting monitor config map: %v", err)
@@ -391,11 +391,11 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	return mc, nil
 }
 
-func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
+func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.LegacyTrafficMonitorConfigMap) (*tc.LegacyTrafficMonitorConfigMap, error) {
 	// Dump the "live" monitoring.json servers, and populate with the "snapshotted" CRConfig
-	mc.TrafficServer = map[string]tc.TrafficServer{}
+	mc.TrafficServer = map[string]tc.LegacyTrafficServer{}
 	for name, srv := range crConfig.ContentServers {
-		s := tc.TrafficServer{}
+		s := tc.LegacyTrafficServer{}
 		if srv.Profile != nil {
 			s.Profile = *srv.Profile
 		} else {

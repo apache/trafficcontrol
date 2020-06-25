@@ -102,13 +102,25 @@ Response Structure
 	:fqdn:          An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the :term:`cache server`'s IPv4 (or IPv6) address
 	:hashId:        The (short) hostname for the :term:`cache server` - named "hashId" for legacy reasons
 	:hostName:      The (short) hostname of the :term:`cache server`
-	:interfacename: The name of the network interface device being used by the :term:`cache server`'s HTTP proxy
-	:ip6:           The :term:`cache server`'s IPv6 address - when applicable
-	:ip:            The :term:`cache server`'s IPv4 address
 	:port:          The port on which the :term:`cache server` listens for incoming connections
 	:profile:       A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
 	:status:        The status of the :term:`cache server`
 	:type:          A string that names the :term:`Type` of the :term:`cache server` - should (ideally) be either ``EDGE`` or ``MID``
+	:interfaces:		A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
+
+		:ipAddresses: A set of objects representing IP Addresses assigned to this network interface. In most scenarios, only one or two (usually one IPv4 address and one IPv6 address) will be present, but it is illegal for this set to be an empty collection.
+
+			:address:        The actual IP address, including any mask as a CIDR-notation suffix
+			:gateway:        Either the IP address of the network gateway for this address, or ``null`` to signify that no such gateway exists
+			:serviceAddress: A boolean that describes whether or not the server's main service is available at this IP address. When this property is ``true``, the IP address is referred to as a "service address". It is illegal for a server to not have at least one service address. It is also illegal for a server to have more than one service address of the same address family (i.e. more than one IPv4 service address and/or more than one IPv6 address). Finally, all service addresses for a server must be contained within one interface - which is therefore sometimes referred to as the "service interface" for the server.
+
+		:maxBandwidth: The maximum healthy bandwidth allowed for this interface. If bandwidth exceeds this limit, Traffic Monitors will consider the entire server unhealthy - which includes *all* configured network interfaces. If this is ``null``, it has the meaning "no limit". It has no effect if ``monitor`` is not true for this interface.
+
+			.. seealso:: :ref:`health-proto`
+
+		:monitor: A boolean which describes whether or not this interface should be monitored by Traffic Monitor for statistics and health consideration.
+		:mtu:     The :abbr:`MTU (Maximum Transmission Unit)` of this interface. If it is ``null``, it may be assumed that the information is either not available or not applicable for this interface.
+		:name:    The name of the interface. No two interfaces of the same server may share a name. It is the same as the network interface's device name on the server, e.g. ``eth0``.
 
 .. code-block:: http
 	:caption: Response Example
@@ -130,26 +142,60 @@ Response Structure
 			{
 				"profile": "ATS_EDGE_TIER_CACHE",
 				"status": "REPORTED",
-				"ip": "172.16.239.100",
-				"ip6": "fc01:9400:1000:8::100",
 				"port": 80,
+				"intefaces": [
+					{
+						"ipAddresses": [
+							{
+								"address": "172.16.239.100",
+								"gateway": "172.16.239.0/24",
+								"serviceAddress": "true"
+							},
+							{
+								"address": "fc01:9400:1000:8::100",
+								"gateway": "fc01::",
+								"serviceAddress": "true"
+							}
+						],
+						"name": "eth0",
+						"monitor": "true",
+						"mtu": 9000,
+						"maxBandwidth": 150
+					}
+				],
 				"cachegroup": "CDN_in_a_Box_Edge",
 				"hostname": "edge",
 				"fqdn": "edge.infra.ciab.test",
-				"interfacename": "eth0",
 				"type": "EDGE",
 				"hashid": "edge"
 			},
 			{
 				"profile": "ATS_MID_TIER_CACHE",
 				"status": "REPORTED",
-				"ip": "172.16.239.120",
-				"ip6": "fc01:9400:1000:8::120",
 				"port": 80,
+				"intefaces": [
+					{
+						"ipAddresses": [
+							{
+								"address": "172.16.239.120",
+								"gateway": "172.16.239.0/24",
+								"serviceAddress": "true"
+							},
+							{
+								"address": "fc02:9400:1000:8::100",
+								"gateway": "fc02::",
+								"serviceAddress": "true"
+							}
+						],
+						"name": "eth0",
+						"monitor": "true",
+						"mtu": 9000,
+						"maxBandwidth": 150
+					}
+				],
 				"cachegroup": "CDN_in_a_Box_Mid",
 				"hostname": "mid",
 				"fqdn": "mid.infra.ciab.test",
-				"interfacename": "eth0",
 				"type": "MID",
 				"hashid": "mid"
 			}
