@@ -72,7 +72,6 @@ public final class RegionalGeo {
     }
 
     private RegionalGeoRule matchRule(final String dsvcId, final String url) {
-
         final RegionalGeoDsvc regionalGeoDsvc = regionalGeoDsvcs.get(dsvcId);
         if (regionalGeoDsvc == null) {
             LOGGER.debug("RegionalGeo: dsvc not found: " + dsvcId);
@@ -156,10 +155,19 @@ public final class RegionalGeo {
     private static ArrayList<RegionalGeoCoordinateRange> parseLocationJsonCoordinateRange(final JsonNode locationJson) {
         final ArrayList<RegionalGeoCoordinateRange> coordinateRange =  new ArrayList<>();
         JsonNode coordinateRangeJson = locationJson.get("coordinateRange");
+        if (coordinateRangeJson == null) {
+            return null;
+        }
         ObjectMapper mapper = new ObjectMapper();
         RegionalGeoCoordinateRange cr = new RegionalGeoCoordinateRange();
         for (final JsonNode cRange : coordinateRangeJson) {
             cr  = mapper.convertValue(cRange, RegionalGeoCoordinateRange.class);
+            if ((cr.getMinLat() < -90.0 || cr.getMinLat() > 90.0) ||
+                (cr.getMaxLat() < -90.0 || cr.getMaxLat() > 90.0) ||
+                (cr.getMinLon() < -180.0 || cr.getMinLon() > 180.0) ||
+                (cr.getMaxLon() < -180.0 || cr.getMaxLon() > 180.0)) {
+                LOGGER.error("The supplied coordinate range is invalid. Latitude must be between -90.0 and +90.0, Longitude must be between -180.0 and +180.0.");
+            }
             coordinateRange.add(cr);
         }
         return coordinateRange;
@@ -237,7 +245,9 @@ public final class RegionalGeo {
                 }
                 // coordinate range
                 final ArrayList<RegionalGeoCoordinateRange> coordinateRanges = parseLocationJsonCoordinateRange(locationJson);
-                regionalGeo.setCoordinateRanges(coordinateRanges);
+                if (coordinateRanges != null) {
+                    regionalGeo.setCoordinateRanges(coordinateRanges);
+                }
 
                 // white list
                 NetworkNode whiteListRoot = null;
@@ -245,7 +255,6 @@ public final class RegionalGeo {
                 if (whiteListJson != null) {
                     whiteListRoot = parseWhiteListJson(whiteListJson);
                 }
-
 
 
                 // add the rule
@@ -258,6 +267,7 @@ public final class RegionalGeo {
             regionalGeo.setFallback(false);
             return regionalGeo;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error("RegionalGeo ERR: parse json file with exception", e);
         }
 
@@ -276,7 +286,7 @@ public final class RegionalGeo {
         }
 
         final RegionalGeo regionalGeo = parseConfigJson(json);
-        if (regionalGeo== null) {
+        if (regionalGeo == null) {
             currentConfig.setFallback(true);
             return false;
         }
@@ -384,14 +394,13 @@ public final class RegionalGeo {
 
         if (clientGeolocation != null) {
             postalCode = clientGeolocation.getPostalCode();
-            if (postalCode == null) {
-                lat = clientGeolocation.getLatitude();
-                lon = clientGeolocation.getLongitude();
-            }
 
             // Get the first 3 chars in the postal code. These 3 chars are called FSA in Canadian postal codes.
             if (postalCode != null && postalCode.length() > 3) {
                 postalCode = postalCode.substring(0, 3);
+            } else {
+                lat = clientGeolocation.getLatitude();
+                lon = clientGeolocation.getLongitude();
             }
         }
 

@@ -44,16 +44,28 @@ public class RegionalGeoTest {
     }
 
     @Test
-    public void testEnforceNotAllowed() {
+    public void testEnforceAllowedCoordinateRange() {
         final String dsvcId = "ds-geoblock-exclude";
         final String url = "http://ds1.example.com/live1";
         final String postal = null;
         final String ip = "10.0.0.1";
 
-        RegionalGeoResult result = RegionalGeo.enforce(dsvcId, url, ip, postal, 0.0, 0.0);
+        RegionalGeoResult result = RegionalGeo.enforce(dsvcId, url, ip, postal, 12.0, 55.0);
 
         assertThat(result.getType(), equalTo(RegionalGeoResultType.ALLOWED));
         assertThat(result.getUrl(), equalTo(url));
+    }
+
+    @Test
+    public void testEnforceAlternateWithCacheNoCoordinateRangeNoPostalCode() {
+        final String dsvcId = "ds-geoblock-include";
+        final String url = "http://ds2.example.com/live2";
+        final String postal = null;
+        final String ip = "10.0.0.1";
+
+        RegionalGeoResult result = RegionalGeo.enforce(dsvcId, url, ip, postal, 12.0, 55.0);
+
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITH_CACHE));
     }
 
     @Test

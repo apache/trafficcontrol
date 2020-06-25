@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed `POST /api/x/steering` and `PUT /api/x/steering` so that a steering target with an invalid `type` is no longer accepted. [Related github issue](https://github.com/apache/trafficcontrol/issues/3531)
 - Fixed `cachegroups` READ endpoint, so that if a request is made with the `type` specified as a non integer value, you get back a `400` with error details, instead of a `500`. [Related github issue](https://github.com/apache/trafficcontrol/issues/4703)
 - Added Delivery Service Raw Remap `__RANGE_DIRECTIVE__` directive to allow inserting the Range Directive after the Raw Remap text. This allows Raw Remaps which manipulate the Range.
+- Added an option for `coordinateRange` in the RGB configuration file, so that in case a client doesn't have a postal code, we can still determine if it should be allowed or not, based on whether or not the latitude/ longitude of the client falls within the supplied ranges. [Related github issue](https://github.com/apache/trafficcontrol/issues/4372)
 
 ### Changed
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
