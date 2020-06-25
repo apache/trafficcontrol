@@ -256,7 +256,7 @@ under the License.
                         <input id="{{inf.name}}-mtu" ng-class="{'has-error': hasError(serverForm[inf.name+'-mtu'])}" name="{{inf.name}}-mtu" type="number" min="1500" max="9000" step="7500" ng-model="inf.mtu"/>
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-mtu'], 'min') || hasPropertyError(serverForm[inf.name+'-mtu'], 'max') || hasPropertyError(serverForm[inf.name+'-mtu'], 'step')">Invalid MTU - must be 1500 or 9000</small>
                         <label for="{{inf.name}}-max-bandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}">Maximum Bandwidth</label>
-                        <input id="{{inf.name}}-max-bandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
+                        <input id="{{inf.name}}-max-bandwidth" ng-model="inf.maxBandwidth" ng-class="{'has-error': hasError(serverForm[inf.name+'-max-bandwidth'])}" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-max-bandwidth'], 'min')">Cannot be negative</small>
                     </div>
 
