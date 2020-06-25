@@ -327,7 +327,7 @@ func DeleteTestCacheGroups(t *testing.T) {
 		}
 	}
 
-	// now delete the parentless cachess
+	// now delete the parentless cachegroups
 	for _, cg := range parentlessCacheGroups {
 		// Retrieve the CacheGroup by name so we can get the id for the Update
 		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
