@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"strings"
 )
 
 func checkUniqueCacheGroupNames(nodes []tc.TopologyNode) error {
@@ -117,14 +118,18 @@ func checkForLeafMids(nodes []tc.TopologyNode, cacheGroups []tc.CacheGroupNullab
 	return leafMids
 }
 
-func checkForCycles(nodes []tc.TopologyNode) error {
+func checkForCycles(nodes []tc.TopologyNode) ([]string, error) {
 	components := tarjan(nodes)
-	var errs []error
+	var (
+		errs        []error
+		cacheGroups []string
+	)
 	for _, component := range components {
 		if len(component) > 1 {
 			errString := "cycle detected between cachegroups "
 			var node tc.TopologyNode
 			for _, node = range component {
+				cacheGroups = append(cacheGroups, node.Cachegroup)
 				errString += node.Cachegroup + ", "
 			}
 			length := len(errString)
@@ -134,8 +139,39 @@ func checkForCycles(nodes []tc.TopologyNode) error {
 		}
 	}
 	if len(errs) == 0 {
-		return nil
+		return nil, nil
 	}
 	errs = append([]error{fmt.Errorf("topology cannot have cycles")}, errs...)
-	return util.JoinErrs(errs)
+	return cacheGroups, util.JoinErrs(errs)
+}
+
+func (topology *TOTopology) checkForCyclesAcrossTopologies() error {
+	var (
+		nodes                  []tc.TopologyNode
+		topologiesByCacheGroup map[string][]string
+		cacheGroups            []string
+		err                    error
+	)
+	if nodes, topologiesByCacheGroup, err = topology.nodesInOtherTopologies(); err != nil {
+		return err
+	}
+	if cacheGroups, err = checkForCycles(nodes); err == nil {
+		return nil
+	}
+	if cacheGroups == nil {
+		return fmt.Errorf("unable to check topology %s for cycles across all topologies", topology.Name)
+	}
+	var involvedTopologies []string
+	includedTopology := map[string]bool{}
+	for _, cacheGroup := range cacheGroups {
+		for _, topology := range topologiesByCacheGroup[cacheGroup] {
+			if _, alreadyIncluded := includedTopology[topology]; alreadyIncluded {
+				continue
+			}
+
+			involvedTopologies = append(involvedTopologies, topology)
+			includedTopology[topology] = true
+		}
+	}
+	return fmt.Errorf("cycles exist between topology %s and topologies [%s]: %v", topology.Name, strings.Join(involvedTopologies, ", "), err)
 }
