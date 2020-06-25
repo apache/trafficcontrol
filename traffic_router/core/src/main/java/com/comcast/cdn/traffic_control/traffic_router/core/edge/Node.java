@@ -89,9 +89,6 @@ public class Node extends DefaultHashable {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public List<InetRecord> getIpAddresses(final JsonNode ttls, final Resolver resolver, final boolean ip6RoutingEnabled) {
-		if(ipAddresses == null || ipAddresses.isEmpty()) {
-			ipAddresses = resolver.resolve(this.getFqdn()+".");
-		}
 		if(ipAddresses == null) { return null; }
 		final List<InetRecord> ret = new ArrayList<InetRecord>();
 		for (final InetRecord ir : ipAddresses) {
