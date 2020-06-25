@@ -142,8 +142,6 @@ func (a ResultStatHistory) Add(r cache.Result, limit uint64) error {
 				statHistory = make([]cache.ResultStatVal, 0, limit) // initialize to the limit, to avoid multiple allocations. TODO put in .Load(statName, defaultSize)?
 			}
 
-			// TODO check len(statHistory) == 0 before indexing, potential panic?
-
 			ok, err := newStatEqual(statHistory, statVal)
 
 			// If the new stat value is the same as the last, update the time and increment the span. Span is the number of polls the latest value has been the same, and hence the length of time it's been the same is span*pollInterval.
