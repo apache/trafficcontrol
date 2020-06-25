@@ -39,6 +39,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -55,7 +56,7 @@ public final class RegionalGeo {
     public static final String HTTPS_SCHEME = "https://";
     private boolean fallback = false;
     private final Map<String, RegionalGeoDsvc> regionalGeoDsvcs = new HashMap<String, RegionalGeoDsvc>();
-    private ArrayList<RegionalGeoCoordinateRange> coordinateRanges = new ArrayList<>();
+    private List<RegionalGeoCoordinateRange> coordinateRanges = new ArrayList<>();
 
     private static RegionalGeo currentConfig = new RegionalGeo();
 
@@ -90,7 +91,7 @@ public final class RegionalGeo {
 
     private boolean addRule(final String dsvcId, final String urlRegex,
                             final RegionalGeoRule.PostalsType postalsType, final Set<String> postals,
-                            final NetworkNode networkRoot, final String alternateUrl, final boolean isSteeringDS, ArrayList<RegionalGeoCoordinateRange> coordinateRanges) {
+                            final NetworkNode networkRoot, final String alternateUrl, final boolean isSteeringDS, final List<RegionalGeoCoordinateRange> coordinateRanges) {
 
         // Loop check for alternateUrl with fqdn against the regex before adding
         Pattern urlRegexPattern;
@@ -152,23 +153,30 @@ public final class RegionalGeo {
         return root;
     }
 
-    private static ArrayList<RegionalGeoCoordinateRange> parseLocationJsonCoordinateRange(final JsonNode locationJson) {
-        final ArrayList<RegionalGeoCoordinateRange> coordinateRange =  new ArrayList<>();
-        JsonNode coordinateRangeJson = locationJson.get("coordinateRange");
-        if (coordinateRangeJson == null) {
-            return null;
-        }
-        ObjectMapper mapper = new ObjectMapper();
-        RegionalGeoCoordinateRange cr = new RegionalGeoCoordinateRange();
-        for (final JsonNode cRange : coordinateRangeJson) {
-            cr  = mapper.convertValue(cRange, RegionalGeoCoordinateRange.class);
-            if ((cr.getMinLat() < -90.0 || cr.getMinLat() > 90.0) ||
+    private static boolean checkCoordinateRangeValidity (final RegionalGeoCoordinateRange cr) {
+        if ((cr.getMinLat() < -90.0 || cr.getMinLat() > 90.0) ||
                 (cr.getMaxLat() < -90.0 || cr.getMaxLat() > 90.0) ||
                 (cr.getMinLon() < -180.0 || cr.getMinLon() > 180.0) ||
                 (cr.getMaxLon() < -180.0 || cr.getMaxLon() > 180.0)) {
-                LOGGER.error("The supplied coordinate range is invalid. Latitude must be between -90.0 and +90.0, Longitude must be between -180.0 and +180.0.");
+            LOGGER.error("The supplied coordinate range is invalid. Latitude must be between -90.0 and +90.0, Longitude must be between -180.0 and +180.0.");
+            return false;
+        }
+        return true;
+    }
+
+    private static List<RegionalGeoCoordinateRange> parseLocationJsonCoordinateRange(final JsonNode locationJson) {
+        final List<RegionalGeoCoordinateRange> coordinateRange =  new ArrayList<>();
+        final JsonNode coordinateRangeJson = locationJson.get("coordinateRange");
+        if (coordinateRangeJson == null) {
+            return null;
+        }
+        final ObjectMapper mapper = new ObjectMapper();
+        RegionalGeoCoordinateRange cr = new RegionalGeoCoordinateRange();
+        for (final JsonNode cRange : coordinateRangeJson) {
+            cr  = mapper.convertValue(cRange, RegionalGeoCoordinateRange.class);
+            if (checkCoordinateRangeValidity(cr)) {
+                coordinateRange.add(cr);
             }
-            coordinateRange.add(cr);
         }
         return coordinateRange;
     }
@@ -244,7 +252,7 @@ public final class RegionalGeo {
                     return null;
                 }
                 // coordinate range
-                final ArrayList<RegionalGeoCoordinateRange> coordinateRanges = parseLocationJsonCoordinateRange(locationJson);
+                final List<RegionalGeoCoordinateRange> coordinateRanges = parseLocationJsonCoordinateRange(locationJson);
                 if (coordinateRanges != null) {
                     regionalGeo.setCoordinateRanges(coordinateRanges);
                 }
@@ -267,7 +275,6 @@ public final class RegionalGeo {
             regionalGeo.setFallback(false);
             return regionalGeo;
         } catch (Exception e) {
-            e.printStackTrace();
             LOGGER.error("RegionalGeo ERR: parse json file with exception", e);
         }
 
@@ -302,7 +309,7 @@ public final class RegionalGeo {
 
 
     public static RegionalGeoResult enforce(final String dsvcId, final String url,
-                                            final String ip, final String postalCode, double lat, double lon) {
+                                            final String ip, final String postalCode, final double lat, final double lon) {
 
         final RegionalGeoResult result = new RegionalGeoResult();
         boolean allowed = false;
@@ -480,11 +487,11 @@ public final class RegionalGeo {
         return "Denied"; // DENIED
     }
 
-    public ArrayList<RegionalGeoCoordinateRange> getCoordinateRanges() {
+    public List<RegionalGeoCoordinateRange> getCoordinateRanges() {
         return coordinateRanges;
     }
 
-    public void setCoordinateRanges(ArrayList<RegionalGeoCoordinateRange> coordinateRanges) {
+    public void setCoordinateRanges(final List<RegionalGeoCoordinateRange> coordinateRanges) {
         this.coordinateRanges = coordinateRanges;
     }
 }

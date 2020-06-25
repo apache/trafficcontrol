@@ -2,9 +2,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
-
-public class RegionalGeoCoordinateRange implements Serializable {
+public class RegionalGeoCoordinateRange {
     @JsonProperty
     private double minLat;
     @JsonProperty
@@ -25,7 +23,7 @@ public class RegionalGeoCoordinateRange implements Serializable {
         return minLat;
     }
 
-    public void setMinLat(double minLat) {
+    public void setMinLat(final double minLat) {
         this.minLat = minLat;
     }
 
@@ -33,7 +31,7 @@ public class RegionalGeoCoordinateRange implements Serializable {
         return minLon;
     }
 
-    public void setMinLon(double minLon) {
+    public void setMinLon(final double minLon) {
         this.minLon = minLon;
     }
 
@@ -41,7 +39,7 @@ public class RegionalGeoCoordinateRange implements Serializable {
         return maxLat;
     }
 
-    public void setMaxLat(double maxLat) {
+    public void setMaxLat(final double maxLat) {
         this.maxLat = maxLat;
     }
 
@@ -49,7 +47,7 @@ public class RegionalGeoCoordinateRange implements Serializable {
         return maxLon;
     }
 
-    public void setMaxLon(double maxLon) {
+    public void setMaxLon(final double maxLon) {
         this.maxLon = maxLon;
     }
 }

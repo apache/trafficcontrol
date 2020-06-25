@@ -17,7 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -42,12 +42,12 @@ public class RegionalGeoRule {
 
     private final String alternateUrl; // if disallowed, client will be redirected to this url
 
-    private final ArrayList<RegionalGeoCoordinateRange> coordinateRanges;
+    private final List<RegionalGeoCoordinateRange> coordinateRanges;
 
     public RegionalGeoRule(final RegionalGeoDsvc regionalGeoDsvc,
                            final String urlRegex, final Pattern urlRegexPattern, final PostalsType postalsType,
                            final Set<String> postals, final NetworkNode whiteListRoot,
-                           final String alternateUrl, ArrayList<RegionalGeoCoordinateRange> coordinateRanges) {
+                           final String alternateUrl, final List<RegionalGeoCoordinateRange> coordinateRanges) {
         this.regionalGeoDsvc = regionalGeoDsvc;
         this.urlRegex = urlRegex;
         this.pattern = urlRegexPattern;
@@ -77,12 +77,12 @@ public class RegionalGeoRule {
         return false;
     }
 
-    public boolean isAllowedCoordinates(double lat, double lon) {
+    public boolean isAllowedCoordinates(final double lat, final double lon) {
         if (coordinateRanges == null) {
             return false;
         }
         for (int i=0; i < coordinateRanges.size(); i++) {
-            RegionalGeoCoordinateRange coordinateRange = coordinateRanges.get(i);
+            final RegionalGeoCoordinateRange coordinateRange = coordinateRanges.get(i);
             if ((lat >= coordinateRange.getMinLat() && lon >= coordinateRange.getMinLon()) &&
                     (lat <= coordinateRange.getMaxLat() && lon <= coordinateRange.getMaxLon())) {
                 return true;
