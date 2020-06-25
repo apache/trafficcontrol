@@ -34,7 +34,7 @@ import (
 )
 
 // GetVitals Gets the vitals to decide health on in the right format
-func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.TrafficMonitorConfigMap) {
+func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.LegacyTrafficMonitorConfigMap) {
 	if newResult.Error != nil {
 		log.Errorf("cache_health.GetVitals() called with an errored Result!")
 		return
@@ -65,7 +65,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 
 }
 
-func EvalCacheWithStatusInfo(result cache.ResultInfo, mc *tc.TrafficMonitorConfigMap, status tc.CacheStatus, serverInfo tc.TrafficServer) (bool, string, string) {
+func EvalCacheWithStatusInfo(result cache.ResultInfo, mc *tc.LegacyTrafficMonitorConfigMap, status tc.CacheStatus, serverInfo tc.LegacyTrafficServer) (bool, string, string) {
 	availability := AvailableStr
 	if !result.Available {
 		availability = UnavailableStr
@@ -96,7 +96,7 @@ const UnavailableStr = "unavailable"
 // The availability of EvalCache MAY NOT be used to directly set the cache's local availability, because the threshold stats may not be part of the poller which produced the result. Rather, if the cache was previously unavailable from a threshold, it must be verified that threshold stat is in the results before setting the cache to available.
 // The resultStats may be nil, and if so, won't be checked for thresholds. For example, the Health poller doesn't have Stats.
 // TODO change to return a `cache.AvailableStatus`
-func EvalCache(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.TrafficMonitorConfigMap) (bool, bool, string, string) {
+func EvalCache(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.LegacyTrafficMonitorConfigMap) (bool, bool, string, string) {
 	serverInfo, ok := mc.TrafficServer[string(result.ID)]
 	if !ok {
 		log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
@@ -153,11 +153,11 @@ func EvalCache(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHis
 
 // CalcAvailabilityWithStats calculates the availability of each cache in results.
 // statResultHistory may be nil, in which case stats won't be used to calculate availability.
-func CalcAvailability(results []cache.Result, pollerName string, statResultHistory *threadsafe.ResultStatHistory, mc tc.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents, protocol config.PollingProtocol) {
+func CalcAvailability(results []cache.Result, pollerName string, statResultHistory *threadsafe.ResultStatHistory, mc tc.LegacyTrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents, protocol config.PollingProtocol) {
 	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
 	statResults := (*threadsafe.ResultStatValHistory)(nil)
 	statResultsVal := (*map[string]threadsafe.ResultStatValHistory)(nil)
-	processAvailableTuple := func(tuple cache.AvailableTuple, serverInfo tc.TrafficServer) bool {
+	processAvailableTuple := func(tuple cache.AvailableTuple, serverInfo tc.LegacyTrafficServer) bool {
 		switch protocol {
 		case config.IPv4Only:
 			return tuple.IPv4

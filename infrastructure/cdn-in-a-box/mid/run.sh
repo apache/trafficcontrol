@@ -69,7 +69,7 @@ while [[ -z "$(testenrolled)" ]]; do
 done
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
-traffic_ops_ort -k BADASS ALL "https://$TO_FQDN:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; }
+PATH="$PATH:/opt/ort" traffic_ops_ort -k BADASS ALL "https://$TO_FQDN:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; }
 
 envsubst < "/etc/cron.d/traffic_ops_ort-cron-template" > "/etc/cron.d/traffic_ops_ort-cron" && rm -f "/etc/cron.d/traffic_ops_ort-cron-template"
 chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_ops_ort-cron"
@@ -77,4 +77,4 @@ chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_
 crond -im off
 
 touch /var/log/trafficserver/diags.log
-tail -Fn +1 /var/log/trafficserver/diags.log
+tail -Fn +1 /var/log/trafficserver/diags.log /var/log/ort.log

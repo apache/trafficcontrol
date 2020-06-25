@@ -136,7 +136,7 @@ func TestStatsMarshall(t *testing.T) {
 	filter := DummyFilterNever{}
 	params := url.Values{}
 	beforeStatsMarshall := time.Now()
-	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.TrafficMonitorConfigMap{}, cache.Kbpses{}, filter, params)
+	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.LegacyTrafficMonitorConfigMap{}, cache.Kbpses{}, filter, params)
 	afterStatsMarshall := time.Now()
 	if err != nil {
 		t.Fatalf("StatsMarshall return expected nil err, actual err: %v", err)
