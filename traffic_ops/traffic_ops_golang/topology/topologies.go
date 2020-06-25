@@ -138,9 +138,97 @@ func (topology *TOTopology) Validate() error {
 	for _, leafMid := range checkForLeafMids(topology.Nodes, cacheGroups) {
 		rules[fmt.Sprintf("node %v leaf mid", leafMid.Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 child)", leafMid.Cachegroup, tc.CacheGroupMidTypeName)
 	}
-	rules["topology cycles"] = checkForCycles(topology.Nodes)
+	_, rules["topology cycles"] = checkForCycles(topology.Nodes)
+	rules["super-topology cycles"] = topology.checkForCyclesAcrossTopologies()
 
 	return util.JoinErrs(tovalidate.ToErrors(rules))
+}
+
+func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
+	baseError := errors.New("unable to verify that there are no cycles across all topologies")
+	where := `WHERE name != $1`
+	query := selectQueryWithParentNames() + where +
+		` UNION ` + selectNonTopologyCacheGroupsQuery() +
+		` UNION ` + selectNonTopologyParentCacheGroupsQuery()
+	rows, err := topology.ReqInfo.Tx.Query(query, topology.Name)
+	if err != nil {
+		return nil, nil, baseError
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	parentMapMap := map[string]map[string]bool{}
+	topologiesMapByCacheGroup := map[string]map[string]bool{}
+	for index := 0; rows.Next(); index++ {
+		var (
+			topologyName string
+			cacheGroup   string
+			parents      []string
+		)
+		topologyNode := tc.TopologyNode{}
+		topologyNode.Parents = []int{}
+		if err = rows.Scan(
+			&topologyName,
+			&cacheGroup,
+			pq.Array(&parents),
+		); err != nil {
+			return nil, nil, baseError
+		}
+		if _, exists := parentMapMap[cacheGroup]; !exists {
+			parentMapMap[cacheGroup] = map[string]bool{}
+		}
+		if _, exists := topologiesMapByCacheGroup[cacheGroup]; !exists {
+			topologiesMapByCacheGroup[cacheGroup] = map[string]bool{}
+		}
+		for _, parent := range parents {
+			parentMapMap[cacheGroup][parent] = true
+		}
+		topologiesMapByCacheGroup[cacheGroup][topologyName] = true
+	}
+
+	topologiesByCacheGroup := map[string][]string{}
+	// Build the list of topologies containing each cache group
+	for cacheGroup, topologiesMap := range topologiesMapByCacheGroup {
+		var topologies []string
+		for topology, _ := range topologiesMap {
+			topologies = append(topologies, topology)
+		}
+		topologiesByCacheGroup[cacheGroup] = topologies
+	}
+
+	// Add nodes for the topology we are validating
+	for _, node := range topology.Nodes {
+		if _, exists := parentMapMap[node.Cachegroup]; !exists {
+			parentMapMap[node.Cachegroup] = map[string]bool{}
+		}
+		for _, parentCacheGroupIndex := range node.Parents {
+			parentMapMap[node.Cachegroup][topology.Nodes[parentCacheGroupIndex].Cachegroup] = true
+		}
+	}
+
+	indexByCachegroup := map[string]int{}
+	var cacheGroups []string
+	index := 0
+	// Get an index for each cachegroup
+	for cacheGroup, _ := range parentMapMap {
+		cacheGroups = append(cacheGroups, cacheGroup)
+		indexByCachegroup[cacheGroup] = index
+		index++
+	}
+
+	var nodes []tc.TopologyNode
+	// Reduce parentMapMap to an array of TopologyNodes
+	// We can't rely on iterating through parentMapMap in the same order twice, so we iterate through
+	// cacheGroups instead
+	for _, cacheGroup := range cacheGroups {
+		parentMap := parentMapMap[cacheGroup]
+		node := tc.TopologyNode{Cachegroup: cacheGroup}
+		for parent, _ := range parentMap {
+			node.Parents = append(node.Parents, indexByCachegroup[parent])
+		}
+		nodes = append(nodes, node)
+	}
+
+	return nodes, topologiesByCacheGroup, nil
 }
 
 // Implementation of the Identifier, Validator interface functions
@@ -441,6 +529,60 @@ tc.id, tc.cachegroup,
 	)
 FROM topology t
 JOIN topology_cachegroup tc on t.name = tc.topology
+`
+	return query
+}
+
+func selectQueryWithParentNames() string {
+	query := `
+SELECT t.name, tc.cachegroup,
+	(SELECT COALESCE (ARRAY_AGG (tcpc.cachegroup)) AS parents
+	FROM topology_cachegroup tc2
+	INNER JOIN topology_cachegroup_parents tcp ON tc2.id = tcp.child
+	INNER JOIN topology_cachegroup tcpc ON tcp.parent = tcpc.id
+	WHERE tc2.topology = tc.topology
+	AND tc2.cachegroup = tc.cachegroup
+	)
+FROM topology t
+JOIN topology_cachegroup tc on t.name = tc.topology
+`
+	return query
+}
+
+func selectNonTopologyCacheGroupsQuery() string {
+	query := `
+SELECT 'non-topology cachegroups' AS name, c."name" AS cachegroup,
+	(SELECT COALESCE (ARRAY_AGG (pc."name")) AS parents
+	FROM cachegroup pc
+	WHERE pc.id = c.parent_cachegroup_id
+	OR pc.id = c.secondary_parent_cachegroup_id
+	)
+FROM cachegroup c
+JOIN "type" t ON c."type" = t.id
+WHERE (t.name = 'EDGE_LOC'
+OR t.name = 'MID_LOC')
+AND (c.parent_cachegroup_id IS NOT NULL
+OR c.secondary_parent_cachegroup_id IS NOT NULL)
+`
+	return query
+}
+
+func selectNonTopologyParentCacheGroupsQuery() string {
+	query := `
+SELECT 'non-topology cachegroups' AS name, pc2."name" AS cachegroup,
+	(SELECT COALESCE (ARRAY_AGG (pc."name")) AS parents
+	FROM cachegroup pc
+	WHERE pc.id = pc2.parent_cachegroup_id
+	OR pc.id = pc2.secondary_parent_cachegroup_id
+	)
+FROM cachegroup c
+JOIN "type" t ON c."type" = t.id
+JOIN cachegroup pc2 ON c.parent_cachegroup_id = pc2.id
+	OR c.secondary_parent_cachegroup_id = pc2.id
+WHERE (t.name = 'EDGE_LOC'
+OR t.name = 'MID_LOC')
+AND (c.parent_cachegroup_id IS NOT NULL
+OR c.secondary_parent_cachegroup_id IS NOT NULL)
 `
 	return query
 }

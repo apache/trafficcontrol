@@ -293,7 +293,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 }
 
 func DeleteTestCacheGroups(t *testing.T) {
-	var mids []tc.CacheGroupNullable
+	var parentlessCacheGroups []tc.CacheGroupNullable
 
 	// delete the edge caches.
 	for _, cg := range testData.CacheGroups {
@@ -302,10 +302,12 @@ func DeleteTestCacheGroups(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET CacheGroup by name: %v - %v", *cg.Name, err)
 		}
-		// Mids are parents and need to be deleted only after the children
-		// cachegroups are deleted.
-		if *cg.Type == "MID_LOC" {
-			mids = append(mids, cg)
+		cg = resp[0]
+
+		// Cachegroups that are parents (usually mids but sometimes edges)
+		// need to be deleted only after the children cachegroups are deleted.
+		if cg.ParentCachegroupID == nil && cg.SecondaryParentCachegroupID == nil {
+			parentlessCacheGroups = append(parentlessCacheGroups, cg)
 			continue
 		}
 		if len(resp) > 0 {
@@ -324,8 +326,9 @@ func DeleteTestCacheGroups(t *testing.T) {
 			}
 		}
 	}
-	// now delete the mid tier caches
-	for _, cg := range mids {
+
+	// now delete the parentless cachegroups
+	for _, cg := range parentlessCacheGroups {
 		// Retrieve the CacheGroup by name so we can get the id for the Update
 		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 		if err != nil {
