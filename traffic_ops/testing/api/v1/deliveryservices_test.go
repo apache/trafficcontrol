@@ -359,7 +359,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot POST deliveryservice, failed to marshal JSON: %s", err.Error())
 	}
-	dsV11Body, err := json.Marshal(ds.DeliveryServiceNullableV11)
+	dsV11Body, err := json.Marshal(ds.ConvertDSToLegacy().DeliveryServiceNullableV11)
 	if err != nil {
 		t.Errorf("cannot POST deliveryservice, failed to marshal JSON: %s", err.Error())
 	}
