@@ -708,7 +708,7 @@ public class TrafficRouter {
 		}
 
 		for (final Cache cache : selectedCaches) {
-			addresses.addAll(cache.getIpAddresses(ds.getTtls(), zoneManager, ds.isIp6RoutingEnabled()));
+			addresses.addAll(cache.getIpAddresses(ds.getTtls(), ds.isIp6RoutingEnabled()));
 		}
 
 		return addresses;
