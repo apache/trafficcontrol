@@ -179,12 +179,13 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 	vals := []interface{}{}
 	code := http.StatusOK
 	var maxTime time.Time
+	var runSecond bool
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	if useIMS {
-		runSecond, maxTime := TryIfModifiedSinceQuery(val, h, where, orderBy, pagination, queryValues)
+		runSecond, maxTime = TryIfModifiedSinceQuery(val, h, where, orderBy, pagination, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			code = http.StatusNotModified

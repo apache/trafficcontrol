@@ -44,13 +44,14 @@ UNION ALL
 
 func getDomainsList(useIMS bool, header http.Header, tx *sqlx.Tx) ([]tc.Domain, error, int, *time.Time) {
 	var maxTime time.Time
+	var runSecond bool
 	domains := []tc.Domain{}
 
 	q := `SELECT p.id, p.name, p.description, domain_name FROM profile AS p
 	JOIN cdn ON p.cdn = cdn.id WHERE p.name LIKE '` + RouterProfilePrefix + `%'`
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, header, nil, selectMaxLastUpdatedQuery())
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, header, nil, selectMaxLastUpdatedQuery())
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return domains, nil, http.StatusNotModified, &maxTime

@@ -202,6 +202,7 @@ func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
 
 func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int, dsIDs []int64, serverIDs []int64, useIMS bool) (*tc.DeliveryServiceServerResponse, error, *time.Time) {
 	var maxTime time.Time
+	var runSecond bool
 	orderby := params["orderby"]
 	limit := 20
 	offset := 0
@@ -236,7 +237,7 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 		log.Warnf("Error getting the max last updated query %v", err)
 	}
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, map[string]interface{}{}, query1)
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, map[string]interface{}{}, query1)
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return nil, nil, &maxTime
@@ -743,6 +744,7 @@ type TODSSDeliveryService struct {
 // Read shows all of the delivery services associated with the specified server.
 func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
+	var runSecond bool
 	returnable := []interface{}{}
 	params := dss.APIInfo().Params
 	tx := dss.APIInfo().Tx.Tx
@@ -784,7 +786,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	queryValues["server"] = dss.APIInfo().Params["id"]
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(dss.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(dss.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return returnable, nil, nil, http.StatusNotModified, &maxTime

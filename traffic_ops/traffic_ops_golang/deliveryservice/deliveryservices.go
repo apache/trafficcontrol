@@ -988,6 +988,7 @@ func (v *TODeliveryService) DeleteQuery() string {
 
 func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceNullable, error, error, int, *time.Time) {
 	var maxTime time.Time
+	var runSecond bool
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
 	}
@@ -1015,7 +1016,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []tc.DeliveryServiceNullable{}, nil, nil, http.StatusNotModified, &maxTime

@@ -56,6 +56,7 @@ func (cgunparam *TOCacheGroupUnassignedParameter) GetType() string {
 
 func (cgunparam *TOCacheGroupUnassignedParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
+	var runSecond bool
 	queryParamsToQueryCols := cgunparam.ParamColumns()
 	parameters := cgunparam.APIInfo().Params
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
@@ -64,7 +65,7 @@ func (cgunparam *TOCacheGroupUnassignedParameter) Read(h http.Header, useIMS boo
 	}
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(cgunparam.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(cgunparam.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime

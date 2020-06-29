@@ -112,6 +112,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 // Read is the handler for GET requests to /federation_resolvers (and /federation_resolvers/{{ID}}).
 func Read(w http.ResponseWriter, r *http.Request) {
 	var maxTime time.Time
+	var runSecond bool
 	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if sysErr != nil || userErr != nil {
@@ -143,7 +144,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 	if useIMS {
-		runSecond, maxTime := TryIfModifiedSinceQuery(r.Header, inf.Tx, where, orderBy, pagination, queryValues)
+		runSecond, maxTime = TryIfModifiedSinceQuery(r.Header, inf.Tx, where, orderBy, pagination, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			// RFC1123

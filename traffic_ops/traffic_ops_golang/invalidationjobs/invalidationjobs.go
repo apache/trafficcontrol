@@ -206,6 +206,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 // content invalidation jobs according to the provided query parameters.
 func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
+	var runSecond bool
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
 		"id":              dbhelpers.WhereColumnInfo{"job.id", api.IsInt},
 		"keyword":         dbhelpers.WhereColumnInfo{"job.keyword", nil},
@@ -233,7 +234,7 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 	queryValues["tenants"] = pq.Array(accessibleTenants)
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(job.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(job.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime

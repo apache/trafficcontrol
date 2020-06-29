@@ -149,6 +149,7 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	var rows *sqlx.Rows
 	var err error
 	var maxTime time.Time
+	var runSecond bool
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
@@ -168,7 +169,7 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []tc.Origin{}, nil, nil, http.StatusNotModified, &maxTime

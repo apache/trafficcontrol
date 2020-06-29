@@ -428,6 +428,7 @@ func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroup
 
 func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
+	var runSecond bool
 	cacheGroups := []interface{}{}
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
@@ -444,7 +445,7 @@ func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, 
 	}
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(cg.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(cg.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return cacheGroups, nil, nil, http.StatusNotModified, &maxTime
