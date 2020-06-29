@@ -121,7 +121,7 @@ func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.C
 	}
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []tc.SteeringTargetNullable{}, nil, nil, http.StatusNotModified, &maxTime
@@ -175,12 +175,12 @@ func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.C
 	return filteredTargets, nil, nil, http.StatusOK, &maxTime
 }
 
-func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
 		SELECT max(st.last_updated) as t FROM steering_target AS st
 	JOIN deliveryservice AS ds ON st.deliveryservice = ds.id
 	JOIN deliveryservice AS dst ON st.target = dst.id
-	JOIN type AS tp ON tp.id = st.type ` + where + orderBy + pagination +
+	JOIN type AS tp ON tp.id = st.type ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='steering_target') as res`
 }

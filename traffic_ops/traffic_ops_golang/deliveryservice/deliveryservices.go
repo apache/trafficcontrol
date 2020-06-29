@@ -1002,7 +1002,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, "", pagination))
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []tc.DeliveryServiceNullable{}, nil, nil, http.StatusNotModified, &maxTime
@@ -1043,13 +1043,13 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	return r, e1, e2, code, &maxTime
 }
 
-func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
 		SELECT max(ds.last_updated) as t from deliveryservice as ds
 	JOIN type ON ds.type = type.id
 	JOIN cdn ON ds.cdn_id = cdn.id
 	LEFT JOIN profile ON ds.profile = profile.id
-	LEFT JOIN tenant ON ds.tenant_id = tenant.id ` + where + orderBy + pagination +
+	LEFT JOIN tenant ON ds.tenant_id = tenant.id ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }

@@ -182,7 +182,7 @@ func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, err
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(topology.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(topology.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return interfaces, nil, nil, http.StatusNotModified, &maxTime
@@ -490,9 +490,9 @@ RETURNING t.name, t.description, t.last_updated
 	return query
 }
 
-func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
+func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(ti) from (
-		SELECT max(t.last_updated) as ti from topology t JOIN topology_cachegroup tc on t.name = tc.topology` + where + orderBy + pagination +
+		SELECT max(t.last_updated) as ti from topology t JOIN topology_cachegroup tc on t.name = tc.topology` + where +
 		` UNION ALL
 	select max(last_updated) as ti from last_deleted l where l.table_name='topology') as res`
 }

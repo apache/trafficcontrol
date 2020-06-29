@@ -107,7 +107,7 @@ func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interfa
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return deliveryServiceRequests, nil, nil, http.StatusNotModified, &maxTime
@@ -142,7 +142,7 @@ func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interfa
 	return deliveryServiceRequests, nil, nil, http.StatusOK, &maxTime
 }
 
-func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
 		SELECT max(r.last_updated) as t FROM deliveryservice_request r
 	JOIN tm_user a ON r.author_id = a.id

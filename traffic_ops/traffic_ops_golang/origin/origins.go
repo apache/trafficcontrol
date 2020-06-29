@@ -168,7 +168,7 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []tc.Origin{}, nil, nil, http.StatusNotModified, &maxTime
@@ -206,14 +206,14 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	return origins, nil, nil, http.StatusOK, &maxTime
 }
 
-func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
+func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
 		SELECT max(o.last_updated) as t from origin as o
 	JOIN deliveryservice d ON o.deliveryservice = d.id
 LEFT JOIN cachegroup cg ON o.cachegroup = cg.id
 LEFT JOIN coordinate c ON o.coordinate = c.id
 LEFT JOIN profile p ON o.profile = p.id
-LEFT JOIN tenant t ON o.tenant = t.id ` + where + orderBy + pagination +
+LEFT JOIN tenant t ON o.tenant = t.id ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='origin') as res`
 }

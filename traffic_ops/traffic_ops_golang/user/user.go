@@ -190,7 +190,7 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "u.tenant_id", tenantIDs)
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(this.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, "", ""))
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(this.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
@@ -223,11 +223,11 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	return users, nil, nil, http.StatusOK, &maxTime
 }
 
-func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
 		SELECT max(u.last_updated) as t FROM tm_user u
 		LEFT JOIN tenant t ON u.tenant_id = t.id
-		LEFT JOIN role r ON u.role = r.id ` + where + orderBy + pagination +
+		LEFT JOIN role r ON u.role = r.id ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='tm_user') as res`
 }

@@ -209,7 +209,7 @@ func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, orde
 		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
 		return runSecond, max
 	}
-	query := SelectMaxLastUpdatedQuery(where, orderBy, pagination, "federation_resolver")
+	query := SelectMaxLastUpdatedQuery(where, "federation_resolver")
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Warnf("Couldn't get the max last updated time: %v", err)
@@ -237,9 +237,9 @@ func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, orde
 	return runSecond, max
 }
 
-func SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string {
+func SelectMaxLastUpdatedQuery(where string, tableName string) string {
 	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from ` + tableName + where + orderBy + pagination +
+		SELECT max(last_updated) as t from ` + tableName + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }

@@ -711,7 +711,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	queryValues["server"] = dss.APIInfo().Params["id"]
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(dss.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(dss.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return returnable, nil, nil, http.StatusNotModified, &maxTime
@@ -737,9 +737,9 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	return returnable, nil, nil, http.StatusOK, &maxTime
 }
 
-func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
-		SELECT max(dss.last_updated) as t from deliveryservice_server dss ` + where + orderBy + pagination +
+		SELECT max(dss.last_updated) as t from deliveryservice_server dss ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`
 }

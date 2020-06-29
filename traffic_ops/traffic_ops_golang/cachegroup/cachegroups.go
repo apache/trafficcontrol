@@ -444,7 +444,7 @@ func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, 
 	}
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(cg.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(cg.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return cacheGroups, nil, nil, http.StatusNotModified, &maxTime
@@ -503,13 +503,13 @@ LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegrou
 	return cacheGroups, nil, nil, http.StatusOK, &maxTime
 }
 
-func selectMaxLastUpdatedQuery(where string, orderBy string, pagination string) string {
+func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
 		SELECT max(cachegroup.last_updated) as t FROM cachegroup
 LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
-LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id ` + where + orderBy + pagination +
+LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='cachegroup') as res`
 }

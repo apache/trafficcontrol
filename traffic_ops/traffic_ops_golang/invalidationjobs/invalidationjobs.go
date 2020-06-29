@@ -193,11 +193,11 @@ type apiResponse struct {
 	Response tc.InvalidationJob `json:"response,omitempty"`
 }
 
-func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
+func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
 		SELECT max(job.last_updated) as t FROM job
 	JOIN tm_user u ON job.job_user = u.id
-	JOIN deliveryservice ds  ON job.job_deliveryservice = ds.id ` + where + orderBy + pagination +
+	JOIN deliveryservice ds  ON job.job_deliveryservice = ds.id ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='job') as res`
 }
@@ -233,7 +233,7 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 	queryValues["tenants"] = pq.Array(accessibleTenants)
 
 	if useIMS {
-		runSecond, maxTime := ims.TryIfModifiedSinceQuery(job.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(job.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
