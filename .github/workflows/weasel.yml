@@ -17,7 +17,13 @@
 
 name: Weasel License checks
 
-on: [push]
+on:
+  - push
+  - create
+  - pull_request:
+    - opened
+    - reopened
+    - edited
 
 jobs:
   weasel:
