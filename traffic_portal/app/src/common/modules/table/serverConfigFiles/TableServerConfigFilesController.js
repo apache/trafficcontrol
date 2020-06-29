@@ -19,7 +19,7 @@
 
 var TableServerConfigFilesController = function(server, serverConfigFiles, $scope, $state, $uibModal, locationUtils) {
 
-	$scope.server = server;
+	$scope.server = server[0];
 
 	$scope.configFiles = serverConfigFiles.configFiles;
 
