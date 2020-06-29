@@ -77,7 +77,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         $state.reload(); // reloads all the resolves for the view
     };
 
-    $scope.server = server instanceof Array ? server[0] : server;
+    $scope.server = server;
 
     $scope.falseTrue = [
         { value: true, label: 'true' },

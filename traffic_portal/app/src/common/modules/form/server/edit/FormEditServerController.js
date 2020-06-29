@@ -20,7 +20,7 @@
 var FormEditServerController = function(server, $anchorScroll, $scope, $controller, $uibModal, locationUtils, serverService, statusService, messageModel) {
 
     // extends the FormServerController to inherit common methods
-    angular.extend(this, $controller('FormServerController', { server: server, $scope: $scope }));
+    angular.extend(this, $controller('FormServerController', { server: server[0], $scope: $scope }));
 
     var getStatuses = function() {
         statusService.getStatuses()
