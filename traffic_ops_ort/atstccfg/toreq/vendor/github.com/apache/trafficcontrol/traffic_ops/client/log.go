@@ -24,12 +24,12 @@ import (
 )
 
 const (
-	API_v14_Logs = "/api/1.4/logs"
+	API_LOGS = apiBase + "/logs"
 )
 
 // GetLogsByQueryParams gets a list of logs filtered by query params.
 func (to *Session) GetLogsByQueryParams(queryParams string) ([]tc.Log, ReqInf, error) {
-	URI := API_v14_Logs + queryParams
+	URI := API_LOGS + queryParams
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

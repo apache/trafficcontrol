@@ -13,6 +13,7 @@
    limitations under the License.
 */
 
+// Package client provides Go bindings to the Traffic Ops RPC API.
 package client
 
 import (
@@ -113,12 +114,6 @@ func loginToken(token string) ([]byte, error) {
 		return nil, e
 	}
 	return j, nil
-}
-
-// Deprecated: Login is deprecated, use LoginWithAgent instead. The `Login` function with its present signature will be removed in the next version and replaced with `Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string)`. The `LoginWithAgent` function will be removed the version after that.
-func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
-	s, _, err := LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client", false, DefaultTimeout)
-	return s, err
 }
 
 // login tries to log in to Traffic Ops, and set the auth cookie in the Session. Returns the IP address of the remote Traffic Ops.

@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	API_V13_Coordinates = "/api/1.3/coordinates"
+	API_COORDINATES = apiBase + "/coordinates"
 )
 
 // Create a Coordinate
@@ -39,7 +39,7 @@ func (to *Session) CreateCoordinate(coordinate tc.Coordinate) (tc.Alerts, ReqInf
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_V13_Coordinates, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_COORDINATES, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -58,7 +58,7 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Al
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s?id=%d", API_V13_Coordinates, id)
+	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -71,7 +71,7 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Al
 
 // Returns a list of Coordinates
 func (to *Session) GetCoordinates() ([]tc.Coordinate, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_V13_Coordinates, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_COORDINATES, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -85,7 +85,7 @@ func (to *Session) GetCoordinates() ([]tc.Coordinate, ReqInf, error) {
 
 // GET a Coordinate by the Coordinate id
 func (to *Session) GetCoordinateByID(id int) ([]tc.Coordinate, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_V13_Coordinates, id)
+	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -103,7 +103,7 @@ func (to *Session) GetCoordinateByID(id int) ([]tc.Coordinate, ReqInf, error) {
 
 // GET a Coordinate by the Coordinate name
 func (to *Session) GetCoordinateByName(name string) ([]tc.Coordinate, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_V13_Coordinates, name)
+	url := fmt.Sprintf("%s?name=%s", API_COORDINATES, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -121,7 +121,7 @@ func (to *Session) GetCoordinateByName(name string) ([]tc.Coordinate, ReqInf, er
 
 // DELETE a Coordinate by ID
 func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_V13_Coordinates, id)
+	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -133,7 +133,7 @@ func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-func (to *Session) SetCachegroupDeliveryServices(cgID int, dsIDs []int) (tc.CacheGroupPostDSRespResponse, ReqInf, error) {
+func (to *Session) SetCachegroupDeliveryServices(cgID int, dsIDs []int64) (tc.CacheGroupPostDSRespResponse, ReqInf, error) {
 	uri := apiBase + `/cachegroups/` + strconv.Itoa(cgID) + `/deliveryservices`
 	req := tc.CachegroupPostDSReq{DeliveryServices: dsIDs}
 	reqBody, err := json.Marshal(req)

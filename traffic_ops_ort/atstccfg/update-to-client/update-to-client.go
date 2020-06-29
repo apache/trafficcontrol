@@ -228,13 +228,13 @@ func updateVendoredTOClient(appDir string, branch string) error {
 		return errors.New("creating vendor dir '" + vendorDir + "': " + err.Error())
 	}
 
-	cmd := exec.Command(`git`, `show`, branch+`:../../client`)
+	cmd := exec.Command(`git`, `show`, branch+`:../../traffic_ops/client`)
 	cmd.Dir = appDir
 	clientFileListBts, err := cmd.Output()
 	if err != nil {
 		return errors.New("getting files from git: " + err.Error())
 	}
-	clientFileListStr := string(clientFileListBts)
+	clientFileListStr := string(clioad	entFileListBts)
 	clientFileList := strings.Split(clientFileListStr, "\n")
 	if len(clientFileList) < 2 {
 		return errors.New("getting files from git: got no files")
@@ -247,7 +247,7 @@ func updateVendoredTOClient(appDir string, branch string) error {
 		if clientFile == "" {
 			continue
 		}
-		cmd := exec.Command(`git`, `show`, branch+`:../../client`+`/`+clientFile)
+		cmd := exec.Command(`git`, `show`, branch+`:../../traffic_ops/client`+`/`+clientFile)
 		cmd.Dir = appDir
 		fileBts, err := cmd.Output()
 		if err != nil {

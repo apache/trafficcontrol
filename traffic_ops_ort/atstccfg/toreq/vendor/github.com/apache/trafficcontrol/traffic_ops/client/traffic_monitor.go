@@ -26,13 +26,14 @@ import (
  * under the License.
  */
 
-// TrafficMonitorConfigMap ...
-// Deprecated: use GetTrafficMonitorConfigMap
-func (to *Session) TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
-	m, _, err := to.GetTrafficMonitorConfigMap(cdn)
-	return m, err
-}
+// API_CDN_MONITORING_CONFIG is the API path on which Traffic Ops serves the CDN monitoring
+// configuration information. It is meant to be used with fmt.Sprintf to insert the necessary
+// path parameters (namely the Name of the CDN of interest).
+// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v2/cdns_name_configs_monitoring.html
+const API_CDN_MONITORING_CONFIG = apiBase + "/cdns/%s/configs/monitoring"
 
+// GetTrafficMonitorConfigMap is functionally identical to GetTrafficMonitorConfig, except that it
+// coerces the value returned by the API to the tc.TrafficMonitorConfigMap structure.
 func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, ReqInf, error) {
 	tmConfig, reqInf, err := to.GetTrafficMonitorConfig(cdn)
 	if err != nil {
@@ -45,15 +46,9 @@ func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorCon
 	return tmConfigMap, reqInf, nil
 }
 
-// TrafficMonitorConfig ...
-// Deprecated: use GetTrafficMonitorConfig
-func (to *Session) TrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, error) {
-	c, _, err := to.GetTrafficMonitorConfig(cdn)
-	return c, err
-}
-
+// GetTrafficMonitorConfig returns the monitoring configuration for the CDN named by 'cdn'.
 func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {
-	url := fmt.Sprintf("/api/1.3/cdns/%s/configs/monitoring.json", cdn)
+	url := fmt.Sprintf(API_CDN_MONITORING_CONFIG, cdn)
 	resp, remoteAddr, err := to.request("GET", url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

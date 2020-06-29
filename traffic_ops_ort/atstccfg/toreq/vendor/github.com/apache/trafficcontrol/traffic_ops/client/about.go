@@ -21,12 +21,12 @@ import (
 )
 
 const (
-	API_v13_ABOUT = "/api/1.3/about"
+	API_ABOUT = apiBase + "/about"
 )
 
-// GetAbout gets data about the TO instance
+// GetAbout gets data about the TO instance.
 func (to *Session) GetAbout() (map[string]string, ReqInf, error) {
-	route := API_v13_ABOUT
+	route := API_ABOUT
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

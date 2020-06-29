@@ -21,31 +21,17 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const API_V14_TO_EXTENSION = "/api/1.4/to_extensions"
+const API_TO_EXTENSION = apiBase + "/servercheck/extensions"
 
-// CreateTOExtension creates a to_extension
-func (to *Session) CreateTOExtension(toExtension tc.TOExtensionNullable) (tc.Alerts, ReqInf, error) {
+// CreateServerCheckExtension creates a servercheck extension.
+func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerCheckExtensionNullable) (tc.Alerts, ReqInf, error) {
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(toExtension)
+	reqBody, err := json.Marshal(ServerCheckExtension)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_V14_TO_EXTENSION, reqBody)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, err
-}
-
-// DeleteToExtension deletes a to_extension
-func (to *Session) DeleteTOExtension(id int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d/delete", API_V14_TO_EXTENSION, id)
-	resp, remoteAddr, err := to.request(http.MethodPost, URI, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_TO_EXTENSION, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -55,15 +41,29 @@ func (to *Session) DeleteTOExtension(id int) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, err
 }
 
-// GetTOExtensions gets all to_extensions
-func (to *Session) GetTOExtensions() (tc.TOExtensionResponse, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_V14_TO_EXTENSION, nil)
+// DeleteServerCheckExtension deletes a servercheck extension.
+func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, ReqInf, error) {
+	URI := fmt.Sprintf("%s/%d", API_TO_EXTENSION, id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.TOExtensionResponse{}, reqInf, err
+		return tc.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var toExtResp tc.TOExtensionResponse
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
+}
+
+// GetServerCheckExtensions gets all servercheck extensions.
+func (to *Session) GetServerCheckExtensions() (tc.ServerCheckExtensionResponse, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_TO_EXTENSION, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.ServerCheckExtensionResponse{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var toExtResp tc.ServerCheckExtensionResponse
 	err = json.NewDecoder(resp.Body).Decode(&toExtResp)
 	return toExtResp, reqInf, err
 }

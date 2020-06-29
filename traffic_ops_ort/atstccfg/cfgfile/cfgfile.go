@@ -111,11 +111,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		dsF := func() error {
 			defer func(start time.Time) { log.Infof("dsF took %v\n", time.Since(start)) }(time.Now())
 
-			dses, unsupported, err := cfg.TOClientNew.GetCDNDeliveryServices(server.CDNID)
-			if err == nil && unsupported {
-				log.Warnln("Traffic Ops newer than ORT, falling back to previous API Delivery Services!")
-				dses, err = cfg.TOClient.GetCDNDeliveryServices(server.CDNID)
-			}
+			dses, err := cfg.TOClient.GetCDNDeliveryServices(server.CDNID)
 			if err != nil {
 				return errors.New("getting delivery services: " + err.Error())
 			}

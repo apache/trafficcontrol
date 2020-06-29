@@ -28,10 +28,10 @@ import (
 )
 
 const (
-	API_DS_REQUESTS = "/api/1.3/deliveryservice_requests"
+	API_DS_REQUESTS = apiBase + "/deliveryservice_requests"
 )
 
-// Create a Delivery Service Request
+// CreateDeliveryServiceRequest creates a Delivery Service Request.
 func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
