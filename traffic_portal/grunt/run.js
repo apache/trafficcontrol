@@ -1,5 +1,3 @@
-package util
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,38 +17,9 @@ package util
  * under the License.
  */
 
-func StrPtr(str string) *string {
-	return &str
-}
-
-func IntPtr(i int) *int {
-	return &i
-}
-
-func UIntPtr(u uint) *uint {
-	return &u
-}
-
-func UInt64Ptr(u uint64) *uint64 {
-	return &u
-}
-
-func Uint64Ptr(u uint64) *uint64 {
-	return &u
-}
-
-func Int64Ptr(i int64) *int64 {
-	return &i
-}
-
-func BoolPtr(b bool) *bool {
-	return &b
-}
-
-func FloatPtr(f float64) *float64 {
-	return &f
-}
-
-func InterfacePtr(i interface{}) *interface{} {
-	return &i
-}
+module.exports = {
+    which_ruby: {
+        cmd: "which",
+        args: ["ruby", "compass"]
+    },
+};

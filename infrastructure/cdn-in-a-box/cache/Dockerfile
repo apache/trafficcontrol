@@ -25,6 +25,7 @@ FROM centos:7
 
 EXPOSE 80
 
+
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-2.el7.x86_64.rpm /trafficserver.rpm
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-2.el7.x86_64.rpm /trafficserver-devel.rpm
 
@@ -32,10 +33,13 @@ RUN yum install -y bind-utils kyotocabinet-libs epel-release initscripts iproute
 RUN yum install -y /trafficserver.rpm /trafficserver-devel.rpm jq python36-psutil python36-typing python36-setuptools python36-pip logrotate && yum clean all
 RUN python3 -m pip install --upgrade pip && python3 -m pip install requests urllib3 distro
 
+
 ADD traffic_server/plugins/astats_over_http/astats_over_http.c traffic_server/plugins/astats_over_http/Makefile.am /
 
 RUN tsxs -v -c astats_over_http.c -o astats_over_http.so
-RUN mkdir -p /usr/libexec/trafficserver /opt/ort && tsxs -v -o astats_over_http.so -i
+
+# The symbolic link here is a shim for broken atstccfg behavior - remove when it's fixed.
+RUN mkdir -p /usr/libexec/trafficserver /opt/ort /opt/trafficserver/etc/trafficserver/ /opt/init.d && ln -s /opt/trafficserver/etc/trafficserver/ssl /etc/trafficserver/ssl && tsxs -v -o astats_over_http.so -i
 
 RUN yum remove -y gcc-c++ glibc-devel autoconf automake libtool && rm -f /astats_over_http.c /Makefile.am
 
@@ -48,11 +52,23 @@ RUN mkdir -p /var/trafficserver /opt/ort && \
 
 RUN setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_server && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_manager && setcap CAP_NET_BIND_SERVICE=+eip /bin/trafficserver && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_cop
 
-ADD infrastructure/cdn-in-a-box/ort /opt/ort/
-
 WORKDIR /opt
 
-RUN touch /var/log/ort.log && pip3 install Apache-TrafficControl==1.1.3 && pip3 install ./ort && cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template && mkdir -p /opt/init.d && cp ort/traffic_ops_ort.logrotate /etc/logrotate.d/ort
+ADD infrastructure/cdn-in-a-box/ort /opt/ort/
+ADD traffic_control/clients/python /opt/Apache-TrafficControl/
+
+RUN touch /var/log/ort.log && \
+	pip3 install ./Apache-TrafficControl && \
+	pip3 install ./ort && \
+	cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template && \
+	cp ort/traffic_ops_ort.logrotate /etc/logrotate.d/ort
 
 ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
+
+ARG ORT_RPM=infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
+ADD $ORT_RPM /
+RUN yum install -y /$(basename $ORT_RPM) &&\
+    rm /$(basename $ORT_RPM) && \
+    yum -y clean all
+
 CMD /run.sh

@@ -103,8 +103,9 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "cachegroup1", Parents: []int{0, 1, 2}},
 		}}},
 		{testCaseDescription: "an edge parenting a mid", Topology: tc.Topology{Name: "edge-parent-of-mid", Description: "Invalid because an edge is a parent of a mid", Nodes: []tc.TopologyNode{
-			{Cachegroup: "parentCachegroup", Parents: []int{1}},
-			{Cachegroup: "cachegroup1", Parents: []int{}},
+			{Cachegroup: "cachegroup1", Parents: []int{1}},
+			{Cachegroup: "parentCachegroup", Parents: []int{2}},
+			{Cachegroup: "cachegroup2", Parents: []int{}},
 		}}},
 		{testCaseDescription: "a leaf mid", Topology: tc.Topology{Name: "leaf-mid", Description: "Invalid because a mid is a leaf node", Nodes: []tc.TopologyNode{
 			{Cachegroup: "parentCachegroup", Parents: []int{1}},
@@ -115,10 +116,19 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "parentCachegroup", Parents: []int{2}},
 			{Cachegroup: "secondaryCachegroup", Parents: []int{1}},
 		}}},
+		{testCaseDescription: "a cycle across topologies", Topology: tc.Topology{Name: "cycle-with-4-tier-topology", Description: `Invalid because it contains a cycle when combined with the "4-tiers" topology`, Nodes: []tc.TopologyNode{
+			{Cachegroup: "parentCachegroup", Parents: []int{1}},
+			{Cachegroup: "parentCachegroup2", Parents: []int{}},
+			{Cachegroup: "cachegroup1", Parents: []int{0}},
+		}}},
+		{testCaseDescription: "a cycle across cache groups", Topology: tc.Topology{Name: "cycle-with-non-topology-cachegroups", Description: "Invalid because it contains a cycle when combined with a topology constructed from cache group parentage", Nodes: []tc.TopologyNode{
+			{Cachegroup: "edge-parent1", Parents: []int{1}},
+			{Cachegroup: "has-edge-parent1", Parents: []int{}},
+		}}},
 		{testCaseDescription: "a nonexistent cache group", Topology: tc.Topology{Name: "nonexistent-cg", Description: "Invalid because it references a cache group that does not exist", Nodes: []tc.TopologyNode{
 			{Cachegroup: "legitcachegroup", Parents: []int{0}},
 		}}},
-		{testCaseDescription: "an out-of-bounds parent index", Topology: tc.Topology{Name: "oob-parent", Description: "Invalid because it contains a parent", Nodes: []tc.TopologyNode{
+		{testCaseDescription: "an out-of-bounds parent index", Topology: tc.Topology{Name: "oob-parent", Description: "Invalid because it contains an out-of-bounds parent", Nodes: []tc.TopologyNode{
 			{Cachegroup: "cachegroup1", Parents: []int{7}},
 		}}},
 	}

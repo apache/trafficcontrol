@@ -163,7 +163,10 @@ type DeliveryServiceNullableV30 DeliveryServiceNullable // this type alias shoul
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV15
-	Topology *string `json:"topology" db:"topology"`
+	Topology           *string `json:"topology" db:"topology"`
+	FirstHeaderRewrite *string `json:"firstHeaderRewrite" db:"first_header_rewrite"`
+	InnerHeaderRewrite *string `json:"innerHeaderRewrite" db:"inner_header_rewrite"`
+	LastHeaderRewrite  *string `json:"lastHeaderRewrite" db:"last_header_rewrite"`
 }
 
 type DeliveryServiceNullableV15 struct {
@@ -327,12 +330,13 @@ func (ds *DeliveryServiceNullable) Sanitize() {
 	if ds.ProfileID != nil && *ds.ProfileID == -1 {
 		ds.ProfileID = nil
 	}
-	if ds.EdgeHeaderRewrite != nil && strings.TrimSpace(*ds.EdgeHeaderRewrite) == "" {
-		ds.EdgeHeaderRewrite = nil
-	}
-	if ds.MidHeaderRewrite != nil && strings.TrimSpace(*ds.MidHeaderRewrite) == "" {
-		ds.MidHeaderRewrite = nil
-	}
+	setNilIfEmpty(
+		&ds.EdgeHeaderRewrite,
+		&ds.MidHeaderRewrite,
+		&ds.FirstHeaderRewrite,
+		&ds.InnerHeaderRewrite,
+		&ds.LastHeaderRewrite,
+	)
 	if ds.RoutingName == nil || *ds.RoutingName == "" {
 		ds.RoutingName = util.StrPtr(DefaultRoutingName)
 	}
@@ -354,6 +358,14 @@ func (ds *DeliveryServiceNullable) Sanitize() {
 		ds.DeepCachingType = &s
 	}
 	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
+}
+
+func setNilIfEmpty(ptrs ...**string) {
+	for _, s := range ptrs {
+		if *s != nil && strings.TrimSpace(**s) == "" {
+			*s = nil
+		}
+	}
 }
 
 func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
@@ -459,6 +471,9 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
 		"xmlId":               validation.Validate(ds.XMLID, validation.Required, noSpaces, noPeriods, validation.Length(1, 48)),
 	})
+	if err := ds.validateTopologyFields(); err != nil {
+		errs = append(errs, err)
+	}
 	if err := ds.validateTypeFields(tx); err != nil {
 		errs = append(errs, errors.New("type fields: "+err.Error()))
 	}
@@ -466,6 +481,16 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 		return nil
 	}
 	return util.JoinErrs(errs)
+}
+
+func (ds *DeliveryServiceNullable) validateTopologyFields() error {
+	if ds.Topology != nil && (ds.EdgeHeaderRewrite != nil || ds.MidHeaderRewrite != nil) {
+		return errors.New("cannot set edgeHeaderRewrite or midHeaderRewrite while a Topology is assigned. Use firstHeaderRewrite, innerHeaderRewrite, and/or lastHeaderRewrite instead")
+	}
+	if ds.Topology == nil && (ds.FirstHeaderRewrite != nil || ds.InnerHeaderRewrite != nil || ds.LastHeaderRewrite != nil) {
+		return errors.New("cannot set firstHeaderRewrite, innerHeaderRewrite, or lastHeaderRewrite unless this delivery service is assigned to a Topology. Use edgeHeaderRewrite and/or midHeaderRewrite instead")
+	}
+	return nil
 }
 
 // Value implements the driver.Valuer interface

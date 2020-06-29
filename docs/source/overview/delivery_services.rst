@@ -189,6 +189,8 @@ This field in general contains the contents of the a configuration file used by 
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
 
+.. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
+
 .. _ds-ecs:
 
 EDNS0 Client Subnet Enabled
@@ -233,6 +235,16 @@ The maximum bytes per second a :term:`cache server` will deliver on any single T
 	+==============+=================================================================================+=======================================+
 	| FQPacingRate | Traffic Ops source code, Delivery Service objects returned by the :ref:`to-api` | unchanged (``int``, ``integer`` etc.) |
 	+--------------+---------------------------------------------------------------------------------+---------------------------------------+
+
+.. _ds-first-header-rw-rules:
+
+First Header Rewrite Rules
+--------------------------
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`First-tier cache servers`.
+
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
 
 .. _ds-geo-limit:
 
@@ -405,6 +417,26 @@ Initial Dispersion
 ------------------
 The number of :term:`Edge-tier cache servers` across which a particular asset will be distributed within each :term:`Cache Group`. For most use-cases, this should be 1, meaning that all clients requesting a particular asset will be directed to 1 :term:`cache server` per :term:`Cache Group`. Depending on the popularity and size of assets, consider increasing this number in order to spread the request load across more than 1 :term:`cache server`. The larger this number, the more copies of a particular asset are stored in a :term:`Cache Group`, which can "pollute" caches (if load distribution is unnecessary) and decreases caching efficiency (due to cache misses if the asset is not requested enough to stay "fresh" in all the caches).
 
+.. _ds-inner-header-rw-rules:
+
+Inner Header Rewrite Rules
+--------------------------
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Inner-tier cache servers`.
+
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
+
+.. _ds-last-header-rw-rules:
+
+Last Header Rewrite Rules
+-------------------------
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Last-tier cache servers`.
+
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
+
 .. _ds-logs-enabled:
 
 Logs Enabled
@@ -502,6 +534,8 @@ Mid Header Rewrite Rules
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Mid-tier cache servers`.
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
 
 .. _ds-origin-url:
 

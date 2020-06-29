@@ -58,10 +58,10 @@ services:
   # defined below
   trafficops:
     build:
-      context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile-go
+      context: .
+      dockerfile: traffic_ops/Dockerfile-go
       args:
-        TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
+        TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
     depends_on:
       - db
       - enroller

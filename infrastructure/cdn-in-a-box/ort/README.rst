@@ -29,4 +29,4 @@ Running Tests
 
 To run tests:
 
-    python3 -m unittest discover -s tests
+    ./doctest-runner.py

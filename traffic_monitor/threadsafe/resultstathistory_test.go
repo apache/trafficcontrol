@@ -29,8 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
-
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 func randResultStatHistory() ResultStatHistory {
@@ -137,7 +136,7 @@ func TestStatsMarshall(t *testing.T) {
 	filter := DummyFilterNever{}
 	params := url.Values{}
 	beforeStatsMarshall := time.Now()
-	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.TrafficMonitorConfigMap{}, cache.Kbpses{}, filter, params)
+	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.LegacyTrafficMonitorConfigMap{}, cache.Kbpses{}, filter, params)
 	afterStatsMarshall := time.Now()
 	if err != nil {
 		t.Fatalf("StatsMarshall return expected nil err, actual err: %v", err)

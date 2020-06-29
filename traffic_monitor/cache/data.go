@@ -25,7 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // AvailableStatusReported is the status string returned by caches set to
@@ -61,7 +61,7 @@ type AvailableStatus struct {
 	// The name of the actual status the cache server has, as configured in
 	// Traffic Ops.
 	Status string
-	// Why will contain the reason a cache server has been purposely marked
+	// `Why` will contain the reason a cache server has been purposely marked
 	// unavailable by a Traffic Ops operator, if indeed that has occurred.
 	Why string
 	// UnavailableStat is the stat whose threshold made the cache unavailable.
@@ -75,14 +75,18 @@ type AvailableStatus struct {
 }
 
 // CacheAvailableStatuses is the available status of each cache.
-type AvailableStatuses map[tc.CacheName]AvailableStatus
+type AvailableStatuses map[tc.CacheName]map[string]AvailableStatus
 
 // Copy copies this CacheAvailableStatuses. It does not modify, and thus is
 // safe for multiple reader goroutines.
 func (a AvailableStatuses) Copy() AvailableStatuses {
-	b := AvailableStatuses(map[tc.CacheName]AvailableStatus{})
-	for k, v := range a {
-		b[k] = v
+	b := AvailableStatuses(map[tc.CacheName]map[string]AvailableStatus{})
+	for cacheName, interfaces := range a {
+		interfaceStats := make(map[string]AvailableStatus)
+		for interfaceName, status := range interfaces {
+			interfaceStats[interfaceName] = status
+		}
+		b[cacheName] = interfaceStats
 	}
 	return b
 }

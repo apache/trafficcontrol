@@ -261,7 +261,7 @@ func addLastDSStatTotals(lastStat *dsdata.LastDSStat, cachesReporting map[tc.Cac
 
 // addDSPerSecStats calculates and adds the per-second delivery service stats to both the Stats and LastStats structures.
 // Note this mutates both dsStats and lastStats, adding the per-second stats to them.
-func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName tc.DeliveryServiceName, stat *dsdata.Stat, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, precomputed map[tc.CacheName]cache.PrecomputedData, states peer.CRStatesThreadsafe) {
+func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName tc.DeliveryServiceName, stat *dsdata.Stat, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.LegacyTrafficMonitorConfigMap, events health.ThreadsafeEvents, precomputed map[tc.CacheName]cache.PrecomputedData, states peer.CRStatesThreadsafe) {
 	lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
 	if !lastStatExists {
 		lastStat = newLastDSStat() // TODO sync.Pool?
@@ -379,7 +379,7 @@ func addCachePerSecStats(lastStats *dsdata.LastStats, cacheName tc.CacheName, pr
 //
 // Note this mutates both dsStats and lastStats, adding the per-second stats to them.
 //
-func addPerSecStats(precomputed map[tc.CacheName]cache.PrecomputedData, dsStats *dsdata.Stats, lastStats *dsdata.LastStats, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) {
+func addPerSecStats(precomputed map[tc.CacheName]cache.PrecomputedData, dsStats *dsdata.Stats, lastStats *dsdata.LastStats, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.LegacyTrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) {
 	for dsName, stat := range dsStats.DeliveryService {
 		addDSPerSecStats(lastStats, dsStats, dsName, stat, serverCachegroups, serverTypes, mc, events, precomputed, states)
 	}
@@ -390,7 +390,7 @@ func addPerSecStats(precomputed map[tc.CacheName]cache.PrecomputedData, dsStats 
 
 // CreateStats aggregates and creates statistics from given precomputed stat history. It returns the created stats, information about these stats necessary for the next calculation, and any error.
 // Note lastStats is mutated, being set with the new last stats.
-func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData todata.TOData, crStates tc.CRStates, lastStats *dsdata.LastStats, now time.Time, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) (*dsdata.Stats, error) {
+func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData todata.TOData, crStates tc.CRStates, lastStats *dsdata.LastStats, now time.Time, mc tc.LegacyTrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) (*dsdata.Stats, error) {
 	start := time.Now()
 	dsStats := dsdata.NewStats(len(toData.DeliveryServiceServers)) // TODO sync.Pool?
 	for deliveryService := range toData.DeliveryServiceServers {
@@ -460,7 +460,7 @@ func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData toda
 	return dsStats, nil
 }
 
-func getDSErr(dsName tc.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig tc.TrafficMonitorConfigMap) error {
+func getDSErr(dsName tc.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig tc.LegacyTrafficMonitorConfigMap) error {
 	if tpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalTPSThreshold; tpsThreshold > 0 && dsStats.TpsTotal.Value > float64(tpsThreshold) {
 		return fmt.Errorf("total.tps_total too high (%.2f > %v)", dsStats.TpsTotal.Value, tpsThreshold)
 	}

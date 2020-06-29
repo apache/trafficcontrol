@@ -25,12 +25,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher;
@@ -76,6 +78,7 @@ public class ConfigHandler {
 	private static long lastSnapshotTimestamp = 0;
 	private static Object configSync = new Object();
 	public static String deliveryServicesKey = "deliveryServices";
+	public static String topologiesKey = "topologies";
 
 	private TrafficRouterManager trafficRouterManager;
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
@@ -227,6 +230,9 @@ public class ConfigHandler {
 
 				parseEdgeTrafficRouterLocations(jo, cacheRegister);
 				parseCacheConfig(JsonUtils.getJsonNode(jo, "contentServers"), cacheRegister);
+				if (jo.has(topologiesKey)) {
+					parseTopologyConfig(JsonUtils.getJsonNode(jo, topologiesKey), deliveryServiceMap, cacheRegister);
+				}
 				parseMonitorConfig(JsonUtils.getJsonNode(jo, "monitors"));
 
 				federationsWatcher.configure(config);
@@ -300,7 +306,7 @@ public class ConfigHandler {
 	public void setAnonymousIpConfigUpdater(final AnonymousIpConfigUpdater anonymousIpConfigUpdater) {
 		this.anonymousIpConfigUpdater = anonymousIpConfigUpdater;
 	}
-	
+
 	public void setAnonymousIpDatabaseUpdater(final AnonymousIpDatabaseUpdater anonymousIpDatabaseUpdater) {
 		this.anonymousIpDatabaseUpdater = anonymousIpDatabaseUpdater;
 	}
@@ -357,6 +363,22 @@ public class ConfigHandler {
 				cache.setFqdn(JsonUtils.getString(jo, "fqdn"));
 				cache.setPort(JsonUtils.getInt(jo, "port"));
 
+				if (jo.has("capabilities")) {
+					final Set<String> capabilities = new HashSet<>();
+					final JsonNode capabilitiesNode = jo.get("capabilities");
+					if (!capabilitiesNode.isArray()) {
+						LOGGER.error("Server '" + hashId + "' has malformed capabilities. Disregarding.");
+					} else {
+						capabilitiesNode.forEach((capabilityNode) -> {
+							final String capability = capabilityNode.asText();
+							if (!capability.isEmpty()) {
+								capabilities.add(capability);
+							}
+						});
+					}
+					cache.addCapabilities(capabilities);
+				}
+
 				final String ip = JsonUtils.getString(jo, "ip");
 				final String ip6 = JsonUtils.optString(jo, "ip6");
 
@@ -394,17 +416,9 @@ public class ConfigHandler {
 									}
 
 									final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name");
-
-									if (name.endsWith(tld)) {
-										final String reName = name.replaceAll("^.*?\\.", "");
-
-										if (!dsNames.contains(reName)) {
-											dsNames.add(reName);
-										}
-									} else {
-										if (!dsNames.contains(name)) {
-											dsNames.add(name);
-										}
+									final String dsName = getDsName( name, tld);
+									if (!dsNames.contains(dsName)) {
+										dsNames.add(dsName);
 									}
 
 									i++;
@@ -457,6 +471,59 @@ public class ConfigHandler {
 		}
 
 		return deliveryServiceMap;
+	}
+
+	private String getDsName(final String name, final String tld) {
+	    return name.endsWith(tld)
+				? name.replaceAll("^.*?\\.", "")
+				: name;
+	}
+
+	private void parseTopologyConfig(final JsonNode allTopologies, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) {
+		final Map<String, List<String>> topologyMap = new HashMap<>();
+		final Map<String, List<String>> statMap = new HashMap<>();
+		final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name");
+		allTopologies.fieldNames().forEachRemaining((String topologyName) -> {
+			final List<String> nodes = new ArrayList<>();
+			allTopologies.get(topologyName).get("nodes").forEach((JsonNode cache) -> nodes.add(cache.textValue()));
+			topologyMap.put(topologyName, nodes);
+		});
+
+		deliveryServiceMap.forEach((xmlId, ds) -> {
+			final List<DeliveryServiceReference> dsReferences = new ArrayList<>();
+			final List<String> dsNames = new ArrayList<>(); // for stats
+			Stream.of(ds.getTopology())
+					.filter(topologyName -> !Objects.isNull(topologyName) && topologyMap.containsKey(topologyName))
+					.flatMap(topologyName -> {
+						statMap.put(ds.getId(), dsNames);
+						return topologyMap.get(topologyName).stream();
+					})
+					.flatMap(node -> cacheRegister.getCacheLocation(node).getCaches().stream())
+					.filter(cache -> ds.hasRequiredCapabilities(cache.getCapabilities()))
+					.forEach(cache -> {
+					    cacheRegister.getDeliveryServiceMatchers(ds).stream()
+								.flatMap(deliveryServiceMatcher -> deliveryServiceMatcher.getRequestMatchers().stream())
+								.map(requestMatcher -> requestMatcher.getPattern().pattern())
+								.forEach(pattern -> {
+									final String remap = ds.getRemap(pattern);
+									final String fqdn = pattern.contains(".*") && !ds.isDns()
+											? cache.getId() + "." + remap
+											: remap;
+									dsNames.add(getDsName(fqdn, tld));
+									if (!remap.equals(ds.isDns() ? ds.getRoutingName() + "." + ds.getDomain() : ds.getDomain())) {
+										return;
+									}
+									try {
+										dsReferences.add(new DeliveryServiceReference(ds.getId(), fqdn));
+									} catch (ParseException e) {
+										LOGGER.error("Unable to create a DeliveryServiceReference from DeliveryService '" + ds.getId() + "'", e);
+									}
+								});
+						cache.setDeliveryServices(dsReferences);
+					});
+
+		});
+		statTracker.initialize(statMap, cacheRegister);
 	}
 
 	private void parseDeliveryServiceMatchSets(final JsonNode allDeliveryServices, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) throws JsonUtilsException {
@@ -541,7 +608,7 @@ public class ConfigHandler {
 	/**
 	 * Parses the geolocation database configuration and updates the database if the URL has
 	 * changed.
-	 * 
+	 *
 	 * @param config
 	 *            the {@link TrafficRouterConfiguration}
 	 * @throws JsonUtilsException
@@ -593,7 +660,7 @@ public class ConfigHandler {
 			AnonymousIp.getCurrentConfig().enabled = false;
 			return;
 		}
-		
+
 		if (databaseUrl == null) {
 			LOGGER.info(anonymousPollingUrl + " not configured; stopping service updater and disabling feature");
 			getAnonymousIpDatabaseUpdater().stopServiceUpdater();

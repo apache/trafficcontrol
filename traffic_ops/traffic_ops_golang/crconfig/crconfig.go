@@ -52,6 +52,9 @@ func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReq
 	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, tx); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
 	}
+	if crc.Topologies, err = makeTopologies(tx); err != nil {
+		return nil, errors.New("Error getting Topologies: " + err.Error())
+	}
 
 	if !useClientReqHost {
 		paramTMURL, ok, err := getGlobalParam(tx, "tm.url")
