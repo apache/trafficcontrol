@@ -20,10 +20,10 @@ import (
 	"net/http"
 	"testing"
 	"time"
+	"testing"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
-
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/lib/go-util"
 
 func TestFederationResolvers(t *testing.T) {
 	WithObjs(t, []TCObj{Types, FederationResolvers}, func() {
@@ -159,7 +159,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 			t.Fatalf("Expected exactly one Type by name %s, got %d", *fr.Type, len(tid))
 		}
 
-		fr.TypeID = util.UintPtr(uint(tid[0].ID))
+		fr.TypeID = util.UIntPtr(uint(tid[0].ID))
 
 		alerts, _, err := TOSession.CreateFederationResolver(fr)
 		if err != nil {
@@ -187,7 +187,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 		}
 	}
 
-	invalidFR.TypeID = util.UintPtr(1)
+	invalidFR.TypeID = util.UIntPtr(1)
 	invalidFR.IPAddress = util.StrPtr("not a valid IP address")
 	alerts, _, err = TOSession.CreateFederationResolver(invalidFR)
 	if err == nil {

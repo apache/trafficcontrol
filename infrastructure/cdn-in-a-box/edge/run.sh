@@ -75,7 +75,7 @@ until [[ $(to-get api/2.0/cdns/name/$CDN_NAME/sslkeys | jq '.response | length')
 done
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
-traffic_ops_ort -kl ALL BADASS || { echo "Failed"; }
+PATH="$PATH:/opt/ort" traffic_ops_ort -kl ALL BADASS || { echo "Failed"; }
 
 envsubst < "/etc/cron.d/traffic_ops_ort-cron-template" > "/var/spool/cron/root" && rm -f "/etc/cron.d/traffic_ops_ort-cron-template"
 crontab "/var/spool/cron/root"
@@ -87,4 +87,4 @@ until grep -q demo1 /etc/trafficserver/remap.config; do
 done
 
 touch /var/log/trafficserver/diags.log
-tail -Fn +1 /var/log/trafficserver/diags.log
+tail -Fn +1 /var/log/trafficserver/diags.log /var/log/ort.log

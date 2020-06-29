@@ -20,25 +20,44 @@
 # Based on CentOS 7.2
 ############################################################
 
-FROM centos:7
-
-# Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
-ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
-COPY $TRAFFIC_OPS_RPM /
+# Keep the trafficops-common-deps in Dockerfile-go the same
+# as trafficops-common-deps in Dockerfile to cache the same
+# layer.
+FROM centos:7 as trafficops-common-deps
 
 RUN mkdir /etc/cron.d && \
-	rpm --install --nodeps --verbose --hash /$(basename $TRAFFIC_OPS_RPM) && \
-	yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-	yum -y install epel-release && \
-	yum -y install jq bind-utils net-tools gettext perl-JSON-PP mkisofs isomd5sum nmap-ncat openssl postgresql96 && \
-	yum clean all
+    yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    yum -y install epel-release && \
+    yum -y install      \
+        jq              \
+        bind-utils      \
+        net-tools       \
+        gettext         \
+        perl-JSON-PP    \
+        mkisofs         \
+        isomd5sum       \
+        nmap-ncat       \
+        openssl         \
+        postgresql96 && \
+    yum clean all
 
-COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
-    infrastructure/cdn-in-a-box/traffic_ops/config.sh \
-    infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \
-    infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
-    /
+FROM    trafficops-common-deps
 
-EXPOSE 443
+# Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
+#
+ARG TRAFFIC_OPS_RPM=traffic_ops/traffic_ops.rpm
+
+COPY $TRAFFIC_OPS_RPM /
+RUN to_rpm_filename="$(basename $TRAFFIC_OPS_RPM)" && \
+    rpm --install --nodeps --verbose --hash "$to_rpm_filename" && \
+    rm "$to_rpm_filename"
+
+COPY enroller/server_template.json \
+     traffic_ops/config.sh \
+     traffic_ops/run-go.sh \
+     traffic_ops/to-access.sh \
+     /
+
 WORKDIR /opt/traffic_ops/app
-CMD /run-go.sh
+EXPOSE  443
+CMD     /run-go.sh

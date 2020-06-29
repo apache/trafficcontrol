@@ -422,7 +422,13 @@ func TestGetMidServers(t *testing.T) {
 		serverMap[*server.ID] = server
 	}
 
-	ts := servers[1]
+	var ts tc.ServerNullable
+	for _, s := range servers {
+		if s.HostName != nil && *s.HostName == "server2" {
+			ts = s
+			break
+		}
+	}
 	*ts.ID = *ts.ID + 1
 	rows2 = rows2.AddRow(
 		ts.Cachegroup,
@@ -547,6 +553,8 @@ func TestV3Validations(t *testing.T) {
 
 	testServer.Interfaces = []tc.ServerInterfaceInfo{}
 
+	typeRows = sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows = sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
@@ -559,6 +567,8 @@ func TestV3Validations(t *testing.T) {
 
 	testServer.Interfaces = nil
 
+	typeRows = sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows = sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
@@ -574,6 +584,8 @@ func TestV3Validations(t *testing.T) {
 	badIface.MTU = &badMTU
 	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
 
+	typeRows = sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows = sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
@@ -588,6 +600,8 @@ func TestV3Validations(t *testing.T) {
 	badIface.IPAddresses = []tc.ServerIPAddress{}
 	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
 
+	typeRows = sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows = sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
@@ -601,6 +615,8 @@ func TestV3Validations(t *testing.T) {
 	badIface.IPAddresses = nil
 	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
 
+	typeRows = sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows = sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
@@ -620,6 +636,8 @@ func TestV3Validations(t *testing.T) {
 	badIface.IPAddresses = []tc.ServerIPAddress{badIP}
 	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
 
+	typeRows = sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows = sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
@@ -632,6 +650,8 @@ func TestV3Validations(t *testing.T) {
 
 	testServer.Interfaces = []tc.ServerInterfaceInfo{goodInterface, goodInterface}
 
+	typeRows = sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows = sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
@@ -650,6 +670,8 @@ func TestV3Validations(t *testing.T) {
 	})
 	testServer.Interfaces = []tc.ServerInterfaceInfo{badIface}
 
+	typeRows = sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
+	cdnRows = sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 

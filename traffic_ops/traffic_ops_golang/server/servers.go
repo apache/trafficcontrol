@@ -51,10 +51,19 @@ import (
 	"github.com/lib/pq"
 )
 
+const serversFromAndJoin = `
+FROM server AS s
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id
+`
+
 const serverCountQuery = `
 SELECT COUNT(s.id)
-FROM server AS s
-`
+` + serversFromAndJoin
 
 const selectQuery = `
 SELECT
@@ -94,14 +103,8 @@ SELECT
 	s.upd_pending AS upd_pending,
 	s.xmpp_id,
 	s.xmpp_passwd
-FROM server AS s
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id
-`
+` + serversFromAndJoin
+
 const InterfacesArray = `
 ARRAY ( SELECT (
 		json_build_object (
@@ -433,7 +436,7 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 		ruleName := fmt.Sprintf("interface '%s' ", iface.Name)
 		errs = append(errs, tovalidate.ToErrors(validation.Errors{
 			ruleName + "name":        validation.Validate(iface.Name, validation.Required),
-			ruleName + "mtu":         validation.Validate(iface.MaxBandwidth, validation.By(validateMTU)),
+			ruleName + "mtu":         validation.Validate(iface.MTU, validation.By(validateMTU)),
 			ruleName + "ipAddresses": validation.Validate(iface.IPAddresses, validation.Required),
 		})...)
 
@@ -475,6 +478,10 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 				}
 			}
 		}
+	}
+
+	if !serviceAddrV6Found && !serviceAddrV4Found {
+		errs = append(errs, errors.New("a server must have at least one service address"))
 	}
 
 	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
@@ -627,7 +634,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
-			return nil, 0, errors.New("forbidden"), sysErr, http.StatusForbidden, nil
+			return nil, 0, errors.New("Forbidden"), sysErr, http.StatusForbidden, nil
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
 		queryAddition = `
@@ -652,7 +659,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	// TODO there's probably a cleaner way to do this by preparing a NamedStmt first and using its QueryRow method
 	var serverCount uint64
-	countRows, err := tx.NamedQuery(serverCountQuery+where, queryValues)
+	countRows, err := tx.NamedQuery(serverCountQuery+queryAddition+where, queryValues)
 	if err != nil {
 		return nil, 0, nil, fmt.Errorf("failed to get servers count: %v", err), http.StatusInternalServerError, nil
 	}
@@ -1133,8 +1140,8 @@ func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
@@ -1188,8 +1195,8 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
@@ -1333,9 +1340,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if inf.Version.Major <= 1 {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2.ServerNullableV11)
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2.ServerNullableV11)
 		} else {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverV2)
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2)
 		}
 	}
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)

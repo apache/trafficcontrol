@@ -16,6 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.edge;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -127,6 +128,12 @@ public class CacheRegister {
 
 	public Map<String,Cache> getCacheMap() {
 		return allCaches;
+	}
+
+	public Set<DeliveryServiceMatcher> getDeliveryServiceMatchers(final DeliveryService deliveryService) {
+	    return this.deliveryServiceMatchers.stream()
+				.filter(deliveryServiceMatcher -> deliveryServiceMatcher.getDeliveryService().getId().equals(deliveryService.getId()))
+				.collect(Collectors.toCollection(TreeSet::new));
 	}
 
 	public void setDeliveryServiceMatchers(final TreeSet<DeliveryServiceMatcher> matchers) {

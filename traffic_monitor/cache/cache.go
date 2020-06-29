@@ -93,7 +93,10 @@ type Result struct {
 	Error error
 	// ID is the fully qualified domain name of the cache server being polled.
 	// (This is assumed to be unique even though that isn't necessarily true)
-	ID            string
+	ID string
+	// Miscellaneous contains the stats that were not directly gathered into
+	// Statistics, but were still found in the stats polling payload. Their
+	// contents are NOT guaranteed in ANY way.
 	Miscellaneous map[string]interface{}
 	// PollFinished is a channel to which data should be sent to indicate that
 	// polling has been completed and a Result has been produced.
@@ -129,6 +132,20 @@ func (result *Result) HasStat(stat string) bool {
 	return false
 }
 
+// Returns the names of all interfaces including the aggregate
+func (result *Result) InterfacesNames() []string {
+	interfaceNames := []string{tc.CacheInterfacesAggregate}
+	for name, _ := range result.Statistics.Interfaces {
+		interfaceNames = append(interfaceNames, name)
+	}
+	return interfaceNames
+}
+
+// Returns the interfaces assigned to this result
+func (result *Result) Interfaces() map[string]Interface {
+	return result.Statistics.Interfaces
+}
+
 // Vitals is the vitals data returned from a cache.
 type Vitals struct {
 	// LoadAvg is the one-minute "loadavg" of the cache server.
@@ -148,7 +165,7 @@ type Stat struct {
 // Stats is designed for returning via the API. It contains result history for each cache, as well as common API data.
 type Stats struct {
 	srvhttp.CommonAPIData
-	Caches map[tc.CacheName]map[string][]ResultStatVal `json:"caches"`
+	Caches map[tc.CacheName]map[string]map[string][]ResultStatVal `json:"caches"`
 }
 
 // Filter filters whether stats and caches should be returned from a data set.
@@ -160,55 +177,54 @@ type Filter interface {
 
 const nsPerMs = 1000000
 
-type StatComputeFunc func(resultInfo ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{}
+type StatComputeFunc func(resultInfo ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{}
 
 // ComputedStats returns a map of cache stats which are computed by Traffic Monitor (rather than returned literally from ATS), mapped to the func to compute them.
 func ComputedStats() map[string]StatComputeFunc {
 	return map[string]StatComputeFunc{
-		"availableBandwidthInKbps": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"availableBandwidthInKbps": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut
 		},
-
-		"availableBandwidthInMbps": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"availableBandwidthInMbps": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return (info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut) / 1000
 		},
-		"bandwidth": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"bandwidth": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.KbpsOut
 		},
-		"error-string": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"error-string": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			if info.Error != nil {
 				return info.Error.Error()
 			}
 			return "false"
 		},
-		"isAvailable": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"isAvailable": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return combinedState // if the cache is missing, default to false
 		},
-		"isHealthy": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"isHealthy": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			if tc.CacheStatusFromString(serverInfo.ServerStatus) == tc.CacheStatusAdminDown {
 				return true
 			}
 			return combinedState.IsAvailable
 		},
-		"kbps": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"kbps": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.KbpsOut
 		},
-		"gbps": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"gbps": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return float64(info.Vitals.KbpsOut) / 1000000.0
 		},
-		"loadavg": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"loadavg": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.LoadAvg
 		},
-		"maxKbps": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"maxKbps": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.MaxKbpsOut
 		},
-		"queryTime": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"queryTime": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.RequestTime.Nanoseconds() / nsPerMs
 		},
-		"stateUrl": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"stateUrl": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return serverProfile.Parameters.HealthPollingURL
 		},
-		"status": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"status": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return serverInfo.ServerStatus
 		},
 
@@ -218,43 +234,43 @@ func ComputedStats() map[string]StatComputeFunc {
 		// sure what the rest of them are even for. None of these are
 		// documented anywhere. The values in comments are the ones that astats
 		// parsers will give back (because it won't get this far).
-		"system.astatsLoad": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.astatsLoad": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.AstatsLoad
 			return 0
 		},
-		"system.configReloadRequests": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.configReloadRequests": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.ConfigLoadRequest
 			return 0
 		},
-		"system.configReloads": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.configReloads": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.ConfigReloads
 			return 0
 		},
-		"system.inf.name": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.inf.name": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.InfName
 			return 0
 		},
-		"system.inf.speed": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.inf.speed": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.InfSpeed
 			return 0
 		},
-		"system.lastReload": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.lastReload": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.LastReload
 			return 0
 		},
-		"system.lastReloadRequest": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.lastReloadRequest": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.LastReloadRequest
 			return 0
 		},
-		"system.notAvailable": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.notAvailable": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.NotAvailable
 			return 0
 		},
-		"system.proc.loadavg": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.proc.loadavg": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.ProcLoadavg
 			return 0
 		},
-		"system.proc.net.dev": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+		"system.proc.net.dev": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.ProcNetDev
 			return 0
 		},

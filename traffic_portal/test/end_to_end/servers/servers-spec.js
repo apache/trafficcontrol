@@ -41,11 +41,6 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
-	it('should verify CSV link exists ', function() {
-		console.log("Verify CSV button exists");
-		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
-	});
-
 	it('should open new Servers form page', function() {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
 		browser.driver.findElement(by.name('createServersButton')).click();
@@ -81,20 +76,14 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(first.isSelected()).toBe(true);
 		first.click();
 		expect(first.isSelected()).toBe(false);
-		let tableColumns = element.all(by.css('#serversTable tr:first-child td'));
-		expect(tableColumns.count()).toBe(11);
+		let tableColumns = element.all(by.css('.ag-header-cell'));
+		expect(tableColumns.count()).toBe(9);
 	});
 
 	it('should verify the new Server and then update Server', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
-		pageData.searchFilter.sendKeys(mockVals.hostName);
-		browser.sleep(250);
-		element.all(by.repeater('s in ::servers')).filter(function(row){
-			return row.element(by.name('hostName')).getText().then(function(val){
-				return val === mockVals.hostName;
-			});
-		}).get(0).click();
+		element(by.cssContainingText('.ag-cell', mockVals.hostName)).click()
 		browser.sleep(1000);
 		pageData.domainName.clear();
 		pageData.domainName.sendKeys('testupdated.com');

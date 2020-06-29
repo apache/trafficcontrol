@@ -42,6 +42,14 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
 
+  traffic_ops_ort_build:
+    image: apache/traffic_ops_ort_builder:master
+    # build:
+    #   dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops_ort
+    #   context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
   traffic_portal_build:
     image: apache/traffic_portal_builder:master
     #build:

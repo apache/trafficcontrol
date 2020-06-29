@@ -63,11 +63,8 @@ const (
 	Eligible
 )
 
-type DSServersAttrResponse struct {
-	Response []DSServer `json:"response"`
-}
-
-type DSServer struct {
+// DSServerBase contains the base information for a Delivery Service Server.
+type DSServerBase struct {
 	Cachegroup                  *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID                *int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID                       *int                 `json:"cdnId" db:"cdn_id"`
@@ -85,13 +82,6 @@ type DSServer struct {
 	ILOIPNetmask                *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
 	ILOPassword                 *string              `json:"iloPassword" db:"ilo_password"`
 	ILOUsername                 *string              `json:"iloUsername" db:"ilo_username"`
-	InterfaceMtu                *int                 `json:"interfaceMtu" db:"interface_mtu"`
-	InterfaceName               *string              `json:"interfaceName" db:"interface_name"`
-	IP6Address                  *string              `json:"ip6Address" db:"ip6_address"`
-	IP6Gateway                  *string              `json:"ip6Gateway" db:"ip6_gateway"`
-	IPAddress                   *string              `json:"ipAddress" db:"ip_address"`
-	IPGateway                   *string              `json:"ipGateway" db:"ip_gateway"`
-	IPNetmask                   *string              `json:"ipNetmask" db:"ip_netmask"`
 	LastUpdated                 *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
 	MgmtIPAddress               *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
 	MgmtIPGateway               *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
@@ -113,4 +103,16 @@ type DSServer struct {
 	UpdPending                  *bool                `json:"updPending" db:"upd_pending"`
 	ServerCapabilities          []string             `json:"-" db:"server_capabilities"`
 	DeliveryServiceCapabilities []string             `json:"-" db:"deliveryservice_capabilities"`
+}
+
+// DSServerV11 contains the legacy format for a Delivery Service Server.
+type DSServerV11 struct {
+	DSServerBase
+	LegacyInterfaceDetails
+}
+
+// DSServer contains information for a Delivery Service Server.
+type DSServer struct {
+	DSServerBase
+	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
 }

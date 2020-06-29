@@ -105,8 +105,8 @@ public final class AnonymousIp {
 	private static void parseIPv6Whitelist(final JsonNode config, final AnonymousIp anonymousIp) throws JsonUtilsException {
 		if (config.has("ip6Whitelist")) {
 			try {
-				anonymousIp.ipv4Whitelist = new AnonymousIpWhitelist();
-				anonymousIp.ipv4Whitelist.init(JsonUtils.getJsonNode(config, "ip6Whitelist"));
+				anonymousIp.ipv6Whitelist = new AnonymousIpWhitelist();
+				anonymousIp.ipv6Whitelist.init(JsonUtils.getJsonNode(config, "ip6Whitelist"));
 			} catch (NetworkNodeException e) {
 				LOGGER.error("Anonymous Ip ERR: Network node err ", e);
 			}

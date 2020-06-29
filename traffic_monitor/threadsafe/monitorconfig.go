@@ -25,56 +25,26 @@ import (
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// CopyTrafficMonitorConfigMap returns a deep copy of the given TrafficMonitorConfigMap
-func CopyTrafficMonitorConfigMap(a *tc.TrafficMonitorConfigMap) tc.TrafficMonitorConfigMap {
-	b := tc.TrafficMonitorConfigMap{}
-	b.TrafficServer = map[string]tc.TrafficServer{}
-	b.CacheGroup = map[string]tc.TMCacheGroup{}
-	b.Config = map[string]interface{}{}
-	b.TrafficMonitor = map[string]tc.TrafficMonitor{}
-	b.DeliveryService = map[string]tc.TMDeliveryService{}
-	b.Profile = map[string]tc.TMProfile{}
-	for k, v := range a.TrafficServer {
-		b.TrafficServer[k] = v
-	}
-	for k, v := range a.CacheGroup {
-		b.CacheGroup[k] = v
-	}
-	for k, v := range a.Config {
-		b.Config[k] = v
-	}
-	for k, v := range a.TrafficMonitor {
-		b.TrafficMonitor[k] = v
-	}
-	for k, v := range a.DeliveryService {
-		b.DeliveryService[k] = v
-	}
-	for k, v := range a.Profile {
-		b.Profile[k] = v
-	}
-	return b
-}
-
-// TrafficMonitorConfigMapThreadsafe encapsulates a TrafficMonitorConfigMap safe for multiple readers and a single writer.
+// TrafficMonitorConfigMapThreadsafe encapsulates a LegacyTrafficMonitorConfigMap safe for multiple readers and a single writer.
 type TrafficMonitorConfigMap struct {
-	monitorConfig *tc.TrafficMonitorConfigMap
+	monitorConfig *tc.LegacyTrafficMonitorConfigMap
 	m             *sync.RWMutex
 }
 
-// NewTrafficMonitorConfigMap returns an encapsulated TrafficMonitorConfigMap safe for multiple readers and a single writer.
+// NewTrafficMonitorConfigMap returns an encapsulated LegacyTrafficMonitorConfigMap safe for multiple readers and a single writer.
 func NewTrafficMonitorConfigMap() TrafficMonitorConfigMap {
-	return TrafficMonitorConfigMap{monitorConfig: &tc.TrafficMonitorConfigMap{}, m: &sync.RWMutex{}}
+	return TrafficMonitorConfigMap{monitorConfig: &tc.LegacyTrafficMonitorConfigMap{}, m: &sync.RWMutex{}}
 }
 
-// Get returns the TrafficMonitorConfigMap. Callers MUST NOT modify, it is not threadsafe for mutation. If mutation is necessary, call CopyTrafficMonitorConfigMap().
-func (t *TrafficMonitorConfigMap) Get() tc.TrafficMonitorConfigMap {
+// Get returns the LegacyTrafficMonitorConfigMap. Callers MUST NOT modify, it is not threadsafe for mutation. If mutation is necessary, call CopyTrafficMonitorConfigMap().
+func (t *TrafficMonitorConfigMap) Get() tc.LegacyTrafficMonitorConfigMap {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return *t.monitorConfig
 }
 
-// Set sets the TrafficMonitorConfigMap. This is only safe for one writer. This MUST NOT be called by multiple threads.
-func (t *TrafficMonitorConfigMap) Set(c tc.TrafficMonitorConfigMap) {
+// Set sets the LegacyTrafficMonitorConfigMap. This is only safe for one writer. This MUST NOT be called by multiple threads.
+func (t *TrafficMonitorConfigMap) Set(c tc.LegacyTrafficMonitorConfigMap) {
 	t.m.Lock()
 	*t.monitorConfig = c
 	t.m.Unlock()
