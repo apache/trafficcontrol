@@ -18,7 +18,10 @@ package v3
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -27,9 +30,29 @@ func TestFederations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Topologies, DeliveryServices, CDNFederations}, func() {
 		PostDeleteTestFederationsDeliveryServices(t)
 		GetTestFederations(t)
+		GetTestFederationsIMS(t)
 		AddFederationResolversForCurrentUserTest(t)
 		RemoveFederationResolversForCurrentUserTest(t)
 	})
+}
+
+func GetTestFederationsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	if len(testData.Federations) == 0 {
+		t.Error("no federations test data")
+	}
+
+	_, reqInf, err := TOSession.AllFederations(header)
+	if err != nil {
+		t.Fatalf("No error expected, but got: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestFederations(t *testing.T) {
@@ -37,7 +60,7 @@ func GetTestFederations(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
-	feds, _, err := TOSession.AllFederations()
+	feds, _, err := TOSession.AllFederations(nil)
 	if err != nil {
 		t.Errorf("getting federations: " + err.Error())
 	}
@@ -83,7 +106,7 @@ func GetTestFederations(t *testing.T) {
 }
 
 func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceNullable, tc.DeliveryServiceNullable, error) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		return -1, tc.DeliveryServiceNullable{}, tc.DeliveryServiceNullable{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
@@ -114,7 +137,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	}
 
 	// Test get created Federation Delivery Services
-	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID)
+	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
 	}
@@ -131,7 +154,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	// Make sure it is deleted
 
 	// Test get created Federation Delivery Services
-	fedDSes, _, err = TOSession.GetFederationDeliveryServices(fedID)
+	fedDSes, _, err = TOSession.GetFederationDeliveryServices(fedID, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
 	}
@@ -179,7 +202,7 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 	}
 
 	// need to assign myself the federation to set its mappings
-	me, _, err := TOSession.GetUserCurrent()
+	me, _, err := TOSession.GetUserCurrent(nil)
 	if err != nil {
 		t.Fatalf("Couldn't figure out who I am: %v", err)
 	}

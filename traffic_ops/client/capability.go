@@ -24,9 +24,15 @@ import "github.com/apache/trafficcontrol/lib/go-tc"
 const API_CAPABILITIES = apiBase + "/capabilities"
 
 // GetCapabilities retrieves all capabilities.
-func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_CAPABILITIES, nil)
+func (to *Session) GetCapabilities(header http.Header) ([]tc.Capability, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_CAPABILITIES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Capability{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -38,12 +44,18 @@ func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
 }
 
 // GetCapability retrieves only the capability named 'c'.
-func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
+func (to *Session) GetCapability(c string, header http.Header) (tc.Capability, ReqInf, error) {
 	v := url.Values{}
 	v.Add("name", c)
 	endpoint := API_CAPABILITIES + "?" + v.Encode()
-	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return tc.Capability{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return tc.Capability{}, reqInf, err
 	}

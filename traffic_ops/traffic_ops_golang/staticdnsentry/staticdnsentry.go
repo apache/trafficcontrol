@@ -20,7 +20,9 @@ package staticdnsentry
  */
 
 import (
+	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -115,10 +117,21 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (en *TOStaticDNSEntry) Read() ([]interface{}, error, error, int) { return api.GenericRead(en) }
-func (en *TOStaticDNSEntry) Create() (error, error, int)              { return api.GenericCreate(en) }
-func (en *TOStaticDNSEntry) Update() (error, error, int)              { return api.GenericUpdate(en) }
-func (en *TOStaticDNSEntry) Delete() (error, error, int)              { return api.GenericDelete(en) }
+func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, en, useIMS)
+}
+func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
+func (en *TOStaticDNSEntry) Update() (error, error, int) { return api.GenericUpdate(en) }
+func (en *TOStaticDNSEntry) Delete() (error, error, int) { return api.GenericDelete(en) }
+func (v *TOStaticDNSEntry) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(sde.last_updated) as t FROM staticdnsentry as sde
+JOIN type as tp on sde.type = tp.id
+LEFT JOIN cachegroup as cg ON sde.cachegroup = cg.id
+JOIN deliveryservice as ds on sde.deliveryservice = ds.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='staticdnsentry') as res`
+}
 
 func insertQuery() string {
 	query := `INSERT INTO staticdnsentry (

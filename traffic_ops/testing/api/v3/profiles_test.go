@@ -16,8 +16,11 @@
 package v3
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -27,11 +30,36 @@ func TestProfiles(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Profiles, Parameters}, func() {
 		CreateBadProfiles(t)
 		UpdateTestProfiles(t)
+		GetTestProfilesIMS(t)
 		GetTestProfiles(t)
 		GetTestProfilesWithParameters(t)
 		ImportProfile(t)
 		CopyProfile(t)
 	})
+}
+
+func GetTestProfilesIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, pr := range testData.Profiles {
+		_, reqInf, err := TOSession.GetProfileByName(pr.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+		_, reqInf, err = TOSession.GetProfileByParameter(pr.Parameter, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 // CreateBadProfiles ensures that profiles can't be created with bad values
@@ -112,7 +140,7 @@ func CopyProfile(t *testing.T) {
 
 	// Cleanup profiles
 	for _, name := range newProfileNames {
-		profiles, _, err := TOSession.GetProfileByName(name)
+		profiles, _, err := TOSession.GetProfileByName(name, nil)
 		if err != nil {
 			t.Fatalf("got err= %s; expected err= nil", err)
 		}
@@ -135,7 +163,7 @@ func CreateTestProfiles(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE profiles with name: %s %v", pr.Name, err)
 		}
-		profiles, _, err := TOSession.GetProfileByName(pr.Name)
+		profiles, _, err := TOSession.GetProfileByName(pr.Name, nil)
 		if err != nil {
 			t.Errorf("could not GET profile with name: %s %v", pr.Name, err)
 		}
@@ -157,7 +185,7 @@ func CreateTestProfiles(t *testing.T) {
 					continue
 				}
 			}
-			p, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(*param.Name, *param.ConfigFile, *param.Value)
+			p, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(*param.Name, *param.ConfigFile, *param.Value, nil)
 			if err != nil {
 				t.Errorf("could not GET parameter %+v: %s", param, err.Error())
 			}
@@ -177,7 +205,7 @@ func UpdateTestProfiles(t *testing.T) {
 
 	firstProfile := testData.Profiles[0]
 	// Retrieve the Profile by name so we can get the id for the Update
-	resp, _, err := TOSession.GetProfileByName(firstProfile.Name)
+	resp, _, err := TOSession.GetProfileByName(firstProfile.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
@@ -191,7 +219,7 @@ func UpdateTestProfiles(t *testing.T) {
 	}
 
 	// Retrieve the Profile to check Profile name got updated
-	resp, _, err = TOSession.GetProfileByID(remoteProfile.ID)
+	resp, _, err = TOSession.GetProfileByID(remoteProfile.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
@@ -205,18 +233,18 @@ func UpdateTestProfiles(t *testing.T) {
 func GetTestProfiles(t *testing.T) {
 
 	for _, pr := range testData.Profiles {
-		resp, _, err := TOSession.GetProfileByName(pr.Name)
+		resp, _, err := TOSession.GetProfileByName(pr.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
 		}
 		profileID := resp[0].ID
 
-		resp, _, err = TOSession.GetProfileByParameter(pr.Parameter)
+		resp, _, err = TOSession.GetProfileByParameter(pr.Parameter, nil)
 		if err != nil {
 			t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
 		}
 
-		resp, _, err = TOSession.GetProfileByCDNID(pr.CDNID)
+		resp, _, err = TOSession.GetProfileByCDNID(pr.CDNID, nil)
 		if err != nil {
 			t.Errorf("cannot GET Profile by cdn: %v - %v", err, resp)
 		}
@@ -234,7 +262,7 @@ func GetTestProfiles(t *testing.T) {
 
 func ImportProfile(t *testing.T) {
 	// Get ID of Profile to export
-	resp, _, err := TOSession.GetProfileByName(testData.Profiles[0].Name)
+	resp, _, err := TOSession.GetProfileByName(testData.Profiles[0].Name, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Profile by name: %v - %v", err, resp)
 	}
@@ -297,7 +325,7 @@ func ImportProfile(t *testing.T) {
 
 func GetTestProfilesWithParameters(t *testing.T) {
 	firstProfile := testData.Profiles[0]
-	resp, _, err := TOSession.GetProfileByName(firstProfile.Name)
+	resp, _, err := TOSession.GetProfileByName(firstProfile.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
 		return
@@ -308,7 +336,7 @@ func GetTestProfilesWithParameters(t *testing.T) {
 	}
 	respProfile := resp[0]
 	// query by name does not retrieve associated parameters.  But query by id does.
-	resp, _, err = TOSession.GetProfileByID(respProfile.ID)
+	resp, _, err = TOSession.GetProfileByID(respProfile.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
 	}
@@ -325,7 +353,7 @@ func DeleteTestProfiles(t *testing.T) {
 
 	for _, pr := range testData.Profiles {
 		// Retrieve the Profile by name so we can get the id for the Update
-		resp, _, err := TOSession.GetProfileByName(pr.Name)
+		resp, _, err := TOSession.GetProfileByName(pr.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET Profile by name: %s - %v", pr.Name, err)
 			continue
@@ -337,7 +365,7 @@ func DeleteTestProfiles(t *testing.T) {
 
 		profileID := resp[0].ID
 		// query by name does not retrieve associated parameters.  But query by id does.
-		resp, _, err = TOSession.GetProfileByID(profileID)
+		resp, _, err = TOSession.GetProfileByID(profileID, nil)
 		if err != nil {
 			t.Errorf("cannot GET Profile by id: %v - %v", err, resp)
 		}
@@ -356,7 +384,7 @@ func DeleteTestProfiles(t *testing.T) {
 		//time.Sleep(1 * time.Second)
 
 		// Retrieve the Profile to see if it got deleted
-		prs, _, err := TOSession.GetProfileByName(pr.Name)
+		prs, _, err := TOSession.GetProfileByName(pr.Name, nil)
 		if err != nil {
 			t.Errorf("error deleting Profile name: %s", err.Error())
 		}

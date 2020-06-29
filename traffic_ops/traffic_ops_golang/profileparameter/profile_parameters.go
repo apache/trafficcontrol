@@ -23,6 +23,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -154,8 +155,18 @@ parameter) VALUES (
 func (pp *TOProfileParameter) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
-func (pp *TOProfileParameter) Read() ([]interface{}, error, error, int) { return api.GenericRead(pp) }
-func (pp *TOProfileParameter) Delete() (error, error, int)              { return api.GenericDelete(pp) }
+func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, pp, useIMS)
+}
+func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
+func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(pp.last_updated) as t FROM profile_parameter pp
+JOIN profile prof ON prof.id = pp.profile
+JOIN parameter param ON param.id = pp.parameter ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='profile_parameter') as res`
+}
 
 func selectQuery() string {
 

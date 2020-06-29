@@ -52,7 +52,7 @@ func CreateTestTenants(t *testing.T) {
 }
 
 func GetTestTenants(t *testing.T) {
-	resp, _, err := TOSession.Tenants()
+	resp, _, err := TOSession.Tenants(nil)
 	if err != nil {
 		t.Errorf("cannot GET all tenants: %v - %v", err, resp)
 		return
@@ -83,12 +83,12 @@ func UpdateTestTenants(t *testing.T) {
 	// Retrieve the Tenant by name so we can get the id for the Update
 	name := "tenant2"
 	parentName := "tenant1"
-	modTenant, _, err := TOSession.TenantByName(name)
+	modTenant, _, err := TOSession.TenantByName(name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
 	}
 
-	newParent, _, err := TOSession.TenantByName(parentName)
+	newParent, _, err := TOSession.TenantByName(parentName, nil)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
 	}
@@ -100,7 +100,7 @@ func UpdateTestTenants(t *testing.T) {
 	}
 
 	// Retrieve the Tenant to check Tenant parent name got updated
-	respTenant, _, err := TOSession.Tenant(strconv.Itoa(modTenant.ID))
+	respTenant, _, err := TOSession.Tenant(strconv.Itoa(modTenant.ID), nil)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %v - %v", name, err)
 	}
@@ -113,7 +113,7 @@ func UpdateTestTenants(t *testing.T) {
 func DeleteTestTenants(t *testing.T) {
 
 	t1 := "tenant1"
-	tenant1, _, err := TOSession.TenantByName(t1)
+	tenant1, _, err := TOSession.TenantByName(t1, nil)
 
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %v - %v", t1, err)
@@ -147,7 +147,7 @@ func DeleteTestTenants(t *testing.T) {
 				continue
 			}
 
-			toTenant, _, err := TOSession.TenantByName(tn.Name)
+			toTenant, _, err := TOSession.TenantByName(tn.Name, nil)
 			if err != nil {
 				t.Fatalf("getting tenant %s: %v", tn.Name, err)
 			}
@@ -174,7 +174,7 @@ func ExtractXMLID(ds *tc.DeliveryServiceNullable) string {
 }
 
 func UpdateTestTenantsActive(t *testing.T) {
-	originalTenants, _, err := TOSession.Tenants()
+	originalTenants, _, err := TOSession.Tenants(nil)
 	if err != nil {
 		t.Fatalf("getting tenants error expected: nil, actual: %+v", err)
 	}
@@ -184,7 +184,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", false)
 
 	// ds3 has tenant3. Even though tenant3 is inactive, we should still be able to get it, because our user is tenant1, which is active.
-	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds3")
+	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds3", nil)
 	if err != nil {
 		t.Fatal("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active)")
 	} else if len(dses) != 1 {
@@ -196,7 +196,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", true)
 
 	// ds3 has tenant3. Even though tenant3's parent, tenant2, is inactive, we should still be able to get it, because our user is tenant1, which is active.
-	_, _, err = TOSession.GetDeliveryServiceByXMLIDNullable("ds3")
+	_, _, err = TOSession.GetDeliveryServiceByXMLIDNullable("ds3", nil)
 	if err != nil {
 		t.Fatal("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active)")
 	}
@@ -213,7 +213,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	}
 
 	// tenant3user with tenant3 has no access to ds3 with tenant3 when parent tenant2 is inactive
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
+	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3", nil)
 	for _, ds := range dses {
 		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 parent tenant2 is inactive, expected: no ds", ExtractXMLID(&ds))
 	}
@@ -223,7 +223,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", false)
 
 	// tenant3user with tenant3 has no access to ds3 with tenant3 when tenant3 is inactive
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
+	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3", nil)
 	for _, ds := range dses {
 		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 is inactive, expected: no ds", ExtractXMLID(&ds))
 	}
@@ -233,7 +233,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", true)
 
 	// tenant3user with tenant3 has access to ds3 with tenant3
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
+	dses, _, err = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3", nil)
 	if err != nil {
 		t.Errorf("tenant3user getting delivery service ds3 error expected: nil, actual: %+v", err)
 	} else if len(dses) == 0 {
@@ -244,7 +244,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// 2. tenant3user has tenant3.
 	// 3. tenant2 is not a child of tenant3 (tenant3 is a child of tenant2)
 	// 4. Therefore, tenant3user should not have access to ds2
-	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds2")
+	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds2", nil)
 	for _, ds := range dses {
 		t.Errorf("tenant3user got delivery service %+v with tenant2, expected: no ds", ExtractXMLID(&ds))
 	}
@@ -253,13 +253,13 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// 2. tenant4user has tenant4.
 	// 3. tenant1 is not a child of tenant4 (tenant4 is unrelated to tenant1)
 	// 4. Therefore, tenant4user should not have access to ds1
-	dses, _, _ = tenant4Session.GetDeliveryServiceByXMLIDNullable("ds1")
+	dses, _, _ = tenant4Session.GetDeliveryServiceByXMLIDNullable("ds1", nil)
 	for _, ds := range dses {
 		t.Errorf("tenant4user got delivery service %+v with tenant1, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant3", false)
-	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3")
+	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLIDNullable("ds3", nil)
 	for _, ds := range dses {
 		t.Errorf("tenant3user was inactive, but got delivery service %+v with tenant3, expected: no ds", ExtractXMLID(&ds))
 	}
@@ -275,7 +275,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 }
 
 func setTenantActive(t *testing.T, name string, active bool) {
-	tn, _, err := TOSession.TenantByName(name)
+	tn, _, err := TOSession.TenantByName(name, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Tenant by name: %s - %v", name, err)
 	}

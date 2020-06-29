@@ -29,9 +29,11 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
 	"net/http"
+	"time"
 )
 
 // TOTopology is a type alias on which we can define functions.
@@ -267,19 +269,31 @@ func (topology *TOTopology) Create() (error, error, int) {
 }
 
 // Read is a requirement of the api.Reader interface and is called by api.ReadHandler().
-func (topology *TOTopology) Read() ([]interface{}, error, error, int) {
+func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
+	interfaces := make([]interface{}, 0)
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(topology.ReqInfo.Params, topology.ParamColumns())
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(topology.ReqInfo.Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return interfaces, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+	// Case where we need to run the second query
 	query := selectQuery() + where + orderBy + pagination
 	rows, err := topology.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("topology read: querying: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("topology read: querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer log.Close(rows, "unable to close DB connection")
-
-	interfaces := make([]interface{}, 0)
 	topologies := map[string]*tc.Topology{}
 	indices := map[int]int{}
 	for index := 0; rows.Next(); index++ {
@@ -298,7 +312,7 @@ func (topology *TOTopology) Read() ([]interface{}, error, error, int) {
 			&topologyNode.Cachegroup,
 			&parents,
 		); err != nil {
-			return nil, nil, errors.New("topology read: scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("topology read: scanning: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		for _, id := range parents {
 			topologyNode.Parents = append(topologyNode.Parents, int(id))
@@ -326,7 +340,7 @@ func (topology *TOTopology) Read() ([]interface{}, error, error, int) {
 		}
 		interfaces = append(interfaces, *topology)
 	}
-	return interfaces, nil, nil, http.StatusOK
+	return interfaces, nil, nil, http.StatusOK, &maxTime
 }
 
 func (topology *TOTopology) removeParents() error {
@@ -421,7 +435,7 @@ func (topology *TOTopology) setDescription() (error, error, int) {
 
 // Update is a requirement of the api.Updater interface.
 func (topology *TOTopology) Update() (error, error, int) {
-	topologies, userErr, sysErr, errCode := topology.Read()
+	topologies, userErr, sysErr, errCode, _ := topology.Read(nil, false)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -474,7 +488,7 @@ func (topology *TOTopology) Delete() (error, error, int) {
 
 // OptionsDelete is a requirement of the OptionsDeleter interface.
 func (topology *TOTopology) OptionsDelete() (error, error, int) {
-	topologies, userErr, sysErr, errCode := topology.Read()
+	topologies, userErr, sysErr, errCode, _ := topology.Read(nil, false)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -623,4 +637,11 @@ WHERE t.name = $2
 RETURNING t.name, t.description, t.last_updated
 `
 	return query
+}
+
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(ti) from (
+		SELECT max(t.last_updated) as ti from topology t JOIN topology_cachegroup tc on t.name = tc.topology` + where +
+		` UNION ALL
+	select max(last_updated) as ti from last_deleted l where l.table_name='topology') as res`
 }

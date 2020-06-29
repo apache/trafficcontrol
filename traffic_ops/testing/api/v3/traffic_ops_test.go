@@ -76,7 +76,8 @@ func TestMain(m *testing.M) {
 			   DB Server:            %s
 			   DB User:              %s
 			   DB Name:              %s
-			   DB Ssl:               %t`, *configFileName, *tcFixturesFileName, Config.TrafficOps.URL, Config.Default.Session.TimeoutInSecs, Config.TrafficOpsDB.Hostname, Config.TrafficOpsDB.User, Config.TrafficOpsDB.Name, Config.TrafficOpsDB.SSL)
+			   DB Ssl:               %t
+               UseIMS:               %v`, *configFileName, *tcFixturesFileName, Config.TrafficOps.URL, Config.Default.Session.TimeoutInSecs, Config.TrafficOpsDB.Hostname, Config.TrafficOpsDB.User, Config.TrafficOpsDB.Name, Config.TrafficOpsDB.SSL, Config.UseIMS)
 
 	//Load the test data
 	LoadFixtures(*tcFixturesFileName)

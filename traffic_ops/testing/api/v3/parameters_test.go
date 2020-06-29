@@ -16,8 +16,11 @@
 package v3
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"sync"
 	"testing"
+	"time"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -28,9 +31,41 @@ func TestParameters(t *testing.T) {
 	//SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Portal, Config.TrafficOps.UserPassword)
 
 	WithObjs(t, []TCObj{Parameters}, func() {
+		GetTestParametersIMS(t)
+		currentTime := time.Now().Add(-1 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestParameters(t)
 		GetTestParameters(t)
+		GetTestParametersIMSAfterChange(t, header)
 	})
+}
+
+func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
+	for _, pl := range testData.Parameters {
+		_, reqInf, err := TOSession.GetParameterByName(pl.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	currentTime := time.Now()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	for _, pl := range testData.Parameters {
+		_, reqInf, err := TOSession.GetParameterByName(pl.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func CreateTestParameters(t *testing.T) {
@@ -49,7 +84,7 @@ func UpdateTestParameters(t *testing.T) {
 
 	firstParameter := testData.Parameters[0]
 	// Retrieve the Parameter by name so we can get the id for the Update
-	resp, _, err := TOSession.GetParameterByName(firstParameter.Name)
+	resp, _, err := TOSession.GetParameterByName(firstParameter.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
@@ -63,7 +98,7 @@ func UpdateTestParameters(t *testing.T) {
 	}
 
 	// Retrieve the Parameter to check Parameter name got updated
-	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID)
+	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
@@ -74,10 +109,27 @@ func UpdateTestParameters(t *testing.T) {
 
 }
 
+func GetTestParametersIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, pl := range testData.Parameters {
+		_, reqInf, err := TOSession.GetParameterByName(pl.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
 func GetTestParameters(t *testing.T) {
 
 	for _, pl := range testData.Parameters {
-		resp, _, err := TOSession.GetParameterByName(pl.Name)
+		resp, _, err := TOSession.GetParameterByName(pl.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by name: %v - %v", err, resp)
 		}
@@ -109,7 +161,7 @@ func DeleteTestParameters(t *testing.T) {
 func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 
 	// Retrieve the Parameter by name so we can get the id for the Update
-	resp, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
+	resp, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile, nil)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", pl.Name, err)
 	}
@@ -128,7 +180,7 @@ func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 		}
 
 		// Retrieve the Parameter to see if it got deleted
-		pls, _, err := TOSession.GetParameterByID(pl.ID)
+		pls, _, err := TOSession.GetParameterByID(pl.ID, nil)
 		if err != nil {
 			t.Errorf("error deleting Parameter name: %s", err.Error())
 		}

@@ -23,9 +23,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -424,7 +426,10 @@ func GetCacheGroupsByName(names []string, Tx *sqlx.Tx) (map[string]tc.CacheGroup
 	return cacheGroupMap, nil, nil, http.StatusOK
 }
 
-func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
+func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
+	cacheGroups := []interface{}{}
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -436,7 +441,18 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	}
+
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(cg.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return cacheGroups, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 	baseSelect := SelectQuery()
 	if _, ok := cg.ReqInfo.Params["topology"]; ok {
@@ -448,17 +464,16 @@ LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegrou
 	if cgType, ok := cg.ReqInfo.Params["type"]; ok {
 		_, err := strconv.Atoi(cgType)
 		if err != nil {
-			return nil, errors.New("cachegroup read: converting cachegroup type to integer " + err.Error()), nil, http.StatusBadRequest
+			return nil, errors.New("cachegroup read: converting cachegroup type to integer " + err.Error()), nil, http.StatusBadRequest, nil
 		}
 	}
 	query := baseSelect + where + orderBy + pagination
 	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
-	cacheGroups := []interface{}{}
 	for rows.Next() {
 		var s TOCacheGroup
 		lms := make([]tc.LocalizationMethod, 0)
@@ -480,14 +495,24 @@ LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegrou
 			pq.Array(&cgfs),
 			&s.FallbackToClosest,
 		); err != nil {
-			return nil, nil, errors.New("cachegroup read: scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("cachegroup read: scanning: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		s.LocalizationMethods = &lms
 		s.Fallbacks = &cgfs
 		cacheGroups = append(cacheGroups, s)
 	}
+	return cacheGroups, nil, nil, http.StatusOK, &maxTime
+}
 
-	return cacheGroups, nil, nil, http.StatusOK
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(cachegroup.last_updated) as t FROM cachegroup
+LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
+INNER JOIN type ON cachegroup.type = type.id
+LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
+LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='cachegroup') as res`
 }
 
 //The TOCacheGroup implementation of the Updater interface

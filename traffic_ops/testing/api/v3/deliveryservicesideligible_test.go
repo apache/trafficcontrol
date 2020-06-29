@@ -16,17 +16,36 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"testing"
+	"time"
 )
 
 func TestDeliveryServicesEligible(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+		GetTestDeliveryServicesEligibleIMS(t)
 		GetTestDeliveryServicesEligible(t)
 	})
 }
 
+func GetTestDeliveryServicesEligibleIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err := TOSession.GetDeliveryServicesNullable(header)
+	if err != nil {
+		t.Fatalf("could not GET eligible delivery services: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
+
 func GetTestDeliveryServicesEligible(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v", err)
 	}
@@ -34,7 +53,7 @@ func GetTestDeliveryServicesEligible(t *testing.T) {
 		t.Error("GET DeliveryServices returned no delivery services, need at least 1 to test")
 	}
 	dsID := dses[0].ID
-	servers, _, err := TOSession.GetDeliveryServicesEligible(*dsID)
+	servers, _, err := TOSession.GetDeliveryServicesEligible(*dsID, nil)
 	if err != nil {
 		t.Errorf("getting delivery services eligible: %v", err)
 	}

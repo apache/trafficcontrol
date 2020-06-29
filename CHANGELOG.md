@@ -77,6 +77,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added debugging functionality to CDN-in-a-Box.
 - Added an SMTP server to CDN-in-a-Box.
 - Cached builder Docker images on Docker Hub to speed up build time
+- Added functionality in the GET endpoints to support the "If-Modified-Since" header in the incoming requests.
 - Traffic Ops Golang Endpoints
   - /api/2.0 for all of the most recent route versions
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`

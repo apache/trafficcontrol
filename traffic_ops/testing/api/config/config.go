@@ -37,6 +37,7 @@ type Config struct {
 	TrafficOps   TrafficOps   `json:"trafficOps"`
 	TrafficOpsDB TrafficOpsDB `json:"trafficOpsDB"`
 	Default      Default      `json:"default"`
+	UseIMS       bool         `json:"use_ims"`
 }
 
 // TrafficOps - config section

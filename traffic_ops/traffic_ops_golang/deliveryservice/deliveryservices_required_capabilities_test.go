@@ -197,7 +197,7 @@ func TestReadDeliveryServicesRequiredCapability(t *testing.T) {
 	)
 	mock.ExpectQuery("SELECT .* FROM deliveryservices_required_capability").WillReturnRows(rows)
 
-	results, userErr, sysErr, errCode := rc.Read()
+	results, userErr, sysErr, errCode, _ := rc.Read(nil, false)
 	if userErr != nil {
 		t.Fatalf(userErr.Error())
 	}

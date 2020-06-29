@@ -17,7 +17,10 @@ package v3
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -25,13 +28,14 @@ import (
 func TestCacheGroupParameters(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CacheGroupParameters}, func() {
 		GetTestCacheGroupParameters(t)
+		GetTestCacheGroupParametersIMS(t)
 	})
 }
 
 func CreateTestCacheGroupParameters(t *testing.T) {
 	// Get Cache Group to assign parameter to
 	firstCacheGroup := testData.CacheGroups[0]
-	cacheGroupResp, _, err := TOSession.GetCacheGroupNullableByName(*firstCacheGroup.Name)
+	cacheGroupResp, _, err := TOSession.GetCacheGroupNullableByName(*firstCacheGroup.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Cache Group by name: %v - %v", firstCacheGroup.Name, err)
 	}
@@ -41,7 +45,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 	// Get Parameter to assign to Cache Group
 	firstParameter := testData.Parameters[0]
-	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
@@ -64,12 +68,29 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 func GetTestCacheGroupParameters(t *testing.T) {
 	for _, cgp := range testData.CacheGroupParameterRequests {
-		resp, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID)
+		resp, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, nil)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by cache group: %v - %v", err, resp)
 		}
 		if resp == nil {
 			t.Fatal("Cache Group Parameters response should not be nil")
+		}
+	}
+}
+
+func GetTestCacheGroupParametersIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, cgp := range testData.CacheGroupParameterRequests {
+		_, reqInf, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
 	}
 }
@@ -90,7 +111,7 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 	// Retrieve the Cache Group Parameter to see if it got deleted
 	queryParams := fmt.Sprintf("?parameterId=%d", cgp.ParameterID)
 
-	parameters, _, err := TOSession.GetCacheGroupParametersByQueryParams(cgp.CacheGroupID, queryParams)
+	parameters, _, err := TOSession.GetCacheGroupParametersByQueryParams(cgp.CacheGroupID, queryParams, nil)
 	if err != nil {
 		t.Errorf("error deleting Parameter name: %s", err.Error())
 	}

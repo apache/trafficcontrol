@@ -29,40 +29,40 @@ import (
 )
 
 // GetUsers returns all users accessible from current user
-func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
+func (to *Session) GetUsers(header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users", apiBase)
-	inf, err := get(to, route, &data)
+	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
 // GetUsersByRole returns all users accessible from current user for a given role
-func (to *Session) GetUsersByRole(roleName string) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUsersByRole(roleName string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users?role=%s", apiBase, url.QueryEscape(roleName))
-	inf, err := get(to, route, &data)
+	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
-func (to *Session) GetUserByID(id int) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUserByID(id int, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users/%d", apiBase, id)
-	inf, err := get(to, route, &data)
+	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
-func (to *Session) GetUserByUsername(username string) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUserByUsername(username string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users?username=%s", apiBase, username)
-	inf, err := get(to, route, &data)
+	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
 // GetUserCurrent gets information about the current user
-func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
+func (to *Session) GetUserCurrent(header http.Header) (*tc.UserCurrent, ReqInf, error) {
 	route := apiBase + `/user/current`
 	resp := tc.UserCurrentResponse{}
-	reqInf, err := get(to, route, &resp)
+	reqInf, err := get(to, route, &resp, header)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -83,7 +83,7 @@ func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf,
 	}
 
 	var resp *http.Response
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+"/user/current", reqBody)
+	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+"/user/current", reqBody, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -97,7 +97,7 @@ func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf,
 // CreateUser creates a user
 func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
-		tenant, _, err := to.TenantByName(*user.Tenant)
+		tenant, _, err := to.TenantByName(*user.Tenant, nil)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
@@ -111,7 +111,7 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 	}
 
 	if user.RoleName != nil && *user.RoleName != "" {
-		roles, _, _, err := to.GetRoleByName(*user.RoleName)
+		roles, _, _, err := to.GetRoleByName(*user.RoleName, nil)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
@@ -131,7 +131,7 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 		return nil, reqInf, err
 	}
 	route := apiBase + "/users"
-	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -151,7 +151,7 @@ func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, R
 		return nil, reqInf, err
 	}
 	route := apiBase + "/users/" + strconv.Itoa(id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -164,7 +164,7 @@ func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, R
 // DeleteUserByID updates user with the given id
 func (to *Session) DeleteUserByID(id int) (tc.Alerts, ReqInf, error) {
 	route := apiBase + "/users/" + strconv.Itoa(id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -190,7 +190,7 @@ func (to *Session) RegisterNewUser(tenantID uint, roleID uint, email rfc.EmailAd
 		return alerts, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+"/users/register", reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+"/users/register", reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err
