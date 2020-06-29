@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"testing"
 	"time"
-	"testing"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )

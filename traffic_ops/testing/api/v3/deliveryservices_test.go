@@ -276,7 +276,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 // UpdateDeliveryServiceTopologyHeaderRewriteFields ensures that a delivery service can only use firstHeaderRewrite,
 // innerHeaderRewrite, or lastHeadeRewrite if a topology is assigned.
 func UpdateDeliveryServiceTopologyHeaderRewriteFields(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v", err)
 	}

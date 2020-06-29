@@ -146,7 +146,7 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Fatalf("Failed to get Delivery Services: %v", err)
 	}
@@ -161,13 +161,13 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	params := url.Values{}
 	params.Add("dsId", strconv.Itoa(*ds.ID))
-	_, _, err = TOSession.GetServers(&params)
+	_, _, err = TOSession.GetServers(&params, nil)
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
 	params.Del("dsId")
 
-	resp, _, err := TOSession.GetServers(nil)
+	resp, _, err := TOSession.GetServers(nil, nil)
 	if err != nil {
 		t.Fatalf("Failed to get servers: %v", err)
 	}
@@ -179,7 +179,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	s := resp.Response[0]
 
 	params.Add("type", s.Type)
-	if _, _, err := TOSession.GetServers(&params); err != nil {
+	if _, _, err := TOSession.GetServers(&params, nil); err != nil {
 		t.Errorf("Error getting servers by type: %v", err)
 	}
 	params.Del("type")
@@ -188,7 +188,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Error("Found server with no Cache Group ID")
 	} else {
 		params.Add("cachegroup", strconv.Itoa(*s.CachegroupID))
-		if _, _, err := TOSession.GetServers(&params); err != nil {
+		if _, _, err := TOSession.GetServers(&params, nil); err != nil {
 			t.Errorf("Error getting servers by Cache Group ID: %v", err)
 		}
 		params.Del("cachegroup")
@@ -198,7 +198,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Error("Found server with no status")
 	} else {
 		params.Add("status", *s.Status)
-		if _, _, err := TOSession.GetServers(&params); err != nil {
+		if _, _, err := TOSession.GetServers(&params, nil); err != nil {
 			t.Errorf("Error getting servers by status: %v", err)
 		}
 		params.Del("status")
@@ -208,13 +208,13 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Error("Found server with no Profile ID")
 	} else {
 		params.Add("profileId", strconv.Itoa(*s.ProfileID))
-		if _, _, err := TOSession.GetServers(&params); err != nil {
+		if _, _, err := TOSession.GetServers(&params, nil); err != nil {
 			t.Errorf("Error getting servers by Profile ID: %v", err)
 		}
 		params.Del("profileId")
 	}
 
-	cgs, _, err := TOSession.GetCacheGroupsNullable()
+	cgs, _, err := TOSession.GetCacheGroupsNullable(nil)
 	if err != nil {
 		t.Fatalf("Failed to get Cache Groups: %v", err)
 	}
@@ -226,7 +226,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 
 	params.Add("parentCacheGroup", strconv.Itoa(*cgs[0].ID))
-	if _, _, err = TOSession.GetServers(&params); err != nil {
+	if _, _, err = TOSession.GetServers(&params, nil); err != nil {
 		t.Errorf("Error getting servers by parentCacheGroup: %v", err)
 	}
 	params.Del("parentCacheGroup")
