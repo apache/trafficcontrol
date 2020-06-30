@@ -197,24 +197,6 @@ func TestParseCacheControl(t *testing.T) {
 	} else if foo != "" {
 		t.Errorf("Invalid value for 'foo' parsed from '%s'; expected: '', actual: '%s'", ccStr, foo)
 	}
-
-	// testCacheControls := []string{
-	// 	"no-store, no-cache, must-revalidate, post-check=0, pre-check=0",
-	// 	"no-store, no-cache",
-	// 	"no-cache",
-	// 	"",
-	// 	`foo="bar"`,
-	// 	`foo="ba\"r"`,
-	// 	`foo="ba\"r", baz=blee, aaaa="bb\"\"\"", cc="dd", ee="ff\"f", gg=hh", i="", j="k", l="m\\\\o\"`,
-	// 	`foo="ba\"r", baz`,
-	// 	`foo=`,
-	// }
-
-	// for _, ccStr := range testCacheControls {
-	// 	ParseCacheControl(map[string][]string{"Cache-Control": []string{ccStr}})
-	// 	// TODO actually test
-	// 	// fmt.Printf("parsed: %+v\n", cc)
-	// }
 }
 
 func BenchmarkParseCacheControl(b *testing.B) {

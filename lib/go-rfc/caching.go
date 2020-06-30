@@ -152,8 +152,8 @@ func ParseCacheControl(h http.Header) CacheControlMap {
 				return c
 			}
 
-			key := cacheControlStr[:nextSpaceOrEqualPos] // TODO trim
-			if cacheControlStr[nextSpaceOrEqualPos] == ' ' {
+			key := strings.TrimSpace(cacheControlStr[:nextSpaceOrEqualPos]) // TODO trim
+			if cacheControlStr[nextSpaceOrEqualPos] == ',' {
 				cacheControlStr = cacheControlStr[nextSpaceOrEqualPos+1:]
 				c[key] = ""
 				continue
