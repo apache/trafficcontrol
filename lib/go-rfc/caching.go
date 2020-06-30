@@ -148,11 +148,11 @@ func ParseCacheControl(h http.Header) CacheControlMap {
 		for len(cacheControlStr) > 0 {
 			nextSpaceOrEqualPos := strings.IndexAny(cacheControlStr, "=,")
 			if nextSpaceOrEqualPos == -1 {
-				c[cacheControlStr] = ""
+				c[strings.TrimSpace(cacheControlStr)] = ""
 				return c
 			}
 
-			key := strings.TrimSpace(cacheControlStr[:nextSpaceOrEqualPos]) // TODO trim
+			key := strings.TrimSpace(cacheControlStr[:nextSpaceOrEqualPos])
 			if cacheControlStr[nextSpaceOrEqualPos] == ',' {
 				cacheControlStr = cacheControlStr[nextSpaceOrEqualPos+1:]
 				c[key] = ""
