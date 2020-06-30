@@ -39,19 +39,6 @@ func codeUnderstood(code int) bool {
 	return ok
 }
 
-// CanCache returns whether an object can be cached per RFC 7234, based on the request headers, response headers, and response code. If strictRFC is false, this ignores request headers denying cacheability such as `no-cache`, in order to protect origins.
-// TODO add options to ignore/violate request cache-control (to protect origins)
-func CanCache(reqMethod string, reqHeaders http.Header, respCode int, respHeaders http.Header, strictRFC bool) bool {
-	log.Debugf("CanCache start\n")
-	if reqMethod != http.MethodGet {
-		return false // for now, we only support GET as a cacheable method.
-	}
-	reqCacheControl := web.ParseCacheControl(reqHeaders)
-	respCacheControl := web.ParseCacheControl(respHeaders)
-	log.Debugf("CanCache reqCacheControl %+v respCacheControl %+v\n", reqCacheControl, respCacheControl)
-	return canStoreResponse(respCode, respHeaders, reqCacheControl, respCacheControl, strictRFC) && canStoreAuthenticated(reqCacheControl, respCacheControl)
-}
-
 // CanReuseStored checks the constraints in RFC7234§4
 func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheControl web.CacheControl, respCacheControl web.CacheControl, respReqHeaders http.Header, respReqTime time.Time, respRespTime time.Time, strictRFC bool) remapdata.Reuse {
 	// TODO: remove allowed_stale, check in cache manager after revalidate fails? (since RFC7234§4.2.4 prohibits serving stale response unless disconnected).

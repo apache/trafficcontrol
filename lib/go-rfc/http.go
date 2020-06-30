@@ -31,8 +31,11 @@ import (
 // caught at compile-time.
 const (
 	AcceptEncoding     = "Accept-Encoding"     // RFC7231§5.3.4
+	CacheControl       = "Cache-Control"       // RFC7234§5.2
 	ContentDisposition = "Content-Disposition" // RFC6266
 	ContentEncoding    = "Content-Encoding"    // RFC7231§3.1.2.2
+	ContentEncoding    = "Content-Encoding"    // RFC7231§3.1.2.2
+	ContentType        = "Content-Type"        // RFC7231§3.1.1.5
 	ContentType        = "Content-Type"        // RFC7231§3.1.1.5
 	IfModifiedSince    = "If-Modified-Since"   // RFC7232§3.3
 	LastModified       = "Last-Modified"       // RFC7232§2.2
