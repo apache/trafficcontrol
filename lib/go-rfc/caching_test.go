@@ -23,10 +23,6 @@ import "fmt"
 import "net/http"
 import "testing"
 
-func makeHeader(cacheControlVal string) http.Header {
-	return map[string][]string{"Cache-Control": []string{cacheControlVal}}
-}
-
 func ExampleParseCacheControl(t *testing.T) {
 	hdrs := http.Header{}
 
