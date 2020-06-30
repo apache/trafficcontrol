@@ -196,7 +196,7 @@ func TestParseCacheControl(t *testing.T) {
 }
 
 func BenchmarkParseCacheControl(b *testing.B) {
-	var hdrs http.Header
+	hdrs := http.Header{}
 	ccStr := `foo="ba\"r", baz=blee, aaaa="bb\"\"\"", cc="dd", ee="ff\"f", gg=hh", i="", j="k", l="m\\\\o\"`
 	hdrs.Set(CacheControl, ccStr)
 	for i := 0; i < b.N; i++ {
