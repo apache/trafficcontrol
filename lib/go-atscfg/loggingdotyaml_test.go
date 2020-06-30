@@ -70,6 +70,7 @@ func TestMakeLoggingDotYAMLMultiFormat(t *testing.T) {
 		"LogFormat.Format":         "myFormat0",
 		"LogFormat1.Name":          "myFormatName1",
 		"LogFormat1.Format":        "myFormat1",
+		"LogFormat1.Filters":       "myFilter",
 		"LogFormat9.Name":          "myFormatName9",
 		"LogFormat9.Format":        "myFormat9",
 		"LogFormat2.Name":          "myFormatName2",
@@ -89,6 +90,8 @@ func TestMakeLoggingDotYAMLMultiFormat(t *testing.T) {
 		"LogObject9.Format":        "myFormatName9",
 		"LogObject1.Filename":      "myFilename1",
 		"LogObject1.Format":        "myFormatName1",
+		"LogFilter.Name":           "myFilterName",
+		"LogFilter.Filter":         "myFilter",
 	}
 
 	txt := MakeLoggingDotYAML(profileName, paramData, toolName, toURL)
