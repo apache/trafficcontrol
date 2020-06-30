@@ -19,7 +19,7 @@ name: Weasel License checks
 
 on:
   - push
-  - create
+  - created
   - pull_request:
     - opened
     - reopened
