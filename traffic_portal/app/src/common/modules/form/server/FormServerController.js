@@ -19,6 +19,10 @@
 
 var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, typeService, messageModel, propertiesModel) {
 
+    $scope.IPPattern = serverUtils.IPPattern;
+    $scope.IPWithCIDRPattern = serverUtils.IPWithCIDRPattern;
+    $scope.IPv4Pattern = serverUtils.IPv4Pattern;
+
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
             .then(function(result) {
@@ -73,11 +77,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         $state.reload(); // reloads all the resolves for the view
     };
 
-    // supposedly matches IPv4 and IPv6 formats. but actually need one that matches each. todo.
-    $scope.validations = {
-        ipRegex: new RegExp(/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/)
-    };
-
     $scope.server = server;
 
     $scope.falseTrue = [
@@ -94,6 +93,47 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.openCharts = serverUtils.openCharts;
 
     $scope.showChartsButton = propertiesModel.properties.servers.charts.show;
+
+    $scope.addIP = function(interface) {
+        $scope.serverForm.$setDirty();
+        const newIP = {
+            address: "",
+            gateway: null,
+            serviceAddress: false
+        };
+
+        if (!interface.ipAddresses) {
+            interface.ipAddresses = [newIP];
+        } else {
+            interface.ipAddresses.push(newIP);
+        }
+    }
+
+    $scope.deleteIP = function(interface, ip) {
+        $scope.serverForm.$setDirty();
+        interface.ipAddresses.splice(interface.ipAddresses.indexOf(ip), 1);
+    }
+
+    $scope.addInterface = function() {
+        $scope.serverForm.$setDirty();
+        const newInf = {
+            mtu: 1500,
+            maxBandwidth: null,
+            monitor: false,
+            ipAddresses: []
+        };
+
+        if (!$scope.server.interfaces) {
+           $scope.server.interfaces = [newInf];
+        } else {
+           $scope.server.interfaces.push(newInf);
+        }
+    }
+
+    $scope.deleteInterface = function(interface) {
+        $scope.serverForm.$setDirty();
+        $scope.server.interfaces.splice($scope.server.interfaces.indexOf(interface, 1));
+    }
 
     $scope.onCDNChange = function() {
         $scope.server.profileId = null; // the cdn of the server changed, so we need to blank out the selected server profile (if any)

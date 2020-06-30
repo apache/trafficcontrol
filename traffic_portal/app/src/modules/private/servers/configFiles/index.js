@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.servers.configFiles', [])
 						controller: 'TableServerConfigFilesController',
 						resolve: {
 							server: function($stateParams, serverService) {
-								return serverService.getServer($stateParams.serverId);
+								return serverService.getServers({id: $stateParams.serverId});
 							},
 							serverConfigFiles: function($stateParams, serverService) {
 								return serverService.getServerConfigFiles($stateParams.serverId);

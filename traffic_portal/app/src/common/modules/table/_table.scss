@@ -16,24 +16,30 @@
 */
 
 .x_content {
-    table {
-        width: 100% !important;
-    }
+	table {
+		width: 100% !important;
+	}
 }
 
 .update-column {
-  text-align: center;
-  .fa-flag {
-    font-weight: bold;
-  }
+	text-align: center;
+	.fa-flag {
+		font-weight: bold;
+	}
+}
+
+button.action-link {
+	padding: 5px;
+	color: #337ab7;
+	border: none;
+	background-color: inherit;
 }
 
 .action-link {
-  padding: 5px;
 }
 
 td span {
-  line-height: 19px;
+	line-height: 19px;
 }
 
 .filter-checkbox {
@@ -41,71 +47,71 @@ td span {
 }
 
 .table {
-    margin-bottom: 0px !important;
+	margin-bottom: 0px !important;
 }
 
 .ds-comment-bold {
-    font-weight:bold;
+	font-weight:bold;
 }
 .ds-comment-italic {
-    font-style:italic;
-    font-size:x-small;
+	font-style:italic;
+	font-size:x-small;
 }
 .dsComments-container {
-    border-bottom: 1px solid #111;
-    margin-top: -2px;
+	border-bottom: 1px solid #111;
+	margin-top: -2px;
 }
 .ds-comment-cell {
-    line-height: 1.428571429;
-    vertical-align: top;
-    border-top: 1px solid #ddd;
-    border-left: 1px solid #ddd;
-    border-right: 1px solid #ddd;
-    padding-bottom: 8px;
-    min-height: 52px;
+	line-height: 1.428571429;
+	vertical-align: top;
+	border-top: 1px solid #ddd;
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+	padding-bottom: 8px;
+	min-height: 52px;
 
-    &:hover {
-        background-color: #F1FAF8;
-    }
+	&:hover {
+		background-color: #F1FAF8;
+	}
 
-    .cell-left {
-        padding-top: 8px;
-        margin-left: 8px;
-        width: 80%;
-    }
-    .cell-right {
-        padding-top: 8px;
-        margin-right: 8px;
-    }
+	.cell-left {
+		padding-top: 8px;
+		margin-left: 8px;
+		width: 80%;
+	}
+	.cell-right {
+		padding-top: 8px;
+		margin-right: 8px;
+	}
 }
 .ds-comment-nodata {
-    line-height: 1.428571429;
-    text-align: center;
-    border-left: 1px solid #ddd;
-    border-right: 1px solid #ddd;
-    padding-top: 4px;
-    padding-bottom: 8px;
-    min-height: 30px;
+	line-height: 1.428571429;
+	text-align: center;
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+	padding-top: 4px;
+	padding-bottom: 8px;
+	min-height: 30px;
 
-    &:hover {
-        background-color: #F1FAF8;
-    }
+	&:hover {
+		background-color: #F1FAF8;
+	}
 }
 .column-settings {
-    max-height: 300px;
-    padding: 10px 20px;
-    overflow-y: auto;
+	max-height: 300px;
+	padding: 10px 20px;
+	overflow-y: auto;
 }
 table.dataTable.params tbody td {
-    word-break: break-word;
-    vertical-align: top;
+	word-break: break-word;
+	vertical-align: top;
 }
 th.center, td.center {
-    text-align: center;
+	text-align: center;
 }
 
 .dt-button.btn-link {
-    text-decoration: underline;
+	text-decoration: underline;
 }
 
 /* Table context menus */
