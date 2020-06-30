@@ -42,7 +42,7 @@ const (
 	LastModified              = "Last-Modified"            // RFC7232§2.2
 )
 
-// ValidHTTPCodes provides fast lookup whether a HTTP response code is valid.
+// ValidHTTPCodes provides fast lookup of whether a HTTP response code is valid.
 var ValidHTTPCodes = map[int]struct{}{
 	http.StatusContinue:           {}, // RFC 7231, 6.2.1
 	http.StatusSwitchingProtocols: {}, // RFC 7231, 6.2.2
@@ -111,6 +111,22 @@ var ValidHTTPCodes = map[int]struct{}{
 	http.StatusLoopDetected:                  {}, // RFC 5842, 7.2
 	http.StatusNotExtended:                   {}, // RFC 2774, 7
 	http.StatusNetworkAuthenticationRequired: {}, // RFC 6585, 6
+}
+
+// CacheableResponseCodes provides fast lookup of whether a HTTP response
+// code is cache-able by default.
+var CacheableResponseCodes = map[int]struct{}{
+	http.StatusOK:                   {},
+	http.StatusNonAuthoritativeInfo: {},
+	http.StatusNoContent:            {},
+	http.StatusPartialContent:       {},
+	http.StatusMultipleChoices:      {},
+	http.StatusMovedPermanently:     {},
+	http.StatusNotFound:             {},
+	http.StatusMethodNotAllowed:     {},
+	http.StatusGone:                 {},
+	http.StatusRequestURITooLong:    {},
+	http.StatusNotImplemented:       {},
 }
 
 // AcceptsGzip returns whether r accepts gzip encoding, per RFC7231§5.3.4.

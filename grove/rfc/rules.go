@@ -33,21 +33,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
-// cacheableResponseCodes provides fast lookup whether a HTTP response code is cacheable by default, per RFC7234§3
-var defaultCacheableResponseCodes = map[int]struct{}{
-	200: {},
-	203: {},
-	204: {},
-	206: {},
-	300: {},
-	301: {},
-	404: {},
-	405: {},
-	410: {},
-	414: {},
-	501: {},
-}
-
 // codeUnderstood returns whether the given response code is understood by this cache. Required by RFC7234§3
 func codeUnderstood(code int) bool {
 	_, ok := ValidHTTPCodes[code]
