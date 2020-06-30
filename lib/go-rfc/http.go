@@ -113,22 +113,6 @@ var ValidHTTPCodes = map[int]struct{}{
 	http.StatusNetworkAuthenticationRequired: {}, // RFC 6585, 6
 }
 
-// CacheableResponseCodes provides fast lookup of whether a HTTP response
-// code is cache-able by default.
-var CacheableResponseCodes = map[int]struct{}{
-	http.StatusOK:                   {},
-	http.StatusNonAuthoritativeInfo: {},
-	http.StatusNoContent:            {},
-	http.StatusPartialContent:       {},
-	http.StatusMultipleChoices:      {},
-	http.StatusMovedPermanently:     {},
-	http.StatusNotFound:             {},
-	http.StatusMethodNotAllowed:     {},
-	http.StatusGone:                 {},
-	http.StatusRequestURITooLong:    {},
-	http.StatusNotImplemented:       {},
-}
-
 // AcceptsGzip returns whether r accepts gzip encoding, per RFC7231§5.3.4.
 func AcceptsGzip(r *http.Request) bool {
 	encodingHeaders := r.Header[AcceptEncoding] // headers are case-insensitive, but Go promises to Canonical-Case requests
