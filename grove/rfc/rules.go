@@ -83,25 +83,6 @@ func CanReuse(reqHeader http.Header, reqCacheControl web.CacheControl, cacheObj 
 	return canReuse == remapdata.ReuseCan || (canReuse == remapdata.ReuseMustRevalidate && revalidateCanReuse)
 }
 
-// canStoreAuthenticated checks the constraints in RFC7234§3.2
-// TODO: ensure RFC7234§3.2 requirements that max-age=0, must-revlaidate, s-maxage=0 are revalidated
-func canStoreAuthenticated(reqCacheControl, respCacheControl web.CacheControl) bool {
-	if _, ok := reqCacheControl["authorization"]; !ok {
-		return true
-	}
-	if _, ok := respCacheControl["must-revalidate"]; ok {
-		return true
-	}
-	if _, ok := respCacheControl["public"]; ok {
-		return true
-	}
-	if _, ok := respCacheControl["s-maxage"]; ok {
-		return true
-	}
-	log.Debugf("CanStoreAuthenticated false: has authorization, and no must-revalidate/public/s-maxage\n")
-	return false
-}
-
 // Fresh checks the constraints in RFC7234§4 via RFC7234§4.2
 func fresh(
 	respHeaders http.Header,
