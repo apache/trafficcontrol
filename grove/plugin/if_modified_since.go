@@ -17,7 +17,7 @@ package plugin
 import (
 	"net/http"
 
-	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 func init() {
@@ -28,7 +28,7 @@ func ifModifiedSince(icfg interface{}, d BeforeRespondData) {
 	if d.CacheObj == nil {
 		return // if we don't have a cacheobj from the origin, there's no object to have been modified.
 	}
-	modifiedSince, ok := web.GetHTTPDate(d.Req.Header, "If-Modified-Since")
+	modifiedSince, ok := rfc.GetHTTPDate(d.Req.Header, "If-Modified-Since")
 	if !ok {
 		return
 	}

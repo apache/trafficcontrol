@@ -22,12 +22,11 @@ package federations
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/grove/web"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
@@ -233,7 +232,7 @@ func tryIfModifiedSinceQuery(header http.Header, tx *sql.Tx, param string, imsQu
 	if len(imsDateHeader) == 0 {
 		return runSecond, max
 	}
-	if imsDate, ok = web.ParseHTTPDate(imsDateHeader[0]); !ok {
+	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
 		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
 		return runSecond, max
 	}

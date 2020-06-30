@@ -23,22 +23,21 @@ package federation_resolvers
 
 import (
 	"database/sql"
-	"github.com/apache/trafficcontrol/grove/web"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
-	"github.com/jmoiron/sqlx"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+
+	"github.com/jmoiron/sqlx"
 )
-import "encoding/json"
-import "fmt"
-import "net/http"
-
-import "github.com/apache/trafficcontrol/lib/go-rfc"
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/lib/go-util"
-
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 const insertFederationResolverQuery = `
 INSERT INTO federation_resolver (ip_address, type)
@@ -206,7 +205,7 @@ func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, orde
 	if len(imsDateHeader) == 0 {
 		return runSecond, max
 	}
-	if imsDate, ok = web.ParseHTTPDate(imsDateHeader[0]); !ok {
+	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
 		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
 		return runSecond, max
 	}

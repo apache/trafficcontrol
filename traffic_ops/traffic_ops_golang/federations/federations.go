@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/grove/web"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -238,7 +237,7 @@ func tryIfModifiedSinceQueryFederations(header http.Header, tx *sql.Tx, fedID in
 	if len(imsDateHeader) == 0 {
 		return runSecond, max
 	}
-	if imsDate, ok = web.ParseHTTPDate(imsDateHeader[0]); !ok {
+	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
 		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
 		return runSecond, max
 	}

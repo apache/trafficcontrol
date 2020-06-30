@@ -2,7 +2,6 @@ package ims
 
 import (
 	"database/sql"
-	"github.com/apache/trafficcontrol/grove/web"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -53,7 +52,7 @@ func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]
 	if ims == nil || len(ims) == 0 {
 		return runSecond, maxTime
 	}
-	if imsDate, ok = web.ParseHTTPDate(ims[0]); !ok {
+	if imsDate, ok = rfc.ParseHTTPDate(ims[0]); !ok {
 		return runSecond, maxTime
 	} else {
 		rows, err := tx.NamedQuery(query, queryValues)
