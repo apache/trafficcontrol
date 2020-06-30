@@ -41,7 +41,8 @@ var CacheableResponseCodes = map[int]struct{}{
 // CacheableRequestMethods is the list of all request methods which elicit
 // cache-able responses.
 var CacheableRequestMethods = map[string]struct{}{
-	http.MethodGet: {},
+	http.MethodGet:  {},
+	http.MethodHead: {},
 }
 
 // CacheControlMap is the parameters found in an HTTP Cache-Control header,
@@ -196,19 +197,89 @@ func ParseCacheControl(h http.Header) CacheControlMap {
 	return c
 }
 
+// Checks if the cache control allows responses to be cached.
+func cacheControlAllows(respCode int, respHeaders http.Header, respCacheControl CacheControlMap) bool {
+	if _, ok := respHeaders["Expires"]; ok {
+		return true
+	}
+	if _, ok := respCacheControl["max-age"]; ok {
+		return true
+	}
+	if _, ok := respCacheControl["s-maxage"]; ok {
+		return true
+	}
+	// This used to be a stub function that just returns false, the original rationale for
+	// why it was always false is shown here in the comment from that original function:
+	// This MUST return false unless a specific Cache Control cache-extension token exists for an extension which allows. Which is to say, returning true here without a cache-extension token is in strict violation of RFC7234.
+	// In practice, all returning true does is override whether a response code is default-cacheable. If we wanted to do that, it would be better to make codeDefaultCacheable take a strictRFC parameter.
+	// if extensionAllows() {
+	// 	return true
+	// }
+	if _, ok := CacheableResponseCodes[respCode]; ok {
+		return true
+	}
+	// log.Debugf("CacheControlAllows false: no expires, no max-age, no s-max-age, no extension allows, code not default cacheable\n")
+	return false
+}
+
+// canStoreResponse checks the constraints in RFC7234.
+func canStoreResponse(respCode int, respHeaders http.Header, reqCC, respCC CacheControlMap, strictRFC bool) bool {
+	if _, ok := reqCC["no-store"]; strictRFC && ok {
+		// log.Debugf("CanStoreResponse false: request has no-store\n")
+		return false
+	}
+	if _, ok := respCC["no-store"]; ok {
+		// log.Debugf("CanStoreResponse false: response has no-store\n") // RFC7234§5.2.2.3
+		return false
+	}
+	if _, ok := respCC["no-cache"]; ok {
+		// log.Debugf("CanStoreResponse false: response has no-cache\n") // RFC7234§5.2.2.2
+		return false
+	}
+	if _, ok := respCC["private"]; ok {
+		// log.Debugf("CanStoreResponse false: has private\n")
+		return false
+	}
+	if _, ok := respCC["authorization"]; ok {
+		// log.Debugf("CanStoreResponse false: has authorization\n")
+		return false
+	}
+	return cacheControlAllows(respCode, respHeaders, respCC)
+}
+
+// canStoreAuthenticated checks the constraints in RFC7234§3.2
+// TODO: ensure RFC7234§3.2 requirements that max-age=0, must-revlaidate, s-maxage=0 are revalidated
+func canStoreAuthenticated(reqCacheControl, respCacheControl CacheControlMap) bool {
+	if _, ok := reqCacheControl["authorization"]; !ok {
+		return true
+	}
+	if _, ok := respCacheControl["must-revalidate"]; ok {
+		return true
+	}
+	if _, ok := respCacheControl["public"]; ok {
+		return true
+	}
+	if _, ok := respCacheControl["s-maxage"]; ok {
+		return true
+	}
+	// log.Debugf("CanStoreAuthenticated false: has authorization, and no must-revalidate/public/s-maxage\n")
+	return false
+}
+
 // CanCache returns whether an object can be cached per RFC 7234, based on the
 // request headers, response headers, and response code.
 //
 // If strictRFC is false, this ignores request headers denying cacheability such
 // as `no-cache`, in order to protect origins.
-// TODO add options to ignore/violate request cache-control (to protect origins)
-// func CanCache(reqMethod string, reqHeaders http.Header, respCode int, respHeaders http.Header, strictRFC bool) bool {
-// 	log.Debugf("CanCache start\n")
-// 	if reqMethod != http.MethodGet {
-// 		return false // for now, we only support GET as a cacheable method.
-// 	}
-// 	reqCacheControl := web.ParseCacheControl(reqHeaders)
-// 	respCacheControl := web.ParseCacheControl(respHeaders)
-// 	log.Debugf("CanCache reqCacheControl %+v respCacheControl %+v\n", reqCacheControl, respCacheControl)
-// 	return canStoreResponse(respCode, respHeaders, reqCacheControl, respCacheControl, strictRFC) && canStoreAuthenticated(reqCacheControl, respCacheControl)
-// }
+// TODO add options to ignore/violate request Cache-Control (to protect origins)
+func CanCache(reqMethod string, reqHeaders http.Header, respCode int, respHeaders http.Header, strictRFC bool) bool {
+	// log.Debugf("CanCache start\n")
+	if _, ok := CacheableRequestMethods[reqMethod]; !ok {
+		return false // for now, we only support GET and HEAD as cacheable methods.
+	}
+
+	reqCacheControl := ParseCacheControl(reqHeaders)
+	respCacheControl := ParseCacheControl(respHeaders)
+	// log.Debugf("CanCache reqCacheControl %+v respCacheControl %+v\n", reqCacheControl, respCacheControl)
+	return canStoreResponse(respCode, respHeaders, reqCacheControl, respCacheControl, strictRFC) && canStoreAuthenticated(reqCacheControl, respCacheControl)
+}
