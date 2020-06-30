@@ -242,10 +242,10 @@ under the License.
             </div>
 
             <fieldset>
-                <legend>Interfaces<button class="btn btn-primary right-button btn-xs" type="button" title="add a new interface" ng-click="addInterface()"><i class="fa fa-plus"></i></button></legend>
+                <legend>Interfaces<button name="addInterfaceBtn" class="btn btn-primary right-button btn-xs" type="button" title="add a new interface" ng-click="addInterface()"><i class="fa fa-plus"></i></button></legend>
                 <fieldset ng-repeat="inf in server.interfaces">
                     <legend>
-                        <input type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}" placeholder="interface-name"/>
+                        <input type="text" ng-model="inf.name" required aria-label="Interface name" id="{{inf.name}}-name" name="{{inf.name}}-name" class="interface-name-input" ng-class="{'has-error': hasError(serverForm[inf.name+'-name'])}" placeholder="interface-name"/>
                         <button class="btn btn-danger right-button btn-xs" type="button" title="delete this interface" ng-click="deleteInterface(inf)"><i class="fa fa-minus"></i></button>
                     </legend>
 
@@ -261,18 +261,18 @@ under the License.
                     </div>
 
                     <fieldset>
-                        <legend>IP Addresses<button type="button" title="add new IP Address" class="btn btn-primary right-button btn-xs" ng-click="addIP(inf)"><i class="fa fa-plus"></i></button></legend>
+                        <legend>IP Addresses<button name="addIPBtn" type="button" title="add new IP Address" class="btn btn-primary right-button btn-xs add-ip-btn" ng-click="addIP(inf)"><i class="fa fa-plus"></i></button></legend>
                         <ul>
                             <li ng-repeat="ip in inf.ipAddresses" ng-class="{'bordered-item': !$last}">
                                 <label for="{{inf.name}}-{{ip.address}}" ng-class="{'has-error': hasError(serverForm[inf.name+'-'+ip.address])}">Address</label>
-                                <input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" type="text" ng-model="ip.address" ng-pattern="IPWithCIDRPattern" required placeholder="192.0.2.0/24" />
+                                <input id="{{inf.name}}-{{ip.address}}" name="{{inf.name}}-{{ip.address}}" class="ip-input" type="text" ng-model="ip.address" ng-pattern="IPWithCIDRPattern" required placeholder="192.0.2.0/24" />
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'pattern')">Invalid address</small>
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'required')">Required</small>
                                 <label for="{{inf.name}}-{{ip.address}}-gateway">Gateway</label>
                                 <input type="text" id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" ng-model="ip.gateway" ng-pattern="IPPattern"/>
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address-gateway], 'pattern')">Invalid gateway</small>
                                 <label for="{{inf.name}}-{{ip.address}}-serviceAddress">Is a Service Address</label>
-                                <input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" ng-model="ip.serviceAddress"/>
+                                <input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" class="service-addr-cb" ng-model="ip.serviceAddress"/>
                                 <button type="button" title="delete this IP address" class="btn btn-danger btn-xs" style="justify-self: start;" ng-click="deleteIP(inf, ip)"><i class="fa fa-minus"></i></button>
                             </li>
                         </ul>
