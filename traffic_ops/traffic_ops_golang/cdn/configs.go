@@ -23,6 +23,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"net/http"
+	"time"
 )
 
 // TOCDNConf used as a type alias to define functions on to satisfy shared API REST interfaces.
@@ -43,10 +45,15 @@ id
 FROM cdn`
 }
 
-func (v *TOCDNConf) Read() ([]interface{}, error, error, int) {
-	return api.GenericRead(v)
+func (v *TOCDNConf) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, v, useIMS)
 }
-
+func (v *TOCDNConf) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from federation ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='federation') as res`
+}
 func (v TOCDNConf) GetType() string {
 	return "cdn_configs"
 }

@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -122,6 +123,15 @@ type TOFedDSes struct {
 	tc.FederationDeliveryServiceNullable
 }
 
+func (v *TOFedDSes) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(fds.last_updated) as t FROM federation_deliveryservice fds
+RIGHT JOIN deliveryservice ds ON fds.deliveryservice = ds.id
+JOIN cdn c ON ds.cdn_id = c.id
+JOIN type t ON ds.type = t.id ` + where + orderBy + pagination +
+		` UNION ALL
+select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
+}
 func (v *TOFedDSes) NewReadObj() interface{} { return &tc.FederationDeliveryServiceNullable{} }
 func (v *TOFedDSes) SelectQuery() string     { return selectQuery() }
 func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
@@ -159,7 +169,9 @@ func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	}
 }
 
-func (v *TOFedDSes) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
+func (v *TOFedDSes) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, v, useIMS)
+}
 
 func (v *TOFedDSes) Delete() (error, error, int) {
 	dsIDStr, ok := v.APIInfo().Params["dsID"]

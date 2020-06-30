@@ -16,24 +16,76 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestDivisions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
+		GetTestDivisionsIMS(t)
 		TryToDeleteDivision(t)
+		currentTime := time.Now().Add(-1 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestDivisions(t)
+		GetTestDivisionsIMSAfterChange(t, header)
 		GetTestDivisions(t)
 	})
+}
+
+func GetTestDivisionsIMSAfterChange(t *testing.T, header http.Header) {
+	for _, division := range testData.Divisions {
+		_, reqInf, err := TOSession.GetDivisionByName(division.Name, header)
+		if err != nil {
+			t.Fatalf("could not GET divisions: %v", err)
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, division := range testData.Divisions {
+		_, reqInf, err := TOSession.GetDivisionByName(division.Name, header)
+		if err != nil {
+			t.Fatalf("could not GET divisions: %v", err)
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestDivisionsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	for _, division := range testData.Divisions {
+		_, reqInf, err := TOSession.GetDivisionByName(division.Name, header)
+		if err != nil {
+			t.Fatalf("could not GET divisions: %v", err)
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
 }
 
 func TryToDeleteDivision(t *testing.T) {
 	division := testData.Divisions[0]
 
-	resp, _, err := TOSession.GetDivisionByName(division.Name)
+	resp, _, err := TOSession.GetDivisionByName(division.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
 	}
@@ -71,7 +123,7 @@ func UpdateTestDivisions(t *testing.T) {
 
 	firstDivision := testData.Divisions[0]
 	// Retrieve the Division by division so we can get the id for the Update
-	resp, _, err := TOSession.GetDivisionByName(firstDivision.Name)
+	resp, _, err := TOSession.GetDivisionByName(firstDivision.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
@@ -85,7 +137,7 @@ func UpdateTestDivisions(t *testing.T) {
 	}
 
 	// Retrieve the Division to check division got updated
-	resp, _, err = TOSession.GetDivisionByID(remoteDivision.ID)
+	resp, _, err = TOSession.GetDivisionByID(remoteDivision.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
@@ -105,7 +157,7 @@ func UpdateTestDivisions(t *testing.T) {
 
 func GetTestDivisions(t *testing.T) {
 	for _, division := range testData.Divisions {
-		resp, _, err := TOSession.GetDivisionByName(division.Name)
+		resp, _, err := TOSession.GetDivisionByName(division.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET Division by division: %v - %v", err, resp)
 		}
@@ -116,7 +168,7 @@ func DeleteTestDivisions(t *testing.T) {
 
 	for _, division := range testData.Divisions {
 		// Retrieve the Division by name so we can get the id
-		resp, _, err := TOSession.GetDivisionByName(division.Name)
+		resp, _, err := TOSession.GetDivisionByName(division.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
 		}
@@ -128,7 +180,7 @@ func DeleteTestDivisions(t *testing.T) {
 		}
 
 		// Retrieve the Division to see if it got deleted
-		divisionResp, _, err := TOSession.GetDivisionByName(division.Name)
+		divisionResp, _, err := TOSession.GetDivisionByName(division.Name, nil)
 		if err != nil {
 			t.Errorf("error deleting Division division: %s", err.Error())
 		}

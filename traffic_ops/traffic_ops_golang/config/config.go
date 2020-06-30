@@ -59,6 +59,7 @@ type Config struct {
 	InfluxEnabled    bool
 	InfluxDBConfPath string `json:"influxdb_conf_path"`
 	Version          string
+	UseIMS           bool `json:"use_ims"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -99,7 +100,6 @@ type ConfigTrafficOpsGolang struct {
 	WhitelistedOAuthUrls     []string                   `json:"whitelisted_oauth_urls"`
 	OAuthClientSecret        string                     `json:"oauth_client_secret"`
 	RoutingBlacklist         `json:"routing_blacklist"`
-
 	// CRConfigUseRequestHost is whether to use the client request host header in the CRConfig. If false, uses the tm.url parameter.
 	// This defaults to false. Traffic Ops used to always use the host header, setting this true will resume that legacy behavior.
 	// See https://github.com/apache/trafficcontrol/issues/2224

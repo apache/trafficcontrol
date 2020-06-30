@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormNewServerController = function(server, $scope, $controller, serverService, statusService) {
+var FormNewServerController = function(server, $anchorScroll, $scope, $controller, serverService, statusService, messageModel, locationUtils) {
 
     // extends the FormServerController to inherit common methods
     angular.extend(this, $controller('FormServerController', { server: server, $scope: $scope }));
@@ -40,7 +40,17 @@ var FormNewServerController = function(server, $scope, $controller, serverServic
     };
 
     $scope.save = function(server) {
-        serverService.createServer(server);
+        serverService.createServer(server).
+            then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, true);
+                    locationUtils.navigateToPath('/servers');
+                },
+                function(fault) {
+                    $anchorScroll(); // scrolls window to top for message
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
     };
 
     var init = function () {
@@ -50,5 +60,5 @@ var FormNewServerController = function(server, $scope, $controller, serverServic
 
 };
 
-FormNewServerController.$inject = ['server', '$scope', '$controller', 'serverService', 'statusService'];
+FormNewServerController.$inject = ['server', '$anchorScroll', '$scope', '$controller', 'serverService', 'statusService', 'messageModel', 'locationUtils'];
 module.exports = FormNewServerController;

@@ -16,19 +16,38 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"testing"
+	"time"
 )
 
 func GetTestDomains(t *testing.T) {
-	resp, _, err := TOSession.GetDomains()
+	resp, _, err := TOSession.GetDomains(nil)
 	t.Log("Response: ", resp)
 	if err != nil {
 		t.Errorf("could not GET domains: %v", err)
 	}
 }
 
+func GetTestDomainsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err := TOSession.GetDomains(header)
+	if err != nil {
+		t.Fatalf("could not GET domains: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
+
 func TestDomains(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses}, func() {
 		GetTestDomains(t)
+		GetTestDomainsIMS(t)
 	})
 }

@@ -129,6 +129,8 @@ var TableParentServersController = function(servers, $scope, $state, $uibModal, 
 	};
 
 	$scope.servers = servers;
+	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
+
 
 	$scope.columns = [
 		{ "name": "Cache Group", "visible": true, "searchable": true },

@@ -21,6 +21,8 @@ package region
 
 import (
 	"errors"
+	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -94,10 +96,20 @@ func (region *TORegion) Validate() error {
 	return nil
 }
 
-func (rg *TORegion) Read() ([]interface{}, error, error, int) { return api.GenericRead(rg) }
-func (rg *TORegion) Update() (error, error, int)              { return api.GenericUpdate(rg) }
-func (rg *TORegion) Create() (error, error, int)              { return api.GenericCreate(rg) }
-func (rg *TORegion) Delete() (error, error, int)              { return api.GenericDelete(rg) }
+func (rg *TORegion) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, rg, useIMS)
+}
+func (v *TORegion) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(r.last_updated) as t FROM region r
+JOIN division d ON r.division = d.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='region') as res`
+}
+
+func (rg *TORegion) Update() (error, error, int) { return api.GenericUpdate(rg) }
+func (rg *TORegion) Create() (error, error, int) { return api.GenericCreate(rg) }
+func (rg *TORegion) Delete() (error, error, int) { return api.GenericDelete(rg) }
 
 // OptionsDelete deletes a resource identified either as a route parameter or as a query string parameter.
 func (rg *TORegion) OptionsDelete() (error, error, int) { return api.GenericOptionsDelete(rg) }

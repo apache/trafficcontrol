@@ -22,13 +22,18 @@ package federations
 import (
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
 func GetAll(w http.ResponseWriter, r *http.Request) {
+	var maxTime *time.Time
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -40,23 +45,62 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	err := error(nil)
 	allFederations := []tc.IAllFederation{}
 
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+	code := http.StatusOK
+
 	if cdnParam, ok := inf.Params["cdnName"]; ok {
 		cdnName := tc.CDNName(cdnParam)
-		feds, err = getAllFederationsForCDN(inf.Tx.Tx, cdnName)
+		feds, err, code, maxTime = getAllFederationsForCDN(inf.Tx.Tx, cdnName, useIMS, r.Header)
+		if code == http.StatusNotModified {
+			if maxTime != nil {
+				// RFC1123
+				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+				w.Header().Add(rfc.LastModified, date)
+			}
+			w.WriteHeader(code)
+			api.WriteResp(w, r, tc.AllFederationCDN{})
+			return
+		}
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.GetAll getting all federations: "+err.Error()))
 			return
 		}
 		allFederations = append(allFederations, tc.AllFederationCDN{CDNName: &cdnName})
 	} else {
-		feds, err = getAllFederations(inf.Tx.Tx)
+		feds, err, code, maxTime = getAllFederations(inf.Tx.Tx, useIMS, r.Header)
+		if code == http.StatusNotModified {
+			if maxTime != nil {
+				// RFC1123
+				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+				w.Header().Add(rfc.LastModified, date)
+			}
+			w.WriteHeader(code)
+			api.WriteResp(w, r, tc.AllFederationCDN{})
+			return
+		}
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.GetAll getting all federations by CDN: "+err.Error()))
 			return
 		}
 	}
 
-	fedsResolvers, err := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds))
+	fedsResolvers, err, code, maxTime := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds), useIMS, r.Header)
+	if code == http.StatusNotModified {
+		if maxTime != nil {
+			// RFC1123
+			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			w.Header().Add(rfc.LastModified, date)
+		}
+		w.WriteHeader(code)
+		api.WriteResp(w, r, []tc.IAllFederation{})
+		return
+	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations resolvers: "+err.Error()))
 		return
@@ -66,7 +110,9 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, allFederations)
 }
 
-func getAllFederations(tx *sql.Tx) ([]FedInfo, error) {
+func getAllFederations(tx *sql.Tx, useIMS bool, header http.Header) ([]FedInfo, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
 	qry := `
 SELECT
   fds.federation,
@@ -80,9 +126,28 @@ FROM
 ORDER BY
   ds.xml_id
 `
+	imsQuery := `SELECT max(t) from (
+		SELECT max(fds.last_updated) as t FROM
+  federation_deliveryservice fds
+  JOIN deliveryservice ds ON ds.id = fds.deliveryservice
+  JOIN federation fd ON fd.id = fds.federation
+	UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
+
+	if useIMS {
+		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, "", imsQuery)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []FedInfo{}, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
 	rows, err := tx.Query(qry)
 	if err != nil {
-		return nil, errors.New("all federations querying: " + err.Error())
+		return nil, errors.New("all federations querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -90,14 +155,16 @@ ORDER BY
 	for rows.Next() {
 		f := FedInfo{}
 		if err := rows.Scan(&f.ID, &f.TTL, &f.CName, &f.DS); err != nil {
-			return nil, errors.New("all federations scanning: " + err.Error())
+			return nil, errors.New("all federations scanning: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		feds = append(feds, f)
 	}
-	return feds, nil
+	return feds, nil, http.StatusOK, &maxTime
 }
 
-func getAllFederationsForCDN(tx *sql.Tx, cdn tc.CDNName) ([]FedInfo, error) {
+func getAllFederationsForCDN(tx *sql.Tx, cdn tc.CDNName, useIMS bool, header http.Header) ([]FedInfo, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
 	qry := `
 SELECT
   fds.federation,
@@ -114,9 +181,30 @@ WHERE
 ORDER BY
   ds.xml_id
 `
+
+	imsQuery := `SELECT max(t) from (
+		SELECT max(fds.last_updated) as t from federation_deliveryservice fds
+	JOIN deliveryservice ds ON ds.id = fds.deliveryservice
+	JOIN federation fd ON fd.id = fds.federation
+	JOIN cdn on cdn.id = ds.cdn_id
+	WHERE cdn.name = $1
+	UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
+
+	if useIMS {
+		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, string(cdn), imsQuery)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []FedInfo{}, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
-		return nil, errors.New("all federations for cdn querying: " + err.Error())
+		return nil, errors.New("all federations for cdn querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -124,9 +212,53 @@ ORDER BY
 	for rows.Next() {
 		f := FedInfo{}
 		if err := rows.Scan(&f.ID, &f.TTL, &f.CName, &f.DS); err != nil {
-			return nil, errors.New("all federations for cdn scanning: " + err.Error())
+			return nil, errors.New("all federations for cdn scanning: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		feds = append(feds, f)
 	}
-	return feds, nil
+	return feds, nil, http.StatusOK, &maxTime
+}
+
+func tryIfModifiedSinceQuery(header http.Header, tx *sql.Tx, param string, imsQuery string) (bool, time.Time) {
+	var max time.Time
+	var imsDate time.Time
+	var ok bool
+	imsDateHeader := []string{}
+	runSecond := true
+	dontRunSecond := false
+	if header == nil {
+		return runSecond, max
+	}
+	imsDateHeader = header[rfc.IfModifiedSince]
+	if len(imsDateHeader) == 0 {
+		return runSecond, max
+	}
+	if imsDate, ok = web.ParseHTTPDate(imsDateHeader[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
+		return runSecond, max
+	}
+
+	rows, err := tx.Query(imsQuery, param)
+	if err != nil {
+		log.Warnf("Couldn't get the max last updated time: %v", err)
+		return runSecond, max
+	}
+	if err == sql.ErrNoRows {
+		return dontRunSecond, max
+	}
+	defer rows.Close()
+	// This should only ever contain one row
+	if rows.Next() {
+		v := tc.TimeNoMod{}
+		if err = rows.Scan(&v); err != nil {
+			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
+			return runSecond, max
+		}
+		max = v.Time
+		// The request IMS time is later than the max of (lastUpdated, deleted_time)
+		if imsDate.After(v.Time) {
+			return dontRunSecond, max
+		}
+	}
+	return runSecond, max
 }

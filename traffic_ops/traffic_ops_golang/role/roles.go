@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -42,6 +43,13 @@ type TORole struct {
 	tc.Role
 	LastUpdated    *tc.TimeNoMod   `json:"-"`
 	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
+}
+
+func (v *TORole) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` r ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
 func (v *TORole) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
@@ -158,11 +166,14 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 	return nil, nil, http.StatusOK
 }
 
-func (role *TORole) Read() ([]interface{}, error, error, int) {
+func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	version := role.APIInfo().Version
-	vals, userErr, sysErr, errCode := api.GenericRead(role)
+	vals, userErr, sysErr, errCode, maxTime := api.GenericRead(h, role, useIMS)
+	if errCode == http.StatusNotModified {
+		return []interface{}{}, nil, nil, errCode, maxTime
+	}
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return nil, userErr, sysErr, errCode, maxTime
 	}
 
 	returnable := []interface{}{}
@@ -177,7 +188,7 @@ func (role *TORole) Read() ([]interface{}, error, error, int) {
 			returnable = append(returnable, rl.RoleV11)
 		}
 	}
-	return returnable, nil, nil, http.StatusOK
+	return returnable, nil, nil, http.StatusOK, maxTime
 }
 
 func (role *TORole) Update() (error, error, int) {

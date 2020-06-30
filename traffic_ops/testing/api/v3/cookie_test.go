@@ -43,7 +43,7 @@ func CookiesTest(t *testing.T) {
 		t.Fatal("unable to json marshal login credentials")
 	}
 	path := TestAPIBase + "/user/login"
-	loginResp, _, err := s.RawRequest(http.MethodPost, path, js)
+	loginResp, _, err := s.RawRequest(http.MethodPost, path, js, nil)
 	if err != nil {
 		t.Fatal("unable to request POST /user/login")
 	}
@@ -54,7 +54,7 @@ func CookiesTest(t *testing.T) {
 	}
 	ensureCookie(loginResp, t)
 
-	cdnResp, _, err := s.RawRequest(http.MethodGet, TestAPIBase+"/cdns", nil)
+	cdnResp, _, err := s.RawRequest(http.MethodGet, TestAPIBase+"/cdns", nil, nil)
 	if err != nil {
 		t.Fatal("unable to request GET /cdns")
 	}

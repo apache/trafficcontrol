@@ -20,8 +20,10 @@ package division
  */
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -40,8 +42,15 @@ type TODivision struct {
 
 func (v *TODivision) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODivision) InsertQuery() string           { return insertQuery() }
-func (v *TODivision) NewReadObj() interface{}       { return &tc.Division{} }
-func (v *TODivision) SelectQuery() string           { return selectQuery() }
+func (v *TODivision) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` d ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
+}
+
+func (v *TODivision) NewReadObj() interface{} { return &tc.Division{} }
+func (v *TODivision) SelectQuery() string     { return selectQuery() }
 func (v *TODivision) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
@@ -90,13 +99,13 @@ func (division TODivision) Validate() error {
 }
 
 func (dv *TODivision) Create() (error, error, int) { return api.GenericCreate(dv) }
-func (dv *TODivision) Read() ([]interface{}, error, error, int) {
+func (dv *TODivision) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	params := dv.APIInfo().Params
 	// TODO move to router, and do for all endpoints
 	if strings.HasSuffix(params["name"], ".json") {
 		params["name"] = params["name"][:len(params["name"])-len(".json")]
 	}
-	return api.GenericRead(dv)
+	return api.GenericRead(h, dv, useIMS)
 }
 func (dv *TODivision) Update() (error, error, int) { return api.GenericUpdate(dv) }
 func (dv *TODivision) Delete() (error, error, int) { return api.GenericDelete(dv) }

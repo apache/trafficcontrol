@@ -33,7 +33,7 @@ func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]s
 		Response []tc.DeliveryServiceIDRegex `json:"response"`
 	}{}
 
-	reqInf, err := get(to, fmt.Sprintf(API_DS_REGEXES, dsID)+mapToQueryParameters(params), &response)
+	reqInf, err := get(to, fmt.Sprintf(API_DS_REGEXES, dsID)+mapToQueryParameters(params), &response, nil)
 	if err != nil {
 		return []tc.DeliveryServiceIDRegex{}, reqInf, err
 	}

@@ -40,12 +40,12 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
 	}
 
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
-	clientCGs, _, err := TOSession.GetCacheGroupNullableByName(TestEdgeServerCacheGroupName)
+	clientCGs, _, err := TOSession.GetCacheGroupNullableByName(TestEdgeServerCacheGroupName, nil)
 	if err != nil {
 		t.Fatalf("getting cachegroup: %v", err)
 	}
@@ -107,7 +107,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	params := url.Values{}
 	for _, serverName := range resp.Response.ServerNames {
 		params.Set("hostName", string(serverName))
-		resp, _, err := TOSession.GetServers(&params)
+		resp, _, err := TOSession.GetServers(&params, nil)
 		if err != nil {
 			t.Fatalf("getting server: %v", err)
 		}

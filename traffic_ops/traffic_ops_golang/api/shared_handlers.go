@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -136,6 +137,7 @@ func checkIfOptionsDeleter(obj interface{}, params map[string]string) (bool, err
 //      marshals the structs returned into the proper response json
 func ReadHandler(reader Reader) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		useIMS := false
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -152,11 +154,24 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		cfg, err := GetConfig(r.Context())
+		if err != nil {
+			log.Warnf("Couldnt get the config %v", err)
+		}
+		if cfg != nil {
+			useIMS = cfg.UseIMS
+		}
+		results, userErr, sysErr, errCode, maxTime := obj.Read(r.Header, useIMS)
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
+		if maxTime != nil {
+			// RFC1123
+			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			w.Header().Add(rfc.LastModified, date)
+		}
+		w.WriteHeader(errCode)
 		WriteResp(w, r, results)
 	}
 }
@@ -187,7 +202,7 @@ func DeprecatedReadHandler(reader Reader, alternative *string) http.HandlerFunc 
 		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
 
-		results, userErr, sysErr, errCode := obj.Read()
+		results, userErr, sysErr, errCode, _ := obj.Read(r.Header, false)
 		if userErr != nil || sysErr != nil {
 			userErr = LogErr(r, http.StatusInternalServerError, userErr, sysErr)
 			alerts.AddAlerts(tc.CreateErrorAlerts(userErr))

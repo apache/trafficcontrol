@@ -33,7 +33,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 			);
 	};
 
-	$scope.server = server;
+	$scope.server = server[0];
 
 	// adds some items to the base delivery services context menu
 	$scope.contextMenuItems.splice(2, 0,

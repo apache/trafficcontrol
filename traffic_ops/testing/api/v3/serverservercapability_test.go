@@ -16,8 +16,11 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -25,8 +28,24 @@ import (
 
 func TestServerServerCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
+		GetTestServerServerCapabilitiesIMS(t)
 		GetTestServerServerCapabilities(t)
 	})
+}
+
+func GetTestServerServerCapabilitiesIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err := TOSession.GetServerServerCapabilities(nil, nil, nil, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func CreateTestServerServerCapabilities(t *testing.T) {
@@ -39,7 +58,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 			t.Fatalf("server-server-capability structure had nil server")
 		}
 		params.Set("hostName", *ssc.Server)
-		resp, _, err := TOSession.GetServers(&params)
+		resp, _, err := TOSession.GetServers(&params, nil)
 		if err != nil {
 			t.Fatalf("cannot GET Server by hostname '%s': %v - %v", *ssc.Server, err, resp.Alerts)
 		}
@@ -107,7 +126,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	// Attempt to assign a server capability to a non MID/EDGE server
 	// TODO: DON'T hard-code server hostnames!
 	params.Set("hostName", "riak")
-	resp, _, err := TOSession.GetServers(&params)
+	resp, _, err := TOSession.GetServers(&params, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname 'riak': %v - %v", err, resp.Alerts)
 	}
@@ -128,7 +147,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 
 func GetTestServerServerCapabilities(t *testing.T) {
 	// Get All Server Capabilities
-	sscs, _, err := TOSession.GetServerServerCapabilities(nil, nil, nil)
+	sscs, _, err := TOSession.GetServerServerCapabilities(nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET server capabilities assigned to servers: %v", err)
 	}
@@ -150,20 +169,20 @@ func GetTestServerServerCapabilities(t *testing.T) {
 
 	for _, ssc := range sscs {
 		// Get assigned Server Capabilities by server id
-		sscs, _, err := TOSession.GetServerServerCapabilities(ssc.ServerID, nil, nil)
+		sscs, _, err := TOSession.GetServerServerCapabilities(ssc.ServerID, nil, nil, nil)
 		if err != nil {
 			t.Fatalf("cannot GET server capabilities assigned to servers by server ID %v: %v", *ssc.ServerID, err)
 		}
 		checkResp(t, sscs)
 		// Get assigned Server Capabilities by host name
-		sscs, _, err = TOSession.GetServerServerCapabilities(nil, ssc.Server, nil)
+		sscs, _, err = TOSession.GetServerServerCapabilities(nil, ssc.Server, nil, nil)
 		if err != nil {
 			t.Fatalf("cannot GET server capabilities assigned to servers by server host name %v: %v", *ssc.Server, err)
 		}
 		checkResp(t, sscs)
 
 		// Get assigned Server Capabilities by server capability
-		sscs, _, err = TOSession.GetServerServerCapabilities(nil, nil, ssc.ServerCapability)
+		sscs, _, err = TOSession.GetServerServerCapabilities(nil, nil, ssc.ServerCapability, nil)
 		if err != nil {
 			t.Fatalf("cannot GET server capabilities assigned to servers by server capability %v: %v", *ssc.ServerCapability, err)
 		}
@@ -173,7 +192,7 @@ func GetTestServerServerCapabilities(t *testing.T) {
 
 func DeleteTestServerServerCapabilities(t *testing.T) {
 	// Get Server Capabilities to delete them
-	sscs, _, err := TOSession.GetServerServerCapabilities(nil, nil, nil)
+	sscs, _, err := TOSession.GetServerServerCapabilities(nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET server capabilities assigned to servers: %v", err)
 	}
@@ -186,7 +205,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 	dsServers := []tc.DeliveryServiceServer{}
 	for _, ssc := range sscs {
 
-		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, ssc.ServerCapability)
+		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, ssc.ServerCapability, nil)
 		if err != nil {
 			t.Fatalf("cannot GET delivery service required capabilities: %v", err)
 		}

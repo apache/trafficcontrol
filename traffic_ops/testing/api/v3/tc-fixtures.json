@@ -123,6 +123,21 @@
             "secondaryParentCachegroupName": "secondaryCachegroup",
             "shortName": "cg3",
             "typeName": "EDGE_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "edge-parent1",
+            "shortName": "ep1",
+            "typeName": "EDGE_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "has-edge-parent1",
+            "parentCachegroupName": "edge-parent1",
+            "shortName": "hep1",
+            "typeName": "EDGE_LOC"
         }
     ],
     "cdns": [

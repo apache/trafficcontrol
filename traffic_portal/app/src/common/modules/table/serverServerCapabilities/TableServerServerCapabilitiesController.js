@@ -19,7 +19,7 @@
 
 var TableServerServerCapabilitiesController = function(server, serverCapabilities, $scope, $state, $uibModal, locationUtils, serverUtils, serverService, messageModel) {
 
-	$scope.server = server;
+	$scope.server = server[0];
 
 	$scope.serverCapabilities = serverCapabilities;
 
