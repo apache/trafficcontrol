@@ -15,7 +15,6 @@ package web
 */
 
 import (
-	// "fmt"
 	"net/http"
 	"strings"
 )
