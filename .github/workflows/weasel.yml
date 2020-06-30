@@ -18,12 +18,10 @@
 name: Weasel License checks
 
 on:
-  - push
-  - created
-  - pull_request:
-    - opened
-    - reopened
-    - edited
+  push:
+  create:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
 
 jobs:
   weasel:
