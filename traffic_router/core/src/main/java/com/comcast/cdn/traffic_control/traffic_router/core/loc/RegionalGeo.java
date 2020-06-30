@@ -56,8 +56,6 @@ public final class RegionalGeo {
     public static final String HTTPS_SCHEME = "https://";
     private boolean fallback = false;
     private final Map<String, RegionalGeoDsvc> regionalGeoDsvcs = new HashMap<String, RegionalGeoDsvc>();
-    private List<RegionalGeoCoordinateRange> coordinateRanges = new ArrayList<>();
-
     private static RegionalGeo currentConfig = new RegionalGeo();
 
     private RegionalGeo() {
@@ -253,9 +251,6 @@ public final class RegionalGeo {
                 }
                 // coordinate range
                 final List<RegionalGeoCoordinateRange> coordinateRanges = parseLocationJsonCoordinateRange(locationJson);
-                if (coordinateRanges != null) {
-                    regionalGeo.setCoordinateRanges(coordinateRanges);
-                }
 
                 // white list
                 NetworkNode whiteListRoot = null;
@@ -487,12 +482,5 @@ public final class RegionalGeo {
         return "Denied"; // DENIED
     }
 
-    public List<RegionalGeoCoordinateRange> getCoordinateRanges() {
-        return coordinateRanges;
-    }
-
-    public void setCoordinateRanges(final List<RegionalGeoCoordinateRange> coordinateRanges) {
-        this.coordinateRanges = coordinateRanges;
-    }
 }
 
