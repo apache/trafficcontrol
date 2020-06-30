@@ -27,19 +27,26 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
+// These are the names of HTTP Headers, for convenience and so that typos are
+// caught at compile-time.
+const (
+	AcceptEncoding     = "Accept-Encoding"     // RFC7231§5.3.4
+	ContentDisposition = "Content-Disposition" // RFC6266
+	ContentEncoding    = "Content-Encoding"    // RFC7231§3.1.2.2
+	ContentType        = "Content-Type"        // RFC7231§3.1.1.5
+	IfModifiedSince    = "If-Modified-Since"   // RFC7232§3.3
+	LastModified       = "Last-Modified"       // RFC7232§2.2
+	Vary               = "Vary"                // RFC7231§7.1.4
+)
+
+// These are (some) valid values for content encoding and MIME types, for
+// convenience and so that typos are caught at compile-time.
 const (
 	ApplicationJSON           = "application/json"         // RFC4627§6
-	Gzip                      = "gzip"                     // RFC7230§4.2.3
-	ContentType               = "Content-Type"             // RFC7231§3.1.1.5
-	ContentEncoding           = "Content-Encoding"         // RFC7231§3.1.2.2
-	ContentTypeTextPlain      = "text/plain"               // RFC2046§4.1
-	ContentTypeMultiPartMixed = "multipart/mixed"          // RFC1341§7.2
-	AcceptEncoding            = "Accept-Encoding"          // RFC7231§5.3.4
-	ContentDisposition        = "Content-Disposition"      // RFC6266
 	ApplicationOctetStream    = "application/octet-stream" // RFC2046§4.5.2
-	Vary                      = "Vary"                     // RFC7231§7.1.4
-	IfModifiedSince           = "If-Modified-Since"        // RFC7232§3.3
-	LastModified              = "Last-Modified"            // RFC7232§2.2
+	ContentTypeMultiPartMixed = "multipart/mixed"          // RFC1341§7.2
+	ContentTypeTextPlain      = "text/plain"               // RFC2046§4.1
+	Gzip                      = "gzip"                     // RFC7230§4.2.3
 )
 
 // ValidHTTPCodes provides fast lookup of whether a HTTP response code is valid.
