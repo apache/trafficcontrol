@@ -43,6 +43,7 @@ to_admin_user:
 to_admin_user_password:
 
 # --- cdn.conf
+to_use_ims: true
 to_heartbeat_timeout: 20
 to_hypnotoad_number_of_workers: 12
 to_cors_access_control_allow_origin: "http://localhost:8080"
