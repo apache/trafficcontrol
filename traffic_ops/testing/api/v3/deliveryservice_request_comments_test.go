@@ -27,7 +27,7 @@ import (
 func TestDeliveryServiceRequestComments(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests, DeliveryServiceRequestComments}, func() {
 		GetTestDeliveryServiceRequestCommentsIMS(t)
-		currentTime := time.Now().Add(-1 * time.Second)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)

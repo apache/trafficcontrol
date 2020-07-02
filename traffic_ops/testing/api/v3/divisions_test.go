@@ -29,7 +29,7 @@ func TestDivisions(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
 		GetTestDivisionsIMS(t)
 		TryToDeleteDivision(t)
-		currentTime := time.Now().Add(-1 * time.Second)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)

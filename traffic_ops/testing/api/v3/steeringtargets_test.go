@@ -32,7 +32,7 @@ func TestSteeringTargets(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, Users, SteeringTargets}, func() {
 		GetTestSteeringTargetsIMS(t)
 		GetTestSteeringTargets(t)
-		currentTime := time.Now().Add(-1 * time.Second)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)
@@ -58,7 +58,7 @@ func GetTestSteeringTargetsIMSAfterChange(t *testing.T, header http.Header) {
 	if reqInf.StatusCode != http.StatusOK {
 		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
-	currentTime := time.Now()
+	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
