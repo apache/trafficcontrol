@@ -37,7 +37,7 @@ func TestCacheGroups(t *testing.T) {
 		GetTestCacheGroupsByShortName(t)
 		GetTestCacheGroupsByTopology(t)
 		CheckCacheGroupsAuthentication(t)
-		currentTime := time.Now().Add(-1 * time.Second)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)
@@ -55,7 +55,7 @@ func GetTestCacheGroupsAfterChangeIMS(t *testing.T, header http.Header) {
 	if reqInf.StatusCode != http.StatusOK {
 		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
-	currentTime := time.Now()
+	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
