@@ -496,14 +496,13 @@ under the License.
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.edgeHeaderRewrite), 'has-feedback': hasError(cacheConfig.edgeHeaderRewrite)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="edgeHeaderRewrite">Edge Header Rewrite Rules<div class="helptooltip">
                             <div class="helptext">
-                                Headers can be added or altered at each layer of the CDN. You must tell us four things: the action, the header name, the header value, and the direction to apply. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. The direction will determine whether we add it before we respond to a request or before we make a request further up the chain in the server hierarchy. Examples include:
+                                For non topology-based delivery services, headers can be added or altered at the edge layer of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. Edge header rewrite values will be added before we respond to a request from a client. Examples include:
                                 <br>
                                 <br>
                                 <ul>
                                     <li>Action: Set</li>
                                     <li>Header Name: X-CDN</li>
                                     <li>Header Value: Foo</li>
-                                    <li>Direction: Edge Response to Client</li>
                                 </ul>
                                 <br>
                                 <br>See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
@@ -511,7 +510,8 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" rows="3"></textarea>
+                            <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.edgeHeaderRewrite, 'maxlength')">Only applicable with non topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.edgeHeaderRewrite != dsCurrent.edgeHeaderRewrite">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.edgeHeaderRewrite}}</pre>
@@ -521,12 +521,11 @@ under the License.
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.midHeaderRewrite), 'has-feedback': hasError(cacheConfig.midHeaderRewrite)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="midHeaderRewrite">Mid Header Rewrite Rules<div class="helptooltip">
                             <div class="helptext">
-                                Headers can be added or altered at each layer of the CDN. You must tell us four things: the action, the header name, the header value, and the direction to apply. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. The direction will determine whether we add it before we respond to a request or before we make a request further up the chain in the server hierarchy. Examples include:
+                                For non topology-based delivery services, headers can be added or altered at the mid layer of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. Mid header rewrite values will be added before we make a request further up the chain in the server hierarchy (ie. to the origin). Examples include:
                                 <ul>
                                     <li>Action: Set</li>
                                     <li>Header Name: Host</li>
                                     <li>Header Value: code_abc123</li>
-                                    <li>Direction: Mid Request to Origin</li>
                                 </ul>
                                 <br>
                                 <br>
@@ -535,10 +534,83 @@ under the License.
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="midHeaderRewrite" name="midHeaderRewrite" class="form-control" ng-model="deliveryService.midHeaderRewrite" rows="3"></textarea>
+                            <textarea id="midHeaderRewrite" name="midHeaderRewrite" class="form-control" ng-model="deliveryService.midHeaderRewrite" ng-maxlength="(deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.midHeaderRewrite, 'maxlength')">Only applicable with non topology-based delivery services</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.midHeaderRewrite != dsCurrent.midHeaderRewrite">
                                 <h3>Current Value</h3>
                                 <pre>{{::dsCurrent.midHeaderRewrite}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.firstHeaderRewrite), 'has-feedback': hasError(cacheConfig.firstHeaderRewrite)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="firstHeaderRewrite">First Header Rewrite Rules<div class="helptooltip">
+                            <div class="helptext">
+                                For topology-based delivery services, headers can be added or altered at the first layer (aka edge layer) of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. First header rewrite values will be added before we respond to a request from a client. Examples include:
+                                <ul>
+                                    <li>Action: Set</li>
+                                    <li>Header Name: Host</li>
+                                    <li>Header Value: code_abc123</li>
+                                </ul>
+                                <br>
+                                <br>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="firstHeaderRewrite" name="firstHeaderRewrite" class="form-control" ng-model="deliveryService.firstHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.firstHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.firstHeaderRewrite != dsCurrent.firstHeaderRewrite">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.firstHeaderRewrite}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.innerHeaderRewrite), 'has-feedback': hasError(cacheConfig.innerHeaderRewrite)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="innerHeaderRewrite">Inner Header Rewrite Rules<div class="helptooltip">
+                            <div class="helptext">
+                                For topology-based delivery services, headers can be added or altered at the inner layer of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. Inner header rewrite values will be added before we make a request further up the chain in the server hierarchy. Examples include:
+                                <ul>
+                                    <li>Action: Set</li>
+                                    <li>Header Name: Host</li>
+                                    <li>Header Value: code_abc123</li>
+                                </ul>
+                                <br>
+                                <br>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="innerHeaderRewrite" name="innerHeaderRewrite" class="form-control" ng-model="deliveryService.innerHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.innerHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.innerHeaderRewrite != dsCurrent.innerHeaderRewrite">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.innerHeaderRewrite}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.lastHeaderRewrite), 'has-feedback': hasError(cacheConfig.lastHeaderRewrite)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="lastHeaderRewrite">Last Header Rewrite Rules<div class="helptooltip">
+                            <div class="helptext">
+                                For topology-based delivery services, headers can be added or altered at the last layer of the CDN. You must tell us three things: the action, the header name, and the header value. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. Last header rewrite values will be added before we make a request further up the chain in the server hierarchy (ie. to the origin). Examples include:
+                                <ul>
+                                    <li>Action: Set</li>
+                                    <li>Header Name: Host</li>
+                                    <li>Header Value: code_abc123</li>
+                                </ul>
+                                <br>
+                                <br>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="lastHeaderRewrite" name="lastHeaderRewrite" class="form-control" ng-model="deliveryService.lastHeaderRewrite" ng-maxlength="(!deliveryService.topology) ? 0 : ''" rows="3"></textarea>
+                            <small class="input-error" ng-show="hasPropertyError(cacheConfig.lastHeaderRewrite, 'maxlength')">Only applicable with topology-based delivery services</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.lastHeaderRewrite != dsCurrent.lastHeaderRewrite">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.lastHeaderRewrite}}</pre>
                             </aside>
                         </div>
                     </div>

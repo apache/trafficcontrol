@@ -59,6 +59,14 @@ public class RequestMatcher implements Comparable<RequestMatcher> {
 		return pattern.matcher(target).matches();
 	}
 
+	public Type getType() {
+		return type;
+	}
+
+	public Pattern getPattern() {
+		return pattern;
+	}
+
 	private String getTarget(final Request request) {
 		if (type == Type.HOST) {
 			return request.getHostname();

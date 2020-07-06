@@ -15,16 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from unittest import TestCase
-from traffic_ops_ort.to_api import API
-from munch import Munch
+source 'https://rubygems.org'
 
-
-class ApiVersionTest(TestCase):
-	def test_api_version_changed(self) -> None:
-		changed = Munch({'configFiles': [Munch({'key': 'value',
-							'apiUri': '/api/3.85/endpoint'})]})
-		expected = Munch({'configFiles': [Munch({'key': 'value',
-							 'apiUri': '/api/%s/endpoint' % API.VERSION})]})
-		API.setConfigFileAPIVersion(None, changed)
-		self.assertEqual(expected, changed)
+ruby ">= 2.0.0"
+gem "compass", ">= 1.0.0"

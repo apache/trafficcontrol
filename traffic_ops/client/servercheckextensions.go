@@ -31,7 +31,7 @@ func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerChec
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_TO_EXTENSION, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_TO_EXTENSION, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -44,7 +44,7 @@ func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerChec
 // DeleteServerCheckExtension deletes a servercheck extension.
 func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, ReqInf, error) {
 	URI := fmt.Sprintf("%s/%d", API_TO_EXTENSION, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -57,7 +57,7 @@ func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, ReqInf, error)
 
 // GetServerCheckExtensions gets all servercheck extensions.
 func (to *Session) GetServerCheckExtensions() (tc.ServerCheckExtensionResponse, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_TO_EXTENSION, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_TO_EXTENSION, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.ServerCheckExtensionResponse{}, reqInf, err

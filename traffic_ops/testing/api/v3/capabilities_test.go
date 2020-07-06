@@ -21,7 +21,10 @@ package v3
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -57,6 +60,7 @@ var staticCapabilities = []tc.Capability{
 
 func TestCapabilities(t *testing.T) {
 	CreateTestCapabilities(t)
+	GetTestCapabilitiesIMS(t)
 	GetTestCapabilities(t)
 }
 
@@ -76,13 +80,34 @@ func CreateTestCapabilities(t *testing.T) {
 	}
 }
 
+func GetTestCapabilitiesIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	testDataLen := len(testData.Capabilities) + len(staticCapabilities)
+	capMap := make(map[string]string, testDataLen)
+
+	for _, c := range testData.Capabilities {
+		capMap[c.Name] = c.Description
+		_, reqInf, err := TOSession.GetCapability(c.Name, header)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
 func GetTestCapabilities(t *testing.T) {
 	testDataLen := len(testData.Capabilities) + len(staticCapabilities)
 	capMap := make(map[string]string, testDataLen)
 
 	for _, c := range testData.Capabilities {
 		capMap[c.Name] = c.Description
-		cap, _, err := TOSession.GetCapability(c.Name)
+		cap, _, err := TOSession.GetCapability(c.Name, nil)
 		if err != nil {
 			t.Errorf("could not get capability '%s': %v", c.Name, err)
 			continue
@@ -101,7 +126,7 @@ func GetTestCapabilities(t *testing.T) {
 		capMap[c.Name] = c.Description
 	}
 
-	caps, _, err := TOSession.GetCapabilities()
+	caps, _, err := TOSession.GetCapabilities(nil)
 	if err != nil {
 		t.Fatalf("could not get all capabilities: %v", err)
 	}

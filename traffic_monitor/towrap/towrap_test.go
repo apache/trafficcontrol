@@ -26,17 +26,17 @@ import (
 )
 
 func TestMonitorConfigValid(t *testing.T) {
-	mc := (*tc.TrafficMonitorConfigMap)(nil)
+	mc := (*tc.LegacyTrafficMonitorConfigMap)(nil)
 	if MonitorConfigValid(mc) == nil {
 		t.Errorf("MonitorCopnfigValid(nil) expected: error, actual: nil")
 	}
-	mc = &tc.TrafficMonitorConfigMap{}
+	mc = &tc.LegacyTrafficMonitorConfigMap{}
 	if MonitorConfigValid(mc) == nil {
 		t.Errorf("MonitorConfigValid({}) expected: error, actual: nil")
 	}
 
-	validMC := &tc.TrafficMonitorConfigMap{
-		TrafficServer:   map[string]tc.TrafficServer{"a": {}},
+	validMC := &tc.LegacyTrafficMonitorConfigMap{
+		TrafficServer:   map[string]tc.LegacyTrafficServer{"a": {}},
 		CacheGroup:      map[string]tc.TMCacheGroup{"a": {}},
 		TrafficMonitor:  map[string]tc.TrafficMonitor{"a": {}},
 		DeliveryService: map[string]tc.TMDeliveryService{"a": {}},

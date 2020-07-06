@@ -101,7 +101,7 @@ func TestGetPhysLocations(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.PhysLocationNullable{},
 	}
-	physLocations, userErr, sysErr, _ := obj.Read()
+	physLocations, userErr, sysErr, _, _ := obj.Read(nil, false)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}

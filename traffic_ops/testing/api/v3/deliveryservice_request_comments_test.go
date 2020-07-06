@@ -16,16 +16,47 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestDeliveryServiceRequestComments(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests, DeliveryServiceRequestComments}, func() {
+		GetTestDeliveryServiceRequestCommentsIMS(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestDeliveryServiceRequestComments(t)
 		GetTestDeliveryServiceRequestComments(t)
+		GetTestDeliveryServiceRequestCommentsIMSAfterChange(t, header)
 	})
+}
+
+func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header http.Header) {
+	_, reqInf, err := TOSession.GetDeliveryServiceRequestComments(header)
+	if err != nil {
+		t.Fatalf("could not GET delivery service request comments: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err = TOSession.GetDeliveryServiceRequestComments(header)
+	if err != nil {
+		t.Fatalf("could not GET delivery service request comments: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func CreateTestDeliveryServiceRequestComments(t *testing.T) {
@@ -33,7 +64,7 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 	// Retrieve a delivery service request by xmlId so we can get the ID needed to create a dsr comment
 	dsr := testData.DeliveryServiceRequests[0].DeliveryService
 
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.XMLID)
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.XMLID, nil)
 	if err != nil {
 		t.Errorf("cannot GET delivery service request by xml id: %v - %v", dsr.XMLID, err)
 	}
@@ -55,7 +86,7 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 
 func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 
-	comments, _, err := TOSession.GetDeliveryServiceRequestComments()
+	comments, _, err := TOSession.GetDeliveryServiceRequestComments(nil)
 
 	firstComment := comments[0]
 	newFirstCommentValue := "new comment value"
@@ -68,7 +99,7 @@ func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 	}
 
 	// Retrieve the delivery service request comment to check that the value got updated
-	resp, _, err := TOSession.GetDeliveryServiceRequestCommentByID(firstComment.ID)
+	resp, _, err := TOSession.GetDeliveryServiceRequestCommentByID(firstComment.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET delivery service request comment by id: '$%d', %v", firstComment.ID, err)
 	}
@@ -79,12 +110,27 @@ func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 
 }
 
+func GetTestDeliveryServiceRequestCommentsIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err := TOSession.GetDeliveryServiceRequestComments(header)
+	if err != nil {
+		t.Fatalf("could not GET delivery service request comments: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
+
 func GetTestDeliveryServiceRequestComments(t *testing.T) {
 
-	comments, _, _ := TOSession.GetDeliveryServiceRequestComments()
+	comments, _, _ := TOSession.GetDeliveryServiceRequestComments(nil)
 
 	for _, comment := range comments {
-		resp, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID)
+		resp, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID, nil)
 		if err != nil {
 			t.Errorf("cannot GET delivery service request comment by id: %v - %v", err, resp)
 		}
@@ -93,7 +139,7 @@ func GetTestDeliveryServiceRequestComments(t *testing.T) {
 
 func DeleteTestDeliveryServiceRequestComments(t *testing.T) {
 
-	comments, _, _ := TOSession.GetDeliveryServiceRequestComments()
+	comments, _, _ := TOSession.GetDeliveryServiceRequestComments(nil)
 
 	for _, comment := range comments {
 		_, _, err := TOSession.DeleteDeliveryServiceRequestCommentByID(comment.ID)
@@ -102,7 +148,7 @@ func DeleteTestDeliveryServiceRequestComments(t *testing.T) {
 		}
 
 		// Retrieve the delivery service request comment to see if it got deleted
-		comments, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID)
+		comments, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID, nil)
 		if err != nil {
 			t.Errorf("error deleting delivery service request comment: %s", err.Error())
 		}

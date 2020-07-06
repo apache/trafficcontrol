@@ -51,7 +51,7 @@ func (f DummyFilterNever) WithinStatHistoryMax(i int) bool {
 }
 
 func TestComputeStatGbps(t *testing.T) {
-	serverInfo := tc.TrafficServer{}
+	serverInfo := tc.LegacyTrafficServer{}
 	serverProfile := tc.TMProfile{}
 	combinedState := tc.IsAvailable{}
 	computedStats := ComputedStats()

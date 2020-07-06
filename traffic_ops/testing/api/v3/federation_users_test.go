@@ -16,14 +16,45 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"testing"
+	"time"
 )
 
 func TestFederationUsers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Topologies, DeliveryServices, CDNFederations, FederationUsers}, func() {
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		CreateTestInvalidFederationUsers(t)
 		GetTestInvalidFederationIDUsers(t)
+		CreateTestValidFederationUsers(t)
+		GetTestValidFederationIDUsersIMSAfterChange(t, header)
 	})
+}
+
+func GetTestValidFederationIDUsersIMSAfterChange(t *testing.T, header http.Header) {
+	_, reqInf, err := TOSession.GetFederationUsers(fedIDs[0], header)
+	if err != nil {
+		t.Fatalf("No error expected, but got: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	_, reqInf, err = TOSession.GetFederationUsers(fedIDs[0], header)
+	if err != nil {
+		t.Fatalf("No error expected, but got: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func CreateTestFederationUsers(t *testing.T) {
@@ -34,7 +65,7 @@ func CreateTestFederationUsers(t *testing.T) {
 	fedID := fedIDs[0]
 
 	// Get Users
-	users, _, err := TOSession.GetUsers()
+	users, _, err := TOSession.GetUsers(nil)
 	if err != nil {
 		t.Fatalf("getting users: " + err.Error())
 	}
@@ -52,7 +83,7 @@ func CreateTestFederationUsers(t *testing.T) {
 		t.Fatalf("assigning users %v to federation %v: %v", []int{*u1}, fedID, err.Error())
 	}
 
-	fedUsers, _, err := TOSession.GetFederationUsers(fedID)
+	fedUsers, _, err := TOSession.GetFederationUsers(fedID, nil)
 	if err != nil {
 		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
 	}
@@ -66,7 +97,7 @@ func CreateTestFederationUsers(t *testing.T) {
 		t.Fatalf("assigning users %v to federation %v: %v", []int{*u2, *u3}, fedID, err.Error())
 	}
 
-	fedUsers, _, err = TOSession.GetFederationUsers(fedID)
+	fedUsers, _, err = TOSession.GetFederationUsers(fedID, nil)
 	if err != nil {
 		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
 	}
@@ -80,7 +111,7 @@ func CreateTestFederationUsers(t *testing.T) {
 		t.Fatalf("assigning users %v to federation %v: %v", []int{*u1}, fedID, err.Error())
 	}
 
-	fedUsers, _, err = TOSession.GetFederationUsers(fedID)
+	fedUsers, _, err = TOSession.GetFederationUsers(fedID, nil)
 	if err != nil {
 		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
 	}
@@ -90,12 +121,34 @@ func CreateTestFederationUsers(t *testing.T) {
 }
 
 func GetTestInvalidFederationIDUsers(t *testing.T) {
-	_, _, err := TOSession.GetFederationUsers(-1)
+	_, _, err := TOSession.GetFederationUsers(-1, nil)
 	if err == nil {
 		t.Fatalf("expected to get an error when requesting federation users for a non-existent federation")
 	}
 }
 
+func CreateTestValidFederationUsers(t *testing.T) {
+	if len(testData.Federations) == 0 {
+		t.Error("no federations test data")
+	}
+
+	fedID := fedIDs[0]
+
+	// Get Users
+	users, _, err := TOSession.GetUsers(nil)
+	if err != nil {
+		t.Fatalf("getting users: " + err.Error())
+	}
+	if len(users) == 0 {
+		t.Fatal("need at least 1 user to test invalid federation user create")
+	}
+
+	// Associate with invalid federdation id
+	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*users[0].ID}, false)
+	if err == nil {
+		t.Error("expected to get error back from associating non existent federation id")
+	}
+}
 func CreateTestInvalidFederationUsers(t *testing.T) {
 	if len(testData.Federations) == 0 {
 		t.Error("no federations test data")
@@ -104,7 +157,7 @@ func CreateTestInvalidFederationUsers(t *testing.T) {
 	fedID := fedIDs[0]
 
 	// Get Users
-	users, _, err := TOSession.GetUsers()
+	users, _, err := TOSession.GetUsers(nil)
 	if err != nil {
 		t.Fatalf("getting users: " + err.Error())
 	}
@@ -132,7 +185,7 @@ func DeleteTestFederationUsers(t *testing.T) {
 
 	fedID := fedIDs[0]
 
-	fedUsers, _, err := TOSession.GetFederationUsers(fedID)
+	fedUsers, _, err := TOSession.GetFederationUsers(fedID, nil)
 	if err != nil {
 		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
 	}
@@ -147,7 +200,7 @@ func DeleteTestFederationUsers(t *testing.T) {
 		}
 	}
 
-	fedUsers, _, err = TOSession.GetFederationUsers(fedID)
+	fedUsers, _, err = TOSession.GetFederationUsers(fedID, nil)
 	if err != nil {
 		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
 	}

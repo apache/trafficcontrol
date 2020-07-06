@@ -83,6 +83,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "pid_file" : "/var/run/traffic_ops.pid",
         "workers" : 12
     },
+    "use_ims": true,
     "traffic_ops_golang" : {
         "insecure": true,
         "port" : "$TO_PORT",

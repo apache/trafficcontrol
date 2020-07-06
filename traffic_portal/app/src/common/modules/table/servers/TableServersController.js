@@ -130,12 +130,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		},
 		{
 			headerName: "IPv6 Address",
-			field: "ipv6Address",
+			field: "ip6Address",
 			hide: false,
 		},
 		{
 			headerName: "IPv6 Gateway",
-			field: "ipv6Gateway",
+			field: "ip6Gateway",
 			hide: true,
 		},
 		{
@@ -258,8 +258,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	/** All of the statuses (populated on init). */
 	let statuses = [];
 
-	/** All of the servers - lastUpdated fields converted to actual Dates. */
-	$scope.servers = servers.map(function(x){x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;});
+	/** All of the servers - lastUpdated fields converted to actual Dates, ip fields populated from interfaces */
+	$scope.servers = servers.map(
+		function(x) {
+			x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
+			Object.assign(x, serverUtils.toLegacyIPInfo(x.interfaces));
+	});
 
 	/** The base URL to use for constructing links to server charts. */
 	$scope.chartsBase = propertiesModel.properties.servers.charts.baseUrl;

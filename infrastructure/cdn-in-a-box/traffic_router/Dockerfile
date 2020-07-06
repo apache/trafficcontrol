@@ -26,19 +26,19 @@ MAINTAINER dev@trafficcontrol.apache.org
 ARG TRAFFIC_ROUTER_RPM=traffic_router/traffic_router.rpm
 ARG TOMCAT_RPM=traffic_router/tomcat.rpm
 
-RUN yum -y install epel-release git rpm-build net-tools iproute nc wget tar unzip \
+RUN yum -y install epel-release && \
+    yum -y install git rpm-build net-tools iproute nc wget tar unzip \
           perl-JSON perl-WWWCurl which make autoconf automake gcc gcc-c++ apr apr-devel \
           openssl openssl-devel bind-utils net-tools perl-JSON-PP gettext \
-          java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel && \
+          java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel tomcat-native && \
     yum -y clean all && \
-    ln -sfv $(find /usr/lib/jvm -type d -name 'java-1.8.0*openjdk*') /opt/java
+    ln -sfv $(realpath /usr/lib/jvm/java-1.8.0) /opt/java
 
 ADD $TRAFFIC_ROUTER_RPM /traffic_router.rpm
 ADD $TOMCAT_RPM /tomcat.rpm
 
-RUN yum -y install /traffic_router.rpm /tomcat.rpm
-
-RUN find /usr/lib* -name libtc\* -exec ln -sfv '{}' /opt/tomcat/lib \;
+RUN yum -y install /traffic_router.rpm /tomcat.rpm && \
+    find /usr/lib* -name libtc\* -exec ln -sfv {} /opt/tomcat/lib \;
 
 ADD enroller/server_template.json \
     traffic_router/run.sh \

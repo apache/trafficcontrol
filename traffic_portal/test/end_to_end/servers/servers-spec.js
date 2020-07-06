@@ -30,8 +30,6 @@ describe('Traffic Portal Servers Test Suite', function() {
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",
-		ipNetmask: "255.255.255.252",
-		ipGateway: "10.42.80.117",
 		interfaceMtu: "9000",
 	};
 
@@ -58,13 +56,12 @@ describe('Traffic Portal Servers Test Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
 		element(by.css("#type [label='EDGE']")).click();
 		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
-		pageData.interfaceName.sendKeys(mockVals.interfaceName);
-		pageData.ipAddress.sendKeys(mockVals.ipAddress);
-		pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
-		pageData.ipGateway.sendKeys(mockVals.ipGateway);
-		pageData.ipIsService.click();
-		pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
 		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
+		pageData.addInterfaceBtn.click();
+		pageData.interfaceName.sendKeys(mockVals.interfaceName);
+		pageData.addIPBtn.click();
+		pageData.ipAddress.sendKeys(mockVals.ipAddress);
+		pageData.ipIsService.click();
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");

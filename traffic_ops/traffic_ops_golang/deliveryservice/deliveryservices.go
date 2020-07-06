@@ -24,9 +24,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -320,7 +322,11 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.TypeID,
 		&ds.XMLID,
 		&ds.EcsEnabled,
-		&ds.RangeSliceBlockSize)
+		&ds.RangeSliceBlockSize,
+		&ds.FirstHeaderRewrite,
+		&ds.InnerHeaderRewrite,
+		&ds.LastHeaderRewrite,
+	)
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -435,24 +441,24 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 	return c, nil
 }
 
-func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
+func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	version := ds.APIInfo().Version
 	if version == nil {
-		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError
+		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError, nil
 	}
 	if version.Major == 1 && version.Minor < 1 {
-		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
 	}
 
 	returnable := []interface{}{}
-	dses, userErr, sysErr, errCode := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
+	dses, userErr, sysErr, errCode, maxTime := readGetDeliveryServices(h, ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User, useIMS)
 
 	if sysErr != nil {
 		sysErr = errors.New("reading dses: " + sysErr.Error())
 		errCode = http.StatusInternalServerError
 	}
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return nil, userErr, sysErr, errCode, nil
 	}
 
 	for _, ds := range dses {
@@ -469,10 +475,10 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 		case version.Minor >= 1:
 			returnable = append(returnable, ds.DeliveryServiceNullableV12)
 		default:
-			return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+			return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
 		}
 	}
-	return returnable, nil, nil, http.StatusOK
+	return returnable, nil, nil, errCode, maxTime
 }
 
 func UpdateV12(w http.ResponseWriter, r *http.Request) {
@@ -700,13 +706,19 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	// query the DB for existing 3.0 fields in order to "upgrade" this 1.5 request into a 3.0 request
 	query := `
 SELECT
-  ds.topology
+  ds.topology,
+  ds.first_header_rewrite,
+  ds.inner_header_rewrite,
+  ds.last_header_rewrite
 FROM
   deliveryservice ds
 WHERE
   ds.id = $1`
 	if err := inf.Tx.Tx.QueryRow(query, *reqDS.ID).Scan(
 		&dsV30.Topology,
+		&dsV30.FirstHeaderRewrite,
+		&dsV30.InnerHeaderRewrite,
+		&dsV30.LastHeaderRewrite,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV30.ID), nil
@@ -823,6 +835,9 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.EcsEnabled,
 		&ds.RangeSliceBlockSize,
 		&ds.Topology,
+		&ds.FirstHeaderRewrite,
+		&ds.InnerHeaderRewrite,
+		&ds.LastHeaderRewrite,
 		&ds.ID)
 
 	if err != nil {
@@ -971,7 +986,9 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
-func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, error, error, int) {
+func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceNullable, error, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
 	}
@@ -996,14 +1013,23 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []tc.DeliveryServiceNullable{}, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, nil, tc.DBError, http.StatusInternalServerError
+		return nil, nil, tc.DBError, http.StatusInternalServerError, &maxTime
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
@@ -1011,24 +1037,35 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 	if accessibleTo, ok := params["accessibleTo"]; ok {
 		if err := api.IsInt(accessibleTo); err != nil {
 			log.Errorln("unknown parameter value: " + err.Error())
-			return nil, errors.New("accessibleTo must be an integer"), nil, http.StatusBadRequest
+			return nil, errors.New("accessibleTo must be an integer"), nil, http.StatusBadRequest, &maxTime
 		}
 		accessibleTo, _ := strconv.Atoi(accessibleTo)
 		accessibleTenants, err := tenant.GetUserTenantIDListTx(tx.Tx, accessibleTo)
 		if err != nil {
 			log.Errorln("unable to get tenants: " + err.Error())
-			return nil, nil, tc.DBError, http.StatusInternalServerError
+			return nil, nil, tc.DBError, http.StatusInternalServerError, &maxTime
 		}
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
 		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
 	}
-
 	query := selectQuery() + where + orderBy + pagination
 
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
-	return GetDeliveryServices(query, queryValues, tx)
+	r, e1, e2, code := GetDeliveryServices(query, queryValues, tx)
+	return r, e1, e2, code, &maxTime
+}
+
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(ds.last_updated) as t from deliveryservice as ds
+	JOIN type ON ds.type = type.id
+	JOIN cdn ON ds.cdn_id = cdn.id
+	LEFT JOIN profile ON ds.profile = profile.id
+	LEFT JOIN tenant ON ds.tenant_id = tenant.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice') as res`
 }
 
 func getOldHostName(id int, tx *sql.Tx) (string, error) {
@@ -1180,6 +1217,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.DSCP,
 			&ds.EcsEnabled,
 			&ds.EdgeHeaderRewrite,
+			&ds.FirstHeaderRewrite,
 			&ds.GeoLimitRedirectURL,
 			&ds.GeoLimit,
 			&ds.GeoLimitCountries,
@@ -1191,7 +1229,9 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.ID,
 			&ds.InfoURL,
 			&ds.InitialDispersion,
+			&ds.InnerHeaderRewrite,
 			&ds.IPV6RoutingEnabled,
+			&ds.LastHeaderRewrite,
 			&ds.LastUpdated,
 			&ds.LogsEnabled,
 			&ds.LongDesc,
@@ -1696,6 +1736,7 @@ ds.dns_bypass_ttl,
 ds.dscp,
 ds.ecs_enabled,
 ds.edge_header_rewrite,
+ds.first_header_rewrite,
 ds.geolimit_redirect_url,
 ds.geo_limit,
 ds.geo_limit_countries,
@@ -1707,7 +1748,9 @@ ds.http_bypass_fqdn,
 ds.id,
 ds.info_url,
 ds.initial_dispersion,
+ds.inner_header_rewrite,
 ds.ipv6_routing_enabled,
+ds.last_header_rewrite,
 ds.last_updated,
 ds.logs_enabled,
 ds.long_desc,
@@ -1815,8 +1858,11 @@ consistent_hash_regex=$51,
 max_origin_connections=$52,
 ecs_enabled=$53,
 range_slice_block_size=$54,
-topology=$55
-WHERE id=$56
+topology=$55,
+first_header_rewrite=$56,
+inner_header_rewrite=$57,
+last_header_rewrite=$58
+WHERE id=$59
 RETURNING last_updated
 `
 }
@@ -1878,9 +1924,12 @@ tr_response_headers,
 type,
 xml_id,
 ecs_enabled,
-range_slice_block_size
+range_slice_block_size,
+first_header_rewrite,
+inner_header_rewrite,
+last_header_rewrite
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58)
 RETURNING id, last_updated
 `
 }

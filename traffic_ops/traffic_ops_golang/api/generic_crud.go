@@ -20,9 +20,15 @@ package api
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	ims "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -43,6 +49,7 @@ type GenericReader interface {
 	ParamColumns() map[string]dbhelpers.WhereColumnInfo
 	NewReadObj() interface{}
 	SelectQuery() string
+	SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string
 }
 
 type GenericUpdater interface {
@@ -118,28 +125,92 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func GenericRead(val GenericReader) ([]interface{}, error, error, int) {
+// TryIfModifiedSinceQuery checks to see the max time that an entity was changed, and then returns a boolean (which tells us whether or not to run the main query for the endpoint)
+// along with the max time
+// If the returned boolean is false, there is no need to run the main query for the GET API endpoint, and we return a 304 status
+func TryIfModifiedSinceQuery(val GenericReader, h http.Header, where string, orderBy string, pagination string, queryValues map[string]interface{}) (bool, time.Time) {
+	var max time.Time
+	var imsDate time.Time
+	var ok bool
+	imsDateHeader := []string{}
+	runSecond := true
+	dontRunSecond := false
+	if h == nil {
+		return runSecond, max
+	}
+	imsDateHeader = h[rfc.IfModifiedSince]
+	if len(imsDateHeader) == 0 {
+		return runSecond, max
+	}
+	if imsDate, ok = web.ParseHTTPDate(imsDateHeader[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
+		return runSecond, max
+	}
+	// ToDo: Remove orderBy, pagination from all the implementations, and eventually remove it from the function definition
+	query := val.SelectMaxLastUpdatedQuery(where, "", "", val.GetType())
+	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		log.Warnf("Couldn't get the max last updated time: %v", err)
+		return runSecond, max
+	}
+	if err == sql.ErrNoRows {
+		return dontRunSecond, max
+	}
+	defer rows.Close()
+	// This should only ever contain one row
+	if rows.Next() {
+		v := &ims.LatestTimestamp{}
+		if err = rows.StructScan(v); err != nil || v == nil {
+			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
+			return runSecond, max
+		}
+		if v.LatestTime != nil {
+			max = v.LatestTime.Time
+			// The request IMS time is later than the max of (lastUpdated, deleted_time)
+			if imsDate.After(v.LatestTime.Time) {
+				return dontRunSecond, max
+			}
+		}
+	}
+	return runSecond, max
+}
+
+func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	vals := []interface{}{}
+	code := http.StatusOK
+	var maxTime time.Time
+	var runSecond bool
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
-
+	if useIMS {
+		runSecond, maxTime = TryIfModifiedSinceQuery(val, h, where, orderBy, pagination, queryValues)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			code = http.StatusNotModified
+			return vals, nil, nil, code, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+	// Case where we need to run the second query
 	query := val.SelectQuery() + where + orderBy + pagination
 	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("querying " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("querying " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError, &maxTime
 	}
 	defer rows.Close()
 
-	vals := []interface{}{}
 	for rows.Next() {
 		v := val.NewReadObj()
 		if err = rows.StructScan(v); err != nil {
-			return nil, nil, errors.New("scanning " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("scanning " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError, &maxTime
 		}
 		vals = append(vals, v)
 	}
-	return vals, nil, nil, http.StatusOK
+	return vals, nil, nil, code, &maxTime
 }
 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.

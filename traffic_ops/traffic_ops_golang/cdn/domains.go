@@ -21,7 +21,10 @@ package cdn
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -31,16 +34,36 @@ import (
 
 const RouterProfilePrefix = "CCR"
 
-func getDomainsList(tx *sqlx.Tx) ([]tc.Domain, error) {
+func selectMaxLastUpdatedQuery() string {
+	return `SELECT max(t) from (
+		SELECT max(profile.last_updated) as t FROM profile
+JOIN cdn ON profile.cdn = cdn.id WHERE profile.name LIKE '` + RouterProfilePrefix + `%'
+UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='profile') as res`
+}
 
+func getDomainsList(useIMS bool, header http.Header, tx *sqlx.Tx) ([]tc.Domain, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
 	domains := []tc.Domain{}
 
 	q := `SELECT p.id, p.name, p.description, domain_name FROM profile AS p
 	JOIN cdn ON p.cdn = cdn.id WHERE p.name LIKE '` + RouterProfilePrefix + `%'`
 
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, header, nil, selectMaxLastUpdatedQuery())
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return domains, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
 	rows, err := tx.Query(q)
 	if err != nil {
-		return nil, fmt.Errorf("querying for profile: %s", err)
+		return nil, fmt.Errorf("querying for profile: %s", err), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -49,16 +72,16 @@ func getDomainsList(tx *sqlx.Tx) ([]tc.Domain, error) {
 		d := tc.Domain{ParameterID: -1}
 		err := rows.Scan(&d.ProfileID, &d.ProfileName, &d.ProfileDescription, &d.DomainName)
 		if err != nil {
-			return nil, fmt.Errorf("getting profile: %s", err)
+			return nil, fmt.Errorf("getting profile: %s", err), http.StatusInternalServerError, nil
 		}
 		domains = append(domains, d)
 	}
 
-	return domains, nil
+	return domains, nil, http.StatusOK, &maxTime
 }
 
 func DomainsHandler(w http.ResponseWriter, r *http.Request) {
-
+	useIMS := false
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -66,11 +89,19 @@ func DomainsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	domains, err := getDomainsList(inf.Tx)
+	cfg, err := api.GetConfig(r.Context())
+	if err != nil {
+		log.Warnf("Couldnt get the config %v", err)
+	}
+	if cfg != nil {
+		useIMS = cfg.UseIMS
+	}
+
+	domains, err, status, _ := getDomainsList(useIMS, r.Header, inf.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, err)
 		return
 	}
-
+	w.WriteHeader(status)
 	api.WriteResp(w, r, domains)
 }

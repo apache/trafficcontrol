@@ -27,7 +27,7 @@ const (
 // GetAbout gets data about the TO instance.
 func (to *Session) GetAbout() (map[string]string, ReqInf, error) {
 	route := API_ABOUT
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

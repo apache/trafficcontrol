@@ -32,16 +32,14 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // CacheStatus contains summary stat data about the given cache.
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
 type CacheStatus struct {
-	Type         *string  `json:"type,omitempty"`
-	Status       *string  `json:"status,omitempty"`
-	StatusPoller *string  `json:"status_poller,omitempty"`
-	LoadAverage  *float64 `json:"load_average,omitempty"`
+	Type        *string  `json:"type,omitempty"`
+	LoadAverage *float64 `json:"load_average,omitempty"`
 	// QueryTimeMilliseconds is the time it took this app to perform a complete query and process the data, end-to-end, for the latest health query.
 	QueryTimeMilliseconds *int64 `json:"query_time_ms,omitempty"`
 	// HealthTimeMilliseconds is the time it took to make the HTTP request and get back the full response, for the latest health query.
@@ -51,13 +49,29 @@ type CacheStatus struct {
 	// StatSpanMilliseconds is the length of time between completing the most recent two stat queries. This can be used as a rough gauge of the end-to-end query processing time.
 	StatSpanMilliseconds *int64 `json:"stat_span_ms,omitempty"`
 	// HealthSpanMilliseconds is the length of time between completing the most recent two health queries. This can be used as a rough gauge of the end-to-end query processing time.
-	HealthSpanMilliseconds *int64   `json:"health_span_ms,omitempty"`
-	BandwidthKbps          *float64 `json:"bandwidth_kbps,omitempty"`
-	BandwidthCapacityKbps  *float64 `json:"bandwidth_capacity_kbps,omitempty"`
-	ConnectionCount        *int64   `json:"connection_count,omitempty"`
-	IPv4Available          *bool    `json:"ipv4_available,omitempty"`
-	IPv6Available          *bool    `json:"ipv6_available,omitempty"`
-	CombinedAvailable      *bool    `json:"combined_available,omitempty"`
+	HealthSpanMilliseconds *int64 `json:"health_span_ms,omitempty"`
+
+	Status                *string  `json:"status,omitempty"`
+	StatusPoller          *string  `json:"status_poller,omitempty"`
+	BandwidthKbps         *float64 `json:"bandwidth_kbps,omitempty"`
+	BandwidthCapacityKbps *float64 `json:"bandwidth_capacity_kbps,omitempty"`
+	ConnectionCount       *int64   `json:"connection_count,omitempty"`
+	IPv4Available         *bool    `json:"ipv4_available,omitempty"`
+	IPv6Available         *bool    `json:"ipv6_available,omitempty"`
+	CombinedAvailable     *bool    `json:"combined_available,omitempty"`
+
+	Interfaces *map[string]CacheInterfaceStatus `json:"interfaces,omitempty"`
+}
+
+type CacheInterfaceStatus struct {
+	Status                *string  `json:"status,omitempty"`
+	StatusPoller          *string  `json:"status_poller,omitempty"`
+	BandwidthKbps         *float64 `json:"bandwidth_kbps,omitempty"`
+	BandwidthCapacityKbps *float64 `json:"bandwidth_capacity_kbps,omitempty"`
+	ConnectionCount       *int64   `json:"connection_count,omitempty"`
+	IPv4Available         *bool    `json:"ipv4_available,omitempty"`
+	IPv6Available         *bool    `json:"ipv6_available,omitempty"`
+	CombinedAvailable     *bool    `json:"combined_available,omitempty"`
 }
 
 func srvAPICacheStates(
@@ -86,7 +100,7 @@ func createCacheStatuses(
 	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
-	servers map[string]tc.TrafficServer,
+	servers map[string]tc.LegacyTrafficServer,
 ) map[tc.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
 	statii := map[tc.CacheName]CacheStatus{}
@@ -95,7 +109,51 @@ func createCacheStatuses(
 
 	for cacheNameStr, serverInfo := range servers {
 		cacheName := tc.CacheName(cacheNameStr)
-		status, statusPoller, ipv4, ipv6, combinedStatus := cacheStatusAndPoller(cacheName, serverInfo, localCacheStatus)
+		interfaceStatus := make(map[string]CacheInterfaceStatus)
+
+		totalKbps := float64(0)
+		totalMaxKbps := float64(0)
+		totalConnections := int64(0)
+		for interfaceName, _ := range localCacheStatus[cacheName] {
+			if interfaceName == tc.CacheInterfacesAggregate {
+				continue
+			}
+			status, statusPoller, ipv4, ipv6, combinedStatus := cacheStatusAndPoller(cacheName, interfaceName, serverInfo, localCacheStatus)
+			var kbps float64
+			if lastStat, ok := lastStats.Caches[cacheName]; !ok {
+				log.Infof("cache not in last kbps cache %s\n", cacheName)
+			} else {
+				kbps = lastStat.Bytes.PerSec / float64(ds.BytesPerKilobit)
+				totalKbps += kbps
+			}
+
+			var maxKbps float64
+			if v, ok := maxKbpses[cacheName]; !ok {
+				log.Infof("cache not in max kbps cache %s\n", cacheName)
+			} else {
+				maxKbps = float64(v)
+				totalMaxKbps += maxKbps
+			}
+
+			var connections int64
+			connectionsVal, ok := conns[cacheName]
+			if !ok {
+				log.Infof("cache not in connections %s\n", cacheName)
+			} else {
+				totalConnections += connectionsVal
+				connections = connectionsVal
+			}
+			interfaceStatus[interfaceName] = CacheInterfaceStatus{
+				Status:                &status,
+				StatusPoller:          &statusPoller,
+				BandwidthKbps:         &kbps,
+				BandwidthCapacityKbps: &maxKbps,
+				ConnectionCount:       &connections,
+				IPv4Available:         &ipv4,
+				IPv6Available:         &ipv6,
+				CombinedAvailable:     &combinedStatus,
+			}
+		}
 
 		cacheTypeStr := ""
 		if cacheType, ok := cacheTypes[cacheName]; !ok {
@@ -138,30 +196,7 @@ func createCacheStatuses(
 			log.Infof("Error getting cache %v health span: %v\n", cacheName, err)
 		}
 
-		var kbps *float64
-		if lastStat, ok := lastStats.Caches[cacheName]; !ok {
-			log.Infof("cache not in last kbps cache %s\n", cacheName)
-		} else {
-			kbpsVal := lastStat.Bytes.PerSec / float64(ds.BytesPerKilobit)
-			kbps = &kbpsVal
-		}
-
-		var maxKbps *float64
-		if v, ok := maxKbpses[cacheName]; !ok {
-			log.Infof("cache not in max kbps cache %s\n", cacheName)
-		} else {
-			fv := float64(v)
-			maxKbps = &fv
-		}
-
-		var connections *int64
-		connectionsVal, ok := conns[cacheName]
-		if !ok {
-			log.Infof("cache not in connections %s\n", cacheName)
-		} else {
-			connections = &connectionsVal
-		}
-
+		status, statusPoller, ipv4, ipv6, combinedStatus := cacheStatusAndPoller(cacheName, tc.CacheInterfacesAggregate, serverInfo, localCacheStatus)
 		statii[cacheName] = CacheStatus{
 			Type:                   &cacheTypeStr,
 			LoadAverage:            &loadAverage,
@@ -170,14 +205,15 @@ func createCacheStatuses(
 			HealthTimeMilliseconds: &healthTime,
 			StatSpanMilliseconds:   &statSpan,
 			HealthSpanMilliseconds: &healthSpan,
-			BandwidthKbps:          kbps,
-			BandwidthCapacityKbps:  maxKbps,
-			ConnectionCount:        connections,
+			BandwidthKbps:          &totalKbps,
+			BandwidthCapacityKbps:  &totalMaxKbps,
+			ConnectionCount:        &totalConnections,
 			Status:                 &status,
 			StatusPoller:           &statusPoller,
 			IPv4Available:          &ipv4,
 			IPv6Available:          &ipv6,
 			CombinedAvailable:      &combinedStatus,
+			Interfaces:             &interfaceStatus,
 		}
 	}
 	return statii
@@ -185,7 +221,7 @@ func createCacheStatuses(
 
 //cacheStatusAndPoller returns the the reason why a cache is unavailable (or that is available), the poller, and 3 booleans in order:
 // IPv4 availability, IPv6 availability and Processed availability which is what the monitor reports based on the PollingProtocol chosen (ipv4only,ipv6only or both)
-func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
+func cacheStatusAndPoller(server tc.CacheName, interfaceName string, serverInfo tc.LegacyTrafficServer, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
 	switch status := tc.CacheStatusFromString(serverInfo.ServerStatus); status {
 	case tc.CacheStatusAdminDown:
 		fallthrough
@@ -195,14 +231,18 @@ func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, loca
 		return status.String(), "", false, false, false
 	}
 
-	statusVal, ok := localCacheStatus[server]
-	if !ok {
+	if _, ok := localCacheStatus[server]; !ok {
 		log.Infof("cache not in statuses %s\n", server)
 		return "ERROR - not in statuses", "", false, false, false
 	}
+	if _, ok := localCacheStatus[server][interfaceName]; !ok {
+		log.Infof("interface %s not in cache %s", interfaceName, server)
+		return "ERROR - not in statuses", "", false, false, false
+	}
 
+	statusVal := localCacheStatus[server][interfaceName]
 	if statusVal.Why != "" {
-		return statusVal.Why, statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
+		return fmt.Sprintf("%s", statusVal.Why), statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
 	}
 	if statusVal.ProcessedAvailable {
 		return fmt.Sprintf("%s - available", statusVal.Status), statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
@@ -212,8 +252,11 @@ func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, loca
 
 func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[tc.CacheName]int64 {
 	conns := map[tc.CacheName]int64{}
-	statResultHistory.Range(func(server tc.CacheName, history threadsafe.ResultStatValHistory) bool {
-		// for server, history := range statResultHistory {
+	statResultHistory.Range(func(server tc.CacheName, interf string, history threadsafe.ResultStatValHistory) bool {
+		// We only want to create connections for each cache
+		if interf != tc.CacheInterfacesAggregate {
+			return true
+		}
 		vals := history.Load("proxy.process.http.current_client_connections")
 		if len(vals) == 0 {
 			return true

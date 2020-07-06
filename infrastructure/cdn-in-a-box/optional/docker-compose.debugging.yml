@@ -66,10 +66,10 @@ services:
   trafficops-go-nondebug:
     image: trafficops-go
     build:
-      context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile-go
+      context: .
+      dockerfile: traffic_ops/Dockerfile-go
       args:
-        TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
+        TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
     command: /usr/bin/true
   # The trafficops-perl-nondebug service exists to ensure that the trafficops-perl
   # base image exists before building trafficmonitor-debug.

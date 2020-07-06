@@ -22,7 +22,5 @@
 
 FROM trafficops-perl
 
-RUN cpanm \
-        Test::More \
-        Devel::Camelcadedb && \
+RUN cpanm -l ./local Carton Devel::Camelcadedb && \
     rm -r /root/.cpanm

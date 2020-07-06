@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,3 +16,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+if __name__ == "__main__":
+	from traffic_ops_ort import config_files, configuration, main_routines, packaging, services, to_api, utils
+	import doctest
+	doctest.testmod(config_files)
+	doctest.testmod(configuration)
+	doctest.testmod(main_routines)
+	doctest.testmod(packaging)
+	doctest.testmod(services)
+	doctest.testmod(to_api)
+	doctest.testmod(utils)

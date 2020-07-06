@@ -15,15 +15,38 @@ package v3
    limitations under the License.
 */
 
-import "testing"
-
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/lib/go-util"
+import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
+	"testing"
+	"time"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
 
 func TestFederationResolvers(t *testing.T) {
 	WithObjs(t, []TCObj{Types, FederationResolvers}, func() {
+		GetTestFederationResolversIMS(t)
 		GetTestFederationResolvers(t)
 	})
+}
+func GetTestFederationResolversIMS(t *testing.T) {
+	var tdlen = len(testData.FederationResolvers)
+	if tdlen < 1 {
+		t.Fatal("no federation resolvers test data")
+	}
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, err := TOSession.GetFederationResolvers(header)
+	if err != nil {
+		t.Fatalf("could not GET Federation resolvers: %v", err)
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestFederationResolvers(t *testing.T) {
@@ -32,7 +55,7 @@ func GetTestFederationResolvers(t *testing.T) {
 		t.Fatal("no federation resolvers test data")
 	}
 
-	frs, _, err := TOSession.GetFederationResolvers()
+	frs, _, err := TOSession.GetFederationResolvers(nil)
 	if err != nil {
 		t.Errorf("Unexpected error getting Federation Resolvers: %v", err)
 	}
@@ -52,7 +75,7 @@ func GetTestFederationResolvers(t *testing.T) {
 
 func getFRByIDTest(testFr tc.FederationResolver) func(*testing.T) {
 	return func(t *testing.T) {
-		fr, _, err := TOSession.GetFederationResolverByID(*testFr.ID)
+		fr, _, err := TOSession.GetFederationResolverByID(*testFr.ID, nil)
 		if err != nil {
 			t.Fatalf("Unexpected error getting Federation Resolver by ID %d: %v", *testFr.ID, err)
 		}
@@ -64,7 +87,7 @@ func getFRByIDTest(testFr tc.FederationResolver) func(*testing.T) {
 
 func getFRByIPTest(testFr tc.FederationResolver) func(*testing.T) {
 	return func(t *testing.T) {
-		fr, _, err := TOSession.GetFederationResolverByIPAddress(*testFr.IPAddress)
+		fr, _, err := TOSession.GetFederationResolverByIPAddress(*testFr.IPAddress, nil)
 		if err != nil {
 			t.Fatalf("Unexpected error getting Federation Resolver by IP %s: %v", *testFr.IPAddress, err)
 		}
@@ -76,7 +99,7 @@ func getFRByIPTest(testFr tc.FederationResolver) func(*testing.T) {
 
 func getFRByTypeTest(testFr tc.FederationResolver) func(*testing.T) {
 	return func(t *testing.T) {
-		frs, _, err := TOSession.GetFederationResolversByType(*testFr.Type)
+		frs, _, err := TOSession.GetFederationResolversByType(*testFr.Type, nil)
 		if err != nil {
 			t.Fatalf("Unexpected error getting Federation Resolvers by Type %s: %v", *testFr.Type, err)
 		}
@@ -127,7 +150,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 			t.Fatal("testData Federation Resolver has nil Type")
 		}
 
-		tid, _, err := TOSession.GetTypeByName(*fr.Type)
+		tid, _, err := TOSession.GetTypeByName(*fr.Type, nil)
 		if err != nil {
 			t.Fatalf("Couldn't get an ID for type %s", *fr.Type)
 		}
@@ -135,7 +158,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 			t.Fatalf("Expected exactly one Type by name %s, got %d", *fr.Type, len(tid))
 		}
 
-		fr.TypeID = util.UintPtr(uint(tid[0].ID))
+		fr.TypeID = util.UIntPtr(uint(tid[0].ID))
 
 		alerts, _, err := TOSession.CreateFederationResolver(fr)
 		if err != nil {
@@ -163,7 +186,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 		}
 	}
 
-	invalidFR.TypeID = util.UintPtr(1)
+	invalidFR.TypeID = util.UIntPtr(1)
 	invalidFR.IPAddress = util.StrPtr("not a valid IP address")
 	alerts, _, err = TOSession.CreateFederationResolver(invalidFR)
 	if err == nil {
@@ -179,7 +202,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 }
 
 func DeleteTestFederationResolvers(t *testing.T) {
-	frs, _, err := TOSession.GetFederationResolvers()
+	frs, _, err := TOSession.GetFederationResolvers(nil)
 	if err != nil {
 		t.Errorf("Unexpected error getting Federation Resolvers: %v", err)
 	}

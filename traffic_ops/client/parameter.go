@@ -38,7 +38,7 @@ func (to *Session) CreateParameter(pl tc.Parameter) (tc.Alerts, ReqInf, error) {
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_PARAMETERS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PARAMETERS, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -57,7 +57,7 @@ func (to *Session) CreateMultipleParameters(pls []tc.Parameter) (tc.Alerts, ReqI
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_PARAMETERS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_PARAMETERS, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -77,7 +77,7 @@ func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqI
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_PARAMETERS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -88,9 +88,15 @@ func (to *Session) UpdateParameterByID(id int, pl tc.Parameter) (tc.Alerts, ReqI
 }
 
 // GetParameters returns a list of Parameters.
-func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_PARAMETERS, nil)
+func (to *Session) GetParameters(header http.Header) ([]tc.Parameter, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PARAMETERS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Parameter{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -102,10 +108,16 @@ func (to *Session) GetParameters() ([]tc.Parameter, ReqInf, error) {
 }
 
 // GetParameterByID GETs a Parameter by the Parameter ID.
-func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
+func (to *Session) GetParameterByID(id int, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_PARAMETERS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Parameter{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -120,10 +132,16 @@ func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
 }
 
 // GetParameterByName GETs a Parameter by the Parameter name.
-func (to *Session) GetParameterByName(name string) ([]tc.Parameter, ReqInf, error) {
+func (to *Session) GetParameterByName(name string, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	URI := API_PARAMETERS + "?name=" + url.QueryEscape(name)
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Parameter{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -138,10 +156,16 @@ func (to *Session) GetParameterByName(name string) ([]tc.Parameter, ReqInf, erro
 }
 
 // GetParameterByConfigFile GETs a Parameter by the Parameter ConfigFile.
-func (to *Session) GetParameterByConfigFile(configFile string) ([]tc.Parameter, ReqInf, error) {
+func (to *Session) GetParameterByConfigFile(configFile string, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	URI := API_PARAMETERS + "?configFile=" + url.QueryEscape(configFile)
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Parameter{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -156,10 +180,16 @@ func (to *Session) GetParameterByConfigFile(configFile string) ([]tc.Parameter, 
 }
 
 // GetParameterByNameAndConfigFile GETs a Parameter by the Parameter Name and ConfigFile.
-func (to *Session) GetParameterByNameAndConfigFile(name string, configFile string) ([]tc.Parameter, ReqInf, error) {
+func (to *Session) GetParameterByNameAndConfigFile(name string, configFile string, header http.Header) ([]tc.Parameter, ReqInf, error) {
 	URI := fmt.Sprintf("%s?name=%s&configFile=%s", API_PARAMETERS, url.QueryEscape(name), url.QueryEscape(configFile))
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.Parameter{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -176,8 +206,11 @@ func (to *Session) GetParameterByNameAndConfigFile(name string, configFile strin
 // GetParameterByNameAndConfigFileAndValue GETs a Parameter by the Parameter Name and ConfigFile and Value.
 // TODO: API should support all 3, but does not support filter by value
 // currently. Until then, loop through hits until you find one with that value.
-func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, value string) ([]tc.Parameter, ReqInf, error) {
-	params, reqInf, err := to.GetParameterByNameAndConfigFile(name, configFile)
+func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, value string, header http.Header) ([]tc.Parameter, ReqInf, error) {
+	params, reqInf, err := to.GetParameterByNameAndConfigFile(name, configFile, header)
+	if reqInf.StatusCode == http.StatusNotModified {
+		return []tc.Parameter{}, reqInf, nil
+	}
 	if err != nil {
 		return params, reqInf, err
 	}
@@ -192,7 +225,7 @@ func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, val
 // DeleteParameterByID DELETEs a Parameter by ID.
 func (to *Session) DeleteParameterByID(id int) (tc.Alerts, ReqInf, error) {
 	URI := fmt.Sprintf("%s/%d", API_PARAMETERS, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

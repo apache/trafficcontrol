@@ -16,8 +16,11 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -31,10 +34,56 @@ const (
 
 func TestRoles(t *testing.T) {
 	WithObjs(t, []TCObj{Roles}, func() {
+		GetTestRolesIMS(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfModifiedSince, time)
 		UpdateTestRoles(t)
 		GetTestRoles(t)
+		GetTestRolesIMSAfterChange(t, header)
 		VerifyGetRolesOrder(t)
 	})
+}
+
+func GetTestRolesIMSAfterChange(t *testing.T, header http.Header) {
+	role := testData.Roles[roleGood]
+	_, reqInf, _, err := TOSession.GetRoleByName(*role.Name, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+	currentTime := time.Now().UTC()
+	currentTime = currentTime.Add(1 * time.Second)
+	timeStr := currentTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, timeStr)
+	_, reqInf, _, err = TOSession.GetRoleByName(*role.Name, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func GetTestRolesIMS(t *testing.T) {
+	var header http.Header
+	header = make(map[string][]string)
+	futureTime := time.Now().AddDate(0,0,1)
+	time := futureTime.Format(time.RFC1123)
+	header.Set(rfc.IfModifiedSince, time)
+	role := testData.Roles[roleGood]
+	_, reqInf, _, err := TOSession.GetRoleByName(*role.Name, header)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err.Error())
+	}
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+
 }
 
 func CreateTestRoles(t *testing.T) {
@@ -58,7 +107,7 @@ func UpdateTestRoles(t *testing.T) {
 	t.Logf("testData.Roles contains: %+v\n", testData.Roles)
 	firstRole := testData.Roles[0]
 	// Retrieve the Role by role so we can get the id for the Update
-	resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name)
+	resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
@@ -75,7 +124,7 @@ func UpdateTestRoles(t *testing.T) {
 	}
 
 	// Retrieve the Role to check role got updated
-	resp, _, status, err = TOSession.GetRoleByID(*remoteRole.ID)
+	resp, _, status, err = TOSession.GetRoleByID(*remoteRole.ID, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
@@ -97,7 +146,7 @@ func UpdateTestRoles(t *testing.T) {
 
 func GetTestRoles(t *testing.T) {
 	role := testData.Roles[roleGood]
-	resp, _, status, err := TOSession.GetRoleByName(*role.Name)
+	resp, _, status, err := TOSession.GetRoleByName(*role.Name, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", err, resp)
@@ -110,13 +159,13 @@ func VerifyGetRolesOrder(t *testing.T) {
 		"orderby":   "name",
 		"sortOrder": "desc",
 	}
-	descResp, _, status, err := TOSession.GetRoleByQueryParams(params)
+	descResp, _, status, err := TOSession.GetRoleByQueryParams(params, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", err, descResp)
 	}
 	params["sortOrder"] = "asc"
-	ascResp, _, status, err := TOSession.GetRoleByQueryParams(params)
+	ascResp, _, status, err := TOSession.GetRoleByQueryParams(params, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", err, ascResp)
@@ -139,7 +188,7 @@ func DeleteTestRoles(t *testing.T) {
 
 	role := testData.Roles[roleGood]
 	// Retrieve the Role by name so we can get the id
-	resp, _, status, err := TOSession.GetRoleByName(*role.Name)
+	resp, _, status, err := TOSession.GetRoleByName(*role.Name, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by name: %v - %v", role.Name, err)
@@ -154,7 +203,7 @@ func DeleteTestRoles(t *testing.T) {
 	}
 
 	// Retrieve the Role to see if it got deleted
-	roleResp, _, status, err := TOSession.GetRoleByName(*role.Name)
+	roleResp, _, status, err := TOSession.GetRoleByName(*role.Name, nil)
 	t.Log("Status Code: ", status)
 
 	if err != nil {

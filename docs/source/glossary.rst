@@ -28,6 +28,7 @@ Glossary
 	astats (stats_over_http)
 		An :abbr:`ATS (Apache Traffic Server)` plugin that allows you to monitor vitals of the :abbr:`ATS (Apache Traffic Server)` server. See :ref:`astats`.
 
+	Cache Server
 	cache server
 	cache servers
 		The main function of a CDN is to proxy requests from clients to :term:`origin servers` and cache the results. To proxy, in the CDN context, is to obtain content using HTTP from an :term:`origin server` on behalf of a client. To cache is to store the results so they can be reused when other clients are requesting the same content. There are three types of proxies in use on the Internet today:
@@ -123,6 +124,7 @@ Glossary
 
 	Edge
 	Edge-tier
+	Edge-Tier
 	Edge-tier cache
 	Edge-tier caches
 	Edge-tier cache server
@@ -136,6 +138,13 @@ Glossary
 		Federations only have meaning to DNS-routed :term:`Delivery Services` - HTTP-routed Delivery services should instead treat the external :abbr:`FQDN (Fully Qualified Domain Name)` as an :term:`Origin` to achieve the same effect.
 
 		.. seealso:: Federations are currently only manageable by directly using the :ref:`to-api`. The endpoints related to federations are :ref:`to-api-federations`, :ref:`to-api-federation_resolvers`, :ref:`to-api-federations-id-deliveryservices`, :ref:`to-api-federations-id-deliveryservices-id`, :ref:`to-api-federations-id-federation_resolvers`, :ref:`to-api-federations-id-users`, and :ref:`to-api-federations-id-users-id`.
+
+	First-tier
+	First-tier cache
+	First-tier caches
+	First-tier cache server
+	First-tier cache servers
+		Closest to the client or end-user. The first tier in a :term:`Topology` is the tier that serves the client, similar to the :term:`Edge-tier`.
 
 	forward proxy
 	forward proxies
@@ -225,11 +234,26 @@ Glossary
  	Health Protocol
  		The protocol to monitor the health of all the caches. See :ref:`health-proto`.
 
+	Inner-tier
+	Inner-tier cache
+	Inner-tier caches
+	Inner-tier cache server
+	Inner-tier cache servers
+		The tier between the First tier and the Last tier. The inner tier in a :term:`Topology` is the tier that forwards requests from other caches to other caches, i.e. caches in this tier do not directly serve the end-user and do not make requests to :term:`Origins`.
+
+	Last-tier
+	Last-tier cache
+	Last-tier caches
+	Last-tier cache server
+	Last-tier cache servers
+		The tier above the First and Inner tiers. The last tier in a :term:`Topology` is the tier that forwards requests from other caches to :term:`Origins`.
+
  	localization
  		Finding location on the network, or on planet earth
 
 	Mid
 	Mid-tier
+	Mid-Tier
 	Mid-tier cache
 	Mid-tier caches
 	Mid-tier cache server

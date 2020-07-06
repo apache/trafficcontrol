@@ -24,10 +24,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/grove/web"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -80,17 +82,44 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	feds, err := getUserFederations(inf.Tx.Tx, inf.User.UserName)
+	code := http.StatusOK
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+	var maxTime *time.Time
+	var err error
+	var feds []FedInfo
+
+	feds, err, code, maxTime = getUserFederations(inf.Tx.Tx, inf.User.UserName, useIMS, r.Header)
+	if code == http.StatusNotModified {
+		w.WriteHeader(code)
+		api.WriteResp(w, r, []tc.IAllFederation{})
+		return
+	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations: "+err.Error()))
 		return
 	}
-	fedsResolvers, err := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds))
+	fedsResolvers, err, code, maxTime := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds), useIMS, r.Header)
+	if code == http.StatusNotModified {
+		w.WriteHeader(code)
+		api.WriteResp(w, r, []tc.IAllFederation{})
+		return
+	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations resolvers: "+err.Error()))
 		return
 	}
 	allFederations := addResolvers([]tc.IAllFederation{}, feds, fedsResolvers)
+	if maxTime != nil {
+		// RFC1123
+		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+		w.Header().Add(rfc.LastModified, date)
+	}
 	api.WriteResp(w, r, allFederations)
 }
 
@@ -140,7 +169,10 @@ type FedResolverInfo struct {
 }
 
 // getFederationResolvers takes a slice of federation IDs, and returns a map[federationID]info.
-func getFederationResolvers(tx *sql.Tx, fedIDs []int) (map[int][]FedResolverInfo, error) {
+func getFederationResolvers(tx *sql.Tx, fedIDs []int, useIMS bool, header http.Header) (map[int][]FedResolverInfo, error, int, *time.Time) {
+	var runSecond bool
+	var maxTime time.Time
+	feds := map[int][]FedResolverInfo{}
 	qry := `
 SELECT
   ffr.federation,
@@ -153,27 +185,92 @@ FROM
 WHERE
   ffr.federation = ANY($1)
 `
+	imsQuery := `SELECT max(t) from (
+		SELECT max(ffr.last_updated) as t FROM
+  federation_federation_resolver ffr
+  JOIN federation_resolver fr ON ffr.federation_resolver = fr.id
+  JOIN type frt on fr.type = frt.id
+WHERE ffr.federation = ANY($1)
+	UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='federation_federation_resolver') as res`
+
+	if useIMS {
+		runSecond, maxTime = tryIfModifiedSinceQueryFederations(header, tx, pq.Array(fedIDs), imsQuery)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return feds, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
 	rows, err := tx.Query(qry, pq.Array(fedIDs))
 	if err != nil {
-		return nil, errors.New("all federations resolvers querying: " + err.Error())
+		return nil, errors.New("all federations resolvers querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
-	feds := map[int][]FedResolverInfo{}
 	for rows.Next() {
 		fedID := 0
 		f := FedResolverInfo{}
 		fType := ""
 		if err := rows.Scan(&fedID, &fType, &f.IP); err != nil {
-			return nil, errors.New("all federations resolvers scanning: " + err.Error())
+			return nil, errors.New("all federations resolvers scanning: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		f.Type = tc.FederationResolverTypeFromString(fType)
 		feds[fedID] = append(feds[fedID], f)
 	}
-	return feds, nil
+	return feds, nil, http.StatusOK, &maxTime
 }
 
-func getUserFederations(tx *sql.Tx, userName string) ([]FedInfo, error) {
+func tryIfModifiedSinceQueryFederations(header http.Header, tx *sql.Tx, fedID interface{}, query string) (bool, time.Time) {
+	var max time.Time
+	var imsDate time.Time
+	var ok bool
+	imsDateHeader := []string{}
+	runSecond := true
+	dontRunSecond := false
+	if header == nil {
+		return runSecond, max
+	}
+	imsDateHeader = header[rfc.IfModifiedSince]
+	if len(imsDateHeader) == 0 {
+		return runSecond, max
+	}
+	if imsDate, ok = web.ParseHTTPDate(imsDateHeader[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
+		return runSecond, max
+	}
+	rows, err := tx.Query(query, fedID)
+	if err != nil {
+		log.Warnf("Couldn't get the max last updated time: %v", err)
+		return runSecond, max
+	}
+	if err == sql.ErrNoRows {
+		return dontRunSecond, max
+	}
+	defer rows.Close()
+	// This should only ever contain one row
+	if rows.Next() {
+		v := tc.TimeNoMod{}
+		if err = rows.Scan(&v); err != nil {
+			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
+			return runSecond, max
+		}
+		max = v.Time
+		// The request IMS time is later than the max of (lastUpdated, deleted_time)
+		if imsDate.After(v.Time) {
+			return dontRunSecond, max
+		}
+	}
+	return runSecond, max
+}
+
+func getUserFederations(tx *sql.Tx, userName string, useIMS bool, header http.Header) ([]FedInfo, error, int, *time.Time) {
+	var runSecond bool
+	var maxTime time.Time
+	feds := []FedInfo{}
 	qry := `
 SELECT
   fds.federation,
@@ -191,21 +288,43 @@ WHERE
 ORDER BY
   ds.xml_id
 `
+	imsQuery := `SELECT max(t) from (
+		SELECT max(fds.last_updated) as t FROM
+  federation_deliveryservice fds
+  JOIN deliveryservice ds ON ds.id = fds.deliveryservice
+  JOIN federation fd ON fd.id = fds.federation
+  JOIN federation_tmuser fu on fu.federation = fd.id
+  JOIN tm_user u on u.id = fu.tm_user
+WHERE
+  u.username = $1
+	UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
+
+	if useIMS {
+		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, userName, imsQuery)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return feds, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
 	rows, err := tx.Query(qry, userName)
 	if err != nil {
-		return nil, errors.New("user federations querying: " + err.Error())
+		return nil, errors.New("user federations querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
-	feds := []FedInfo{}
 	for rows.Next() {
 		f := FedInfo{}
 		if err := rows.Scan(&f.ID, &f.TTL, &f.CName, &f.DS); err != nil {
-			return nil, errors.New("user federations scanning: " + err.Error())
+			return nil, errors.New("user federations scanning: " + err.Error()), http.StatusInternalServerError, nil
 		}
 		feds = append(feds, f)
 	}
-	return feds, nil
+	return feds, nil, http.StatusOK, &maxTime
 }
 
 // AddFederationResorverMappingsForCurrentUser is the handler for a POST request to /federations.
