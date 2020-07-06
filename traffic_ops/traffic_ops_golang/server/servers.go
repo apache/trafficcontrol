@@ -44,6 +44,7 @@ import (
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -1166,6 +1167,9 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
+
+	str := uuid.New().String()
+	server.XMPPID = &str
 
 	serviceInterface, err := validateV3(&server, tx)
 	if err != nil {

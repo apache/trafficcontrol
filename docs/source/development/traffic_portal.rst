@@ -86,6 +86,6 @@ Installing The Traffic Portal Developer Environment
 	#. Valid SSL certificates and keys are needed for Traffic Portal to run. Generate these (e.g. using `this SuperUser answer <https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information#answer-226229>`_) and update ``ssl``.
 	#. Modify ``api.base_url`` to point to your Traffic Ops API endpoint.
 	#. Modify ``files.static`` to be ``./app/dist/public``.
-	#. Modify ``log.stream`` to be ``./server/log/access.log``.
-
+	#. Modify ``log.stream`` to be ``./server/log/access.log``. If you have created a ``traffic_portal/log`` directory with ``access.log`` file, use that location.
+    #. Ensure ca_bundle.crt is present at ``/etc/pki/tls/certs``. If not present, use the cmd: ``sudo touch ca_bundle.crt``
 #. Navigate to http(s)://localhost:[port|sslPort defined in ``traffic_portal/conf/config.js``]
