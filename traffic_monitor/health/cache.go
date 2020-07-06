@@ -160,7 +160,7 @@ func EvalCache(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHis
 	return avail, result.UsingIPv4, eventDescVal, eventMsg
 }
 
-func EvalAggregate(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.TrafficMonitorConfigMap) (bool, bool, string, string) {
+func EvalAggregate(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.LegacyTrafficMonitorConfigMap) (bool, bool, string, string) {
 	serverInfo, ok := mc.TrafficServer[string(result.ID)]
 	if !ok {
 		log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
