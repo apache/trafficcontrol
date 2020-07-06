@@ -46,18 +46,45 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatus, error) {
-	baseSelectStatement :=
-		`WITH parentservers AS (SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending FROM server ps
-         LEFT JOIN status AS pstatus ON pstatus.id = ps.status
-         WHERE pstatus.name != 'OFFLINE' ),
-         use_reval_pending AS (SELECT value::boolean FROM parameter WHERE name = 'use_reval_pending' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY)
-         SELECT s.id, s.host_name, type.name AS type, (s.reval_pending::boolean) as server_reval_pending, use_reval_pending.value, s.upd_pending, status.name AS status, COALESCE(bool_or(ps.upd_pending), FALSE) AS parent_upd_pending, COALESCE(bool_or(ps.reval_pending), FALSE) AS parent_reval_pending FROM use_reval_pending, server s
-         LEFT JOIN status ON s.status = status.id
-         LEFT JOIN cachegroup cg ON s.cachegroup = cg.id
-         LEFT JOIN type ON type.id = s.type
-         LEFT JOIN parentservers ps ON ps.cachegroup = cg.parent_cachegroup_id AND ps.cdn_id = s.cdn_id AND type.name = 'EDGE'` //remove the EDGE reference if other server types should have their parents processed
+	// language=SQL
+	baseSelectStatement := `
+WITH parentservers AS (
+	SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending
+	FROM server ps
+	LEFT JOIN status AS pstatus ON pstatus.id = ps.status
+	WHERE pstatus.name != 'OFFLINE'
+), use_reval_pending AS (
+	SELECT value::BOOLEAN
+	FROM parameter
+	WHERE name = 'use_reval_pending'
+	AND config_file = 'global'
+	UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY
+)
+SELECT
+	s.id,
+	s.host_name,
+	type.name AS type,
+	(s.reval_pending::BOOLEAN) AS server_reval_pending,
+	use_reval_pending.value,
+	s.upd_pending,
+	status.name AS status,
+	COALESCE(BOOL_OR(ps.upd_pending), FALSE) AS parent_upd_pending,
+	COALESCE(BOOL_OR(ps.reval_pending), FALSE) AS parent_reval_pending
+	FROM use_reval_pending,
+		 server s
+LEFT JOIN status ON s.status = status.id
+LEFT JOIN cachegroup cg ON s.cachegroup = cg.id
+LEFT JOIN type ON type.id = s.type
+LEFT JOIN parentservers ps ON ps.cachegroup = cg.parent_cachegroup_id
+	AND ps.cdn_id = s.cdn_id
+	AND type.name = 'EDGE'
+` // remove the EDGE reference if other server types should have their parents processed
 
-	groupBy := ` GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, s.upd_pending, status.name ORDER BY s.id;`
+	// language=SQL
+	groupBy := `
+GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, s.upd_pending, status.name
+ORDER BY s.id
+`
 
 	updateStatuses := []tc.ServerUpdateStatus{}
 	var rows *sql.Rows
