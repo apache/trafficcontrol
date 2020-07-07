@@ -57,7 +57,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 		}
 
 		final WatcherConfig watcherConfig = new WatcherConfig(getWatcherConfigPrefix(), config, trafficOpsUtils);
-		final String resourceUrl = (watcherConfig.getUrl() != null && !watcherConfig.getUrl().isEmpty()) ? watcherConfig.getUrl() : getDataBaseURL();
+		final String resourceUrl = (watcherConfig.getUrl() != null && !watcherConfig.getUrl().isEmpty()) ? watcherConfig.getUrl() : getDefaultDatabaseURL();
 
 		final long pollingInterval = (watcherConfig.getInterval() > 0) ? watcherConfig.getInterval() : getPollingInterval();
 		final int configTimeout = (watcherConfig.getTimeout() > 0) ? watcherConfig.getTimeout() : this.timeout;

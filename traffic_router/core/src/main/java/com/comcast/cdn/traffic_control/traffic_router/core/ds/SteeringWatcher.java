@@ -26,6 +26,7 @@ public class SteeringWatcher extends AbstractResourceWatcher {
 
 	public SteeringWatcher() {
 		setDatabaseUrl(DEFAULT_STEERING_DATA_URL);
+		setDefaultDatabaseUrl(DEFAULT_STEERING_DATA_URL);
 	}
 
 	@Override
