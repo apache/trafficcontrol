@@ -1,19 +1,19 @@
 {
-  "framework": "jasmine",
-  "seleniumAddress": "http://localhost:4444/wd/hub",
   "baseUrl": "https://localhost:4443",
-  "getPageTimeout": 30000,
   "capabilities": {
-    "browserName": "chrome",
-    "acceptInsecureCerts": true
+    "acceptInsecureCerts": true,
+    "browserName": "chrome"
   },
-  "params": {
-    "adminUser": "admin",
-    "adminPassword": "twelve"
-  },
+  "framework": "jasmine",
+  "getPageTimeout": 30000,
   "jasmineNodeOpts": {
     "defaultTimeoutInterval": 600000
   },
+  "params": {
+    "adminPassword": "twelve",
+    "adminUser": "admin"
+  },
+  "seleniumAddress": "http://localhost:4444/wd/hub",
   "suites": {
     "allTests": [
       "login/login-spec.js",
