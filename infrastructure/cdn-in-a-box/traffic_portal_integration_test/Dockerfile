@@ -22,10 +22,13 @@ COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
 
 RUN yum install -y \
         bind-utils \
+        # jq is in EPEL
+        epel-release \
         git \
         google-chrome-stable \
         java-1.8.0-openjdk \
         net-tools && \
+    yum -y install jq && \
     yum -y clean all
 
 FROM os-dependencies AS node-dependencies
@@ -39,25 +42,27 @@ FROM node-dependencies
 
 COPY    traffic_portal/ /lang/traffic_portal/
 WORKDIR /lang/traffic_portal/test/end_to_end
+COPY    infrastructure/cdn-in-a-box/traffic_portal_integration_test/junit-jasmine-onprepare.js .
 
 RUN npm install --save-dev jasmine-reporters@^2.0.0
 
-RUN sed -i "s/baseUrl: 'https:\/\/localhost:4443/baseUrl: 'https:\/\/trafficportal.infra.ciab.test:443/" /lang/traffic_portal/test/end_to_end/conf.js
+# Sets the exports.config.onPrepare handler, which cannot be stored in JSON
+RUN mkdir /portaltestresults && \
+    cat junit-jasmine-onprepare.js >> conf.js && \
+    rm junit-jasmine-onprepare.js
 
-RUN export junit_conf_jasmine="\n\
-	onPrepare: function() {\n\
-		var jasmineReporters = require('jasmine-reporters');\n\
-		jasmine.getEnv().addReporter(\n\
-			new jasmineReporters.JUnitXmlReporter({savePath:'/portaltestresults', filePrefix: 'portaltestresults', consolidateAll:true})\n\
-		);\n\
-	},\n\
-" && perl -p -i -e 'BEGIN{ ($e=$ENV{junit_conf_jasmine}) =~ s/\\n/\n/g } if (/^\s*suites\b/) {print $e}' conf.js
+RUN jq ' \
+        .capabilities.chromeOptions.args = [ \
+            "--disable-extensions", \
+            "--disable-gpu", \
+            "--headless", \
+            "--ignore-certificate-errors", \
+            "--no-sandbox", \
+            "--whitelisted-ips=" \
+        ] ' \
+        conf.json > conf.json.tmp && \
+    mv conf.json.tmp conf.json
 
-RUN export junit_conf_chrome="\
-		chromeOptions: {\n\
-			args: ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors', '--disable-extensions', '--whitelisted-ips=\"\"'] \n\
-		},\n\
-" && perl -p -i -e 'BEGIN{ ($e=$ENV{junit_conf_chrome}) =~ s/\\n/\n/g } if (/\bbrowserName\b/../}/) {print $e; $e=""}' conf.js
 RUN webdriver-manager clean && \
     webdriver-manager update
 
