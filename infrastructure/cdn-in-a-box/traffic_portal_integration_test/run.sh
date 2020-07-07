@@ -65,7 +65,6 @@ jq "$(<<JQ_FILTERS cat
 	.baseUrl = "https://$TP_FQDN" |
 	.params.admin = "$TO_ADMIN_USER" |
 	.params.adminPassword = "$TO_ADMIN_PASSWORD"
-
 JQ_FILTERS
 )" conf.json > conf.json.tmp
 mv conf.json.tmp conf.json
