@@ -19,16 +19,10 @@ FROM centos:7
 
 COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /usr/local/sbin/
 COPY ./traffic_portal/ /lang/traffic_portal/
+# Installs the Google Chrome yum repo
+COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
 
 WORKDIR /lang/traffic_portal/test/end_to_end
-RUN printf "\n\
-[google-chrome] \n\
-name=google-chrome \n\
-baseurl=https://dl.google.com/linux/chrome/rpm/stable/x86_64 \n\
-enabled=1 \n\
-gpgcheck=1 \n\
-gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub \n\
-" > /etc/yum.repos.d/google-chrome.repo
 
 RUN yum update -y
 RUN yum install -y java-1.8.0-openjdk git google-chrome-stable bind-utils net-tools
