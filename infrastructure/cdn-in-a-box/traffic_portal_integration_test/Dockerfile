@@ -58,9 +58,9 @@ RUN export junit_conf_chrome="\
 			args: ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors', '--disable-extensions', '--whitelisted-ips=\"\"'] \n\
 		},\n\
 " && perl -p -i -e 'BEGIN{ ($e=$ENV{junit_conf_chrome}) =~ s/\\n/\n/g } if (/\bbrowserName\b/../}/) {print $e; $e=""}' conf.js
+RUN webdriver-manager clean && \
+    webdriver-manager update
 
-RUN webdriver-manager clean
-RUN webdriver-manager update
 COPY infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
      infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh \
      /usr/local/sbin/
