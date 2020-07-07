@@ -15,14 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos:7
+FROM centos:7 as os-dependencies
 
-COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /usr/local/sbin/
-COPY ./traffic_portal/ /lang/traffic_portal/
 # Installs the Google Chrome yum repo
 COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
 
-WORKDIR /lang/traffic_portal/test/end_to_end
 RUN yum install -y \
         bind-utils \
         git \
@@ -31,11 +28,17 @@ RUN yum install -y \
         net-tools && \
     yum -y clean all
 
+FROM os-dependencies AS node-dependencies
 # Download and install node
 RUN curl -Lo node.tar.xz https://nodejs.org/dist/v12.16.3/node-v12.16.3-linux-x64.tar.xz && \
     tar --strip-components=1 -C /usr/local -xf node.tar.xz && \
     rm node.tar.xz && \
     npm install -g protractor@^7.0.0
+
+FROM node-dependencies
+
+COPY    traffic_portal/ /lang/traffic_portal/
+WORKDIR /lang/traffic_portal/test/end_to_end
 
 RUN npm install --save-dev jasmine-reporters@^2.0.0
 
@@ -58,6 +61,8 @@ RUN export junit_conf_chrome="\
 
 RUN webdriver-manager clean
 RUN webdriver-manager update
+COPY infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
+     infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh \
+     /usr/local/sbin/
 
-COPY ./infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh /lang/traffic_portal/test/end_to_end/
-CMD ./run.sh
+CMD run.sh
