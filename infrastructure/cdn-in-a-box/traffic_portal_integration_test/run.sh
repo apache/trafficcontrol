@@ -61,10 +61,18 @@ while ! curl -Lvsk "${selenium_fqdn}" 2>/dev/null >/dev/null; do
    sleep 1
 done
 
+jq "$(<<JQ_FILTERS cat
+	.baseUrl = "https://$TP_FQDN" |
+	.params.admin = "$TO_ADMIN_USER" |
+	.params.adminPassword = "$TO_ADMIN_PASSWORD"
+
+JQ_FILTERS
+)" conf.json > conf.json.tmp
+mv conf.json.tmp conf.json
+
 cat conf.json
 
-protractor conf.js --params.adminUser "$TO_ADMIN_USER" --params.adminPassword "$TO_ADMIN_PASSWORD" --baseUrl "https://$TP_FQDN"
-
+protractor conf.js
 rc=$?
 
 cp /portaltestresults/* /junit/
