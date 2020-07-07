@@ -75,4 +75,14 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		pageData.updateButton.click();
 		expect(pageData.domainName.getAttribute('value')).toEqual(myDomainName + 'updated.com');
 	});
+
+	it('should perform cdn snapshot', function() {
+		console.log('Performing cdn snapshot for ' + myNewCDN);
+		pageData.diffCDNSnapshotButton.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns/[0-9]+/config/changes");
+		pageData.performCDNSnapshotButton.click();
+		pageData.yesButton.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns/[0-9]+");
+	});
+
 });
