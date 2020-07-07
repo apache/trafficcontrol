@@ -37,7 +37,7 @@ RUN curl -LO https://nodejs.org/dist/v12.16.3/node-v12.16.3-linux-x64.tar.xz
 # Use bsdtar, because regular tar doesn't work with Docker
 RUN yum install -y bsdtar
 RUN bsdtar --strip-components 1 -xzvf node-v* -C /usr/local
-RUN npm install -g protractor
+RUN npm install -g protractor@^7.0.0
 RUN npm install --save-dev jasmine-reporters@^2.0.0
 
 RUN sed -i "s/baseUrl: 'https:\/\/localhost:4443/baseUrl: 'https:\/\/trafficportal.infra.ciab.test:443/" /lang/traffic_portal/test/end_to_end/conf.js
