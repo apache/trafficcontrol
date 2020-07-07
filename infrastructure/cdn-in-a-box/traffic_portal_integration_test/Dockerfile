@@ -23,9 +23,14 @@ COPY ./traffic_portal/ /lang/traffic_portal/
 COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
 
 WORKDIR /lang/traffic_portal/test/end_to_end
+RUN yum install -y \
+        bind-utils \
+        git \
+        google-chrome-stable \
+        java-1.8.0-openjdk \
+        net-tools && \
+    yum -y clean all
 
-RUN yum update -y
-RUN yum install -y java-1.8.0-openjdk git google-chrome-stable bind-utils net-tools
 
 RUN curl -LO https://nodejs.org/dist/v12.16.3/node-v12.16.3-linux-x64.tar.xz
 # Use bsdtar, because regular tar doesn't work with Docker
