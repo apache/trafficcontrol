@@ -102,6 +102,7 @@ to_go_proxy_tls_timeout: 120
 to_go_read_header_timeout: 120
 to_go_read_timeout: 120
 to_go_write_timeout: 120
+to_go_supported_ds_metrics: [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
 
 to_smtp_enabled: false
 to_smtp_username: ""
