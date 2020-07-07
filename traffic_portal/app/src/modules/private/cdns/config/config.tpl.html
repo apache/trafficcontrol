@@ -215,6 +215,32 @@ under the License.
                 </div>
             </uib-tab>
             <uib-tab index="7" class="tab" select="tabSelected()">
+                <uib-tab-heading uib-popover-template="topologiesCount.templateUrl" popover-title="{{topologiesCount.added + topologiesCount.removed + topologiesCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Topologies<br/>[ {{topologiesCount.added}} | {{topologiesCount.removed}} | {{topologiesCount.updated}} ]
+                </uib-tab-heading>
+                <div class="x_content">
+                    <br>
+                    <table id="topologiesChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="top in ::topologiesChanges track by $index">
+                            <td data-search="^{{::top.op}}$">{{::top.op}}</td>
+                            <td data-search="^{{::top.path}}$">{{::top.path}}</td>
+                            <td class="value" data-search="^{{::top.oldValue}}$"><json-formatter open="expandLevel" json="top.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::top.value}}$"><json-formatter open="expandLevel" json="top.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </uib-tab>
+            <uib-tab index="8" class="tab" select="tabSelected()">
                 <uib-tab-heading uib-popover-template="statsCount.templateUrl" popover-title="{{statsCount.added + statsCount.removed + statsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     Stats<br/>[ {{statsCount.added}} | {{statsCount.removed}} | {{statsCount.updated}} ]
                 </uib-tab-heading>
@@ -286,6 +312,12 @@ under the License.
     <div>{{trLocationsCount.added}} adds</div>
     <div>{{trLocationsCount.removed}} removes</div>
     <div>{{trLocationsCount.updated}} updates</div>
+</script>
+
+<script type="text/ng-template" id="topPopoverTemplate.html">
+    <div>{{topologiesCount.added}} adds</div>
+    <div>{{topologiesCount.removed}} removes</div>
+    <div>{{topologiesCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="statsPopoverTemplate.html">
