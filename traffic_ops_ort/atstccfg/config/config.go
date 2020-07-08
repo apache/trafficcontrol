@@ -65,6 +65,7 @@ type Cfg struct {
 	TOTimeout       time.Duration
 	TOURL           *url.URL
 	TOUser          string
+	Dir             string
 }
 
 type TCCfg struct {
@@ -99,6 +100,7 @@ func GetCfg() (Cfg, error) {
 	setRevalStatusPtr := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revalidate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
 	revalOnlyPtr := flag.BoolP("revalidate-only", "y", false, "Whether to exclude files not named 'regex_revalidate.config'")
 	disableProxyPtr := flag.BoolP("traffic-ops-disable-proxy", "p", false, "Whether to not use the Traffic Ops proxy specified in the GLOBAL Parameter tm.rev_proxy.url")
+	dirPtr := flag.StringP("dir", "D", "", "ATS config directory, used for config files without location parameters or with relative paths. May be blank. If blank and any required config file location parameter is missing or relative, will error.")
 
 	flag.Parse()
 
@@ -128,6 +130,7 @@ func GetCfg() (Cfg, error) {
 	setRevalStatus := *setRevalStatusPtr
 	revalOnly := *revalOnlyPtr
 	disableProxy := *disableProxyPtr
+	dir := *dirPtr
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -186,6 +189,7 @@ func GetCfg() (Cfg, error) {
 		SetQueueStatus:  setQueueStatus,
 		RevalOnly:       revalOnly,
 		DisableProxy:    disableProxy,
+		Dir:             dir,
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")

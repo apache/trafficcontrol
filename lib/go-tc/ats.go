@@ -46,8 +46,8 @@ type ATSConfigMetaDataInfo struct {
 type ATSConfigMetaDataConfigFile struct {
 	FileNameOnDisk string `json:"fnameOnDisk"`
 	Location       string `json:"location"`
-	APIURI         string `json:"apiUri,omitempty"`
-	URL            string `json:"url,omitempty"`
+	APIURI         string `json:"apiUri,omitempty"` // APIURI is deprecated, do not use.
+	URL            string `json:"url,omitempty"`    // URL is deprecated, do not use.
 	Scope          string `json:"scope"`
 }
 
