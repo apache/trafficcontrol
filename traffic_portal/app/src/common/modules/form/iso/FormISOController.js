@@ -57,8 +57,9 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 	$scope.generate = function(iso) {
 		// for whatever reason this was designed with "yes" and "no" instead of actual
 		// boolean values, so we need to emulate that here.
-		iso.dhcp = iso.dhcp ? "yes" : "no";
-		toolsService.generateISO(iso)
+		const tmp = Object.assign({}, iso);
+		tmp.dhcp = iso.dhcp ? "yes" : "no";
+		toolsService.generateISO(tmp)
 			.then(function() {
 				$anchorScroll(); // scrolls window to top
 				messageModel.setMessages([{level: 'success', text: 'ISO successfully downloaded'}], false);
