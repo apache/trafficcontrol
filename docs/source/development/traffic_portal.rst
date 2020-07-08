@@ -13,6 +13,8 @@
 .. limitations under the License.
 ..
 
+.. _dev-traffic-portal:
+
 **************
 Traffic Portal
 **************
@@ -20,6 +22,8 @@ Traffic Portal
 Introduction
 ============
 Traffic Portal is an `AngularJS <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the :ref:`to-api`. Traffic Portal is the official replacement for the legacy Traffic Ops UI.
+
+.. _dev-tp-software-requirements:
 
 Software Requirements
 =====================
@@ -32,7 +36,60 @@ To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly us
 	* `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
 	* Access to a working instance of Traffic Ops
 
-.. note:: The Traffic Portal consumes the Traffic Ops API. Modify traffic_portal/conf/config.js to specify the location of Traffic Ops.
+.. _dev-tp-global-npm:
+
+Install Global NPM Packages
+---------------------------
+
+Bower and the Grunt CLI can be installed using NPM.
+
+.. code-block:: shell
+	:caption: Install Bower and Grunt CLI
+
+	npm -g install bower grunt-cli
+
+.. _dev-tp-compass:
+
+Install Compass
+---------------
+
+Compass can be installed using ``gem`` manually, or by using ``bundle``
+
+.. tip:: Bundle will automatically install the correct version of the gems.
+
+#. ``brew install ruby``/``apt-get install ruby``/``yum install ruby``
+
+#. ``gem update --system``
+
+#. At this point, you can either manually install the gems or use bundler
+
+	#. For manually: ``gem install sass compass``
+
+	#. For automatically: ``gem install bundle && bundle install``
+
+	.. note:: Bundle requires ruby versions > 2.3.0, so if you're using a version of ruby < 2.3.0 then this will not work.
+
+#. Make sure that ``compass`` and ``sass`` are part of your ``PATH`` environment variable.
+
+#. If not, you can see where gem installs ``compass`` and ``sass`` by running:
+	``gem environment``
+
+#. In there, you can see where ruby is installing all the gems. Add that path to your ``PATH`` environment variable.
+	For example, it is ``/usr/local/lib/ruby/gems/2.7.0/gems/compass-1.0.3/bin/`` for this test setup.
+
+#. Once you have installed ``compass`` successfully, make sure you can reach it by typing:
+	``compass version``
+	This should give a valid output. For example, for the test setup, the output is:
+
+.. code-block:: text
+	:caption: Compass version output
+
+	Compass 1.0.3 (Polaris)
+	Copyright (c) 2008-2020 Chris Eppstein
+	Released under the MIT License.
+	Compass is charityware.
+	Please make a tax deductable donation for a worthy cause: http://umdf.org/compass
+
 
 Traffic Portal Project Tree Overview
 =====================================
@@ -44,42 +101,7 @@ Installing The Traffic Portal Developer Environment
 #. Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
 #. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
 #. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
-#. Make sure that compass is installed and functioning correctly by running ``compass version``. If compass is not available, then it can be installed using ``gem``'s manually, or using ``bundle``
-
-    .. tip:: Bundle will automitcally install the correct version of the gems
-
-    #. ``brew install ruby``/``apt-get install ruby``/``yum install ruby``
-
-    #. ``gem update --system``
-
-    #. At this point, you can either manually install the gems or use bundler
-
-       #. For manually: ``gem install sass compass``
-
-       #. For automatically: ``gem install bundle && bundle install``
-
-       .. note:: Bundle requires ruby versions > 2.3.0, so if you're using a version of ruby < 2.3.0 then this will not work.
-
-    #. Make sure that ``compass`` and ``sass`` are part of your ``PATH`` environment variable.
-
-    #. If not, you can see where gem installs ``compass`` and ``sass`` by running:
-       ``gem environment``
-
-    #. In there, you can see where ruby is installing all the gems. Add that path to your ``PATH`` environment variable.
-       For example, it is ``/usr/local/lib/ruby/gems/2.7.0/gems/compass-1.0.3/bin/`` for this test setup.
-
-    #. Once you have installed ``compass`` successfully, make sure you can reach it by typing:
-       ``compass version``
-       This should give a valid output. For example, for the test setup, the output is:
-
-    .. code-block:: text
-        :caption: Compass version output
-
-        Compass 1.0.3 (Polaris)
-        Copyright (c) 2008-2020 Chris Eppstein
-        Released under the MIT License.
-        Compass is charityware.
-        Please make a tax deductable donation for a worthy cause: http://umdf.org/compass
+#. Make sure that compass is installed and functioning correctly by running ``compass version``. If compass is not available, then it can be installed following the instructions under :ref:`dev-tp-compass`.
 
 #. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
 #. Modify ``traffic_portal/conf/config.js``:
@@ -90,3 +112,5 @@ Installing The Traffic Portal Developer Environment
 	#. Modify ``log.stream`` to be ``./server/log/access.log``. If you have created a ``traffic_portal/log`` directory with ``access.log`` file, use that location.
     #. Ensure ca_bundle.crt is present at ``/etc/pki/tls/certs``. If not present, use the cmd: ``sudo touch ca_bundle.crt``
 #. Navigate to http(s)://localhost:[port|sslPort defined in ``traffic_portal/conf/config.js``]
+
+.. note:: The Traffic Portal consumes the Traffic Ops API. Modify traffic_portal/conf/config.js to specify the location of Traffic Ops.

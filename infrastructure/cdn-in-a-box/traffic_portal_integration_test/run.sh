@@ -28,10 +28,29 @@ set-dns.sh
 insert-self-into-dns.sh
 
 TO_URL="https://$TO_FQDN:$TO_PORT"
-while ! to-ping 2>/dev/null; do
-   echo "waiting for trafficops at '$TO_URL' fqdn '$TO_FQDN' host '$TO_HOST'"
+until to-ping 2>/dev/null; do
+   echo "waiting for Traffic Ops at '$TO_URL' fqdn '$TO_FQDN' host '$TO_HOST'"
    sleep 3
 done
+
+until [[ -e "${ENROLLER_DIR}/initial-load-done" ]]; do
+	echo 'Waiting for Traffic Ops Perl to finish seeding the Traffic Ops data so Traffic Portal will start...'
+	sleep 3;
+done
+
+timeout_in_seconds=30
+start_time="$(date +%s)"
+date_in_seconds="$start_time"
+TP_URL="https://$TP_FQDN:$TP_PORT"
+until curl -sk "${TP_URL}/api/3.0/ping" || (( time - start_time >= timeout_in_seconds )); do
+	echo "waiting for Traffic Portal at '$TP_URL' fqdn '$TP_FQDN' host '$TP_HOST'"
+	time="$(date +%s)"
+	sleep 3;
+done
+
+if (( time - start_time >= timeout_in_seconds )); then
+	echo "Warning: Traffic Portal did not start after ${timeout_in_seconds} seconds.";
+fi;
 
 nohup webdriver-manager start &
 
@@ -42,9 +61,17 @@ while ! curl -Lvsk "${selenium_fqdn}" 2>/dev/null >/dev/null; do
    sleep 1
 done
 
-cat conf.js
+jq "$(<<JQ_FILTERS cat
+	.baseUrl = "https://$TP_FQDN" |
+	.params.adminUser = "$TO_ADMIN_USER" |
+	.params.adminPassword = "$TO_ADMIN_PASSWORD"
+JQ_FILTERS
+)" conf.json > conf.json.tmp
+mv conf.json.tmp conf.json
 
-protractor conf.js --params.adminUser "$TO_ADMIN_USER" --params.adminPassword "$TO_ADMIN_PASSWORD"
+cat conf.json
+
+protractor conf.js
 rc=$?
 
 cp /portaltestresults/* /junit/
