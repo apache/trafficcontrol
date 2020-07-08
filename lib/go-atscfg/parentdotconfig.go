@@ -165,24 +165,6 @@ type OriginURI struct {
 	Port   string
 }
 
-/*
-/api/x/topologies => topologies := map[string]*tc.Topology{}
-/api/x/deliveryservices =>	Topology *string
-
-type Topology struct {
-	Description string         `json:"description" db:"description"`
-	Name        string         `json:"name" db:"name"`
-	Nodes       []TopologyNode `json:"nodes"`
-	LastUpdated *TimeNoMod     `json:"lastUpdated" db:"last_updated"`
-}
-type TopologyNode struct {
-	Id          int        `json:"-" db:"id"`
-	Cachegroup  string     `json:"cachegroup" db:"cachegroup"`
-	Parents     []int      `json:"parents"`
-	LastUpdated *TimeNoMod `json:"-" db:"last_updated"`
-}
-*/
-
 func MakeParentDotConfig(
 	serverInfo *ServerInfo, // getServerInfoByHost OR getServerInfoByID
 	atsMajorVer int, // GetATSMajorVersion (TODO: determine if the cache itself [ORT via Yum] should produce this data, rather than asking TO?)
