@@ -32,4 +32,4 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
     - name: Run weasel
-      uses: docker://licenseweasel/weasel@v0.4
+      uses: comcast/weasel@v0.4
