@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-const fs = require('fs');
-const path = require('path');
-
-exports.config = JSON.parse(
-  fs.readFileSync(
-    path.join(process.cwd(), 'conf.json')
-  ).toString()
-);
+exports.config.onPrepare = () => {
+  const jasmineReporters = require('jasmine-reporters');
+  jasmine.getEnv().addReporter(
+    new jasmineReporters.JUnitXmlReporter({
+      savePath: '/portaltestresults',
+      filePrefix: 'portaltestresults',
+      consolidateAll: true
+    }))
+}
