@@ -282,12 +282,8 @@ func updateVendoredTOClient(appDir string, branch string) error {
 	vendorDir := filepath.Join(appDir, `toreq`, `vendor`)
 	vendorTCDir := filepath.Join(vendorDir, `github.com`, `apache`, `trafficcontrol`)
 	vendorClientDir := filepath.Join(vendorTCDir, `traffic_ops`, `client`)
-	vendorLibDir := filepath.Join(vendorTCDir, `lib`, `go-tc`)
 
 	if err := updateFromBranch(appDir, branch, vendorDir, vendorClientDir, "../../traffic_ops/client"); err != nil {
-		return err
-	}
-	if err := updateFromBranch(appDir, branch, vendorDir, vendorLibDir, "../../lib/go-tc"); err != nil {
 		return err
 	}
 
