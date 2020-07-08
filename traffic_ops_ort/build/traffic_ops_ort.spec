@@ -16,16 +16,16 @@
 # RPM spec file for Traffic Stats (tm).
 #
 %define debug_package %{nil}
-Name:		traffic_ops_ort
-Summary:	Installs ORT script for Traffic Control caches
-Version:	%{traffic_control_version}
-Release:	%{build_number}
-License:	Apache License, Version 2.0
-Group:		Applications/Communications
-Source0:	traffic_ops_ort-%{version}.tgz
-URL:		https://github.com/apache/trafficcontrol/
-Vendor:		Apache Software Foundation
-Packager:	dev at trafficcontrol dot Apache dot org
+Name:     traffic_ops_ort
+Summary:  Installs ORT script for Traffic Control caches
+Version:  %{traffic_control_version}
+Release:  %{build_number}
+License:  Apache License, Version 2.0
+Group:    Applications/Communications
+Source0:  traffic_ops_ort-%{version}.tgz
+URL:      https://github.com/apache/trafficcontrol/
+Vendor:   Apache Software Foundation
+Packager: dev at trafficcontrol dot Apache dot org
 %{?el6:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-Digest-SHA}
 %{?el7:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-LWP-Protocol-https, perl-Digest-SHA}
 
@@ -41,8 +41,8 @@ tar xvf %{SOURCE0} -C $RPM_SOURCE_DIR
 # copy atstccfg binary
 godir=src/github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg
 ( mkdir -p "$godir" && \
-  cd "$godir" && \
-  cp "$TC_DIR"/traffic_ops_ort/atstccfg/atstccfg .
+	cd "$godir" && \
+	cp "$TC_DIR"/traffic_ops_ort/atstccfg/atstccfg .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 

@@ -40,6 +40,8 @@ Traffic Monitor
 	make very-clean
 	make debug
 
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native`` instead of ``make debug`` to build the RPMs quickly.
+
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TM_DEBUG_ENABLE`` to ``true``.
 
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Rebuild the ``trafficmonitor`` image without reusing any cached layers to make sure it uses our fresh ``traffic_monitor.rpm``. Then, start CDN-in-a-Box.
@@ -86,6 +88,8 @@ Traffic Ops (Go)
 
 	make very-clean
 	make debug
+
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native`` instead of ``make debug`` to build the RPMs quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TO_DEBUG_ENABLE`` to ``true``.
 

@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Router: Added support for topology-based delivery services
 - Updated /servers/details to use multiple interfaces in API v3
 - Added [Edge Traffic Routing](https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#edge-traffic-routing) feature which allows Traffic Router to localize more DNS record types than just the routing name for DNS delivery services
+- Added the ability to speedily build development RPMs from any OS without needing Docker
 - Astats csv support - astats will now respond to `Accept: text/csv` and return a csv formatted stats list
 - Updated /deliveryservices/{{ID}}/servers to use multiple interfaces in API v3
 - Updated /deliveryservices/{{ID}}/servers/eligible to use multiple interfaces in API v3
