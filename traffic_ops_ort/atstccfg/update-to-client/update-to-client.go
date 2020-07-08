@@ -230,7 +230,7 @@ func pullFromDirectory(appDir string, branch string, baseVendorDir string, local
 		}
 
 		if string(file[len(file)-1]) == "/" {
-			subDir := localVendorDir + "/" + file
+			subDir := filepath.Join(localVendorDir, file)
 			if err := os.Mkdir(subDir, 0755); err != nil {
 				return errors.New("error writing vendored dir '" + file + "': " + err.Error())
 			}
