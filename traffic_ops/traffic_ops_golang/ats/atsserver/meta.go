@@ -84,7 +84,15 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txt := atscfg.MakeMetaConfig(tc.CacheName(serverName), server, tmParams.URL, tmParams.ReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames)
+	// DSes are only used by the Meta generation for inferring location Parameters, which can't be done anyway since TO doesn't have a local ATS install config directory.
+	// This would be fragile, and break if the Meta were changed to use them for anything else,
+	// Except this endpoint is going away shortly anyway, and is not used by ORT.
+	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{}
+	for name, _ := range dsNames {
+		dses[name] = tc.DeliveryServiceNullable{}
+	}
+
+	txt := atscfg.MakeMetaConfig(tc.CacheName(serverName), server, tmParams.URL, tmParams.ReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write([]byte(txt))
 }

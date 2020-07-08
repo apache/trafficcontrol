@@ -66,15 +66,13 @@ func MakeMetaConfig(
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
-	dsNames map[tc.DeliveryServiceName]struct{},
+	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable,
 ) string {
-	// dses are only used when configDir is not empty
-	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{}
-	for dsName, _ := range dsNames {
-		dses[dsName] = tc.DeliveryServiceNullable{}
-	}
-	configDir := ""
-	atsData, err := MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, configDir)
+	configDir := "" // this should only be used for Traffic Ops, which doesn't have a local ATS install config directory (and thus will fail if any location Parameters are missing or relative).
+	return MetaObjToMetaConfig(MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, configDir))
+}
+
+func MetaObjToMetaConfig(atsData tc.ATSConfigMetaData, err error) string {
 	if err != nil {
 		return "error creating meta config: " + err.Error()
 	}
@@ -197,7 +195,6 @@ func AddMetaObjConfigDir(
 			}
 		}
 	}
-	// TODO add location params for ds ensure garbage here
 
 	newFiles := []tc.ATSConfigMetaDataConfigFile{}
 	for _, fis := range configFilesM {
