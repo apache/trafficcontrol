@@ -106,7 +106,8 @@ func hostingMakeDSTopologies(dses []tc.DeliveryServiceNullable, topologies []tc.
 		if to, ok := topNames[*ds.Topology]; ok {
 			dsTops[tc.DeliveryServiceName(*ds.XMLID)] = to
 		} else if *ds.Topology != "" {
-			log.Errorln("Making remap.config for Delivery Service '" + *ds.XMLID + "': has topology '" + *ds.Topology + "', but that topology doesn't exist! Treating as if DS has no Topology!")
+			// TODO propogate this up, so context can be added higher up, once generation is changed to return errors (after config files are removed from the TO API)
+			log.Errorln("Making hosting.config for Delivery Service '" + *ds.XMLID + "': has topology '" + *ds.Topology + "', but that topology doesn't exist! Treating as if DS has no Topology!")
 		}
 	}
 	return dsTops
