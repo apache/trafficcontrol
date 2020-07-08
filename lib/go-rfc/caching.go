@@ -283,3 +283,61 @@ func CanCache(reqMethod string, reqHeaders http.Header, respCode int, respHeader
 	// log.Debugf("CanCache reqCacheControl %+v respCacheControl %+v\n", reqCacheControl, respCacheControl)
 	return canStoreResponse(respCode, respHeaders, reqCacheControl, respCacheControl, strictRFC) && canStoreAuthenticated(reqCacheControl, respCacheControl)
 }
+
+// heuristicFreshness follows the recommendation of RFC7234§4.2.2 and returns the
+// min of 10% of the (Date - Last-Modified) headers and 24 hours, if they exist,
+// and 24 hours if they don't.
+// TODO: smarter and configurable heuristics
+func heuristicFreshness(respHeaders http.Header) time.Duration {
+	day := 24 * time.Hour
+	lastModified, ok := GetHTTPDate(respHeaders, "last-modified")
+	if !ok {
+		return day
+	}
+	date, ok := GetHTTPDate(respHeaders, "date")
+	if !ok {
+		return day
+	}
+	freshness := time.Duration(math.Min(float64(24*time.Hour), float64(date.Sub(lastModified))))
+	return freshness
+}
+
+// getFreshnessLifetime calculates the freshness_lifetime per RFC7234§4.2.1
+func getFreshnessLifetime(respHeaders http.Header, respCacheControl CacheControlMap) time.Duration {
+	if s, ok := getHTTPDeltaSecondsCacheControl(respCacheControl, "s-maxage"); ok {
+		return s
+	}
+	if s, ok := getHTTPDeltaSecondsCacheControl(respCacheControl, "max-age"); ok {
+		return s
+	}
+
+	getExpires := func() (time.Duration, bool) {
+		expires, ok := rfc.GetHTTPDate(respHeaders, "Expires")
+		if !ok {
+			return 0, false
+		}
+		date, ok := rfc.GetHTTPDate(respHeaders, "Date")
+		if !ok {
+			return 0, false
+		}
+		return expires.Sub(date), true
+	}
+	if s, ok := getExpires(); ok {
+		return s
+	}
+	return heuristicFreshness(respHeaders)
+}
+
+// FreshFor gives a duration for which an HTTP response may still be cached - from
+// the time of the request.
+//
+// respHeaders is the collection of headers passed in the original response
+// respCC is the parsed Cache-Control header that was present in the original response
+// reqTime is the time at which the request was made
+// respTime is the time at which the original response was received
+func FreshFor(respHeaders http.Header, respCC CacheControlMap, reqTime, respTime time.Time) time.Duration {
+	freshnessLifetime := getFreshnessLifetime(respHeaders, respCacheControl)
+	currentAge := getCurrentAge(respHeaders, respReqTime, respRespTime)
+	// log.Debugf("FreshFor: freshnesslifetime %v currentAge %v\n", freshnessLifetime, currentAge)
+	return freshnessLifetime - currentAge
+}

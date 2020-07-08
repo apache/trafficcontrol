@@ -234,44 +234,7 @@ func getHTTPDeltaSecondsCacheControl(m map[string]string, key string) (time.Dura
 	return time.Duration(seconds) * time.Second, true
 }
 
-// getFreshnessLifetime calculates the freshness_lifetime per RFC7234§4.2.1
-func getFreshnessLifetime(respHeaders http.Header, respCacheControl web.CacheControl) time.Duration {
-	if s, ok := getHTTPDeltaSecondsCacheControl(respCacheControl, "s-maxage"); ok {
-		return s
-	}
-	if s, ok := getHTTPDeltaSecondsCacheControl(respCacheControl, "max-age"); ok {
-		return s
-	}
-
-	getExpires := func() (time.Duration, bool) {
-		expires, ok := rfc.GetHTTPDate(respHeaders, "Expires")
-		if !ok {
-			return 0, false
-		}
-		date, ok := rfc.GetHTTPDate(respHeaders, "Date")
-		if !ok {
-			return 0, false
-		}
-		return expires.Sub(date), true
-	}
-	if s, ok := getExpires(); ok {
-		return s
-	}
-	return heuristicFreshness(respHeaders)
-}
-
 const Day = time.Hour * time.Duration(24)
-
-// HeuristicFreshness follows the recommendation of RFC7234§4.2.2 and returns the min of 10% of the (Date - Last-Modified) headers and 24 hours, if they exist, and 24 hours if they don't.
-// TODO: smarter and configurable heuristics
-func heuristicFreshness(respHeaders http.Header) time.Duration {
-	sinceLastModified, ok := sinceLastModified(respHeaders)
-	if !ok {
-		return Day
-	}
-	freshness := time.Duration(math.Min(float64(Day), float64(sinceLastModified)))
-	return freshness
-}
 
 func sinceLastModified(headers http.Header) (time.Duration, bool) {
 	lastModified, ok := rfc.GetHTTPDate(headers, "last-modified")
@@ -329,18 +292,4 @@ func getCurrentAge(respHeaders http.Header, respReqTime time.Time, respRespTime 
 	resident := residentTime(respRespTime)
 	log.Debugf("getCurrentAge: correctedInitialAge %v residentTime %v\n", correctedInitial, resident)
 	return correctedInitial + resident
-}
-
-// FreshFor checks returns how long this object is still good for
-func FreshFor(
-	respHeaders http.Header,
-	respCacheControl web.CacheControl,
-	respReqTime time.Time,
-	respRespTime time.Time,
-) time.Duration {
-	freshnessLifetime := getFreshnessLifetime(respHeaders, respCacheControl)
-	currentAge := getCurrentAge(respHeaders, respReqTime, respRespTime)
-	log.Debugf("FreshFor: freshnesslifetime %v currentAge %v\n", freshnessLifetime, currentAge)
-	//fresh := freshnessLifetime > currentAge
-	return freshnessLifetime - currentAge
 }
