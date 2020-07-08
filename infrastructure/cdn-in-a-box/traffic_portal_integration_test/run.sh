@@ -28,9 +28,14 @@ set-dns.sh
 insert-self-into-dns.sh
 
 TO_URL="https://$TO_FQDN:$TO_PORT"
-while ! to-ping 2>/dev/null; do
-   echo "waiting for trafficops at '$TO_URL' fqdn '$TO_FQDN' host '$TO_HOST'"
+until to-ping 2>/dev/null; do
+   echo "waiting for Traffic Ops at '$TO_URL' fqdn '$TO_FQDN' host '$TO_HOST'"
    sleep 3
+done
+
+until [[ -e "${ENROLLER_DIR}/initial-load-done" ]]; do
+	echo 'Waiting for Traffic Ops Perl to finish seeding the Traffic Ops data so Traffic Portal will start...'
+	sleep 3;
 done
 
 nohup webdriver-manager start &
