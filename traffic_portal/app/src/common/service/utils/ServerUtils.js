@@ -94,14 +94,14 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 
 		for (let i = 0; i < interfaces.length; ++i) {
 			const inf = interfaces[i];
-			legacyInfo.interfaceName = inf.name;
-			legacyInfo.interfaceMtu = inf.mtu;
 
 			for (let j = 0; j < inf.ipAddresses.length; ++j) {
 				const ip = inf.ipAddresses[j];
 				if (!ip.serviceAddress) {
 					continue;
 				}
+				legacyInfo.interfaceName = inf.name;
+				legacyInfo.interfaceMtu = inf.mtu;
 
 				let address = ip.address;
 
