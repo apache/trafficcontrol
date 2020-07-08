@@ -209,57 +209,90 @@ func updateNewClientUsage(appDir string) error {
 	return nil
 }
 
+func pullFromDirectory(appDir string, branch string, baseVendorDir string, localVendorDir string, remoteVendorDir string) error {
+	cmd := exec.Command(`git`, `show`, branch+`:`+remoteVendorDir)
+	cmd.Dir = appDir
+	fileListBits, err := cmd.Output()
+	if err != nil {
+		return errors.New("getting files from git: " + err.Error())
+	}
+	fileListStr := string(fileListBits)
+	fileList := strings.Split(fileListStr, "\n")
+	if len(fileList) < 2 {
+		return errors.New("getting files from git: got no files")
+	}
+	fileList = fileList[1:] // first line is a header, remove it.
+
+	for _, file := range fileList {
+		file = strings.TrimSpace(file)
+		if file == "" {
+			continue
+		}
+
+		if string(file[len(file)-1]) == "/" {
+			subDir := localVendorDir + "/" + file
+			if err := os.Mkdir(subDir, 0755); err != nil {
+				return errors.New("error writing vendored dir '" + file + "': " + err.Error())
+			}
+			if err := pullFromDirectory(appDir, branch, baseVendorDir, subDir, remoteVendorDir+"/"+file); err != nil {
+				return err
+			}
+			continue
+		}
+
+		cmd := exec.Command(`git`, `show`, branch+`:`+remoteVendorDir+`/`+file)
+		cmd.Dir = appDir
+		fileBts, err := cmd.Output()
+		if err != nil {
+			return errors.New("getting client file '" + file + "' from git: " + err.Error())
+		}
+
+		if err := ioutil.WriteFile(localVendorDir+`/`+file, fileBts, 0644); err != nil {
+			return errors.New("Error writing vendored file '" + file + "': " + err.Error())
+		}
+	}
+
+	return nil
+
+}
+
+func updateFromBranch(appDir string, branch string, baseVendorDir string, localVendorDir string, remoteVendorDir string) error {
+	vendorFileInfo, err := os.Stat(localVendorDir)
+	if err != nil {
+		return errors.New("getting vendor dir '" + baseVendorDir + "' info: " + err.Error())
+	}
+	if !vendorFileInfo.IsDir() {
+		return errors.New("getting vendor dir '" + baseVendorDir + "' info: not a directory")
+	}
+	if err := os.RemoveAll(localVendorDir); err != nil {
+		return errors.New("removing vendor dir '" + baseVendorDir + "': " + err.Error())
+	}
+	if err := os.Mkdir(localVendorDir, 0755); err != nil {
+		return errors.New("creating vendor dir '" + baseVendorDir + "': " + err.Error())
+	}
+
+	if err := pullFromDirectory(appDir, branch, baseVendorDir, localVendorDir, remoteVendorDir); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func updateVendoredTOClient(appDir string, branch string) error {
 	vendorDir := filepath.Join(appDir, `toreq`, `vendor`)
 	vendorTCDir := filepath.Join(vendorDir, `github.com`, `apache`, `trafficcontrol`)
 	vendorClientDir := filepath.Join(vendorTCDir, `traffic_ops`, `client`)
+	vendorLibDir := filepath.Join(vendorTCDir, `lib`, `go-tc`)
 
-	vendorFileInfo, err := os.Stat(vendorClientDir)
-	if err != nil {
-		return errors.New("getting vendor dir '" + vendorDir + "' info: " + err.Error())
+	if err := updateFromBranch(appDir, branch, vendorDir, vendorClientDir, "../../traffic_ops/client"); err != nil {
+		return err
 	}
-	if !vendorFileInfo.IsDir() {
-		return errors.New("getting vendor dir '" + vendorDir + "' info: not a directory")
-	}
-	if err := os.RemoveAll(vendorClientDir); err != nil {
-		return errors.New("removing vendor dir '" + vendorDir + "': " + err.Error())
-	}
-	if err := os.Mkdir(vendorClientDir, 0755); err != nil {
-		return errors.New("creating vendor dir '" + vendorDir + "': " + err.Error())
-	}
-
-	cmd := exec.Command(`git`, `show`, branch+`:../../traffic_ops/client`)
-	cmd.Dir = appDir
-	clientFileListBts, err := cmd.Output()
-	if err != nil {
-		return errors.New("getting files from git: " + err.Error())
-	}
-	clientFileListStr := string(clioad	entFileListBts)
-	clientFileList := strings.Split(clientFileListStr, "\n")
-	if len(clientFileList) < 2 {
-		return errors.New("getting files from git: got no files")
-	}
-	clientFileList = clientFileList[1:] // first line is a header, remove it.
-	// fmt.Printf("DEBUG got client file list '''%+v'''\n", clientFileListStr)
-
-	for _, clientFile := range clientFileList {
-		clientFile = strings.TrimSpace(clientFile)
-		if clientFile == "" {
-			continue
-		}
-		cmd := exec.Command(`git`, `show`, branch+`:../../traffic_ops/client`+`/`+clientFile)
-		cmd.Dir = appDir
-		fileBts, err := cmd.Output()
-		if err != nil {
-			return errors.New("getting client file '" + clientFile + "' from git: " + err.Error())
-		}
-		if err := ioutil.WriteFile(vendorClientDir+`/`+clientFile, fileBts, 0644); err != nil {
-			return errors.New("Error writing vendored file '" + clientFile + "': " + err.Error())
-		}
+	if err := updateFromBranch(appDir, branch, vendorDir, vendorLibDir, "../../lib/go-tc"); err != nil {
+		return err
 	}
 
 	// update VERSION in vendored dir
-	cmd = exec.Command(`git`, `show`, branch+`:VERSION`)
+	cmd := exec.Command(`git`, `show`, branch+`:VERSION`)
 	cmd.Dir = appDir
 	versionBts, err := cmd.Output()
 	if err != nil {
