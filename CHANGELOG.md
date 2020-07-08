@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
 
 ### Removed
+- Removed API 1.x tests from Traffic Ops Go Client.
 - Removed deprecated Traffic Ops Go Client methods.
 - Configuration generation logic in the TO API (v1) for:
   - `ip_allow.config`
