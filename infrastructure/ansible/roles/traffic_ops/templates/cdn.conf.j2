@@ -75,6 +75,6 @@
       "read_header_timeout" : {{ to_go_read_header_timeout }},
       "read_timeout" : {{ to_go_read_timeout }},
       "write_timeout" : {{ to_go_write_timeout }},
-      "supported_ds_metrics" : {{ to_go_supported_ds_metrics }}
+      "supported_ds_metrics" : {{ to_go_supported_ds_metrics | to_json }}
    }
 }
