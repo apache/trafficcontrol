@@ -78,10 +78,10 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 		});
 	};
 
-	$scope.cloneDsAssignments = function(server) {
+	$scope.cloneDsAssignments = function() {
 		var params = {
 			title: 'Clone Delivery Service Assignments',
-			message: "Please select another " + server.type + " cache to assign these " + deliveryServices.length + " delivery services to." +
+			message: "Please select another " + $scope.server.type + " cache to assign these " + deliveryServices.length + " delivery services to." +
 				"<br>" +
 				"<br>" +
 				"<strong>WARNING THIS CANNOT BE UNDONE</strong> - Any delivery services currently assigned to the selected cache will be lost and replaced with these " + deliveryServices.length + " delivery service assignments.",
@@ -96,7 +96,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 					return params;
 				},
 				collection: function(serverService) {
-					return serverService.getServers({ type: server.type, orderby: 'hostName', cdn: server.cdnId }).then(function(xs){return xs.filter(function(x){return x.id!=server.id})}, function(err){throw err});
+					return serverService.getServers({ type: $scope.server.type, orderby: 'hostName', cdn: $scope.server.cdnId }).then(function(xs){return xs.filter(function(x){return x.id!=$scope.server.id})}, function(err){throw err});
 				}
 			}
 		});
@@ -120,10 +120,10 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 			size: 'lg',
 			resolve: {
 				server: function() {
-					return server;
+					return $scope.server;
 				},
 				deliveryServices: function(deliveryServiceService) {
-					return deliveryServiceService.getDeliveryServices({ cdn: server.cdnId });
+					return deliveryServiceService.getDeliveryServices({ cdn: $scope.server.cdnId });
 				},
 				assignedDeliveryServices: function() {
 					return deliveryServices;
@@ -131,7 +131,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 			}
 		});
 		modalInstance.result.then(function(selectedDsIds) {
-			serverService.assignDeliveryServices(server, selectedDsIds, true, false)
+			serverService.assignDeliveryServices($scope.server, selectedDsIds, true, false)
 				.then(
 					function() {
 						$scope.refresh();

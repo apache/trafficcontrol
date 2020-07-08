@@ -52,7 +52,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 			}
 		});
 		modalInstance.result.then(function(serverCapability) {
-			serverService.addServerCapability(server.id, serverCapability.name)
+			serverService.addServerCapability($scope.server.id, serverCapability.name)
 				.then(
 					function(result) {
 						messageModel.setMessages(result.alerts, false);
@@ -81,7 +81,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 			}
 		});
 		modalInstance.result.then(function() {
-			serverService.removeServerCapability(server.id, serverCapability)
+			serverService.removeServerCapability($scope.server.id, serverCapability)
 				.then(
 					function(result) {
 						messageModel.setMessages(result.alerts, false);
