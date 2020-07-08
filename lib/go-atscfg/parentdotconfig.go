@@ -372,10 +372,9 @@ func GetTopologyParentConfigLine(
 	if !serverInTopology {
 		return "", nil // server isn't in topology, no error
 	}
-	// TODO omit server and parents without necessary Capabilities
 	// TODO add Topology/Capabilities to remap.config
 
-	parents, secondaryParents, err := GetTopologyParents(server, ds, serverParams, servers, parentConfigParams, topology, serverIsLastTier, serverCapabilities)
+	parents, secondaryParents, err := GetTopologyParents(server, ds, servers, parentConfigParams, topology, serverIsLastTier, serverCapabilities)
 	if err != nil {
 		return "", errors.New("getting topology parents for '" + string(ds.Name) + "': skipping! " + err.Error())
 	}
@@ -383,23 +382,23 @@ func GetTopologyParentConfigLine(
 	if len(secondaryParents) > 0 {
 		txt += ` secondary_parent="` + strings.Join(secondaryParents, `;`) + `"`
 	}
-	txt += ` round_robin=` + getTopologyRoundRobin(server, ds, topology, serverParams, serverIsLastTier)
-	txt += ` go_direct=` + getTopologyGoDirect(server, ds, topology, serverIsLastTier)
-	txt += ` qstring=` + getTopologyQueryString(server, ds, topology, serverParams, serverIsLastTier)
+	txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverIsLastTier)
+	txt += ` go_direct=` + getTopologyGoDirect(ds, serverIsLastTier)
+	txt += ` qstring=` + getTopologyQueryString(ds, serverParams, serverIsLastTier)
 	txt += getTopologyParentIsProxyStr(serverIsLastTier)
-	txt += " # topology"
+	txt += " # topology '" + ds.Topology + "'"
 	txt += "\n"
 	return txt, nil
 }
 
 func getTopologyParentIsProxyStr(serverIsLastTier bool) string {
-	if serverIsLastTier { // && ds.MultiSiteOrigin
+	if serverIsLastTier {
 		return ` parent_is_proxy=false`
 	}
 	return ""
 }
 
-func getTopologyRoundRobin(server tc.Server, ds ParentConfigDSTopLevel, topology tc.Topology, serverParams map[string]string, serverIsLastTier bool) string {
+func getTopologyRoundRobin(ds ParentConfigDSTopLevel, serverParams map[string]string, serverIsLastTier bool) string {
 	roundRobinConsistentHash := "consistent_hash"
 	if !serverIsLastTier {
 		return roundRobinConsistentHash
@@ -413,9 +412,8 @@ func getTopologyRoundRobin(server tc.Server, ds ParentConfigDSTopLevel, topology
 	return roundRobinConsistentHash
 }
 
-func getTopologyGoDirect(server tc.Server, ds ParentConfigDSTopLevel, topology tc.Topology, serverIsLastTier bool) string {
+func getTopologyGoDirect(ds ParentConfigDSTopLevel, serverIsLastTier bool) string {
 	if !serverIsLastTier {
-		// TODO make sure this is correct for DSTypeHTTPNoCache || DSTypeHTTPLive || DSTypeDNSLive
 		return "false"
 	}
 	if ds.OriginShield != "" {
@@ -424,11 +422,10 @@ func getTopologyGoDirect(server tc.Server, ds ParentConfigDSTopLevel, topology t
 	if ds.MultiSiteOrigin {
 		return "false"
 	}
-	// TODO make sure this is correct. If we're the last tier, we should go direct to the origin, right?
 	return "true"
 }
 
-func getTopologyQueryString(server tc.Server, ds ParentConfigDSTopLevel, topology tc.Topology, serverParams map[string]string, serverIsLastTier bool) string {
+func getTopologyQueryString(ds ParentConfigDSTopLevel, serverParams map[string]string, serverIsLastTier bool) string {
 	if serverIsLastTier {
 		if ds.MultiSiteOrigin && ds.QStringHandling == "" && ds.MSOAlgorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 			return "consider"
@@ -501,7 +498,6 @@ func serverParentStr(sv tc.Server, params []ParameterWithProfilesMap) string {
 func GetTopologyParents(
 	server tc.Server,
 	ds ParentConfigDSTopLevel,
-	serverParams map[string]string,
 	servers []tc.Server,
 	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.confign
 	topology tc.Topology,

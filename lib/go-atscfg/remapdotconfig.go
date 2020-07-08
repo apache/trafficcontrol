@@ -104,7 +104,6 @@ func makeDSTopologies(dses []RemapConfigDSData, topologies []tc.Topology) map[tc
 func GetServerConfigRemapDotConfigForMid(
 	atsMajorVersion int,
 	profilesCacheKeyConfigParams map[int]map[string]string,
-	serverInfo *ServerInfo,
 	dses []RemapConfigDSData,
 	header string,
 	server tc.Server,
@@ -226,7 +225,7 @@ func GetServerConfigRemapDotConfigForEdge(
 			}
 			remapText = BuildRemapLine(cacheURLConfigParams, atsMajorVersion, serverInfo, serverPackageParamData, remapText, ds, line.From, line.To, profilecacheKeyConfigParams)
 			if hasTopology {
-				remapText += " # topology" // debug
+				remapText += " # topology '" + topology.Name + "'"
 			}
 			remapText += "\n"
 		}
