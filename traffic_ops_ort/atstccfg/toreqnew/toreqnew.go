@@ -75,7 +75,7 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 	deliveryServices := []tc.DeliveryServiceNullable{}
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
-		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID)
+		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID, nil)
 		if err != nil {
 			if errStr := strings.ToLower(err.Error()); strings.Contains(errStr, "not found") || strings.Contains(errStr, "not impl") {
 				unsupported = true
