@@ -38,6 +38,20 @@ until [[ -e "${ENROLLER_DIR}/initial-load-done" ]]; do
 	sleep 3;
 done
 
+timeout_in_seconds=30
+start_time="$(date +%s)"
+date_in_seconds="$start_time"
+TP_URL="https://$TP_FQDN:$TP_PORT"
+until curl -sk "${TP_URL}/api/3.0/ping" || (( time - start_time >= timeout_in_seconds )); do
+	echo "waiting for Traffic Portal at '$TP_URL' fqdn '$TP_FQDN' host '$TP_HOST'"
+	time="$(date +%s)"
+	sleep 3;
+done
+
+if (( time - start_time >= timeout_in_seconds )); then
+	echo "Warning: Traffic Portal did not start after ${timeout_in_seconds} seconds.";
+fi;
+
 nohup webdriver-manager start &
 
 selenium_port=4444
