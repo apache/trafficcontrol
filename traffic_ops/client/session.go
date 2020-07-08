@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/grove/web"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -369,11 +368,17 @@ func (to *Session) RawRequest(method, path string, body []byte, header http.Head
 		if err != nil {
 			return nil, remoteAddr, err
 		}
+		if header != nil {
+			req.Header = header.Clone()
+		}
 		req.Header.Set("Content-Type", "application/json")
 	} else {
 		req, err = http.NewRequest(method, url, nil)
 		if err != nil {
 			return nil, remoteAddr, err
+		}
+		if header != nil {
+			req.Header = header.Clone()
 		}
 	}
 
@@ -383,7 +388,6 @@ func (to *Session) RawRequest(method, path string, body []byte, header http.Head
 		},
 	}
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
-	web.CopyHeaderTo(header, &req.Header)
 	req.Header.Set("User-Agent", to.UserAgentStr)
 	resp, err := to.Client.Do(req)
 	if err != nil {
