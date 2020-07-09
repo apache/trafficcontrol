@@ -49,7 +49,7 @@ fi
  cd "$GOPATH"
  mkdir -p src pkg bin "$(dirname "$tc_dir")"
 )
-rsync -a --exclude=dist "${tc_volume}/" "$tc_dir";
+rsync -a --exclude=^dist --exclude=^.m2 "${tc_volume}/" "$tc_dir";
 if ! [ -d ${tc_dir}/.git ]; then
 	rsync -a "${tc_volume}/.git" $tc_dir; # Docker for Windows compatibility
 fi
