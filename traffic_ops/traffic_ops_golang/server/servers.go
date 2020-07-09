@@ -592,7 +592,7 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 		api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, servers)
 		return
 	}
-	legacyServers := make([]tc.ServerNullableV11, 0, 1)
+	legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2()
 		if err != nil {

@@ -16,8 +16,9 @@ package v1
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestServers(t *testing.T) {
@@ -70,18 +71,18 @@ func UpdateTestServers(t *testing.T) {
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
 	if err != nil {
-		t.Fatalf("cannot UPDATE Server by ID: %v - %v", err, alert)
+		t.Errorf("cannot UPDATE Server by ID: %v - %v", err, alert)
 	}
 	// Retrieve the server to check rack and interfaceName values were updated
 	resp, _, err = TOSession.GetServerByID(remoteServer.ID)
 	if err != nil {
-		t.Fatalf("cannot GET Server by ID: %v - %v", remoteServer.ID, err)
+		t.Errorf("cannot GET Server by ID: %v - %v", remoteServer.ID, err)
 	}
 
 	respServer := resp[0]
 	if respServer.InterfaceName != updatedServerInterface || respServer.Rack != updatedServerRack {
-		t.Fatalf("results do not match actual: %s, expected: %s", respServer.InterfaceName, updatedServerInterface)
-		t.Fatalf("results do not match actual: %s, expected: %s", respServer.Rack, updatedServerRack)
+		t.Errorf("results do not match actual: %s, expected: %s", respServer.InterfaceName, updatedServerInterface)
+		t.Errorf("results do not match actual: %s, expected: %s", respServer.Rack, updatedServerRack)
 	}
 
 	// Assign server to DS and then attempt to update to a different type
@@ -116,7 +117,7 @@ func UpdateTestServers(t *testing.T) {
 	// Attempt Update - should fail
 	_, _, err = TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
 	if err == nil {
-		t.Fatalf("expected error when updating Server Type of a server assigned to DSes")
+		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
 	}
 
 }
