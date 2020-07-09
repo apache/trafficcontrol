@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -164,5 +165,19 @@ func TestStatsMarshall(t *testing.T) {
 	}
 	if len(stats.Caches) > 0 {
 		t.Errorf(`unmarshalling stats.Caches expected empty, actual %+v`, stats.Caches)
+	}
+}
+
+func TestSystemComputedStats(t *testing.T) {
+	stats := cache.ComputedStats()
+
+	for stat, function := range stats {
+		if strings.HasPrefix(stat, "system.") {
+			computedStat := function(cache.ResultInfo{}, tc.LegacyTrafficServer{}, tc.TMProfile{}, tc.IsAvailable{})
+			_, err := newStatEqual([]cache.ResultStatVal{{Val: float64(0)}}, computedStat)
+			if err != nil {
+				t.Errorf("expected no errors from newStatEqual: %s", err)
+			}
+		}
 	}
 }
