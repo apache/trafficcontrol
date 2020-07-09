@@ -456,7 +456,7 @@ func GetConfigFileServerParentDotConfig(toData *config.TOData) (string, string, 
 
 	parentInfos := atscfg.MakeParentInfo(&serverInfo, serverCDNDomain, profileCaches, originServers)
 
-	return atscfg.MakeParentDotConfig(&serverInfo, atsMajorVer, toData.TOToolName, toData.TOURL, parentConfigDSes, serverParams, parentInfos, toData.Server, toData.Servers, toData.Topologies, toData.ParentConfigParams, toData.ServerCapabilities), atscfg.ContentTypeParentDotConfig, atscfg.LineCommentParentDotConfig, nil
+	return atscfg.MakeParentDotConfig(&serverInfo, atsMajorVer, toData.TOToolName, toData.TOURL, parentConfigDSes, serverParams, parentInfos, toData.Server, toData.Servers, toData.Topologies, toData.ParentConfigParams, toData.ServerCapabilities, toData.CacheGroups), atscfg.ContentTypeParentDotConfig, atscfg.LineCommentParentDotConfig, nil
 }
 
 // GetDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI.

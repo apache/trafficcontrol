@@ -123,7 +123,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 		// TODO sort by DS ID? the old Perl query does, but it shouldn't be necessary, except for determinism.
 		// TODO warn if no regexes?
 		for _, dsRegex := range dsRegexMap[tc.DeliveryServiceName(*ds.XMLID)] {
-			remapConfigDSData = append(remapConfigDSData, atscfg.RemapConfigDSData{
+			rds := atscfg.RemapConfigDSData{
 				ID:                       *ds.ID,
 				Type:                     *ds.Type,
 				OriginFQDN:               ds.OrgServerFQDN,
@@ -149,7 +149,17 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 				Active:                   *ds.Active,
 				RangeSliceBlockSize:      ds.RangeSliceBlockSize,
 				Topology:                 dsTopology,
-			})
+			}
+			if ds.FirstHeaderRewrite != nil {
+				rds.FirstHeaderRewrite = *ds.FirstHeaderRewrite
+			}
+			if ds.InnerHeaderRewrite != nil {
+				rds.InnerHeaderRewrite = *ds.InnerHeaderRewrite
+			}
+			if ds.LastHeaderRewrite != nil {
+				rds.LastHeaderRewrite = *ds.LastHeaderRewrite
+			}
+			remapConfigDSData = append(remapConfigDSData, rds)
 		}
 	}
 
@@ -277,6 +287,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 
 	serverInfo := &atscfg.ServerInfo{
 		CacheGroupID:                  toData.Server.CachegroupID,
+		CacheGroupName:                toData.Server.Cachegroup,
 		CDN:                           tc.CDNName(toData.Server.CDNName),
 		CDNID:                         toData.Server.CDNID,
 		DomainName:                    toData.CDN.DomainName, // note this is intentionally the CDN domain, not the server domain. It's what's remapped to.
@@ -293,7 +304,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 		SecondaryParentCacheGroupType: secondaryParentCGType,
 		Type:                          toData.Server.Type,
 	}
-	return atscfg.MakeRemapDotConfig(toData.Server, toData.TOToolName, toData.TOURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData, toData.Topologies), atscfg.ContentTypeRemapDotConfig, atscfg.LineCommentRemapDotConfig, nil
+	return atscfg.MakeRemapDotConfig(toData.Server, toData.TOToolName, toData.TOURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData, toData.Topologies, toData.CacheGroups, toData.ServerCapabilities, toData.DSRequiredCapabilities), atscfg.ContentTypeRemapDotConfig, atscfg.LineCommentRemapDotConfig, nil
 }
 
 type DeliveryServiceRegexesSortByTypeThenSetNum []tc.DeliveryServiceRegex

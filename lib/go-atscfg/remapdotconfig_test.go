@@ -99,7 +99,10 @@ func TestMakeRemapDotConfig(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -202,7 +205,10 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -287,7 +293,10 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -386,7 +395,10 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -471,7 +483,10 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -584,7 +599,10 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -669,7 +687,10 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -777,7 +798,10 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -876,7 +900,10 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -982,7 +1009,10 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1091,7 +1121,10 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1201,7 +1234,10 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1304,7 +1340,10 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1435,7 +1474,10 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1548,7 +1590,10 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -1924,7 +1969,10 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2010,7 +2058,10 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2113,7 +2164,10 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2216,7 +2270,10 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2319,7 +2376,10 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2422,7 +2482,10 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2521,7 +2584,10 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2620,7 +2686,10 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2719,7 +2788,10 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2822,7 +2894,10 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -2925,7 +3000,10 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3028,7 +3106,10 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3126,7 +3207,10 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3224,7 +3308,10 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3322,7 +3409,10 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3420,7 +3510,10 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3518,7 +3611,10 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3614,7 +3710,10 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3714,7 +3813,10 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3813,7 +3915,10 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -3908,7 +4013,10 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4010,7 +4118,10 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4116,7 +4227,10 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4219,7 +4333,10 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4317,7 +4434,10 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4427,7 +4547,10 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4529,7 +4652,10 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4627,7 +4753,10 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4729,7 +4858,10 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4831,7 +4963,10 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -4934,7 +5069,10 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5041,7 +5179,10 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5161,7 +5302,10 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5274,7 +5418,10 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5376,7 +5523,10 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5474,7 +5624,10 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5572,7 +5725,10 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5670,7 +5826,10 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5772,7 +5931,10 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5870,7 +6032,10 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -5958,7 +6123,10 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 
 	server := serverInfoToServer(serverInfo)
 	topologies := []tc.Topology{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -6102,7 +6270,11 @@ func TestMakeRemapDotConfigTopologies(t *testing.T) {
 		},
 	}
 
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies)
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -6114,6 +6286,169 @@ func TestMakeRemapDotConfigTopologies(t *testing.T) {
 
 	if strings.Contains(txt, "origin1") {
 		t.Errorf("expected to not contain DS with edge not in topology, actual '%v'", txt)
+	}
+}
+
+func TestMakeRemapDotConfigTopologyCapabilities(t *testing.T) {
+	serverName := tc.CacheName("server0")
+	toToolName := "to0"
+	toURL := "trafficops.example.net"
+	atsMajorVersion := 7
+
+	cacheURLConfigParams := map[string]string{
+		"not_location": "notinconfig",
+	}
+
+	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
+		46: map[string]string{
+			"cachekeykey": "cachekeyval",
+		},
+	}
+
+	serverPackageParamData := map[string]string{
+		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
+	}
+
+	serverInfo := &ServerInfo{
+		CacheGroupID:                  42,
+		CDN:                           "mycdn",
+		CDNID:                         43,
+		DomainName:                    "mydomain",
+		HostName:                      string(serverName),
+		HTTPSPort:                     12443,
+		ID:                            44,
+		IP:                            "192.168.2.4",
+		ParentCacheGroupID:            45,
+		ParentCacheGroupType:          "CGType4",
+		ProfileID:                     46,
+		ProfileName:                   "MyProfile",
+		Port:                          12080,
+		SecondaryParentCacheGroupID:   47,
+		SecondaryParentCacheGroupType: "MySecondaryParentCG",
+		Type:                          "EDGE",
+	}
+
+	remapDSData := []RemapConfigDSData{
+		RemapConfigDSData{
+			ID:                       48,
+			Type:                     "HTTP_LIVE",
+			OriginFQDN:               util.StrPtr("origin0.example.test"),
+			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
+			CacheURL:                 util.StrPtr("mycacheurl"),
+			RangeRequestHandling:     util.IntPtr(0),
+			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
+			RemapText:                util.StrPtr("myremaptext"),
+			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
+			SigningAlgorithm:         util.StrPtr("url_sig"),
+			Name:                     "mydsname0",
+			QStringIgnore:            util.IntPtr(0),
+			RegexRemap:               util.StrPtr("myregexremap"),
+			FQPacingRate:             util.IntPtr(0),
+			DSCP:                     0,
+			RoutingName:              util.StrPtr("myroutingname"),
+			MultiSiteOrigin:          util.StrPtr("mymso"),
+			Pattern:                  util.StrPtr("myregexpattern"),
+			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
+			Domain:                   util.StrPtr("mydomain"),
+			RegexSetNumber:           util.StrPtr("myregexsetnum"),
+			OriginShield:             util.StrPtr("myoriginshield"),
+			ProfileID:                util.IntPtr(49),
+			Protocol:                 util.IntPtr(0),
+			AnonymousBlockingEnabled: util.BoolPtr(false),
+			Active:                   true,
+			Topology:                 "t0",
+		},
+		RemapConfigDSData{
+			ID:                       48,
+			Type:                     "HTTP_LIVE",
+			OriginFQDN:               util.StrPtr("origin1.example.test"),
+			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
+			CacheURL:                 util.StrPtr("mycacheurl"),
+			RangeRequestHandling:     util.IntPtr(0),
+			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
+			RemapText:                util.StrPtr("myremaptext"),
+			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
+			SigningAlgorithm:         util.StrPtr("url_sig"),
+			Name:                     "mydsname1",
+			QStringIgnore:            util.IntPtr(0),
+			RegexRemap:               util.StrPtr("myregexremap"),
+			FQPacingRate:             util.IntPtr(0),
+			DSCP:                     0,
+			RoutingName:              util.StrPtr("myroutingname"),
+			MultiSiteOrigin:          util.StrPtr("mymso"),
+			Pattern:                  util.StrPtr("myregexpattern"),
+			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
+			Domain:                   util.StrPtr("mydomain"),
+			RegexSetNumber:           util.StrPtr("myregexsetnum"),
+			OriginShield:             util.StrPtr("myoriginshield"),
+			ProfileID:                util.IntPtr(49),
+			Protocol:                 util.IntPtr(0),
+			AnonymousBlockingEnabled: util.BoolPtr(false),
+			Active:                   true,
+			Topology:                 "t1",
+		},
+	}
+
+	server := serverInfoToServer(serverInfo)
+	server.Cachegroup = "edgeCG"
+
+	topologies := []tc.Topology{
+		tc.Topology{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+		tc.Topology{
+			Name: "t1",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "otherEdgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+	}
+
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{
+		serverInfo.ID: map[ServerCapability]struct{}{
+			"capx": {},
+		},
+	}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{
+		remapDSData[0].ID: map[ServerCapability]struct{}{
+			"capx": {},
+		},
+	}
+
+	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, string(serverName), toToolName, toURL)
+
+	if !strings.Contains(txt, "origin0") {
+		t.Errorf("expected to contain DS with edge in topology, actual '%v'", txt)
+	}
+
+	if strings.Contains(txt, "origin1") {
+		t.Errorf("expected to not contain DS with edge not in topology, actual '%v'", txt)
+	}
+
+	serverCapabilities[serverInfo.ID] = map[ServerCapability]struct{}{}
+	txt = MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+	if strings.Contains(txt, "origin1") {
+		t.Errorf("expected to not contain DS with edge missing required capabilities, actual '%v'", txt)
 	}
 }
 

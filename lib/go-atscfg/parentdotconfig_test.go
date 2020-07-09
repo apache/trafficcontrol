@@ -113,8 +113,9 @@ func TestMakeParentDotConfig(t *testing.T) {
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	parentConfigParams := []tc.Parameter{}
+	cgs := []tc.CacheGroupNullable{}
 
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities)
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -239,7 +240,8 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	parentConfigParams := []tc.Parameter{}
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities)
+	cgs := []tc.CacheGroupNullable{}
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -369,7 +371,8 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	parentConfigParams := []tc.Parameter{}
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities)
+	cgs := []tc.CacheGroupNullable{}
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -473,8 +476,8 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	parentConfigParams := []tc.Parameter{}
-
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities)
+	cgs := []tc.CacheGroupNullable{}
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -583,8 +586,8 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	parentConfigParams := []tc.Parameter{}
-
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities)
+	cgs := []tc.CacheGroupNullable{}
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -708,8 +711,9 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 		44: map[ServerCapability]struct{}{"FOO": {}},
 	}
 	parentConfigParams := []tc.Parameter{}
+	cgs := []tc.CacheGroupNullable{}
 
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities)
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
 
 	testComment(t, txt, serverName, toolName, toURL)
 

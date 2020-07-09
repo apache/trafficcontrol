@@ -178,7 +178,10 @@ func MakeParentDotConfig(
 	topologies []tc.Topology,
 	tcParentConfigParams []tc.Parameter,
 	serverCapabilities map[int]map[ServerCapability]struct{},
+	cacheGroupArr []tc.CacheGroupNullable,
 ) string {
+	cacheGroups := MakeCGMap(cacheGroupArr)
+
 	sort.Sort(ParentConfigDSTopLevelSortByName(parentConfigDSes))
 
 	nameVersionStr := GetNameVersionStringFromToolNameAndURL(toToolName, toURL)
@@ -205,7 +208,7 @@ func MakeParentDotConfig(
 		// TODO put these in separate functions. No if-statement should be this long.
 		if ds.Topology != "" {
 			log.Infoln("parent.config generating Topology line for ds '" + ds.Name + "'")
-			txt, err := GetTopologyParentConfigLine(server, servers, ds, serverParams, parentConfigParams, topologies, serverCapabilities)
+			txt, err := GetTopologyParentConfigLine(server, servers, ds, serverParams, parentConfigParams, topologies, serverCapabilities, cacheGroups)
 			if err != nil {
 				log.Errorln(err)
 				continue
@@ -342,6 +345,7 @@ func GetTopologyParentConfigLine(
 	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.config
 	topologies []tc.Topology,
 	serverCapabilities map[int]map[ServerCapability]struct{},
+	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 ) (string, error) {
 	txt := ""
 
@@ -368,13 +372,14 @@ func GetTopologyParentConfigLine(
 
 	txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
 
-	serverIsLastTier, serverInTopology := serverTopologyTier(server, topology)
-	if !serverInTopology {
+	log.Errorf("DEBUG topo GetTopologyParentConfigLine calling getTopologyPlacement cg '" + server.Cachegroup + "'\n")
+	serverPlacement := getTopologyPlacement(tc.CacheGroupName(server.Cachegroup), topology, cacheGroups)
+	if !serverPlacement.InTopology {
 		return "", nil // server isn't in topology, no error
 	}
 	// TODO add Topology/Capabilities to remap.config
 
-	parents, secondaryParents, err := GetTopologyParents(server, ds, servers, parentConfigParams, topology, serverIsLastTier, serverCapabilities)
+	parents, secondaryParents, err := GetTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities)
 	if err != nil {
 		return "", errors.New("getting topology parents for '" + string(ds.Name) + "': skipping! " + err.Error())
 	}
@@ -382,10 +387,10 @@ func GetTopologyParentConfigLine(
 	if len(secondaryParents) > 0 {
 		txt += ` secondary_parent="` + strings.Join(secondaryParents, `;`) + `"`
 	}
-	txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverIsLastTier)
-	txt += ` go_direct=` + getTopologyGoDirect(ds, serverIsLastTier)
-	txt += ` qstring=` + getTopologyQueryString(ds, serverParams, serverIsLastTier)
-	txt += getTopologyParentIsProxyStr(serverIsLastTier)
+	txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastTier)
+	txt += ` go_direct=` + getTopologyGoDirect(ds, serverPlacement.IsLastTier)
+	txt += ` qstring=` + getTopologyQueryString(ds, serverParams, serverPlacement.IsLastTier)
+	txt += getTopologyParentIsProxyStr(serverPlacement.IsLastTier)
 	txt += " # topology '" + ds.Topology + "'"
 	txt += "\n"
 	return txt, nil
@@ -531,7 +536,7 @@ func GetTopologyParents(
 	if numParents := len(svNode.Parents); numParents > 2 {
 		log.Errorln("DS " + string(ds.Name) + " topology '" + ds.Topology + "' has " + strconv.Itoa(numParents) + " parent nodes, but Apache Traffic Server only supports Primary and Secondary (2) lists of parents. CacheGroup nodes after the first 2 will be ignored!")
 	}
-	if len(topology.Nodes) < svNode.Parents[0] {
+	if len(topology.Nodes) <= svNode.Parents[0] {
 		return nil, nil, errors.New("DS " + string(ds.Name) + " topology '" + ds.Topology + "' node parent " + strconv.Itoa(svNode.Parents[0]) + " greater than number of topology nodes " + strconv.Itoa(len(topology.Nodes)) + ". Cannot create parents!")
 	}
 	if len(svNode.Parents) > 1 && len(topology.Nodes) <= svNode.Parents[1] {

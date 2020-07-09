@@ -92,7 +92,12 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 		dses[name] = tc.DeliveryServiceNullable{}
 	}
 
-	txt := atscfg.MakeMetaConfig(tc.CacheName(serverName), server, tmParams.URL, tmParams.ReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
+	// This endpoint should not be used for new features with Topologies.
+	// If a new TO install is using Topologies, it must be upgraded to the latest ORT (which doesn't use this endpoint).
+	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.Topology{}
+
+	txt := atscfg.MakeMetaConfig(tc.CacheName(serverName), server, tmParams.URL, tmParams.ReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cgs, topologies)
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write([]byte(txt))
 }

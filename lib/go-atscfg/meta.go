@@ -67,9 +67,11 @@ func MakeMetaConfig(
 	uriSignedDSes []tc.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
 	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable,
+	cacheGroupArr []tc.CacheGroupNullable,
+	topologies []tc.Topology,
 ) string {
 	configDir := "" // this should only be used for Traffic Ops, which doesn't have a local ATS install config directory (and thus will fail if any location Parameters are missing or relative).
-	return MetaObjToMetaConfig(MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, configDir))
+	return MetaObjToMetaConfig(MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cacheGroupArr, topologies, configDir))
 }
 
 func MetaObjToMetaConfig(atsData tc.ATSConfigMetaData, err error) string {
@@ -100,7 +102,10 @@ func AddMetaObjConfigDir(
 	uriSignedDSes []tc.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
 	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable,
+	cacheGroupArr []tc.CacheGroupNullable,
+	topologies []tc.Topology,
 ) (tc.ATSConfigMetaData, error) {
+	cacheGroups := MakeCGMap(cacheGroupArr)
 
 	// Note there may be multiple files with the same name in different directories.
 	configFilesM := map[string][]tc.ATSConfigMetaDataConfigFile{} // map[fileShortName]tc.ATSConfigMetaDataConfigFile
@@ -146,24 +151,64 @@ func AddMetaObjConfigDir(
 			log.Errorln("meta config generation got Delivery Service with nil XMLID - not considering!")
 			continue
 		}
+
 		err := error(nil)
 		// Note we log errors, but don't return them.
 		// If an individual DS has an error, we don't want to break the rest of the CDN.
-		if (ds.EdgeHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
-			strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
-			fileName := "hdr_rw_" + *ds.XMLID + ".config"
-			scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
-			if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
-				log.Errorln("meta config generation: " + err.Error())
+		if ds.Topology != nil && *ds.Topology != "" {
+			topology := tc.Topology{}
+			for _, to := range topologies {
+				if to.Name == *ds.Topology {
+					topology = to
+					break
+				}
 			}
-		}
-		if (ds.MidHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
-			ds.Type != nil && ds.Type.UsesMidCache() &&
-			strings.HasPrefix(server.Type, tc.MidTypePrefix) {
-			fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"
-			scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
-			if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
-				log.Errorln("meta config generation: " + err.Error())
+
+			placement := getTopologyPlacement(tc.CacheGroupName(server.CacheGroupName), topology, cacheGroups)
+			switch placement.CacheTier {
+			case TopologyCacheTierFirst:
+				if ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "" || ds.MaxOriginConnections != nil {
+					fileName := FirstHeaderRewriteConfigFileName(*ds.XMLID)
+					scope := tc.ATSConfigMetaDataConfigFileScopeServers
+					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
+						log.Errorln("meta config generation: " + err.Error())
+					}
+				}
+			case TopologyCacheTierInner:
+				if ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "" || ds.MaxOriginConnections != nil {
+					fileName := InnerHeaderRewriteConfigFileName(*ds.XMLID)
+					scope := tc.ATSConfigMetaDataConfigFileScopeServers
+					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
+						log.Errorln("meta config generation: " + err.Error())
+					}
+				}
+			case TopologyCacheTierLast:
+				if ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "" || ds.MaxOriginConnections != nil {
+					fileName := LastHeaderRewriteConfigFileName(*ds.XMLID)
+					scope := tc.ATSConfigMetaDataConfigFileScopeServers
+					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
+						log.Errorln("meta config generation: " + err.Error())
+					}
+				}
+			}
+		} else if strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
+			if (ds.EdgeHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
+				strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
+				fileName := "hdr_rw_" + *ds.XMLID + ".config"
+				scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
+				if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
+					log.Errorln("meta config generation: " + err.Error())
+				}
+			}
+		} else if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+			if (ds.MidHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
+				ds.Type != nil && ds.Type.UsesMidCache() &&
+				strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+				fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"
+				scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
+				if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
+					log.Errorln("meta config generation: " + err.Error())
+				}
 			}
 		}
 		if ds.RegexRemap != nil {
@@ -233,6 +278,8 @@ func MakeMetaObj(
 	uriSignedDSes []tc.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
 	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable,
+	cacheGroupArr []tc.CacheGroupNullable,
+	topologies []tc.Topology,
 	configDir string,
 ) (tc.ATSConfigMetaData, error) {
 	if tmURL == "" {
@@ -310,7 +357,7 @@ locationParamsFor:
 		atsData.ConfigFiles = append(atsData.ConfigFiles, atsCfg)
 	}
 
-	return AddMetaObjConfigDir(atsData, configDir, serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
+	return AddMetaObjConfigDir(atsData, configDir, serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cacheGroupArr, topologies)
 }
 
 func getServerScope(cfgFile string, serverType string, scopeParams map[string]string) tc.ATSConfigMetaDataConfigFileScope {
