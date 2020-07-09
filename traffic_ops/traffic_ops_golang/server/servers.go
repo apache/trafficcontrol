@@ -596,12 +596,13 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2()
 		if err != nil {
+			api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err), &alternative)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
 			return
 		}
 		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
 	}
-	api.WriteResp(w, r, legacyServers)
+	api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, legacyServers)
 	return
 }
 
