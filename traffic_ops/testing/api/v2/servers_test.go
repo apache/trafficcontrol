@@ -31,13 +31,46 @@ func TestServers(t *testing.T) {
 
 func CreateTestServers(t *testing.T) {
 
+	var name string
+
 	// loop through servers, assign FKs and create
 	for _, server := range testData.Servers {
 		resp, _, err := TOSession.CreateServer(server)
 		t.Log("Response: ", server.HostName, " ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE servers: %v", err)
+		} else {
+			name = server.HostName
 		}
+	}
+
+	if name == "" {
+		t.Fatal("Failed to create at least one valid server to use as a template")
+	}
+
+	servers, _, err := TOSession.GetServerByHostName(name)
+	if err != nil {
+		t.Fatalf("Failed to get server by hostname '%s': %v", name, err)
+	}
+	if len(servers) < 1 {
+		t.Fatalf("Failed to get at least one server by hostname '%s'", name)
+	}
+
+	testServer := servers[0]
+
+	testServer.DomainName = "test"
+	testServer.HostName = "test"
+	testServer.ID = 0
+	testServer.IPIsService = true
+	testServer.IPAddress = ""
+	testServer.IP6IsService = false
+	testServer.IP6Address = "::1/64"
+
+	if alerts, _, err := TOSession.CreateServer(testServer); err == nil {
+		t.Error("Didn't get expected error trying to create a server with a blank service address")
+	} else {
+		t.Logf("Received expected error creating a server with a blank service address: %v", err)
+		t.Logf("Alerts: %v", alerts)
 	}
 
 }

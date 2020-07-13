@@ -397,11 +397,11 @@ func validateV2(s *tc.ServerNullableV2, tx *sql.Tx) error {
 		errs = append(errs, tc.NeedsAtLeastOneServiceAddressError)
 	}
 
-	if *s.IPIsService && s.IPAddress == nil {
+	if *s.IPIsService && (s.IPAddress == nil || *s.IPAddress == "") {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 
-	if *s.IP6IsService && s.IP6Address == nil {
+	if *s.IP6IsService && (s.IP6Address == nil || *s.IP6Address == "") {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 	return util.JoinErrs(errs)
