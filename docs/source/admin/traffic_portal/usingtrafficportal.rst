@@ -230,6 +230,7 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 - :ref:`ds-dscp` (visible by default)
 - :ref:`ds-edge-header-rw-rules`
 - :ref:`ds-fqpr`
+- :ref:`ds-first-header-rw-rules`
 - :ref:`ds-geo-limit`
 - :ref:`ds-geo-limit-countries`
 - :ref:`ds-geo-limit-redirect-url`
@@ -241,7 +242,9 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 - :ref:`ds-http-bypass-fqdn`
 - :ref:`ds-info-url`
 - :ref:`ds-initial-dispersion`
+- :ref:`ds-inner-header-rw-rules`
 - :ref:`ds-ipv6-routing` (visible by default)
+- :ref:`ds-last-header-rw-rules`
 - :ref:`ds-longdesc`
 - :ref:`ds-longdesc2`
 - :ref:`ds-longdesc3`
@@ -254,12 +257,14 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 - :ref:`ds-protocol` (visible by default)
 - :ref:`ds-qstring-handling` (visible by default)
 - :ref:`ds-range-request-handling`
+- :ref:`ds-slice-block-size`
 - :ref:`ds-raw-remap`
 - :ref:`ds-regex-remap`
 - :ref:`ds-regionalgeo`
 - :ref:`ds-routing-name`
 - :ref:`ds-signing-algorithm` (visible by default)
 - :ref:`ds-tenant` (visible by default)
+- :ref:`ds-topology`
 - :ref:`ds-tr-resp-headers`
 - :ref:`ds-tr-req-headers`
 - :ref:`ds-types` (visible by default)

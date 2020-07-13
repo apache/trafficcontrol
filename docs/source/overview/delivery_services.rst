@@ -660,6 +660,14 @@ Describes how HTTP "Range Requests" should be handled by the Delivery Service at
 
 .. warning:: The definitions of each integral, unique identifier are hidden in implementations in each :abbr:`ATC (Apache Traffic Control)` component. Different components will handle invalid values differently, and there's no actual enforcement that the stored integral, unique identifier actually be within the representable range.
 
+.. _ds-slice-block-size:
+
+Range Slice Request Block Size
+-------------------------------------
+The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
+
+This can only and must be set if the :ref:`ds-range-request-handling` is set to ``3``.
+
 .. _ds-raw-remap:
 
 Raw Remap Text
@@ -769,14 +777,6 @@ Keys for either algorithm can be generated within :ref:`Traffic Portal <tp-servi
 
 .. _ds-ssl-key-version:
 
-Range Slice Request Block Size
--------------------------------------
-The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
-
-This can only and must be set if the :ref:`ds-range-request-handling` is set to ``3``.
-
-.. _ds-slice-block-size:
-
 SSL Key Version
 ---------------
 An integer that describes the version of the SSL key(s) - if any - used by this Delivery Service. This is incremented whenever Traffic Portal generates new SSL keys for the Delivery Service.
@@ -804,6 +804,12 @@ The :term:`Tenant` who owns this Delivery Service. They (and their parents, if a
 	+==========+==============================================+========================================================+
 	| TenantID | Go code and :ref:`to-api` requests/responses | Integral, unique identifier (``bigint``, ``int`` etc.) |
 	+----------+----------------------------------------------+--------------------------------------------------------+
+
+.. _ds-topology:
+
+Topology
+--------
+A structure composed of :term:`Cache Groups` and parent relationships, which is assignable to one or more :term:`Delivery Services`.
 
 .. _ds-tr-resp-headers:
 
