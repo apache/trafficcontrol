@@ -1,13 +1,14 @@
 {
   "name": "traffic_portal",
   "devDependencies": {
+    "browserify": "^16.5.1",
     "connect-livereload": "0.6.1",
     "connect-modrewrite": "0.10.2",
     "connect-timeout": "1.9.0",
     "express": "4.17.1",
     "grunt": "1.0.4",
     "grunt-adam-compass": "0.7.1",
-    "grunt-browserify2": "0.1.8",
+    "grunt-browserify": "^5.3.0",
     "grunt-concurrent": "2.2.1",
     "grunt-contrib-clean": "2.0.0",
     "grunt-contrib-concat": "1.0.1",
