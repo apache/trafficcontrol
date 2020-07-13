@@ -214,32 +214,39 @@ func EvalAggregate(result cache.ResultInfo, resultStats *threadsafe.ResultStatVa
 	return avail, result.UsingIPv4, eventDescVal, eventMsg
 }
 
+// gets a function to process an availability tuple based on the protocol used.
+func getProcessAvailableTuple(protocol config.PollingProtocol) func(cache.AvailableTuple, tc.LegacyTrafficServer) bool {
+	switch protocol {
+	case config.IPv4Only:
+		return func(tuple cache.AvailableTuple, _ tc.LegacyTrafficServer) bool {
+			return tuple.IPv4
+		}
+	case config.IPv6Only:
+		return func(tuple cache.AvailableTuple, _ tc.LegacyTrafficServer) bool {
+			return tuple.IPv6
+		}
+	case config.Both:
+		return func(tuple cache.AvailableTuple, serverInfo tc.LegacyTrafficServer) bool {
+			if serverInfo.IP == "" {
+				return tuple.IPv6
+			} else if serverInfo.IP6 == "" {
+				return tuple.IPv4
+			}
+			return tuple.IPv4 || tuple.IPv6
+		}
+	default:
+		log.Errorf("received an unknown Polling Protocol: %s", protocol)
+	}
+	return func(cache.AvailableTuple, tc.LegacyTrafficServer) bool { return false }
+}
+
 // CalcAvailability calculates the availability of each cache in results.
 // statResultHistory may be nil, in which case stats won't be used to calculate availability.
 func CalcAvailability(results []cache.Result, pollerName string, statResultHistory *threadsafe.ResultStatHistory, mc tc.LegacyTrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents, protocol config.PollingProtocol) {
 	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
 	statResults := (*threadsafe.ResultStatValHistory)(nil)
 	statResultsVal := (*map[string]threadsafe.ResultStatValHistory)(nil)
-	processAvailableTuple := func(tuple cache.AvailableTuple, serverInfo tc.LegacyTrafficServer) bool {
-		switch protocol {
-		case config.IPv4Only:
-			return tuple.IPv4
-		case config.IPv6Only:
-			return tuple.IPv6
-		case config.Both:
-			// only report availability based on defined IP addresses
-			if serverInfo.IP == "" {
-				return tuple.IPv6
-			} else if serverInfo.IP6 == "" {
-				return tuple.IPv4
-			}
-			// if both IP addresses are defined then report availability based on both
-			return tuple.IPv4 || tuple.IPv6
-		default:
-			log.Errorln("received an unknown PollingProtocol: " + protocol.String())
-		}
-		return false
-	}
+	processAvailableTuple := getProcessAvailableTuple(protocol)
 
 	for _, result := range results {
 		if statResultHistory != nil {
