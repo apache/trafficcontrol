@@ -213,7 +213,6 @@ const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
 // The cacheKeyConfigParams map may be nil, if this ds profile had no cache key config params.
 func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int, server *ServerInfo, pData map[string]string, text string, ds RemapConfigDSData, mapFrom string, mapTo string, cacheKeyConfigParams map[string]string) string {
 	// ds = 'remap' in perl
-
 	mapFrom = strings.Replace(mapFrom, `__http__`, server.HostName, -1)
 
 	if _, hasDSCPRemap := pData["dscp_remap"]; hasDSCPRemap {
@@ -298,14 +297,20 @@ func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int,
 			rangeReqTxt = ` @plugin=slice.so @pparam=--blockbytes=` + strconv.Itoa(*ds.RangeSliceBlockSize) + ` @plugin=cache_range_requests.so	`
 		}
 	}
-	if ds.RemapText != nil && *ds.RemapText != "" && strings.Contains(*ds.RemapText, RemapConfigRangeDirective) {
-		*ds.RemapText = strings.Replace(*ds.RemapText, `__RANGE_DIRECTIVE__`, rangeReqTxt, 1)
+
+	remapText := ""
+	if ds.RemapText != nil {
+		remapText = *ds.RemapText
+	}
+
+	if strings.Contains(remapText, RemapConfigRangeDirective) {
+		remapText = strings.Replace(remapText, RemapConfigRangeDirective, rangeReqTxt, 1)
 	} else {
 		text += rangeReqTxt
 	}
 
-	if ds.RemapText != nil && *ds.RemapText != "" {
-		text += " " + *ds.RemapText
+	if remapText != "" {
+		text += " " + remapText
 	}
 
 	if ds.FQPacingRate != nil && *ds.FQPacingRate > 0 {

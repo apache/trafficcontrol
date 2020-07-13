@@ -4940,7 +4940,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 			RegexSetNumber:           util.StrPtr("myregexsetnum"),
 			OriginShield:             util.StrPtr("myoriginshield"),
 			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
+			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS)),
 			AnonymousBlockingEnabled: util.BoolPtr(false),
 			Active:                   true,
 			RangeSliceBlockSize:      util.IntPtr(262144),
@@ -4955,8 +4955,8 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	txtLines := strings.Split(txt, "\n")
 
-	if len(txtLines) != 2 {
-		t.Fatalf("expected 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	if len(txtLines) != 3 { // 2 remaps plus header comment
+		t.Fatalf("expected 2 remaps from HTTP_AND_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
 	}
 
 	remapLine := txtLines[1]
@@ -4983,8 +4983,11 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	if strings.Contains(remapLine, "__RANGE_DIRECTIVE__") {
 		t.Errorf("expected raw remap range directive to be replaced, actual '%v'", txt)
 	}
-	if strings.Count(remapLine, "slice.so") != 1 {
-		t.Errorf("expected raw remap range directive to be replaced not duplicated, actual '%v'", txt)
+	if count := strings.Count(remapLine, "slice.so"); count != 1 { // Individual line should only have 1 slice.so
+		t.Errorf("expected raw remap range directive to be replaced not duplicated, actual count %v '%v'", count, txt)
+	}
+	if count := strings.Count(txt, "slice.so"); count != 2 { // All lines should have 2 slice.so - HTTP and HTTPS lines
+		t.Errorf("expected raw remap range directive to have one slice.so for HTTP and one for HTTPS remap, actual count %v '%v'", count, txt)
 	}
 }
 
