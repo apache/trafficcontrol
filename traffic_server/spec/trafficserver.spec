@@ -18,19 +18,19 @@
 
 %global install_prefix "/opt"
 
-Name:		trafficserver
-Version:	5.2.0
-Release:	1%{?dist}
-Summary:	Apache Traffic Server
-Vendor:		Comcast
-Group:		Applications/Communications
-License:	Apache License, Version 2.0
-URL:		https://trafficserver.apache.org/
+Name:           trafficserver
+Version:        5.2.0
+Release:        1%{?dist}
+Summary:        Apache Traffic Server
+Vendor:         Comcast
+Group:          Applications/Communications
+License:        Apache License, Version 2.0
+URL:            https://trafficserver.apache.org/
 Source0:        %{name}-%{version}.tar.bz2
-Patch:		%{name}-%{version}-791ddc4.patch
-BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Requires:	tcl, hwloc, pcre, openssl, libcap
-BuildRequires:	autoconf, automake, libtool, gcc-c++, glibc-devel, openssl-devel, expat-devel, pcre, libcap-devel, pcre-devel, perl-ExtUtils-MakeMaker, tcl-devel, hwloc-devel
+Patch:          %{name}-%{version}-791ddc4.patch
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+Requires:       tcl, hwloc, pcre, openssl, libcap
+BuildRequires:  autoconf, automake, libtool, gcc-c++, glibc-devel, openssl-devel, expat-devel, pcre, libcap-devel, pcre-devel, perl-ExtUtils-MakeMaker, tcl-devel, hwloc-devel
 
 %description
 Apache Traffic Server with Comcast modifications and environment specific modifications

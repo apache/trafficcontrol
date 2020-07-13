@@ -40,7 +40,8 @@ var ToolsService = function($http, messageModel, ENV) {
 				return result.data.response;
 			},
 			function(err) {
-				messageModel.setMessages(err.data.alerts, false);
+				// apparently there are no alerts sent from this endpoint
+				messageModel.setMessages([ { level: 'error', text: err.status.toString() + ': ' + err.statusText } ], false);
 				throw err;
 			}
 		);

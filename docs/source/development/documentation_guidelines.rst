@@ -22,9 +22,20 @@ The Apache Traffic Control documentation is written in :abbr:`RST (reStructuredT
 
 .. seealso:: `The docutils RST reference <http://docutils.sourceforge.net/rst.html>`_.
 
+.. _docs-build:
+
 Building
 ========
-To build the documentation, see :ref:`docs-build`.
+This documentation uses the `Sphinx documentation build system <http://www.sphinx-doc.org/en/master/>`_, and as such requires a Python3 version that is at least 3.4.1. It also has dependency on Sphinx, and Sphinx extensions and themes. All of these can be easily installed using `pip` by referencing the requirements file like so:
+
+.. code-block:: shell
+	:caption: Run from the Repository's Root Directory
+
+	python3 -m pip install --user -r docs/source/requirements.txt
+
+Once all dependencies have been satisfied, build using the Makefile at ``docs/Makefile``.
+
+Alternatively, it is also possible to :ref:`pkg` or to :ref:`build-with-dc`, both of which will output a documentation "tarball" to ``dist/``.
 
 Writing
 =======
