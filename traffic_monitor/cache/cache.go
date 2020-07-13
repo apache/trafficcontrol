@@ -220,17 +220,34 @@ func ComputedAggregateStats() map[string]AggregateComputeFunc {
 	}
 }
 
-// ComputedStats returns a map of cache stats which are computed by Traffic Monitor (rather than returned literally from ATS), mapped to the func to compute them.
+// ComputedStats returns a map of cache stats which are computed by Traffic
+// Monitor (rather than returned literally from ATS), mapped to the function to
+// compute them.
 func ComputedStats() map[string]StatComputeFunc {
 	return map[string]StatComputeFunc{
 		"availableBandwidthInKbps": func(info ResultInfo, _ tc.LegacyTrafficServer, _ tc.TMProfile, _ tc.IsAvailable, interfaceName string) interface{} {
-			return info.InterfaceVitals[interfaceName].MaxKbpsOut - info.InterfaceVitals[interfaceName].KbpsOut
+			inf, ok := info.InterfaceVitals[interfaceName]
+			if !ok {
+				log.Errorf("'availableBandwidthInKbps' requested for un-polled interface '%s'", interfaceName)
+				return -1.0
+			}
+			return inf.MaxKbpsOut - inf.KbpsOut
 		},
 		"availableBandwidthInMbps": func(info ResultInfo, _ tc.LegacyTrafficServer, _ tc.TMProfile, stats_over_httpData tc.IsAvailable, interfaceName string) interface{} {
-			return (info.InterfaceVitals[interfaceName].MaxKbpsOut - info.InterfaceVitals[interfaceName].KbpsOut) / 1000
+			inf, ok := info.InterfaceVitals[interfaceName]
+			if !ok {
+				log.Errorf("'availableBandwidthInMbps' requested for un-polled interface '%s'", interfaceName)
+				return -1.0
+			}
+			return (inf.MaxKbpsOut - inf.KbpsOut) / 1000.0
 		},
 		"bandwidth": func(info ResultInfo, _ tc.LegacyTrafficServer, _ tc.TMProfile, _ tc.IsAvailable, interfaceName string) interface{} {
-			return info.InterfaceVitals[interfaceName].KbpsOut
+			inf, ok := info.InterfaceVitals[interfaceName]
+			if !ok {
+				log.Errorf("'bandwidth' requested for un-polled interface '%s'", interfaceName)
+				return -1.0
+			}
+			return inf.KbpsOut
 		},
 		"error-string": func(info ResultInfo, _ tc.LegacyTrafficServer, _ tc.TMProfile, _ tc.IsAvailable, _ string) interface{} {
 			if info.Error != nil {
@@ -248,16 +265,36 @@ func ComputedStats() map[string]StatComputeFunc {
 			return combinedState.IsAvailable
 		},
 		"kbps": func(info ResultInfo, _ tc.LegacyTrafficServer, _ tc.TMProfile, _ tc.IsAvailable, interfaceName string) interface{} {
-			return info.InterfaceVitals[interfaceName].KbpsOut
+			inf, ok := info.InterfaceVitals[interfaceName]
+			if !ok {
+				log.Errorf("'bandwidth' requested for un-polled interface '%s'", interfaceName)
+				return -1.0
+			}
+			return inf.KbpsOut
 		},
 		"gbps": func(info ResultInfo, _ tc.LegacyTrafficServer, _ tc.TMProfile, _ tc.IsAvailable, interfaceName string) interface{} {
-			return float64(info.InterfaceVitals[interfaceName].KbpsOut) / 1000000.0
+			inf, ok := info.InterfaceVitals[interfaceName]
+			if !ok {
+				log.Errorf("'bandwidth' requested for un-polled interface '%s'", interfaceName)
+				return -1.0
+			}
+			return float64(inf.KbpsOut) / 1000000.0
 		},
 		"loadavg": func(info ResultInfo, _ tc.LegacyTrafficServer, _ tc.TMProfile, _ tc.IsAvailable, interfaceName string) interface{} {
-			return info.InterfaceVitals[interfaceName].LoadAvg
+			inf, ok := info.InterfaceVitals[interfaceName]
+			if !ok {
+				log.Errorf("'bandwidth' requested for un-polled interface '%s'", interfaceName)
+				return -1.0
+			}
+			return inf.LoadAvg
 		},
 		"maxKbps": func(info ResultInfo, _ tc.LegacyTrafficServer, _ tc.TMProfile, _ tc.IsAvailable, interfaceName string) interface{} {
-			return info.InterfaceVitals[interfaceName].MaxKbpsOut
+			inf, ok := info.InterfaceVitals[interfaceName]
+			if !ok {
+				log.Errorf("'bandwidth' requested for un-polled interface '%s'", interfaceName)
+				return -1.0
+			}
+			return inf.MaxKbpsOut
 		},
 		"queryTime": func(info ResultInfo, _ tc.LegacyTrafficServer, _ tc.TMProfile, _ tc.IsAvailable, _ string) interface{} {
 			return info.RequestTime.Nanoseconds() / nsPerMs
