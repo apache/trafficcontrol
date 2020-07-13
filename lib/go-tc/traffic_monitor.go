@@ -26,24 +26,48 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
-// TMConfigResponse ...
+
+const aggregate = ""
+
+// TMConfigResponse is the response to requests made to the
+// cdns/{{Name}}/configs/monitoring endpoint of the Traffic Ops API.
 type TMConfigResponse struct {
 	Response TrafficMonitorConfig `json:"response"`
 }
 
-// LegacyTMConfigResponse ...
+// LegacyTMConfigResponse was the response to requests made to the
+// cdns/{{Name}}/configs/montoring endpoint of the Traffic Ops API in older API
+// versions.
 type LegacyTMConfigResponse struct {
 	Response LegacyTrafficMonitorConfig `json:"response"`
 }
 
-// TrafficMonitorConfig ...
+// TrafficMonitorConfig is the full set of information needed by Traffic
+// Monitor to do its job of monitoring health and statistics of cache servers.
 type TrafficMonitorConfig struct {
-	TrafficServers   []TrafficServer        `json:"trafficServers,omitempty"`
-	CacheGroups      []TMCacheGroup         `json:"cacheGroups,omitempty"`
-	Config           map[string]interface{} `json:"config,omitempty"`
-	TrafficMonitors  []TrafficMonitor       `json:"trafficMonitors,omitempty"`
-	DeliveryServices []TMDeliveryService    `json:"deliveryServices,omitempty"`
-	Profiles         []TMProfile            `json:"profiles,omitempty"`
+	// TrafficServers is the set of all Cache Servers which should be monitored
+	// by the Traffic Monitor.
+	TrafficServers []TrafficServer `json:"trafficServers,omitempty"`
+	// CacheGroups is a collection of Cache Group Names associated with their
+	// geographic coordinates, for use in determining Cache Group availability.
+	CacheGroups []TMCacheGroup `json:"cacheGroups,omitempty"`
+	// Config is a mapping of arbitrary configuration parameters to their
+	// respective values. While there is no defined structure to this map,
+	// certain configuration parameters have specifically defined semantics
+	// which may be found in the Traffic Monitor documentation.
+	Config map[string]interface{} `json:"config,omitempty"`
+	// TrafficMonitors is the set of ALL Traffic Monitors (including whatever
+	// Traffic Monitor requested the endpoint (if indeed one did)) which is
+	// used to determine quorum and peer polling behavior.
+	TrafficMonitors []TrafficMonitor `json:"trafficMonitors,omitempty"`
+	// DeliveryServices is the set of all Delivery Services within the
+	// monitored CDN, which are used to determine Delivery Service-level
+	// statistics.
+	DeliveryServices []TMDeliveryService `json:"deliveryServices,omitempty"`
+	// Profiles is the set of Profiles in use by any and all monitored cache
+	// servers (those given in TrafficServers), which are stored here to
+	// avoid potentially lengthy reiteration.
+	Profiles []TMProfile `json:"profiles,omitempty"`
 }
 
 // ToLegacyConfig converts TrafficMonitorConfig to LegacyTrafficMonitorConfig.
@@ -74,14 +98,39 @@ type LegacyTrafficMonitorConfig struct {
 	Profiles         []TMProfile            `json:"profiles,omitempty"`
 }
 
-// TrafficMonitorConfigMap ...
+// TrafficMonitorConfigMap is a representation of a TrafficMonitorConfig using
+// unique values as map keys.
 type TrafficMonitorConfigMap struct {
-	TrafficServer   map[string]TrafficServer
-	CacheGroup      map[string]TMCacheGroup
-	Config          map[string]interface{}
-	TrafficMonitor  map[string]TrafficMonitor
+	// TrafficServer is a map of cache server hostnames to TrafficServer
+	// objects.
+	//
+	// WARNING: Cache server hostnames are NOT guaranteed to be unique, so when
+	// more than one cache server with the same hostname exists, the two CANNOT
+	// coexist within this structure; only one will appear and, when
+	// constructed using TrafficMonitorTransformToMap, which cache server does
+	// exist in the generated map is undefined.
+	TrafficServer map[string]TrafficServer
+	// CacheGroup is a map of Cache Group Names to TMCacheGroup objects.
+	CacheGroup map[string]TMCacheGroup
+	// Config is a mapping of arbitrary configuration parameters to their
+	// respective values. While there is no defined structure to this map,
+	// certain configuration parameters have specifically defined semantics
+	// which may be found in the Traffic Monitor documentation.
+	Config map[string]interface{}
+	// TrafficMonitor is a map of Traffic Monitor hostnames to TrafficMonitor
+	// objects.
+	//
+	// WARNING: Traffic Monitor hostnames are NOT guaranteed to be unique, so
+	// when more than one cache server with the same hostname exists, the two
+	// CANNOT coexist within this structure; only one will appear and, when
+	// constructed using TrafficMonitorTransformToMap, which Traffic Monitor
+	// does exist in the generated map is undefined.
+	TrafficMonitor map[string]TrafficMonitor
+	// DeliveryService is a map of Delivery Service XMLIDs to TMDeliveryService
+	// objects.
 	DeliveryService map[string]TMDeliveryService
-	Profile         map[string]TMProfile
+	// Profile is a map of Profile Names to TMProfile objects.
+	Profile map[string]TMProfile
 }
 
 // LegacyTrafficMonitorConfigMap ...
@@ -94,20 +143,31 @@ type LegacyTrafficMonitorConfigMap struct {
 	Profile         map[string]TMProfile
 }
 
-// TrafficMonitor ...
+// TrafficMonitor is a structure containing enough information about a Traffic
+// Monitor instance for another Traffic Monitor to use it for quorums and peer
+// polling.
 type TrafficMonitor struct {
-	Port         int    `json:"port"`
-	IP6          string `json:"ip6"`
-	IP           string `json:"ip"`
-	HostName     string `json:"hostName"`
-	FQDN         string `json:"fqdn"`
-	Profile      string `json:"profile"`
-	Location     string `json:"location"`
+	// Port is the port on which the Traffic Monitor listens for HTTP requests.
+	Port int `json:"port"`
+	// IP6 is the Traffic Monitor's IPv6 address.
+	IP6 string `json:"ip6"`
+	// IP is the Traffic Monitor's IPv4 address.
+	IP string `json:"ip"`
+	// HostName is the Traffic Monitor's hostname.
+	HostName string `json:"hostName"`
+	// FQDN is the Fully Qualified Domain Name of the Traffic Monitor server.
+	FQDN string `json:"fqdn"`
+	// Profile is the Name of the Profile used by the Traffic Monitor.
+	Profile string `json:"profile"`
+	// Location is the Name of the Cache Group to which the Traffic Monitor
+	// belongs - called "Location" for legacy reasons.
+	Location string `json:"location"`
+	// ServerStatus is the Name of the Status of the Traffic Monitor.
 	ServerStatus string `json:"status"`
 }
 
-// TMCacheGroup ...
-// !!! Note the lowercase!!! this is local to this file, there's a CacheGroup definition in cachegroup.go!
+// TMCacheGroup contains all of the information about a Cache Group necessary
+// for Traffic Monitor to do its job of monitoring health and statistics.
 type TMCacheGroup struct {
 	Name        string                `json:"name"`
 	Coordinates MonitoringCoordinates `json:"coordinates"`
@@ -120,7 +180,9 @@ type MonitoringCoordinates struct {
 	Longitude float64 `json:"longitude"`
 }
 
-// TMDeliveryService ...
+// TMDeliveryService is all of the information about a Delivery Service
+// necessary for Traffic Monitor to do its job of monitoring health and
+// statistics.
 type TMDeliveryService struct {
 	XMLID              string `json:"xmlId"`
 	TotalTPSThreshold  int64  `json:"TotalTpsThreshold"`
@@ -128,14 +190,19 @@ type TMDeliveryService struct {
 	TotalKbpsThreshold int64  `json:"TotalKbpsThreshold"`
 }
 
-// TMProfile ...
+// TMProfile is primarily a collection of the Parameters with special meaning
+// to Traffic Monitor for a Profile of one of the monitored cache servers
+// and/or other Traffic Monitors, along with some identifying information for
+// the Profile.
 type TMProfile struct {
 	Parameters TMParameters `json:"parameters"`
 	Name       string       `json:"name"`
 	Type       string       `json:"type"`
 }
 
-// TMParameters ...
+// TMParameters is a structure containing all of the Parameters with special
+// meaning to Traffic Monitor. For specifics regarding each Parameter, refer to
+// the official documentation.
 // TODO change TO to return this struct, so a custom UnmarshalJSON isn't necessary.
 type TMParameters struct {
 	HealthConnectionTimeout int    `json:"health.connection.timeout"`
@@ -144,13 +211,20 @@ type TMParameters struct {
 	HealthPollingType       string `json:"health.polling.type"`
 	HistoryCount            int    `json:"history.count"`
 	MinFreeKbps             int64
+	MinFreeKbpsAggregate    int64
 	Thresholds              map[string]HealthThreshold `json:"health_threshold"`
+	AggregateThresholds     map[string]HealthThreshold `json:"health_threshold_aggregate"`
 }
 
 const DefaultHealthThresholdComparator = "<"
 
+// HealthThreshold describes some value against which to compare health
+// measurements to determine if a cache server is healthy.
 type HealthThreshold struct {
-	Val        float64
+	// Val is the actual, numeric, threshold value.
+	Val float64
+	// Comparator is the comparator used to compare the Val to the monitored
+	// value. One of '=', '>', '<', '>=', or '<=' - other values are invalid.
 	Comparator string // TODO change to enum?
 }
 
@@ -173,6 +247,8 @@ func strToThreshold(s string) (HealthThreshold, error) {
 	}
 	return HealthThreshold{Val: val, Comparator: DefaultHealthThresholdComparator}, nil
 }
+
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 	raw := map[string]interface{}{}
 	if err := json.Unmarshal(bytes, &raw); err != nil {
@@ -220,13 +296,18 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 	}
 
 	params.Thresholds = map[string]HealthThreshold{}
+	params.AggregateThresholds = map[string]HealthThreshold{}
 	thresholdPrefix := "health.threshold."
+	thresholdAggregatePrefix := "health.threshold.aggregate."
 	for k, v := range raw {
 		if strings.HasPrefix(k, thresholdPrefix) {
 			stat := k[len(thresholdPrefix):]
 			vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
 			if t, err := strToThreshold(vStr); err != nil {
 				return fmt.Errorf("Unmarshalling TMParameters `health.threshold.` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v'", k, v)
+			} else if strings.HasPrefix(k, thresholdAggregatePrefix) || k == "health.threshold.availableBandwidthInKbps" {
+				stat = k[len(thresholdAggregatePrefix):]
+				params.AggregateThresholds[stat] = t
 			} else {
 				params.Thresholds[stat] = t
 			}
@@ -238,12 +319,12 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonitorConfigMap, error) {
 	var tm TrafficMonitorConfigMap
 
-	tm.TrafficServer = make(map[string]TrafficServer)
-	tm.CacheGroup = make(map[string]TMCacheGroup)
-	tm.Config = make(map[string]interface{})
-	tm.TrafficMonitor = make(map[string]TrafficMonitor)
-	tm.DeliveryService = make(map[string]TMDeliveryService)
-	tm.Profile = make(map[string]TMProfile)
+	tm.TrafficServer = make(map[string]TrafficServer, len(tmConfig.TrafficServers))
+	tm.CacheGroup = make(map[string]TMCacheGroup, len(tmConfig.CacheGroups))
+	tm.Config = make(map[string]interface{}, len(tmConfig.Config))
+	tm.TrafficMonitor = make(map[string]TrafficMonitor, len(tmConfig.TrafficMonitors))
+	tm.DeliveryService = make(map[string]TMDeliveryService, len(tmConfig.DeliveryServices))
+	tm.Profile = make(map[string]TMProfile, len(tmConfig.Profiles))
 
 	for _, trafficServer := range tmConfig.TrafficServers {
 		tm.TrafficServer[trafficServer.HostName] = trafficServer
@@ -268,6 +349,8 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 	for _, profile := range tmConfig.Profiles {
 		bwThreshold := profile.Parameters.Thresholds["availableBandwidthInKbps"]
 		profile.Parameters.MinFreeKbps = int64(bwThreshold.Val)
+		bwThresholdAggregate := profile.Parameters.AggregateThresholds["availableBandwidthInKbps"]
+		profile.Parameters.MinFreeKbpsAggregate = int64(bwThresholdAggregate.Val)
 		tm.Profile[profile.Name] = profile
 	}
 
