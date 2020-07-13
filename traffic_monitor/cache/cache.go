@@ -134,9 +134,10 @@ func (result *Result) HasStat(stat string) bool {
 	return false
 }
 
-// Returns the names of all interfaces including the aggregate
+// Returns the names of all network interfaces used by the cache that was
+// monitored to obtain the result.
 func (result *Result) InterfacesNames() []string {
-	interfaceNames := []string{tc.CacheInterfacesAggregate}
+	interfaceNames := make([]string, 0, len(result.Statistics.Interfaces))
 	for name, _ := range result.Statistics.Interfaces {
 		interfaceNames = append(interfaceNames, name)
 	}
@@ -179,11 +180,20 @@ type Filter interface {
 
 const nsPerMs = 1000000
 
-type StatComputeFunc func(resultInfo ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable, interfaceName string) interface{}
-type AggregateComputeFunc func(resultInfo ResultInfo) interface{}
+// StatComputeFunc functions calculate a specific statistic given a set of
+// polling results, server and profile information, whether or not the server
+// is available, and the name of the specific network interface for which stats
+// will be computed.
+type StatComputeFunc func(ResultInfo, tc.LegacyTrafficServer, tc.TMProfile, tc.IsAvailable, string) interface{}
 
-// ComputedAggregateStats returns a map of cache stats which are computed by Traffic Monitor (rather than returned literally from ATS), mapped to the func to compute them.
-// ComputedAggregateStats returns stats based on the aggregate data from all interfaces.
+// AggregateComputeFunc functions calculate a specific statistic for a cache
+// server based on an aggregate of all network interfaces - and therefore only
+// requires a polling result to calculate the statistic in question.
+type AggregateComputeFunc func(ResultInfo) interface{}
+
+// ComputedAggregateStats returns a map of cache stats which are computed by
+// Traffic Monitor (rather than returned literally from ATS), mapped to the
+// function used to compute them.
 func ComputedAggregateStats() map[string]AggregateComputeFunc {
 	return map[string]AggregateComputeFunc{
 		"availableBandwidthInKbps": func(info ResultInfo) interface{} {
