@@ -100,7 +100,7 @@ func createCacheStatuses(
 	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
-	servers map[string]tc.LegacyTrafficServer,
+	servers map[string]tc.TrafficServer,
 ) map[tc.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
 	statii := map[tc.CacheName]CacheStatus{}
