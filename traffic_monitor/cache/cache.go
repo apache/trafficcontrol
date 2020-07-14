@@ -68,20 +68,6 @@ type PrecomputedData struct {
 	Time      time.Time
 }
 
-// Result is the data result returned by a cache.
-// type Result struct {
-// 	ID              string// 	Error           error
-// 	Astats          Astats
-// 	Time            time.Time
-// 	RequestTime     time.Duration
-// 	Vitals          Vitals
-// 	PollID          uint64
-// 	UsingIPv4       bool
-// 	PollFinished    chan<- uint64
-// 	PrecomputedData PrecomputedData
-// 	Available       bool
-// }
-
 // Result is a result of polling a cache server for statistics.
 type Result struct {
 	// Available indicates whether or not the cache server should be considered
