@@ -20,6 +20,8 @@ package tc
  */
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -73,4 +75,40 @@ func TestLegacyMonitorConfigValid(t *testing.T) {
 	if err := LegacyMonitorConfigValid(validMC); err != nil {
 		t.Errorf("MonitorConfigValid(%++v) expected: nil, actual: %+v", validMC, err)
 	}
+}
+
+func ExampleHealthThreshold_String() {
+	ht := HealthThreshold{Comparator: ">=", Val: 500}
+	fmt.Println(ht)
+	// Output: >=500.000000
+}
+
+func ExampleTMParameters_UnmarshalJSON() {
+	const data = `{
+		"health.connection.timeout": 5,
+		"health.polling.url": "https://example.com/",
+		"health.polling.format": "stats_over_http",
+		"history.count": 1,
+		"health.threshold.bandwidth": ">50",
+		"health.threshold.foo": "<=500"
+	}`
+
+	var params TMParameters
+	if err := json.Unmarshal([]byte(data), &params); err != nil {
+		fmt.Printf("Failed to unmarshal: %v\n", err)
+		return
+	}
+	fmt.Printf("timeout: %d\n", params.HealthConnectionTimeout)
+	fmt.Printf("url: %s\n", params.HealthPollingURL)
+	fmt.Printf("format: %s\n", params.HealthPollingFormat)
+	fmt.Printf("history: %d\n", params.HistoryCount)
+	fmt.Printf("# of Thresholds: %d - foo: %s\n", len(params.Thresholds), params.Thresholds["foo"])
+	fmt.Printf("# of Aggregate Thresholds: %d - bandwidth: %s\n", len(params.AggregateThresholds), params.AggregateThresholds["bandwidth"])
+
+	// Output: timeout: 5
+	// url: https://example.com/
+	// format: stats_over_http
+	// history: 1
+	// # of Thresholds: 1 - foo: <=500.000000
+	// # of Aggregate Thresholds: 1 - bandwidth: >50.000000
 }

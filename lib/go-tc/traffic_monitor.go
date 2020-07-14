@@ -253,7 +253,9 @@ func (t HealthThreshold) String() string {
 // `DefaultHealthThresholdComparator` is used. If the string does not match
 // "(>|<|)(=|)\d+" an error is returned.
 func strToThreshold(s string) (HealthThreshold, error) {
-	comparators := []string{"=", ">", "<", ">=", "<="}
+	// The order of these is important - don't re-order without considering the
+	// consequences.
+	comparators := []string{">=", "<=", ">", "<", "="}
 	for _, comparator := range comparators {
 		if strings.HasPrefix(s, comparator) {
 			valStr := s[len(comparator):]
