@@ -243,6 +243,11 @@ type HealthThreshold struct {
 	Comparator string // TODO change to enum?
 }
 
+// String implements the fmt.Stringer interface.
+func (t HealthThreshold) String() string {
+	return fmt.Sprintf("%s%f", t.Comparator, t.Val)
+}
+
 // strToThreshold takes a string like ">=42" and returns a HealthThreshold with
 // a Val of `42` and a Comparator of `">="`. If no comparator exists,
 // `DefaultHealthThresholdComparator` is used. If the string does not match
