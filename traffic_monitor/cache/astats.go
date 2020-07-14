@@ -43,7 +43,6 @@ import (
 )
 
 func init() {
-	// AddStatsType("astats", astatsParse, astatsPrecompute)
 	registerDecoder("astats", astatsParse, astatsPrecompute)
 }
 
