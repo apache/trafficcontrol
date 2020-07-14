@@ -259,14 +259,14 @@ func strToThreshold(s string) (HealthThreshold, error) {
 			valStr := s[len(comparator):]
 			val, err := strconv.ParseFloat(valStr, 64)
 			if err != nil {
-				return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN")
+				return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN (%v)", err)
 			}
 			return HealthThreshold{Val: val, Comparator: comparator}, nil
 		}
 	}
 	val, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN")
+		return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN (%v)", err)
 	}
 	return HealthThreshold{Val: val, Comparator: DefaultHealthThresholdComparator}, nil
 }
@@ -338,7 +338,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 			stat := k[len(ThresholdPrefix):]
 			vStr := fmt.Sprintf("%v", v)
 			if t, err := strToThreshold(vStr); err != nil {
-				return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v'", ThresholdPrefix, k, v)
+				return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v': %v", ThresholdPrefix, k, v, err)
 			} else {
 				params.AggregateThresholds[stat] = t
 			}
@@ -347,7 +347,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 				stat := k[len(ThresholdPrefix):]
 				vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
 				if t, err := strToThreshold(vStr); err != nil {
-					return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v'", ThresholdPrefix, k, v)
+					return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v': %v", ThresholdPrefix, k, v, err)
 				} else {
 					params.Thresholds[stat] = t
 				}
