@@ -97,6 +97,30 @@ type ServerInterfaceInfo struct {
 	Name         string            `json:"name" db:"name"`
 }
 
+// GetDefaultAddress returns the IPv4 and IPv6 service addresses of the interface.
+func (i *ServerInterfaceInfo) GetDefaultAddress() (string, string) {
+	var ipv4 string
+	var ipv6 string
+	for _, ip := range i.IPAddresses {
+		if ip.ServiceAddress {
+			address, _, err := net.ParseCIDR(ip.Address)
+			if err != nil || address == nil {
+				continue
+			}
+			if address.To4() != nil {
+				ipv4 = ip.Address
+			} else if address.To16() != nil {
+				ipv6 = ip.Address
+			}
+
+			if ipv4 != "" && ipv6 != "" {
+				break
+			}
+		}
+	}
+	return ipv4, ipv6
+}
+
 // Value implements the driver.Valuer interface
 // marshals struct to json to pass back as a json.RawMessage
 func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
