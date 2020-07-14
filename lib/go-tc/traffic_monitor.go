@@ -27,7 +27,23 @@ import (
  * under the License.
  */
 
-const aggregate = ""
+// ThresholdPrefix is the prefix of all Names of Parameters used to define
+// monitoring thresholds.
+const ThresholdPrefix = "health.threshold."
+
+// These are the Names of Parameters with special meaning to Traffic Monitor.
+// They are used as thresholds in aggregate across all of a monitored cache
+// server's network interfaces. Documentation on specific Parameter meanings
+// can be found in the ATC official documentation.
+const (
+	AvailableBandwidthInKbpsThresholdName = ThresholdPrefix + "availableBandwidthInKbps"
+	AvailableBandwidthInMbpsThresholdName = ThresholdPrefix + "availableBandwidthInMbps"
+	BandwidthThresholdName                = ThresholdPrefix + "bandwidth"
+	GbpsThresholdName                     = ThresholdPrefix + "gbps"
+	KbpsThresholdName                     = ThresholdPrefix + "kbps"
+	LoadavgThresholdName                  = ThresholdPrefix + "loadavg"
+	MaxKbpsThresholdName                  = ThresholdPrefix + "maxKbps"
+)
 
 // TMConfigResponse is the response to requests made to the
 // cdns/{{Name}}/configs/monitoring endpoint of the Traffic Ops API.
@@ -211,7 +227,6 @@ type TMParameters struct {
 	HealthPollingType       string `json:"health.polling.type"`
 	HistoryCount            int    `json:"history.count"`
 	MinFreeKbps             int64
-	MinFreeKbpsAggregate    int64
 	Thresholds              map[string]HealthThreshold `json:"health_threshold"`
 	AggregateThresholds     map[string]HealthThreshold `json:"health_threshold_aggregate"`
 }
@@ -228,7 +243,10 @@ type HealthThreshold struct {
 	Comparator string // TODO change to enum?
 }
 
-// strToThreshold takes a string like ">=42" and returns a HealthThreshold with a Val of `42` and a Comparator of `">="`. If no comparator exists, `DefaultHealthThresholdComparator` is used. If the string is not of the form "(>|<|)(=|)\d+" an error is returned
+// strToThreshold takes a string like ">=42" and returns a HealthThreshold with
+// a Val of `42` and a Comparator of `">="`. If no comparator exists,
+// `DefaultHealthThresholdComparator` is used. If the string does not match
+// "(>|<|)(=|)\d+" an error is returned.
 func strToThreshold(s string) (HealthThreshold, error) {
 	comparators := []string{"=", ">", "<", ">=", "<="}
 	for _, comparator := range comparators {
@@ -297,19 +315,37 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 
 	params.Thresholds = map[string]HealthThreshold{}
 	params.AggregateThresholds = map[string]HealthThreshold{}
-	thresholdPrefix := "health.threshold."
-	thresholdAggregatePrefix := "health.threshold.aggregate."
 	for k, v := range raw {
-		if strings.HasPrefix(k, thresholdPrefix) {
-			stat := k[len(thresholdPrefix):]
-			vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
+		switch k {
+		case AvailableBandwidthInKbpsThresholdName:
+			fallthrough
+		case AvailableBandwidthInMbpsThresholdName:
+			fallthrough
+		case BandwidthThresholdName:
+			fallthrough
+		case KbpsThresholdName:
+			fallthrough
+		case GbpsThresholdName:
+			fallthrough
+		case LoadavgThresholdName:
+			fallthrough
+		case MaxKbpsThresholdName:
+			stat := k[len(ThresholdPrefix):]
+			vStr := fmt.Sprintf("%v", v)
 			if t, err := strToThreshold(vStr); err != nil {
-				return fmt.Errorf("Unmarshalling TMParameters `health.threshold.` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v'", k, v)
-			} else if strings.HasPrefix(k, thresholdAggregatePrefix) || k == "health.threshold.availableBandwidthInKbps" {
-				stat = k[len(thresholdAggregatePrefix):]
-				params.AggregateThresholds[stat] = t
+				return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v'", ThresholdPrefix, k, v)
 			} else {
-				params.Thresholds[stat] = t
+				params.AggregateThresholds[stat] = t
+			}
+		default:
+			if strings.HasPrefix(k, ThresholdPrefix) {
+				stat := k[len(ThresholdPrefix):]
+				vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
+				if t, err := strToThreshold(vStr); err != nil {
+					return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v'", ThresholdPrefix, k, v)
+				} else {
+					params.Thresholds[stat] = t
+				}
 			}
 		}
 	}
@@ -349,8 +385,6 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 	for _, profile := range tmConfig.Profiles {
 		bwThreshold := profile.Parameters.Thresholds["availableBandwidthInKbps"]
 		profile.Parameters.MinFreeKbps = int64(bwThreshold.Val)
-		bwThresholdAggregate := profile.Parameters.AggregateThresholds["availableBandwidthInKbps"]
-		profile.Parameters.MinFreeKbpsAggregate = int64(bwThresholdAggregate.Val)
 		tm.Profile[profile.Name] = profile
 	}
 
