@@ -36,7 +36,6 @@ import (
 )
 
 // CacheStatus contains summary stat data about the given cache.
-// TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
 type CacheStatus struct {
 	Type        *string  `json:"type,omitempty"`
 	LoadAverage *float64 `json:"load_average,omitempty"`
