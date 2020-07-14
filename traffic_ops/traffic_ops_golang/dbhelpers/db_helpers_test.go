@@ -148,7 +148,7 @@ func TestGetCacheGroupByName(t *testing.T) {
 	}
 }
 
-// CreateServerInterfaces takes in a cache id and creates the interfaces/ipaddresses for it
+// createServerInterfaces takes in a cache id and creates the interfaces/ipaddresses for it
 func createServerIntefaces(cacheID int) []tc.ServerInterfaceInfo {
 	return []tc.ServerInterfaceInfo{
 		{
