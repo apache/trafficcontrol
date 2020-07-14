@@ -20,10 +20,7 @@ package tc
  */
 
 import (
-	"net"
 	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 // SOA (Start of Authority record) defines the SOA record for the CDN's
@@ -135,58 +132,29 @@ type StaticDNS struct {
 
 // LegacyTrafficServer ...
 type LegacyTrafficServer struct {
-	Profile          string              `json:"profile"`
-	IP               string              `json:"ip"`
-	ServerStatus     string              `json:"status"`
 	CacheGroup       string              `json:"cacheGroup"`
+	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+	FQDN             string              `json:"fqdn"`
+	HashID           string              `json:"hashId"`
+	HostName         string              `json:"hostName"`
+	HTTPSPort        int                 `json:"httpsPort,omitempty"`
+	InterfaceName    string              `json:"interfaceName"`
+	IP               string              `json:"ip"`
 	IP6              string              `json:"ip6"`
 	Port             int                 `json:"port"`
-	HTTPSPort        int                 `json:"httpsPort,omitempty"`
-	HostName         string              `json:"hostName"`
-	FQDN             string              `json:"fqdn"`
-	InterfaceName    string              `json:"interfaceName"`
+	Profile          string              `json:"profile"`
+	ServerStatus     string              `json:"status"`
 	Type             string              `json:"type"`
-	HashID           string              `json:"hashId"`
-	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
-}
-
-// GetDefaultAddress returns the ipv4 and ipv6 service addresses of the interface.
-func (i *InterfaceInfo) GetDefaultAddress() (string, string) {
-	var ipv4 string
-	var ipv6 string
-	for _, ip := range i.IPAddresses {
-		if ip.ServiceAddress {
-			address, _, err := net.ParseCIDR(ip.Address)
-			if err != nil {
-				log.Warnf("Unable to parse ipaddress %v on interface %v: %v", ip.Address, i.Name, err)
-			} else if address == nil {
-				log.Warnf("Unable to parse ipaddress %v on interface %v", ip.Address, i.Name)
-				continue
-			}
-			if address.To4() != nil {
-				ipv4 = ip.Address
-			} else if address.To16() != nil {
-				ipv6 = ip.Address
-			} else {
-				log.Warnf("Invalid address %v on interface %v", address, i.Name)
-			}
-
-			if ipv4 != "" && ipv6 != "" {
-				break
-			}
-		}
-	}
-	return ipv4, ipv6
 }
 
 // GetVIPInterface returns the primary interface specified by the `Monitor` property of an Interface. First interface marked as `Monitor` is returned.
-func GetVIPInterface(ts TrafficServer) InterfaceInfo {
+func GetVIPInterface(ts TrafficServer) ServerInterfaceInfo {
 	for _, interf := range ts.Interfaces {
 		if interf.Monitor {
 			return interf
 		}
 	}
-	return InterfaceInfo{}
+	return ServerInterfaceInfo{}
 }
 
 // ToLegacyServer converts a TrafficServer to LegacyTrafficServer.
@@ -211,35 +179,50 @@ func (ts *TrafficServer) ToLegacyServer() LegacyTrafficServer {
 	}
 }
 
-// TrafficServer ...
+// TrafficServer represents a cache server for use by Traffic Monitor and
+// Traffic Router instances.
 type TrafficServer struct {
-	Profile          string              `json:"profile"`
-	ServerStatus     string              `json:"status"`
-	CacheGroup       string              `json:"cacheGroup"`
-	Port             int                 `json:"port"`
-	HostName         string              `json:"hostName"`
-	FQDN             string              `json:"fqdn"`
-	Interfaces       []InterfaceInfo     `json:"interfaces"`
-	HTTPSPort        int                 `json:"httpsPort,omitempty"`
-	Type             string              `json:"type"`
-	HashID           string              `json:"hashId"`
-	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+	CacheGroup       string                `json:"cacheGroup"`
+	DeliveryServices []tsdeliveryService   `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+	FQDN             string                `json:"fqdn"`
+	HashID           string                `json:"hashId"`
+	HostName         string                `json:"hostName"`
+	HTTPSPort        int                   `json:"httpsPort,omitempty"`
+	Interfaces       []ServerInterfaceInfo `json:"interfaces"`
+	Port             int                   `json:"port"`
+	Profile          string                `json:"profile"`
+	ServerStatus     string                `json:"status"`
+	Type             string                `json:"type"`
 }
 
-// ServerIPAddress is the data associated with a server's interface's IP address.
-type IPAddress struct {
-	Address        string  `json:"address" db:"address"`
-	Gateway        *string `json:"gateway" db:"gateway"`
-	ServiceAddress bool    `json:"serviceAddress" db:"service_address"`
+// IPv4 gets the server's IPv4 address if one exists, otherwise an empty
+// string.
+//
+// Note: This swallows errors from the legacy data conversion process.
+func (ts *TrafficServer) IPv4() string {
+	if ts == nil {
+		return ""
+	}
+	lid, err := InterfaceInfoToLegacyInterfaces(ts.Interfaces)
+	if err != nil || lid.IPAddress == nil {
+		return ""
+	}
+	return *lid.IPAddress
 }
 
-// ServerInterfaceInfo is the data associated with a server's interface.
-type InterfaceInfo struct {
-	IPAddresses  []IPAddress `json:"ipAddresses" db:"ip_addresses"`
-	MaxBandwidth *uint64     `json:"maxBandwidth" db:"max_bandwidth"`
-	Monitor      bool        `json:"monitor" db:"monitor"`
-	MTU          *uint64     `json:"mtu" db:"mtu"`
-	Name         string      `json:"name" db:"name"`
+// IPv6 gets the server's IPv6 address if one exists, otherwise an empty
+// string.
+//
+// Note: This swallows errors from the legacy data conversion process.
+func (ts *TrafficServer) IPv6() string {
+	if ts == nil {
+		return ""
+	}
+	lid, err := InterfaceInfoToLegacyInterfaces(ts.Interfaces)
+	if err != nil || lid.IP6Address == nil {
+		return ""
+	}
+	return *lid.IP6Address
 }
 
 type tsdeliveryService struct {
