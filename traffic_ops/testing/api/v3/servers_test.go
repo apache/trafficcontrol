@@ -16,6 +16,7 @@ package v3
 */
 
 import (
+	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/url"
@@ -79,7 +80,7 @@ func GetTestServersIMSAfterChange(t *testing.T, header http.Header) {
 func GetTestServersIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	params := url.Values{}
@@ -248,6 +249,8 @@ func UpdateTestServers(t *testing.T) {
 
 	// Retrieve the server by hostname so we can get the id for the Update
 	resp, _, err := TOSession.GetServers(&params, nil)
+	fmt.Println("BeforeResponseHN: ", *resp.Response[0].HostName)
+	fmt.Println("BeforeResponseXMP: ", *resp.Response[0].XMPPID)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
 	}
@@ -264,6 +267,11 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatalf("Got null ID for server '%s'", hostName)
 	}
 
+	id := string(*resp.Response[0].ID)
+	fmt.Println("ID:", id)
+	idParam := url.Values{}
+	idParam.Add("id", id)
+
 	infs := remoteServer.Interfaces
 	if len(infs) < 1 {
 		t.Fatalf("Expected server '%s' to have at least one network interface", hostName)
@@ -278,6 +286,9 @@ func UpdateTestServers(t *testing.T) {
 	infs[0] = inf
 	remoteServer.Interfaces = infs
 	remoteServer.Rack = &updatedServerRack
+	//update hostname
+	str := "atl-edge-01"
+	remoteServer.HostName = &str
 
 	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
 	if err != nil {
@@ -285,9 +296,11 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Retrieve the server to check rack and interfaceName values were updated
-	resp, _, err = TOSession.GetServers(&params, nil)
+	resp, _, err = TOSession.GetServers(&idParam, nil)
+	fmt.Println("ResponseHN: ", *remoteServer.HostName, " ", resp)
+	fmt.Println("ResponseXMP: ", *remoteServer.XMPPID, " ", resp)
 	if err != nil {
-		t.Errorf("cannot GET Server by ID: %v - %v", remoteServer.HostName, err)
+		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
