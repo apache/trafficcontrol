@@ -67,8 +67,9 @@ func (f *CacheStatFilter) UseStat(statName string) bool {
 	return false
 }
 
-// WithinStatHistoryMax returns whether the given history index is less than the max history of this filter.
-func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
+// WithinStatHistoryMax returns whether the given history index is less than the
+// max history of this filter.
+func (f *CacheStatFilter) WithinStatHistoryMax(n uint64) bool {
 	if f.historyCount == 0 {
 		return true
 	}

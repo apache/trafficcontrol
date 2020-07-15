@@ -173,9 +173,10 @@ type Stats struct {
 
 // Filter filters whether stats and caches should be returned from a data set.
 type Filter interface {
-	UseStat(name string) bool
 	UseCache(name tc.CacheName) bool
-	WithinStatHistoryMax(int) bool
+	UseInterfaceStat(name string) bool
+	UseStat(name string) bool
+	WithinStatHistoryMax(uint64) bool
 }
 
 const nsPerMs = 1000000
