@@ -64,41 +64,190 @@ func (h *ResultInfoHistory) Set(v cache.ResultInfoHistory) {
 }
 
 // ResultStatHistory is a thread-safe mapping of cache server hostnames to
-// ResultStatValHistory objects containing statistics for those cache servers.
-type ResultStatHistory struct{ *sync.Map } // map[string]ResultStatValHistory
+// CacheStatHistory objects containing statistics for those cache servers.
+type ResultStatHistory struct{ *sync.Map } // map[string]CacheStatHistory
 
 // NewResultStatHistory constructs a new, empty ResultStatHistory.
 func NewResultStatHistory() ResultStatHistory {
 	return ResultStatHistory{&sync.Map{}}
 }
 
-func (h ResultStatHistory) LoadOrStore(cache tc.CacheName) map[string]ResultStatValHistory {
+// LoadOrStore returns the stored CacheStatHistory for the given cache server
+// hostname if it has already been stored. If it has not already been stored, a
+// new, empty CacheStatHistory object is created, stored under the given
+// hostname, and returned.
+func (h ResultStatHistory) LoadOrStore(hostname string) CacheStatHistory {
 	// TODO change to use sync.Pool?
-	v, loaded := h.Map.LoadOrStore(cache, NewResultStatValHistory())
-	if !loaded {
-		v = map[string]ResultStatValHistory{}
+	v, _ := h.Map.LoadOrStore(hostname, NewCacheStatHistory())
+	rv, ok := v.(CacheStatHistory)
+	if !ok {
+		log.Errorf("Failed to load or store stat history for '%s': invalid stored type.", hostname)
+		return NewCacheStatHistory()
 	}
-	if rv, ok := v.(ResultStatValHistory); ok {
-		v = map[string]ResultStatValHistory{tc.CacheInterfacesAggregate: rv}
-	}
-	return v.(map[string]ResultStatValHistory)
+
+	return rv
 }
 
-// Range behaves like sync.Map.Range. It calls f for every value in the map; if f returns false, the iteration is stopped.
-func (h ResultStatHistory) Range(f func(cache tc.CacheName, interfaceName string, val ResultStatValHistory) bool) {
+// Range behaves like sync.Map.Range. It calls f for every value in the map; if
+// f returns false, the iteration is stopped.
+func (h ResultStatHistory) Range(f func(cacheName string, val CacheStatHistory) bool) {
 	h.Map.Range(func(k, v interface{}) bool {
-		i, ok := v.(map[string]ResultStatValHistory)
+		i, ok := v.(CacheStatHistory)
 		if !ok {
-			log.Warnln("Cannot umarshal result stat val history")
+			log.Warnf("Non-CacheStatHistory object (%T) found in ResultStatHistory during Range.", v)
 			return true
 		}
-		for a, b := range i {
-			if !f(k.(tc.CacheName), a, b) {
-				return false
+		cacheName, ok := k.(string)
+		if !ok {
+			log.Warnf("Non-string object (%T) found as key in ResultStatHistory during Range.", k)
+			return true
+		}
+		return f(cacheName, i)
+	})
+}
+
+// This is just a convenience structure used only for passing data about a
+// single statistic for a network interface into
+// compareAndAppendStatForInterface.
+type interfaceStat struct {
+	InterfaceName string
+	Stat          interface{}
+	StatName      string
+	Time          time.Time
+}
+
+// This is a little helper function used to compare a single stat for a single
+// network interface to its historical values and do the appropriate appending
+// and management of the history to ensure it never exceeds `limit`.
+func compareAndAppendStatForInterface(history []cache.ResultStatVal, errs strings.Builder, limit uint64, stat interfaceStat) []cache.ResultStatVal {
+	if history == nil {
+		history = make([]cache.ResultStatVal, 0, limit)
+	}
+
+	ok, err := newStatEqual(history, stat.Stat)
+	if err != nil {
+		errs.WriteString(stat.InterfaceName)
+		errs.Write([]byte(": cannot add stat "))
+		errs.WriteString(stat.StatName)
+		errs.Write([]byte(": "))
+		errs.WriteString(err.Error())
+		errs.Write([]byte("; "))
+	} else if ok {
+		history[0].Time = stat.Time
+		history[0].Span++
+	} else {
+		if uint64(len(history)) > limit {
+			history = history[:limit]
+		} else if uint64(len(history)) < limit {
+			history = append(history, cache.ResultStatVal{})
+		}
+
+		for i := len(history) - 1; i >= 1; i-- {
+			history[i] = history[i-1]
+		}
+		history[0] = cache.ResultStatVal{
+			Val:  stat.Stat,
+			Time: stat.Time,
+			Span: 1,
+		}
+	}
+	return history
+}
+
+// Add adds the given result to the stored statistics history, keeping only up
+// to `limit` number of records for any given stat (oldest records will be
+// removed to make way for new ones if the limit would otherwise be exceeded).
+//
+// If `limit` is zero, it will be treated as though it were one instead.
+func (a ResultStatHistory) Add(r cache.Result, limit uint64) error {
+	var errStrs strings.Builder
+	cacheHistory := a.LoadOrStore(r.ID)
+	if limit == 0 {
+		log.Warnln("ResultStatHistory.Add got limit 0 - setting to 1")
+		limit = 1
+	}
+
+	for statName, statVal := range r.Miscellaneous {
+		statHistory := cacheHistory.Stats.Load(statName)
+		if statHistory == nil {
+			statHistory = make([]cache.ResultStatVal, 0, limit)
+		}
+
+		ok, err := newStatEqual(statHistory, statVal)
+		// If the new stat value is the same as the last, update the time and
+		// increment the span. Span is the number of polls the latest value has
+		// been the same, and hence the length of time it's been the same is
+		// span*pollInterval.
+		if err != nil {
+			errStrs.Write([]byte("cannot add stat "))
+			errStrs.WriteString(statName)
+			errStrs.Write([]byte(": "))
+			errStrs.WriteString(err.Error())
+			errStrs.Write([]byte("; "))
+		} else if ok {
+			statHistory[0].Time = r.Time
+			statHistory[0].Span++
+		} else {
+			if uint64(len(statHistory)) > limit {
+				statHistory = statHistory[:limit]
+			} else if uint64(len(statHistory)) < limit {
+				statHistory = append(statHistory, cache.ResultStatVal{})
+			}
+
+			for i := len(statHistory) - 1; i >= 1; i-- {
+				statHistory[i] = statHistory[i-1]
+			}
+			statHistory[0] = cache.ResultStatVal{
+				Val:  statVal,
+				Time: r.Time,
+				Span: 1,
 			}
 		}
-		return true
-	})
+		cacheHistory.Stats.Store(statName, statHistory)
+
+	}
+
+	stat := interfaceStat{
+		Time: r.Time,
+	}
+	for interfaceName, inf := range r.Interfaces() {
+		statHistory, ok := cacheHistory.Interfaces[interfaceName]
+		if !ok {
+			statHistory = NewResultStatValHistory()
+			cacheHistory.Interfaces[interfaceName] = statHistory
+		}
+
+		speedHistory := statHistory.Load(InterfaceStatNameSpeed)
+
+		stat.InterfaceName = interfaceName
+		stat.Stat = inf.Speed
+		stat.StatName = InterfaceStatNameSpeed
+
+		speedHistory = compareAndAppendStatForInterface(speedHistory, errStrs, limit, stat)
+		statHistory.Store(InterfaceStatNameSpeed, speedHistory)
+
+		outHistory := statHistory.Load(InterfaceStatNameBytesOut)
+
+		stat.Stat = inf.BytesOut
+		stat.StatName = InterfaceStatNameBytesOut
+
+		outHistory = compareAndAppendStatForInterface(outHistory, errStrs, limit, stat)
+		statHistory.Store(InterfaceStatNameBytesOut, outHistory)
+
+		inHistory := statHistory.Load(InterfaceStatNameBytesIn)
+
+		stat.Stat = inf.BytesIn
+		stat.StatName = InterfaceStatNameBytesIn
+
+		inHistory = compareAndAppendStatForInterface(inHistory, errStrs, limit, stat)
+		statHistory.Store(InterfaceStatNameBytesIn, inHistory)
+	}
+
+	if errStrs.Len() > 0 {
+		errStr := errStrs.String()
+		return errors.New("some stats could not be added: " + errStr[:len(errStr)-2])
+	}
+	return nil
 }
 
 // ResultStatValHistory is thread-safe for one writer. Specifically, because a
