@@ -22,7 +22,6 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 )
 
@@ -36,7 +35,7 @@ type CacheAvailableStatus struct {
 // NewCacheAvailableStatus creates and returns a new CacheAvailableStatus,
 // initializing internal pointer values.
 func NewCacheAvailableStatus() CacheAvailableStatus {
-	c := cache.AvailableStatuses(map[tc.CacheName]map[string]cache.AvailableStatus{})
+	c := cache.AvailableStatuses(map[string]cache.AvailableStatus{})
 	return CacheAvailableStatus{m: &sync.RWMutex{}, caches: &c}
 }
 
