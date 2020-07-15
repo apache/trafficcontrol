@@ -7,7 +7,8 @@
                 "excludePostalCode": [
                     "V5G",
                     "M7A"
-                ]
+                ],
+                "coordinateRange": [{"minLat" : -12, "maxLat": 13, "minLon" : 55, "maxLon": 56}, {"minLat" : -13, "maxLat": 14, "minLon" : 55, "maxLon": 56}]
             },
             "urlRegex": ".*live1"
         },

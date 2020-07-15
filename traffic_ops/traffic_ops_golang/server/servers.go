@@ -398,11 +398,11 @@ func validateV2(s *tc.ServerNullableV2, tx *sql.Tx) error {
 		errs = append(errs, tc.NeedsAtLeastOneServiceAddressError)
 	}
 
-	if *s.IPIsService && s.IPAddress == nil {
+	if *s.IPIsService && (s.IPAddress == nil || *s.IPAddress == "") {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 
-	if *s.IP6IsService && s.IP6Address == nil {
+	if *s.IP6IsService && (s.IP6Address == nil || *s.IP6Address == "") {
 		errs = append(errs, tc.EmptyAddressCannotBeAServiceAddressError)
 	}
 	return util.JoinErrs(errs)
@@ -582,18 +582,29 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
-
 	if len(servers) > 1 {
 		api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("ID '%d' matched more than one server (%d total)", inf.IntParams["id"], len(servers)), &alternative)
 		return
 	}
-
 	deprecationAlerts := api.CreateDeprecationAlerts(&alternative)
 
 	// No need to bother converting if there's no data
 	if len(servers) < 1 {
 		api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, servers)
+		return
 	}
+	legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
+	for _, server := range servers {
+		legacyServer, err := server.ToServerV2()
+		if err != nil {
+			api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err), &alternative)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
+			return
+		}
+		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
+	}
+	api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, legacyServers)
+	return
 }
 
 func selectMaxLastUpdatedQuery(where string) string {
