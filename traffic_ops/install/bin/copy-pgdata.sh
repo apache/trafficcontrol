@@ -79,7 +79,7 @@ to-get () {
 # Dump the postgres db to a file from traffic ops
 dump_source_db() {
     local dumpfile="$1"
-    to-get api/1.2/dbdump >"$dumpfile"
+    to-get api/2.0/dbdump >"$dumpfile"
 }
 
 # Prepare the destination db by terminating any existing connections and then dropping and creating the db.
@@ -120,7 +120,7 @@ EOF
 
 # write cr-config
 write_crconfig() {
-    to-get "tools/write_crconfig/$1" >/dev/null
+    to-put "api/2.0/snapshot?cdn=$1" >/dev/null
 }
 
 
@@ -205,7 +205,7 @@ TO_URL=$TO_DEST_URL
 echo "Snapshotting CRConfigs on $TO_URL"
 
 # get the list of cdns from the copied db
-cdns=$(to-get api/1.3/cdns | jq -Sr '.response|.[]|.name' | grep -v ALL)
+cdns=$(to-get api/2.0/cdns | jq -Sr '.response|.[]|.name' | grep -v ALL)
 
 for c in $cdns; do
     write_crconfig "$c"
