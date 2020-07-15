@@ -145,16 +145,30 @@ type Vitals struct {
 	MaxKbpsOut int64
 }
 
-// Stat is a generic stat, including the untyped value and the time the stat was taken.
+// Stat is a generic stat, including the untyped value and the time the stat was
+// taken.
 type Stat struct {
 	Time  int64       `json:"time"`
 	Value interface{} `json:"value"`
 }
 
-// Stats is designed for returning via the API. It contains result history for each cache, as well as common API data.
+// StatsCache is a representation of cache server statistics as present in the
+// TM API.
+type StatsCache struct {
+	// Interfaces contains statistics specific to each monitored interface
+	// of the cache server.
+	Interfaces map[string]map[string][]ResultStatVal `json:"interfaces"`
+	// Stats contains statistics regarding the cache server in general.
+	Stats map[string][]ResultStatVal `json:"stats"`
+}
+
+// Stats is designed for returning via the API. It contains result history
+// for each cache, as well as common API data.
 type Stats struct {
 	srvhttp.CommonAPIData
-	Caches map[tc.CacheName]map[string]map[string][]ResultStatVal `json:"caches"`
+	// Caches is a map of cache server hostnames to groupings of statistics
+	// regarding each cache server and all of its separate network interfaces.
+	Caches map[string]StatsCache `json:"caches"`
 }
 
 // Filter filters whether stats and caches should be returned from a data set.
