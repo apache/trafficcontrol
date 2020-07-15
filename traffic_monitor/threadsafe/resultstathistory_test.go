@@ -119,15 +119,19 @@ func randBool() bool {
 type DummyFilterNever struct {
 }
 
-func (f DummyFilterNever) UseStat(name string) bool {
+func (DummyFilterNever) UseStat(string) bool {
 	return false
 }
 
-func (f DummyFilterNever) UseCache(name tc.CacheName) bool {
+func (DummyFilterNever) UseInterfaceStat(string) bool {
 	return false
 }
 
-func (f DummyFilterNever) WithinStatHistoryMax(i int) bool {
+func (DummyFilterNever) UseCache(tc.CacheName) bool {
+	return false
+}
+
+func (DummyFilterNever) WithinStatHistoryMax(uint64) bool {
 	return false
 }
 
@@ -137,7 +141,7 @@ func TestStatsMarshall(t *testing.T) {
 	filter := DummyFilterNever{}
 	params := url.Values{}
 	beforeStatsMarshall := time.Now()
-	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.LegacyTrafficMonitorConfigMap{}, cache.Kbpses{}, filter, params)
+	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.TrafficMonitorConfigMap{}, cache.Kbpses{}, filter, params)
 	afterStatsMarshall := time.Now()
 	if err != nil {
 		t.Fatalf("StatsMarshall return expected nil err, actual err: %v", err)
@@ -213,7 +217,7 @@ func TestcompareAndAppendStatForInterface(t *testing.T) {
 	}
 
 	if v, ok := result.Val.(uint64); !ok {
-		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %v", stat.Val)
+		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %T", result.Val)
 	} else if v != stat.Stat {
 		t.Errorf("Incorrect value from comparing previously non-existent interface stat; want: %d, got: %d", stat.Stat, v)
 	}
@@ -241,7 +245,7 @@ func TestcompareAndAppendStatForInterface(t *testing.T) {
 	}
 
 	if v, ok := result.Val.(uint64); !ok {
-		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %v", stat.Val)
+		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %T", result.Val)
 	} else if v != stat.Stat {
 		t.Errorf("Incorrect value from comparing previously non-existent interface stat; want: %d, got: %d", stat.Stat, v)
 	}
@@ -270,7 +274,7 @@ func TestcompareAndAppendStatForInterface(t *testing.T) {
 	}
 
 	if v, ok := result.Val.(uint64); !ok {
-		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %v", stat.Val)
+		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %T", result.Val)
 	} else if v != stat.Stat {
 		t.Errorf("Incorrect value from comparing previously non-existent interface stat; want: %d, got: %d", stat.Stat, v)
 	}
