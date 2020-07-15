@@ -365,35 +365,52 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 		cacheId := string(id)
 
 		cacheStatResultHistory := statResultHistory.LoadOrStore(cacheId)
-		cache, ok := stats.Caches[cacheId]
-		if !ok {
-			cache = cache.StatsCache{
+		if _, ok := stats.Caches[cacheId]; !ok {
+			stats.Caches[cacheId] = cache.StatsCache{
 				Interfaces: make(map[string]map[string][]cache.ResultStatVal),
 				Stats:      make(map[string][]cache.ResultStatVal),
 			}
-			stats.Caches[cacheId] = cache
 		}
+
+		cacheStatResultHistory.Stats.Range(func(stat string, vals []cache.ResultStatVal) bool {
+			stat = "ats." + stat // legacy reasons
+			if !filter.UseStat(stat) {
+				return true
+			}
+
+			var historyCount uint64 = 1
+			for _, val := range vals {
+				if !filter.WithinStatHistoryMax(historyCount) {
+					break
+				}
+				if _, ok := stats.Caches[cacheId].Stats[stat]; !ok {
+					stats.Caches[cacheId].Stats[stat] = []cache.ResultStatVal{val}
+				} else {
+					stats.Caches[cacheId].Stats[stat] = append(stats.Caches[cacheId].Stats[stat], val)
+				}
+				historyCount += val.Span
+			}
+
+			return true
+		})
 
 		for interfaceName, interfaceHistory := range cacheStatResultHistory.Interfaces {
 			interfaceHistory.Range(func(stat string, vals []cache.ResultStatVal) bool {
-				stat = "ats." + stat // TM1 prefixes ATS stats with 'ats.'
-				if !filter.UseStat(stat) {
+				if !filter.UseInterfaceStat(stat) {
 					return true
 				}
-				historyCount := 1
-				if _, ok := stats.Caches[string(id)]; !ok {
-					stats.Caches[id] = map[string]map[string][]cache.ResultStatVal{}
-				}
+
+				var historyCount uint64 = 1
 				for _, val := range vals {
 					if !filter.WithinStatHistoryMax(historyCount) {
 						break
 					}
-					if _, ok := stats.Caches[id][interfaceName]; !ok {
-						stats.Caches[id][interfaceName] = map[string][]cache.ResultStatVal{}
+					if _, ok := stats.Caches[cacheId].Interfaces[interfaceName]; !ok {
+						stats.Caches[cacheId].Interfaces[interfaceName] = map[string][]cache.ResultStatVal{}
 					}
-					stats.Caches[id][interfaceName][stat] = append(stats.Caches[id][interfaceName][stat], val)
+					stats.Caches[cacheId].Interfaces[interfaceName][stat] = append(stats.Caches[cacheId].Interfaces[interfaceName][stat], val)
 					// Todo add for each interface?
-					historyCount += int(val.Span)
+					historyCount += val.Span
 				}
 				return true
 			})
@@ -410,11 +427,8 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 		}
 
 		for i, resultInfo := range statInfo[id] {
-			if !filter.WithinStatHistoryMax(i + 1) {
+			if !filter.WithinStatHistoryMax(uint64(i) + 1) {
 				break
-			}
-			if _, ok := stats.Caches[id]; !ok {
-				stats.Caches[id] = map[string]map[string][]cache.ResultStatVal{}
 			}
 
 			t := resultInfo.Time
@@ -425,15 +439,15 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 				}
 				// Need to actually handle interfaces, needs vitals to be refactored
 				for infName, _ := range resultInfo.Statistics.Interfaces {
-					if _, ok := stats.Caches[id][infName]; !ok {
-						stats.Caches[id][infName] = map[string][]cache.ResultStatVal{}
+					if _, ok := stats.Caches[cacheId].Interfaces[infName]; !ok {
+						stats.Caches[cacheId].Interfaces[infName] = map[string][]cache.ResultStatVal{}
 					}
 					rv := cache.ResultStatVal{
 						Span: 1,
 						Time: t,
 						Val:  statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache, infName),
 					}
-					stats.Caches[id][infName][stat] = append(stats.Caches[id][infName][stat], rv)
+					stats.Caches[cacheId].Interfaces[infName][stat] = append(stats.Caches[cacheId].Interfaces[infName][stat], rv)
 				}
 			}
 		}
