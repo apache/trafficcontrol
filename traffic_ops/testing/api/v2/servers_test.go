@@ -101,6 +101,8 @@ func UpdateTestServers(t *testing.T) {
 	hostName := firstServer.HostName
 	// Retrieve the server by hostname so we can get the id for the Update
 	resp, _, err := TOSession.GetServerByHostName(hostName)
+	originalHostname := resp[0].HostName
+	originalXMPIDD := resp[0].XMPPID
 
 	if err != nil {
 		t.Errorf("cannot GET Server by hostname: %v - %v", firstServer.HostName, err)
@@ -108,10 +110,12 @@ func UpdateTestServers(t *testing.T) {
 	remoteServer := resp[0]
 	updatedServerInterface := "bond1"
 	updatedServerRack := "RR 119.03"
-
+	updatedHostName := "atl-edge-01"
 	// update rack and interfaceName values on server
 	remoteServer.InterfaceName = updatedServerInterface
 	remoteServer.Rack = updatedServerRack
+	//update hostName
+	remoteServer.HostName = updatedHostName
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
 	if err != nil {
@@ -128,6 +132,24 @@ func UpdateTestServers(t *testing.T) {
 	if respServer.InterfaceName != updatedServerInterface || respServer.Rack != updatedServerRack {
 		t.Errorf("results do not match actual: %s, expected: %s", respServer.InterfaceName, updatedServerInterface)
 		t.Errorf("results do not match actual: %s, expected: %s", respServer.Rack, updatedServerRack)
+	}
+
+	//Check change in hostname with no change to xmppid
+	if originalHostname == remoteServer.HostName && originalXMPIDD != remoteServer.XMPPID {
+		t.Errorf("HostName didn't change. Expected: #{updatedHostName}, actual: #{originalHostname}")
+	}
+
+	//Change back hostname to its original name for other tests to pass
+	hostNameStr := "atlanta-edge-01"
+	remoteServer.HostName = hostNameStr
+
+	alerts, _, err := TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
+	if err != nil {
+		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", remoteServer.ID, hostName, err, alerts)
+	}
+	resp, _, err = TOSession.GetServerByID(remoteServer.ID)
+	if err != nil {
+		t.Errorf("cannot GET Server by hostName: %v - %v", originalHostname, err)
 	}
 
 	// Assign server to DS and then attempt to update to a different type
