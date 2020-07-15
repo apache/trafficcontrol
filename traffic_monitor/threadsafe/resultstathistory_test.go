@@ -181,3 +181,97 @@ func TestSystemComputedStats(t *testing.T) {
 		}
 	}
 }
+
+func TestcompareAndAppendStatForInterface(t *testing.T) {
+	var errs strings.Builder
+	var limit uint64 = 1
+	stat := interfaceStat{
+		InterfaceName: "test",
+		Stat:          uint64(5),
+		StatName:      "test",
+		Time:          time.Now(),
+	}
+
+	history := compareAndAppendStatForInterface(nil, errs, limit, stat)
+	if errs.Len() > 0 {
+		t.Errorf("Unexpected errors comparing previously non-existent interface stat: %s", errs.String())
+	}
+	if len(history) == 0 {
+		t.Fatal("Empty history after comparing previously non-existent interface stat")
+	}
+	if len(history) > 1 {
+		t.Fatalf("Too many stats returned from comparing previously non-existent interface stat: %d", len(history))
+	}
+
+	result := history[0]
+	if result.Span != 1 {
+		t.Errorf("Incorrect span comparing previously non-existent interface stat; want: 1, got: %d", result.Span)
+	}
+
+	if result.Time != stat.Time {
+		t.Errorf("Incorrect time comparing previously non-existent interface stat; want: %v, got: %v", stat.Time, result.Time)
+	}
+
+	if v, ok := result.Val.(uint64); !ok {
+		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %v", stat.Val)
+	} else if v != stat.Stat {
+		t.Errorf("Incorrect value from comparing previously non-existent interface stat; want: %d, got: %d", stat.Stat, v)
+	}
+
+	errs.Reset()
+
+	history = compareAndAppendStatForInterface(history, errs, limit, stat)
+	if errs.Len() > 0 {
+		t.Errorf("Unexpected errors comparing previously non-existent interface stat: %s", errs.String())
+	}
+	if len(history) == 0 {
+		t.Fatal("Empty history after comparing previously non-existent interface stat")
+	}
+	if len(history) > 1 {
+		t.Fatalf("Too many stats returned from comparing previously non-existent interface stat: %d", len(history))
+	}
+
+	result = history[0]
+	if result.Span != 2 {
+		t.Errorf("Incorrect span comparing previously non-existent interface stat; want: 2, got: %d", result.Span)
+	}
+
+	if result.Time != stat.Time {
+		t.Errorf("Incorrect time comparing previously non-existent interface stat; want: %v, got: %v", stat.Time, result.Time)
+	}
+
+	if v, ok := result.Val.(uint64); !ok {
+		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %v", stat.Val)
+	} else if v != stat.Stat {
+		t.Errorf("Incorrect value from comparing previously non-existent interface stat; want: %d, got: %d", stat.Stat, v)
+	}
+
+	errs.Reset()
+	stat.Stat = uint64(6)
+
+	history = compareAndAppendStatForInterface(history, errs, limit, stat)
+	if errs.Len() > 0 {
+		t.Errorf("Unexpected errors comparing previously non-existent interface stat: %s", errs.String())
+	}
+	if len(history) == 0 {
+		t.Fatal("Empty history after comparing previously non-existent interface stat")
+	}
+	if len(history) > 1 {
+		t.Fatalf("Too many stats returned from comparing previously non-existent interface stat: %d", len(history))
+	}
+
+	result = history[0]
+	if result.Span != 1 {
+		t.Errorf("Incorrect span comparing previously non-existent interface stat; want: 1, got: %d", result.Span)
+	}
+
+	if result.Time != stat.Time {
+		t.Errorf("Incorrect time comparing previously non-existent interface stat; want: %v, got: %v", stat.Time, result.Time)
+	}
+
+	if v, ok := result.Val.(uint64); !ok {
+		t.Errorf("Incorrect value type from comparing previously non-existent interface stat; want: uint64, got: %v", stat.Val)
+	} else if v != stat.Stat {
+		t.Errorf("Incorrect value from comparing previously non-existent interface stat; want: %d, got: %d", stat.Stat, v)
+	}
+}
