@@ -27,24 +27,24 @@ import (
 
 // TrafficMonitorConfigMapThreadsafe encapsulates a LegacyTrafficMonitorConfigMap safe for multiple readers and a single writer.
 type TrafficMonitorConfigMap struct {
-	monitorConfig *tc.LegacyTrafficMonitorConfigMap
+	monitorConfig *tc.TrafficMonitorConfigMap
 	m             *sync.RWMutex
 }
 
 // NewTrafficMonitorConfigMap returns an encapsulated LegacyTrafficMonitorConfigMap safe for multiple readers and a single writer.
 func NewTrafficMonitorConfigMap() TrafficMonitorConfigMap {
-	return TrafficMonitorConfigMap{monitorConfig: &tc.LegacyTrafficMonitorConfigMap{}, m: &sync.RWMutex{}}
+	return TrafficMonitorConfigMap{monitorConfig: &tc.TrafficMonitorConfigMap{}, m: &sync.RWMutex{}}
 }
 
 // Get returns the LegacyTrafficMonitorConfigMap. Callers MUST NOT modify, it is not threadsafe for mutation. If mutation is necessary, call CopyTrafficMonitorConfigMap().
-func (t *TrafficMonitorConfigMap) Get() tc.LegacyTrafficMonitorConfigMap {
+func (t *TrafficMonitorConfigMap) Get() tc.TrafficMonitorConfigMap {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return *t.monitorConfig
 }
 
 // Set sets the LegacyTrafficMonitorConfigMap. This is only safe for one writer. This MUST NOT be called by multiple threads.
-func (t *TrafficMonitorConfigMap) Set(c tc.LegacyTrafficMonitorConfigMap) {
+func (t *TrafficMonitorConfigMap) Set(c tc.TrafficMonitorConfigMap) {
 	t.m.Lock()
 	*t.monitorConfig = c
 	t.m.Unlock()
