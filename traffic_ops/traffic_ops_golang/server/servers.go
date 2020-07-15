@@ -1159,6 +1159,9 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	str := uuid.New().String()
+	server.XMPPID = &str
+
 	if err := validateV2(&server, tx); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
