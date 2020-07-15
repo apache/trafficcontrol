@@ -317,7 +317,10 @@ func NewCacheStatHistory() CacheStatHistory {
 	}
 }
 
-// newStatEqual Returns whether the given stat is equal to the latest stat in history. If len(history)==0, this returns false without error. If the given stat is not a JSON primitive (string, number, bool), this returns an error. We explicitly refuse to compare arrays and objects, for performance.
+// newStatEqual returns whether the given stat is equal to the latest stat in
+// history. If len(history)==0, this returns false without error. If the given
+// stat is not a JSON primitive (string, number, bool), this returns an error.
+// We explicitly refuse to compare arrays and objects, for performance.
 func newStatEqual(history []cache.ResultStatVal, stat interface{}) (bool, error) {
 	if len(history) == 0 {
 		return false, nil // if there's no history, it's "not equal", i.e. store this new history
