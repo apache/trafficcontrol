@@ -74,6 +74,7 @@ under the License.
                     <th>DSCP</th>
                     <th>ECS Enabled</th>
                     <th>Edge Header Rewrite Rules</th>
+                    <th>First Header Rewrite Rules</th>
                     <th>FQ Pacing Rate</th>
                     <th>Geo Limit</th>
                     <th>Geo Limit Countries</th>
@@ -87,7 +88,9 @@ under the License.
                     <th>ID</th>
                     <th>Info URL</th>
                     <th>Initial Dispersion</th>
+                    <th>Inner Header Rewrite Rules</th>
                     <th>IPv6 Routing</th>
+                    <th>Last Header Rewrite Rules</th>
                     <th>Last Updated</th>
                     <th>Long Desc 1</th>
                     <th>Long Desc 2</th>
@@ -136,6 +139,7 @@ under the License.
                     <td data-search="^{{::ds.dscp}}$">{{::ds.dscp}}</td>
                     <td data-search="^{{::ds.ecsEnabled}}$">{{::ds.ecsEnabled}}</td>
                     <td data-search="^{{::ds.edgeHeaderRewrite}}$">{{::ds.edgeHeaderRewrite}}</td>
+                    <td data-search="^{{::ds.firstHeaderRewrite}}$">{{::ds.firstHeaderRewrite}}</td>
                     <td data-search="^{{::ds.fqPacingRate}}$">{{::ds.fqPacingRate}}</td>
                     <td data-search="^{{::geoLimit(ds)}}$">{{::geoLimit(ds)}}</td>
                     <td data-search="^{{::ds.geoLimitCountries}}$">{{::ds.geoLimitCountries}}</td>
@@ -149,7 +153,9 @@ under the License.
                     <td data-search="^{{::ds.id}}$">{{::ds.id}}</td>
                     <td data-search="^{{::ds.infoUrl}}$">{{::ds.infoUrl}}</td>
                     <td data-search="^{{::ds.initialDispersion}}$">{{::ds.initialDispersion}}</td>
+                    <td data-search="^{{::ds.innerHeaderRewrite}}$">{{::ds.innerHeaderRewrite}}</td>
                     <td data-search="^{{::ds.ipv6RoutingEnabled}}$">{{::ds.ipv6RoutingEnabled}}</td>
+                    <td data-search="^{{::ds.lastHeaderRewrite}}$">{{::ds.lastHeaderRewrite}}</td>
                     <td data-search="^{{::getRelativeTime(ds.lastUpdated)}}$" data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
                     <td data-search="^{{::ds.longDesc}}$">{{::ds.longDesc}}</td>
                     <td data-search="^{{::ds.longDesc1}}$">{{::ds.longDesc1}}</td>
