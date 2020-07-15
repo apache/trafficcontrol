@@ -31,7 +31,8 @@ Configure Regional Geo-blocking (RGB)
 				{
 					"deliveryServiceId": "hls-live",
 					"urlRegex": ".*live4\\.m3u8",
-					"geoLocation": {"includePostalCode":["N0H", "L9V", "L9W"]},
+					"geoLocation": {"includePostalCode":["N0H", "L9V", "L9W"],
+									"coordinateRange": [{"minLat" : -12, "maxLat": 13, "minLon" : 55, "maxLon": 56}, {"minLat" : -13, "maxLat": 14, "minLon" : 55, "maxLon": 56}]},
 					"redirectUrl": "http://third-party.com/blacked_out.html"
 				},
 				{
@@ -58,7 +59,7 @@ Configure Regional Geo-blocking (RGB)
 	``urlRegex``
 		A regular expression to be used to determine to what URLs the rule shall apply; a URL that matches it is subject to the rule
 	``geoLocation``
-		An object that currently supports only the keys ``includePostalCode`` and ``excludePostalCode`` (mutually exclusive). When the ``includePostalCode`` key is used, only the clients whose :abbr:`FSA (Forward Sortation Areas)`\ s - the first three postal characters of Canadian postal codes - are in the ``includePostalCode`` list are able to view the content at URLs matched by the ``urlRegex``. When ``excludePostalCode`` is used, any client whose :abbr:`FSA (Forward Sortation Areas)` is not in the ``excludePostalCode`` list will be allowed to view the content
+		An object that currently supports only the keys ``includePostalCode``, ``excludePostalCode`` (mutually exclusive) and ``coordinateRange``. When the ``includePostalCode`` key is used, only the clients whose :abbr:`FSA (Forward Sortation Areas)`\ s - the first three postal characters of Canadian postal codes - are in the ``includePostalCode`` list are able to view the content at URLs matched by the ``urlRegex``. When ``excludePostalCode`` is used, any client whose :abbr:`FSA (Forward Sortation Areas)` is not in the ``excludePostalCode`` list will be allowed to view the content. The ``coordinateRange`` key is used to specify a list of latitude and longitude ranges. This is used in regional geo blocking, in case the client does not have a postal code associated with it.
 	``redirectUrl``
 		The URL that will be returned to the blocked clients. Without a domain name in the URL, the URL will still be served in the same :term:`Delivery Service`. Thus Traffic Router will redirect the client to a chosen :term:`cache server` assigned to the :term:`Delivery Service`. If the URL includes a domain name, Traffic Router simply redirects the client to the defined URL. In the latter case, the redirect URL must not match the ``urlRegex`` value, or an infinite loop of  HTTP ``302 Found`` responses will occur at the Traffic Router.  Steering-:ref:`ds-types` :term:`Delivery Services` must contain an :abbr:`FQDN (Fully Qualified Domain Name)` as the re-direct or Traffic Router will return a DENIED to the client.  This is because steering services do not have caches associated to them, so a relative ``redirectURL`` can not be turned into a :abbr:`FQDN (Fully Qualified Domain Name)`.
 	``ipWhiteList``
