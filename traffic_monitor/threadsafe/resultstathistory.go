@@ -55,15 +55,19 @@ func (h *ResultInfoHistory) Get() cache.ResultInfoHistory {
 	return *h.history
 }
 
-// Set sets the internal ResultInfoHistory. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
+// Set sets the internal ResultInfoHistory. This is only safe for one thread of
+// execution. This MUST NOT be called from multiple threads.
 func (h *ResultInfoHistory) Set(v cache.ResultInfoHistory) {
 	h.m.Lock()
 	*h.history = v
 	h.m.Unlock()
 }
 
-type ResultStatHistory struct{ *sync.Map } // map[tc.CacheName]map[interfaceName]ResultStatValHistory
+// ResultStatHistory is a thread-safe mapping of cache server hostnames to
+// ResultStatValHistory objects containing statistics for those cache servers.
+type ResultStatHistory struct{ *sync.Map } // map[string]ResultStatValHistory
 
+// NewResultStatHistory constructs a new, empty ResultStatHistory.
 func NewResultStatHistory() ResultStatHistory {
 	return ResultStatHistory{&sync.Map{}}
 }
@@ -97,13 +101,17 @@ func (h ResultStatHistory) Range(f func(cache tc.CacheName, interfaceName string
 	})
 }
 
-// ResultStatValHistory is threadsafe for one writer. Specifically, because a CompareAndSwap is not provided, it's not possible to Load and Store without a race condition.
-// If multiple writers were necessary, it wouldn't be difficult to add a CompareAndSwap, internally storing an atomically-accessed pointer to the slice.
+// ResultStatValHistory is thread-safe for one writer. Specifically, because a
+// CompareAndSwap is not provided, it's not possible to Load and Store without
+// a race condition. If multiple writers were necessary, it wouldn't be
+// difficult to add a CompareAndSwap, internally storing an atomically-accessed
+// pointer to the slice.
 type ResultStatValHistory struct{ *sync.Map } //  map[string][]ResultStatVal
 
 func NewResultStatValHistory() ResultStatValHistory { return ResultStatValHistory{&sync.Map{}} }
 
-// Load returns the []ResultStatVal for the given stat. If the given stat does not exist, nil is returned.
+// Load returns the []ResultStatVal for the given stat. If the given stat does
+// not exist, nil is returned.
 func (h ResultStatValHistory) Load(stat string) []cache.ResultStatVal {
 	i, ok := h.Map.Load(stat)
 	if !ok {
@@ -112,17 +120,20 @@ func (h ResultStatValHistory) Load(stat string) []cache.ResultStatVal {
 	return i.([]cache.ResultStatVal)
 }
 
-// Range behaves like sync.Map.Range. It calls f for every value in the map; if f returns false, the iteration is stopped.
+// Range behaves like sync.Map.Range. It calls f for every value in the map; if
+// f returns false, the iteration is stopped.
 func (h ResultStatValHistory) Range(f func(stat string, val []cache.ResultStatVal) bool) {
 	h.Map.Range(func(k, v interface{}) bool {
 		return f(k.(string), v.([]cache.ResultStatVal))
 	})
 }
 
-// Store stores the given []ResultStatVal in the ResultStatValHistory for the given stat. Store is threadsafe for only one writer.
-// Specifically, if there are multiple writers, there's a race, that one writer could Load(), another writer could Store() underneath it,
-// and the first writer would then Store() having lost values.
-// To safely use ResultStatValHistory with multiple writers, a CompareAndSwap function would have to be added.
+// Store stores the given []ResultStatVal in the ResultStatValHistory for the
+// given stat. Store is thread-safe for only one writer. Specifically, if there
+// are multiple writers, there's a race, that one writer could Load(), another
+// writer could Store() underneath it, and the first writer would then Store()
+// having lost values. To safely use ResultStatValHistory with multiple writers,
+// a CompareAndSwap method would have to be added.
 func (h ResultStatValHistory) Store(stat string, vals []cache.ResultStatVal) {
 	h.Map.Store(stat, vals)
 }
