@@ -146,9 +146,6 @@ func TestStatsMarshall(t *testing.T) {
 	if err != nil {
 		t.Fatalf("StatsMarshall return expected nil err, actual err: %v", err)
 	}
-	// if len(bytes) > 0 {
-	// 	t.Errorf("expected empty bytes, actual: %v", string(bytes))
-	// }
 
 	stats := cache.Stats{}
 	json := jsoniter.ConfigFastest // TODO make configurable
