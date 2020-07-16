@@ -281,14 +281,16 @@ func UpdateTestServers(t *testing.T) {
 	updatedServerInterface := "bond1"
 	updatedServerRack := "RR 119.03"
 	updatedHostName := "atl-edge-01"
+	updatedXMPPID := "change-it"
 
 	// update rack and interfaceName values on server
 	inf.Name = updatedServerInterface
 	infs[0] = inf
 	remoteServer.Interfaces = infs
 	remoteServer.Rack = &updatedServerRack
-	//update hostName
+	//update hostName and XMPPID
 	remoteServer.HostName = &updatedHostName
+	remoteServer.XMPPID = &updatedXMPPID
 
 	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
 	if err != nil {
@@ -306,23 +308,6 @@ func UpdateTestServers(t *testing.T) {
 	if len(resp.Response) > 1 {
 		t.Errorf("Expected exactly one server to exist by hostname '%s' - actual: %d", hostName, len(resp.Response))
 		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
-	}
-
-	//Check change in hostname with no change to xmppid
-	if originalHostname == *remoteServer.HostName && originalXMPIDD != *remoteServer.XMPPID {
-		t.Errorf("HostName didn't change. Expected: #{updatedHostName}, actual hostName: #{originalHostname}")
-	}
-
-	//Change back hostname to its original name for other tests to pass
-	remoteServer.HostName = &originalHostname
-
-	alert, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
-	if err != nil {
-		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
-	}
-	resp, _, err = TOSession.GetServers(&params, nil)
-	if err != nil {
-		t.Errorf("cannot GET Server by hostName: %v - %v", originalHostname, err)
 	}
 
 	respServer := resp.Response[0]
@@ -347,6 +332,26 @@ func UpdateTestServers(t *testing.T) {
 
 	if remoteServer.TypeID == nil {
 		t.Fatalf("Cannot test server type change update; server '%s' had nil type ID", hostName)
+	}
+
+	//Check change in hostname with no change to xmppid
+	if originalHostname == *respServer.HostName {
+		t.Errorf("HostName didn't change. Expected: #{updatedHostName}, actual: #{originalHostname}")
+	}
+	if originalXMPIDD != *respServer.XMPPID {
+		t.Errorf("XMPPID did change. Expected: #{originalXMPIDD}, changed to: #{updatedXMPPID}")
+	}
+
+	//Change back hostname to its original name for other tests to pass
+	remoteServer.HostName = &originalHostname
+
+	alert, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	if err != nil {
+		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
+	}
+	resp, _, err = TOSession.GetServers(&params, nil)
+	if err != nil {
+		t.Errorf("cannot GET Server by hostName: %v - %v", originalHostname, err)
 	}
 
 	// Assign server to DS and then attempt to update to a different type

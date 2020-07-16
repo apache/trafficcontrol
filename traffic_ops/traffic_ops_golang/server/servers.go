@@ -256,7 +256,6 @@ UPDATE server SET
 	tcp_port=:tcp_port,
 	type=:server_type_id,
 	upd_pending=:upd_pending,
-	xmpp_id=:xmpp_id,
 	xmpp_passwd=:xmpp_passwd
 WHERE id=:id
 RETURNING
@@ -992,6 +991,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewDecoder(r.Body).Decode(&newServer); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
+		}
+		if newServer.XMPPID != nil {
+			fmt.Println("Change in xmpp_id was requested but it will be ignored to ensure hash_id remains consistent")
 		}
 		serviceInterface, err := validateV3(&newServer, tx)
 		if err != nil {
