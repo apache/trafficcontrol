@@ -22,27 +22,41 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 )
+
+// CacheKbps is a collection of kbps measurements for a cache server's network,
+// interfaces.
+type CacheKbps struct {
+	InterfaceKbpses cache.Kbpses
+}
+
+// Total gets the total kbps of a CacheKbps across all of its interfaces.
+func (c CacheKbps) Total() uint64 {
+	var sum uint64 = 0
+	for _, kbps := range c.InterfaceKbpses {
+		sum += kbps
+	}
+	return sum
+}
 
 // CacheKbpses wraps a map of cache kbps measurements to be safe for multiple
 // reader goroutines and one writer.
 type CacheKbpses struct {
-	v *cache.Kbpses
+	v *map[string]CacheKbps
 	m *sync.RWMutex
 }
 
 // NewCacheKbpses creates and returns a new, empty CacheKbpses,
 // initializing internal pointer values.
 func NewCacheKbpses() CacheKbpses {
-	v := cache.Kbpses(map[tc.CacheName]int64{})
+	v := map[string]CacheKbps{}
 	return CacheKbpses{m: &sync.RWMutex{}, v: &v}
 }
 
 // Get returns the internal map of cache kbps measurements. The returned map
 // MUST NOT be modified. If modification is necessary, copy.
-func (o *CacheKbpses) Get() cache.Kbpses {
+func (o *CacheKbpses) Get() map[string]CacheKbps {
 	o.m.RLock()
 	defer o.m.RUnlock()
 	return *o.v
@@ -50,7 +64,7 @@ func (o *CacheKbpses) Get() cache.Kbpses {
 
 // Set sets the internal map of cache kbps measurements. This MUST NOT be called
 // by multiple goroutines.
-func (o *CacheKbpses) Set(v cache.Kbpses) {
+func (o *CacheKbpses) Set(v map[string]CacheKbps) {
 	o.m.Lock()
 	*o.v = v
 	o.m.Unlock()
