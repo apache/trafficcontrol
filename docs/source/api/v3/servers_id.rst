@@ -94,7 +94,7 @@ Request Structure
 
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Ops ORT
-:xmppId:     An optional identifier to be used in XMPP communications with the server - in nearly all cases this should be the same as ``hostName``
+:xmppId:     A system-generated UUID used to generate a server hashId for use in traffic router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: An optional password used in XMPP communications with the server
 
 .. code-block:: http
