@@ -79,7 +79,7 @@ func TestComputeAggregateStats(t *testing.T) {
 }
 
 func TestComputeStatGbps(t *testing.T) {
-	serverInfo := tc.LegacyTrafficServer{}
+	serverInfo := tc.TrafficServer{}
 	serverProfile := tc.TMProfile{}
 	combinedState := tc.IsAvailable{}
 	computedStats := ComputedStats()
