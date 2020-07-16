@@ -75,18 +75,14 @@ type AvailableStatus struct {
 }
 
 // CacheAvailableStatuses is the available status of each cache.
-type AvailableStatuses map[tc.CacheName]map[string]AvailableStatus
+type AvailableStatuses map[string]AvailableStatus
 
 // Copy copies this CacheAvailableStatuses. It does not modify, and thus is
 // safe for multiple reader goroutines.
 func (a AvailableStatuses) Copy() AvailableStatuses {
-	b := AvailableStatuses(map[tc.CacheName]map[string]AvailableStatus{})
-	for cacheName, interfaces := range a {
-		interfaceStats := make(map[string]AvailableStatus)
-		for interfaceName, status := range interfaces {
-			interfaceStats[interfaceName] = status
-		}
-		b[cacheName] = interfaceStats
+	b := AvailableStatuses(make(map[string]AvailableStatus, len(a)))
+	for cacheName, status := range a {
+		b[cacheName] = status
 	}
 	return b
 }
