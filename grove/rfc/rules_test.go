@@ -13,14 +13,3 @@ package rfc
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-
-// Package rfc contains functions implementing RFC 7234, 2616, and other RFCs.
-// When changing functions, be sure they still conform to the corresponding RFC.
-// When adding symbols, document the RFC and section they correspond to.
-
-import (
-	"net/http"
-	"os"
-	"testing"
-	"time"
-)
