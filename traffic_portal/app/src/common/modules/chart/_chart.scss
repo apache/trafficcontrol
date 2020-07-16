@@ -25,7 +25,14 @@
     width: 100%;
     height: 250px;
   }
+}
 
+.x_content {
+  div.legend {
+    table {
+      width: initial !important;
+    }
+  }
 }
 
 .dashboard_graph small {
