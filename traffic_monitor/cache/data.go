@@ -220,17 +220,14 @@ func (a ResultInfoHistory) Add(r Result, limit uint64) {
 	a[tc.CacheName(r.ID)] = pruneInfos(append([]ResultInfo{ToInfo(r)}, a[tc.CacheName(r.ID)]...), limit)
 }
 
-// Kbpses is the kbps values of each cache.
-type Kbpses map[tc.CacheName]int64
+// Kbpses is the kbps values of each interface of a cache server.
+type Kbpses map[string]uint64
 
+// Copy returns a deep copy of the Kbpses.
 func (a Kbpses) Copy() Kbpses {
 	b := Kbpses{}
 	for k, v := range a {
 		b[k] = v
 	}
 	return b
-}
-
-func (a Kbpses) AddMax(r Result) {
-	a[tc.CacheName(r.ID)] = r.PrecomputedData.MaxKbps
 }

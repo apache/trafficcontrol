@@ -346,8 +346,21 @@ func newStatEqual(history []cache.ResultStatVal, stat interface{}) (bool, error)
 	return stat == history[0].Val, nil
 }
 
-// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
-func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInfoHistory, combinedStates tc.CRStates, monitorConfig tc.TrafficMonitorConfigMap, statMaxKbpses cache.Kbpses, filter cache.Filter, params url.Values) ([]byte, error) {
+// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each
+// stat. If statsToUse is empty, all stats are encoded; otherwise, only the
+// given stats are encoded. If `wildcard` is true, stats which contain the text
+// in each statsToUse are returned, instead of exact stat names. If cacheType is
+// not CacheTypeInvalid, only stats for the given type are returned. If hosts is
+// not empty, only the given hosts are returned.
+func StatsMarshall(
+	statResultHistory ResultStatHistory,
+	statInfo cache.ResultInfoHistory,
+	combinedStates tc.CRStates,
+	monitorConfig tc.TrafficMonitorConfigMap,
+	statMaxKbpses map[string]CacheKbps,
+	filter cache.Filter,
+	params url.Values,
+) ([]byte, error) {
 	stats := cache.Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 		Caches:        map[string]cache.StatsCache{},
