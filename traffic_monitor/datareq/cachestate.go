@@ -39,15 +39,22 @@ import (
 type CacheStatus struct {
 	Type        *string  `json:"type,omitempty"`
 	LoadAverage *float64 `json:"load_average,omitempty"`
-	// QueryTimeMilliseconds is the time it took this app to perform a complete query and process the data, end-to-end, for the latest health query.
+	// QueryTimeMilliseconds is the time it took this app to perform a complete
+	// query and process the data, end-to-end, for the latest health query.
 	QueryTimeMilliseconds *int64 `json:"query_time_ms,omitempty"`
-	// HealthTimeMilliseconds is the time it took to make the HTTP request and get back the full response, for the latest health query.
+	// HealthTimeMilliseconds is the time it took to make the HTTP request and
+	// get back the full response, for the latest health query.
 	HealthTimeMilliseconds *int64 `json:"health_time_ms,omitempty"`
-	// StatTimeMilliseconds is the time it took to make the HTTP request and get back the full response, for the latest stat query.
+	// StatTimeMilliseconds is the time it took to make the HTTP request and get
+	// back the full response, for the latest stat query.
 	StatTimeMilliseconds *int64 `json:"stat_time_ms,omitempty"`
-	// StatSpanMilliseconds is the length of time between completing the most recent two stat queries. This can be used as a rough gauge of the end-to-end query processing time.
+	// StatSpanMilliseconds is the length of time between completing the most
+	// recent two stat queries. This can be used as a rough gauge of the
+	// end-to-end query processing time.
 	StatSpanMilliseconds *int64 `json:"stat_span_ms,omitempty"`
-	// HealthSpanMilliseconds is the length of time between completing the most recent two health queries. This can be used as a rough gauge of the end-to-end query processing time.
+	// HealthSpanMilliseconds is the length of time between completing the most
+	// recent two health queries. This can be used as a rough gauge of the
+	// end-to-end query processing time.
 	HealthSpanMilliseconds *int64 `json:"health_span_ms,omitempty"`
 
 	Status                *string  `json:"status,omitempty"`
