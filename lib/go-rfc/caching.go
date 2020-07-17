@@ -409,6 +409,22 @@ const (
 	ReuseMustRevalidateCanStale
 )
 
+// String implements the fmt.Stringer interface by returning the name of the
+// Reuse constant the value indicates.
+func (r Reuse) String() string {
+	switch r {
+	case ReuseCan:
+		return "ReuseCan"
+	case ReuseCannot:
+		return "ReuseCannot"
+	case ReuseMustRevalidate:
+		return "ReuseMustRevalidate"
+	case ReuseMustRevalidateCanStale:
+		return "ReuseMustRevalidateCanStale"
+	}
+	return "INVALID"
+}
+
 // selectedHeadersMatch checks the constraints in RFC7234§4.1.
 // TODO: change caching to key on URL+headers, so multiple requests for the same URL with different vary headers can be cached?
 func selectedHeadersMatch(reqHeaders http.Header, respReqHeaders http.Header, strictRFC bool) bool {
