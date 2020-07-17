@@ -63,3 +63,18 @@ func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL
 	obj.Size = obj.ComputeSize()
 	return obj
 }
+
+// CanReuse is a helper wrapping
+// github.com/apache/trafficcontrol/lib/go-rfc.CanReuseStored, returning a
+// boolean rather than an enumerated "Reuse" value, for when it's known whether
+// MustRevalidate can be used.
+func CanReuse(
+	reqHeader http.Header,
+	reqCacheControl rfc.CacheControlMap,
+	cacheObj *CacheObj,
+	strictRFC bool,
+	revalidateCanReuse bool,
+) bool {
+	canReuse := rfc.CanReuseStored(reqHeader, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, strictRFC)
+	return canReuse == rfc.ReuseCan || (canReuse == rfc.ReuseMustRevalidate && revalidateCanReuse)
+}

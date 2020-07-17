@@ -33,6 +33,20 @@ func ExampleParseCacheControl(t *testing.T) {
 	// Output: Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
 }
 
+func ExampleCacheControlMap_Has() {
+	hdrs := http.Header{}
+	hdrs.Set(CacheControl, "no-cache")
+
+	ccm := ParseCacheControl(hdrs)
+	if ccm.Has("no-cache") {
+		fmt.Println("Has 'no-cache'")
+	}
+	if ccm.Has("no-store") {
+		fmt.Println("Has 'no-store'")
+	}
+	// Output: Has 'no-cache'
+}
+
 func TestParseCacheControl(t *testing.T) {
 	hdrs := http.Header{}
 

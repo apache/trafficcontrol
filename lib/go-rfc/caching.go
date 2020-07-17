@@ -19,8 +19,11 @@ package rfc
  * under the License.
  */
 
+import "math"
 import "net/http"
+import "strconv"
 import "strings"
+import "time"
 
 // CacheableResponseCodes provides fast lookup of whether a HTTP response
 // code is cache-able by default.
@@ -49,8 +52,8 @@ var CacheableRequestMethods = map[string]struct{}{
 // each mapped to its specified value.
 type CacheControlMap map[string]string
 
-// String implements the Stringer interface by returning a textual representation
-// of the CacheControlMap.
+// String implements the Stringer interface by returning a textual
+// representation of the CacheControlMap.
 func (ccm CacheControlMap) String() string {
 	s := "Cache-Control:"
 
@@ -70,8 +73,14 @@ func (ccm CacheControlMap) String() string {
 	return s
 }
 
-// Gets the position in the string at which a *quoted* Cache-Control parameter value
-// ends - assuming it begins with the start of such a value.
+// Has returns whether or not the CacheControlMap contains the named parameter.
+func (ccm CacheControlMap) Has(param string) bool {
+	_, ok := ccm[param]
+	return ok
+}
+
+// Gets the position in the string at which a *quoted* Cache-Control parameter
+// value ends - assuming it begins with the start of such a value.
 //
 // If the end can't be determined, returns -1.
 func getQuotedValueEndPos(cacheControlStr string) int {
@@ -99,8 +108,8 @@ func getQuotedValueEndPos(cacheControlStr string) int {
 	}
 }
 
-// Gets the position in the string at which a Cache-Control parameter value ends -
-// assuming it begins with the start of such a value.
+// Gets the position in the string at which a Cache-Control parameter value
+// ends - assuming it begins with the start of such a value.
 //
 // If the end can't be determined, returns -1.
 func getValueEndPos(cacheControlStr string) int {
@@ -208,10 +217,16 @@ func cacheControlAllows(respCode int, respHeaders http.Header, respCacheControl 
 	if _, ok := respCacheControl["s-maxage"]; ok {
 		return true
 	}
-	// This used to be a stub function that just returns false, the original rationale for
-	// why it was always false is shown here in the comment from that original function:
-	// This MUST return false unless a specific Cache Control cache-extension token exists for an extension which allows. Which is to say, returning true here without a cache-extension token is in strict violation of RFC7234.
-	// In practice, all returning true does is override whether a response code is default-cacheable. If we wanted to do that, it would be better to make codeDefaultCacheable take a strictRFC parameter.
+	// This used to be a stub function that just returns false, the original
+	// rationale for why it was always false is shown here in the comment from
+	// that original function:
+	//
+	// This MUST return false unless a specific Cache Control cache-extension
+	// token exists for an extension which allows. Which is to say, returning
+	// true here without a cache-extension token is in strict violation of
+	// RFC7234. In practice, all returning true does is override whether a
+	// response code is default-cacheable. If we wanted to do that, it would be
+	// better to make codeDefaultCacheable take a strictRFC parameter.
 	// if extensionAllows() {
 	// 	return true
 	// }
@@ -284,9 +299,9 @@ func CanCache(reqMethod string, reqHeaders http.Header, respCode int, respHeader
 	return canStoreResponse(respCode, respHeaders, reqCacheControl, respCacheControl, strictRFC) && canStoreAuthenticated(reqCacheControl, respCacheControl)
 }
 
-// heuristicFreshness follows the recommendation of RFC7234§4.2.2 and returns the
-// min of 10% of the (Date - Last-Modified) headers and 24 hours, if they exist,
-// and 24 hours if they don't.
+// heuristicFreshness follows the recommendation of RFC7234§4.2.2 and returns
+// the min of 10% of the (Date - Last-Modified) headers and 24 hours, if they
+// exist, and 24 hours if they don't.
 // TODO: smarter and configurable heuristics
 func heuristicFreshness(respHeaders http.Header) time.Duration {
 	day := 24 * time.Hour
@@ -302,6 +317,22 @@ func heuristicFreshness(respHeaders http.Header) time.Duration {
 	return freshness
 }
 
+// getHTTPDeltaSeconds is a helper function which gets an HTTP Delta Seconds
+// from the given map (which is typically a `http.Header` or `CacheControl`.
+// Returns false if the given key doesn't exist in the map, or if the value
+// isn't a valid Delta Seconds per RFC2616§3.3.2.
+func getHTTPDeltaSecondsCacheControl(m map[string]string, key string) (time.Duration, bool) {
+	maybeSec, ok := m[key]
+	if !ok {
+		return 0, false
+	}
+	seconds, err := strconv.ParseUint(maybeSec, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return time.Duration(seconds) * time.Second, true
+}
+
 // getFreshnessLifetime calculates the freshness_lifetime per RFC7234§4.2.1
 func getFreshnessLifetime(respHeaders http.Header, respCacheControl CacheControlMap) time.Duration {
 	if s, ok := getHTTPDeltaSecondsCacheControl(respCacheControl, "s-maxage"); ok {
@@ -312,11 +343,11 @@ func getFreshnessLifetime(respHeaders http.Header, respCacheControl CacheControl
 	}
 
 	getExpires := func() (time.Duration, bool) {
-		expires, ok := rfc.GetHTTPDate(respHeaders, "Expires")
+		expires, ok := GetHTTPDate(respHeaders, "Expires")
 		if !ok {
 			return 0, false
 		}
-		date, ok := rfc.GetHTTPDate(respHeaders, "Date")
+		date, ok := GetHTTPDate(respHeaders, "Date")
 		if !ok {
 			return 0, false
 		}
@@ -328,16 +359,164 @@ func getFreshnessLifetime(respHeaders http.Header, respCacheControl CacheControl
 	return heuristicFreshness(respHeaders)
 }
 
-// FreshFor gives a duration for which an HTTP response may still be cached - from
-// the time of the request.
+func getCurrentAge(respHeaders http.Header, reqTime, respTime time.Time) time.Duration {
+	var apparentAge time.Duration = 0
+	dateValue, ok := GetHTTPDate(respHeaders, "date")
+	if ok {
+		apparentAge = time.Duration(math.Max(0.0, float64(respTime.Sub(dateValue))))
+	}
+
+	var correctedAge time.Duration = 0
+	ageValue, ok := GetHTTPDeltaSeconds(respHeaders, "date")
+	if ok {
+		correctedAge = ageValue + respTime.Sub(reqTime)
+	}
+
+	correctedInitial := time.Duration(math.Max(float64(apparentAge), float64(correctedAge)))
+	return correctedInitial + time.Now().Sub(respTime)
+}
+
+// FreshFor gives a duration for which an HTTP response may still be cached -
+// from the time of the request.
 //
 // respHeaders is the collection of headers passed in the original response
 // respCC is the parsed Cache-Control header that was present in the original response
 // reqTime is the time at which the request was made
 // respTime is the time at which the original response was received
 func FreshFor(respHeaders http.Header, respCC CacheControlMap, reqTime, respTime time.Time) time.Duration {
-	freshnessLifetime := getFreshnessLifetime(respHeaders, respCacheControl)
-	currentAge := getCurrentAge(respHeaders, respReqTime, respRespTime)
-	// log.Debugf("FreshFor: freshnesslifetime %v currentAge %v\n", freshnessLifetime, currentAge)
+	freshnessLifetime := getFreshnessLifetime(respHeaders, respCC)
+
+	currentAge := getCurrentAge(respHeaders, reqTime, respTime)
 	return freshnessLifetime - currentAge
+}
+
+// Reuse is an "enumerated" type describing the necessary behavior of a cache
+// with regard to its cached objects.
+type Reuse int
+
+const (
+	// ReuseCan indicates that the cached response may be served.
+	ReuseCan Reuse = iota
+	// ReuseCannot indicates that the cached response must not be served.
+	ReuseCannot
+	// ReuseMustRevalidate indicates that the cached response must be
+	// revalidated, and cannot be served stale if revalidation fails for some
+	// reason.
+	ReuseMustRevalidate
+	// ReuseMustRevalidateCanStale indicates the response must be revalidated,
+	// but if the parent cannot be reached, may be served stale, per
+	// RFC7234§4.2.4.
+	ReuseMustRevalidateCanStale
+)
+
+// selectedHeadersMatch checks the constraints in RFC7234§4.1.
+// TODO: change caching to key on URL+headers, so multiple requests for the same URL with different vary headers can be cached?
+func selectedHeadersMatch(reqHeaders http.Header, respReqHeaders http.Header, strictRFC bool) bool {
+	varyHeaders, ok := reqHeaders["vary"]
+	if !strictRFC && !ok {
+		return true
+	}
+	if len(varyHeaders) == 0 {
+		return true
+	}
+	varyHeader := varyHeaders[0]
+
+	if varyHeader == "*" {
+		return false
+	}
+	varyHeader = strings.ToLower(varyHeader)
+	varyHeaderHeaders := strings.Split(varyHeader, ",")
+	for _, header := range varyHeaderHeaders {
+		if _, ok := respReqHeaders[header]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+// allowedStale checks the constraints in RFC7234§4 via RFC7234§4.2.4.
+func allowedStale(
+	headers http.Header,
+	reqCC CacheControlMap,
+	respCC CacheControlMap,
+	reqTime time.Time,
+	respTime time.Time,
+	strictRFC bool,
+	freshness time.Duration,
+	age time.Duration,
+) Reuse {
+	// TODO return ReuseMustRevalidate where permitted
+	if respCC.Has("must-revalidate") || respCC.Has("proxy-revalidate") {
+		return ReuseMustRevalidate
+	}
+	if strictRFC && reqCC.Has("max-age") && !reqCC.Has("max-stale") {
+		return ReuseMustRevalidateCanStale
+	}
+	if respCC.Has("no-cache") || respCC.Has("no-store") {
+		return ReuseCannot // TODO verify RFC doesn't allow revalidate here
+	}
+
+	maxStale, ok := getHTTPDeltaSecondsCacheControl(respCC, "max-stale")
+	if !ok {
+		return ReuseMustRevalidateCanStale
+	}
+
+	if maxStale <= (age - freshness) {
+		return ReuseMustRevalidate // TODO verify RFC allows
+	}
+	return ReuseMustRevalidateCanStale
+}
+
+// CanReuseStored checks the constraints in RFC7234§4.
+func CanReuseStored(
+	reqHeaders http.Header,
+	respHeaders http.Header,
+	reqCC CacheControlMap,
+	respCC CacheControlMap,
+	respReqHeaders http.Header,
+	reqTime time.Time,
+	respTime time.Time,
+	strictRFC bool,
+) Reuse {
+	// TODO: remove allowed_stale, check in cache manager after revalidate fails? (since RFC7234§4.2.4 prohibits serving stale response unless disconnected).
+
+	if !selectedHeadersMatch(reqHeaders, respReqHeaders, strictRFC) {
+		return ReuseCannot
+	}
+
+	freshness := getFreshnessLifetime(respHeaders, respCC)
+	age := getCurrentAge(respHeaders, reqTime, respTime)
+
+	if freshness <= age {
+		allowedStale := allowedStale(respHeaders, reqCC, respCC, reqTime, respTime, strictRFC, freshness, age)
+		return allowedStale
+	}
+
+	if strictRFC {
+
+		if _, ok := reqHeaders["Cache-Control"]; !ok {
+			pragmas, ok := reqHeaders["pragma"]
+			if ok && len(pragmas) > 0 && strings.HasPrefix(pragmas[0], "no-cache") {
+				return ReuseMustRevalidate
+			}
+		}
+	}
+
+	if respCC.Has("no-cache") {
+		return ReuseCannot
+	}
+
+	if !strictRFC {
+		return ReuseMustRevalidate
+	}
+
+	minFresh, ok := getHTTPDeltaSecondsCacheControl(reqCC, "min-fresh")
+	if !ok {
+		return ReuseCan
+	}
+
+	if minFresh >= (freshness - age) {
+		return ReuseMustRevalidate
+	}
+	return ReuseCan
 }

@@ -21,6 +21,7 @@ package rfc
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -164,4 +165,25 @@ func ParseHTTPDate(d string) (time.Time, bool) {
 	}
 	return time.Time{}, false
 
+}
+
+// GetHTTPDeltaSeconds is a helper function which gets an HTTP Delta Seconds
+// from the given map (which is typically a `http.Header` or `CacheControl`).
+// Returns false if the given key doesn't exist in the map, or if the value
+// isn't a valid Delta Seconds per RFC2616§3.3.2.
+func GetHTTPDeltaSeconds(m map[string][]string, key string) (time.Duration, bool) {
+	maybeSeconds, ok := m[key]
+	if !ok {
+		return 0, false
+	}
+	if len(maybeSeconds) == 0 {
+		return 0, false
+	}
+	maybeSec := maybeSeconds[0]
+
+	seconds, err := strconv.ParseUint(maybeSec, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return time.Duration(seconds) * time.Second, true
 }
