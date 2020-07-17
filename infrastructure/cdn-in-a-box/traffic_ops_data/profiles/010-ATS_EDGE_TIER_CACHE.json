@@ -126,54 +126,6 @@
 			"value": "INT 2"
 		},
 		{
-			"configFile": "cache.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "hosting.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "parent.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "plugin.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "records.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "remap.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "storage.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
-			"configFile": "volume.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver/"
-		},
-		{
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.url_remap.remap_required",
 			"secure": false,
