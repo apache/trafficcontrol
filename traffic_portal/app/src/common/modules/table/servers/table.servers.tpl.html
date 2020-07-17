@@ -24,7 +24,8 @@ under the License.
         </ol>
         <div class="pull-right">
             <div class="form-inline">
-                <input id="quickSearch" type="text" class="form-control" placeholder="Quick Search..." ng-model="quickSearch" ng-change="onQuickSearchChanged()"/>
+                <input id="quickSearch" type="text" class="form-control" placeholder="Quick search..." ng-model="quickSearch" ng-change="onQuickSearchChanged()"/>
+                <input id="pageSize" type="number" class="form-control" placeholder="Page size..." ng-model="pageSize" ng-change="onPageSizeChanged()"/>
                 <a class="btn btn-primary" name="createServersButton" title="Create Server" href="#!/servers/new"><i class="fa fa-plus"></i></a>
                 <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
                 <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">

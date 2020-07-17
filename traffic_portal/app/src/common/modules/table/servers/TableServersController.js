@@ -552,6 +552,11 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		$scope.gridOptions.api.setQuickFilter(document.getElementById('quickSearch').value);
 	};
 
+	$scope.onPageSizeChanged = function() {
+		let value = document.getElementById('pageSize').value;
+		$scope.gridOptions.api.paginationSetPageSize(Number(value));
+	};
+
 	$scope.clearColFilters = function() {
 		$scope.gridOptions.api.setFilterModel(null);
 	};
