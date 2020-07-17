@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated /deliveryservices/{{ID}}/servers/eligible to use multiple interfaces in API v3
 
 ### Fixed
+- Fixed #4848 - `GET /api/x/cdns/capacity` gives back 500, with the message `capacity was zero`. [Related github issue](https://github.com/apache/trafficcontrol/issues/4848)
 - Fixed #3661 - Anonymous Proxy ipv4 whitelist does not work
 - Fixed the `GET /api/x/jobs` and `GET /api/x/jobs/:id` Traffic Ops API routes to allow falling back to Perl via the routing blacklist
 - Fixed ORT config generation not using the coalesce_number_v6 Parameter.
