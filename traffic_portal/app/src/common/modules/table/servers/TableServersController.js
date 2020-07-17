@@ -275,6 +275,8 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		id: -1
 	};
 
+	$scope.pageSize = 100;
+
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	$scope.gridOptions = {
 		components: {
@@ -294,6 +296,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		},
 		rowData: servers,
 		pagination: true,
+		paginationPageSize: $scope.pageSize,
 		rowBuffer: 0,
 		onColumnResized: function(params) {
 			localStorage.setItem("servers_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));

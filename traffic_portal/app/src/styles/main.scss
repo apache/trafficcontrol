@@ -121,12 +121,13 @@ body.nav-sm .container.body .main-content {
     font-size: 24px;
   }
 
-  button, input, a {
-    margin: 8px 6px 4px 0;
-  }
+  .text-input {
+    margin: 5px 6px 4px 0;
 
-  .btn-group {
-    margin-top: -4px;
+    #pageSize {
+      width: 100px;
+    }
+
   }
 
 }
