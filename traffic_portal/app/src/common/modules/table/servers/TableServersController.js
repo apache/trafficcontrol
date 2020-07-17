@@ -41,7 +41,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		} else {
 			this.eGui.classList.add("fa-check");
 		}
-	}
+	};
 	UpdateCellRenderer.prototype.getGui = function() {return this.eGui;};
 
 	/**
@@ -548,6 +548,13 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		}
 	};
 
+	$scope.onQuickSearchChanged = function() {
+		$scope.gridOptions.api.setQuickFilter(document.getElementById('quickSearch').value);
+	};
+
+	$scope.clearColFilters = function() {
+		$scope.gridOptions.api.setFilterModel(null);
+	};
 
 	/**** Initialization code, including loading user columns from localstorage ****/
 	angular.element(document).ready(function () {
