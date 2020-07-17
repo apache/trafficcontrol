@@ -101,7 +101,31 @@ td span {
 	max-height: 300px;
 	padding: 10px 20px;
 	overflow-y: auto;
+
+  .checkbox {
+    position: relative;
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 10px;
+
+    label {
+      min-height: 20px;
+      padding-left: 20px;
+      margin-bottom: 0;
+      font-weight: normal;
+      cursor: pointer;
+
+      input[type="checkbox"] {
+        position: absolute;
+        margin-left: -20px;
+      }
+
+    }
+
+  }
+
 }
+
 table.dataTable.params tbody td {
 	word-break: break-word;
 	vertical-align: top;
