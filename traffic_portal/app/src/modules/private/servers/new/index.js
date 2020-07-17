@@ -33,7 +33,17 @@ module.exports = angular.module('trafficPortal.private.servers.new', [])
                                     tcpPort: 80,
                                     httpsPort: 443,
                                     ipIsService: false,
-                                    ip6IsService: false
+                                    ip6IsService: false,
+                                    interfaces: [
+                                        {
+                                            ipAddresses: [
+                                                {
+                                                    serviceAddress: true
+                                                }
+                                            ],
+                                            monitor: true
+                                        }
+                                    ]
                                 };
                             }
                         }
