@@ -249,8 +249,6 @@ func UpdateTestServers(t *testing.T) {
 
 	// Retrieve the server by hostname so we can get the id for the Update
 	resp, _, err := TOSession.GetServers(&params, nil)
-	originalHostname := *resp.Response[0].HostName
-	originalXMPIDD := *resp.Response[0].XMPPID
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
 	}
@@ -267,6 +265,8 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatalf("Got null ID for server '%s'", hostName)
 	}
 
+	originalHostname := *resp.Response[0].HostName
+	originalXMPIDD := *resp.Response[0].XMPPID
 	// Creating idParam to get server when hostname changes.
 	id := fmt.Sprintf("%v", *resp.Response[0].ID)
 	idParam := url.Values{}

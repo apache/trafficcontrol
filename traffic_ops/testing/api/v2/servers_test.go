@@ -101,13 +101,13 @@ func UpdateTestServers(t *testing.T) {
 	hostName := firstServer.HostName
 	// Retrieve the server by hostname so we can get the id for the Update
 	resp, _, err := TOSession.GetServerByHostName(hostName)
-	originalHostname := resp[0].HostName
-	originalXMPIDD := resp[0].XMPPID
 
 	if err != nil {
 		t.Errorf("cannot GET Server by hostname: %v - %v", firstServer.HostName, err)
 	}
 	remoteServer := resp[0]
+	originalHostname := resp[0].HostName
+	originalXMPIDD := resp[0].XMPPID
 	updatedServerInterface := "bond1"
 	updatedServerRack := "RR 119.03"
 	updatedHostName := "atl-edge-01"

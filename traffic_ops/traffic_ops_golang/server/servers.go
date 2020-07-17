@@ -993,7 +993,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if newServer.XMPPID != nil {
-			fmt.Println("Change in xmpp_id was requested but it will be ignored to ensure hashId remains consistent")
+			log.Debugln("Change in xmpp_id was requested but it will be ignored to ensure hashId remains consistent")
 		}
 		serviceInterface, err := validateV3(&newServer, tx)
 		if err != nil {
