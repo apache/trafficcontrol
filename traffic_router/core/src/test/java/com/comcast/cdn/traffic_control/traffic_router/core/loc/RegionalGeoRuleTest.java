@@ -15,22 +15,64 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.io.File;
-import java.io.FileReader;
-import java.util.regex.Pattern;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ArrayList;
-
-import org.apache.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
-
 public class RegionalGeoRuleTest {
+
+    @Test
+    public void testIsAllowedCoordinateRanges() throws Exception {
+        final String urlRegex = ".*abc.m3u8";
+        final RegionalGeoRule.PostalsType ruleType = RegionalGeoRule.PostalsType.INCLUDE;
+        final Set<String> postals = new HashSet<String>();
+
+        final NetworkNode whiteList = new NetworkNode.SuperNode();
+        final String alternateUrl = "/alternate.m3u8";
+        final ArrayList<RegionalGeoCoordinateRange> coordinateRanges = new ArrayList<>();
+        RegionalGeoCoordinateRange coordinateRange = new RegionalGeoCoordinateRange();
+        RegionalGeoCoordinateRange coordinateRange2 = new RegionalGeoCoordinateRange();
+        coordinateRange.setMinLat(10.0);
+        coordinateRange.setMinLon(165.0);
+        coordinateRange.setMaxLat(22.0);
+        coordinateRange.setMaxLon(179.0);
+        coordinateRanges.add(coordinateRange);
+        coordinateRange2.setMinLat(17.0);
+        coordinateRange2.setMinLon(-20.0);
+        coordinateRange2.setMaxLat(25.0);
+        coordinateRange2.setMaxLon(19.0);
+        coordinateRanges.add(coordinateRange2);
+
+        Pattern urlRegexPattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
+
+        final RegionalGeoRule urlRule = new RegionalGeoRule(null,
+                urlRegex, urlRegexPattern,
+                ruleType, postals,
+                whiteList, alternateUrl, coordinateRanges);
+
+        boolean allowed;
+
+        allowed = urlRule.isAllowedCoordinates(11.0, 170.0);
+        assertThat(allowed, equalTo(true));
+
+        allowed = urlRule.isAllowedCoordinates(13.0, 162.0);
+        assertThat(allowed, equalTo(false));
+
+        allowed = urlRule.isAllowedCoordinates(23.0, 22.0);
+        assertThat(allowed, equalTo(false));
+
+        allowed = urlRule.isAllowedCoordinates(23.0, -12.0);
+        assertThat(allowed, equalTo(true));
+
+        allowed = urlRule.isAllowedCoordinates(9.0, 21.0);
+        assertThat(allowed, equalTo(false));
+    }
 
     @Test
     public void testMatchesUrl() throws Exception {
@@ -45,7 +87,7 @@ public class RegionalGeoRuleTest {
         final RegionalGeoRule urlRule = new RegionalGeoRule(null,
                 urlRegex, urlRegexPattern,
                 ruleType, postals,
-                whiteList, alternateUrl);
+                whiteList, alternateUrl, null);
 
         boolean matches;
         String url = "http://example.com/abc.m3u8";
@@ -88,7 +130,7 @@ public class RegionalGeoRuleTest {
         final RegionalGeoRule urlRule = new RegionalGeoRule(null,
                 urlRegex, urlRegexPattern,
                 ruleType, postals,
-                whiteList, alternateUrl);
+                whiteList, alternateUrl, null);
 
         boolean allowed;
 
@@ -117,7 +159,7 @@ public class RegionalGeoRuleTest {
         final RegionalGeoRule urlRule = new RegionalGeoRule(null,
                 urlRegex, urlRegexPattern,
                 ruleType, postals,
-                whiteList, alternateUrl);
+                whiteList, alternateUrl, null);
 
         boolean allowed;
 
@@ -153,7 +195,7 @@ public class RegionalGeoRuleTest {
         final RegionalGeoRule urlRule = new RegionalGeoRule(null,
                 urlRegex, urlRegexPattern,
                 ruleType, postals,
-                whiteList, alternateUrl);
+                whiteList, alternateUrl, null);
 
         boolean in;
 
@@ -209,7 +251,7 @@ public class RegionalGeoRuleTest {
             final RegionalGeoRule urlRule = new RegionalGeoRule(null,
                     urlRegex, urlRegexPattern,
                     ruleType, postals,
-                    whiteList, alternateUrl);
+                    whiteList, alternateUrl, null);
 
             boolean in;
 
@@ -245,7 +287,7 @@ public class RegionalGeoRuleTest {
         final RegionalGeoRule urlRule = new RegionalGeoRule(null,
                 urlRegex, urlRegexPattern,
                 ruleType, postals,
-                whiteList, alternateUrl);
+                whiteList, alternateUrl, null);
 
         boolean in;
 
