@@ -54,7 +54,6 @@ func GetTestATSConfigMeta(t *testing.T) {
 	expected := tc.ATSConfigMetaDataConfigFile{
 		FileNameOnDisk: "hdr_rw_ds1.config",
 		Location:       "/remap/config/location/parameter",
-		APIURI:         "cdns/cdn1/configfiles/ats/hdr_rw_ds1.config", // expected suffix; config gen doesn't care about API version
 		URL:            "",
 		Scope:          "cdns",
 	}
@@ -74,9 +73,6 @@ func GetTestATSConfigMeta(t *testing.T) {
 		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
 	}
 	if expected.Location != actual.Location {
-		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
-	}
-	if !strings.HasSuffix(actual.APIURI, expected.APIURI) {
 		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
 	}
 	if actual.Scope != expected.Scope {
@@ -114,7 +110,6 @@ func GetTestATSConfigMetaMidHdrRw(t *testing.T) {
 	expected := tc.ATSConfigMetaDataConfigFile{
 		FileNameOnDisk: "hdr_rw_mid_ds1nat.config",
 		Location:       "/remap/config/location/parameter",
-		APIURI:         "cdns/cdn1/configfiles/ats/hdr_rw_mid_ds1nat.config", // expected suffix; config gen doesn't care about API version
 		URL:            "",
 		Scope:          "cdns",
 	}
@@ -134,9 +129,6 @@ func GetTestATSConfigMetaMidHdrRw(t *testing.T) {
 		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
 	}
 	if expected.Location != actual.Location {
-		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
-	}
-	if !strings.HasSuffix(actual.APIURI, expected.APIURI) {
 		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
 	}
 	if actual.Scope != expected.Scope {
