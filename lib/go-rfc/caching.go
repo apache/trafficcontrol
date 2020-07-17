@@ -516,6 +516,10 @@ func CanReuseStored(
 				return ReuseMustRevalidate
 			}
 		}
+
+		if reqCC.Has("no-cache") {
+			return ReuseCannot
+		}
 	}
 
 	if respCC.Has("no-cache") {
@@ -523,7 +527,7 @@ func CanReuseStored(
 	}
 
 	if !strictRFC {
-		return ReuseMustRevalidate
+		return ReuseCan
 	}
 
 	minFresh, ok := getHTTPDeltaSecondsCacheControl(reqCC, "min-fresh")
