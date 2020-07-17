@@ -18,14 +18,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 type CacheObj struct {
 	Body             []byte
 	ReqHeaders       http.Header
 	RespHeaders      http.Header
-	RespCacheControl web.CacheControl
+	RespCacheControl rfc.CacheControlMap
 	Code             int
 	OriginCode       int
 	ProxyURL         string
@@ -48,7 +48,7 @@ func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL
 		Body:             bytes,
 		ReqHeaders:       reqHeader,
 		RespHeaders:      respHeader,
-		RespCacheControl: web.ParseCacheControl(respHeader),
+		RespCacheControl: rfc.ParseCacheControl(respHeader),
 		Code:             code,
 		OriginCode:       originCode,
 		ProxyURL:         proxyURL,
