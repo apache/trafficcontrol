@@ -378,9 +378,9 @@ func TestCanCache(t *testing.T) {
 	})
 }
 
-// This benchmarks one of the longer checking processes: when the response code is
-// not cache-able by default, but a Cache-Control header is present that makes it
-// cache-able.
+// This benchmarks one of the longer checking processes: when the response code
+// is not cache-able by default, but a Cache-Control header is present that
+// makes it cache-able.
 func BenchmarkCanCache(b *testing.B) {
 	hdrs := http.Header{}
 	hdrs.Set(CacheControl, "s-maxage=42")
@@ -909,4 +909,29 @@ func TestCanReuseStored(t *testing.T) {
 			t.Errorf("CanReuseStored request with strictRFC min-fresh 1200 with 600 remaining: expected ReuseCan, actual %v", reuse)
 		}
 	})
+}
+
+func BenchmarkCanReuseStored(b *testing.B) {
+	tenMinutesAgo := time.Now().Add(time.Minute * -10)
+	reqHdr := http.Header{
+		"Cache-Control": {"min-fresh=900"},
+	}
+	respHdr := http.Header{
+		"Date":          {tenMinutesAgo.Format(time.RFC1123)},
+		"Cache-Control": {"max-age=1200"},
+	}
+	reqCC := CacheControlMap{
+		"min-fresh": "900",
+	}
+	respCC := CacheControlMap{
+		"max-age": "1200",
+	}
+	respReqHdrs := http.Header{}
+	respReqTime := tenMinutesAgo
+	respRespTime := tenMinutesAgo
+	strictRFC := true
+
+	for i := 0; i < b.N; i++ {
+		CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC)
+	}
 }
