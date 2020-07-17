@@ -271,7 +271,7 @@ under the License.
                                 <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address], 'required')">Required</small>
                                 <label for="{{inf.name}}-{{ip.address}}-gateway">Gateway</label>
                                 <input type="text" id="{{inf.name}}-{{ip.address}}-gateway" name="{{inf.name}}-{{ip.address}}-gateway" ng-model="ip.gateway" ng-pattern="IPPattern"/>
-                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address-gateway], 'pattern')">Invalid gateway</small>
+                                <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-'+ip.address+'-gateway'], 'pattern')">Invalid gateway</small>
                                 <label for="{{inf.name}}-{{ip.address}}-serviceAddress">Is a Service Address</label>
                                 <input type="checkbox" name="{{inf.name}}-{{ip.address}}-serviceAddress" id="{{inf.name}}-{{ip.address}}-serviceAddress" class="service-addr-cb" ng-model="ip.serviceAddress"/>
                                 <button type="button" title="delete this IP address" class="btn btn-danger btn-xs" style="justify-self: start;" ng-click="deleteIP(inf, ip)"><i class="fa fa-minus"></i></button>
