@@ -552,12 +552,15 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	};
 
 	$scope.onQuickSearchChanged = function() {
-		$scope.gridOptions.api.setQuickFilter(document.getElementById('quickSearch').value);
+		const quickSearchValue = document.getElementById('quickSearch').value;
+		$scope.gridOptions.api.setQuickFilter(quickSearchValue);
+		localStorage.setItem("servers_quick_search", quickSearchValue);
 	};
 
 	$scope.onPageSizeChanged = function() {
-		let value = document.getElementById('pageSize').value;
-		$scope.gridOptions.api.paginationSetPageSize(Number(value));
+		const value = Number(document.getElementById('pageSize').value);
+		$scope.gridOptions.api.paginationSetPageSize(value);
+		localStorage.setItem("servers_page_size", value);
 	};
 
 	$scope.clearColFilters = function() {
@@ -596,6 +599,23 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			$scope.gridOptions.api.setSortModel(sortState);
 		} catch (e) {
 			console.error("Failure to load stored sort state:", e);
+		}
+
+		try {
+			$scope.quickSearch = localStorage.getItem("servers_quick_search");
+			$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
+		} catch (e) {
+			console.error("Failure to load stored quick search:", e);
+		}
+
+		try {
+			const ps = localStorage.getItem("servers_page_size");
+			if (ps) {
+				$scope.pageSize = Number(ps);
+				$scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
+			}
+		} catch (e) {
+			console.error("Failure to load stored page size:", e);
 		}
 
 		$scope.gridOptions.api.addEventListener("sortChanged", function() {
