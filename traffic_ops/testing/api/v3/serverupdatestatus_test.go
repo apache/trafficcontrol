@@ -196,7 +196,7 @@ func TestServerUpdateStatus(t *testing.T) {
 }
 
 func TestServerQueueUpdate(t *testing.T) {
-	WithObjs(t, []TCObj{Divisions, Regions, PhysLocations, Statuses, Types, CacheGroups, CDNs, Profiles, Servers}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 		// TODO: DON'T hard-code server hostnames!
 		const serverName = "atlanta-edge-01"
 
