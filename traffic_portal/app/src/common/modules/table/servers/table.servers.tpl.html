@@ -49,8 +49,6 @@ under the License.
                         </li>
                     </menu>
                 </div>
-                <button class="btn btn-default" title="Clear Column Filters" ng-click="clearColFilters()"><i class="fa fa-filter"></i><i class="fa fa-times"></i></button>
-                <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
                 <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                     <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                         More&nbsp;
@@ -62,6 +60,7 @@ under the License.
                         <li role="menuitem"><a ng-click="confirmCDNQueueServerUpdates(null)">Queue Server Updates</a></li>
                         <li role="menuitem"><a ng-click="confirmCDNClearServerUpdates(null)">Clear Server Updates</a></li>
                         <li class="divider"></li>
+                        <li role="menuitem"><button class="menu-item-button" type="button" ng-click="clearColFilters()">Clear Column Filters</button></li>
                         <li role="menuitem"><button class="menu-item-button" type="button" ng-click="exportCSV()">Export CSV</button></li>
                     </ul>
                 </div>
