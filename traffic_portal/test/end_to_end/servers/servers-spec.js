@@ -41,7 +41,8 @@ describe('Traffic Portal Servers Test Suite', function() {
 
 	it('should open new Servers form page', function() {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
-		browser.driver.findElement(by.name('createServersButton')).click();
+		pageData.moreBtn.click();
+		pageData.createServerMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/new");
 	});
 

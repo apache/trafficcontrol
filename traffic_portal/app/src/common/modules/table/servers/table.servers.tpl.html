@@ -50,12 +50,12 @@ under the License.
                     </menu>
                 </div>
                 <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                    <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                         More&nbsp;
                         <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                        <li role="menuitem"><a href="#!/servers/new">Create New Server</a></li>
+                        <li role="menuitem"><a name="createServerMenuItem" href="#!/servers/new">Create New Server</a></li>
                         <li class="divider"></li>
                         <li role="menuitem"><a ng-click="confirmCDNQueueServerUpdates(null)">Queue Server Updates</a></li>
                         <li role="menuitem"><a ng-click="confirmCDNClearServerUpdates(null)">Clear Server Updates</a></li>
