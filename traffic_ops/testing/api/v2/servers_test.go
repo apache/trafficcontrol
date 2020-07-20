@@ -112,12 +112,12 @@ func UpdateTestServers(t *testing.T) {
 	updatedServerRack := "RR 119.03"
 	updatedHostName := "atl-edge-01"
 	updatedXMPPID := "change-it"
-	// update rack and interfaceName values on server
+
+	// update rack, interfaceName and hostName values on server
 	remoteServer.InterfaceName = updatedServerInterface
 	remoteServer.Rack = updatedServerRack
-	//update hostName and XMPPID
 	remoteServer.HostName = updatedHostName
-	remoteServer.XMPPID = updatedXMPPID
+
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
 	if err != nil {
@@ -137,16 +137,23 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	//Check change in hostname with no change to xmppid
-	if originalHostname == respServer.HostName {
+	if originalHostname == respServer.HostName && originalXMPIDD == respServer.XMPPID {
 		t.Errorf("HostName didn't change. Expected: #{updatedHostName}, actual: #{originalHostname}")
 	}
-	if originalXMPIDD != respServer.XMPPID {
-		t.Errorf("XMPPID did change. Expected: #{originalXMPIDD}, changed to: #{updatedXMPPID}")
+
+	//Check to verify XMPPID never gets updated
+	changeXMPPID := true
+	if changeXMPPID {
+		remoteServer.XMPPID = updatedXMPPID
+		al, _, err := TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
+		if err != nil {
+			t.Logf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", remoteServer.ID, hostName, err, al)
+		}
 	}
 
-	//Change back hostname to its original name for other tests to pass
+	//Change back hostname and xmppid to its original name for other tests to pass
 	remoteServer.HostName = originalHostname
-
+	remoteServer.XMPPID = originalXMPIDD
 	alerts, _, err := TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", remoteServer.ID, hostName, err, alerts)
