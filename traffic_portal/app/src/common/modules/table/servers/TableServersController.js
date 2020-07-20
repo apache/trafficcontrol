@@ -275,6 +275,8 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		id: -1
 	};
 
+	$scope.quickSearch = '';
+
 	$scope.pageSize = 100;
 
 	/** Options, configuration, data and callbacks for the ag-grid table. */
@@ -552,13 +554,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	};
 
 	$scope.onQuickSearchChanged = function() {
-		const quickSearchValue = document.getElementById('quickSearch').value;
-		$scope.gridOptions.api.setQuickFilter(quickSearchValue);
-		localStorage.setItem("servers_quick_search", quickSearchValue);
+		$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
+		localStorage.setItem("servers_quick_search", $scope.quickSearch);
 	};
 
 	$scope.onPageSizeChanged = function() {
-		const value = Number(document.getElementById('pageSize').value);
+		const value = Number($scope.pageSize);
 		$scope.gridOptions.api.paginationSetPageSize(value);
 		localStorage.setItem("servers_page_size", value);
 	};
