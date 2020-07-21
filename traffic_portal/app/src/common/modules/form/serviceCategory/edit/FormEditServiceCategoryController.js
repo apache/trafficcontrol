@@ -39,7 +39,7 @@ var FormEditServiceCategoryController = function(serviceCategory, $scope, $contr
     $scope.save = function(serviceCategory) {
         serviceCategoryService.updateServiceCategory(serviceCategory).
             then(function() {
-                $scope.divisionName = angular.copy(serviceCategory.name);
+                $scope.serviceCategoryName = angular.copy(serviceCategory.name);
                 $anchorScroll(); // scrolls window to top
             });
     };
