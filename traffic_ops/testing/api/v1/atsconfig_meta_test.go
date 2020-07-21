@@ -16,7 +16,6 @@ package v1
 */
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -35,6 +34,9 @@ func GetTestATSConfigMeta(t *testing.T) {
 	if len(testData.Servers) < 1 {
 		t.Fatal("cannot GET Server: no test data")
 	}
+
+	MakeConfigLocationParams(t)
+
 	testServer := testData.Servers[0]
 
 	serverList, _, err := TOSession.GetServerByHostName(testServer.HostName)
