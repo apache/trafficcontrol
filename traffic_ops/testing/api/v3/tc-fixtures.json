@@ -138,6 +138,69 @@
             "parentCachegroupName": "edge-parent1",
             "shortName": "hep1",
             "typeName": "EDGE_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "topology-edge-cg-01",
+            "shortName": "te1",
+            "typeName": "EDGE_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "topology-edge-cg-02",
+            "shortName": "te2",
+            "typeName": "EDGE_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "topology-mid-cg-01",
+            "shortName": "tm1",
+            "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "topology-mid-cg-02",
+            "shortName": "tm2",
+            "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "topology-mid-cg-03",
+            "shortName": "tm3",
+            "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "topology-mid-cg-04",
+            "shortName": "tm4",
+            "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "topology-mid-cg-05",
+            "shortName": "tm5",
+            "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "topology-mid-cg-06",
+            "shortName": "tm6",
+            "typeName": "MID_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "topology-mid-cg-07",
+            "shortName": "tm7",
+            "typeName": "MID_LOC"
         }
     ],
     "cdns": [
@@ -2477,6 +2540,108 @@
             "updPending": false,
             "xmppId": "",
             "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "topology-edge-cg-01",
+            "cdnName": "cdn1",
+            "domainName": "edge-01.forked-topology.kabletown.net",
+            "hostName": "topology-edge-01",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:12:2::4/64",
+                            "gateway": "2345:1234:12:2::4",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.13/30",
+                            "gateway": "127.0.0.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-edge-cg-02",
+            "cdnName": "cdn1",
+            "domainName": "edge-02.forked-topology.kabletown.net",
+            "hostName": "topology-edge-02",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:12:2::4/64",
+                            "gateway": "2345:1234:12:2::4",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.13/30",
+                            "gateway": "127.0.0.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "EDGE1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false
+        },
+        {
+            "cachegroup": "topology-mid-cg-04",
+            "cdnName": "cdn1",
+            "domainName": "mid-04.forked-topology.kabletown.net",
+            "hostName": "topology-mid-04",
+            "httpsPort": 443,
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "2345:1234:12:2::4/64",
+                            "gateway": "2345:1234:12:2::4",
+                            "serviceAddress": false
+                        },
+                        {
+                            "address": "127.0.0.13/30",
+                            "gateway": "127.0.0.1",
+                            "serviceAddress": true
+                        }
+                    ],
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0"
+                }
+            ],
+            "physLocation": "Denver",
+            "profile": "MID1",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "MID",
+            "updPending": false
         }
     ],
     "serverCapabilities": [
@@ -2696,6 +2861,62 @@
                     "parents": [
                         3
                     ]
+                }
+            ]
+        },
+        {
+            "name": "forked-topology",
+            "description": "This topology stems from 2 anscestors",
+            "nodes": [
+                {
+                    "cachegroup": "topology-edge-cg-01",
+                    "parents": [
+                        2
+                    ]
+                },
+                {
+                    "cachegroup": "topology-edge-cg-02",
+                    "parents": [
+                        6
+                    ]
+                },
+                {
+                    "cachegroup": "topology-mid-cg-01",
+                    "parents": [
+                        3
+                    ]
+                },
+                {
+                    "cachegroup": "topology-mid-cg-02",
+                    "parents": [
+                        4
+                    ]
+                },
+                {
+                    "cachegroup": "topology-mid-cg-03",
+                    "parents": [
+                        5
+                    ]
+                },
+                {
+                    "cachegroup": "topology-mid-cg-04",
+                    "parents": []
+                },
+                {
+                    "cachegroup": "topology-mid-cg-05",
+                    "parents": [
+                        7
+                    ]
+                },
+                {
+                    "cachegroup": "topology-mid-cg-06",
+                    "parents": [
+                        8
+                    ]
+                },
+                {
+                    "cachegroup": "topology-mid-cg-07",
+                    "parents": []
                 }
             ]
         }

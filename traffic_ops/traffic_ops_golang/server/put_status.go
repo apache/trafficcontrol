@@ -105,16 +105,64 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlert(w, r, tc.SuccessLevel, msg)
 }
 
+// queueUpdatesOnChildNodes queues updates on child nodes of the topology node corresponding corresponding to the given cachegroup
+// and returns an error (if one occurs).
+func queueUpdatesOnChildNodes(tx *sql.Tx, serverID int, cachegroupID int) error {
+	query := `
+WITH RECURSIVE topology AS (
+		SELECT tcp.parent child, tc.cachegroup
+		FROM "server" s
+		JOIN cachegroup c ON s.cachegroup = c.id
+		JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
+		JOIN topology_cachegroup_parents tcp ON tc.id = tcp.parent
+		WHERE s.id = $1
+	UNION ALL
+		SELECT tcp.child, tc.cachegroup FROM topology t, topology_cachegroup_parents tcp
+		JOIN topology_cachegroup tc ON tcp.child = tc.id
+		WHERE t.child = tcp.parent
+)
+SELET c.id
+FROM cachegroup c
+JOIN topology t ON c."name" = t.cachegroup
+WHERE s.cachegroup = c.id
+AND s.cachegroup != $2
+`
+	if _, err := tx.Exec(query, serverID, cachegroupID); err != nil {
+		return errors.New("queueing updates on child topology nodes: " + err.Error())
+	}
+	return nil
+}
+
 // queueUpdatesOnChildCaches queues updates on child caches of the given cdnID and parentCachegroupID and returns an error (if one occurs).
 func queueUpdatesOnChildCaches(tx *sql.Tx, cdnID, parentCachegroupID int) error {
 	q := `
+WITH RECURSIVE topology_descendants AS (
+	SELECT tcp.parent child, tc.cachegroup
+	FROM cachegroup c
+	JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
+	JOIN topology_cachegroup_parents tcp ON tc.id = tcp.parent
+	WHERE c.id = $2
+UNION ALL
+	SELECT tcp.child, tc.cachegroup
+	FROM topology_descendants td, topology_cachegroup_parents tcp
+	JOIN topology_cachegroup tc ON tcp.child = tc.id
+	WHERE td.child = tcp.parent
+), server_topology_descendants AS (
+SELECT c.id
+FROM cachegroup c
+JOIN topology_descendants td ON c."name" = td.cachegroup
+WHERE c.id != $2
+)
 UPDATE server
-SET    upd_pending = TRUE
-WHERE  server.cdn_id = $1
-       AND server.cachegroup IN (SELECT id
-                                 FROM   cachegroup
-                                 WHERE  parent_cachegroup_id = $2
-                                        OR secondary_parent_cachegroup_id = $2)
+SET upd_pending = TRUE
+WHERE (server.cdn_id = $1
+	   AND server.cachegroup IN (
+			SELECT id
+			FROM cachegroup
+			WHERE parent_cachegroup_id = $2
+				OR secondary_parent_cachegroup_id = $2
+			))
+		OR server.cachegroup IN (SELECT stc.id FROM server_topology_descendants stc)
 `
 	if _, err := tx.Exec(q, cdnID, parentCachegroupID); err != nil {
 		return errors.New("queueing updates on child caches: " + err.Error())
