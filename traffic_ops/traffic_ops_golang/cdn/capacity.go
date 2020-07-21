@@ -51,6 +51,11 @@ func GetCapacity(w http.ResponseWriter, r *http.Request) {
 const MonitorProxyParameter = "tm.traffic_mon_fwd_proxy"
 const MonitorRequestTimeout = time.Second * 10
 const MonitorOnlineStatus = "ONLINE"
+const checkServiceAddressQuery = `
+SELECT i.service_address FROM ip_address AS i 
+JOIN server as s on s.id = i.server 
+WHERE i.interface=$1 AND s.host_name=$2
+`
 
 func getCapacity(tx *sql.Tx) (CapacityResp, error) {
 	monitors, err := getCDNMonitorFQDNs(tx)
@@ -119,18 +124,6 @@ func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (Capacity
 	}, nil
 }
 
-func checkServiceInterface(tx *sql.Tx, name tc.InterfaceName, cacheName tc.CacheName) bool {
-	var result *bool
-	if err := tx.QueryRow(`SELECT i.service_address FROM ip_address AS i JOIN server as s on s.id = i.server WHERE i.interface=$1 AND s.host_name=$2`, name, cacheName).Scan(&result); err != nil {
-		log.Errorln("Error checking for service interface ", err)
-		return false
-	}
-	if *result == true {
-		return true
-	}
-	return false
-}
-
 // getCapacityData attempts to get the CDN capacity from each monitor. If one fails, it tries the next.
 // The first monitor for which all data requests succeed is used.
 // Only if all monitors for a CDN fail is an error returned, from the last monitor tried.
@@ -181,27 +174,7 @@ func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crCon
 		if !strings.HasPrefix(*cache.ServerType, string(tc.CacheTypeEdge)) {
 			continue
 		}
-		var kbps, maxKbps float64
-		for intName, intStats := range stats {
-			if len(intStats.KBPS) < 1 || len(intStats.MaxKBPS) < 1 {
-				continue
-			}
-			if checkServiceInterface(tx, intName, cacheName) {
-				if len(intStats.KBPS) >= 1 {
-					if kbps < intStats.KBPS[0].Value {
-						kbps = intStats.KBPS[0].Value
-					}
-				}
-				if len(intStats.MaxKBPS) >= 1 {
-					if maxKbps < intStats.MaxKBPS[0].Value {
-						maxKbps = intStats.MaxKBPS[0].Value
-					}
-				}
-			}
-			if kbps > 0 && maxKbps > 0 {
-				break
-			}
-		}
+		kbps, maxKbps := checkServiceInterface(tx, cacheName, stats)
 		if string(*cache.ServerStatus) == string(tc.CacheStatusReported) || string(*cache.ServerStatus) == string(tc.CacheStatusOnline) {
 			if crStates.Caches[cacheName].IsAvailable {
 				cap.Available += kbps
@@ -216,6 +189,27 @@ func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crCon
 		cap.Capacity += maxKbps - thresholds[*cache.Profile]
 	}
 	return cap
+}
+
+func checkServiceInterface(tx *sql.Tx, cacheName tc.CacheName, stats map[tc.InterfaceName]CacheStat) (float64, float64) {
+	var result *bool
+	var kbps, maxKbps float64
+
+	for intName, intStats := range stats {
+		if err := tx.QueryRow(checkServiceAddressQuery, intName, cacheName).Scan(&result); err != nil {
+			log.Errorln("Error checking for service interface ", err)
+			continue
+		}
+		if len(intStats.KBPS) < 1 ||
+			len(intStats.MaxKBPS) < 1 ||
+			!*result {
+			continue
+		}
+		kbps = intStats.KBPS[0].Value
+		maxKbps = intStats.MaxKBPS[0].Value
+		return kbps, maxKbps
+	}
+	return kbps, maxKbps
 }
 
 func getEdgeProfileHealthThresholdBandwidth(tx *sql.Tx) (map[string]float64, error) {
