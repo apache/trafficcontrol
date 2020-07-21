@@ -461,3 +461,7 @@ For the GehirnInc/crypt (commit 6c0105a) component:
 For the go-acme/lego (version 2.7.2) component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/go-acme/lego/LICENSE
+
+For the google/uuid (version 1.1.1) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/google/uuid/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/google/uuid/LICENSE
