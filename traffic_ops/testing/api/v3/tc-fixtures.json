@@ -2866,7 +2866,7 @@
         },
         {
             "name": "forked-topology",
-            "description": "This topology stems from 2 anscestors",
+            "description": "This topology stems from 2 ancestors",
             "nodes": [
                 {
                     "cachegroup": "topology-edge-cg-01",

@@ -389,6 +389,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		)
 		cacheGroupNames := []string{edgeCacheGroup, otherEdgeCacheGroup, midCacheGroup}
 		cachesByCacheGroup := map[string]tc.ServerNullable{}
+		updateStatusByCacheGroup := map[string]tc.ServerUpdateStatus{}
 
 		forkedTopology, _, err := TOSession.GetTopology(topologyName, nil)
 		if err != nil {
@@ -438,6 +439,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			}
 		}
 		for _, cacheGroupName := range cacheGroupNames {
+			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
 			if err != nil {
 				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
 			}
@@ -450,14 +452,35 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		if !*cachesByCacheGroup[edgeCacheGroup].UpdPending {
 			t.Fatalf("expected UpdPending: %t, actual: %t", true, *cachesByCacheGroup[edgeCacheGroup].UpdPending)
 		}
+		if !updateStatusByCacheGroup[edgeCacheGroup].UpdatePending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", true, updateStatusByCacheGroup[edgeCacheGroup].UpdatePending)
+		}
 		// otherEdgeCacheGroup is not a descendant of midCacheGroup but is still in the same topology
 		if *cachesByCacheGroup[otherEdgeCacheGroup].UpdPending {
 			t.Fatalf("expected UpdPending: %t, actual: %t", false, *cachesByCacheGroup[otherEdgeCacheGroup].UpdPending)
+		}
+		if updateStatusByCacheGroup[otherEdgeCacheGroup].UpdatePending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", false, updateStatusByCacheGroup[otherEdgeCacheGroup].UpdatePending)
 		}
 
 		_, _, err = TOSession.SetServerQueueUpdate(*cachesByCacheGroup[midCacheGroup].ID, true)
 		if err != nil {
 			t.Fatalf("cannot update server status on %s: %s", *cachesByCacheGroup[midCacheGroup].HostName, err.Error())
+		}
+		for _, cacheGroupName := range cacheGroupNames {
+			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
+			if err != nil {
+				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
+			}
+		}
+
+		// edgeCacheGroup is a descendant of midCacheGroup
+		if !updateStatusByCacheGroup[edgeCacheGroup].ParentPending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", true, updateStatusByCacheGroup[edgeCacheGroup].ParentPending)
+		}
+		// otherEdgeCacheGroup is not a descendant of midCacheGroup but is still in the same topology
+		if updateStatusByCacheGroup[otherEdgeCacheGroup].ParentPending {
+			t.Fatalf("expected UpdPending: %t, actual: %t", false, updateStatusByCacheGroup[otherEdgeCacheGroup].ParentPending)
 		}
 	})
 }
