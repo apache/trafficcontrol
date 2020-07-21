@@ -232,8 +232,8 @@ function getDsStats() {
 
 		for (const [dsName, deliveryService] of deliveryServices) {
 			const row = table.insertRow(0);
-			const available = !deliveryService.isAvailable || !deliveryService.isAvailable[0] || !deliveryService.isAvailable[0].value === "true";
-			if (available) {
+			const available = deliveryService.isAvailable && deliveryService.isAvailable[0] && deliveryService.isAvailable[0].value === "true";
+			if (!available) {
 				row.classList.add("error");
 			}
 
