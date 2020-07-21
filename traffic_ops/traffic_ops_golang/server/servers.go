@@ -1066,7 +1066,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if changeXMPPID {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, nil, fmt.Errorf("server cannot be updated due to requested XMPPID change"))
+		api.WriteRespAlertObj(w, r, tc.ErrorLevel, fmt.Sprintf("server cannot be updated due to requested XMPPID change. XMPIDD is immutable"), nil)
 	} else {
 		rows, err := inf.Tx.NamedQuery(updateQuery, server)
 		if err != nil {
