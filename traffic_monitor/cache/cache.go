@@ -236,43 +236,43 @@ func ComputedStats() map[string]StatComputeFunc {
 		// parsers will give back (because it won't get this far).
 		"system.astatsLoad": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.AstatsLoad
-			return 0
+			return float64(0)
 		},
 		"system.configReloadRequests": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.ConfigLoadRequest
-			return 0
+			return float64(0)
 		},
 		"system.configReloads": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.ConfigReloads
-			return 0
+			return float64(0)
 		},
 		"system.inf.name": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.InfName
-			return 0
+			return ""
 		},
 		"system.inf.speed": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.InfSpeed
-			return 0
+			return float64(0)
 		},
 		"system.lastReload": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.LastReload
-			return 0
+			return float64(0)
 		},
 		"system.lastReloadRequest": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.LastReloadRequest
-			return 0
+			return ""
 		},
 		"system.notAvailable": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.NotAvailable
-			return 0
+			return ""
 		},
 		"system.proc.loadavg": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.ProcLoadavg
-			return 0
+			return float64(0)
 		},
 		"system.proc.net.dev": func(info ResultInfo, serverInfo tc.LegacyTrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			// return info.System.ProcNetDev
-			return 0
+			return float64(0)
 		},
 	}
 }

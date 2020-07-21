@@ -16,7 +16,10 @@ package v1
 */
 
 import (
+	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestATSConfigs(t *testing.T) {
@@ -41,6 +44,8 @@ func GetTestATSConfigs(t *testing.T) {
 		t.Fatalf("cannot GET Server '" + testServer.HostName + "', returned no servers\n")
 	}
 	server := serverList[0]
+
+	MakeConfigLocationParams(t)
 
 	_, _, err = TOSession.GetATSServerConfigList(server.ID)
 	if err != nil {
@@ -181,5 +186,43 @@ func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 		}
 
 		t.Errorf("Found ds-to-server assignment {DSID: %d, Server: %d} after deletion", *dss.DeliveryService, *dss.Server)
+	}
+}
+
+func MakeConfigLocationParams(t *testing.T) {
+	for _, sv := range testData.Servers {
+		profileName := sv.Profile
+		profiles, _, err := TOSession.GetProfileByName(profileName)
+		if err != nil {
+			t.Fatalf("cannot GET Profile by name: %v - %v", profileName, err)
+		} else if len(profiles) != 1 {
+			t.Fatal("missing server profile")
+		}
+		locationFiles := []string{
+			"cache.config",
+			"hosting.config",
+			"ip_allow.config",
+			"parent.config",
+			"plugin.config",
+			"records.config",
+			"remap.config",
+			"storage.config",
+			"volume.config",
+		}
+		for _, locationFileName := range locationFiles {
+			params, _, err := TOSession.GetParameterByNameAndConfigFile("location", locationFileName)
+			if err != nil {
+				t.Fatalf("getting location cache.config param: %v", err)
+			} else if len(params) == 0 {
+				t.Fatal("missing location cache.config param")
+			}
+			_, _, err = TOSession.CreateProfileParameter(tc.ProfileParameter{
+				ProfileID:   profiles[0].ID,
+				ParameterID: params[0].ID,
+			})
+			if err != nil && !strings.Contains(err.Error(), "already exists") {
+				t.Fatalf("creating location cache.config profile parameter: %v", err)
+			}
+		}
 	}
 }

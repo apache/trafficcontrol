@@ -16,7 +16,6 @@ package v1
 */
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -35,6 +34,9 @@ func GetTestATSConfigMeta(t *testing.T) {
 	if len(testData.Servers) < 1 {
 		t.Fatal("cannot GET Server: no test data")
 	}
+
+	MakeConfigLocationParams(t)
+
 	testServer := testData.Servers[0]
 
 	serverList, _, err := TOSession.GetServerByHostName(testServer.HostName)
@@ -54,7 +56,6 @@ func GetTestATSConfigMeta(t *testing.T) {
 	expected := tc.ATSConfigMetaDataConfigFile{
 		FileNameOnDisk: "hdr_rw_ds1.config",
 		Location:       "/remap/config/location/parameter",
-		APIURI:         "cdns/cdn1/configfiles/ats/hdr_rw_ds1.config", // expected suffix; config gen doesn't care about API version
 		URL:            "",
 		Scope:          "cdns",
 	}
@@ -74,9 +75,6 @@ func GetTestATSConfigMeta(t *testing.T) {
 		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
 	}
 	if expected.Location != actual.Location {
-		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
-	}
-	if !strings.HasSuffix(actual.APIURI, expected.APIURI) {
 		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
 	}
 	if actual.Scope != expected.Scope {
@@ -114,7 +112,6 @@ func GetTestATSConfigMetaMidHdrRw(t *testing.T) {
 	expected := tc.ATSConfigMetaDataConfigFile{
 		FileNameOnDisk: "hdr_rw_mid_ds1nat.config",
 		Location:       "/remap/config/location/parameter",
-		APIURI:         "cdns/cdn1/configfiles/ats/hdr_rw_mid_ds1nat.config", // expected suffix; config gen doesn't care about API version
 		URL:            "",
 		Scope:          "cdns",
 	}
@@ -134,9 +131,6 @@ func GetTestATSConfigMetaMidHdrRw(t *testing.T) {
 		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
 	}
 	if expected.Location != actual.Location {
-		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
-	}
-	if !strings.HasSuffix(actual.APIURI, expected.APIURI) {
 		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
 	}
 	if actual.Scope != expected.Scope {

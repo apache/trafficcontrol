@@ -21,6 +21,8 @@ package atscfg
 
 import (
 	"encoding/json"
+	"errors"
+	"path/filepath"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -31,7 +33,6 @@ type ConfigProfileParams struct {
 	FileNameOnDisk string
 	Location       string
 	URL            string
-	APIURI         string
 }
 
 // APIVersion is the Traffic Ops API version for config fiels.
@@ -39,6 +40,23 @@ type ConfigProfileParams struct {
 // Note the version in the meta config is not used by the atstccfg generator, which isn't actually an API.
 // TODO change the config system to not use old API paths, and remove this.
 const APIVersion = "2.0"
+
+// requiredFiles is a constant (because Go doesn't allow const slices).
+// Note these are not exhaustive. This is only used to error if these are missing.
+// The presence of these is no guarantee the location Parameters are complete and correct.
+func requiredFiles() []string {
+	return []string{
+		"cache.config",
+		"hosting.config",
+		"ip_allow.config",
+		"parent.config",
+		"plugin.config",
+		"records.config",
+		"remap.config",
+		"storage.config",
+		"volume.config",
+	}
+}
 
 func MakeMetaConfig(
 	serverHostName tc.CacheName,
@@ -50,10 +68,16 @@ func MakeMetaConfig(
 	scopeParams map[string]string, // map[configFileName]scopeParam
 	dsNames map[tc.DeliveryServiceName]struct{},
 ) string {
-	return MetaObjToMetaConfig(MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames))
-}
-
-func MetaObjToMetaConfig(atsData tc.ATSConfigMetaData) string {
+	// dses are only used when configDir is not empty
+	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{}
+	for dsName, _ := range dsNames {
+		dses[dsName] = tc.DeliveryServiceNullable{}
+	}
+	configDir := ""
+	atsData, err := MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, configDir)
+	if err != nil {
+		return "error creating meta config: " + err.Error()
+	}
 	bts, err := json.Marshal(atsData)
 	if err != nil {
 		// should never happen
@@ -61,6 +85,146 @@ func MetaObjToMetaConfig(atsData tc.ATSConfigMetaData) string {
 		bts = []byte("error encoding to json, see log for details")
 	}
 	return string(bts)
+}
+
+// AddMetaObjConfigDir takes the Meta Object generated from TO data, and the ATS config directory
+// and prepends the config directory to all relative paths,
+// and creates MetaObj entries for all required config files which have no location parameter.
+// If configDir is empty and any location Parameters have relative paths, returns an error.
+func AddMetaObjConfigDir(
+	metaObj tc.ATSConfigMetaData,
+	configDir string,
+	serverHostName tc.CacheName,
+	server *ServerInfo,
+	tmURL string, // global tm.url Parameter
+	tmReverseProxyURL string, // global tm.rev_proxy.url Parameter
+	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
+	uriSignedDSes []tc.DeliveryServiceName,
+	scopeParams map[string]string, // map[configFileName]scopeParam
+	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable,
+) (tc.ATSConfigMetaData, error) {
+
+	// Note there may be multiple files with the same name in different directories.
+	configFilesM := map[string][]tc.ATSConfigMetaDataConfigFile{} // map[fileShortName]tc.ATSConfigMetaDataConfigFile
+	for _, fi := range metaObj.ConfigFiles {
+		configFilesM[fi.FileNameOnDisk] = append(configFilesM[fi.FileNameOnDisk], fi)
+	}
+
+	// add all strictly required files, all of which should be in the base config directory.
+	// If they don't exist, create them.
+	// If they exist with a relative path, prepend configDir.
+	// If any exist with a relative path, or don't exist, and configDir is empty, return an error.
+	for _, fileName := range requiredFiles() {
+		if _, ok := configFilesM[fileName]; ok {
+			continue
+		}
+		if configDir == "" {
+			return metaObj, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found.")
+		}
+		configFilesM[fileName] = []tc.ATSConfigMetaDataConfigFile{{
+			FileNameOnDisk: fileName,
+			Location:       configDir,
+			Scope:          string(getServerScope(fileName, server.Type, nil)),
+		}}
+	}
+
+	for fileName, fis := range configFilesM {
+		newFis := []tc.ATSConfigMetaDataConfigFile{}
+		for _, fi := range fis {
+			if !filepath.IsAbs(fi.Location) {
+				if configDir == "" {
+					return metaObj, errors.New("file '" + fileName + "' has location Parameter with relative path '" + fi.Location + "', but ATS config directory was not found.")
+				}
+				absPath := filepath.Join(configDir, fi.Location)
+				fi.Location = absPath
+			}
+			newFis = append(newFis, fi)
+		}
+		configFilesM[fileName] = newFis
+	}
+
+	for _, ds := range dses {
+		if ds.XMLID == nil {
+			log.Errorln("meta config generation got Delivery Service with nil XMLID - not considering!")
+			continue
+		}
+		err := error(nil)
+		// Note we log errors, but don't return them.
+		// If an individual DS has an error, we don't want to break the rest of the CDN.
+		if (ds.EdgeHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
+			strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
+			fileName := "hdr_rw_" + *ds.XMLID + ".config"
+			scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
+			if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
+				log.Errorln("meta config generation: " + err.Error())
+			}
+		}
+		if (ds.MidHeaderRewrite != nil || ds.MaxOriginConnections != nil) &&
+			ds.Type != nil && ds.Type.UsesMidCache() &&
+			strings.HasPrefix(server.Type, tc.MidTypePrefix) {
+			fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"
+			scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
+			if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir, scope); err != nil {
+				log.Errorln("meta config generation: " + err.Error())
+			}
+		}
+		if ds.RegexRemap != nil {
+			configFile := "regex_remap_" + *ds.XMLID + ".config"
+			scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
+			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir, scope); err != nil {
+				log.Errorln("meta config generation: " + err.Error())
+			}
+		}
+		if ds.CacheURL != nil {
+			configFile := "cacheurl_" + *ds.XMLID + ".config"
+			scope := tc.ATSConfigMetaDataConfigFileScopeCDNs
+			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir, scope); err != nil {
+				log.Errorln("meta config generation: " + err.Error())
+			}
+		}
+		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig {
+			configFile := "url_sig_" + *ds.XMLID + ".config"
+			scope := tc.ATSConfigMetaDataConfigFileScopeProfiles
+			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir, scope); err != nil {
+				log.Errorln("meta config generation: " + err.Error())
+			}
+		}
+		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURISigning {
+			configFile := "uri_signing_" + *ds.XMLID + ".config"
+			scope := tc.ATSConfigMetaDataConfigFileScopeProfiles
+			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir, scope); err != nil {
+				log.Errorln("meta config generation: " + err.Error())
+			}
+		}
+	}
+	// TODO add location params for ds ensure garbage here
+
+	newFiles := []tc.ATSConfigMetaDataConfigFile{}
+	for _, fis := range configFilesM {
+		for _, fi := range fis {
+			newFiles = append(newFiles, fi)
+		}
+	}
+	metaObj.ConfigFiles = newFiles
+	return metaObj, nil
+}
+
+// ensureConfigFile ensures files contains the given fileName. If so, returns files unmodified.
+// If not, if configDir is empty, returns an error.
+// If not, and configDir is nonempty, creates the given file, configDir location, and scope, and returns files.
+func ensureConfigFile(files map[string][]tc.ATSConfigMetaDataConfigFile, fileName string, configDir string, scope tc.ATSConfigMetaDataConfigFileScope) (map[string][]tc.ATSConfigMetaDataConfigFile, error) {
+	if _, ok := files[fileName]; ok {
+		return files, nil
+	}
+	if configDir == "" {
+		return files, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found.")
+	}
+	files[fileName] = []tc.ATSConfigMetaDataConfigFile{{
+		FileNameOnDisk: fileName,
+		Location:       configDir,
+		Scope:          string(scope),
+	}}
+	return files, nil
 }
 
 func MakeMetaObj(
@@ -71,8 +235,9 @@ func MakeMetaObj(
 	locationParams map[string]ConfigProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
 	scopeParams map[string]string, // map[configFileName]scopeParam
-	dsNames map[tc.DeliveryServiceName]struct{},
-) tc.ATSConfigMetaData {
+	dses map[tc.DeliveryServiceName]tc.DeliveryServiceNullable,
+	configDir string,
+) (tc.ATSConfigMetaData, error) {
 	if tmURL == "" {
 		log.Errorln("ats.GetConfigMetadata: global tm.url parameter missing or empty! Setting empty in meta config!")
 	}
@@ -121,7 +286,7 @@ locationParamsFor:
 			for _, prefix := range dsConfigFilePrefixes {
 				if strings.HasPrefix(cfgFile, prefix) {
 					dsName := strings.TrimSuffix(strings.TrimPrefix(cfgFile, prefix), ".config")
-					if _, ok := dsNames[tc.DeliveryServiceName(dsName)]; !ok {
+					if _, ok := dses[tc.DeliveryServiceName(dsName)]; !ok {
 						log.Warnln("Server Profile had 'location' Parameter '" + cfgFile + "', but delivery Service '" + dsName + "' is not assigned to this Server! Not including in meta config!")
 						continue locationParamsFor
 					}
@@ -138,25 +303,17 @@ locationParamsFor:
 		scope := getServerScope(cfgFile, server.Type, scopeParams)
 
 		if cfgParams.URL != "" {
+			// TODO this is legacy, from when a custom URL could be set via Parameters.
+			//      verify nobody is relying on it in a production system, and remove.
 			scope = tc.ATSConfigMetaDataConfigFileScopeCDNs
-			atsCfg.URL = cfgParams.URL
-		} else {
-			scopeID := ""
-			if scope == tc.ATSConfigMetaDataConfigFileScopeCDNs {
-				scopeID = string(server.CDN)
-			} else if scope == tc.ATSConfigMetaDataConfigFileScopeProfiles {
-				scopeID = server.ProfileName
-			} else { // ATSConfigMetaDataConfigFileScopeServers
-				scopeID = server.HostName
-			}
-			atsCfg.APIURI = "/api/" + APIVersion + "/" + string(scope) + "/" + scopeID + "/configfiles/ats/" + cfgFile
 		}
 
 		atsCfg.Scope = string(scope)
 
 		atsData.ConfigFiles = append(atsData.ConfigFiles, atsCfg)
 	}
-	return atsData
+
+	return AddMetaObjConfigDir(atsData, configDir, serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
 }
 
 func getServerScope(cfgFile string, serverType string, scopeParams map[string]string) tc.ATSConfigMetaDataConfigFileScope {

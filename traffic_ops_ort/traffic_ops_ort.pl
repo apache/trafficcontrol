@@ -189,6 +189,8 @@ my %install_tracker;
 
 my $cfg_file_tracker = undef;
 
+my $ats_config_dir = get_ats_config_dir();
+
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 #### Start main flow
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
@@ -269,6 +271,26 @@ if ( $script_mode != $REPORT ) {
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 #### Subroutines
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
+
+# Returns the ATS config directory, if it can find it.
+# Tries rpm (yum) first, then falls back to find.
+# If it fails to find it, logs an error and returns the empty string.
+sub get_ats_config_dir {
+	my $dir = `rpm -ql trafficserver | grep -E 'etc/trafficserver\$' | tail -1`;
+	$dir =~ s/^\s+|\s+$//g; # trim leading and trailing whitespace
+	if ( $dir eq "" ) {
+		$dir = `find / -type d -path '*/etc/trafficserver' | tail -1`;
+		$dir =~ s/^\s+|\s+$//g; # trim leading and trailing whitespace
+	}
+	if ( ! length $dir ) {
+		# if it became undefined somehow, make sure we're returning ""
+		$dir = "";
+	}
+	if ( $dir eq "" ) {
+		( $log_level >> $ERROR ) && print "ERROR Failed to find config directory, using empty string!\n";
+	}
+	return $dir;
+}
 
 sub revalidate_while_sleeping {
 	$syncds_update = &check_revalidate_state(1);
@@ -1583,7 +1605,7 @@ sub get_cfg_file_list {
 		$atstccfg_reval_arg = '--revalidate-only';
 	}
 
-	my $result = `$atstccfg_cmd $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$host_name' $atstccfg_reval_arg --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
+	my $result = `$atstccfg_cmd --dir='$ats_config_dir' $atstccfg_timeout_arg $atstccfg_arg_disable_proxy --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$TO_URL' --cache-host-name='$host_name' $atstccfg_reval_arg --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
 	my $atstccfg_exit_code = $?;
 	if ($atstccfg_exit_code != 0) {
 		( $log_level >> $ERROR ) && printf("ERROR getting config files from atstccfg via Traffic Ops. See $atstccfg_log_path for details\n");

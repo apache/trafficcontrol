@@ -27,7 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
-func GetMeta(toData *config.TOData) (*tc.ATSConfigMetaData, error) {
+func GetMeta(toData *config.TOData, dir string) (*tc.ATSConfigMetaData, error) {
 	cgMap := map[string]tc.CacheGroupNullable{}
 	for _, cg := range toData.CacheGroups {
 		if cg.Name == nil {
@@ -125,7 +125,7 @@ func GetMeta(toData *config.TOData) (*tc.ATSConfigMetaData, error) {
 		}
 	}
 
-	dsNames := map[tc.DeliveryServiceName]struct{}{}
+	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{}
 	if tc.CacheTypeFromString(toData.Server.Type) != tc.CacheTypeMid {
 		dsIDs := map[int]struct{}{}
 		for _, ds := range toData.DeliveryServices {
@@ -163,7 +163,7 @@ func GetMeta(toData *config.TOData) (*tc.ATSConfigMetaData, error) {
 			if _, ok := dssMap[*ds.ID]; !ok {
 				continue
 			}
-			dsNames[tc.DeliveryServiceName(*ds.XMLID)] = struct{}{}
+			dses[tc.DeliveryServiceName(*ds.XMLID)] = ds
 		}
 	} else {
 		for _, ds := range toData.DeliveryServices {
@@ -176,7 +176,7 @@ func GetMeta(toData *config.TOData) (*tc.ATSConfigMetaData, error) {
 			if ds.CDNID == nil || *ds.CDNID != toData.Server.CDNID {
 				continue
 			}
-			dsNames[tc.DeliveryServiceName(*ds.XMLID)] = struct{}{}
+			dses[tc.DeliveryServiceName(*ds.XMLID)] = ds
 		}
 	}
 
@@ -188,7 +188,7 @@ func GetMeta(toData *config.TOData) (*tc.ATSConfigMetaData, error) {
 		if ds.XMLID == nil {
 			continue // TODO log?
 		}
-		if _, ok := dsNames[tc.DeliveryServiceName(*ds.XMLID)]; !ok {
+		if _, ok := dses[tc.DeliveryServiceName(*ds.XMLID)]; !ok {
 			continue
 		}
 		if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
@@ -197,6 +197,9 @@ func GetMeta(toData *config.TOData) (*tc.ATSConfigMetaData, error) {
 		uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(*ds.XMLID))
 	}
 
-	metaObj := atscfg.MakeMetaObj(tc.CacheName(toData.Server.HostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dsNames)
+	metaObj, err := atscfg.MakeMetaObj(tc.CacheName(toData.Server.HostName), &serverInfo, toURL, toReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, dir)
+	if err != nil {
+		return nil, errors.New("generating: " + err.Error())
+	}
 	return &metaObj, nil
 }
