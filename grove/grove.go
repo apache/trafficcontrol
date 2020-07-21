@@ -36,16 +36,16 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 
-	"github.com/apache/trafficcontrol/grove/cache"
 	"github.com/apache/trafficcontrol/grove/config"
-	"github.com/apache/trafficcontrol/grove/diskcache"
-	"github.com/apache/trafficcontrol/grove/icache"
-	"github.com/apache/trafficcontrol/grove/memcache"
+	"github.com/apache/trafficcontrol/grove/handler"
+	// "github.com/apache/trafficcontrol/grove/diskcache"
+	// "github.com/apache/trafficcontrol/grove/icache"
+	// "github.com/apache/trafficcontrol/grove/memcacheta"
 	"github.com/apache/trafficcontrol/grove/plugin"
 	"github.com/apache/trafficcontrol/grove/remap"
 	"github.com/apache/trafficcontrol/grove/remapdata"
 	"github.com/apache/trafficcontrol/grove/stat"
-	"github.com/apache/trafficcontrol/grove/tiercache"
+	// "github.com/apache/trafficcontrol/grove/tiercache"
 	"github.com/apache/trafficcontrol/grove/web"
 )
 
@@ -81,22 +81,42 @@ func main() {
 	}
 	log.Init(eventW, errW, warnW, infoW, debugW)
 
-	caches, err := createCaches(cfg.CacheFiles, uint64(cfg.FileMemBytes), uint64(cfg.CacheSizeBytes))
-	if err != nil {
-		log.Errorln("starting service: creating caches: " + err.Error())
-		os.Exit(1)
-	}
-
 	reqTimeout := time.Duration(cfg.ReqTimeoutMS) * time.Millisecond
 	reqKeepAlive := time.Duration(cfg.ReqKeepAliveMS) * time.Millisecond
 	reqMaxIdleConns := cfg.ReqMaxIdleConns
 	reqIdleConnTimeout := time.Duration(cfg.ReqIdleConnTimeoutMS) * time.Millisecond
 	baseTransport := remap.NewRemappingTransport(reqTimeout, reqKeepAlive, reqMaxIdleConns, reqIdleConnTimeout)
 
+	cfg.Plugins = append(cfg.Plugins, cfg.DefaultCache) // enable the default cache plugin, even if the user didn't
+	const diskCachePluginName = "cache_disk"
+	if cfg.FileMemBytes > 0 || len(cfg.CacheFiles) > 0 {
+		cfg.Plugins = append(cfg.Plugins, diskCachePluginName) // enable the disk cache plugin, even if the user didn't
+	}
+
 	plugins := plugin.Get(cfg.Plugins)
-	remapper, err := remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches, baseTransport)
+
+	remapRulesJSON, err := remap.LoadRemapRulesJSON(cfg.RemapRulesFile)
 	if err != nil {
-		log.Errorf("starting service: loading remap rules: %v\n", err)
+		log.Errorf("starting service: loading remap rules from file: %v\n", err)
+		os.Exit(1)
+	}
+
+	pluginCfgs := remap.LoadRemapRulesPluginCfgs(remapRulesJSON, plugins.LoadFuncs())
+
+	pluginContext := map[string]*interface{}{}
+	plugins.OnStartup(pluginCfgs.Plugins, pluginContext, plugin.StartupData{Config: cfg, Shared: pluginCfgs.PluginsSharedRemaps})
+
+	loadCacheData := plugin.LoadCacheData{Config: cfg, Shared: pluginCfgs.PluginsSharedGlobal}
+	caches := plugins.LoadCaches(pluginCfgs.Plugins, pluginContext, loadCacheData)
+	if _, ok := caches[cfg.DefaultCache]; !ok {
+		log.Errorln("default cache '" + cfg.DefaultCache + "' not found! (Did the cache plugin fail to load? Is it missing required config?)")
+		os.Exit(1)
+	}
+	caches[""] = caches[cfg.DefaultCache]
+
+	remapper, err := remap.LoadRemapper(remapRulesJSON, plugins.LoadFuncs(), caches, baseTransport)
+	if err != nil {
+		log.Errorf("starting service: parsing remap rules: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -133,8 +153,8 @@ func main() {
 	// TODO pass total size for all file groups?
 	stats := stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns, Version)
 
-	buildHandler := func(scheme string, port string, conns *web.ConnMap, stats stat.Stats, pluginContext map[string]*interface{}) *cache.HandlerPointer {
-		return cache.NewHandlerPointer(cache.NewHandler(
+	buildHandler := func(scheme string, port string, conns *web.ConnMap, stats stat.Stats, pluginContext map[string]*interface{}) *handler.HandlerPointer {
+		return handler.NewPointer(handler.New(
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -151,16 +171,12 @@ func main() {
 		))
 	}
 
-	pluginContext := map[string]*interface{}{}
-
 	httpHandler := buildHandler("http", strconv.Itoa(cfg.Port), httpConns, stats, pluginContext)
 	httpsHandler := buildHandler("https", strconv.Itoa(cfg.HTTPSPort), httpsConns, stats, pluginContext)
 
 	idleTimeout := time.Duration(cfg.ServerIdleTimeoutMS) * time.Millisecond
 	readTimeout := time.Duration(cfg.ServerReadTimeoutMS) * time.Millisecond
 	writeTimeout := time.Duration(cfg.ServerWriteTimeoutMS) * time.Millisecond
-
-	plugins.OnStartup(remapper.PluginCfg(), pluginContext, plugin.StartupData{Config: cfg, Shared: remapper.PluginSharedCfg()})
 
 	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
 	httpServer := startServer(httpHandler, httpListener, httpConnStateCallback, nil, cfg.Port, idleTimeout, readTimeout, writeTimeout, cfg.DisableHTTP2, "http")
@@ -195,7 +211,7 @@ func main() {
 
 		plugins = plugin.Get(cfg.Plugins)
 		oldRemapper := remapper
-		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches, baseTransport)
+		remapper, err = remap.LoadRemapper(remapRulesJSON, plugins.LoadFuncs(), caches, baseTransport)
 		if err != nil {
 			log.Errorln("reloading config: failed to load remap rules, keeping existing rules: " + err.Error())
 			remapper = oldRemapper
@@ -221,7 +237,7 @@ func main() {
 
 		stats = stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns, Version) // TODO copy stats from old stats object?
 
-		httpCacheHandler := cache.NewHandler(
+		httpCacheHandler := handler.New(
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -238,7 +254,7 @@ func main() {
 		)
 		httpHandler.Set(httpCacheHandler)
 
-		httpsCacheHandler := cache.NewHandler(
+		httpsCacheHandler := handler.New(
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -378,22 +394,6 @@ func loadCerts(rules []remapdata.RemapRule) ([]tls.Certificate, error) {
 		certs = append(certs, cert)
 	}
 	return certs, nil
-}
-
-// createCaches creates the caches specified in the config. The nameFiles is the map of names to groups of files, nameMemBytes is the amount of memory to use for each named group, and memCacheBytes is the amount of memory to use for the default memory cache.
-func createCaches(nameFiles map[string][]config.CacheFile, nameMemBytes uint64, memCacheBytes uint64) (map[string]icache.Cache, error) {
-	caches := map[string]icache.Cache{}
-	caches[""] = memcache.New(memCacheBytes) // default empty names to the mem cache
-
-	for name, files := range nameFiles {
-		multiDiskCache, err := diskcache.NewMulti(files)
-		if err != nil {
-			return nil, errors.New("creating cache '" + name + "': " + err.Error())
-		}
-		caches[name] = tiercache.New(memcache.New(nameMemBytes), multiDiskCache)
-	}
-
-	return caches, nil
 }
 
 func cachesChanged(oldCfg, newCfg config.Config) bool {

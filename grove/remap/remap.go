@@ -318,22 +318,66 @@ type RemapRuleJSON struct {
 	Plugins         map[string]json.RawMessage `json:"plugins"`
 }
 
-// LoadRemapRules returns the loaded rules, the global plugins, the Stats remap rules, and any error
-func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache, baseTransport *http.Transport) ([]remapdata.RemapRule, map[string]interface{}, *remapdata.RemapRulesStats, error) {
+func LoadRemapRulesJSON(path string) (*RemapRulesJSON, error) {
 	fmt.Println(time.Now().Format(time.RFC3339Nano) + " Loading Remap Rules")
 	defer func() {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Loaded Remap Rules")
 	}()
+
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, errors.New("opening file: " + err.Error())
 	}
 	defer file.Close()
 
-	remapRulesJSON := RemapRulesJSON{}
-	if err := json.NewDecoder(file).Decode(&remapRulesJSON); err != nil {
-		return nil, nil, nil, fmt.Errorf("decoding JSON: %s", err)
+	remapRulesJSON := &RemapRulesJSON{}
+	if err := json.NewDecoder(file).Decode(remapRulesJSON); err != nil {
+		return nil, errors.New("decoding JSON: " + err.Error())
 	}
+	return remapRulesJSON, nil
+}
+
+type PluginCfgs struct {
+	// Plugins is a map[pluginName]pluginConfig
+	Plugins map[string]interface{}
+
+	// PluginsSharedGlobal is a map[pluginName]pluginConfig
+	PluginsSharedGlobal map[string]json.RawMessage
+
+	// PluginsSharedRemaps is a map[remapRuleName][pluginName]pluginConfig.
+	// If a given remap rule has a shared_config key in the JSON, it will be inserted; otherwise, the rule will have the same value as the global shared config.
+	PluginsSharedRemaps map[string]map[string]json.RawMessage
+}
+
+// LoadRemapRulesPluginCfgs returns the global plugin configs from the remapRulesJSON.
+// This does NOT return configs per remap rule. This exists primarily for things that need plugin configs, before remap rules are mapped, on startup, or on request before a mapping is found.
+func LoadRemapRulesPluginCfgs(remapRulesJSON *RemapRulesJSON, pluginConfigLoaders map[string]plugin.LoadFunc) *PluginCfgs {
+	pluginCfgs := &PluginCfgs{
+		Plugins:             make(map[string]interface{}, len(remapRulesJSON.Plugins)),
+		PluginsSharedGlobal: remapRulesJSON.PluginsShared,
+		PluginsSharedRemaps: make(map[string]map[string]json.RawMessage, len(remapRulesJSON.Rules)),
+	}
+	for name, b := range remapRulesJSON.Plugins {
+		if loadF := pluginConfigLoaders[name]; loadF != nil {
+			pluginCfgs.Plugins[name] = loadF(b)
+		}
+	}
+	for _, rule := range remapRulesJSON.Rules {
+		if rule.PluginsShared != nil {
+			pluginCfgs.PluginsSharedRemaps[rule.Name] = rule.PluginsShared
+		} else {
+			pluginCfgs.PluginsSharedRemaps[rule.Name] = pluginCfgs.PluginsSharedGlobal
+		}
+	}
+	return pluginCfgs
+}
+
+// LoadRemapRules returns the loaded rules, the global plugins, the Stats remap rules, and any error
+func LoadRemapRules(remapRulesJSON *RemapRulesJSON, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache, baseTransport *http.Transport) ([]remapdata.RemapRule, map[string]interface{}, *remapdata.RemapRulesStats, error) {
+	fmt.Println(time.Now().Format(time.RFC3339Nano) + " Parsing Remap Rules")
+	defer func() {
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Parsing Remap Rules")
+	}()
 
 	remapRules := RemapRules{RemapRulesBase: remapRulesJSON.RemapRulesBase}
 
@@ -358,6 +402,8 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc,
 			return nil, nil, nil, fmt.Errorf("error parsing rules: parent selection invalid: '%v'", remapRulesJSON.ParentSelection)
 		}
 	}
+
+	err := error(nil)
 	if remapRulesJSON.Stats.Allow != nil {
 		if remapRules.Stats.Allow, err = makeIPNets(remapRulesJSON.Stats.Allow); err != nil {
 			return nil, nil, nil, fmt.Errorf("error parsing rules allows: %v", err)
@@ -562,8 +608,8 @@ func makeIPNet(cidr string) (*net.IPNet, error) {
 	return cidrnet, nil
 }
 
-func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache, baseTransport *http.Transport) (HTTPRequestRemapper, error) {
-	rules, plugins, statRules, err := LoadRemapRules(path, pluginConfigLoaders, caches, baseTransport)
+func LoadRemapper(remapRulesJSON *RemapRulesJSON, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache, baseTransport *http.Transport) (HTTPRequestRemapper, error) {
+	rules, plugins, statRules, err := LoadRemapRules(remapRulesJSON, pluginConfigLoaders, caches, baseTransport)
 	if err != nil {
 		return nil, err
 	}

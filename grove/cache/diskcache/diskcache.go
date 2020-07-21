@@ -21,8 +21,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/apache/trafficcontrol/grove/cache/lru"
 	"github.com/apache/trafficcontrol/grove/cacheobj"
-	"github.com/apache/trafficcontrol/grove/lru"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 
@@ -157,6 +157,7 @@ func (c *DiskCache) Get(key string) (*cacheobj.CacheObj, bool) {
 		atomic.AddUint64(&val.HitCount, 1)
 		return val, true
 	}
+	log.Debugln("DiskCache.Get getting '" + key + "' - not found.")
 	return nil, false
 
 }

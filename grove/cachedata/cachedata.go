@@ -35,7 +35,7 @@ type ParentRespData struct {
 	ProxyStr            string
 }
 
-// HandlerData contains data generally held by the Handler, and known as soon as the request is received.
+// SrvrData contains data generally held by the Handler, and known as soon as the request is received.
 type SrvrData struct {
 	Hostname string
 	Port     string

@@ -1,4 +1,4 @@
-package memcache
+package memlrucache
 
 /*
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,9 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/apache/trafficcontrol/grove/cache/lru"
 	"github.com/apache/trafficcontrol/grove/cacheobj"
-	"github.com/apache/trafficcontrol/grove/lru"
+	"github.com/apache/trafficcontrol/grove/icache"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
@@ -34,7 +35,7 @@ type MemCache struct {
 	gcChan       chan<- uint64
 }
 
-func New(bytes uint64) *MemCache {
+func New(bytes uint64) icache.Cache {
 	log.Errorf("MemCache.New: creating cache with %d capacity.", bytes)
 	gcChan := make(chan uint64, 1)
 	c := &MemCache{
