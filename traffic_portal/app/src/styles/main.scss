@@ -92,6 +92,7 @@ body.nav-sm .container.body .main-content {
 }
 
 .dropdown-menu-right {
+  min-width: 200px;
   left: auto !important; // Reset the default from `.dropdown-menu`
   right: 0 !important;
 }
