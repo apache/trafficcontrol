@@ -985,7 +985,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	//Get original xmppid
-	origSer, _, _, _, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false)
+	origSer, _, userErr, sysErr, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
 	originalXMPPID := *origSer[0].XMPPID
 	changeXMPPID := false
 
@@ -1067,54 +1071,55 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	if changeXMPPID {
 		api.WriteRespAlertObj(w, r, tc.ErrorLevel, fmt.Sprintf("server cannot be updated due to requested XMPPID change. XMPIDD is immutable"), nil)
-	} else {
-		rows, err := inf.Tx.NamedQuery(updateQuery, server)
-		if err != nil {
-			userErr, sysErr, errCode = api.ParseDBError(err)
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-			return
-		}
-		defer rows.Close()
-
-		rowsAffected := 0
-		for rows.Next() {
-			if err := rows.StructScan(&server); err != nil {
-				api.HandleErr(w, r, tx, http.StatusNotFound, nil, fmt.Errorf("scanning lastUpdated from server insert: %v", err))
-				return
-			}
-			rowsAffected++
-		}
-
-		if rowsAffected < 1 {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
-			return
-		}
-		if rowsAffected > 1 {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("update for server #%d affected too many rows (%d)", *server.ID, rowsAffected))
-			return
-		}
-
-		if userErr, sysErr, errCode = deleteInterfaces(inf.IntParams["id"], tx); userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-			return
-		}
-
-		if userErr, sysErr, errCode = createInterfaces(inf.IntParams["id"], interfaces, tx); userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-			return
-		}
-
-		if inf.Version.Major >= 3 {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces})
-		} else if inf.Version.Minor <= 1 {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server.ServerNullableV11)
-		} else {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
-		}
-
-		changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *server.HostName, *server.DomainName, *server.ID)
-		api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+		return
 	}
+
+	rows, err := inf.Tx.NamedQuery(updateQuery, server)
+	if err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer rows.Close()
+
+	rowsAffected := 0
+	for rows.Next() {
+		if err := rows.StructScan(&server); err != nil {
+			api.HandleErr(w, r, tx, http.StatusNotFound, nil, fmt.Errorf("scanning lastUpdated from server insert: %v", err))
+			return
+		}
+		rowsAffected++
+	}
+
+	if rowsAffected < 1 {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
+		return
+	}
+	if rowsAffected > 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("update for server #%d affected too many rows (%d)", *server.ID, rowsAffected))
+		return
+	}
+
+	if userErr, sysErr, errCode = deleteInterfaces(inf.IntParams["id"], tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if userErr, sysErr, errCode = createInterfaces(inf.IntParams["id"], interfaces, tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if inf.Version.Major >= 3 {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", tc.ServerNullable{CommonServerProperties: server.CommonServerProperties, Interfaces: interfaces})
+	} else if inf.Version.Minor <= 1 {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server.ServerNullableV11)
+	} else {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server updated", server)
+	}
+
+	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *server.HostName, *server.DomainName, *server.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
 func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
