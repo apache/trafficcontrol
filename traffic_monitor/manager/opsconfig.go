@@ -26,6 +26,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -42,6 +43,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 	to "github.com/apache/trafficcontrol/traffic_ops/client"
+	tov2 "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
 	"github.com/json-iterator/go"
 )
@@ -252,8 +254,26 @@ func StartOpsConfigManager(
 }
 
 // getMonitorCDN returns the CDN of a given Traffic Monitor.
-// TODO change to get by name, when Traffic Ops supports querying a single server.
 func getMonitorCDN(toc *to.Session, monitorHostname string) (string, error) {
+	params := url.Values{}
+	params.Set("hostName", monitorHostname)
+	servers, _, err := toc.GetServers(&params, nil)
+	if err != nil {
+		return "", fmt.Errorf("getting monitor %s CDN: %v", monitorHostname, err)
+	}
+
+	for _, server := range servers.Response {
+		if server.CDNName == nil || server.HostName == nil || *server.HostName != monitorHostname {
+			continue
+		}
+		return *server.CDNName, nil
+	}
+	return "", fmt.Errorf("no monitor named %v found in Traffic Ops", monitorHostname)
+}
+
+// getMonitorCDNLegacy returns the CDN of a given Traffic Monitor - using a
+// legacy TO API version.
+func getMonitorCDNLegacy(toc *tov2.Session, monitorHostname string) (string, error) {
 	servers, _, err := toc.GetServers()
 	if err != nil {
 		return "", fmt.Errorf("getting monitor %s CDN: %v", monitorHostname, err)
