@@ -149,6 +149,53 @@ type TrafficMonitorConfigMap struct {
 	Profile map[string]TMProfile
 }
 
+// Valid returns a non-nil error if the configuration map is invalid.
+//
+// A configuration map is considered invalid if:
+// - It is nil
+// - It has no CacheGroups
+// - It has no Profiles
+// - It has no Traffic Monitors
+// - It has no Traffic Servers
+// - The Config mapping has no 'peers.polling.interval' key
+// - The Config mapping has no 'health.polling.interval' key
+func (cfg *TrafficMonitorConfigMap) Valid() error {
+	if cfg == nil {
+		return errors.New("MonitorConfig is nil")
+	}
+	if len(cfg.TrafficServer) == 0 {
+		return errors.New("MonitorConfig.TrafficServer empty (is the monitoring.json an empty object?)")
+	}
+	if len(cfg.CacheGroup) == 0 {
+		return errors.New("MonitorConfig.CacheGroup empty")
+	}
+	if len(cfg.TrafficMonitor) == 0 {
+		return errors.New("MonitorConfig.TrafficMonitor empty")
+	}
+	// TODO uncomment this, when TO is fixed to include DeliveryServices.
+	// See https://github.com/apache/trafficcontrol/issues/3528
+	// if len(cfg.DeliveryService) == 0 {
+	// 	return errors.New("MonitorConfig.DeliveryService empty")
+	// }
+	if len(cfg.Profile) == 0 {
+		return errors.New("MonitorConfig.Profile empty")
+	}
+
+	if intervalI, ok := cfg.Config["peers.polling.interval"]; !ok {
+		return errors.New(`MonitorConfig.Config["peers.polling.interval"] missing, peers.polling.interval parameter required`)
+	} else if _, ok := intervalI.(float64); !ok {
+		return fmt.Errorf(`MonitorConfig.Config["peers.polling.interval"] '%v' not a number, parameter peers.polling.interval must be a number`, intervalI)
+	}
+
+	if intervalI, ok := cfg.Config["health.polling.interval"]; !ok {
+		return errors.New(`MonitorConfig.Config["health.polling.interval"] missing, health.polling.interval parameter required`)
+	} else if _, ok := intervalI.(float64); !ok {
+		return fmt.Errorf(`MonitorConfig.Config["health.polling.interval"] '%v' not a number, parameter health.polling.interval must be a number`, intervalI)
+	}
+
+	return nil
+}
+
 // LegacyTrafficMonitorConfigMap ...
 type LegacyTrafficMonitorConfigMap struct {
 	TrafficServer   map[string]LegacyTrafficServer
@@ -395,44 +442,7 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 		tm.Profile[profile.Name] = profile
 	}
 
-	return &tm, MonitorConfigValid(&tm)
-}
-
-func MonitorConfigValid(cfg *TrafficMonitorConfigMap) error {
-	if cfg == nil {
-		return errors.New("MonitorConfig is nil")
-	}
-	if len(cfg.TrafficServer) == 0 {
-		return errors.New("MonitorConfig.TrafficServer empty (is the monitoring.json an empty object?)")
-	}
-	if len(cfg.CacheGroup) == 0 {
-		return errors.New("MonitorConfig.CacheGroup empty")
-	}
-	if len(cfg.TrafficMonitor) == 0 {
-		return errors.New("MonitorConfig.TrafficMonitor empty")
-	}
-	// TODO uncomment this, when TO is fixed to include DeliveryServices.
-	// See https://github.com/apache/trafficcontrol/issues/3528
-	// if len(cfg.DeliveryService) == 0 {
-	// 	return errors.New("MonitorConfig.DeliveryService empty")
-	// }
-	if len(cfg.Profile) == 0 {
-		return errors.New("MonitorConfig.Profile empty")
-	}
-
-	if intervalI, ok := cfg.Config["peers.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["peers.polling.interval"] missing, peers.polling.interval parameter required`)
-	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["peers.polling.interval"] '%v' not a number, parameter peers.polling.interval must be a number`, intervalI)
-	}
-
-	if intervalI, ok := cfg.Config["health.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["health.polling.interval"] missing, health.polling.interval parameter required`)
-	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["health.polling.interval"] '%v' not a number, parameter health.polling.interval must be a number`, intervalI)
-	}
-
-	return nil
+	return &tm, tm.Valid()
 }
 
 func LegacyTrafficMonitorTransformToMap(tmConfig *LegacyTrafficMonitorConfig) (*LegacyTrafficMonitorConfigMap, error) {

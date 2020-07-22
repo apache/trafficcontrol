@@ -221,7 +221,6 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 	return nil
 }
 
-
 // CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 
