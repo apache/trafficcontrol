@@ -31,12 +31,13 @@ import (
 
 // CacheStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewCacheStatFilter` documentation for details on which query parameters are used to filter.
 type CacheStatFilter struct {
-	historyCount int
-	statsToUse   map[string]struct{}
-	wildcard     bool
-	cacheType    tc.CacheType
-	hosts        map[tc.CacheName]struct{}
-	cacheTypes   map[tc.CacheName]tc.CacheType
+	historyCount        uint64
+	statsToUse          map[string]struct{}
+	interfaceStatsToUse map[string]struct{}
+	wildcard            bool
+	cacheType           tc.CacheType
+	hosts               map[tc.CacheName]struct{}
+	cacheTypes          map[tc.CacheName]tc.CacheType
 }
 
 // UseCache returns whether the given cache is in the filter.
@@ -61,6 +62,22 @@ func (f *CacheStatFilter) UseStat(statName string) bool {
 	}
 	for statToUse := range f.statsToUse {
 		if strings.Contains(statName, statToUse) {
+			return true
+		}
+	}
+	return false
+}
+
+func (f *CacheStatFilter) UseInterfaceStat(statName string) bool {
+	if len(f.interfaceStatsToUse) == 0 {
+		return true
+	}
+	if !f.wildcard {
+		_, ok := f.interfaceStatsToUse[statName]
+		return ok
+	}
+	for stat := range f.interfaceStatsToUse {
+		if strings.Contains(statName, stat) {
 			return true
 		}
 	}
@@ -103,9 +120,9 @@ func NewCacheStatFilter(path string, params url.Values, cacheTypes map[tc.CacheN
 		}
 	}
 
-	historyCount := 1
+	var historyCount uint64 = 1
 	if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
-		v, err := strconv.Atoi(paramHc[0])
+		v, err := strconv.ParseUint(paramHc[0], 10, 64)
 		if err == nil {
 			historyCount = v
 		}
