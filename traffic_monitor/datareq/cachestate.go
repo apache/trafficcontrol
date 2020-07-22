@@ -21,7 +21,6 @@ package datareq
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -35,6 +34,10 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 )
+
+// NotFoundStatus is the status value of an interface that has not been found in
+// the polled interface data.
+const NotFoundStatus = "unavailable - interface not found"
 
 // CacheStatus contains summary stat data about the given cache.
 type CacheStatus struct {
@@ -70,15 +73,14 @@ type CacheStatus struct {
 	Interfaces *map[string]CacheInterfaceStatus `json:"interfaces,omitempty"`
 }
 
+// CacheInterfaceStatus represents the status of a single network interface of a
+// cache server.
 type CacheInterfaceStatus struct {
-	Status                *string  `json:"status,omitempty"`
-	StatusPoller          *string  `json:"status_poller,omitempty"`
-	BandwidthKbps         *float64 `json:"bandwidth_kbps,omitempty"`
-	BandwidthCapacityKbps *float64 `json:"bandwidth_capacity_kbps,omitempty"`
-	ConnectionCount       *int64   `json:"connection_count,omitempty"`
-	IPv4Available         *bool    `json:"ipv4_available,omitempty"`
-	IPv6Available         *bool    `json:"ipv6_available,omitempty"`
-	CombinedAvailable     *bool    `json:"combined_available,omitempty"`
+	Status                string  `json:"status"`
+	StatusPoller          string  `json:"status_poller"`
+	BandwidthKbps         float64 `json:"bandwidth_kbps"`
+	BandwidthCapacityKbps float64 `json:"bandwidth_capacity_kbps"`
+	Available             bool    `json:"available"`
 }
 
 func srvAPICacheStates(
@@ -97,6 +99,22 @@ func srvAPICacheStates(
 	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statInfoHistory.Get(), statResultHistory, healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus, statMaxKbpses, monitorConfig.Get().TrafficServer))
 }
 
+// interfaceStatus returns the status of the given interface, both qualitatively
+// as a human-readable string and as a boolean indicating its availability.
+func interfaceStatus(inf tc.ServerInterfaceInfo, vitalsMap map[string]cache.Vitals) (string, bool) {
+	vitals, ok := vitalsMap[inf.Name]
+	if !ok {
+		return "not found in health polling data", false
+	}
+	if inf.MaxBandwidth != nil && *inf.MaxBandwidth < uint64(vitals.KbpsOut) {
+		return "maximum bandwidth exceeded", false
+	}
+	return "available", true
+}
+
+// createCacheStatuses builds a map of cache server hostnames to their
+// respective status by examining the calculated availability and statistics of
+// each cache server and its network interfaces.
 func createCacheStatuses(
 	cacheTypes map[tc.CacheName]tc.CacheType,
 	statInfoHistory cache.ResultInfoHistory,
@@ -115,7 +133,7 @@ func createCacheStatuses(
 	maxKbpses := statMaxKbpses.Get()
 
 	for cacheName, serverInfo := range servers {
-		interfaceStatuses := make(map[string]CacheInterfaceStatus)
+		interfaceStatuses := make(map[string]CacheInterfaceStatus, len(serverInfo.Interfaces))
 
 		var totalMaxKbps float64 = 0
 		maxKbps, maxKbpsOk := maxKbpses[cacheName]
@@ -125,52 +143,62 @@ func createCacheStatuses(
 			totalMaxKbps = float64(maxKbps.Total())
 		}
 
-		var totalKbps float64 = 0
-		var totalConnections int64 = 0
+		health, healthOk := healthHistory[tc.CacheName(cacheName)]
+		if !healthOk {
+			log.Infof("Cache server '%s' not in max kbps cache", cacheName)
+		} else if len(health) < 1 {
+			log.Infof("No health data history for cache server '%s'", cacheName)
+			healthOk = false
+		}
 
-		cacheStatus, ok := localCacheStatus[cacheName]
-		if !ok {
+		var totalKbps float64 = 0
+
+		cacheStatus, statusOk := localCacheStatus[cacheName]
+		poller := "unknown"
+		if !statusOk {
 			log.Warnf("No cache status found for cache '%s'", cacheName)
+		} else {
+			poller = cacheStatus.Poller
 		}
 		for _, inf := range serverInfo.Interfaces {
 			interfaceName := inf.Name
 
-			status, statusPoller, ipv4, ipv6, combinedStatus := cacheInterfaceStatusAndPoller(string(cacheName), serverInfo, interfaceName, localCacheStatus)
-			var kbps float64
-			if lastStat, ok := lastStats.Caches[tc.CacheName(cacheName)]; !ok {
-				log.Infof("cache not in last kbps cache %s\n", cacheName)
-			} else {
-				kbps = lastStat.Bytes.PerSec / float64(ds.BytesPerKilobit)
-				totalKbps += kbps
+			infStatus := CacheInterfaceStatus{
+				Available:             false,
+				BandwidthCapacityKbps: 0,
+				BandwidthKbps:         0,
+				Status:                NotFoundStatus,
+				StatusPoller:          poller,
 			}
 
-			var iMaxKbps float64 = 0
+			if healthOk {
+				infStatus.Status, infStatus.Available = interfaceStatus(inf, health[0].InterfaceVitals)
+			}
+
+			if lastStat, ok := lastStats.Caches[tc.CacheName(cacheName)]; !ok {
+				log.Infof("Cache server '%s' not in last kbps cache.", cacheName)
+			} else {
+				infStatus.BandwidthKbps = lastStat.Bytes.PerSec / float64(ds.BytesPerKilobit)
+				totalKbps += infStatus.BandwidthKbps
+			}
+
 			if maxKbpsOk {
 				if mkbps, ok := maxKbps.InterfaceKbpses[interfaceName]; ok {
-					iMaxKbps = float64(mkbps)
+					infStatus.BandwidthCapacityKbps = float64(mkbps)
 				} else {
 					log.Infof("Cache server '%s' interface '%s' not in max kbps cache", cacheName, interfaceName)
 				}
 			}
 
-			var connections int64
-			connectionsVal, ok := conns[tc.CacheName(cacheName)]
-			if !ok {
-				log.Infof("cache not in connections %s\n", cacheName)
-			} else {
-				totalConnections += connectionsVal
-				connections = connectionsVal
-			}
-			interfaceStatuses[interfaceName] = CacheInterfaceStatus{
-				Status:                &status,
-				StatusPoller:          &statusPoller,
-				BandwidthKbps:         &kbps,
-				BandwidthCapacityKbps: &iMaxKbps,
-				ConnectionCount:       &connections,
-				IPv4Available:         &ipv4,
-				IPv6Available:         &ipv6,
-				CombinedAvailable:     &combinedStatus,
-			}
+			interfaceStatuses[interfaceName] = infStatus
+		}
+
+		var connections int64 = 0
+		connectionsVal, ok := conns[cacheName]
+		if !ok {
+			log.Infof("Cache server '%s' not in connections.", cacheName)
+		} else {
+			connections = connectionsVal
 		}
 
 		cacheTypeStr := ""
@@ -194,27 +222,26 @@ func createCacheStatuses(
 			log.Infof("Error getting cache %v health query time: %v\n", cacheName, err)
 		}
 
-		statTime, err := latestResultInfoTimeMS(cacheName, statInfoHistory)
+		statTime, err := latestResultInfoTimeMS(tc.CacheName(cacheName), statInfoHistory)
 		if err != nil {
 			log.Infof("Error getting cache %v stat result time: %v\n", cacheName, err)
 		}
 
-		healthTime, err := latestResultTimeMS(cacheName, healthHistory)
+		healthTime, err := latestResultTimeMS(tc.CacheName(cacheName), healthHistory)
 		if err != nil {
 			log.Infof("Error getting cache %v health result time: %v\n", cacheName, err)
 		}
 
-		statSpan, err := infoResultSpanMS(cacheName, statInfoHistory)
+		statSpan, err := infoResultSpanMS(tc.CacheName(cacheName), statInfoHistory)
 		if err != nil {
 			log.Infof("Error getting cache %v stat span: %v\n", cacheName, err)
 		}
 
-		healthSpan, err := resultSpanMS(cacheName, healthHistory)
+		healthSpan, err := resultSpanMS(tc.CacheName(cacheName), healthHistory)
 		if err != nil {
 			log.Infof("Error getting cache %v health span: %v\n", cacheName, err)
 		}
 
-		status, statusPoller, ipv4, ipv6, combinedStatus := combineInterfaceStatuses(interfaceStatus)
 		statii[cacheName] = CacheStatus{
 			Type:                   &cacheTypeStr,
 			LoadAverage:            &loadAverage,
@@ -225,57 +252,23 @@ func createCacheStatuses(
 			HealthSpanMilliseconds: &healthSpan,
 			BandwidthKbps:          &totalKbps,
 			BandwidthCapacityKbps:  &totalMaxKbps,
-			ConnectionCount:        &totalConnections,
-			Status:                 &status,
-			StatusPoller:           &statusPoller,
-			IPv4Available:          &ipv4,
-			IPv6Available:          &ipv6,
-			CombinedAvailable:      &combinedStatus,
+			ConnectionCount:        &connections,
+			Status:                 &cacheStatus.Status,
+			StatusPoller:           &poller,
+			IPv4Available:          &cacheStatus.Available.IPv4,
+			IPv6Available:          &cacheStatus.Available.IPv6,
+			CombinedAvailable:      &cacheStatus.ProcessedAvailable,
 			Interfaces:             &interfaceStatuses,
 		}
 	}
 	return statii
 }
 
-// cacheInterfaceStatusAndPoller returns the reason why a specific interface of
-// a cache server is unavailable (or that it is available), the poller, and 3
-// booleans in order: IPv4 availability, IPv6 availability and Processed
-// availability which is what the monitor reports based on the PollingProtocol
-// chosen (ipv4only, ipv6only or both).
-func cacheInterfaceStatusAndPoller(serverName string, server tc.TrafficServer, infName string, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
-	switch status := tc.CacheStatusFromString(server.ServerStatus); status {
-	case tc.CacheStatusAdminDown:
-		fallthrough
-	case tc.CacheStatusOnline:
-		fallthrough
-	case tc.CacheStatusOffline:
-		return status.String(), "", false, false, false
-	}
-
-	if _, ok := localCacheStatus[serverName]; !ok {
-		log.Infof("cache not in statuses %s\n", serverName)
-		return "ERROR - not in statuses", "", false, false, false
-	}
-	if _, ok := localCacheStatus[serverName][infName]; !ok {
-		log.Infof("interface %s not in cache %s", infName, serverName)
-		return "ERROR - not in statuses", "", false, false, false
-	}
-
-	statusVal := localCacheStatus[serverName][infName]
-	if statusVal.Why != "" {
-		return fmt.Sprintf("%s", statusVal.Why), statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
-	}
-	if statusVal.ProcessedAvailable {
-		return fmt.Sprintf("%s - available", statusVal.Status), statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
-	}
-	return fmt.Sprintf("%s - unavailable", statusVal.Status), statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
-}
-
-//cacheStatusAndPoller returns the reason why a cache is unavailable (or
+// cacheStatusAndPoller returns the reason why a cache is unavailable (or
 // that is available), the poller, and 3 booleans in order: IPv4 availability,
 // IPv6 availability and Processed availability which is what the monitor
 // reports based on the PollingProtocol chosen (ipv4only,ipv6only or both).
-func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
+func cacheStatusAndPoller(server string, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
 	switch status := tc.CacheStatusFromString(serverInfo.ServerStatus); status {
 	case tc.CacheStatusAdminDown:
 		fallthrough
@@ -285,50 +278,33 @@ func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, loca
 		return status.String(), "", false, false, false
 	}
 
-	if _, ok := localCacheStatus[server]; !ok {
-		log.Infof("cache not in statuses %s\n", server)
+	status, ok := localCacheStatus[server]
+	if !ok {
+		log.Infof("Cache server '%s' not in statuses.", server)
 		return "ERROR - not in statuses", "", false, false, false
 	}
 
-	reasons := []string{}
-	statuses := []string{}
-	var poller string
-	ipv4 := true
-	ipv6 := true
-	processed := true
-	for infName, status := range localCacheStatus[server] {
-		if status.Why != "" {
-			reasons = append(reasons, status.Why)
+	var statusStr string
+	if status.Why == "" {
+		if status.ProcessedAvailable {
+			statusStr = status.Status + " - available"
+		} else {
+			statusStr = status.Status + " - unavailable"
 		}
-		if status.Status != "" {
-			statuses = append(statuses, status.Status)
-		}
-		poller = status.Poller
-		ipv4 = ipv4 && status.Available.IPv4
-		ipv6 = ipv6 && status.Available.IPv6
-		processed = processed && status.ProcessedAvailable
+	} else {
+		statusStr = status.Why
 	}
-
-	why := strings.Join(reasons, ", ")
-	if why != "" {
-		return why, poller, ipv4, ipv6, processed
-	}
-
-	status := strings.Join(statuses, ", ")
-	if processed {
-		return fmt.Sprintf("%s - available", status), poller, ipv4, ipv6, processed
-	}
-	return fmt.Sprintf("%s - unavailable", status), poller, ipv4, ipv6, processed
+	return statusStr, status.Poller, status.Available.IPv4, status.Available.IPv6, status.ProcessedAvailable
 }
 
-func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[tc.CacheName]int64 {
-	conns := map[tc.CacheName]int64{}
-	statResultHistory.Range(func(server tc.CacheName, _ string, history threadsafe.ResultStatValHistory) bool {
+func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[string]int64 {
+	conns := map[string]int64{}
+	statResultHistory.Range(func(server string, history threadsafe.CacheStatHistory) bool {
 		// We only want to create connections for each cache
 		if _, ok := conns[server]; ok {
 			return true
 		}
-		vals := history.Load("proxy.process.http.current_client_connections")
+		vals := history.Stats.Load("proxy.process.http.current_client_connections")
 		if len(vals) == 0 {
 			return true
 		}
