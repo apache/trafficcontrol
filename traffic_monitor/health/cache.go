@@ -251,7 +251,8 @@ func getProcessAvailableTuple(protocol config.PollingProtocol) func(cache.Availa
 }
 
 // CalcAvailability calculates the availability of each cache in results.
-// statResultHistory may be nil, in which case stats won't be used to calculate availability.
+// statResultHistory may be nil, in which case stats won't be used to calculate
+// availability.
 func CalcAvailability(
 	results []cache.Result,
 	pollerName string,
