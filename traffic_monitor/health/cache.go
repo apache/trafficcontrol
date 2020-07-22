@@ -47,7 +47,7 @@ const AvailableStr = "available"
 const UnavailableStr = "unavailable"
 
 // GetVitals Gets the vitals to decide health on in the right format
-func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.LegacyTrafficMonitorConfigMap) {
+func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.TrafficMonitorConfigMap) {
 	if newResult.Error != nil {
 		log.Errorf("cache_health.GetVitals() called with an errored Result!")
 		return

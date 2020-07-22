@@ -330,7 +330,7 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 }
 
 // LegacyTrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
-func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error) {
+func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
 	mc, err := s.trafficMonitorConfigMapRaw(cdn)
 	if err != nil {
 		return nil, fmt.Errorf("getting monitor config map: %v", err)

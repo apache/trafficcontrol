@@ -49,7 +49,7 @@ type PollIntervals struct {
 }
 
 // getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, stat, and TrafficOps poll intervals
-func getIntervals(monitorConfig tc.LegacyTrafficMonitorConfigMap, cfg config.Config, logMissingParams bool) (PollIntervals, error) {
+func getIntervals(monitorConfig tc.TrafficMonitorConfigMap, cfg config.Config, logMissingParams bool) (PollIntervals, error) {
 	intervals := PollIntervals{}
 	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
 	if !peerPollIntervalExists {
@@ -334,8 +334,9 @@ func monitorConfigListen(
 	}
 }
 
-// createServerHealthPollURLs takes the template pollingURLStr, and replaces variables with data from srv, and returns the polling URL for srv.
-func createServerHealthPollURLs(pollingURLStr string, srv tc.LegacyTrafficServer) (string, string) {
+// createServerHealthPollURLs takes the template pollingURLStr, and replaces
+// variables with data from srv, and returns the polling URL for srv.
+func createServerHealthPollURLs(pollingURLStr string, srv tc.TrafficServer) (string, string) {
 	pollingURL4Str := ""
 	pollingURL6Str := ""
 
