@@ -31,7 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/client"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -40,7 +40,7 @@ import (
 type ITrafficOpsSession interface {
 	CRConfigRaw(cdn string) ([]byte, error)
 	LastCRConfig(cdn string) ([]byte, time.Time, error)
-	TrafficMonitorConfigMap(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error)
+	TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error)
 	Set(session *client.Session)
 	CRConfigHistory() []CRConfigStat
 	BackupFileExists() bool
@@ -355,67 +355,99 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	return mc, nil
 }
 
-func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.LegacyTrafficMonitorConfigMap) (*tc.LegacyTrafficMonitorConfigMap, error) {
-	// Dump the "live" monitoring.json servers, and populate with the "snapshotted" CRConfig
-	mc.TrafficServer = map[string]tc.LegacyTrafficServer{}
+// CreateMonitorConfig modifies the passed TrafficMonitorConfigMap to add the
+// cache servers, Traffic Monitors, and Delivery Services found in a CDN
+// Snapshot, and wipe out all of those that already existed in the configuration
+// map.
+func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
+	// Dump the "live" monitoring.json servers, and populate with th
+	// "snapshotted" CRConfig
+	mc.TrafficServer = map[string]tc.TrafficServer{}
 	for name, srv := range crConfig.ContentServers {
-		s := tc.LegacyTrafficServer{}
-		if srv.Profile != nil {
-			s.Profile = *srv.Profile
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Profile field\n", name)
+		s := tc.TrafficServer{
+			HostName: name,
 		}
-		if srv.Ip != nil {
-			s.IP = *srv.Ip
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing IP field\n", name)
-		}
-		if srv.ServerStatus != nil {
-			s.ServerStatus = string(*srv.ServerStatus)
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Status field\n", name)
-		}
+
 		if srv.CacheGroup != nil {
 			s.CacheGroup = *srv.CacheGroup
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing CacheGroup field\n", name)
 		}
-		if srv.Ip6 != nil {
-			s.IP6 = *srv.Ip6
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing IP6 field\n", name)
-		}
-		if srv.Port != nil {
-			s.Port = *srv.Port
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Port field\n", name)
-		}
-		s.HostName = name
+
 		if srv.Fqdn != nil {
 			s.FQDN = *srv.Fqdn
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing FQDN field\n", name)
 		}
-		if srv.InterfaceName != nil {
-			s.InterfaceName = *srv.InterfaceName
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing InterfaceName field\n", name)
-		}
-		if srv.ServerType != nil {
-			s.Type = *srv.ServerType
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Type field\n", name)
-		}
+
 		if srv.HashId != nil {
 			s.HashID = *srv.HashId
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing HashId field\n", name)
 		}
+
 		if srv.HttpsPort != nil {
 			s.HTTPSPort = *srv.HttpsPort
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing HttpsPort field\n", name)
 		}
+
+		if srv.Port != nil {
+			s.Port = *srv.Port
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing Port field\n", name)
+		}
+
+		if srv.Profile != nil {
+			s.Profile = *srv.Profile
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing Profile field\n", name)
+		}
+
+		if srv.ServerStatus != nil {
+			s.ServerStatus = string(*srv.ServerStatus)
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing Status field\n", name)
+		}
+
+		if srv.ServerType != nil {
+			s.Type = *srv.ServerType
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing Type field\n", name)
+		}
+
+		if srv.InterfaceName != nil {
+			inf := tc.ServerInterfaceInfo{
+				IPAddresses:  make([]tc.ServerIPAddress, 0, 2),
+				MaxBandwidth: nil,
+				Monitor:      false,
+				MTU:          nil,
+				Name:         *srv.InterfaceName,
+			}
+
+			if srv.Ip != nil {
+				ip := tc.ServerIPAddress{
+					Address:        *srv.Ip,
+					Gateway:        nil,
+					ServiceAddress: true,
+				}
+				inf.IPAddresses = append(inf.IPAddresses, ip)
+			}
+
+			if srv.Ip6 != nil {
+				ip := tc.ServerIPAddress{
+					Address:        *srv.Ip6,
+					Gateway:        nil,
+					ServiceAddress: true,
+				}
+				inf.IPAddresses = append(inf.IPAddresses, ip)
+			}
+
+			if len(inf.IPAddresses) > 0 {
+				s.Interfaces = []tc.ServerInterfaceInfo{inf}
+			}
+		}
+
 		mc.TrafficServer[name] = s
 	}
 
