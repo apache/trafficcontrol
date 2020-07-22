@@ -481,6 +481,7 @@ order by dr.set_number asc
 		return nil, nil, errors.New("querying deliveryservices: " + err.Error())
 	}
 	defer rows.Close()
+	dsNameOrderMap := make(map[string]int)
 
 	for rows.Next() {
 		pattern := ""
@@ -491,12 +492,14 @@ order by dr.set_number asc
 		if err := rows.Scan(&pattern, &ttype, &dstype, &setnum, &dsname); err != nil {
 			return nil, nil, errors.New("scanning deliveryservice regexes: " + err.Error())
 		}
-
+		if _, ok := dsNameOrderMap[dsname]; !ok {
+			dsNameOrderMap[dsname] = 0
+		} else {
+			dsNameOrderMap[dsname] = dsNameOrderMap[dsname] + 1
+		}
 		protocolStr := getProtocolStr(dstype)
 
-		for len(dsmatchsets[dsname]) <= setnum {
-			dsmatchsets[dsname] = append(dsmatchsets[dsname], nil) // TODO change to not insert empties? Current behavior emulates old Perl CRConfig
-		}
+		dsmatchsets[dsname] = append(dsmatchsets[dsname], nil)
 
 		matchType := ""
 		switch ttype {
@@ -511,10 +514,10 @@ order by dr.set_number asc
 			continue
 		}
 
-		if dsmatchsets[dsname][setnum] == nil {
-			dsmatchsets[dsname][setnum] = &tc.MatchSet{}
+		if dsmatchsets[dsname][dsNameOrderMap[dsname]] == nil {
+			dsmatchsets[dsname][dsNameOrderMap[dsname]] = &tc.MatchSet{}
 		}
-		matchset := dsmatchsets[dsname][setnum]
+		matchset := dsmatchsets[dsname][dsNameOrderMap[dsname]]
 		matchset.Protocol = protocolStr
 		matchset.MatchList = append(matchset.MatchList, tc.MatchList{MatchType: matchType, Regex: pattern})
 
