@@ -357,7 +357,7 @@ func StatsMarshall(
 	statInfo cache.ResultInfoHistory,
 	combinedStates tc.CRStates,
 	monitorConfig tc.TrafficMonitorConfigMap,
-	statMaxKbpses map[string]CacheKbps,
+	statMaxKbpses cache.Kbpses,
 	filter cache.Filter,
 	params url.Values,
 ) ([]byte, error) {

@@ -28,7 +28,7 @@ import (
 func srvAPIBandwidthCapacityKbps(statMaxKbpses threadsafe.CacheKbpses) []byte {
 	var capacity uint64 = 0
 	for _, kbps := range statMaxKbpses.Get() {
-		capacity += kbps.Total()
+		capacity += kbps
 	}
 	return []byte(strconv.FormatUint(capacity, 10))
 }

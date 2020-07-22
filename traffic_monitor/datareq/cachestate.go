@@ -76,11 +76,10 @@ type CacheStatus struct {
 // CacheInterfaceStatus represents the status of a single network interface of a
 // cache server.
 type CacheInterfaceStatus struct {
-	Status                string  `json:"status"`
-	StatusPoller          string  `json:"status_poller"`
-	BandwidthKbps         float64 `json:"bandwidth_kbps"`
-	BandwidthCapacityKbps float64 `json:"bandwidth_capacity_kbps"`
-	Available             bool    `json:"available"`
+	Status        string  `json:"status"`
+	StatusPoller  string  `json:"status_poller"`
+	BandwidthKbps float64 `json:"bandwidth_kbps"`
+	Available     bool    `json:"available"`
 }
 
 func srvAPICacheStates(
@@ -140,7 +139,7 @@ func createCacheStatuses(
 		if !maxKbpsOk {
 			log.Infof("Cache server '%s' not in max kbps cache", cacheName)
 		} else {
-			totalMaxKbps = float64(maxKbps.Total())
+			totalMaxKbps = float64(maxKbps)
 		}
 
 		health, healthOk := healthHistory[tc.CacheName(cacheName)]
@@ -164,11 +163,10 @@ func createCacheStatuses(
 			interfaceName := inf.Name
 
 			infStatus := CacheInterfaceStatus{
-				Available:             false,
-				BandwidthCapacityKbps: 0,
-				BandwidthKbps:         0,
-				Status:                NotFoundStatus,
-				StatusPoller:          poller,
+				Available:     false,
+				BandwidthKbps: 0,
+				Status:        NotFoundStatus,
+				StatusPoller:  poller,
 			}
 
 			if healthOk {
@@ -181,15 +179,6 @@ func createCacheStatuses(
 				infStatus.BandwidthKbps = lastStat.Bytes.PerSec / float64(ds.BytesPerKilobit)
 				totalKbps += infStatus.BandwidthKbps
 			}
-
-			if maxKbpsOk {
-				if mkbps, ok := maxKbps.InterfaceKbpses[interfaceName]; ok {
-					infStatus.BandwidthCapacityKbps = float64(mkbps)
-				} else {
-					log.Infof("Cache server '%s' interface '%s' not in max kbps cache", cacheName, interfaceName)
-				}
-			}
-
 			interfaceStatuses[interfaceName] = infStatus
 		}
 
