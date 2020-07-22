@@ -19,7 +19,9 @@ package rfc
 // When adding symbols, document the RFC and section they correspond to.
 
 import (
+	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -28,8 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/grove/web"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"math"
-	"strconv"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 // ValidHTTPCodes provides fast lookup whether a HTTP response code is valid per RFC7234§3
@@ -426,11 +427,11 @@ func getFreshnessLifetime(respHeaders http.Header, respCacheControl web.CacheCon
 	}
 
 	getExpires := func() (time.Duration, bool) {
-		expires, ok := web.GetHTTPDate(respHeaders, "Expires")
+		expires, ok := rfc.GetHTTPDate(respHeaders, "Expires")
 		if !ok {
 			return 0, false
 		}
-		date, ok := web.GetHTTPDate(respHeaders, "Date")
+		date, ok := rfc.GetHTTPDate(respHeaders, "Date")
 		if !ok {
 			return 0, false
 		}
@@ -456,11 +457,11 @@ func heuristicFreshness(respHeaders http.Header) time.Duration {
 }
 
 func sinceLastModified(headers http.Header) (time.Duration, bool) {
-	lastModified, ok := web.GetHTTPDate(headers, "last-modified")
+	lastModified, ok := rfc.GetHTTPDate(headers, "last-modified")
 	if !ok {
 		return 0, false
 	}
-	date, ok := web.GetHTTPDate(headers, "date")
+	date, ok := rfc.GetHTTPDate(headers, "date")
 	if !ok {
 		return 0, false
 	}
@@ -478,7 +479,7 @@ func ageValue(respHeaders http.Header) time.Duration {
 
 // dateValue is used to calculate current_age per RFC7234§4.2.3. It returns time, or false if the response had no Date header (in violation of HTTP/1.1).
 func dateValue(respHeaders http.Header) (time.Time, bool) {
-	return web.GetHTTPDate(respHeaders, "date")
+	return rfc.GetHTTPDate(respHeaders, "date")
 }
 
 func apparentAge(respHeaders http.Header, respRespTime time.Time) time.Duration {

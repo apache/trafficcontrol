@@ -172,29 +172,5 @@ func TryGetBytesWritten(w http.ResponseWriter, conn *InterceptConn, bytesWritten
 	return bytesWritten
 }
 
-// GetHTTPDate is a helper function which gets an HTTP date from the given map (which is typically a `http.Header` or `CacheControl`. Returns false if the given key doesn't exist in the map, or if the value isn't a valid HTTP Date per RFC2616§3.3.
-func GetHTTPDate(headers http.Header, key string) (time.Time, bool) {
-	maybeDate := headers.Get(key)
-	if maybeDate == "" {
-		return time.Time{}, false
-	}
-	return ParseHTTPDate(maybeDate)
-}
-
-// ParseHTTPDate parses the given RFC7231§7.1.1 HTTP-date
-func ParseHTTPDate(d string) (time.Time, bool) {
-	if t, err := time.Parse(time.RFC1123, d); err == nil {
-		return t, true
-	}
-	if t, err := time.Parse(time.RFC850, d); err == nil {
-		return t, true
-	}
-	if t, err := time.Parse(time.ANSIC, d); err == nil {
-		return t, true
-	}
-	return time.Time{}, false
-
-}
-
 // RemapTextKey is the plugin shared data key inserted by grovetccfg for the Remap Line of the Delivery Service in Traffic Control, Traffic Ops.
 const RemapTextKey = "remap_text"
