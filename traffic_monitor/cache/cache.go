@@ -173,9 +173,9 @@ type Stats struct {
 
 // Filter filters whether stats and caches should be returned from a data set.
 type Filter interface {
-	UseCache(name tc.CacheName) bool
-	UseInterfaceStat(name string) bool
-	UseStat(name string) bool
+	UseCache(tc.CacheName) bool
+	UseInterfaceStat(string) bool
+	UseStat(string) bool
 	WithinStatHistoryMax(uint64) bool
 }
 
