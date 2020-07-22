@@ -332,7 +332,7 @@ to-auto-snapqueue() {
 		expected_servers_list=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|join(",")')
 		expected_servers_total=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|length')
 
-		current_servers_json=$(to-get 'api/'$TO_API_VERSION'/servers' 2>/dev/null | jq -c -e '[.response[] | .xmppId] | sort')
+		current_servers_json=$(to-get 'api/'$TO_API_VERSION'/servers' 2>/dev/null | jq -c -e '[.response[] | .hostName] | sort')
 		[ -z "$current_servers_json" ] && current_servers_json='[]'
 		current_servers_list=$(jq -r -n --argjson current "$current_servers_json" '$current|join(",")')
 		current_servers_total=$(jq -r -n --argjson current "$current_servers_json" '$current|length')

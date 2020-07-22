@@ -20,7 +20,6 @@ package atscfg
  */
 
 import (
-	"encoding/json"
 	"strings"
 	"testing"
 
@@ -51,15 +50,10 @@ func TestMakeMetaConfig(t *testing.T) {
 	tmURL := "https://myto.invalid"
 	tmReverseProxyURL := "https://myrp.myto.invalid"
 	locationParams := map[string]ConfigProfileParams{
-		"remap.config": ConfigProfileParams{
-			FileNameOnDisk: "remap.config",
-			Location:       "/my/location/",
-		},
 		"regex_revalidate.config": ConfigProfileParams{
 			FileNameOnDisk: "regex_revalidate.config",
 			Location:       "/my/location/",
 			URL:            "http://myurl/remap.config", // cdn-scoped endpoint
-			APIURI:         "http://myapi/remap.config",
 		},
 		"cache.config": ConfigProfileParams{
 			FileNameOnDisk: "cache.config", // cache.config on mids is server-scoped
@@ -116,15 +110,14 @@ func TestMakeMetaConfig(t *testing.T) {
 		},
 	}
 	uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
-	dses := map[tc.DeliveryServiceName]struct{}{"mydsname": {}}
+	dses := map[tc.DeliveryServiceName]tc.DeliveryServiceNullable{"mydsname": {}}
 
 	scopeParams := map[string]string{"custom.config": string(tc.ATSConfigMetaDataConfigFileScopeProfiles)}
 
-	txt := MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
-
-	cfg := tc.ATSConfigMetaData{}
-	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
-		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
+	cfgPath := "/etc/foo/trafficserver"
+	cfg, err := MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cfgPath)
+	if err != nil {
+		t.Fatalf("MakeMetaObj: " + err.Error())
 	}
 
 	if cfg.Info.ProfileID != int(server.ProfileID) {
@@ -223,7 +216,7 @@ func TestMakeMetaConfig(t *testing.T) {
 			}
 		},
 		"remap.config": func(cf tc.ATSConfigMetaDataConfigFile) {
-			if expected := "/my/location/"; cf.Location != expected {
+			if expected := cfgPath; cf.Location != expected {
 				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
 			}
 			if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cf.Scope != expected {
@@ -246,6 +239,46 @@ func TestMakeMetaConfig(t *testing.T) {
 				t.Errorf("expected scope '%v', actual '%v'", expected, cf.Scope)
 			}
 		},
+		"hosting.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
+		"parent.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeServers); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
+		"plugin.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
+		"records.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
+		"storage.config": func(cf tc.ATSConfigMetaDataConfigFile) {
+			if expected := cfgPath; cf.Location != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Location)
+			}
+			if expected := string(tc.ATSConfigMetaDataConfigFileScopeProfiles); cf.Scope != expected {
+				t.Errorf("expected scope for %v is '%v', actual '%v'", cf.FileNameOnDisk, expected, cf.Scope)
+			}
+		},
 	}
 
 	for _, cfgFile := range cfg.ConfigFiles {
@@ -258,10 +291,9 @@ func TestMakeMetaConfig(t *testing.T) {
 	}
 
 	server.Type = "MID"
-	txt = MakeMetaConfig(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses)
-	cfg = tc.ATSConfigMetaData{}
-	if err := json.Unmarshal([]byte(txt), &cfg); err != nil {
-		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
+	cfg, err = MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cfgPath)
+	if err != nil {
+		t.Fatalf("MakeMetaObj: " + err.Error())
 	}
 	for _, cfgFile := range cfg.ConfigFiles {
 		if cfgFile.FileNameOnDisk != "cache.config" {
@@ -272,23 +304,15 @@ func TestMakeMetaConfig(t *testing.T) {
 		}
 		break
 	}
-	if strings.Contains(txt, "nonexistentds") {
-		t.Errorf("expected location parameters for nonexistent delivery services to not be added to config, actual '%v'", txt)
-	}
-
-	// check for expected apiUri vs url keys (if values are empty strings, they should be omitted from the json)
-	m := map[string]interface{}{}
-	if err := json.Unmarshal([]byte(txt), &m); err != nil {
-		t.Fatalf("MakeMetaConfig returned invalid JSON: " + err.Error())
-	}
-	cfl := m["configFiles"].([]interface{})
-	for _, cf := range cfl {
-		c := cf.(map[string]interface{})
-		if c["fnameOnDisk"] == "external.config" {
-			if _, exists := c["apiUri"]; exists {
+	for _, fi := range cfg.ConfigFiles {
+		if strings.Contains(fi.FileNameOnDisk, "nonexistentds") {
+			t.Errorf("expected location parameters for nonexistent delivery services to not be added to config, actual '%v'", fi.FileNameOnDisk)
+		}
+		if fi.FileNameOnDisk == "external.config" {
+			if fi.APIURI != "" {
 				t.Errorf("expected: apiUri field to be omitted for external.config, actual: present")
 			}
-			if _, exists := c["url"]; !exists {
+			if fi.URL != "" {
 				t.Errorf("expected: url field to be present for external.config, actual: omitted")
 			}
 		}

@@ -81,23 +81,23 @@ module.exports = function (grunt) {
     // js (custom)
     grunt.registerTask('build-js', [
         'html2js',
-        'browserify2:app-prod',
-        'browserify2:app-config'
+        'browserify:app-prod',
+        'browserify:app-config'
     ]);
 
     grunt.registerTask('build-js-dev', [
         'html2js',
-        'browserify2:app-dev',
-        'browserify2:app-config'
+        'browserify:app-dev',
+        'browserify:app-config'
     ]);
 
     // js (libraries)
     grunt.registerTask('build-shared-libs', [
-        'browserify2:shared-libs-prod'
+        'browserify:shared-libs-prod'
     ]);
 
     grunt.registerTask('build-shared-libs-dev', [
-        'browserify2:shared-libs-dev'
+        'browserify:shared-libs-dev'
     ]);
 
 };

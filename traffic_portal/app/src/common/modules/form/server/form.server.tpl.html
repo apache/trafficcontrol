@@ -241,6 +241,11 @@ under the License.
                 <span ng-show="hasError(serverForm.routerPortName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
             </div>
 
+            <label ng-if="!settings.isNew">Hash ID</label>
+            <div ng-if="!settings.isNew">
+                <input name="xmppId" type="text" class="form-control" ng-model="server.xmppId" readonly/>
+            </div>
+
             <fieldset>
                 <legend>Interfaces<button name="addInterfaceBtn" class="btn btn-primary right-button btn-xs" type="button" title="add a new interface" ng-click="addInterface()"><i class="fa fa-plus"></i></button></legend>
                 <fieldset ng-repeat="inf in server.interfaces">
