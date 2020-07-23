@@ -34,7 +34,7 @@ under the License.
                     <span class="input-group-btn">
                         <label for="pageSize" class="btn btn-default">Page Size:</label>
                     </span>
-                    <input id="pageSize" type="number" class="form-control" placeholder="100" ng-model="pageSize" ng-change="onPageSizeChanged()" aria-label="Page Size"/>
+                    <input id="pageSize" type="number" class="form-control" placeholder="100" step="25" ng-model="pageSize" ng-change="onPageSizeChanged()" aria-label="Page Size"/>
                 </div>
                 <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
                     <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
