@@ -52,7 +52,14 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		if (!params.value || !serverUtils.isOffline(params.value)) {
 			return;
 		}
-		return params.data.offlineReason;
+		return params.value + ': ' + params.data.offlineReason;
+	}
+
+	/**
+	 * Gets value to display a default tooltip.
+	 */
+	function defaultTooltip(params) {
+		return params.value;
 	}
 
 	/**
@@ -71,84 +78,99 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			headerName: "Cache Group",
 			field: "cachegroup",
 			hide: false,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "CDN",
 			field: "cdnName",
 			hide: false,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Domain",
 			field: "domainName",
 			hide: false,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Host",
 			field: "hostName",
 			hide: false,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "HTTPS Port",
 			field: "httpsPort",
 			hide: true,
-			filter: "agNumberColumnFilter"
+			filter: "agNumberColumnFilter",
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "ID",
 			field: "id",
 			hide: true,
-			filter: "agNumberColumnFilter"
+			filter: "agNumberColumnFilter",
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "ILO IP Address",
 			field: "iloIpAddress",
 			hide: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: null,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "ILO IP Gateway",
 			field: "iloIpGateway",
 			hide: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: null,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "ILO IP Netmask",
 			field: "iloIpNetmask",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "ILO Username",
 			field: "iloUsername",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Interface Name",
 			field: "interfaceName",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "IPv6 Address",
 			field: "ip6Address",
 			hide: false,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "IPv6 Gateway",
 			field: "ip6Gateway",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Last Updated",
 			field: "lastUpdated",
 			hide: true,
 			filter: "agDateColumnFilter",
-			valueFormatter: dateCellFormatter
+			valueFormatter: dateCellFormatter,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Mgmt IP Address",
 			field: "mgmtIpAddress",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Mgmt IP Gateway",
@@ -156,7 +178,8 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			hide: true,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: null,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Mgmt IP Netmask",
@@ -164,7 +187,8 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			hide: true,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: null,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Network Gateway",
@@ -172,7 +196,8 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			hide: true,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: null,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Network IP",
@@ -180,55 +205,65 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			hide: false,
 			filter: true,
 			cellRenderer: "sshCellRenderer",
-			onCellClicked: null
+			onCellClicked: null,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Network MTU",
 			field: "interfaceMtu",
 			hide: true,
-			filter: "agNumberColumnFilter"
+			filter: "agNumberColumnFilter",
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Network Subnet",
 			field: "ipNetmask",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Offline Reason",
 			field: "offlineReason",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Phys Location",
 			field: "physLocation",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Profile",
 			field: "profile",
 			hide: false,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Rack",
 			field: "rack",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Reval Pending",
 			field: "revalPending",
 			hide: true,
 			filter: true,
-			cellRenderer: "updateCellRenderer"
+			cellRenderer: "updateCellRenderer",
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Router Hostname",
 			field: "routerHostName",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Router Port Name",
 			field: "routerPortName",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Status",
@@ -240,18 +275,21 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			headerName: "TCP Port",
 			field: "tcpPort",
 			hide: true,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Type",
 			field: "type",
 			hide: false,
+			tooltip: defaultTooltip
 		},
 		{
 			headerName: "Update Pending",
 			field: "updPending",
 			hide: false,
 			filter: true,
-			cellRenderer: "updateCellRenderer"
+			cellRenderer: "updateCellRenderer",
+			tooltip: defaultTooltip
 		}
 	];
 
