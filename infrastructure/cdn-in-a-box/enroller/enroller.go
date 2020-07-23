@@ -18,7 +18,6 @@ package main
 // under the License.
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -47,14 +46,6 @@ type session struct {
 func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass string) (session, error) {
 	s, _, err := client.LoginWithAgent(toURL, toUser, toPass, true, "cdn-in-a-box-enroller", true, reqTimeout)
 	return session{s}, err
-}
-
-func printJSON(label string, b interface{}) {
-	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.SetIndent(``, `  `)
-	enc.Encode(b)
-	log.Infoln(label, buf.String())
 }
 
 func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
@@ -509,12 +500,6 @@ func enrollUser(toSession *session, r io.Reader) error {
 	err = enc.Encode(&alerts)
 
 	return err
-}
-
-// using documented import form for profiles
-type profileImport struct {
-	Profile    tc.Profile             `json:"profile"`
-	Parameters []tc.ParameterNullable `json:"parameters"`
 }
 
 // enrollProfile takes a json file and creates a Profile object using the TO API
