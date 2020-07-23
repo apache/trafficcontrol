@@ -589,8 +589,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			}
 			eparam, err = toSession.getParameter(param)
 			if err != nil {
-				log.Infof("error getting new parameter %+v\n", param)
-				eparam, err = toSession.getParameter(param)
+				log.Infof("error getting new parameter %+v: \n", param)
 				log.Infof(err.Error())
 				continue
 			}
@@ -737,7 +736,7 @@ func (dw *dirWatcher) watch(watchdir, t string, f func(*session, io.Reader) erro
 		if err != nil {
 			return err
 		}
-		defer fh.Close()
+		defer log.Close(fh, "could not close file")
 		return f(toSession, fh)
 	}
 }
@@ -757,7 +756,7 @@ func startServer(httpPort string, toSession *session, dispatcher map[string]func
 	baseEP := "/api/2.0/"
 	for d, f := range dispatcher {
 		http.HandleFunc(baseEP+d, func(w http.ResponseWriter, r *http.Request) {
-			defer r.Body.Close()
+			defer log.Close(r.Body, "could not close reader")
 			f(toSession, r.Body)
 		})
 	}
@@ -863,7 +862,7 @@ func main() {
 	if len(watchDir) != 0 {
 		log.Infoln("Watching directory " + watchDir)
 		dw, err := startWatching(watchDir, &toSession, dispatcher)
-		defer dw.Close()
+		defer log.Close(dw, "could not close dirwatcher")
 		if err != nil {
 			log.Errorf("dirwatcher on %s failed: %s", watchDir, err.Error())
 		}
@@ -875,7 +874,7 @@ func main() {
 		panic(err)
 	}
 	log.Infoln("Created " + startedFile)
-	f.Close()
+	log.Close(f, "could not close file")
 
 	var waitforever chan struct{}
 	<-waitforever
