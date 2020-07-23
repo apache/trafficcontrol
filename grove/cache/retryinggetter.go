@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/grove/web"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	librfc "github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 const CodeConnectFailure = http.StatusBadGateway
@@ -150,13 +151,13 @@ func GetAndCache(
 		}
 
 		log.Debugf("GetAndCache request returned %v headers %+v (reqid %v)\n", respCode, respHeader, reqID)
-		respRespTime, ok := web.GetHTTPDate(respHeader, "Date")
+		respRespTime, ok := librfc.GetHTTPDate(respHeader, "Date")
 		if !ok {
 			log.Errorf("request %v returned no Date header - RFC Violation! Using local response timestamp (reqid %v)\n", req.RequestURI, reqID)
 			respRespTime = reqRespTime // if no Date was returned using the client response time simulates latency 0
 		}
 
-		lastModified, ok := web.GetHTTPDate(respHeader, "Last-Modified")
+		lastModified, ok := librfc.GetHTTPDate(respHeader, "Last-Modified")
 		if !ok {
 			lastModified = respRespTime
 		}
