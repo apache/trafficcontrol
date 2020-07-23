@@ -33,7 +33,7 @@ import (
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	"github.com/apache/trafficcontrol/traffic_ops/client"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/fsnotify.v1"
 )
@@ -60,7 +60,7 @@ func printJSON(label string, b interface{}) {
 func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
-	parameters, _, err := s.GetParameters()
+	parameters, _, err := s.GetParameters(nil)
 	if err != nil {
 		return m, err
 	}
@@ -73,7 +73,7 @@ func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
 }
 
 func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
-	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n))
+	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n), nil)
 	if err != nil {
 		return -1, err
 	}
@@ -230,7 +230,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId)
+	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId, nil)
 	if err != nil {
 		return err
 	}
@@ -242,18 +242,20 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	}
 	dsID := *dses[0].ID
 
+	params := &url.Values{}
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
-		servers, _, err := toSession.GetServerByHostName(sn)
+		params.Set("hostName", sn)
+		servers, _, err := toSession.GetServers(params, nil)
 		if err != nil {
 			return err
 		}
-		if len(servers) == 0 {
+		if len(servers.Response) == 0 {
 			return errors.New("no server with hostName " + sn)
 		}
-		serverIDs = append(serverIDs, servers[0].ID)
+		serverIDs = append(serverIDs, *servers.Response[0].ID)
 	}
-	_, err = toSession.CreateDeliveryServiceServers(dsID, serverIDs, true)
+	_, _, err = toSession.CreateDeliveryServiceServers(dsID, serverIDs, true)
 	if err != nil {
 		log.Infof("error creating DeliveryServiceServer: %s\n", err)
 	}
@@ -354,7 +356,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 			}
 
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByName(n)
+				profiles, _, err := toSession.GetProfileByName(n, nil)
 				if err != nil {
 					return err
 				}
@@ -537,7 +539,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByName(profile.Name)
+	profiles, _, err := toSession.GetProfileByName(profile.Name, nil)
 
 	createProfile := false
 	if err != nil || len(profiles) == 0 {
@@ -559,7 +561,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
 			}
 		}
-		profiles, _, err = toSession.GetProfileByName(profile.Name)
+		profiles, _, err = toSession.GetProfileByName(profile.Name, nil)
 		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
 		}
@@ -635,7 +637,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 // enrollServer takes a json file and creates a Server object using the TO API
 func enrollServer(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.Server
+	var s tc.ServerNullable
 	err := dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Infof("error decoding Server: %s\n", err)
