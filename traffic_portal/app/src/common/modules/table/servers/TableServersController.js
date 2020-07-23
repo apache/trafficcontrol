@@ -611,7 +611,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 
 		try {
 			const ps = localStorage.getItem("servers_page_size");
-			if (ps) {
+			if (ps && ps > 0) {
 				$scope.pageSize = Number(ps);
 				$scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
 			}
