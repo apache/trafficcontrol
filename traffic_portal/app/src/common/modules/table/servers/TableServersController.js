@@ -94,6 +94,11 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 			filter: "agNumberColumnFilter"
 		},
 		{
+			headerName: "Hash ID",
+			field: "xmppId",
+			hide: false
+		},
+		{
 			headerName: "ID",
 			field: "id",
 			hide: true,
