@@ -35,6 +35,9 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 				return parseInt($(this).attr('id'));
 			}).get();
 		$scope.selectedDeliveryServices = _.map(deliveryServices, function(ds) {
+			if (ds.topology) {
+				return ds;
+			}
 			if (visibleDSIds.includes(ds.id)) {
 				ds['selected'] = selected;
 			}
