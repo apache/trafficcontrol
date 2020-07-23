@@ -192,11 +192,11 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
 	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false)
-	if err == nil {
-		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
+	if err != nil {
+		t.Errorf("Expected assignment to succeed, but it didn't! (alerts: %v)", alerts)
 	}
-	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
-		t.Fatalf("assigning Topology-based delivery service to server - expected: 400-level status code, actual: %d", reqInf.StatusCode)
+	if reqInf.StatusCode >= http.StatusBadRequest {
+		t.Fatalf("assigning Topology-based delivery service to server - expected: non-error status code, actual: %d", reqInf.StatusCode)
 	}
 
 	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID, nil)
@@ -214,7 +214,7 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		}
 	}
 
-	if found {
-		t.Errorf(`Invalid Server/DS assignment was created!`)
+	if !found {
+		t.Errorf(`Valid Server/DS assignment was not created!`)
 	}
 }

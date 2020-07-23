@@ -96,15 +96,6 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 			api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
 			return
 		}
-		dses, sysErr := dbhelpers.GetDeliveryServicesWithTopologies(inf.Tx.Tx, dsList)
-		if sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-		if len(dses) > 0 {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("delivery services %v are already assigned to a topology", dses), nil)
-			return
-		}
 	}
 
 	// We already know the CDN exists because that's part of the serverInfo query above
