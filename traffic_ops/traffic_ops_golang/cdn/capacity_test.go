@@ -1,7 +1,6 @@
 package cdn
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"testing"
@@ -26,8 +25,45 @@ import (
  * under the License.
  */
 
-func TestCheckServiceInterface(t *testing.T) {
-	m := make(map[tc.InterfaceName]CacheStat)
+func TestGetServiceInterfaces(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+	cols := []string{"host_name", "interface"}
+	rows := sqlmock.NewRows(cols)
+	rows = rows.AddRow(
+		"host1",
+		"eth1",
+	)
+	rows = rows.AddRow(
+		"host2",
+		"eth2",
+	)
+	mock.ExpectBegin()
+	mock.ExpectQuery("select").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	m, err := getServiceInterfaces(db.MustBegin().Tx)
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err.Error())
+	}
+	if len(m) != 2 {
+		t.Errorf("Expected a result of length %v, got %v instead", 2, len(m))
+	}
+	if m["host1"] != "eth1" {
+		t.Errorf("Expected host1 to have service interface eth1, got %v instead", m["host1"])
+	}
+	if m["host2"] != "eth2" {
+		t.Errorf("Expected host2 to have service interface eth2, got %v instead", m["host2"])
+	}
+}
+
+func TestGetStatsFromServiceInterface(t *testing.T) {
 	var data1 []CacheStatData
 	var data2 []CacheStatData
 	kbpsData := CacheStatData{Value: 24.5}
@@ -39,49 +75,11 @@ func TestCheckServiceInterface(t *testing.T) {
 		KBPS:    data1,
 		MaxKBPS: data2,
 	}
-	m["notservice"] = c
-
-	kbpsData = CacheStatData{Value: 50.0}
-	maxKbpsData = CacheStatData{Value: 100.9}
-	data1 = nil
-	data2 = nil
-	data1 = append(data1, kbpsData)
-	data2 = append(data2, maxKbpsData)
-
-	c = CacheStat{
-		KBPS:    data1,
-		MaxKBPS: data2,
-	}
-
-	m["service"] = c
-
-	mockDB, mock, err := sqlmock.New()
+	kbps, maxKbps, err := getStatsFromServiceInterface(c)
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Errorf("Expected no error, but got %v", err.Error())
 	}
-	defer mockDB.Close()
-
-	db := sqlx.NewDb(mockDB, "sqlmock")
-	defer db.Close()
-
-	cols := []string{"service_address"}
-	rows := sqlmock.NewRows(cols)
-	rows = rows.AddRow(
-		false,
-	)
-	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT").WithArgs("notservice", "host").WillReturnRows(rows)
-	rows = sqlmock.NewRows(cols)
-	rows = rows.AddRow(
-		true,
-	)
-
-	mock.ExpectQuery("SELECT").WithArgs("service", "host").WillReturnRows(rows)
-	mock.ExpectCommit()
-
-	kbps, maxKbps := checkServiceInterface(db.MustBegin().Tx, "host", m)
-
-	if kbps != 50.0 || maxKbps != 100.9 {
-		t.Fatalf("Expected kbps = 50.0, got %v, expected maxKbps = 100.9, got %v", kbps, maxKbps)
+	if kbps != 24.5 || maxKbps != 66.8 {
+		t.Errorf("Expected kbps to be 24.5, got %v; Expected maxKbps to be 66.8, got %v", kbps, maxKbps)
 	}
 }

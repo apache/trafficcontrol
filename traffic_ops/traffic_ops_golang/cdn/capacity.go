@@ -52,8 +52,8 @@ const MonitorProxyParameter = "tm.traffic_mon_fwd_proxy"
 const MonitorRequestTimeout = time.Second * 10
 const MonitorOnlineStatus = "ONLINE"
 const checkServiceAddressQuery = `
-SELECT i.service_address FROM ip_address AS i 
-JOIN server as s on s.id = i.server 
+SELECT i.service_address FROM ip_address AS i
+JOIN server as s on s.id = i.server
 WHERE i.interface=$1 AND s.host_name=$2
 `
 
@@ -162,6 +162,11 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 }
 
 func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64, tx *sql.Tx) CapData {
+	serviceInterfaces, err := getServiceInterfaces(tx)
+	if err != nil {
+		log.Errorf("couldn't get the service interfaces for servers. err: %v", err.Error())
+		return cap
+	}
 	for cacheName, stats := range cacheStats.Caches {
 		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
@@ -174,7 +179,15 @@ func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crCon
 		if !strings.HasPrefix(*cache.ServerType, string(tc.CacheTypeEdge)) {
 			continue
 		}
-		kbps, maxKbps := checkServiceInterface(tx, cacheName, stats)
+		if _, ok := serviceInterfaces[string(cacheName)]; !ok {
+			log.Errorf("no service interface found for server with host name %v", cacheName)
+			continue
+		}
+		kbps, maxKbps, err := getStatsFromServiceInterface(stats[tc.InterfaceName(serviceInterfaces[string(cacheName)])])
+		if err != nil {
+			log.Errorf("couldn't get service interface stats for %v. err: %v", cacheName, err.Error())
+			continue
+		}
 		if string(*cache.ServerStatus) == string(tc.CacheStatusReported) || string(*cache.ServerStatus) == string(tc.CacheStatusOnline) {
 			if crStates.Caches[cacheName].IsAvailable {
 				cap.Available += kbps
@@ -191,25 +204,42 @@ func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crCon
 	return cap
 }
 
-func checkServiceInterface(tx *sql.Tx, cacheName tc.CacheName, stats map[tc.InterfaceName]CacheStat) (float64, float64) {
-	var result *bool
+func getStatsFromServiceInterface(stats CacheStat) (float64, float64, error) {
 	var kbps, maxKbps float64
-
-	for intName, intStats := range stats {
-		if err := tx.QueryRow(checkServiceAddressQuery, intName, cacheName).Scan(&result); err != nil {
-			log.Errorln("Error checking for service interface ", err)
-			continue
-		}
-		if len(intStats.KBPS) < 1 ||
-			len(intStats.MaxKBPS) < 1 ||
-			!*result {
-			continue
-		}
-		kbps = intStats.KBPS[0].Value
-		maxKbps = intStats.MaxKBPS[0].Value
-		return kbps, maxKbps
+	if len(stats.KBPS) < 1 ||
+		len(stats.MaxKBPS) < 1 {
+		return kbps, maxKbps, errors.New("no kbps/ maxKbps stats to return")
 	}
-	return kbps, maxKbps
+	kbps = stats.KBPS[0].Value
+	maxKbps = stats.MaxKBPS[0].Value
+	return kbps, maxKbps, nil
+}
+
+func getServiceInterfaces(tx *sql.Tx) (map[string]string, error) {
+	query := `
+select s.host_name, i.interface from ip_address i 
+join server s on s.id = i.server 
+where i.service_address=true 
+`
+	rows, err := tx.Query(query)
+	if err != nil {
+		log.Errorf("couldn't get service interfaces %v", err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	resultMap := make(map[string]string)
+	for rows.Next() {
+		hostname := ""
+		serviceinterface := ""
+		err = rows.Scan(&hostname, &serviceinterface)
+		if err != nil {
+			log.Errorf("error unmarshalling response %v", err.Error())
+			continue
+		}
+		resultMap[hostname] = serviceinterface
+	}
+	return resultMap, nil
 }
 
 func getEdgeProfileHealthThresholdBandwidth(tx *sql.Tx) (map[string]float64, error) {
