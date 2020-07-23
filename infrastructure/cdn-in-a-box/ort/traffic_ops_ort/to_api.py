@@ -25,6 +25,7 @@ import logging
 import re
 import subprocess
 import typing
+from os import path
 
 from munch import Munch
 from requests.compat import urljoin
@@ -80,7 +81,8 @@ class API(TOSession):
 			"--traffic-ops-password={}".format(conf.password),
 			"--log-location-error=stderr",
 			"--log-location-warning=stderr",
-			"--log-location-info=stderr"
+			"--log-location-info=stderr",
+			"--dir={}".format(path.join(conf.tsroot, "etc/trafficserver"))
 		]
 
 		if conf.timeout is not None and conf.timeout >= 0:
