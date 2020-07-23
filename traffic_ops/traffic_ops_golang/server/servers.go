@@ -26,13 +26,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -45,7 +46,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -427,7 +428,9 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 	}
 	var errs []error
 	var serviceAddrV4Found bool
+	var ipv4 string
 	var serviceAddrV6Found bool
+	var ipv6 string
 	var serviceInterface string
 	for _, iface := range s.Interfaces {
 
@@ -468,11 +471,13 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 						errs = append(errs, fmt.Errorf("interfaces: address '%s' of interface '%s' is marked as a service address, but an IPv4 service address appears earlier in the list", addr.Address, iface.Name))
 					}
 					serviceAddrV4Found = true
+					ipv4 = addr.Address
 				} else {
 					if serviceAddrV6Found {
 						errs = append(errs, fmt.Errorf("interfaces: address '%s' of interface '%s' is marked as a service address, but an IPv6 service address appears earlier in the list", addr.Address, iface.Name))
 					}
 					serviceAddrV6Found = true
+					ipv6 = addr.Address
 				}
 			}
 		}
@@ -483,6 +488,39 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 	}
 
 	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
+
+	query := `
+SELECT s.ID, ip.address FROM server s 
+JOIN profile p on p.Id = s.Profile
+JOIN interface i on i.server = s.ID
+JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
+WHERE i.monitor = true
+and p.id = $1
+`
+	var rows *sql.Rows
+	var err error
+	//ProfileID already validated
+	if s.ID != nil {
+		rows, err = tx.Query(query+" and s.id != $2", *s.ProfileID, *s.ID)
+	} else {
+		rows, err = tx.Query(query, *s.ProfileID)
+	}
+	if err != nil {
+		errs = append(errs, errors.New("unable to determine service address uniqueness"))
+	} else if rows != nil {
+		defer rows.Close()
+		for rows.Next() {
+			var id int
+			var ipaddress string
+			err = rows.Scan(&id, &ipaddress)
+			if err != nil {
+				errs = append(errs, errors.New("unable to determine service address uniqueness"))
+			} else if (ipaddress == ipv4 || ipaddress == ipv6) && (s.ID == nil || *s.ID != id) {
+				errs = append(errs, errors.New("there exists a server on the same profile that has the same service address"))
+			}
+		}
+	}
+
 	return serviceInterface, util.JoinErrs(errs)
 }
 
