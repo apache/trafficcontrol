@@ -347,7 +347,7 @@ func validateDSRegexOrder(tx *sql.Tx, dsID int, order int) error {
 	err := tx.QueryRow(`
 select deliveryservice from deliveryservice_regex 
 where deliveryservice = $1 and set_number = $2`,
-dsID, order).Scan(&ds)
+		dsID, order).Scan(&ds)
 	if err == nil {
 		return errors.New("cannot add regex, another regex with the same order exists")
 	}
