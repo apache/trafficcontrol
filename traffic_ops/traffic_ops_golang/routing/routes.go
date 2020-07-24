@@ -1077,7 +1077,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Server status
 		{api.Version{1, 1}, http.MethodPut, `servers/{id}/status$`, server.UpdateStatusHandler, auth.PrivLevelOperations, Authenticated, nil, 776663851, perlBypass},
 		{api.Version{1, 1}, http.MethodPost, `servers/{id}/queue_update$`, server.QueueUpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 9189471, perlBypass},
-		{api.Version{1, 3}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandlerV2, auth.PrivLevelReadOnly, Authenticated, nil, 438451599, noPerlBypass},
+		{api.Version{1, 3}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandlerV1, auth.PrivLevelReadOnly, Authenticated, nil, 438451599, noPerlBypass},
 
 		//Server: CRUD
 		{api.Version{1, 1}, http.MethodGet, `servers/?(\.json)?$`, server.Read, auth.PrivLevelReadOnly, Authenticated, nil, 1720959285, noPerlBypass},

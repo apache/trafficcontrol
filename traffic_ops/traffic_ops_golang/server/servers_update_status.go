@@ -131,6 +131,10 @@ ORDER BY s.id
 }
 
 func GetServerUpdateStatusHandlerV2(w http.ResponseWriter, r *http.Request) {
+	GetServerUpdateStatusHandlerV1(w, r)
+}
+
+func GetServerUpdateStatusHandlerV1(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"host_name"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
