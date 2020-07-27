@@ -236,12 +236,35 @@ func TestEvalInterface(t *testing.T) {
 	}
 
 	available, why := EvalInterface(result.InterfaceVitals, mc.TrafficServer["test"].Interfaces[0])
+	if available {
+		t.Error("Expected unpolled interface to be unavailable, but it wasn't")
+	}
+
+	if why != "not found in polled data" {
+		t.Errorf("Incorrect reason for unpolled interface's availability; expected: 'not found in polled data', got: '%s'", why)
+	}
+
+	result.InterfaceVitals["testInterface"] = cache.Vitals{
+		KbpsOut: 199,
+	}
+	available, why = EvalInterface(result.InterfaceVitals, mc.TrafficServer["test"].Interfaces[0])
 	if !available {
-		t.Error("Expected available, but it wasn't")
+		t.Error("Expected polled interface within threshold to be available, but it wasn't")
 	}
 
-	if why != "REPORTED - "+AvailableStr {
-		t.Errorf("expected empty why, got: %s", why)
+	if why != "" {
+		t.Errorf("Expected no reason why polled interface within threshold is unavailable, got: '%s'", why)
 	}
 
+	result.InterfaceVitals["testInterface"] = cache.Vitals{
+		KbpsOut: 201,
+	}
+	available, why = EvalInterface(result.InterfaceVitals, mc.TrafficServer["test"].Interfaces[0])
+	if available {
+		t.Error("Expected interface exceeding threshold to be unavailable, but it wasn't")
+	}
+
+	if why != "maximum bandwidth exceeded" {
+		t.Errorf("Incorrect reason for interface exceeding threshold to be unavailable; expected: 'maximum bandwidth exceeded', got: '%s'", why)
+	}
 }
