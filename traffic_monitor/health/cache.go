@@ -250,12 +250,13 @@ func CalcAvailability(
 
 		availStatus := cache.AvailableStatus{
 			Available: cache.AvailableTuple{
-				IPv4: true,
-				IPv6: true,
+				IPv4: result.UsingIPv4,
+				IPv6: !result.UsingIPv4,
 			},
 			LastCheckedIPv4:    result.UsingIPv4,
 			ProcessedAvailable: true,
 			Poller:             pollerName,
+			Status:             serverInfo.ServerStatus,
 		}
 
 		reasons := []string{}
