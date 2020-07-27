@@ -102,6 +102,27 @@ func (s TrafficOpsSessionThreadsafe) BackupFileExists() bool {
 	return false
 }
 
+// CRConfigStat represents a set of statistics from a CDN Snapshot requested at
+// a particular time.
+type CRConfigStat struct {
+	// Err contains any error that may have occurred when obtaining the
+	// statistics.
+	Err error `json:"error"`
+	// ReqAddr is the network address from which the statistics were requested.
+	ReqAddr string `json:"request_address"`
+	// ReqTime is the time at which the request for statistics was made.
+	ReqTime time.Time `json:"request_time"`
+	// Stats contains the actual statistics.
+	Stats tc.CRConfigStats `json:"stats"`
+}
+
+// CopyCRConfigStat makes a deep copy of a slice of CRConfigStats.
+func CopyCRConfigStat(old []CRConfigStat) []CRConfigStat {
+	newStats := make([]CRConfigStat, len(old))
+	copy(newStats, old)
+	return newStats
+}
+
 // CRConfigHistoryThreadsafe stores history in a circular buffer.
 type CRConfigHistoryThreadsafe struct {
 	hist   *[]CRConfigStat
@@ -170,19 +191,6 @@ func (h CRConfigHistoryThreadsafe) Len() uint64 {
 		return 0
 	}
 	return *h.length
-}
-
-func CopyCRConfigStat(old []CRConfigStat) []CRConfigStat {
-	newStats := make([]CRConfigStat, len(old))
-	copy(newStats, old)
-	return newStats
-}
-
-type CRConfigStat struct {
-	ReqTime time.Time        `json:"request_time"`
-	ReqAddr string           `json:"request_address"`
-	Stats   tc.CRConfigStats `json:"stats"`
-	Err     error            `json:"error"`
 }
 
 // TrafficOpsSessionThreadsafe provides access to the Traffic Ops client safe for multiple goroutines. This fulfills the ITrafficOpsSession interface.
