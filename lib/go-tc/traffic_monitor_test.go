@@ -241,3 +241,62 @@ func TestTrafficMonitorConfigMap_Valid(t *testing.T) {
 		t.Logf("Got expected error: checking validity of config map with no TrafficServers: %v", err)
 	}
 }
+
+func TestTrafficMonitorTransformToMap(t *testing.T) {
+	tmc := TrafficMonitorConfig{
+		TrafficServers: []TrafficServer{
+			{
+				HostName: "testHostname",
+				Interfaces: []ServerInterfaceInfo{
+					{
+						Name: "testInterface",
+						IPAddresses: []ServerIPAddress{
+							{
+								Address:        "::1",
+								ServiceAddress: true,
+							},
+						},
+					},
+				},
+			},
+		},
+		CacheGroups:      []TMCacheGroup{},
+		Config:           map[string]interface{}{},
+		TrafficMonitors:  []TrafficMonitor{},
+		DeliveryServices: []TMDeliveryService{},
+		Profiles: []TMProfile{
+			{
+				Name: "test",
+			},
+		},
+	}
+
+	_, err := TrafficMonitorTransformToMap(&tmc)
+	if err == nil {
+		t.Error("Expected error converting profile with missing 'availableBandwidthInKbps' parameter, but got no error")
+	} else {
+		t.Logf("Received expected error converting profile with missing 'availableBandwidthInKbps' parameter: %v", err)
+	}
+
+	tmc.Profiles = []TMProfile{{Name: "test", Parameters: TMParameters{Thresholds: map[string]HealthThreshold{"availableBandwidthInKbps": {Val: 12.0, Comparator: ">"}}}}}
+	converted, err := TrafficMonitorTransformToMap(&tmc)
+	if err != nil {
+		t.Fatalf("Unexpected error converting valid TrafficMonitorConfig to map: %v", err)
+	}
+	if converted == nil {
+		t.Fatal("Null map after conversion")
+	}
+
+	if len(converted.TrafficServer) != 1 {
+		t.Errorf("Incorrect number of traffic servers after conversion; expected: 1, got: %d", len(converted.TrafficServer))
+	}
+
+	if _, ok := converted.TrafficServer["testHostname"]; !ok {
+		t.Error("Expected server 'testHostname' to exist in map after conversion, but it didn't")
+	} else if len(converted.TrafficServer["testHostname"].Interfaces) != 1 {
+		t.Errorf("Incorrect number of interfaces on converted traffic server; expected: 1, got: %d", len(converted.TrafficServer["testHostname"].Interfaces))
+	} else if len(converted.TrafficServer["testHostname"].Interfaces[0].IPAddresses) != 1 {
+		t.Errorf("Incorrect number of IP addresses on converted traffic server's interface; expected: 1, got: %d", len(converted.TrafficServer["testHostname"].Interfaces[0].IPAddresses))
+	}
+
+}
