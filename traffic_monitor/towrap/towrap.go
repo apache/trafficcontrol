@@ -38,7 +38,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// ITrafficOpsSession provides an interface to the Traffic Ops client, so it may be wrapped or mocked.
+// ITrafficOpsSession provides an interface to the Traffic Ops client, so it may
+// be wrapped or mocked.
 type ITrafficOpsSession interface {
 	CRConfigRaw(cdn string) ([]byte, error)
 	LastCRConfig(cdn string) ([]byte, time.Time, error)
@@ -193,7 +194,8 @@ func (h CRConfigHistoryThreadsafe) Len() uint64 {
 	return *h.length
 }
 
-// TrafficOpsSessionThreadsafe provides access to the Traffic Ops client safe for multiple goroutines. This fulfills the ITrafficOpsSession interface.
+// TrafficOpsSessionThreadsafe provides access to the Traffic Ops client safe
+// for multiple goroutines. This fulfills the ITrafficOpsSession interface.
 type TrafficOpsSessionThreadsafe struct {
 	session            **client.Session // pointer-to-pointer, because we're given a pointer from the Traffic Ops package, and we don't want to copy it.
 	m                  *sync.Mutex
@@ -203,19 +205,34 @@ type TrafficOpsSessionThreadsafe struct {
 	TMConfigBackupFile string
 }
 
-// NewTrafficOpsSessionThreadsafe returns a new threadsafe TrafficOpsSessionThreadsafe wrapping the given `Session`.
-func NewTrafficOpsSessionThreadsafe(s *client.Session, crConfigHistoryLimit uint64, cfg config.Config) TrafficOpsSessionThreadsafe {
-	return TrafficOpsSessionThreadsafe{session: &s, m: &sync.Mutex{}, lastCRConfig: NewByteMapCache(), crConfigHist: NewCRConfigHistoryThreadsafe(crConfigHistoryLimit), CRConfigBackupFile: cfg.CRConfigBackupFile, TMConfigBackupFile: cfg.TMConfigBackupFile}
+// NewTrafficOpsSessionThreadsafe returns a new threadsafe
+// TrafficOpsSessionThreadsafe wrapping the given `Session`.
+func NewTrafficOpsSessionThreadsafe(s *client.Session, histLimit uint64, cfg config.Config) TrafficOpsSessionThreadsafe {
+	return TrafficOpsSessionThreadsafe{
+		CRConfigBackupFile: cfg.CRConfigBackupFile,
+		crConfigHist:       NewCRConfigHistoryThreadsafe(histLimit),
+		lastCRConfig:       NewByteMapCache(),
+		m:                  &sync.Mutex{},
+		session:            &s,
+		TMConfigBackupFile: cfg.TMConfigBackupFile,
+	}
 }
 
-// Set sets the internal Traffic Ops session. This is safe for multiple goroutines, being aware they will race.
+// Set sets the internal Traffic Ops session. This is safe for multiple
+// goroutines, being aware they will race.
 func (s TrafficOpsSessionThreadsafe) Set(session *client.Session) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	*s.session = session
 }
 
-// getThreadsafeSession is used internally to get a copy of the session pointer, or nil if it doesn't exist. This should not be used outside TrafficOpsSessionThreadsafe, and never stored, because part of the purpose of TrafficOpsSessionThreadsafe is to store a pointer to the Session pointer, so it can be updated by one goroutine and immediately used by another. This should only be called immediately before using the session, since someone else may update it concurrently.
+// getThreadsafeSession is used internally to get a copy of the session pointer,
+// or nil if it doesn't exist. This should not be used outside
+// TrafficOpsSessionThreadsafe, and never stored, because part of the purpose of
+// rafficOpsSessionThreadsafe is to store a pointer to the Session pointer, so
+// it can be updated by one goroutine and immediately used by another. This
+// should only be called immediately before using the session, since someone
+// else may update it concurrently.
 func (s TrafficOpsSessionThreadsafe) get() *client.Session {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -237,7 +254,8 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 		return errors.New("CRConfig.Stats.Date missing")
 	}
 
-	// Note this intentionally takes intended CDN, rather than trusting crc.Stats
+	// Note this intentionally takes intended CDN, rather than trusting
+	// crc.Stats
 	lastCrc, lastCrcTime, lastCrcStats := s.lastCRConfig.Get(cdn)
 
 	if lastCrc == nil {
@@ -260,7 +278,8 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 	return nil
 }
 
-// CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
+// CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for
+// multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 
 	ss := s.get()
@@ -316,7 +335,11 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	return b, nil
 }
 
-// LastCRConfig returns the last CRConfig requested from CRConfigRaw, and the time it was returned. This is designed to be used in conjunction with a poller which regularly calls CRConfigRaw. If no last CRConfig exists, because CRConfigRaw has never been called successfully, this calls CRConfigRaw once to try to get the CRConfig from Traffic Ops.
+// LastCRConfig returns the last CRConfig requested from CRConfigRaw, and the
+// time it was returned. This is designed to be used in conjunction with a
+// poller which regularly calls CRConfigRaw. If no last CRConfig exists, because
+// CRConfigRaw has never been called successfully, this calls CRConfigRaw once
+// to try to get the CRConfig from Traffic Ops.
 func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time, error) {
 	crConfig, crConfigTime, _ := s.lastCRConfig.Get(cdn)
 	if crConfig == nil {
@@ -326,9 +349,12 @@ func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time
 	return crConfig, crConfigTime, nil
 }
 
-// TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple goroutines.
-func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.LegacyTrafficMonitorConfigMap, error) {
-	var configMap *tc.LegacyTrafficMonitorConfigMap
+// TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the
+// Traffic Ops, directly from the monitoring.json endpoint. This is not usually
+// what is needed, rather monitoring needs the snapshotted CRConfig data, which
+// is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple
+// goroutines.
+func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.TrafficMonitorConfigMap, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
@@ -368,7 +394,8 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	return configMap, err
 }
 
-// LegacyTrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
+// LegacyTrafficMonitorConfigMap returns the Traffic Monitor config map from the
+// Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
 	mc, err := s.trafficMonitorConfigMapRaw(cdn)
 	if err != nil {
@@ -407,7 +434,8 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 	// config - why? It's also doing that for Delivery Services, but that's
 	// necessary until issue #3528 is resolved.
 
-	// Dump the "live" monitoring.json monitors, and populate with the "snapshotted" CRConfig
+	// Dump the "live" monitoring.json monitors, and populate with the
+	// "snapshotted" CRConfig
 	mc.TrafficMonitor = map[string]tc.TrafficMonitor{}
 	for name, mon := range crConfig.Monitors {
 		// monitorProfile = *mon.Profile
@@ -451,13 +479,15 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		mc.TrafficMonitor[name] = m
 	}
 
-	// Dump the "live" monitoring.json DeliveryServices, and populate with the "snapshotted" CRConfig
-	// But keep using the monitoring.json thresholds, because they're not in the CRConfig.
+	// Dump the "live" monitoring.json DeliveryServices, and populate with the
+	// "snapshotted" CRConfig but keep using the monitoring.json thresholds,
+	// because they're not in the CRConfig.
 	rawDeliveryServices := mc.DeliveryService
 	mc.DeliveryService = map[string]tc.TMDeliveryService{}
 	for name, _ := range crConfig.DeliveryServices {
 		if rawDS, ok := rawDeliveryServices[name]; ok {
-			// use the raw DS if it exists, because the CRConfig doesn't have thresholds or statuses
+			// use the raw DS if it exists, because the CRConfig doesn't have
+			// thresholds or statuses
 			mc.DeliveryService[name] = rawDS
 		} else {
 			mc.DeliveryService[name] = tc.TMDeliveryService{
