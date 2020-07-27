@@ -141,7 +141,7 @@ func TestStatsMarshall(t *testing.T) {
 	filter := DummyFilterNever{}
 	params := url.Values{}
 	beforeStatsMarshall := time.Now()
-	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.TrafficMonitorConfigMap{}, map[string]CacheKbps{}, filter, params)
+	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.TrafficMonitorConfigMap{}, cache.Kbpses{}, filter, params)
 	afterStatsMarshall := time.Now()
 	if err != nil {
 		t.Fatalf("StatsMarshall return expected nil err, actual err: %v", err)
@@ -174,7 +174,7 @@ func TestSystemComputedStats(t *testing.T) {
 
 	for stat, function := range stats {
 		if strings.HasPrefix(stat, "system.") {
-			computedStat := function(cache.ResultInfo{}, tc.TrafficServer{}, tc.TMProfile{}, tc.IsAvailable{}, "dummy")
+			computedStat := function(cache.ResultInfo{}, tc.TrafficServer{}, tc.TMProfile{}, tc.IsAvailable{})
 			_, err := newStatEqual([]cache.ResultStatVal{{Val: float64(0)}}, computedStat)
 			if err != nil {
 				t.Errorf("expected no errors from newStatEqual: %s", err)
