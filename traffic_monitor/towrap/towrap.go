@@ -422,9 +422,8 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 }
 
 // CreateMonitorConfig modifies the passed TrafficMonitorConfigMap to add the
-// cache servers, Traffic Monitors, and Delivery Services found in a CDN
-// Snapshot, and wipe out all of those that already existed in the configuration
-// map.
+// Traffic Monitors and Delivery Services found in a CDN Snapshot, and wipe out
+// all of those that already existed in the configuration map.
 func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
 	// For unknown reasons, this function used to overwrite the passed set of
 	// TrafficServer objects. That was problematic, tc.CRConfig structures don't
