@@ -265,6 +265,8 @@ func (s TrafficOpsSessionThreadsafe) get() *client.Session {
 	return *s.session
 }
 
+// CRConfigHistory gets all of the stored, historical data about CRConfig
+// Snapshots' Stats sections.
 func (s TrafficOpsSessionThreadsafe) CRConfigHistory() []CRConfigStat {
 	return s.crConfigHist.Get()
 }
