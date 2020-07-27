@@ -218,6 +218,12 @@ func NewTrafficOpsSessionThreadsafe(s *client.Session, histLimit uint64, cfg con
 	}
 }
 
+// Initialized tells whether or not the TrafficOpsSessionThreadsafe has been
+// properly initialized (by calling 'Update').
+func (s TrafficOpsSessionThreadsafe) Initialized() bool {
+	return s.session != nil && *s.session != nil
+}
+
 // Set sets the internal Traffic Ops session. This is safe for multiple
 // goroutines, being aware they will race.
 func (s TrafficOpsSessionThreadsafe) Set(session *client.Session) {
