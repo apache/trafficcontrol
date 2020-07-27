@@ -104,11 +104,11 @@ func (s TrafficOpsSessionThreadsafe) BackupFileExists() bool {
 
 // CRConfigHistoryThreadsafe stores history in a circular buffer.
 type CRConfigHistoryThreadsafe struct {
-	hist  *[]CRConfigStat
-	m     *sync.RWMutex
-	limit *uint64
-	len   *uint64
-	pos   *uint64
+	hist   *[]CRConfigStat
+	m      *sync.RWMutex
+	limit  *uint64
+	length *uint64
+	pos    *uint64
 }
 
 // NewCRConfigHistoryThreadsafe constructs a new, empty
@@ -118,9 +118,9 @@ type CRConfigHistoryThreadsafe struct {
 // entries it will be capable of storing.
 func NewCRConfigHistoryThreadsafe(limit uint64) CRConfigHistoryThreadsafe {
 	hist := make([]CRConfigStat, limit, limit)
-	len := uint64(0)
+	length := uint64(0)
 	pos := uint64(0)
-	return CRConfigHistoryThreadsafe{hist: &hist, m: &sync.RWMutex{}, limit: &limit, len: &len, pos: &pos}
+	return CRConfigHistoryThreadsafe{hist: &hist, m: &sync.RWMutex{}, limit: &limit, length: &length, pos: &pos}
 }
 
 // Add adds the given stat to the history. Does not add new additions with the
@@ -129,7 +129,7 @@ func (h CRConfigHistoryThreadsafe) Add(i *CRConfigStat) {
 	h.m.Lock()
 	defer h.m.Unlock()
 
-	if *h.len != 0 {
+	if *h.length != 0 {
 		last := (*h.hist)[(*h.pos-1)%*h.limit]
 		datesEqual := (i.Stats.DateUnixSeconds == nil && last.Stats.DateUnixSeconds == nil) || (i.Stats.DateUnixSeconds != nil && last.Stats.DateUnixSeconds != nil && *i.Stats.DateUnixSeconds == *last.Stats.DateUnixSeconds)
 		cdnsEqual := (i.Stats.CDNName == nil && last.Stats.CDNName == nil) || (i.Stats.CDNName != nil && last.Stats.CDNName != nil && *i.Stats.CDNName == *last.Stats.CDNName)
@@ -141,8 +141,8 @@ func (h CRConfigHistoryThreadsafe) Add(i *CRConfigStat) {
 
 	(*h.hist)[*h.pos] = *i
 	*h.pos = (*h.pos + 1) % *h.limit
-	if *h.len < *h.limit {
-		*h.len++
+	if *h.length < *h.limit {
+		*h.length++
 	}
 }
 
@@ -150,19 +150,19 @@ func (h CRConfigHistoryThreadsafe) Add(i *CRConfigStat) {
 func (h CRConfigHistoryThreadsafe) Get() []CRConfigStat {
 	h.m.RLock()
 	defer h.m.RUnlock()
-	if *h.len < *h.limit {
-		return CopyCRConfigStat((*h.hist)[:*h.len])
+	if *h.length < *h.limit {
+		return CopyCRConfigStat((*h.hist)[:*h.length])
 	}
-	new := make([]CRConfigStat, *h.limit)
-	copy(new, (*h.hist)[*h.pos:])
-	copy(new[*h.len-*h.pos:], (*h.hist)[:*h.pos])
-	return new
+	newStats := make([]CRConfigStat, *h.limit)
+	copy(newStats, (*h.hist)[*h.pos:])
+	copy(newStats[*h.length-*h.pos:], (*h.hist)[:*h.pos])
+	return newStats
 }
 
 func CopyCRConfigStat(old []CRConfigStat) []CRConfigStat {
-	new := make([]CRConfigStat, len(old))
-	copy(new, old)
-	return new
+	newStats := make([]CRConfigStat, len(old))
+	copy(newStats, old)
+	return newStats
 }
 
 type CRConfigStat struct {
