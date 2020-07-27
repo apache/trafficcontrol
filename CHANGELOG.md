@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Updated `/cdns/{{name}}/configs/monitoring` TO API endpoint to return multi-interface data.
     - CDN Snapshots now use a server's "service addresses" to provide its IP addresses.
     - Changed the `/publish/CacheStats` in Traffic Monitor to support multiple interfaces.
+    - Changed the CDN-in-a-Box server enrollment template to support multiple interfaces.
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.

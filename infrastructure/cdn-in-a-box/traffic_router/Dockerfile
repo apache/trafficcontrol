@@ -27,7 +27,7 @@ ARG TRAFFIC_ROUTER_RPM=traffic_router/traffic_router.rpm
 ARG TOMCAT_RPM=traffic_router/tomcat.rpm
 
 RUN yum -y install epel-release && \
-    yum -y install git rpm-build net-tools iproute nc wget tar unzip \
+    yum -y install jq git rpm-build net-tools iproute nc wget tar unzip \
           perl-JSON perl-WWWCurl which make autoconf automake gcc gcc-c++ apr apr-devel \
           openssl openssl-devel bind-utils net-tools perl-JSON-PP gettext \
           java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel tomcat-native && \

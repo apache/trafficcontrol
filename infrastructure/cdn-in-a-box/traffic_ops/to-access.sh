@@ -203,6 +203,21 @@ to-enroll() {
 	export MY_IP6_GATEWAY="$(route -n6 | grep UG | awk '{print $2}')"
 
 	case "$serverType" in
+		"db" )
+			export MY_TYPE="TRAFFIC_OPS_DB"
+			export MY_PROFILE="TRAFFIC_OPS_DB"
+			export MY_STATUS="ONLINE"
+			;;
+		"dns" )
+			export MY_TYPE="BIND"
+			export MY_PROFILE="BIND_ALL"
+			export MY_STATUS="ONLINE"
+			;;
+		"enroller" )
+			export MY_TYPE="ENROLLER"
+			export MY_PROFILE="ENROLLER_ALL"
+			export MY_STATUS="ONLINE"
+			;;
 		"edge" )
 			export MY_TYPE="EDGE"
 			export MY_PROFILE="ATS_EDGE_TIER_CACHE"
@@ -261,7 +276,19 @@ to-enroll() {
 	esac
 
 	# replace env references in the file
-	envsubst < "/server_template.json" > "${ENROLLER_DIR}/servers/$HOSTNAME.json"
+	<"/server_template.json" envsubst | #first envsubst expands $MY_TCP_PORT and $MY_HTTPS_PORT so they are valid JSON
+		jq '.cdnName = "$MY_CDN"' |
+		if [[ -n "$MY_IP" && -n "$MY_GATEWAY" ]]; then
+			jq '.interfaces[0].ipAddresses += [({} | .address = "$MY_IP" | .gateway = "$MY_GATEWAY" | .serviceAddress = true)]'
+		else
+			cat
+		fi |
+		if [[ -n "$MY_IP6_ADDRESS" && -n "$MY_IP6_GATEWAY" ]]; then
+			jq '.interfaces[0].ipAddresses += [({} | .address = "$MY_IP6_ADDRESS" | .gateway = "$MY_IP6_GATEWAY" | .serviceAddress = true)]'
+		else
+			cat
+		fi |
+		envsubst >"${ENROLLER_DIR}/servers/$HOSTNAME.json"
 
 	sleep 3
 }
