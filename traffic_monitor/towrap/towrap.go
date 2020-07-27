@@ -269,7 +269,13 @@ func (s TrafficOpsSessionThreadsafe) CRConfigHistory() []CRConfigStat {
 	return s.crConfigHist.Get()
 }
 
+// CRConfigValid checks if the passed tc.CRConfig structure is valid, and
+// ensures that it is from the same CDN as the last CRConfig Snapshot, as well
+// as that it is newer than the last CRConfig Snapshot.
 func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string) error {
+	if crc == nil {
+		return errors.New("CRConfig is nil")
+	}
 	if crc.Stats.CDNName == nil {
 		return errors.New("CRConfig.Stats.CDN missing")
 	}
