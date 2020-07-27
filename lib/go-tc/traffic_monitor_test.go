@@ -267,18 +267,18 @@ func TestTrafficMonitorTransformToMap(t *testing.T) {
 		Profiles: []TMProfile{
 			{
 				Name: "test",
+				Parameters: TMParameters{
+					Thresholds: map[string]HealthThreshold{
+						"availableBandwidthInKbps": {
+							Comparator: ">",
+							Val:        42,
+						},
+					},
+				},
 			},
 		},
 	}
 
-	_, err := TrafficMonitorTransformToMap(&tmc)
-	if err == nil {
-		t.Error("Expected error converting profile with missing 'availableBandwidthInKbps' parameter, but got no error")
-	} else {
-		t.Logf("Received expected error converting profile with missing 'availableBandwidthInKbps' parameter: %v", err)
-	}
-
-	tmc.Profiles = []TMProfile{{Name: "test", Parameters: TMParameters{Thresholds: map[string]HealthThreshold{"availableBandwidthInKbps": {Val: 12.0, Comparator: ">"}}}}}
 	converted, err := TrafficMonitorTransformToMap(&tmc)
 	if err != nil {
 		t.Fatalf("Unexpected error converting valid TrafficMonitorConfig to map: %v", err)

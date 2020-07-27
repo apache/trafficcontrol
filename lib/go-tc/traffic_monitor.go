@@ -398,10 +398,7 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 	}
 
 	for _, profile := range tmConfig.Profiles {
-		bwThreshold, ok := profile.Parameters.Thresholds["availableBandwidthInKbps"]
-		if !ok {
-			return nil, fmt.Errorf("profile '%s' missing parameter 'availableBandwidthInKbps'", profile.Name)
-		}
+		bwThreshold := profile.Parameters.Thresholds["availableBandwidthInKbps"]
 		profile.Parameters.MinFreeKbps = int64(bwThreshold.Val)
 		tm.Profile[profile.Name] = profile
 	}
