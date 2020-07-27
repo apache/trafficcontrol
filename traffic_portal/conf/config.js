@@ -21,8 +21,8 @@
 module.exports = {
     timeout: '120s',
     useSSL: true, // set to true if you plan to use https (self-signed or trusted certs).
-    port: 8080, // set to http port
-    sslPort: 9090, // set to https port
+    port: 80, // set to http port
+    sslPort: 443, // set to https port
     // if useSSL is true, generate ssl certs and provide the proper locations.
     ssl: {
         key:    '/etc/pki/tls/private/localhost.key',
@@ -31,12 +31,12 @@ module.exports = {
     },
     // set api 'base_url' to the traffic ops api url (all api calls made from the traffic portal will be proxied to the api base_url)
     api: {
-        base_url: 'https://localhost:6443/api/'
+        base_url: 'https://trafficops.CHANGEME.domain.com/api/'
     },
     // default static files location (this is where the traffic portal html, css and javascript was installed. rpm installs these files at /opt/traffic_portal/public
     // change this to ./app/dist/public/ if you are running locally for development
     files: {
-        static: './app/dist/public/'
+        static: '/opt/traffic_portal/public'
     },
     // default log location (this is where traffic_portal logs are written)
     // change this to ./server/log/access.log if you are running traffic portal locally for development
