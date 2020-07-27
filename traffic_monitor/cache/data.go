@@ -167,6 +167,8 @@ type ResultInfoHistory map[tc.CacheName][]ResultInfo
 // ResultInfo contains all the non-stat result info. This includes the cache ID,
 // any errors, the time of the poll, the request time duration, Astats System
 // (Vitals), Poll ID, and Availability.
+// TODO: Determine why this exists, it doesn't seem to differ from Result in any
+// meaningful way.
 type ResultInfo struct {
 	Available       bool
 	Error           error

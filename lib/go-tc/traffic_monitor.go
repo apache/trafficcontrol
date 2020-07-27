@@ -31,20 +31,6 @@ import (
 // monitoring thresholds.
 const ThresholdPrefix = "health.threshold."
 
-// These are the Names of Parameters with special meaning to Traffic Monitor.
-// They are used as thresholds in aggregate across all of a monitored cache
-// server's network interfaces. Documentation on specific Parameter meanings
-// can be found in the ATC official documentation.
-const (
-	AvailableBandwidthInKbpsThresholdName = ThresholdPrefix + "availableBandwidthInKbps"
-	AvailableBandwidthInMbpsThresholdName = ThresholdPrefix + "availableBandwidthInMbps"
-	BandwidthThresholdName                = ThresholdPrefix + "bandwidth"
-	GbpsThresholdName                     = ThresholdPrefix + "gbps"
-	KbpsThresholdName                     = ThresholdPrefix + "kbps"
-	LoadavgThresholdName                  = ThresholdPrefix + "loadavg"
-	MaxKbpsThresholdName                  = ThresholdPrefix + "maxKbps"
-)
-
 // TMConfigResponse is the response to requests made to the
 // cdns/{{Name}}/configs/monitoring endpoint of the Traffic Ops API.
 type TMConfigResponse struct {
@@ -275,7 +261,6 @@ type TMParameters struct {
 	HistoryCount            int    `json:"history.count"`
 	MinFreeKbps             int64
 	Thresholds              map[string]HealthThreshold `json:"health_threshold"`
-	AggregateThresholds     map[string]HealthThreshold `json:"health_threshold_aggregate"`
 }
 
 const DefaultHealthThresholdComparator = "<"
@@ -368,38 +353,14 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 	}
 
 	params.Thresholds = map[string]HealthThreshold{}
-	params.AggregateThresholds = map[string]HealthThreshold{}
 	for k, v := range raw {
-		switch k {
-		case AvailableBandwidthInKbpsThresholdName:
-			fallthrough
-		case AvailableBandwidthInMbpsThresholdName:
-			fallthrough
-		case BandwidthThresholdName:
-			fallthrough
-		case KbpsThresholdName:
-			fallthrough
-		case GbpsThresholdName:
-			fallthrough
-		case LoadavgThresholdName:
-			fallthrough
-		case MaxKbpsThresholdName:
+		if strings.HasPrefix(k, ThresholdPrefix) {
 			stat := k[len(ThresholdPrefix):]
-			vStr := fmt.Sprintf("%v", v)
+			vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
 			if t, err := strToThreshold(vStr); err != nil {
 				return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v': %v", ThresholdPrefix, k, v, err)
 			} else {
-				params.AggregateThresholds[stat] = t
-			}
-		default:
-			if strings.HasPrefix(k, ThresholdPrefix) {
-				stat := k[len(ThresholdPrefix):]
-				vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
-				if t, err := strToThreshold(vStr); err != nil {
-					return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v': %v", ThresholdPrefix, k, v, err)
-				} else {
-					params.Thresholds[stat] = t
-				}
+				params.Thresholds[stat] = t
 			}
 		}
 	}

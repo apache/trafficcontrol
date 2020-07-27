@@ -451,17 +451,12 @@ func StatsMarshall(
 					continue
 				}
 				// Need to actually handle interfaces, needs vitals to be refactored
-				for infName, _ := range resultInfo.Statistics.Interfaces {
-					if _, ok := stats.Caches[cacheId].Interfaces[infName]; !ok {
-						stats.Caches[cacheId].Interfaces[infName] = map[string][]cache.ResultStatVal{}
-					}
-					rv := cache.ResultStatVal{
-						Span: 1,
-						Time: t,
-						Val:  statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache, infName),
-					}
-					stats.Caches[cacheId].Interfaces[infName][stat] = append(stats.Caches[cacheId].Interfaces[infName][stat], rv)
+				rv := cache.ResultStatVal{
+					Span: 1,
+					Time: t,
+					Val:  statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache),
 				}
+				stats.Caches[cacheId].Stats[stat] = append(stats.Caches[cacheId].Stats[stat], rv)
 			}
 		}
 	}

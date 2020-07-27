@@ -122,59 +122,21 @@ func EvalCacheWithStatusInfo(result cache.ResultInfo, mc *tc.TrafficMonitorConfi
 // cache to available. The resultStats may be nil, and if so, won't be checked
 // for thresholds. For example, the Health poller doesn't have Stats.
 // TODO change to return a `cache.AvailableStatus`
-func EvalInterface(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.TrafficMonitorConfigMap, interfaceName string) (bool, string, string) {
-	serverInfo, ok := mc.TrafficServer[string(result.ID)]
+func EvalInterface(infVitals map[string]cache.Vitals, inf tc.ServerInterfaceInfo) (bool, string) {
+	vitals, ok := infVitals[inf.Name]
 	if !ok {
-		log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
-		return false, "ERROR - server missing in Traffic Ops monitor config", ""
-	}
-	status := tc.CacheStatusFromString(serverInfo.ServerStatus)
-	if status == tc.CacheStatusOnline {
-		// return here first, even though EvalCacheWithStatus checks online, because we later assume that if EvalCacheWithStatus returns true, to return false if thresholds are exceeded; but, if the cache is ONLINE, we don't want to check thresholds.
-		return true, eventDesc(status, AvailableStr), ""
+		return false, "not found in polled data"
 	}
 
-	serverProfile, ok := mc.Profile[serverInfo.Profile]
-	if !ok {
-		log.Errorf("Cache %v profile %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID, serverInfo.Profile)
-		return false, "ERROR - server profile missing in Traffic Ops monitor config", ""
+	if inf.MaxBandwidth == nil {
+		return true, ""
 	}
 
-	avail, eventDescVal, eventMsg := EvalCacheWithStatusInfo(result, mc, status, serverInfo.ServerStatus)
-	if !avail {
-		return avail, eventDescVal, eventMsg
+	if *inf.MaxBandwidth < uint64(vitals.KbpsOut) {
+		return false, "maximum bandwidth exceeded"
 	}
 
-	computedStats := cache.ComputedStats()
-
-	for stat, threshold := range serverProfile.Parameters.Thresholds {
-		resultStat := interface{}(nil)
-		if computedStatF, ok := computedStats[stat]; ok {
-			dummyCombinedstate := tc.IsAvailable{} // the only stats which use combinedState are things like isAvailable, which don't make sense to ever be thresholds.
-			resultStat = computedStatF(result, serverInfo, serverProfile, dummyCombinedstate, interfaceName)
-		} else {
-			if resultStats == nil {
-				continue
-			}
-			resultStatHistory := resultStats.Load(stat)
-			if len(resultStatHistory) == 0 {
-				continue
-			}
-			resultStat = resultStatHistory[0].Val
-		}
-
-		resultStatNum, ok := util.ToNumeric(resultStat)
-		if !ok {
-			log.Errorf("health.EvalCache threshold stat %s was not a number: %v", stat, resultStat)
-			continue
-		}
-
-		if !inThreshold(threshold, resultStatNum) {
-			return false, eventDesc(status, exceedsThresholdMsg(stat, threshold, resultStatNum)), stat
-		}
-	}
-
-	return avail, eventDescVal, eventMsg
+	return true, ""
 }
 
 func EvalAggregate(result cache.ResultInfo, resultStats *threadsafe.ResultStatValHistory, mc *tc.TrafficMonitorConfigMap) (bool, string, string) {
@@ -200,15 +162,23 @@ func EvalAggregate(result cache.ResultInfo, resultStats *threadsafe.ResultStatVa
 		return avail, eventDescVal, eventMsg
 	}
 
-	computedAggregateStats := cache.ComputedAggregateStats()
+	computedStats := cache.ComputedStats()
 
-	for stat, threshold := range profile.Parameters.AggregateThresholds {
+	for stat, threshold := range profile.Parameters.Thresholds {
 		resultStat := interface{}(nil)
-		computedStatF, ok := computedAggregateStats[stat]
+		computedStatF, ok := computedStats[stat]
 		if !ok {
-			continue
+			if resultStats == nil {
+				continue
+			}
+			resultStatHistory := resultStats.Load(stat)
+			if len(resultStatHistory) == 0 {
+				continue
+			}
+			resultStat = resultStatHistory[0].Val
+		} else {
+			resultStat = computedStatF(result, serverInfo, profile, dummyCombinedState)
 		}
-		resultStat = computedStatF(result)
 
 		resultStatNum, ok := util.ToNumeric(resultStat)
 		if !ok {
@@ -265,7 +235,6 @@ func CalcAvailability(
 	protocol config.PollingProtocol,
 ) {
 	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
-	var statResults *threadsafe.ResultStatValHistory
 	var statResultsVal *threadsafe.CacheStatHistory
 	processAvailableTuple := getProcessAvailableTuple(protocol)
 
@@ -290,33 +259,26 @@ func CalcAvailability(
 		}
 
 		reasons := []string{}
-		unavailableStats := []string{}
 		resultInfo := cache.ToInfo(result)
-		for interfaceName, _ := range result.Interfaces() {
+		for _, inf := range serverInfo.Interfaces {
+			if !inf.Monitor {
+				continue
+			}
 			availStatus.LastCheckedIPv4 = availStatus.LastCheckedIPv4 || result.UsingIPv4
 
-			if statResultsVal != nil {
-				t := (*statResultsVal).Interfaces[interfaceName]
-				statResults = &t
-			}
-
-			isAvailable, whyAvailable, unavailableStat := EvalInterface(resultInfo, statResults, &mc, interfaceName)
+			available, why := EvalInterface(resultInfo.InterfaceVitals, inf)
 			if result.UsingIPv4 {
-				availStatus.Available.IPv4 = availStatus.Available.IPv4 && isAvailable
+				availStatus.Available.IPv4 = availStatus.Available.IPv4 && available
 			} else {
-				availStatus.Available.IPv6 = availStatus.Available.IPv6 && isAvailable
+				availStatus.Available.IPv6 = availStatus.Available.IPv6 && available
 			}
 
-			if whyAvailable != "" {
-				reasons = append(reasons, interfaceName+": "+whyAvailable)
-			}
-
-			if unavailableStat != "" {
-				unavailableStats = append(unavailableStats, interfaceName+": "+unavailableStat)
+			if why != "" {
+				reasons = append(reasons, inf.Name+": "+why)
 			}
 		}
 
-		aggIsAvailable, aggWhyAvailable, aggUnavailableStat := EvalAggregate(cache.ToInfo(result), statResults, &mc)
+		aggIsAvailable, aggWhyAvailable, aggUnavailableStat := EvalAggregate(cache.ToInfo(result), &statResultsVal.Stats, &mc)
 
 		if result.UsingIPv4 {
 			availStatus.Available.IPv4 = availStatus.Available.IPv4 && aggIsAvailable
@@ -331,9 +293,8 @@ func CalcAvailability(
 		}
 		availStatus.Why = strings.Join(reasons, "; ")
 		if aggUnavailableStat != "" {
-			unavailableStats = append([]string{aggUnavailableStat}, unavailableStats...)
+			availStatus.UnavailableStat = aggUnavailableStat
 		}
-		availStatus.UnavailableStat = strings.Join(unavailableStats, "; ")
 
 		localStates.SetCache(tc.CacheName(result.ID), tc.IsAvailable{
 			IsAvailable:   availStatus.ProcessedAvailable,
@@ -361,6 +322,8 @@ func CalcAvailability(
 			}
 			events.Add(event)
 		}
+
+		localCacheStatuses[result.ID] = availStatus
 	}
 	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates, toData)
 	localCacheStatusThreadsafe.Set(localCacheStatuses)
