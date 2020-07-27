@@ -265,6 +265,15 @@ func (s TrafficOpsSessionThreadsafe) get() *client.Session {
 	return *s.session
 }
 
+func (s TrafficOpsSessionThreadsafe) getLegacy() *legacyClient.Session {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if s.legacySession == nil || *s.legacySession == nil {
+		return nil
+	}
+	return *s.legacySession
+}
+
 // CRConfigHistory gets all of the stored, historical data about CRConfig
 // Snapshots' Stats sections.
 func (s TrafficOpsSessionThreadsafe) CRConfigHistory() []CRConfigStat {
