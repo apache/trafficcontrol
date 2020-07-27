@@ -360,96 +360,13 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 // Snapshot, and wipe out all of those that already existed in the configuration
 // map.
 func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
-	// Dump the "live" monitoring.json servers, and populate with th
-	// "snapshotted" CRConfig
-	mc.TrafficServer = map[string]tc.TrafficServer{}
-	for name, srv := range crConfig.ContentServers {
-		s := tc.TrafficServer{
-			HostName: name,
-		}
-
-		if srv.CacheGroup != nil {
-			s.CacheGroup = *srv.CacheGroup
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing CacheGroup field\n", name)
-		}
-
-		if srv.Fqdn != nil {
-			s.FQDN = *srv.Fqdn
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing FQDN field\n", name)
-		}
-
-		if srv.HashId != nil {
-			s.HashID = *srv.HashId
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing HashId field\n", name)
-		}
-
-		if srv.HttpsPort != nil {
-			s.HTTPSPort = *srv.HttpsPort
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing HttpsPort field\n", name)
-		}
-
-		if srv.Port != nil {
-			s.Port = *srv.Port
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Port field\n", name)
-		}
-
-		if srv.Profile != nil {
-			s.Profile = *srv.Profile
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Profile field\n", name)
-		}
-
-		if srv.ServerStatus != nil {
-			s.ServerStatus = string(*srv.ServerStatus)
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Status field\n", name)
-		}
-
-		if srv.ServerType != nil {
-			s.Type = *srv.ServerType
-		} else {
-			log.Warnf("Creating monitor config: CRConfig server %s missing Type field\n", name)
-		}
-
-		if srv.InterfaceName != nil {
-			inf := tc.ServerInterfaceInfo{
-				IPAddresses:  make([]tc.ServerIPAddress, 0, 2),
-				MaxBandwidth: nil,
-				Monitor:      false,
-				MTU:          nil,
-				Name:         *srv.InterfaceName,
-			}
-
-			if srv.Ip != nil {
-				ip := tc.ServerIPAddress{
-					Address:        *srv.Ip,
-					Gateway:        nil,
-					ServiceAddress: true,
-				}
-				inf.IPAddresses = append(inf.IPAddresses, ip)
-			}
-
-			if srv.Ip6 != nil {
-				ip := tc.ServerIPAddress{
-					Address:        *srv.Ip6,
-					Gateway:        nil,
-					ServiceAddress: true,
-				}
-				inf.IPAddresses = append(inf.IPAddresses, ip)
-			}
-
-			if len(inf.IPAddresses) > 0 {
-				s.Interfaces = []tc.ServerInterfaceInfo{inf}
-			}
-		}
-
-		mc.TrafficServer[name] = s
-	}
+	// For unknown reasons, this function used to overwrite the passed set of
+	// TrafficServer objects. That was problematic, tc.CRConfig structures don't
+	// contain the same amount of information about their "equivalent"
+	// ContentServers.
+	// TODO: This is still overwriting TM instances found in the monitoring
+	// config - why? It's also doing that for Delivery Services, but that's
+	// necessary until issue #3528 is resolved.
 
 	// Dump the "live" monitoring.json monitors, and populate with the "snapshotted" CRConfig
 	mc.TrafficMonitor = map[string]tc.TrafficMonitor{}
