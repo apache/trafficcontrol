@@ -76,15 +76,13 @@ func ExampleTMParameters_UnmarshalJSON() {
 	fmt.Printf("url: %s\n", params.HealthPollingURL)
 	fmt.Printf("format: %s\n", params.HealthPollingFormat)
 	fmt.Printf("history: %d\n", params.HistoryCount)
-	fmt.Printf("# of Thresholds: %d - foo: %s\n", len(params.Thresholds), params.Thresholds["foo"])
-	fmt.Printf("# of Aggregate Thresholds: %d - bandwidth: %s\n", len(params.AggregateThresholds), params.AggregateThresholds["bandwidth"])
+	fmt.Printf("# of Thresholds: %d - foo: %s, bandwidth: %s\n", len(params.Thresholds), params.Thresholds["foo"], params.Thresholds["bandwidth"])
 
 	// Output: timeout: 5
 	// url: https://example.com/
 	// format: stats_over_http
 	// history: 1
-	// # of Thresholds: 1 - foo: <=500.000000
-	// # of Aggregate Thresholds: 1 - bandwidth: >50.000000
+	// # of Thresholds: 2 - foo: <=500.000000, bandwidth: >50.000000
 }
 
 func ExampleTrafficMonitorConfigMap_Valid() {
