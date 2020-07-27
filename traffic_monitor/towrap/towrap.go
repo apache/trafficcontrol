@@ -34,7 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	client "github.com/apache/trafficcontrol/traffic_ops/client"
-	v2Client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	legacyClient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -188,7 +188,7 @@ func (h CRConfigHistoryThreadsafe) Len() uint64 {
 // for multiple goroutines. This fulfills the ITrafficOpsSession interface.
 type TrafficOpsSessionThreadsafe struct {
 	session            **client.Session // pointer-to-pointer, because we're given a pointer from the Traffic Ops package, and we don't want to copy it.
-	legacySession      **v2Client.Session
+	legacySession      **legacyClient.Session
 	m                  *sync.Mutex
 	lastCRConfig       ByteMapCache
 	crConfigHist       CRConfigHistoryThreadsafe
@@ -199,7 +199,7 @@ type TrafficOpsSessionThreadsafe struct {
 
 // NewTrafficOpsSessionThreadsafe returns a new threadsafe
 // TrafficOpsSessionThreadsafe wrapping the given `Session`.
-func NewTrafficOpsSessionThreadsafe(s *client.Session, ls *v2Client.Session, histLimit uint64, cfg config.Config) TrafficOpsSessionThreadsafe {
+func NewTrafficOpsSessionThreadsafe(s *client.Session, ls *legacyClient.Session, histLimit uint64, cfg config.Config) TrafficOpsSessionThreadsafe {
 	return TrafficOpsSessionThreadsafe{
 		CRConfigBackupFile: cfg.CRConfigBackupFile,
 		crConfigHist:       NewCRConfigHistoryThreadsafe(histLimit),
@@ -236,7 +236,7 @@ func (s TrafficOpsSessionThreadsafe) Update(
 	session, _, err := client.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
 	if err != nil {
 		log.Errorf("Error logging in using up-to-date client: %v", err)
-		legacySession, _, err := v2Client.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
+		legacySession, _, err := legacyClient.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
 		if err != nil {
 			return err
 		}
@@ -322,30 +322,43 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 // multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 
-	ss := s.get()
-
 	var remoteAddr string
+	var err error
+	var data []byte
 
-	if ss == nil {
-		return nil, ErrNilSession
+	if s.useLegacy {
+		ss := s.getLegacy()
+		if ss == nil {
+			return nil, ErrNilSession
+		}
+		b, reqInf, e := ss.GetCRConfig(cdn)
+		err = e
+		data = b
+		remoteAddr = reqInf.RemoteAddr.String()
+	} else {
+		ss := s.get()
+		if ss == nil {
+			return nil, ErrNilSession
+		}
+		b, reqInf, e := ss.GetCRConfig(cdn)
+		err = e
+		data = b
+		remoteAddr = reqInf.RemoteAddr.String()
 	}
 
-	b, reqInf, err := ss.GetCRConfig(cdn)
 	if err == nil {
-		remoteAddr = reqInf.RemoteAddr.String()
-		ioutil.WriteFile(s.CRConfigBackupFile, b, 0644)
+		ioutil.WriteFile(s.CRConfigBackupFile, data, 0644)
 	} else {
 		if s.BackupFileExists() {
-			b, err = ioutil.ReadFile(s.CRConfigBackupFile)
+			data, err = ioutil.ReadFile(s.CRConfigBackupFile)
 			if err != nil {
-				err = errors.New("file Read Error: " + err.Error())
-				return nil, err
+				return nil, fmt.Errorf("file Read Error: %v", err)
 			}
 			remoteAddr = localHostIP
 			log.Errorln("Error getting CRConfig from traffic_ops, backup file exists, reading from file")
 			err = nil
 		} else {
-			return nil, ErrNilSession
+			return nil, fmt.Errorf("Failed to get CRConfig from Traffic Ops (%v), and there is no backup file", err)
 		}
 	}
 
@@ -357,27 +370,28 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	}
 	defer s.crConfigHist.Add(hist)
 
+	// TODO: per the above logic, I don't think this is possible
 	if err != nil {
-		return b, err
+		return data, err
 	}
 
 	crc := &tc.CRConfig{}
 	json := jsoniter.ConfigFastest
-	if err = json.Unmarshal(b, crc); err != nil {
+	if err = json.Unmarshal(data, crc); err != nil {
 		err = errors.New("invalid JSON: " + err.Error())
 		hist.Err = err
-		return b, err
+		return data, err
 	}
 	hist.Stats = crc.Stats
 
 	if err = s.CRConfigValid(crc, cdn); err != nil {
 		err = errors.New("invalid CRConfig: " + err.Error())
 		hist.Err = err
-		return b, err
+		return data, err
 	}
 
-	s.lastCRConfig.Set(cdn, b, &crc.Stats)
-	return b, nil
+	s.lastCRConfig.Set(cdn, data, &crc.Stats)
+	return data, nil
 }
 
 // LastCRConfig returns the last CRConfig requested from CRConfigRaw, and the
