@@ -1,3 +1,5 @@
+// Package towrap wraps two versions of Traffic Ops clients to give up-to-date
+// information, possibly using legacy API versions.
 package towrap
 
 /*
@@ -48,18 +50,47 @@ type ITrafficOpsSession interface {
 
 const localHostIP = "127.0.0.1"
 
-var ErrNilSession = fmt.Errorf("nil session")
+// ErrNilSession is the error returned by operations performed on a nil session.
+var ErrNilSession = errors.New("nil session")
 
-// TODO rename CRConfigCacheObj
+// ByteTime is a structure for associating a set of raw data with some CDN
+// Snapshot statistics, and a certain time.
 type ByteTime struct {
 	bytes []byte
 	time  time.Time
 	stats *tc.CRConfigStats
 }
 
+// ByteMapCache is a thread-access-safe map of cache server hostnames to
+// ByteTime structures.
 type ByteMapCache struct {
 	cache *map[string]ByteTime
 	m     *sync.RWMutex
+}
+
+// NewByteMapCache constructs a new, empty ByteMapCache.
+func NewByteMapCache() ByteMapCache {
+	return ByteMapCache{m: &sync.RWMutex{}, cache: &map[string]ByteTime{}}
+}
+
+// Set sets the entry given by 'key' to a new ByteTime structure with the given
+// raw data ('newBytes') and the given statistics ('stats') at the current time.
+func (c ByteMapCache) Set(key string, newBytes []byte, stats *tc.CRConfigStats) {
+	c.m.Lock()
+	defer c.m.Unlock()
+	(*c.cache)[key] = ByteTime{bytes: newBytes, stats: stats, time: time.Now()}
+}
+
+// Get retrieves the raw data, associated time, and statistics of the entry
+// given by 'key'.
+func (c ByteMapCache) Get(key string) ([]byte, time.Time, *tc.CRConfigStats) {
+	c.m.RLock()
+	defer c.m.RUnlock()
+	if byteTime, ok := (*c.cache)[key]; !ok {
+		return nil, time.Time{}, nil
+	} else {
+		return byteTime.bytes, byteTime.time, byteTime.stats
+	}
 }
 
 func (s TrafficOpsSessionThreadsafe) BackupFileExists() bool {
@@ -71,26 +102,6 @@ func (s TrafficOpsSessionThreadsafe) BackupFileExists() bool {
 	return false
 }
 
-func NewByteMapCache() ByteMapCache {
-	return ByteMapCache{m: &sync.RWMutex{}, cache: &map[string]ByteTime{}}
-}
-
-func (c ByteMapCache) Set(key string, newBytes []byte, stats *tc.CRConfigStats) {
-	c.m.Lock()
-	defer c.m.Unlock()
-	(*c.cache)[key] = ByteTime{bytes: newBytes, stats: stats, time: time.Now()}
-}
-
-func (c ByteMapCache) Get(key string) ([]byte, time.Time, *tc.CRConfigStats) {
-	c.m.RLock()
-	defer c.m.RUnlock()
-	if byteTime, ok := (*c.cache)[key]; !ok {
-		return nil, time.Time{}, nil
-	} else {
-		return byteTime.bytes, byteTime.time, byteTime.stats
-	}
-}
-
 // CRConfigHistoryThreadsafe stores history in a circular buffer.
 type CRConfigHistoryThreadsafe struct {
 	hist  *[]CRConfigStat
@@ -100,6 +111,11 @@ type CRConfigHistoryThreadsafe struct {
 	pos   *uint64
 }
 
+// NewCRConfigHistoryThreadsafe constructs a new, empty
+// CRConfigHistoryThreadsafe.
+//
+// 'limit' indicates the size of the circular buffer - effectively the number of
+// entries it will be capable of storing.
 func NewCRConfigHistoryThreadsafe(limit uint64) CRConfigHistoryThreadsafe {
 	hist := make([]CRConfigStat, limit, limit)
 	len := uint64(0)
@@ -107,7 +123,8 @@ func NewCRConfigHistoryThreadsafe(limit uint64) CRConfigHistoryThreadsafe {
 	return CRConfigHistoryThreadsafe{hist: &hist, m: &sync.RWMutex{}, limit: &limit, len: &len, pos: &pos}
 }
 
-// Add adds the given stat to the history. Does not add new additions with the same remote address and CRConfig Date as the previous.
+// Add adds the given stat to the history. Does not add new additions with the
+// same remote address and CRConfig Date as the previous.
 func (h CRConfigHistoryThreadsafe) Add(i *CRConfigStat) {
 	h.m.Lock()
 	defer h.m.Unlock()
@@ -129,6 +146,7 @@ func (h CRConfigHistoryThreadsafe) Add(i *CRConfigStat) {
 	}
 }
 
+// Get retrieves the stored history of CRConfigStat entries.
 func (h CRConfigHistoryThreadsafe) Get() []CRConfigStat {
 	h.m.RLock()
 	defer h.m.RUnlock()
