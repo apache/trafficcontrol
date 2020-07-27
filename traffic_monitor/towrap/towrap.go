@@ -112,7 +112,10 @@ type CRConfigHistoryThreadsafe struct {
 }
 
 // NewCRConfigHistoryThreadsafe constructs a new, empty
-// CRConfigHistoryThreadsafe.
+// CRConfigHistoryThreadsafe - this is the ONLY way to safely create a
+// CRConfigHistoryThreadsafe, using the zero value of the structure will cause
+// all operations to encounter segmentation faults, and there is no way to
+// preempt this.
 //
 // 'limit' indicates the size of the circular buffer - effectively the number of
 // entries it will be capable of storing.
@@ -157,6 +160,16 @@ func (h CRConfigHistoryThreadsafe) Get() []CRConfigStat {
 	copy(newStats, (*h.hist)[*h.pos:])
 	copy(newStats[*h.length-*h.pos:], (*h.hist)[:*h.pos])
 	return newStats
+}
+
+// Len gives the number of currently stored items in the buffer.
+//
+// An uninitialized buffer has zero length.
+func (h CRConfigHistoryThreadsafe) Len() uint64 {
+	if h.length == nil {
+		return 0
+	}
+	return *h.length
 }
 
 func CopyCRConfigStat(old []CRConfigStat) []CRConfigStat {
