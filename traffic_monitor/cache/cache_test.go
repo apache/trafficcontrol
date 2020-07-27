@@ -68,12 +68,16 @@ var StatToDesiredValue = map[string]float64{
 }
 
 func TestComputeAggregateStats(t *testing.T) {
-	computedStats := ComputedAggregateStats()
+	computedStats := ComputedStats()
 
 	for stat, want := range StatToDesiredValue {
-		got := computedStats[stat](ResultInfo{Vitals: AggregatedStats})
-		if numGot, ok := util.ToNumeric(got); ok && numGot != want {
-			t.Errorf("ComputedAggregateStats[\"%v\"] return %v instead of %v", stat, got, want)
+		got := computedStats[stat](ResultInfo{Vitals: AggregatedStats}, tc.TrafficServer{}, tc.TMProfile{}, tc.IsAvailable{})
+		if numGot, ok := util.ToNumeric(got); ok {
+			if numGot != want {
+				t.Errorf("ComputedStats[\"%v\"] return %v instead of %v", stat, got, want)
+			}
+		} else {
+			t.Errorf(`ComputedStats["%s"] returned non-numeric value: %v`, stat, got)
 		}
 	}
 }
@@ -85,9 +89,7 @@ func TestComputeStatGbps(t *testing.T) {
 	computedStats := ComputedStats()
 
 	for stat, want := range StatToDesiredValue {
-		got := computedStats[stat](ResultInfo{InterfaceVitals: map[string]Vitals{
-			"eth0": AggregatedStats,
-		}}, serverInfo, serverProfile, combinedState, "eth0")
+		got := computedStats[stat](ResultInfo{Vitals: AggregatedStats}, serverInfo, serverProfile, combinedState)
 		if numGot, ok := util.ToNumeric(got); ok && numGot != want {
 			t.Errorf("ComputedStats[\"%v\"] return %v instead of %v", stat, got, want)
 		}
