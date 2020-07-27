@@ -129,7 +129,7 @@ func StartMonitorConfigManager(
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	toData todata.TODataThreadsafe,
 ) threadsafe.TrafficMonitorConfigMap {
 	monitorConfig := threadsafe.NewTrafficMonitorConfigMap()
@@ -199,7 +199,7 @@ func monitorConfigListen(
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	toData todata.TODataThreadsafe,
 ) {
 	defer func() {

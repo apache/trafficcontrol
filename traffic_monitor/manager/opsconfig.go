@@ -52,10 +52,10 @@ import (
 // Note the OpsConfigManager is in charge of the httpServer, because ops config changes trigger server changes. If other things needed to trigger server restarts, the server could be put in its own goroutine with signal channels
 func StartOpsConfigManager(
 	opsConfigFile string,
-	toSession towrap.ITrafficOpsSession,
+	toSession towrap.TrafficOpsSessionThreadsafe,
 	toData todata.TODataThreadsafe,
 	opsConfigChangeSubscribers []chan<- handler.OpsConfig,
-	toChangeSubscribers []chan<- towrap.ITrafficOpsSession,
+	toChangeSubscribers []chan<- towrap.TrafficOpsSessionThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
@@ -238,7 +238,7 @@ func StartOpsConfigManager(
 			go func(s chan<- handler.OpsConfig) { s <- newOpsConfig }(subscriber)
 		}
 		for _, subscriber := range toChangeSubscribers {
-			go func(s chan<- towrap.ITrafficOpsSession) { s <- toSession }(subscriber)
+			go func(s chan<- towrap.TrafficOpsSessionThreadsafe) { s <- toSession }(subscriber)
 		}
 	}
 

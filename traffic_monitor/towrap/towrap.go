@@ -38,17 +38,6 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// ITrafficOpsSession provides an interface to the Traffic Ops client, so it may
-// be wrapped or mocked.
-type ITrafficOpsSession interface {
-	CRConfigRaw(cdn string) ([]byte, error)
-	LastCRConfig(cdn string) ([]byte, time.Time, error)
-	TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error)
-	Set(session *client.Session)
-	CRConfigHistory() []CRConfigStat
-	BackupFileExists() bool
-}
-
 const localHostIP = "127.0.0.1"
 
 // ErrNilSession is the error returned by operations performed on a nil session.
@@ -315,7 +304,12 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		}
 	}
 
-	hist := &CRConfigStat{time.Now(), remoteAddr, tc.CRConfigStats{}, err}
+	hist := &CRConfigStat{
+		Err:     err,
+		ReqAddr: remoteAddr,
+		ReqTime: time.Now(),
+		Stats:   tc.CRConfigStats{},
+	}
 	defer s.crConfigHist.Add(hist)
 
 	if err != nil {
