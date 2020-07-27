@@ -34,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	client "github.com/apache/trafficcontrol/traffic_ops/client"
+	v2Client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -187,23 +188,27 @@ func (h CRConfigHistoryThreadsafe) Len() uint64 {
 // for multiple goroutines. This fulfills the ITrafficOpsSession interface.
 type TrafficOpsSessionThreadsafe struct {
 	session            **client.Session // pointer-to-pointer, because we're given a pointer from the Traffic Ops package, and we don't want to copy it.
+	legacySession      **v2Client.Session
 	m                  *sync.Mutex
 	lastCRConfig       ByteMapCache
 	crConfigHist       CRConfigHistoryThreadsafe
+	useLegacy          bool
 	CRConfigBackupFile string
 	TMConfigBackupFile string
 }
 
 // NewTrafficOpsSessionThreadsafe returns a new threadsafe
 // TrafficOpsSessionThreadsafe wrapping the given `Session`.
-func NewTrafficOpsSessionThreadsafe(s *client.Session, histLimit uint64, cfg config.Config) TrafficOpsSessionThreadsafe {
+func NewTrafficOpsSessionThreadsafe(s *client.Session, ls *v2Client.Session, histLimit uint64, cfg config.Config) TrafficOpsSessionThreadsafe {
 	return TrafficOpsSessionThreadsafe{
 		CRConfigBackupFile: cfg.CRConfigBackupFile,
 		crConfigHist:       NewCRConfigHistoryThreadsafe(histLimit),
 		lastCRConfig:       NewByteMapCache(),
 		m:                  &sync.Mutex{},
 		session:            &s,
+		legacySession:      &ls,
 		TMConfigBackupFile: cfg.TMConfigBackupFile,
+		useLegacy:          false,
 	}
 }
 
@@ -213,12 +218,35 @@ func (s TrafficOpsSessionThreadsafe) Initialized() bool {
 	return s.session != nil && *s.session != nil
 }
 
-// Set sets the internal Traffic Ops session. This is safe for multiple
-// goroutines, being aware they will race.
-func (s TrafficOpsSessionThreadsafe) Set(session *client.Session) {
+// Update updates the TrafficOpsSessionThreadsafe's connection information with
+// the provided information. It's safe for calling by multiple goroutines, being
+// aware that they will race.
+func (s TrafficOpsSessionThreadsafe) Update(
+	url string,
+	username string,
+	password string,
+	insecure bool,
+	userAgent string,
+	useCache bool,
+	timeout time.Duration,
+) error {
 	s.m.Lock()
 	defer s.m.Unlock()
-	*s.session = session
+
+	session, _, err := client.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
+	if err != nil {
+		log.Errorf("Error logging in using up-to-date client: %v", err)
+		legacySession, _, err := v2Client.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
+		if err != nil {
+			return err
+		}
+		*s.legacySession = legacySession
+		s.useLegacy = true
+	} else {
+		*s.session = session
+		s.useLegacy = false
+	}
+	return nil
 }
 
 // getThreadsafeSession is used internally to get a copy of the session pointer,

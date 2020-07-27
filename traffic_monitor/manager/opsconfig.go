@@ -20,12 +20,12 @@ package manager
  */
 
 import (
-	"crypto/tls"
+	// "crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
-	"net/http"
-	"net/http/cookiejar"
+	// "net/http"
+	// "net/http/cookiejar"
 	"net/url"
 	"time"
 
@@ -171,7 +171,7 @@ func StartOpsConfigManager(
 			backoff = util.NewConstantBackoff(util.ConstantBackoffDuration)
 		}
 		for {
-			realToSession, toAddr, err = to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
+			err = toSession.Update(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
 			if err != nil {
 				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops (%v): %s\n", toAddr, err))
 				duration := backoff.BackoffDuration()
@@ -179,21 +179,23 @@ func StartOpsConfigManager(
 				time.Sleep(duration)
 
 				if toSession.BackupFileExists() && (toLoginCount >= cfg.TrafficOpsDiskRetryMax) {
-					jar, err := cookiejar.New(nil)
-					if err != nil {
-						log.Errorf("Err getting cookiejar")
-						continue
-					}
+					// jar, err := cookiejar.New(nil)
+					// if err != nil {
+					// 	log.Errorf("Err getting cookiejar")
+					// 	continue
+					// }
 
-					realToSession = to.NewSession(newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Url, staticAppData.UserAgent, &http.Client{
-						Timeout: trafficOpsRequestTimeout,
-						Transport: &http.Transport{
-							TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-						},
-						Jar: jar,
-					}, useCache)
-					toSession.Set(realToSession)
-					// At this point we have a valid 'dummy' session. This will allow us to pull from disk but will also retry when TO comes up
+					// realToSession = to.NewSession(newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Url, staticAppData.UserAgent, &http.Client{
+					// 	Timeout: trafficOpsRequestTimeout,
+					// 	Transport: &http.Transport{
+					// 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+					// 	},
+					// 	Jar: jar,
+					// }, useCache)
+					// toSession.Set(realToSession)
+					// At this point we have a valid 'dummy' session. This will
+					// allow us to pull from disk but will also retry when TO
+					// comes up
 					log.Errorf("error instantiating Session with traffic_ops, backup disk files exist, creating empty traffic_ops session to read")
 					newOpsConfig.UsingDummyTO = true
 					break
@@ -202,12 +204,13 @@ func StartOpsConfigManager(
 				toLoginCount++
 				continue
 			} else {
-				toSession.Set(realToSession)
 				newOpsConfig.UsingDummyTO = false
 				break
 			}
 		}
 		opsConfig.Set(newOpsConfig)
+
+		// TODO - 'realToSession' DOESN'T MAKE SENSE HERE!
 
 		if cdn, err := getMonitorCDN(realToSession, staticAppData.Hostname); err != nil {
 			handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))
