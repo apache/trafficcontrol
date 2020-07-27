@@ -50,4 +50,6 @@ ADD enroller/server_template.json \
     traffic_portal/run.sh \
     traffic_ops/to-access.sh /
 
+EXPOSE 443
+
 CMD /run.sh
