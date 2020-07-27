@@ -278,7 +278,15 @@ func CalcAvailability(
 			}
 		}
 
-		aggIsAvailable, aggWhyAvailable, aggUnavailableStat := EvalAggregate(cache.ToInfo(result), &statResultsVal.Stats, &mc)
+		var aggIsAvailable bool
+		var aggWhyAvailable string
+		var aggUnavailableStat string
+
+		if statResultsVal != nil {
+			aggIsAvailable, aggWhyAvailable, aggUnavailableStat = EvalAggregate(cache.ToInfo(result), &statResultsVal.Stats, &mc)
+		} else {
+			aggIsAvailable, aggWhyAvailable, aggUnavailableStat = EvalAggregate(cache.ToInfo(result), nil, &mc)
+		}
 
 		if result.UsingIPv4 {
 			availStatus.Available.IPv4 = availStatus.Available.IPv4 && aggIsAvailable
