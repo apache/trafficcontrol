@@ -56,11 +56,11 @@ UPDATE server SET ip_address = host(ip_address.address),
   AND ip_address.service_address;
 
 UPDATE server SET ip6_address = CASE
-          WHEN masklen(ip_address.address) = 128 then host(ip_address.address)
+          WHEN masklen(ip_address.address) = 128 then ip_address.address
           ELSE ip_address.address
           END,
   ip6_gateway = CASE
-          WHEN masklen(ip_address.gateway) = 128 then host(ip_address.gateway)
+          WHEN masklen(ip_address.gateway) = 128 then ip_address.gateway
           ELSE ip_address.gateway
           END,
   ip6_address_is_service = ip_address.service_address
