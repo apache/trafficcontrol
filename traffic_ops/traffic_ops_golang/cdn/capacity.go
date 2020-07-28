@@ -51,11 +51,6 @@ func GetCapacity(w http.ResponseWriter, r *http.Request) {
 const MonitorProxyParameter = "tm.traffic_mon_fwd_proxy"
 const MonitorRequestTimeout = time.Second * 10
 const MonitorOnlineStatus = "ONLINE"
-const checkServiceAddressQuery = `
-SELECT i.service_address FROM ip_address AS i
-JOIN server as s on s.id = i.server
-WHERE i.interface=$1 AND s.host_name=$2
-`
 
 func getCapacity(tx *sql.Tx) (CapacityResp, error) {
 	monitors, err := getCDNMonitorFQDNs(tx)
@@ -217,9 +212,9 @@ func getStatsFromServiceInterface(stats CacheStat) (float64, float64, error) {
 
 func getServiceInterfaces(tx *sql.Tx) (map[string]string, error) {
 	query := `
-select s.host_name, i.interface from ip_address i 
-join server s on s.id = i.server 
-where i.service_address=true 
+SELECT s.host_name, i.interface FROM ip_address i
+JOIN server s ON s.id = i.server
+WHERE i.service_address=true
 `
 	rows, err := tx.Query(query)
 	if err != nil {

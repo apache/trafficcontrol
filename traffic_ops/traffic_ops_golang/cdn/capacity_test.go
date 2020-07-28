@@ -45,7 +45,7 @@ func TestGetServiceInterfaces(t *testing.T) {
 		"eth2",
 	)
 	mock.ExpectBegin()
-	mock.ExpectQuery("select").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
 	m, err := getServiceInterfaces(db.MustBegin().Tx)
