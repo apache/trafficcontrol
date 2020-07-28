@@ -489,6 +489,32 @@ func (s Server) ToNullable() ServerNullableV2 {
 	}
 }
 
+// Upgrade upgrades the ServerNullableV2 to the new ServerNullable structure.
+//
+// Note that this makes "shallow" copies of all underlying data, so changes to
+// the original will affect the upgraded copy.
+func (s ServerNullableV2) Upgrade() (ServerNullable, error) {
+	ipv4IsService := false
+	if s.IPIsService != nil {
+		ipv4IsService = *s.IPIsService
+	}
+	ipv6IsService := false
+	if s.IP6IsService != nil {
+		ipv6IsService = *s.IP6IsService
+	}
+
+	upgraded := ServerNullable{
+		CommonServerProperties: s.CommonServerProperties,
+	}
+
+	infs, err := s.LegacyInterfaceDetails.ToInterfaces(ipv4IsService, ipv6IsService)
+	if err != nil {
+		return upgraded, err
+	}
+	upgraded.Interfaces = infs
+	return upgraded, nil
+}
+
 // ServerNullable represents an ATC server, as returned by the TO API.
 type ServerNullable struct {
 	CommonServerProperties
