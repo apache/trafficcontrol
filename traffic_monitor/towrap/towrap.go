@@ -216,6 +216,9 @@ func NewTrafficOpsSessionThreadsafe(s *client.Session, ls *legacyClient.Session,
 // Initialized tells whether or not the TrafficOpsSessionThreadsafe has been
 // properly initialized (by calling 'Update').
 func (s TrafficOpsSessionThreadsafe) Initialized() bool {
+	if s.useLegacy {
+		return s.legacySession != nil && *s.legacySession != nil
+	}
 	return s.session != nil && *s.session != nil
 }
 
