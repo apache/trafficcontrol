@@ -420,6 +420,75 @@ type ServerNullableV2 struct {
 	IP6IsService *bool `json:"ip6IsService" db:"ip6_address_is_service"`
 }
 
+// ToNullable converts the Server to an equivalent, "nullable" structure.
+//
+// Note that "zero" values (e.g. the empty string "") are NOT coerced to actual
+// null values. In particular, the only fields that will possibly be nil are
+// FQDN - if the original server had a nil FQDN - and DeliveryServices - which
+// will actually be a pointer to a nil map if the original server had a nil
+// DeliveryServices map.
+// Further note that this makes "shallow" copies of member properties; if
+// reference types (map, slice, pointer etc.) are altered on the original after
+// conversion, the changes WILL affect the nullable copy.
+func (s Server) ToNullable() ServerNullableV2 {
+	return ServerNullableV2{
+		ServerNullableV11: ServerNullableV11{
+			CommonServerProperties: CommonServerProperties{
+				Cachegroup:       &s.Cachegroup,
+				CachegroupID:     &s.CachegroupID,
+				CDNID:            &s.CDNID,
+				CDNName:          &s.CDNName,
+				DeliveryServices: &s.DeliveryServices,
+				DomainName:       &s.DomainName,
+				FQDN:             s.FQDN,
+				FqdnTime:         s.FqdnTime,
+				GUID:             &s.GUID,
+				HostName:         &s.HostName,
+				HTTPSPort:        &s.HTTPSPort,
+				ID:               &s.ID,
+				ILOIPAddress:     &s.ILOIPAddress,
+				ILOIPGateway:     &s.ILOIPGateway,
+				ILOIPNetmask:     &s.ILOIPNetmask,
+				ILOPassword:      &s.ILOPassword,
+				ILOUsername:      &s.ILOUsername,
+				LastUpdated:      &s.LastUpdated,
+				MgmtIPAddress:    &s.MgmtIPAddress,
+				MgmtIPGateway:    &s.MgmtIPGateway,
+				MgmtIPNetmask:    &s.MgmtIPNetmask,
+				OfflineReason:    &s.OfflineReason,
+				PhysLocation:     &s.PhysLocation,
+				PhysLocationID:   &s.PhysLocationID,
+				Profile:          &s.Profile,
+				ProfileDesc:      &s.ProfileDesc,
+				ProfileID:        &s.ProfileID,
+				Rack:             &s.Rack,
+				RevalPending:     &s.RevalPending,
+				RouterHostName:   &s.RouterHostName,
+				RouterPortName:   &s.RouterPortName,
+				Status:           &s.Status,
+				StatusID:         &s.StatusID,
+				TCPPort:          &s.TCPPort,
+				Type:             s.Type,
+				TypeID:           &s.TypeID,
+				UpdPending:       &s.UpdPending,
+				XMPPID:           &s.XMPPID,
+				XMPPPasswd:       &s.XMPPPasswd,
+			},
+			LegacyInterfaceDetails: LegacyInterfaceDetails{
+				InterfaceMtu:  &s.InterfaceMtu,
+				InterfaceName: &s.InterfaceName,
+				IPAddress:     &s.IPAddress,
+				IPGateway:     &s.IPGateway,
+				IPNetmask:     &s.IPNetmask,
+				IP6Address:    &s.IP6Address,
+				IP6Gateway:    &s.IP6Gateway,
+			},
+		},
+		IPIsService:  &s.IPIsService,
+		IP6IsService: &s.IP6IsService,
+	}
+}
+
 // ServerNullable represents an ATC server, as returned by the TO API.
 type ServerNullable struct {
 	CommonServerProperties
