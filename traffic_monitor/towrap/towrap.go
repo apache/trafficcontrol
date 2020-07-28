@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"strconv"
 	"sync"
@@ -507,6 +508,110 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	}
 
 	return mc, nil
+}
+
+func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.ServerNullable, error) {
+	ss := s.get()
+	if ss == nil {
+		return tc.ServerNullable{}, ErrNilSession
+	}
+
+	params := url.Values{}
+	params.Set("hostName", hostName)
+	resp, _, err := ss.GetServers(&params, nil)
+	if err != nil {
+		return tc.ServerNullable{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
+	}
+
+	respLen := len(resp.Response)
+	if respLen < 1 {
+		return tc.ServerNullable{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
+	}
+
+	var server tc.ServerNullable
+	var num int
+	found := false
+	for i, srv := range resp.Response {
+		num = i
+		if srv.CDNName != nil && srv.HostName != nil && *srv.HostName == hostName {
+			server = srv
+			found = true
+			break
+		}
+	}
+	if !found {
+		return tc.ServerNullable{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-nil CDN", hostName)
+	}
+
+	if respLen > 1 {
+		log.Warnf("Getting monitor server by hostname '%s' returned %d servers - selecting #%d", hostName, respLen, num)
+	}
+
+	return server, nil
+}
+
+func (s TrafficOpsSessionThreadsafe) fetchLegacyServerByHostname(hostName string) (tc.ServerNullable, error) {
+	ss := s.getLegacy()
+	if ss == nil {
+		return tc.ServerNullable{}, ErrNilSession
+	}
+
+	resp, _, err := ss.GetServerByHostName(hostName)
+	if err != nil {
+		return tc.ServerNullable{}, fmt.Errorf("fetching legacy server by hostname '%s': %v", hostName, err)
+	}
+
+	respLen := len(resp)
+	if respLen < 1 {
+		return tc.ServerNullable{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
+	}
+
+	var server tc.ServerNullableV2
+	var num int
+	found := false
+	for i, srv := range resp {
+		num = i
+		if srv.CDNName != "" && srv.HostName == hostName {
+			server = srv.ToNullable()
+			found = true
+			break
+		}
+
+	}
+	if !found {
+		return tc.ServerNullable{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-empty CDN", hostName)
+	}
+	if respLen > 1 {
+		log.Warnf("Getting monitor server by hostname '%s' returned %d servers - selecting #%d", hostName, respLen, num)
+	}
+
+	ret, err := server.Upgrade()
+	if err != nil {
+		return ret, fmt.Errorf("coercing legacy server to new format: %v", err)
+	}
+
+	return ret, nil
+}
+
+// MonitorCDN returns the name of the CDN of a Traffic Monitor with the given
+// hostName.
+func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error) {
+	var server tc.ServerNullable
+	var err error
+
+	if s.useLegacy {
+		server, err = s.fetchLegacyServerByHostname(hostName)
+	} else {
+		server, err = s.fetchServerByHostname(hostName)
+	}
+
+	if err != nil {
+		return "", fmt.Errorf("getting monitor CDN: %v", err)
+	}
+
+	// nil-dereference checks done already in each 'fetch' method; they'll just
+	// return an error in that case
+	return *server.CDNName, nil
 }
 
 // CreateMonitorConfig modifies the passed TrafficMonitorConfigMap to add the
