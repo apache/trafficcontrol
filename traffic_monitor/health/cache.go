@@ -123,6 +123,10 @@ func EvalCacheWithStatusInfo(result cache.ResultInfo, mc *tc.TrafficMonitorConfi
 // for thresholds. For example, the Health poller doesn't have Stats.
 // TODO change to return a `cache.AvailableStatus`
 func EvalInterface(infVitals map[string]cache.Vitals, inf tc.ServerInterfaceInfo) (bool, string) {
+	if !inf.Monitor {
+		return true, ""
+	}
+
 	vitals, ok := infVitals[inf.Name]
 	if !ok {
 		return false, "not found in polled data"
