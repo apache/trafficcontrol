@@ -172,23 +172,6 @@ func StartOpsConfigManager(
 				time.Sleep(duration)
 
 				if toSession.BackupFileExists() && (toLoginCount >= cfg.TrafficOpsDiskRetryMax) {
-					// jar, err := cookiejar.New(nil)
-					// if err != nil {
-					// 	log.Errorf("Err getting cookiejar")
-					// 	continue
-					// }
-
-					// realToSession = to.NewSession(newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Url, staticAppData.UserAgent, &http.Client{
-					// 	Timeout: trafficOpsRequestTimeout,
-					// 	Transport: &http.Transport{
-					// 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-					// 	},
-					// 	Jar: jar,
-					// }, useCache)
-					// toSession.Set(realToSession)
-					// At this point we have a valid 'dummy' session. This will
-					// allow us to pull from disk but will also retry when TO
-					// comes up
 					log.Errorf("error instantiating Session with traffic_ops, backup disk files exist, creating empty traffic_ops session to read")
 					newOpsConfig.UsingDummyTO = true
 					break
@@ -202,8 +185,6 @@ func StartOpsConfigManager(
 			}
 		}
 		opsConfig.Set(newOpsConfig)
-
-		// TODO - 'realToSession' DOESN'T MAKE SENSE HERE!
 
 		if cdn, err := toSession.MonitorCDN(staticAppData.Hostname); err != nil {
 			handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))

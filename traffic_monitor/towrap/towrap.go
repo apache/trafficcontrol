@@ -225,7 +225,7 @@ func (s TrafficOpsSessionThreadsafe) Initialized() bool {
 // Update updates the TrafficOpsSessionThreadsafe's connection information with
 // the provided information. It's safe for calling by multiple goroutines, being
 // aware that they will race.
-func (s TrafficOpsSessionThreadsafe) Update(
+func (s *TrafficOpsSessionThreadsafe) Update(
 	url string,
 	username string,
 	password string,
@@ -234,6 +234,9 @@ func (s TrafficOpsSessionThreadsafe) Update(
 	useCache bool,
 	timeout time.Duration,
 ) error {
+	if s == nil {
+		return errors.New("cannot update nil session")
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -241,7 +244,8 @@ func (s TrafficOpsSessionThreadsafe) Update(
 	if err != nil {
 		log.Errorf("Error logging in using up-to-date client: %v", err)
 		legacySession, _, err := legacyClient.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
-		if err != nil {
+		if err != nil || legacySession == nil {
+			err = fmt.Errorf("logging in using legacy client: %v", err)
 			return err
 		}
 		*s.legacySession = legacySession
@@ -250,6 +254,7 @@ func (s TrafficOpsSessionThreadsafe) Update(
 		*s.session = session
 		s.useLegacy = false
 	}
+
 	return nil
 }
 
@@ -449,7 +454,7 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 
 	if configMap == nil {
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("getting Traffic Monitor configuration map: %v", err)
 		}
 		return nil, errors.New("nil configMap after fetching")
 	}
