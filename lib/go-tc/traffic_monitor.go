@@ -192,6 +192,27 @@ type LegacyTrafficMonitorConfigMap struct {
 	Profile         map[string]TMProfile
 }
 
+// Upgrade returns a TrafficMonitorConfigMap that is equivalent to this legacy
+// configuration map.
+//
+// Note that all fields except TrafficServer are "shallow" copies, so modifying
+// the original will impact the upgraded copy.
+func (c *LegacyTrafficMonitorConfigMap) Upgrade() *TrafficMonitorConfigMap {
+	upgraded := TrafficMonitorConfigMap{
+		CacheGroup:      c.CacheGroup,
+		Config:          c.Config,
+		DeliveryService: c.DeliveryService,
+		Profile:         c.Profile,
+		TrafficMonitor:  c.TrafficMonitor,
+		TrafficServer:   make(map[string]TrafficServer, len(c.TrafficServer)),
+	}
+
+	for k, ts := range c.TrafficServer {
+		upgraded.TrafficServer[k] = ts.Upgrade()
+	}
+	return &upgraded
+}
+
 // TrafficMonitor is a structure containing enough information about a Traffic
 // Monitor instance for another Traffic Monitor to use it for quorums and peer
 // polling.

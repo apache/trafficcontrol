@@ -103,6 +103,175 @@ func ExampleTrafficMonitorConfigMap_Valid() {
 	// Output: Validity error: <nil>
 }
 
+func ExampleLegacyTrafficMonitorConfigMap_Upgrade() {
+	lcm := LegacyTrafficMonitorConfigMap{
+		CacheGroup: map[string]TMCacheGroup{
+			"test": {
+				Name: "test",
+				Coordinates: MonitoringCoordinates{
+					Latitude:  0,
+					Longitude: 0,
+				},
+			},
+		},
+		Config: map[string]interface{}{
+			"foo": "bar",
+		},
+		DeliveryService: map[string]TMDeliveryService{
+			"test": {
+				XMLID:              "test",
+				TotalTPSThreshold:  -1,
+				ServerStatus:       "testStatus",
+				TotalKbpsThreshold: -1,
+			},
+		},
+		Profile: map[string]TMProfile{
+			"test": {
+				Parameters: TMParameters{
+					HealthConnectionTimeout: -1,
+					HealthPollingURL:        "testURL",
+					HealthPollingFormat:     "astats",
+					HealthPollingType:       "http",
+					HistoryCount:            -1,
+					MinFreeKbps:             -1,
+					Thresholds: map[string]HealthThreshold{
+						"availableBandwidthInKbps": {
+							Comparator: "<",
+							Val:        -1,
+						},
+					},
+				},
+				Name: "test",
+				Type: "testType",
+			},
+		},
+		TrafficMonitor: map[string]TrafficMonitor{
+			"test": {
+				Port:         -1,
+				IP6:          "::1",
+				IP:           "0.0.0.0",
+				HostName:     "test",
+				FQDN:         "test.quest",
+				Profile:      "test",
+				Location:     "test",
+				ServerStatus: "testStatus",
+			},
+		},
+		TrafficServer: map[string]LegacyTrafficServer{
+			"test": {
+				CacheGroup:       "test",
+				DeliveryServices: []tsdeliveryService{},
+				FQDN:             "test.quest",
+				HashID:           "test",
+				HostName:         "test",
+				HTTPSPort:        -1,
+				InterfaceName:    "testInterface",
+				IP:               "0.0.0.1",
+				IP6:              "::2",
+				Port:             -1,
+				Profile:          "test",
+				ServerStatus:     "testStatus",
+				Type:             "testType",
+			},
+		},
+	}
+
+	cm := lcm.Upgrade()
+	fmt.Println("# of Cachegroups:", len(cm.CacheGroup))
+	fmt.Println("Cachegroup Name:", cm.CacheGroup["test"].Name)
+	fmt.Printf("Cachegroup Coordinates: (%v,%v)\n", cm.CacheGroup["test"].Coordinates.Latitude, cm.CacheGroup["test"].Coordinates.Longitude)
+	fmt.Println("# of Config parameters:", len(cm.Config))
+	fmt.Println(`Config["foo"]:`, cm.Config["foo"])
+	fmt.Println("# of DeliveryServices:", len(cm.DeliveryService))
+	fmt.Println("DeliveryService XMLID:", cm.DeliveryService["test"].XMLID)
+	fmt.Println("DeliveryService TotalTPSThreshold:", cm.DeliveryService["test"].TotalTPSThreshold)
+	fmt.Println("DeliveryService ServerStatus:", cm.DeliveryService["test"].ServerStatus)
+	fmt.Println("DeliveryService TotalKbpsThreshold:", cm.DeliveryService["test"].TotalKbpsThreshold)
+	fmt.Println("# of Profiles:", len(cm.Profile))
+	fmt.Println("Profile Name:", cm.Profile["test"].Name)
+	fmt.Println("Profile Type:", cm.Profile["test"].Type)
+	fmt.Println("Profile HealthConnectionTimeout:", cm.Profile["test"].Parameters.HealthConnectionTimeout)
+	fmt.Println("Profile HealthPollingURL:", cm.Profile["test"].Parameters.HealthPollingURL)
+	fmt.Println("Profile HealthPollingFormat:", cm.Profile["test"].Parameters.HealthPollingFormat)
+	fmt.Println("Profile HealthPollingType:", cm.Profile["test"].Parameters.HealthPollingType)
+	fmt.Println("Profile HistoryCount:", cm.Profile["test"].Parameters.HistoryCount)
+	fmt.Println("Profile MinFreeKbps:", cm.Profile["test"].Parameters.MinFreeKbps)
+	fmt.Println("# of Profile Thresholds:", len(cm.Profile["test"].Parameters.Thresholds))
+	fmt.Println("Profile availableBandwidthInKbps Threshold:", cm.Profile["test"].Parameters.Thresholds["availableBandwidthInKbps"])
+	fmt.Println("# of TrafficMonitors:", len(cm.TrafficMonitor))
+	fmt.Println("TrafficMonitor Port:", cm.TrafficMonitor["test"].Port)
+	fmt.Println("TrafficMonitor IP6:", cm.TrafficMonitor["test"].IP6)
+	fmt.Println("TrafficMonitor IP:", cm.TrafficMonitor["test"].IP)
+	fmt.Println("TrafficMonitor HostName:", cm.TrafficMonitor["test"].HostName)
+	fmt.Println("TrafficMonitor FQDN:", cm.TrafficMonitor["test"].FQDN)
+	fmt.Println("TrafficMonitor Profile:", cm.TrafficMonitor["test"].Profile)
+	fmt.Println("TrafficMonitor Location:", cm.TrafficMonitor["test"].Location)
+	fmt.Println("TrafficMonitor ServerStatus:", cm.TrafficMonitor["test"].ServerStatus)
+	fmt.Println("# of TrafficServers:", len(cm.TrafficServer))
+	fmt.Println("TrafficServer CacheGroup:", cm.TrafficServer["test"].CacheGroup)
+	fmt.Println("TrafficServer # of DeliveryServices:", len(cm.TrafficServer["test"].DeliveryServices))
+	fmt.Println("TrafficServer FQDN:", cm.TrafficServer["test"].FQDN)
+	fmt.Println("TrafficServer HashID:", cm.TrafficServer["test"].HashID)
+	fmt.Println("TrafficServer HostName:", cm.TrafficServer["test"].HostName)
+	fmt.Println("TrafficServer HTTPSPort:", cm.TrafficServer["test"].HTTPSPort)
+	fmt.Println("TrafficServer # of Interfaces:", len(cm.TrafficServer["test"].Interfaces))
+	fmt.Println("TrafficServer Interface Name:", cm.TrafficServer["test"].Interfaces[0].Name)
+	fmt.Println("TrafficServer # of Interface IP Addresses:", len(cm.TrafficServer["test"].Interfaces[0].IPAddresses))
+	fmt.Println("TrafficServer first IP Address:", cm.TrafficServer["test"].Interfaces[0].IPAddresses[0].Address)
+	fmt.Println("TrafficServer second IP Address:", cm.TrafficServer["test"].Interfaces[0].IPAddresses[1].Address)
+	fmt.Println("TrafficServer Port:", cm.TrafficServer["test"].Port)
+	fmt.Println("TrafficServer Profile:", cm.TrafficServer["test"].Profile)
+	fmt.Println("TrafficServer ServerStatus:", cm.TrafficServer["test"].ServerStatus)
+	fmt.Println("TrafficServer Type:", cm.TrafficServer["test"].Type)
+
+	// Output: # of Cachegroups: 1
+	// Cachegroup Name: test
+	// Cachegroup Coordinates: (0,0)
+	// # of Config parameters: 1
+	// Config["foo"]: bar
+	// # of DeliveryServices: 1
+	// DeliveryService XMLID: test
+	// DeliveryService TotalTPSThreshold: -1
+	// DeliveryService ServerStatus: testStatus
+	// DeliveryService TotalKbpsThreshold: -1
+	// # of Profiles: 1
+	// Profile Name: test
+	// Profile Type: testType
+	// Profile HealthConnectionTimeout: -1
+	// Profile HealthPollingURL: testURL
+	// Profile HealthPollingFormat: astats
+	// Profile HealthPollingType: http
+	// Profile HistoryCount: -1
+	// Profile MinFreeKbps: -1
+	// # of Profile Thresholds: 1
+	// Profile availableBandwidthInKbps Threshold: <-1.000000
+	// # of TrafficMonitors: 1
+	// TrafficMonitor Port: -1
+	// TrafficMonitor IP6: ::1
+	// TrafficMonitor IP: 0.0.0.0
+	// TrafficMonitor HostName: test
+	// TrafficMonitor FQDN: test.quest
+	// TrafficMonitor Profile: test
+	// TrafficMonitor Location: test
+	// TrafficMonitor ServerStatus: testStatus
+	// # of TrafficServers: 1
+	// TrafficServer CacheGroup: test
+	// TrafficServer # of DeliveryServices: 0
+	// TrafficServer FQDN: test.quest
+	// TrafficServer HashID: test
+	// TrafficServer HostName: test
+	// TrafficServer HTTPSPort: -1
+	// TrafficServer # of Interfaces: 1
+	// TrafficServer Interface Name: testInterface
+	// TrafficServer # of Interface IP Addresses: 2
+	// TrafficServer first IP Address: 0.0.0.1
+	// TrafficServer second IP Address: ::2
+	// TrafficServer Port: -1
+	// TrafficServer Profile: test
+	// TrafficServer ServerStatus: testStatus
+	// TrafficServer Type: testType
+}
+
 func TestTrafficMonitorConfigMap_Valid(t *testing.T) {
 	var mc *TrafficMonitorConfigMap = nil
 	err := mc.Valid()
@@ -298,5 +467,4 @@ func TestTrafficMonitorTransformToMap(t *testing.T) {
 	} else if len(converted.TrafficServer["testHostname"].Interfaces[0].IPAddresses) != 1 {
 		t.Errorf("Incorrect number of IP addresses on converted traffic server's interface; expected: 1, got: %d", len(converted.TrafficServer["testHostname"].Interfaces[0].IPAddresses))
 	}
-
 }
