@@ -408,21 +408,50 @@ func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time
 	return crConfig, crConfigTime, nil
 }
 
+func (s TrafficOpsSessionThreadsafe) fetchTMConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+	ss := s.get()
+	if ss == nil {
+		return nil, ErrNilSession
+	}
+
+	m, _, e := ss.GetTrafficMonitorConfigMap(cdn)
+	return m, e
+}
+
+func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
+	ss := s.getLegacy()
+	if ss == nil {
+		return nil, ErrNilSession
+	}
+
+	m, _, e := ss.GetTrafficMonitorConfigMap(cdn)
+	return m.Upgrade(), e
+}
+
 // TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the
 // Traffic Ops, directly from the monitoring.json endpoint. This is not usually
 // what is needed, rather monitoring needs the snapshotted CRConfig data, which
 // is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple
 // goroutines.
 func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc.TrafficMonitorConfigMap, error) {
-	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
+	var configMap *tc.TrafficMonitorConfigMap
+	var err error
+
+	if s.useLegacy {
+		configMap, err = s.fetchLegacyTMConfigMap(cdn)
+	} else {
+		configMap, err = s.fetchTMConfigMap(cdn)
 	}
 
-	tmConfig, _, err := ss.GetTrafficMonitorConfig(cdn)
+	if configMap == nil {
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("nil configMap after fetching")
+	}
 
 	if err == nil {
-		configMap, err = tc.LegacyTrafficMonitorTransformToMap(tmConfig)
+		err = configMap.Valid()
 	}
 
 	if err != nil {
