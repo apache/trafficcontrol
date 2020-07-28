@@ -147,6 +147,66 @@ type LegacyTrafficServer struct {
 	Type             string              `json:"type"`
 }
 
+// Upgrade upgrades the LegacyTrafficServer into its modern-day equivalent.
+//
+// Note that the DeliveryServices slice is a "shallow" copy of the original, so
+// making changes to the original slice will affect the upgraded copy.
+func (s LegacyTrafficServer) Upgrade() TrafficServer {
+	upgraded := TrafficServer{
+		CacheGroup:       s.CacheGroup,
+		DeliveryServices: s.DeliveryServices,
+		FQDN:             s.FQDN,
+		HashID:           s.HashID,
+		HostName:         s.HostName,
+		HTTPSPort:        s.HTTPSPort,
+		Interfaces: []ServerInterfaceInfo{
+			{
+				MaxBandwidth: nil,
+				MTU:          nil,
+				Monitor:      false,
+				Name:         s.InterfaceName,
+				IPAddresses:  []ServerIPAddress{},
+			},
+		},
+		Port:         s.Port,
+		Profile:      s.Profile,
+		ServerStatus: s.ServerStatus,
+		Type:         s.Type,
+	}
+
+	if s.IP != "" {
+		upgraded.Interfaces[0] = ServerInterfaceInfo{
+			MaxBandwidth: nil,
+			MTU:          nil,
+			Monitor:      false,
+			Name:         s.InterfaceName,
+			IPAddresses: []ServerIPAddress{
+				{
+					Address:        s.IP,
+					Gateway:        nil,
+					ServiceAddress: true,
+				},
+			},
+		}
+	}
+
+	if s.IP6 != "" {
+		upgraded.Interfaces[0] = ServerInterfaceInfo{
+			MaxBandwidth: nil,
+			MTU:          nil,
+			Monitor:      false,
+			Name:         s.InterfaceName,
+			IPAddresses: append(upgraded.Interfaces[0].IPAddresses, ServerIPAddress{
+				Address:        s.IP6,
+				Gateway:        nil,
+				ServiceAddress: true,
+			}),
+		}
+	}
+
+	return upgraded
+}
+
 // GetVIPInterface returns the primary interface specified by the `Monitor` property of an Interface. First interface marked as `Monitor` is returned.
 func GetVIPInterface(ts TrafficServer) ServerInterfaceInfo {
 	for _, interf := range ts.Interfaces {
