@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -203,6 +205,76 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 
 	iface.IPAddresses = ips
 	return []ServerInterfaceInfo{iface}, nil
+}
+
+// String implements the fmt.Stringer interface.
+func (lid LegacyInterfaceDetails) String() string {
+	var b strings.Builder
+	b.Write([]byte("LegacyInterfaceDetails(InterfaceMtu="))
+
+	if lid.InterfaceMtu == nil {
+		b.Write([]byte("nil"))
+	} else {
+		b.WriteString(strconv.FormatInt(int64(*lid.InterfaceMtu), 10))
+	}
+
+	b.Write([]byte(", InterfaceName="))
+	if lid.InterfaceName != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.InterfaceName)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IP6Address="))
+	if lid.IP6Address != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IP6Address)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IP6Gateway="))
+	if lid.IP6Gateway != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IP6Gateway)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IPAddress="))
+	if lid.IPAddress != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IPAddress)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IPGateway="))
+	if lid.IPGateway != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IPGateway)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.Write([]byte(", IPNetmask="))
+	if lid.IPNetmask != nil {
+		b.WriteRune('\'')
+		b.WriteString(*lid.IPNetmask)
+		b.WriteRune('\'')
+	} else {
+		b.Write([]byte("nil"))
+	}
+
+	b.WriteRune(')')
+
+	return b.String()
 }
 
 // InterfaceInfoToLegacyInterfaces converts a ServerInterfaceInfo to an

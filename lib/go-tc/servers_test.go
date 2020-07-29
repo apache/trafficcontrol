@@ -60,6 +60,27 @@ func ExampleLegacyInterfaceDetails_ToInterfaces() {
 	//
 }
 
+func ExampleLegacyInterfaceDetails_String() {
+	ipv4 := "192.0.2.0"
+	ipv6 := "2001:DB8::/64"
+	name := "test"
+	mtu := 9000
+
+	lid := LegacyInterfaceDetails{
+		InterfaceMtu:  &mtu,
+		InterfaceName: &name,
+		IP6Address:    &ipv6,
+		IP6Gateway:    nil,
+		IPAddress:     &ipv4,
+		IPGateway:     nil,
+		IPNetmask:     nil,
+	}
+
+	fmt.Println(lid.String())
+
+	// Output: LegacyInterfaceDetails(InterfaceMtu=9000, InterfaceName='test', IP6Address='2001:DB8::/64', IP6Gateway=nil, IPAddress='192.0.2.0', IPGateway=nil, IPNetmask=nil)
+}
+
 type interfaceTest struct {
 	ExpectedIPv4        string
 	ExpectedIPv4Gateway string
