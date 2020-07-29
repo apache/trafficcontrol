@@ -392,6 +392,20 @@ func TestGetConfig(t *testing.T) {
 	}
 }
 
+func sortByInterfaceName(servers []Cache) {
+	for _, cache := range servers {
+		sort.SliceStable(cache.Interfaces, func(i, j int) bool {
+			interface1, interface2 := cache.Interfaces[i], cache.Interfaces[j]
+			switch {
+			case interface1.Name != interface2.Name:
+				return interface1.Name < interface2.Name
+			default:
+				return interface1.Name < interface2.Name
+			}
+		})
+	}
+}
+
 func TestGetMonitoringJSON(t *testing.T) {
 	resp := MonitoringResponse{}
 	mockDB, mock, err := sqlmock.New()
@@ -528,9 +542,10 @@ func TestGetMonitoringJSON(t *testing.T) {
 	if err != nil {
 		t.Errorf("GetMonitoringJSON expected: nil error, actual: %v", err)
 	}
-
 	resp.Response.TrafficServers = sortCaches(resp.Response.TrafficServers)
 	sqlResp.TrafficServers = sortCaches(sqlResp.TrafficServers)
+	sortByInterfaceName(resp.Response.TrafficServers)
+	sortByInterfaceName(sqlResp.TrafficServers)
 	resp.Response.TrafficMonitors = sortMonitors(resp.Response.TrafficMonitors)
 	sqlResp.TrafficMonitors = sortMonitors(sqlResp.TrafficMonitors)
 	resp.Response.Cachegroups = sortCachegroups(resp.Response.Cachegroups)
