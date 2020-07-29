@@ -69,7 +69,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 		PollFinished:    make(chan uint64, 1),
 		PrecomputedData: cache.PrecomputedData{},
 		Available:       true,
-		UsingIPv4: false,
+		UsingIPv4:       false,
 	}
 	GetVitals(&result, nil, nil)
 
@@ -220,12 +220,12 @@ func TestEvalInterface(t *testing.T) {
 				Profile: "testProfile",
 				Interfaces: []tc.ServerInterfaceInfo{
 					{
-						Monitor: true,
+						Monitor:      true,
 						MaxBandwidth: &infMaxKbps,
-						Name: "testInterface",
-						IPAddresses: []tc.ServerIPAddress {
+						Name:         "testInterface",
+						IPAddresses: []tc.ServerIPAddress{
 							{
-								Address: "::1",
+								Address:        "::1",
 								ServiceAddress: true,
 							},
 						},
