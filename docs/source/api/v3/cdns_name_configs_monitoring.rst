@@ -241,7 +241,6 @@ Response Structure
 					"health.connection.timeout": 2000,
 					"health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
 					"health.threshold.availableBandwidthInKbps": ">1750000",
-					"health.threshold.aggregate.availableBandwidthInKbps": ">17500000",
 					"health.threshold.loadavg": "25.0",
 					"health.threshold.queryTime": 1000,
 					"history.count": 30
@@ -254,7 +253,6 @@ Response Structure
 					"health.connection.timeout": 2000,
 					"health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
 					"health.threshold.availableBandwidthInKbps": ">1750000",
-					"health.threshold.aggregate.availableBandwidthInKbps": ">17500000",
 					"health.threshold.loadavg": "25.0",
 					"health.threshold.queryTime": 1000,
 					"history.count": 30
