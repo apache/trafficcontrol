@@ -26,7 +26,10 @@ RUN echo 'APT::Install-Recommends 0;' >> /etc/apt/apt.conf.d/01norecommends \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y vim.tiny wget net-tools sudo net-tools ca-certificates unzip apt-transport-https \
  && rm -rf /var/lib/apt/lists/* && rm -rf /etc/apt/apt.conf.d/docker-gzip-indexes \
  && apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y bind9=${BIND_VERSION}* bind9-host=${BIND_VERSION}* dnsutils \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        #to-access dependencies
+        jq gettext \
+        bind9=${BIND_VERSION}* bind9-host=${BIND_VERSION}* dnsutils \
  && rm -rf /var/lib/apt/lists/*
 
 COPY dns/entrypoint.sh /sbin/entrypoint.sh

@@ -20,7 +20,7 @@ FROM golang:1.14.2 AS enroller-builder
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
-COPY ./traffic_ops/v2-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v2-client/
+COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
 COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 
@@ -31,7 +31,11 @@ RUN go clean && go get -v && go build
 
 FROM debian:stretch
 
-RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools && apt-get clean
+RUN apt-get update && apt-get install -y \
+        netcat curl dnsutils net-tools \
+        #to-access dependencies
+        jq gettext && \
+    apt-get clean
 COPY --from=enroller-builder \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/enroller \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/run.sh \

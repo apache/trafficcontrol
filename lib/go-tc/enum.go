@@ -55,6 +55,9 @@ type DeliveryServiceName string
 // CacheType is the type (or tier) of a CDN cache.
 type CacheType string
 
+// InterfaceName is the name of the server interface
+type InterfaceName string
+
 const OriginLocationType = "ORG_LOC"
 
 const (

@@ -16,7 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -e
+set -o errexit
+# enable job control
+set -o monitor
 
 BIND_DATA_DIR=${DATA_DIR}/bind
 
@@ -70,7 +72,13 @@ fi
 # default behaviour is to launch named
 if [[ -z ${1} ]]; then
   echo "Starting named..."
-  exec $(which named) -u ${BIND_USER} -g ${EXTRA_ARGS} 
+  $(which named) -u ${BIND_USER} -g ${EXTRA_ARGS} &
 else
-  exec "$@"
+  "$@" &
 fi
+
+source /to-access.sh
+# Enroll with traffic ops
+TO_URL="https://$TO_FQDN:$TO_PORT"
+to-enroll dns ALL '' 53 || (while true; do echo "enroll failed."; sleep 3 ; done)
+fg;
