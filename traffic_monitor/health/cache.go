@@ -269,7 +269,6 @@ func CalcAvailability(
 			if !inf.Monitor {
 				continue
 			}
-			availStatus.LastCheckedIPv4 = availStatus.LastCheckedIPv4 || result.UsingIPv4
 
 			available, why := EvalInterface(resultInfo.InterfaceVitals, inf)
 			if result.UsingIPv4 {

@@ -60,6 +60,353 @@ func ExampleLegacyInterfaceDetails_ToInterfaces() {
 	//
 }
 
+type interfaceTest struct {
+	ExpectedIPv4        string
+	ExpectedIPv4Gateway string
+	ExpectedIPv6        string
+	ExpectedIPv6Gateway string
+	ExpectedMTU         *uint64
+	ExpectedName        string
+	ExpectedNetmask     string
+	Interfaces          []ServerInterfaceInfo
+}
+
+// tests a set of interfaces' conversion to legacy format against expected
+// values.
+// Note: This doesn't distinguish between nil and pointer-to-empty-string values
+// when a value is not expected. That's because all ATC components treat null
+// and empty-string values the same, so it's not important which is returned by
+// the conversion process (and in fact expecting one or the other could
+// potentially break some applications).
+func testInfs(expected interfaceTest, t *testing.T) {
+	lid, err := InterfaceInfoToLegacyInterfaces(expected.Interfaces)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if lid.InterfaceName == nil {
+		t.Error("Unexpectedly nil Interface Name")
+	} else if *lid.InterfaceName != expected.ExpectedName {
+		t.Errorf("Incorrect Interface Name; want: '%s', got: '%s'", expected.ExpectedName, *lid.InterfaceName)
+	}
+
+	if expected.ExpectedMTU != nil {
+		if lid.InterfaceMtu == nil {
+			t.Error("Unexpectedly nil Interface MTU")
+		} else if uint64(*lid.InterfaceMtu) != *expected.ExpectedMTU {
+			t.Errorf("Incorrect Interface MTU; want: %d, got: %d", *expected.ExpectedMTU, *lid.InterfaceMtu)
+		}
+	} else if lid.InterfaceMtu != nil {
+		t.Error("Unexpectedly non-nil Interface MTU")
+	}
+
+	if expected.ExpectedIPv4 != "" {
+		if lid.IPAddress == nil {
+			t.Error("Unexpectedly nil IPv4 Address")
+		} else if *lid.IPAddress != expected.ExpectedIPv4 {
+			t.Errorf("Incorrect IPv4 Address; want: '%s', got: '%s'", expected.ExpectedIPv4, *lid.IPAddress)
+		}
+	} else if lid.IPAddress != nil && *lid.IPAddress != "" {
+		t.Error("Unexpectedly non-empty IPv4 Address")
+	}
+
+	if expected.ExpectedIPv4Gateway != "" {
+		if lid.IPGateway == nil {
+			t.Error("Unexpectedly nil IPv4 Gateway")
+		} else if *lid.IPGateway != expected.ExpectedIPv4Gateway {
+			t.Errorf("Incorrect IPv4 Gateway; want: '%s', got: '%s'", expected.ExpectedIPv4Gateway, *lid.IPGateway)
+		}
+	} else if lid.IPGateway != nil && *lid.IPGateway != "" {
+		t.Error("Unexpectedly non-empty IPv4 Gateway")
+	}
+
+	if expected.ExpectedNetmask != "" {
+		if lid.IPNetmask == nil {
+			t.Error("Unexpectedly nil IPv4 Netmask")
+		} else if *lid.IPNetmask != expected.ExpectedNetmask {
+			t.Errorf("Incorrect IPv4 Netmask; want: '%s', got: '%s'", expected.ExpectedNetmask, *lid.IPNetmask)
+		}
+	} else if lid.IPNetmask != nil && *lid.IPNetmask != "" {
+		t.Error("Unexpectedly non-empty IPv4 Netmask")
+	}
+
+	if expected.ExpectedIPv6 != "" {
+		if lid.IP6Address == nil {
+			t.Error("Unexpectedly nil IPv6 Address")
+		} else if *lid.IP6Address != expected.ExpectedIPv6 {
+			t.Errorf("Incorrect IPv6 Address; want: '%s', got: '%s'", expected.ExpectedIPv6, *lid.IP6Address)
+		}
+	} else if lid.IP6Address != nil && *lid.IP6Address != "" {
+		t.Error("Unexpectedly non-empty IPv6 Address")
+	}
+
+	if expected.ExpectedIPv6Gateway != "" {
+		if lid.IP6Gateway == nil {
+			t.Error("Unexpectedly nil IPv6 Gateway")
+		} else if *lid.IP6Gateway != expected.ExpectedIPv6Gateway {
+			t.Errorf("Incorrect IPv6 Gateway; want: '%s', got: '%s'", expected.ExpectedIPv6Gateway, *lid.IP6Gateway)
+		}
+	} else if lid.IP6Gateway != nil && *lid.IP6Gateway != "" {
+		t.Error("Unexpectedly non-empty IPv6 Gateway")
+	}
+}
+
+func TestInterfaceInfoToLegacyInterfaces(t *testing.T) {
+	var mtu uint64 = 9000
+	ipv4Gateway := "192.0.2.2"
+	ipv6Gateway := "2001:DB8::2"
+
+	cases := map[string]interfaceTest{
+		"single interface, IPv4 only, no gateway, MTU, or netmask": interfaceTest{
+			ExpectedIPv4:        "192.0.2.0",
+			ExpectedIPv4Gateway: "",
+			ExpectedIPv6:        "",
+			ExpectedIPv6Gateway: "",
+			ExpectedMTU:         nil,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "",
+			Interfaces: []ServerInterfaceInfo{
+				ServerInterfaceInfo{
+					MTU:  nil,
+					Name: "test",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.0",
+							Gateway:        nil,
+							ServiceAddress: true,
+						},
+					},
+				},
+			},
+		},
+		"single interface, IPv4 only, no gateway or netmask": interfaceTest{
+			ExpectedIPv4:        "192.0.2.0",
+			ExpectedIPv4Gateway: "",
+			ExpectedIPv6:        "",
+			ExpectedIPv6Gateway: "",
+			ExpectedMTU:         &mtu,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "",
+			Interfaces: []ServerInterfaceInfo{
+				ServerInterfaceInfo{
+					MTU:  &mtu,
+					Name: "test",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.0",
+							Gateway:        nil,
+							ServiceAddress: true,
+						},
+					},
+				},
+			},
+		},
+		"single interface, IPv4 only, no netmask": interfaceTest{ // Final Destination
+			ExpectedIPv4:        "192.0.2.0",
+			ExpectedIPv4Gateway: ipv4Gateway,
+			ExpectedIPv6:        "",
+			ExpectedIPv6Gateway: "",
+			ExpectedMTU:         &mtu,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "",
+			Interfaces: []ServerInterfaceInfo{
+				ServerInterfaceInfo{
+					MTU:  &mtu,
+					Name: "test",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.0",
+							Gateway:        &ipv4Gateway,
+							ServiceAddress: true,
+						},
+					},
+				},
+			},
+		},
+		"single interface, IPv4 only": interfaceTest{
+			ExpectedIPv4:        "192.0.2.0",
+			ExpectedIPv4Gateway: ipv4Gateway,
+			ExpectedIPv6:        "",
+			ExpectedIPv6Gateway: "",
+			ExpectedMTU:         &mtu,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "255.255.255.0",
+			Interfaces: []ServerInterfaceInfo{
+				ServerInterfaceInfo{
+					MTU:  &mtu,
+					Name: "test",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.0/24",
+							Gateway:        &ipv4Gateway,
+							ServiceAddress: true,
+						},
+					},
+				},
+			},
+		},
+		"single interface, no gateway, MTU, or netmask": interfaceTest{
+			ExpectedIPv4:        "192.0.2.0",
+			ExpectedIPv4Gateway: "",
+			ExpectedIPv6:        "2001:DB8::1",
+			ExpectedIPv6Gateway: "",
+			ExpectedMTU:         nil,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "",
+			Interfaces: []ServerInterfaceInfo{
+				ServerInterfaceInfo{
+					MTU:  nil,
+					Name: "test",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.0",
+							Gateway:        nil,
+							ServiceAddress: true,
+						},
+						ServerIPAddress{
+							Address:        "2001:DB8::1",
+							Gateway:        nil,
+							ServiceAddress: true,
+						},
+					},
+				},
+			},
+		},
+		"single interface": interfaceTest{
+			ExpectedIPv4:        "192.0.2.0",
+			ExpectedIPv4Gateway: ipv4Gateway,
+			ExpectedIPv6:        "2001:DB8::1",
+			ExpectedIPv6Gateway: ipv6Gateway,
+			ExpectedMTU:         &mtu,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "255.255.255.0",
+			Interfaces: []ServerInterfaceInfo{
+				ServerInterfaceInfo{
+					MTU:  &mtu,
+					Name: "test",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.0/24",
+							Gateway:        &ipv4Gateway,
+							ServiceAddress: true,
+						},
+						ServerIPAddress{
+							Address:        "2001:DB8::1",
+							Gateway:        &ipv6Gateway,
+							ServiceAddress: true,
+						},
+					},
+				},
+			},
+		},
+		"multiple interfaces": interfaceTest{
+			ExpectedIPv4:        "192.0.2.0",
+			ExpectedIPv4Gateway: ipv4Gateway,
+			ExpectedIPv6:        "2001:DB8::1",
+			ExpectedIPv6Gateway: ipv6Gateway,
+			ExpectedMTU:         &mtu,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "255.255.255.0",
+			Interfaces: []ServerInterfaceInfo{
+				ServerInterfaceInfo{
+					MTU:  nil,
+					Name: "invalid1",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.1/5",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+						ServerIPAddress{
+							Address:        "2001:DB8::2",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+					},
+				},
+				ServerInterfaceInfo{
+					MTU:  &mtu,
+					Name: "test",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.0/24",
+							Gateway:        &ipv4Gateway,
+							ServiceAddress: true,
+						},
+						ServerIPAddress{
+							Address:        "2001:DB8::1",
+							Gateway:        &ipv6Gateway,
+							ServiceAddress: true,
+						},
+					},
+				},
+				ServerInterfaceInfo{
+					MTU:  nil,
+					Name: "invalid2",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.2/7",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+						ServerIPAddress{
+							Address:        "2001:DB8::3/12",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+					},
+				},
+			},
+		},
+		"single interface, extra IP addresses": interfaceTest{
+			ExpectedIPv4:        "192.0.2.0",
+			ExpectedIPv4Gateway: ipv4Gateway,
+			ExpectedIPv6:        "2001:DB8::1",
+			ExpectedIPv6Gateway: ipv6Gateway,
+			ExpectedMTU:         &mtu,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "255.255.255.0",
+			Interfaces: []ServerInterfaceInfo{
+				ServerInterfaceInfo{
+					MTU:  &mtu,
+					Name: "test",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.1/5",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+						ServerIPAddress{
+							Address:        "192.0.2.0/24",
+							Gateway:        &ipv4Gateway,
+							ServiceAddress: true,
+						},
+						ServerIPAddress{
+							Address:        "2001:DB8::2",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+						ServerIPAddress{
+							Address:        "2001:DB8::1",
+							Gateway:        &ipv6Gateway,
+							ServiceAddress: true,
+						},
+						ServerIPAddress{
+							Address:        "192.0.2.2/20",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for description, test := range cases {
+		t.Run(description, func(t *testing.T) { testInfs(test, t) })
+	}
+}
+
 func TestServer_ToNullable(t *testing.T) {
 	fqdn := "testFQDN"
 	srv := Server{
