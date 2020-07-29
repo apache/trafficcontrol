@@ -320,6 +320,85 @@ func TestInterfaceInfoToLegacyInterfaces(t *testing.T) {
 				},
 			},
 		},
+		"single interface, extra IP addresses": interfaceTest{
+			ExpectedIPv4:        "192.0.2.0",
+			ExpectedIPv4Gateway: ipv4Gateway,
+			ExpectedIPv6:        "2001:DB8::1",
+			ExpectedIPv6Gateway: ipv6Gateway,
+			ExpectedMTU:         &mtu,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "255.255.255.0",
+			Interfaces: []ServerInterfaceInfo{
+				ServerInterfaceInfo{
+					MTU:  &mtu,
+					Name: "test",
+					IPAddresses: []ServerIPAddress{
+						ServerIPAddress{
+							Address:        "192.0.2.1/5",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+						ServerIPAddress{
+							Address:        "192.0.2.0/24",
+							Gateway:        &ipv4Gateway,
+							ServiceAddress: true,
+						},
+						ServerIPAddress{
+							Address:        "2001:DB8::2",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+						ServerIPAddress{
+							Address:        "2001:DB8::1",
+							Gateway:        &ipv6Gateway,
+							ServiceAddress: true,
+						},
+						ServerIPAddress{
+							Address:        "192.0.2.2/20",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+					},
+				},
+			},
+		},
+		"multiple interfaces, IPv4 only, no netmask": interfaceTest{
+			ExpectedIPv4:        "192.0.2.1",
+			ExpectedIPv4Gateway: ipv4Gateway,
+			ExpectedMTU:         &mtu,
+			ExpectedName:        "test",
+			ExpectedNetmask:     "",
+			ExpectedIPv6:        "",
+			ExpectedIPv6Gateway: "",
+			Interfaces: []ServerInterfaceInfo{
+				{
+					IPAddresses: []ServerIPAddress{
+						{
+							Address:        "192.0.2.1",
+							Gateway:        &ipv4Gateway,
+							ServiceAddress: true,
+						},
+					},
+					MaxBandwidth: nil,
+					Monitor:      true,
+					MTU:          &mtu,
+					Name:         "test",
+				},
+				{
+					IPAddresses: []ServerIPAddress{
+						{
+							Address:        "192.0.2.2",
+							Gateway:        nil,
+							ServiceAddress: false,
+						},
+					},
+					MaxBandwidth: nil,
+					Monitor:      false,
+					MTU:          &mtu,
+					Name:         "invalid",
+				},
+			},
+		},
 		"multiple interfaces": interfaceTest{
 			ExpectedIPv4:        "192.0.2.0",
 			ExpectedIPv4Gateway: ipv4Gateway,
@@ -372,48 +451,6 @@ func TestInterfaceInfoToLegacyInterfaces(t *testing.T) {
 						},
 						ServerIPAddress{
 							Address:        "2001:DB8::3/12",
-							Gateway:        nil,
-							ServiceAddress: false,
-						},
-					},
-				},
-			},
-		},
-		"single interface, extra IP addresses": interfaceTest{
-			ExpectedIPv4:        "192.0.2.0",
-			ExpectedIPv4Gateway: ipv4Gateway,
-			ExpectedIPv6:        "2001:DB8::1",
-			ExpectedIPv6Gateway: ipv6Gateway,
-			ExpectedMTU:         &mtu,
-			ExpectedName:        "test",
-			ExpectedNetmask:     "255.255.255.0",
-			Interfaces: []ServerInterfaceInfo{
-				ServerInterfaceInfo{
-					MTU:  &mtu,
-					Name: "test",
-					IPAddresses: []ServerIPAddress{
-						ServerIPAddress{
-							Address:        "192.0.2.1/5",
-							Gateway:        nil,
-							ServiceAddress: false,
-						},
-						ServerIPAddress{
-							Address:        "192.0.2.0/24",
-							Gateway:        &ipv4Gateway,
-							ServiceAddress: true,
-						},
-						ServerIPAddress{
-							Address:        "2001:DB8::2",
-							Gateway:        nil,
-							ServiceAddress: false,
-						},
-						ServerIPAddress{
-							Address:        "2001:DB8::1",
-							Gateway:        &ipv6Gateway,
-							ServiceAddress: true,
-						},
-						ServerIPAddress{
-							Address:        "192.0.2.2/20",
 							Gateway:        nil,
 							ServiceAddress: false,
 						},

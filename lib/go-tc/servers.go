@@ -286,10 +286,14 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 
 	for _, intFace := range serverInterfaces {
 
+		foundServiceInterface := false
+
 		for _, addr := range intFace.IPAddresses {
 			if !addr.ServiceAddress {
 				continue
 			}
+
+			foundServiceInterface = true
 
 			address := addr.Address
 			gateway := addr.Gateway
@@ -322,17 +326,26 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 				legacyDetails.InterfaceMtu = util.IntPtr(int(*intFace.MTU))
 			}
 
-			legacyDetails.InterfaceName = &intFace.Name
+			// This should no longer matter now that short-circuiting is better,
+			// but this temporary variable is necessary because the 'intFace'
+			// variable is referential, so taking '&intFace.Name' would cause
+			// problems when intFace is reassigned.
+			name := intFace.Name
+			legacyDetails.InterfaceName = &name
 
 			// we can jump out here since servers can only legally have one
 			// IPv4 and one IPv6 service address
 			if legacyDetails.IPAddress != nil && *legacyDetails.IPAddress != "" && legacyDetails.IP6Address != nil && *legacyDetails.IP6Address != "" {
-				return legacyDetails, nil
+				break
 			}
+		}
+
+		if foundServiceInterface {
+			return legacyDetails, nil
 		}
 	}
 
-	return legacyDetails, nil
+	return legacyDetails, errors.New("no service addresses found")
 }
 
 type Server struct {
