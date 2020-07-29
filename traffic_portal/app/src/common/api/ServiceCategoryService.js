@@ -20,7 +20,7 @@
 var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
 
     this.getServiceCategories = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'service-categories', {params: queryParams}).then(
+        return $http.get(ENV.api['root'] + 'service_categories', {params: queryParams}).then(
             function(result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.getServiceCategory = function(id) {
-        return $http.get(ENV.api['root'] + 'service-categories', {params: {id: id}}).then(
+        return $http.get(ENV.api['root'] + 'service_categories', {params: {id: id}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.createServiceCategory = function(serviceCategory) {
-        return $http.post(ENV.api['root'] + 'service-categories', serviceCategory).then(
+        return $http.post(ENV.api['root'] + 'service_categories', serviceCategory).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/service-categories');
@@ -56,7 +56,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.updateServiceCategory = function(serviceCategory) {
-        return $http.put(ENV.api['root'] + 'service-categories/' + serviceCategory.id, serviceCategory).then(
+        return $http.put(ENV.api['root'] + 'service_categories/' + serviceCategory.id, serviceCategory).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;            },
@@ -68,7 +68,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.deleteServiceCategory = function(id) {
-        return $http.delete(ENV.api['root'] + 'service-categories/' + id).then(
+        return $http.delete(ENV.api['root'] + 'service_categories/' + id).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 return result;

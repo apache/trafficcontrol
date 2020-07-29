@@ -37,7 +37,7 @@ func CreateTestServiceCategories(t *testing.T) {
 	tenant1 := "tenant1"
 	// loop through service categories, assign FKs and create
 	for _, sc := range testData.ServiceCategories {
-		tenant, _, err := TOSession.TenantByName(tenant1)
+		tenant, _, err := TOSession.TenantByName(tenant1, nil)
 		sc.TenantID = tenant.ID
 		resp, _, err := TOSession.CreateServiceCategory(sc)
 		if err != nil {
@@ -106,7 +106,7 @@ func UpdateTestServiceCategories(t *testing.T) {
 
 func ServiceCategoryTenancyTest(t *testing.T) {
 	var alert tc.Alerts
-	tenant3, _, err := TOSession.TenantByName("tenant3")
+	tenant3, _, err := TOSession.TenantByName("tenant3", nil)
 	if err != nil {
 		t.Errorf("cannot GET Tenant3: %v", err)
 	}

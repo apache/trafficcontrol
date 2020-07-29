@@ -20,20 +20,15 @@ package servicecategory
  */
 
 import (
-	"fmt"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
+	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
@@ -83,6 +78,22 @@ func (serviceCategory TOServiceCategory) GetType() string {
 	return "serviceCategory"
 }
 
+func (serviceCategory *TOServiceCategory) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"id":       dbhelpers.WhereColumnInfo{"sc.id", api.IsInt},
+		"name":     dbhelpers.WhereColumnInfo{"sc.name", nil},
+		"tenantId": dbhelpers.WhereColumnInfo{"sc.tenant_id", api.IsInt},
+		"tenantName": dbhelpers.WhereColumnInfo{"sc.tenant", nil},
+	}
+}
+
+func (serviceCategory *TOServiceCategory) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` sc ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
+}
+
 func (serviceCategory TOServiceCategory) Validate() error {
 	errs := validation.Errors{
 		"name":     validation.Validate(serviceCategory.Name, validation.NotNil, validation.Required),
@@ -95,79 +106,14 @@ func (serviceCategory *TOServiceCategory) Create() (error, error, int) {
 	return api.GenericCreate(serviceCategory)
 }
 
-func (serviceCategory *TOServiceCategory) Read() ([]interface{}, error, error, int) {
-	returnable := []interface{}{}
-
-	serviceCategories, userErr, sysErr, errCode := getServiceCategories(serviceCategory.ReqInfo.Params, serviceCategory.ReqInfo.Tx, serviceCategory.ReqInfo.User)
-	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
-	}
-
-	for _, serviceCategory := range serviceCategories {
-		returnable = append(returnable, serviceCategory)
-	}
-
-	return returnable, nil, nil, http.StatusOK
+func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, serviceCategory, useIMS)
 }
 func (serviceCategory *TOServiceCategory) Update() (error, error, int) {
 	return api.GenericUpdate(serviceCategory)
 }
 func (serviceCategory *TOServiceCategory) Delete() (error, error, int) {
 	return api.GenericDelete(serviceCategory)
-}
-
-func getServiceCategories(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServiceCategory, error, error, int) {
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":       dbhelpers.WhereColumnInfo{"sc.id", api.IsInt},
-		"name":     dbhelpers.WhereColumnInfo{"sc.name", nil},
-		"tenantId": dbhelpers.WhereColumnInfo{"sc.tenant_id", api.IsInt},
-	}
-
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
-	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
-	}
-
-	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
-
-	if err != nil {
-		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, nil, tc.DBError, http.StatusInternalServerError
-	}
-
-	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "tenant_id", tenantIDs)
-
-	query := selectQuery() + where + orderBy + pagination
-
-	log.Debugln("generated serviceCategory query: " + query)
-	log.Debugf("executing with values: %++v\n", queryValues)
-
-	rows, err := tx.NamedQuery(query, queryValues)
-	if err != nil {
-		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
-	}
-	defer rows.Close()
-
-	serviceCategories := []tc.ServiceCategory{}
-
-	for rows.Next() {
-		var serviceCategory tc.ServiceCategory
-		err := rows.Scan(&serviceCategory.ID,
-			&serviceCategory.TenantID,
-			&serviceCategory.TenantName,
-			&serviceCategory.LastUpdated,
-			&serviceCategory.Name)
-
-		if err != nil {
-			return nil, nil, fmt.Errorf("getting service categories: %v", err), http.StatusInternalServerError
-		}
-
-		serviceCategories = append(serviceCategories, serviceCategory)
-	}
-	return serviceCategories, nil, nil, http.StatusOK
 }
 
 func insertQuery() string {
@@ -178,7 +124,7 @@ func selectQuery() string {
 	return `SELECT
 sc.id,
 sc.tenant_id,
-t.name,
+t.name as tenant,
 sc.last_updated,
 sc.name
 FROM service_category as sc

@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	API_SERVICE_CATEGORIES = apiBase + "/service-categories"
+	API_SERVICE_CATEGORIES = apiBase + "/service_categories"
 )
 
 // CreateServiceCategory performs a post to create a service category.
@@ -38,7 +38,7 @@ func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory) (tc
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVICE_CATEGORIES, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVICE_CATEGORIES, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -60,7 +60,7 @@ func (to *Session) UpdateServiceCategoryByID(id int, serviceCategory tc.ServiceC
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_SERVICE_CATEGORIES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -75,7 +75,7 @@ func (to *Session) UpdateServiceCategoryByID(id int, serviceCategory tc.ServiceC
 // GetServiceCategories gets a list of service categories by the passed in url values.
 func (to *Session) GetServiceCategories(values *url.Values) ([]tc.ServiceCategory, ReqInf, error) {
 	url := fmt.Sprintf("%s?%s", API_SERVICE_CATEGORIES, values.Encode())
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -93,7 +93,7 @@ func (to *Session) GetServiceCategories(values *url.Values) ([]tc.ServiceCategor
 // DeleteServiceCategoryByID deletes a service category by the service category unique numeric id.
 func (to *Session) DeleteServiceCategoryByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_SERVICE_CATEGORIES, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
