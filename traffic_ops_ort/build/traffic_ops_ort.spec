@@ -55,11 +55,16 @@ got3cdir=src/github.com/apache/trafficcontrol/traffic_ops_ort/t3c
 
 %install
 mkdir -p ${RPM_BUILD_ROOT}/opt/ort
+mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
+mkdir -p "${RPM_BUILD_ROOT}"/var/log/ort
+
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/opt/ort
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/opt/ort
 
-src=src/github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg
-cp -p "$src"/atstccfg ${RPM_BUILD_ROOT}/opt/ort
+src=src/github.com/apache/trafficcontrol/traffic_ops_ort
+cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/build/atstccfg.logrotate "${RPM_BUILD_ROOT}"/etc/logrotate.d/atstccfg
+touch ${RPM_BUILD_ROOT}/var/log/ort/atstccfg.log
+cp -p "$src"/atstccfg/atstccfg ${RPM_BUILD_ROOT}/opt/ort
 
 t3csrc=src/github.com/apache/trafficcontrol/traffic_ops_ort/t3c
 cp -p "$t3csrc"/t3c ${RPM_BUILD_ROOT}/opt/ort
@@ -75,5 +80,8 @@ rm -rf ${RPM_BUILD_ROOT}
 /opt/ort/supermicro_udev_mapper.pl
 /opt/ort/atstccfg
 /opt/ort/t3c
+
+%config(noreplace) /etc/logrotate.d/atstccfg
+%config(noreplace) /var/log/ort/atstccfg.log
 
 %changelog
