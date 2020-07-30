@@ -52,7 +52,13 @@ func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]t
 	var err error
 
 	selectQuery := `
+/* topology_ancestors finds the ancestor topology nodes of the topology node for
+ * the cachegroup containing server $1.
+ */
 WITH RECURSIVE topology_ancestors AS (
+/* This is the base case of the recursive CTE, the topology node for the
+ * cachegroup containing server $1.
+ */
 	SELECT tcp.child parent, tc.cachegroup
 	FROM "server" s
 	JOIN cachegroup c ON s.cachegroup = c.id
@@ -60,15 +66,20 @@ WITH RECURSIVE topology_ancestors AS (
 	JOIN topology_cachegroup_parents tcp ON tc.id = tcp.child
 	WHERE s.host_name = $1
 UNION ALL
+/* Find all direct topology parent nodes tc of a given topology ancestor ta. */
 	SELECT tcp.parent, tc.cachegroup
 	FROM topology_ancestors ta, topology_cachegroup_parents tcp
 	JOIN topology_cachegroup tc ON tcp.parent = tc.id
 	WHERE ta.parent = tcp.child
+/* server_topology_ancestors is the set of every server whose cachegroup is an
+ * ancestor topology node found by topology_ancestors.
+ */
 ), server_topology_ancestors AS (
 SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status
 FROM server s
 JOIN cachegroup c ON s.cachegroup = c.id
 JOIN topology_ancestors ta ON c."name" = ta.cachegroup
+/* Filter out host_name $1 */
 WHERE s.host_name != $1
 ), parentservers AS (
 	SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status

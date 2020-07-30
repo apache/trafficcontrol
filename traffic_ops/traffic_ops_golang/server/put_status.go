@@ -108,21 +108,32 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 // queueUpdatesOnChildCaches queues updates on child caches of the given cdnID and parentCachegroupID and returns an error (if one occurs).
 func queueUpdatesOnChildCaches(tx *sql.Tx, cdnID, parentCachegroupID int) error {
 	q := `
+/* topology_descendants finds the descendant topology nodes of the topology node
+ * for the cachegroup containing server $2.
+ */
 WITH RECURSIVE topology_descendants AS (
+/* This is the base case of the recursive CTE, the topology node for the
+ * cachegroup containing cachegroup $2.
+ */
 	SELECT tcp.parent child, tc.cachegroup
 	FROM cachegroup c
 	JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
 	JOIN topology_cachegroup_parents tcp ON tc.id = tcp.parent
 	WHERE c.id = $2
 UNION ALL
+/* Find all direct topology child nodes tc of a given topology descendant td. */
 	SELECT tcp.child, tc.cachegroup
 	FROM topology_descendants td, topology_cachegroup_parents tcp
 	JOIN topology_cachegroup tc ON tcp.child = tc.id
 	WHERE td.child = tcp.parent
+/* server_topology_descendants is the set of every server whose cachegroup is a
+ * descendant topology node found by topology_descendants.
+ */
 ), server_topology_descendants AS (
 SELECT c.id
 FROM cachegroup c
 JOIN topology_descendants td ON c."name" = td.cachegroup
+/* Filter out cachegroup id $2 */
 WHERE c.id != $2
 )
 UPDATE server
