@@ -544,8 +544,6 @@ func TestGetMonitoringJSON(t *testing.T) {
 	}
 	resp.Response.TrafficServers = sortCaches(resp.Response.TrafficServers)
 	sqlResp.TrafficServers = sortCaches(sqlResp.TrafficServers)
-	sortByInterfaceName(resp.Response.TrafficServers)
-	sortByInterfaceName(sqlResp.TrafficServers)
 	resp.Response.TrafficMonitors = sortMonitors(resp.Response.TrafficMonitors)
 	sqlResp.TrafficMonitors = sortMonitors(sqlResp.TrafficMonitors)
 	resp.Response.Cachegroups = sortCachegroups(resp.Response.Cachegroups)
@@ -623,6 +621,7 @@ func (s SortableCaches) Less(i, j int) bool {
 
 func sortCaches(p []Cache) []Cache {
 	sort.Sort(SortableCaches(p))
+	sortByInterfaceName(p)
 	return p
 }
 
