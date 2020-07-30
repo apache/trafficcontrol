@@ -126,7 +126,7 @@ ORDER BY s.id
 		log.Errorf("could not execute query: %s\n", err)
 		return nil, tc.DBError
 	}
-	defer log.Close(rows, "unable to close db connection")
+	defer log.Close(rows, "getServerUpdateStatus(): unable to close db connection")
 
 	for rows.Next() {
 		var serverUpdateStatus tc.ServerUpdateStatus
