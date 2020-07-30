@@ -42,6 +42,18 @@ initBuildArea() {
 	# tar/gzip the source
 	local ts_dest
 	ts_dest="$(createSourceDir traffic_stats)"
+
+	{ set +o nounset;
+	gcflags=''
+	ldflags=''
+	if [ "$DEBUG_BUILD" = true ]; then
+		echo 'DEBUG_BUILD is enabled, building Traffic Stats without optimization or inlining...';
+		gcflags="${gcflags} all=-N -l";
+	else
+		ldflags="${ldflags} -s -w"; #strip binary
+	fi;
+	set -o nounset; }
+
 	cd "$TS_DIR" || \
 		 { echo "Could not cd to $TS_DIR: $?"; return 1; }
 
@@ -49,7 +61,6 @@ initBuildArea() {
 				echo "GOPATH: $GOPATH"
 				go version
 				go env
-				ldflags='-s -w'
 				tags='osusergo netgo'
 
 				# get x/* packages (everything else should be properly vendored)
@@ -57,14 +68,14 @@ initBuildArea() {
 								{ echo "Could not get go package dependencies"; return 1; }
 
 				# compile traffic_stats
-				go build -v -ldflags "$ldflags" -tags "$tags" || \
+				go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
 								{ echo "Could not build traffic_stats binary"; return 1; }
 
 	# compile influx_db_tools
 	(cd influxdb_tools
-	go build -v -ldflags "$ldflags" -tags="$tags" sync/sync_ts_databases.go || \
+	go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags="$tags" sync/sync_ts_databases.go || \
 								{ echo "Could not build sync_ts_databases binary"; return 1; }
-	go build -v -ldflags "$ldflags" -tags="$tags" create/create_ts_databases.go || \
+	go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags="$tags" create/create_ts_databases.go || \
 								{ echo "Could not build create_ts_databases binary"; return 1; })
 
 	rsync -aLv ./ "$ts_dest"/ || \

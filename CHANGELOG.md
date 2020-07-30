@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated /deliveryservices/{{ID}}/servers to use multiple interfaces in API v3
 - Updated /deliveryservices/{{ID}}/servers/eligible to use multiple interfaces in API v3
 - Added the ability to view Hash ID field (aka xmppID) on Traffic Portals' server summary page
+- Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 
 ### Fixed
 - Fixed #4848 - `GET /api/x/cdns/capacity` gives back 500, with the message `capacity was zero`
