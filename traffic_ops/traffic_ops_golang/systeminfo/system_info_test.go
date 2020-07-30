@@ -22,6 +22,7 @@ package systeminfo
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -93,7 +94,7 @@ func TestGetSystemInfo(t *testing.T) {
 	}
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT.*WHERE p.config_file = 'global'").WillReturnRows(rows)
+	mock.ExpectQuery(fmt.Sprintf("SELECT.*WHERE p.config_file = '%s'", tc.GlobalConfigFileName)).WillReturnRows(rows)
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
 	tx, err := db.BeginTxx(dbCtx, nil)

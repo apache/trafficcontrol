@@ -51,18 +51,18 @@ func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]t
 
 	selectQuery := `
 /* topology_ancestors finds the ancestor topology nodes of the topology node for
- * the cachegroup containing server $3.
+ * the cachegroup containing server $4.
  */
 WITH RECURSIVE topology_ancestors AS (
 /* This is the base case of the recursive CTE, the topology node for the
- * cachegroup containing server $3.
+ * cachegroup containing server $4.
  */
 	SELECT tcp.child parent, tc.cachegroup
 	FROM "server" s
 	JOIN cachegroup c ON s.cachegroup = c.id
 	JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
 	JOIN topology_cachegroup_parents tcp ON tc.id = tcp.child
-	WHERE s.host_name = $3
+	WHERE s.host_name = $4
 UNION ALL
 /* Find all direct topology parent nodes tc of a given topology ancestor ta. */
 	SELECT tcp.parent, tc.cachegroup
@@ -77,8 +77,8 @@ SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status
 FROM server s
 JOIN cachegroup c ON s.cachegroup = c.id
 JOIN topology_ancestors ta ON c."name" = ta.cachegroup
-/* Filter out host_name $3 */
-WHERE s.host_name != $3
+/* Filter out host_name $4 */
+WHERE s.host_name != $4
 ), parentservers AS (
 	SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status
 		FROM server ps
@@ -88,7 +88,7 @@ WHERE s.host_name != $3
 	SELECT value::BOOLEAN
 	FROM parameter
 	WHERE name = $2
-	AND config_file = 'global'
+	AND config_file = $3
 	UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY
 )
 SELECT
@@ -114,12 +114,12 @@ LEFT JOIN cachegroup cg ON s.cachegroup = cg.id
 LEFT JOIN type ON type.id = s.type
 LEFT JOIN parentservers ps ON ps.cachegroup = cg.parent_cachegroup_id
 	AND ps.cdn_id = s.cdn_id
-WHERE s.host_name = $3
+WHERE s.host_name = $4
 GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, s.upd_pending, status.name
 ORDER BY s.id
 `
 
-	rows, err := tx.Query(selectQuery, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, hostName)
+	rows, err := tx.Query(selectQuery, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, hostName)
 	if err != nil {
 		log.Errorf("could not execute query: %s\n", err)
 		return nil, tc.DBError
@@ -171,7 +171,7 @@ WITH parentservers AS (
 	SELECT value::BOOLEAN
 	FROM parameter
 	WHERE name = $2
-	AND config_file = 'global'
+	AND config_file = $3
 	UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY
 )
 SELECT
@@ -210,7 +210,7 @@ ORDER BY s.id
 			return nil, tc.DBError
 		}
 	} else {
-		rows, err = tx.Query(baseSelectStatement+` WHERE s.host_name = $3`+groupBy, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, hostName)
+		rows, err = tx.Query(baseSelectStatement+` WHERE s.host_name = $4`+groupBy, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, hostName)
 		if err != nil {
 			log.Errorf("could not execute select server update status by hostname query: %s\n", err)
 			return nil, tc.DBError
