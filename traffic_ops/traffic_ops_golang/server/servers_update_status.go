@@ -116,11 +116,10 @@ LEFT JOIN cachegroup cg ON s.cachegroup = cg.id
 LEFT JOIN type ON type.id = s.type
 LEFT JOIN parentservers ps ON ps.cachegroup = cg.parent_cachegroup_id
 	AND ps.cdn_id = s.cdn_id
-	AND type.name = 'EDGE'
 WHERE s.host_name = $1
 GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, s.upd_pending, status.name
 ORDER BY s.id
-` // remove the type.name = 'EDGE' condition if other server types should have their parents processed
+`
 
 	rows, err = tx.Query(selectQuery, hostName)
 	if err != nil {
