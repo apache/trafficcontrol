@@ -84,6 +84,12 @@ const (
 
 const GlobalProfileName = "GLOBAL"
 
+// ParameterName represents the name of a Traffic Ops parameter meant to belong in a Traffic Ops config file.
+type ParameterName string
+
+// UseRevalPendingParameterName is the name of a parameter which tells whether or not Traffic Ops should use pending revalidation jobs.
+const UseRevalPendingParameterName = ParameterName("use_reval_pending")
+
 func (c CacheName) String() string {
 	return string(c)
 }

@@ -634,7 +634,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 func setRevalFlags(d interface{}, tx *sql.Tx) error {
 	var useReval string
-	row := tx.QueryRow(`SELECT value FROM parameter WHERE name='use_reval_pending' AND config_file='global'`)
+	row := tx.QueryRow(`SELECT value FROM parameter WHERE name=$1 AND config_file='global'`, tc.UseRevalPendingParameterName)
 	if err := row.Scan(&useReval); err != nil {
 		if err != sql.ErrNoRows {
 			return err
