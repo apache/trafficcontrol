@@ -105,34 +105,6 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlert(w, r, tc.SuccessLevel, msg)
 }
 
-// queueUpdatesOnChildNodes queues updates on child nodes of the topology node corresponding corresponding to the given cachegroup
-// and returns an error (if one occurs).
-func queueUpdatesOnChildNodes(tx *sql.Tx, serverID int, cachegroupID int) error {
-	query := `
-WITH RECURSIVE topology AS (
-		SELECT tcp.parent child, tc.cachegroup
-		FROM "server" s
-		JOIN cachegroup c ON s.cachegroup = c.id
-		JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
-		JOIN topology_cachegroup_parents tcp ON tc.id = tcp.parent
-		WHERE s.id = $1
-	UNION ALL
-		SELECT tcp.child, tc.cachegroup FROM topology t, topology_cachegroup_parents tcp
-		JOIN topology_cachegroup tc ON tcp.child = tc.id
-		WHERE t.child = tcp.parent
-)
-SELET c.id
-FROM cachegroup c
-JOIN topology t ON c."name" = t.cachegroup
-WHERE s.cachegroup = c.id
-AND s.cachegroup != $2
-`
-	if _, err := tx.Exec(query, serverID, cachegroupID); err != nil {
-		return errors.New("queueing updates on child topology nodes: " + err.Error())
-	}
-	return nil
-}
-
 // queueUpdatesOnChildCaches queues updates on child caches of the given cdnID and parentCachegroupID and returns an error (if one occurs).
 func queueUpdatesOnChildCaches(tx *sql.Tx, cdnID, parentCachegroupID int) error {
 	q := `
