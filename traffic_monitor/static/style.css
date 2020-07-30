@@ -80,6 +80,71 @@ th {
 	margin: 15px 0;
 }
 
+#icon-disc-holder.hidden {
+	display: none;
+}
+#icon-disc-holder {
+	display: block;
+    width: 125px;
+	position: relative;
+	margin-top: 5px;
+	cursor: pointer;
+}
+
+#icon-disc,
+#icon-disc::after,
+#icon-disc::before {
+	display: block;
+	box-sizing: border-box;
+	border: 2px solid;
+	border-radius: 50%
+}
+#icon-disc {
+	margin: auto;
+	border-top-color: transparent;
+	border-bottom-color: transparent;
+	transform: rotate(45deg);
+	position: relative;
+	width: 14px;
+	height: 14px;
+}
+#icon-disc-holder .icon-disc-tooltip {
+	visibility: hidden;
+	background-color: black;
+	color: #fff;
+	text-align: center;
+	border-radius: 6px;
+	padding: 5px 0;
+
+	position: absolute;
+	z-index: 1;
+	width: 125px;
+	top: 20px
+}
+
+#icon-disc-holder:hover .icon-disc-tooltip {
+	visibility: visible;
+	opacity: 1;
+    animation: 1s ease-in;
+}
+
+#icon-disc::after,
+#icon-disc::before {
+	content: "";
+	position: absolute;
+	width: 6px;
+	height: 6px;
+	top: 2px;
+	left: 2px
+}
+#icon-disc::after {
+	width: 22px;
+	height: 22px;
+	border-radius: 100%;
+	top: -6px;
+	left: -6px
+}
+
 /*****************/
 /*     Links     */
 /*****************/

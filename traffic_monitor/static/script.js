@@ -109,7 +109,14 @@ function getTrafficOpsUri() {
 
 function getTrafficOpsCdn() {
 	ajax("/publish/ConfigDoc", function(r) {
-		document.getElementById("cdn-name").textContent = JSON.parse(r).cdnName || "unknown";
+		let opsConfig = JSON.parse(r);
+		document.getElementById("cdn-name").textContent = opsConfig.cdnName || "unknown";
+		var diskIconContainer = document.getElementById("icon-disc-holder");
+		if ((opsConfig.usingDummyTO || true) === false) {
+			diskIconContainer.classList.add("hidden");
+		} else {
+			//diskIconContainer.classList.remove("hidden");
+		}
 	});
 }
 
