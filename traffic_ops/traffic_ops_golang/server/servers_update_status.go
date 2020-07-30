@@ -123,7 +123,7 @@ ORDER BY s.id
 
 	rows, err = tx.Query(selectQuery, hostName)
 	if err != nil {
-		log.Error.Printf("could not execute query: %s\n", err)
+		log.Errorf("could not execute query: %s\n", err)
 		return nil, tc.DBError
 	}
 	defer log.Close(rows, "unable to close db connection")
@@ -132,7 +132,7 @@ ORDER BY s.id
 		var serverUpdateStatus tc.ServerUpdateStatus
 		var serverType string
 		if err := rows.Scan(&serverUpdateStatus.HostId, &serverUpdateStatus.HostName, &serverType, &serverUpdateStatus.RevalPending, &serverUpdateStatus.UseRevalPending, &serverUpdateStatus.UpdatePending, &serverUpdateStatus.Status, &serverUpdateStatus.ParentPending, &serverUpdateStatus.ParentRevalPending); err != nil {
-			log.Error.Printf("could not scan server update status: %s\n", err)
+			log.Errorf("could not scan server update status: %s\n", err)
 			return nil, tc.DBError
 		}
 		updateStatuses = append(updateStatuses, serverUpdateStatus)
@@ -208,13 +208,13 @@ ORDER BY s.id
 	if hostName == "all" {
 		rows, err = tx.Query(baseSelectStatement + groupBy)
 		if err != nil {
-			log.Error.Printf("could not execute select server update status query: %s\n", err)
+			log.Errorf("could not execute select server update status query: %s\n", err)
 			return nil, tc.DBError
 		}
 	} else {
 		rows, err = tx.Query(baseSelectStatement+` WHERE s.host_name = $1`+groupBy, hostName)
 		if err != nil {
-			log.Error.Printf("could not execute select server update status by hostname query: %s\n", err)
+			log.Errorf("could not execute select server update status by hostname query: %s\n", err)
 			return nil, tc.DBError
 		}
 	}
@@ -224,7 +224,7 @@ ORDER BY s.id
 		var serverUpdateStatus tc.ServerUpdateStatus
 		var serverType string
 		if err := rows.Scan(&serverUpdateStatus.HostId, &serverUpdateStatus.HostName, &serverType, &serverUpdateStatus.RevalPending, &serverUpdateStatus.UseRevalPending, &serverUpdateStatus.UpdatePending, &serverUpdateStatus.Status, &serverUpdateStatus.ParentPending, &serverUpdateStatus.ParentRevalPending); err != nil {
-			log.Error.Printf("could not scan server update status: %s\n", err)
+			log.Errorf("could not scan server update status: %s\n", err)
 			return nil, tc.DBError
 		}
 		if hostName == "all" { //if we want to return the parent data for servers when all is used remove this block
