@@ -129,13 +129,13 @@ ORDER BY s.id
 	defer log.Close(rows, "getServerUpdateStatus(): unable to close db connection")
 
 	for rows.Next() {
-		var serverUpdateStatus tc.ServerUpdateStatus
+		var us tc.ServerUpdateStatus
 		var serverType string
-		if err := rows.Scan(&serverUpdateStatus.HostId, &serverUpdateStatus.HostName, &serverType, &serverUpdateStatus.RevalPending, &serverUpdateStatus.UseRevalPending, &serverUpdateStatus.UpdatePending, &serverUpdateStatus.Status, &serverUpdateStatus.ParentPending, &serverUpdateStatus.ParentRevalPending); err != nil {
+		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending); err != nil {
 			log.Errorf("could not scan server update status: %s\n", err)
 			return nil, tc.DBError
 		}
-		updateStatuses = append(updateStatuses, serverUpdateStatus)
+		updateStatuses = append(updateStatuses, us)
 	}
 	return updateStatuses, nil
 }
@@ -221,17 +221,17 @@ ORDER BY s.id
 	defer rows.Close()
 
 	for rows.Next() {
-		var serverUpdateStatus tc.ServerUpdateStatus
+		var us tc.ServerUpdateStatus
 		var serverType string
-		if err := rows.Scan(&serverUpdateStatus.HostId, &serverUpdateStatus.HostName, &serverType, &serverUpdateStatus.RevalPending, &serverUpdateStatus.UseRevalPending, &serverUpdateStatus.UpdatePending, &serverUpdateStatus.Status, &serverUpdateStatus.ParentPending, &serverUpdateStatus.ParentRevalPending); err != nil {
+		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending); err != nil {
 			log.Errorf("could not scan server update status: %s\n", err)
 			return nil, tc.DBError
 		}
 		if hostName == "all" { //if we want to return the parent data for servers when all is used remove this block
-			serverUpdateStatus.ParentRevalPending = false
-			serverUpdateStatus.ParentPending = false
+			us.ParentRevalPending = false
+			us.ParentPending = false
 		}
-		updateStatuses = append(updateStatuses, serverUpdateStatus)
+		updateStatuses = append(updateStatuses, us)
 	}
 	return updateStatuses, nil
 }
