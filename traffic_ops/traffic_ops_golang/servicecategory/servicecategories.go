@@ -20,6 +20,7 @@ package servicecategory
  */
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -29,7 +30,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/go-ozzo/ozzo-validation"
 )
 
 type TOServiceCategory struct {
@@ -80,9 +82,9 @@ func (serviceCategory TOServiceCategory) GetType() string {
 
 func (serviceCategory *TOServiceCategory) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":       dbhelpers.WhereColumnInfo{"sc.id", api.IsInt},
-		"name":     dbhelpers.WhereColumnInfo{"sc.name", nil},
-		"tenantId": dbhelpers.WhereColumnInfo{"sc.tenant_id", api.IsInt},
+		"id":         dbhelpers.WhereColumnInfo{"sc.id", api.IsInt},
+		"name":       dbhelpers.WhereColumnInfo{"sc.name", nil},
+		"tenantId":   dbhelpers.WhereColumnInfo{"sc.tenant_id", api.IsInt},
 		"tenantName": dbhelpers.WhereColumnInfo{"sc.tenant", nil},
 	}
 }
@@ -107,8 +109,36 @@ func (serviceCategory *TOServiceCategory) Create() (error, error, int) {
 }
 
 func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	return api.GenericRead(h, serviceCategory, useIMS)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(serviceCategory.APIInfo().Tx.Tx, serviceCategory.APIInfo().User.TenantID)
+	if err != nil {
+		return nil, nil, errors.New("getting tenant list for user: " + err.Error()), http.StatusInternalServerError, nil
+	}
+
+	serviceCategories, userErr, sysErr, errCode, maxTime := api.GenericRead(h, serviceCategory, useIMS)
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, errCode, nil
+	}
+
+	filteredServiceCategories := []interface{}{}
+	for _, sc := range serviceCategories {
+		sc1 := sc.(*tc.ServiceCategory)
+		if checkTenancy(sc1, tenantIDs) {
+			filteredServiceCategories = append(filteredServiceCategories, sc1)
+		}
+	}
+
+	return filteredServiceCategories, nil, nil, errCode, maxTime
 }
+
+func checkTenancy(category *tc.ServiceCategory, tenantIDs []int) bool {
+	for _, tenantID := range tenantIDs {
+		if tenantID == category.TenantID {
+			return true
+		}
+	}
+	return false
+}
+
 func (serviceCategory *TOServiceCategory) Update() (error, error, int) {
 	return api.GenericUpdate(serviceCategory)
 }

@@ -313,7 +313,6 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.RegionalGeoBlocking,
 		&ds.RemapText,
 		&ds.RoutingName,
-		&ds.ServiceCategoryId,
 		&ds.SigningAlgorithm,
 		&ds.SSLKeyVersion,
 		&ds.TenantID,
@@ -327,6 +326,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.FirstHeaderRewrite,
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
+		&ds.ServiceCategoryId,
 	)
 
 	if err != nil {
@@ -825,7 +825,6 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.RegionalGeoBlocking,
 		&ds.RemapText,
 		&ds.RoutingName,
-		&ds.ServiceCategoryId,
 		&ds.SigningAlgorithm,
 		&ds.SSLKeyVersion,
 		&ds.TenantID,
@@ -842,6 +841,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.FirstHeaderRewrite,
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
+		&ds.ServiceCategoryId,
 		&ds.ID)
 
 	if err != nil {
@@ -1013,7 +1013,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"tenant":           {"ds.tenant_id", api.IsInt},
 		"signingAlgorithm": {"ds.signing_algorithm", nil},
 		"topology":         {"ds.topology", nil},
-		"serviceCategory":	{"ds.service_category", api.IsInt},
+		"serviceCategory":  {"ds.service_category", api.IsInt},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)

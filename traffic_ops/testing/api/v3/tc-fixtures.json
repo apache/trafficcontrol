@@ -2665,11 +2665,11 @@
     "serviceCategories": [
         {
             "name": "serviceCategory1",
-            "tenantId": 3
+            "tenant": "tenant3"
         },
         {
             "name": "serviceCategory2",
-            "tenantId": 4
+            "tenant": "tenant4"
         }
     ],
     "staticdnsentries": [
