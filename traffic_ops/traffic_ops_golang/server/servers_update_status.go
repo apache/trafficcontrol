@@ -48,8 +48,6 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatus, error) {
 
 	updateStatuses := []tc.ServerUpdateStatus{}
-	var rows *sql.Rows
-	var err error
 
 	selectQuery := `
 /* topology_ancestors finds the ancestor topology nodes of the topology node for
@@ -121,7 +119,7 @@ GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.v
 ORDER BY s.id
 `
 
-	rows, err = tx.Query(selectQuery, hostName)
+	rows, err := tx.Query(selectQuery, hostName)
 	if err != nil {
 		log.Errorf("could not execute query: %s\n", err)
 		return nil, tc.DBError
