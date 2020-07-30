@@ -160,8 +160,7 @@ func GetServerUpdateStatusHandlerV1(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespRaw(w, r, serverUpdateStatus)
 }
 
-// getServerUpdateStatusV2 supports /servers/all/update_status in addition to /servers/{host_name}/update_status
-// This special case is believed to be used nowhere.
+// getServerUpdateStatusV2 supports /servers/all/update_status (believed to be used nowhere) in addition to /servers/{host_name}/update_status.
 func getServerUpdateStatusV2(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatus, error) {
 	// language=SQL
 	baseSelectStatement := `
