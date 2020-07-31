@@ -150,7 +150,7 @@ func GetServerUpdateStatusHandlerV1(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	serverUpdateStatus, err := getServerUpdateStatusV2(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
+	serverUpdateStatus, err := getServerUpdateStatusV1(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -158,8 +158,8 @@ func GetServerUpdateStatusHandlerV1(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespRaw(w, r, serverUpdateStatus)
 }
 
-// getServerUpdateStatusV2 supports /servers/all/update_status (believed to be used nowhere) in addition to /servers/{host_name}/update_status.
-func getServerUpdateStatusV2(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatus, error) {
+// getServerUpdateStatusV1 supports /servers/all/update_status (believed to be used nowhere) in addition to /servers/{host_name}/update_status.
+func getServerUpdateStatusV1(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatus, error) {
 	// language=SQL
 	baseSelectStatement := `
 WITH parentservers AS (
