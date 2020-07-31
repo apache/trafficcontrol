@@ -258,9 +258,18 @@ JOIN type t ON server.type = t.id
 	sIDs := []int{}
 	servers := []tc.ServerDetailV30{}
 	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
+
+	serviceAddress := util.StrPtr("")
+	service6Address := util.StrPtr("")
+	serviceGateway := util.StrPtr("")
+	service6Gateway := util.StrPtr("")
+	serviceNetmask := util.StrPtr("")
+	serviceInterface := util.StrPtr("")
+	serviceMtu := util.StrPtr("")
+
 	for rows.Next() {
 		s := tc.ServerDetailV30{}
-		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
 

@@ -294,8 +294,6 @@ AND cdn.name = $3
 		var status sql.NullString
 		var cachegroup sql.NullString
 		var port sql.NullInt64
-		var ip sql.NullString
-		var ip6 sql.NullString
 		var profile sql.NullString
 		var ttype sql.NullString
 		var hashID sql.NullString
@@ -316,8 +314,6 @@ AND cdn.name = $3
 						HostName:   hostName.String,
 						FQDN:       fqdn.String,
 					},
-					IP:  ip.String,
-					IP6: ip6.String,
 				},
 			})
 		} else if strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID") {
