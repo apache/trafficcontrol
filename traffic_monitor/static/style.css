@@ -85,7 +85,7 @@ th {
 }
 #icon-disc-holder {
 	display: block;
-    width: 125px;
+	width: 125px;
 	position: relative;
 	margin-top: 5px;
 	cursor: pointer;
@@ -124,8 +124,6 @@ th {
 
 #icon-disc-holder:hover .icon-disc-tooltip {
 	visibility: visible;
-	opacity: 1;
-    animation: 1s ease-in;
 }
 
 #icon-disc::after,
