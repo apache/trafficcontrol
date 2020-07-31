@@ -77,8 +77,8 @@ SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status
 FROM server s
 JOIN cachegroup c ON s.cachegroup = c.id
 JOIN topology_ancestors ta ON c."name" = ta.cachegroup
-/* Filter out host_name $4 */
-WHERE s.host_name != $4
+/* Filter out cachegroup of host_name $4 */
+WHERE s.cachegroup != (SELECT s.cachegroup FROM server s WHERE s.host_name = $4)
 ), parentservers AS (
 	SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status
 		FROM server ps
