@@ -324,7 +324,7 @@ Traffic Stats
 	mydc build trafficstats-nondebug trafficstats
 	mydc up
 
-* Install `an IDE that supports delve <https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code>`_ and create a debugging configuration over port 2344. If you are using VS Code, the configuration should look like this:
+* Install `an IDE that supports delve <https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code>`_ and create a debugging configuration over port 2346. If you are using VS Code, the configuration should look like this:
 
 .. code-block:: json
 	:caption: VS Code launch.json for debugging Traffic Stats
@@ -337,7 +337,7 @@ Traffic Stats
 				"type": "go",
 				"request": "attach",
 				"mode": "remote",
-				"port": 2344,
+				"port": 2346,
 				"cwd": "${workspaceRoot}/traffic_stats",
 				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_stats",
 			}
