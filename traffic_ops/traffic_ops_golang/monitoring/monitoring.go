@@ -187,8 +187,6 @@ SELECT
 	status.name as status,
 	cachegroup.name as cachegroup,
 	me.tcp_port as port,
-	me.ip_address as ip,
-	me.ip6_address as ip6,
 	profile.name as profile,
 	type.name as type,
 	me.xmpp_id as hashID,
@@ -303,7 +301,7 @@ AND cdn.name = $3
 		var hashID sql.NullString
 		var serverID sql.NullInt64
 
-		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &ttype, &hashID, &serverID); err != nil {
+		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &profile, &ttype, &hashID, &serverID); err != nil {
 			return nil, nil, nil, err
 		}
 
