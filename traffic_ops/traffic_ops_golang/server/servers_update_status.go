@@ -204,13 +204,13 @@ ORDER BY s.id
 	var rows *sql.Rows
 	var err error
 	if hostName == "all" {
-		rows, err = tx.Query(baseSelectStatement + groupBy)
+		rows, err = tx.Query(baseSelectStatement + groupBy, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName)
 		if err != nil {
 			log.Errorf("could not execute select server update status query: %s\n", err)
 			return nil, tc.DBError
 		}
 	} else {
-		rows, err = tx.Query(baseSelectStatement+` WHERE s.host_name = $4`+groupBy, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, hostName)
+		rows, err = tx.Query(baseSelectStatement+` WHERE s.host_name = $4`+groupBy, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName, hostName)
 		if err != nil {
 			log.Errorf("could not execute select server update status by hostname query: %s\n", err)
 			return nil, tc.DBError
