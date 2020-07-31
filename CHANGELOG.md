@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated /deliveryservices/{{ID}}/servers to use multiple interfaces in API v3
 - Updated /deliveryservices/{{ID}}/servers/eligible to use multiple interfaces in API v3
 - Added the ability to view Hash ID field (aka xmppID) on Traffic Portals' server summary page
+- Added the ability to set TLS config provided here: https://golang.org/pkg/crypto/tls/#Config in Traffic Ops
 
 ### Fixed
 - Fixed #4848 - `GET /api/x/cdns/capacity` gives back 500, with the message `capacity was zero`
@@ -61,6 +62,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Deprecated
 - Deprecated the non-nullable `DeliveryService` Go struct and other structs that use it. `DeliveryServiceNullable` structs should be used instead.
+- Deprecated the `insecure` option in `traffic_ops_golang` in favor of `"tls_config": { "InsecureSkipVerify": <bool> }`
 
 ### Removed
 - Removed deprecated Traffic Ops Go Client methods.
