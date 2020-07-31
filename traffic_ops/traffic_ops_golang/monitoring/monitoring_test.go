@@ -528,7 +528,12 @@ func TestGetMonitoringJSON(t *testing.T) {
 	if err != nil {
 		t.Errorf("GetMonitoringJSON expected: nil error, actual: %v", err)
 	}
-
+	for _, cache := range resp.Response.TrafficServers {
+		cache.Interfaces = sortInterfaces(cache.Interfaces)
+	}
+	for _, cache := range sqlResp.TrafficServers {
+		cache.Interfaces = sortInterfaces(cache.Interfaces)
+	}
 	resp.Response.TrafficServers = sortCaches(resp.Response.TrafficServers)
 	sqlResp.TrafficServers = sortCaches(sqlResp.TrafficServers)
 	resp.Response.TrafficMonitors = sortMonitors(resp.Response.TrafficMonitors)
@@ -604,6 +609,23 @@ func (s SortableCaches) Swap(i, j int) {
 }
 func (s SortableCaches) Less(i, j int) bool {
 	return s[i].HostName < s[j].HostName
+}
+
+type SortableInterfaces []tc.ServerInterfaceInfo
+
+func (s SortableInterfaces) Len() int {
+	return len(s)
+}
+func (s SortableInterfaces) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s SortableInterfaces) Less(i, j int) bool {
+	return s[i].Name < s[j].Name
+}
+
+func sortInterfaces(i []tc.ServerInterfaceInfo) []tc.ServerInterfaceInfo {
+	sort.Sort(SortableInterfaces(i))
+	return i
 }
 
 func sortCaches(p []Cache) []Cache {
