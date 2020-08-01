@@ -18,6 +18,7 @@
  */
 
 var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, staticDnsEntry, $scope, formUtils, locationUtils, typeService, cacheGroupService) {
+    $scope.StaticDNSPattern = locationUtils.StaticDNSPattern;
 
     var getTypes = function() {
         typeService.getTypes({ useInTable: 'staticdnsentry' })
