@@ -1218,6 +1218,42 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{1, 1}, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandlerDeprecated, auth.PrivLevelOperations, Authenticated, nil, 854424150, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandlerDeprecated, auth.PrivLevelOperations, Authenticated, nil, 1969911829, noPerlBypass},
 
+		// Legacy Configfile routes
+		{api.Version{1, 1}, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1755842214, noPerlBypass},
+
+		{api.Version{1, 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/regex_revalidate\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1810067775, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_mid_{xml-id}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 658322121, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_{xml-id}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1894063777, noPerlBypass},
+
+		{api.Version{1, 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/bg_fetch\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 160404036, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/cacheurl{filename}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1373111113, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/regex_remap_{ds-name}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1283602930, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/set_dscp_{dscp}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1889993740, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/ssl_multicert\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1113687166, noPerlBypass},
+
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/12M_facts/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 2146608231, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/50-ats\.rules/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1101032000, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/astats\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1362661662, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/cache\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 292387870, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/drop_qstring\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1097869291, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/logging\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 172702063, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/logging\.yaml/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 453568059, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/logs_xml\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1309053227, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/plugin\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 274047559, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/records\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 469014057, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/storage\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 121977329, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/sysctl\.conf/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1202950646, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/url_sig_{file}\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 448450070, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/uri_signing_{file}\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 125995582, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/volume\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 792704719, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/{file}/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1651257268, noPerlBypass},
+
+		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/cache\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 34686861, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/hosting\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1387459113, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/packages/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 245024839, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/chkconfig/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1012457987, noPerlBypass},
+		{api.Version{1, 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/{file}/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 322079218, noPerlBypass},
+
 		// Federations
 		{api.Version{1, 4}, http.MethodGet, `federations/all/?(\.json)?$`, federations.GetAll, auth.PrivLevelAdmin, Authenticated, nil, 61059986, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `federations/?(\.json)?$`, federations.Get, auth.PrivLevelFederation, Authenticated, nil, 154954994, noPerlBypass},
