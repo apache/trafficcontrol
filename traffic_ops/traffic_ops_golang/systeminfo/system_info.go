@@ -51,9 +51,9 @@ SELECT
 FROM
   parameter p
 WHERE
-  p.config_file = 'global'
+  p.config_file = $1
 `
-	rows, err := tx.Queryx(q)
+	rows, err := tx.Queryx(q, tc.GlobalConfigFileName)
 	if err != nil {
 		return nil, errors.New("querying system info global parameters: " + err.Error())
 	}
