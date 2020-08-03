@@ -26,7 +26,9 @@ under the License.
             <div class="form-inline" role="search">
                 <input id="quickSearch" name="quickSearch" type="search" class="form-control text-input" placeholder="Quick search..." ng-model="quickSearch" ng-change="onQuickSearchChanged()" aria-label="Search"/>
                 <div class="input-group text-input">
-                    <span class="input-group-addon">Page Size:</span>
+                    <span class="input-group-addon">
+                        <label for="pageSize">Page size:</label>
+                    </span>
                     <input id="pageSize" name="pageSize" type="number" class="form-control" placeholder="100" ng-model="pageSize" ng-change="onPageSizeChanged()" aria-label="Page Size"/>
                 </div>
                 <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">

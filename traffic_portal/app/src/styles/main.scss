@@ -122,6 +122,12 @@ body.nav-sm .container.body .main-content {
     font-size: 24px;
   }
 
+  .input-group-addon > label {
+    color: gray;
+    font-weight: normal;
+    margin-bottom: 0;
+  }
+
   .text-input {
     margin: 5px 6px 4px 0;
 
