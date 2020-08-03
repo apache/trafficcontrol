@@ -187,8 +187,6 @@ SELECT
 	status.name as status,
 	cachegroup.name as cachegroup,
 	me.tcp_port as port,
-	me.ip_address as ip,
-	me.ip6_address as ip6,
 	profile.name as profile,
 	type.name as type,
 	me.xmpp_id as hashID,
@@ -296,14 +294,12 @@ AND cdn.name = $3
 		var status sql.NullString
 		var cachegroup sql.NullString
 		var port sql.NullInt64
-		var ip sql.NullString
-		var ip6 sql.NullString
 		var profile sql.NullString
 		var ttype sql.NullString
 		var hashID sql.NullString
 		var serverID sql.NullInt64
 
-		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &ttype, &hashID, &serverID); err != nil {
+		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &profile, &ttype, &hashID, &serverID); err != nil {
 			return nil, nil, nil, err
 		}
 
@@ -318,8 +314,6 @@ AND cdn.name = $3
 						HostName:   hostName.String,
 						FQDN:       fqdn.String,
 					},
-					IP:  ip.String,
-					IP6: ip6.String,
 				},
 			})
 		} else if strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID") {

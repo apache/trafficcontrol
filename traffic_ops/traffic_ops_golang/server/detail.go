@@ -154,12 +154,12 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 		"ilo_password":     "server.ilo_password",
 		"ilo_username":     "server.ilo_username",
 		"interface_mtu":    "interface_mtu",
-		"interface_name":   "server.interface_name",
-		"ip6_address":      "server.ip6_address",
-		"ip6_gateway":      "server.ip6_gateway",
-		"ip_address":       "server.ip_address",
-		"ip_gateway":       "server.ip_gateway",
-		"ip_netmask":       "server.ip_netmask",
+		"interface_name":   "interface_name",
+		"ip6_address":      "service_ip6",
+		"ip6_gateway":      "service_gateway6",
+		"ip_address":       "service_ip",
+		"ip_gateway":       "service_gateway",
+		"ip_netmask":       "service_netmask",
 		"mgmt_ip_address":  "server.mgmt_ip_address",
 		"mgmt_ip_gateway":  "server.mgmt_ip_gateway",
 		"mgmt_ip_netmask":  "server.mgmt_ip_netmask",
@@ -181,6 +181,7 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 		return nil, errors.New("orderBy '" + orderBy + "' not permitted")
 	}
 	const JumboFrameBPS = 9000
+
 	q := `
 SELECT
 	cg.name AS cachegroup,
@@ -197,6 +198,13 @@ SELECT
 	server.ilo_password,
 	server.ilo_username,
 	` + InterfacesArray + ` AS interfaces,
+	(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_ip,
+	(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_ip6,
+	(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_gateway,
+	(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_gateway6,
+	(SELECT host(netmask(ip_address.address)) FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_netmask,
+	(SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS interface_name,
+	(SELECT mtu FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id)) AS interface_mtu,
 	server.mgmt_ip_address,
 	server.mgmt_ip_gateway,
 	server.mgmt_ip_netmask,
@@ -250,9 +258,18 @@ JOIN type t ON server.type = t.id
 	sIDs := []int{}
 	servers := []tc.ServerDetailV30{}
 	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
+
+	serviceAddress := util.StrPtr("")
+	service6Address := util.StrPtr("")
+	serviceGateway := util.StrPtr("")
+	service6Gateway := util.StrPtr("")
+	serviceNetmask := util.StrPtr("")
+	serviceInterface := util.StrPtr("")
+	serviceMtu := util.StrPtr("")
+
 	for rows.Next() {
 		s := tc.ServerDetailV30{}
-		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
 
