@@ -222,7 +222,6 @@ public class TrafficRouter {
 	 */
 	protected DeliveryService selectDeliveryService(final Request request) {
 		if (cacheRegister == null) {
-		if(cacheRegister==null) {
 			LOGGER.warn("no caches yet");
 			return null;
 		}
