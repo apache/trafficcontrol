@@ -204,7 +204,7 @@ SELECT
 	(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_gateway6,
 	(SELECT host(netmask(ip_address.address)) FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_netmask,
 	(SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS interface_name,
-	(SELECT mtu FROM interface WHERE server.id = interface.server AND interface.name = interface_name) AS interface_mtu,
+	(SELECT mtu FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id)) AS interface_mtu,
 	server.mgmt_ip_address,
 	server.mgmt_ip_gateway,
 	server.mgmt_ip_netmask,
