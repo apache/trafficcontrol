@@ -99,13 +99,15 @@ SELECT
 	use_reval_pending.value,
 	s.upd_pending,
 	status.name AS status,
-	COALESCE(BOOL_OR(ps.upd_pending),
+		/* True if the cachegroup parent or any ancestor topology node has pending updates */
 		TRUE IN (
-			SELECT sta.upd_pending FROM  server_topology_ancestors sta)
+			SELECT sta.upd_pending FROM  server_topology_ancestors sta
+			UNION SELECT COALESCE(BOOL_OR(ps.upd_pending), FALSE)
 		) AS parent_upd_pending,
-	COALESCE(BOOL_OR(ps.reval_pending),
+		/* True if the cachegroup parent or any ancestor topology node has pending updates */
 		TRUE IN (
-			SELECT sta.reval_pending FROM  server_topology_ancestors sta)
+			SELECT sta.reval_pending FROM  server_topology_ancestors sta
+			UNION SELECT COALESCE(BOOL_OR(ps.reval_pending), FALSE)
 		) AS parent_reval_pending
 	FROM use_reval_pending,
 		 server s
