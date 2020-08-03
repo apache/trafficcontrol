@@ -19,6 +19,7 @@
 
 module.exports = function(){
 	this.moreBtn=element(by.name('moreBtn'));
+	this.createServerMenuItem=element(by.name('createServerMenuItem'));
 	this.viewCapabilitiesMenuItem=element(by.css('a[ng-click*=viewCapabilities]'));
 	this.addCapabilityBtn=element(by.name('addCapabilityBtn'));
 	this.selectFormDropdown=element(by.name('selectFormDropdown'));
