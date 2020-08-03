@@ -533,7 +533,6 @@ public class TrafficRouter {
 	 * @param track A "tracker" that tracks the results of routing.
 	 * @return The final result of routing.
 	 */
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public DNSRouteResult route(final DNSRequest request, final Track track) throws GeolocationException {
 		final DeliveryService ds = selectDeliveryService(request);
 
@@ -1084,6 +1083,7 @@ public class TrafficRouter {
 	 * @param request An {@link HTTPRequest} representing the client's request.
 	 * @return A string appropriate to use for consistent hashing to service the request
 	*/
+	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	public String buildPatternBasedHashString(final DeliveryService deliveryService, final HTTPRequest request) {
 		final String requestPath = request.getPath();
 		final StringBuilder hashString = new StringBuilder("");
@@ -1144,6 +1144,7 @@ public class TrafficRouter {
 	 * @throws MalformedURLException
 	 * @throws GeolocationException
 	 */
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
