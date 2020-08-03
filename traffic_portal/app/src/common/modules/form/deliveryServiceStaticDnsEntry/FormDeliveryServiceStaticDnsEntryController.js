@@ -17,8 +17,8 @@
  * under the License.
  */
 
-var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, staticDnsEntry, $scope, formUtils, locationUtils, typeService, cacheGroupService) {
-    $scope.StaticDNSPattern = locationUtils.StaticDNSPattern;
+var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, staticDnsEntry, $scope, formUtils, locationUtils, deliveryServiceUtils, typeService, cacheGroupService) {
+    $scope.StaticDNSPattern = deliveryServiceUtils.StaticDNSPattern;
 
     var getTypes = function() {
         typeService.getTypes({ useInTable: 'staticdnsentry' })
@@ -44,5 +44,5 @@ var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, stat
 
 };
 
-FormDeliveryServiceStaticDnsEntryController.$inject = ['deliveryService', 'staticDnsEntry', '$scope', 'formUtils', 'locationUtils', 'typeService', 'cacheGroupService'];
+FormDeliveryServiceStaticDnsEntryController.$inject = ['deliveryService', 'staticDnsEntry', '$scope', 'formUtils', 'locationUtils', 'deliveryServiceUtils', 'typeService', 'cacheGroupService'];
 module.exports = FormDeliveryServiceStaticDnsEntryController;

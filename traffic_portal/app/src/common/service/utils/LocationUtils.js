@@ -19,11 +19,6 @@
 
 var LocationUtils = function($location, $uibModal) {
 
-    // ... this one allows Static DNS entries with only a trailing period
-    this.StaticDNSPattern = /^(?=.{1,253}\.?$)(?:(?!-|[^.]+_)[A-Za-z0-9-_]{1,63}(?:\.)){2,}$/;
-    // actual regex: /^(?=.{1,253}\.?$)(?:(?!-|[^.]+_)[A-Za-z0-9-_]{1,63}(?<!-)(?:\.)){2,}$/
-    // but this, (?<!-),  is failing JScheck
-
     this.navigateToPath = function(path, unsavedChanges) {
         if (unsavedChanges) {
             const params = {

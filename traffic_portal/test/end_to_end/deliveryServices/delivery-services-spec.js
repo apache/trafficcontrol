@@ -336,7 +336,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		console.log('Adding Static DNS entry to ' + mockVals.httpXmlId);
 		pageData.moreBtn.click();
 		pageData.viewStaticCapabilitiesMenuItem.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/static-dns-entries?type=HTTP");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/static-dns-entries");
 		pageData.addStaticDNSBtn.click();
 		// expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
 		// set host name
