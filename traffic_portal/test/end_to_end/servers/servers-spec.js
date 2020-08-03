@@ -34,7 +34,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	};
 
 	it('should go to the Servers page', function() {
-		console.log('Looading Configure/Servers');
+		console.log('Loading Configure/Servers');
 		browser.setLocation("servers");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
@@ -77,7 +77,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	it('should verify the new Server and then update Server', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
-		element(by.cssContainingText('.ag-cell', mockVals.hostName)).click()
+		element(by.cssContainingText('.ag-cell', mockVals.hostName)).click();
 		browser.sleep(1000);
 		pageData.domainName.clear();
 		pageData.domainName.sendKeys('testupdated.com');

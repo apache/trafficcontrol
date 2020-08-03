@@ -50,7 +50,11 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		dnsXmlId: "dns-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		httpXmlId: "http-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		steeringXmlId: "http-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
-		longDesc: "This is only a test delivery service that should be disposed of by Automated UI Testing."
+		longDesc: "This is only a test delivery service that should be disposed of by Automated UI Testing.",
+		staticDNShostName: "static-dns-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
+		staticDNSTTL: 50,
+		staticDNSAddress: "cdn.test.com."
+
 	};
 
 	it('should open delivery services page', function() {
@@ -312,19 +316,60 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(pageData.displayName.getText() === "Updated display name");
 	});
 
-	it('should add a required server capability to the HTTP delivery service', function() {
-		console.log('Adding required server capability to ' + mockVals.httpXmlId);
+	// it('should add a required server capability to the HTTP delivery service', function() {
+	// 	console.log('Adding required server capability to ' + mockVals.httpXmlId);
+	// 	pageData.moreBtn.click();
+	// 	pageData.viewCapabilitiesMenuItem.click();
+	// 	expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/required-server-capabilities");
+	// 	pageData.addCapabilityBtn.click();
+	// 	expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
+	// 	commonFunctions.selectDropdownbyNum(pageData.selectFormDropdown, 1);
+	// 	expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
+	// 	pageData.selectFormSubmitButton.click();
+	// 	element.all(by.css('tbody tr')).then(function(totalRows) {
+	// 		expect(totalRows.length).toBe(1);
+	// 	});
+	// });
+
+	it('should add a required Static DNS entry to the HTTP delivery service', function() {
+		console.log('Adding Static DNS entry to ' + mockVals.httpXmlId);
 		pageData.moreBtn.click();
-		pageData.viewCapabilitiesMenuItem.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/required-server-capabilities");
-		pageData.addCapabilityBtn.click();
-		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
-		commonFunctions.selectDropdownbyNum(pageData.selectFormDropdown, 1);
-		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
-		pageData.selectFormSubmitButton.click();
+		pageData.viewStaticCapabilitiesMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/static-dns-entries/?type=HTTP");
+		pageData.addStaticDNSBtn.click();
+		// expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
+		// set host name
+		pageData.host.sendKeys(mockVals.staticDNShostName);
+		// set type ID
+		pageData.typeId.click();
+		commonFunctions.selectDropdownbyNum(pageData.typeId, 3);
+		// set ttl
+		pageData.ttl.sendKeys(mockVals.staticDNSTTL);
+		// set address
+		pageData.address.sendKeys(mockVals.staticDNSAddress);
+		expect(pageData.createButton.isEnabled()).toBe(true);
+		pageData.createButton.click();
 		element.all(by.css('tbody tr')).then(function(totalRows) {
 			expect(totalRows.length).toBe(1);
 		});
+	});
+
+	it('should delete the Static DNS entry', function() {
+		console.log('Deleting the Static DNS entry for ' + mockVals.httpXmlId);
+		// pageData.searchStaticFilter.clear().then(function () {
+		// 	pageData.searchStaticFilter.sendKeys(mockVals.staticDNShostName);
+		// });
+		// element.all(by.repeater('s in ::staticDnsEntries')).filter(function(row){
+		// 	return row.element(by.name('::s.host')).getText().then(function(val){
+		// 		return val.toString() === mockVals.staticDNShostName.toString();
+		// 	});
+		// }).get(0).click();
+	 	pageData.dsStaticLink.click();
+		expect(pageData.deleteButton.isEnabled()).toBe(true);
+		pageData.deleteButton.click();
+		pageData.confirmWithNameInput.sendKeys(mockVals.staticDNShostName);
+		pageData.deletePermanentlyButton.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/static-dns-entries");
 	});
 
 	it('should navigate back to the HTTP delivery service and delete it', function() {
