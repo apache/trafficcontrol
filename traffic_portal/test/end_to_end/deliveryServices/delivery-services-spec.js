@@ -332,10 +332,11 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	});
 
 	it('should add a required Static DNS entry to the HTTP delivery service', function() {
+		pageData.dsLink.click();
 		console.log('Adding Static DNS entry to ' + mockVals.httpXmlId);
 		pageData.moreBtn.click();
 		pageData.viewStaticCapabilitiesMenuItem.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/static-dns-entries/?type=HTTP");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/static-dns-entries?type=HTTP");
 		pageData.addStaticDNSBtn.click();
 		// expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
 		// set host name
@@ -352,24 +353,6 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		element.all(by.css('tbody tr')).then(function(totalRows) {
 			expect(totalRows.length).toBe(1);
 		});
-	});
-
-	it('should delete the Static DNS entry', function() {
-		console.log('Deleting the Static DNS entry for ' + mockVals.httpXmlId);
-		// pageData.searchStaticFilter.clear().then(function () {
-		// 	pageData.searchStaticFilter.sendKeys(mockVals.staticDNShostName);
-		// });
-		// element.all(by.repeater('s in ::staticDnsEntries')).filter(function(row){
-		// 	return row.element(by.name('::s.host')).getText().then(function(val){
-		// 		return val.toString() === mockVals.staticDNShostName.toString();
-		// 	});
-		// }).get(0).click();
-	 	pageData.dsStaticLink.click();
-		expect(pageData.deleteButton.isEnabled()).toBe(true);
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.staticDNShostName);
-		pageData.deletePermanentlyButton.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/static-dns-entries");
 	});
 
 	it('should navigate back to the HTTP delivery service and delete it', function() {

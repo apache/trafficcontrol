@@ -27,7 +27,6 @@ module.exports = function(){
 	this.selectServersBtn=element(by.name('selectServersBtn'));
 	this.selectAllCB=element(by.id('selectAllCB'));
 	this.dsLink=element(by.name('dsLink'));
-	this.dsStaticLink=element(by.name('dsStaticLink'));
 	this.selectFormDropdown=element(by.name('selectFormDropdown'));
 	this.selectFormSubmitButton=element(by.buttonText('Submit'));
 	this.active=element(by.name('active'));
@@ -48,7 +47,6 @@ module.exports = function(){
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
 	this.searchFilter=element(by.id('deliveryServicesTable_filter')).element(by.css('label input'));
-	this.searchStaticFilter=element(by.id('staticDnsEntriesTable_filter')).element(by.css('label input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
 };
