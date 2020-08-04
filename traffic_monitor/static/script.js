@@ -108,14 +108,15 @@ function getTrafficOpsUri() {
 }
 
 function getTrafficOpsCdn() {
+	const cdnName = document.getElementById("cdn-name");
+	const discIconContainer = document.getElementById("icon-disc-holder");
 	ajax("/publish/ConfigDoc", function(r) {
 		let opsConfig = JSON.parse(r);
-		document.getElementById("cdn-name").textContent = opsConfig.cdnName || "unknown";
-		var discIconContainer = document.getElementById("icon-disc-holder");
-		if ((opsConfig.usingDummyTO || true) === false) {
-			discIconContainer.classList.add("hidden");
+		cdnName.textContent = opsConfig.cdnName || "unknown";
+		if (opsConfig.usingDummyTO === false) {
+		    discIconContainer.hidden = true;
 		} else {
-			discIconContainer.classList.remove("hidden");
+			discIconContainer.hidden = false;
 		}
 	});
 }

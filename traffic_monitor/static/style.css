@@ -80,11 +80,7 @@ th {
 	margin: 15px 0;
 }
 
-#icon-disc-holder.hidden {
-	display: none;
-}
 #icon-disc-holder {
-	display: block;
 	width: 125px;
 	position: relative;
 	margin-top: 5px;
