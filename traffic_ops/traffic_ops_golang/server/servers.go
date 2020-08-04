@@ -858,7 +858,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err := rows.StructScan(&s); err != nil {
-			log.Error.Printf("could not scan mid servers: %s\n", err)
+			log.Errorf("could not scan mid servers: %s\n", err)
 			return nil, nil, err, http.StatusInternalServerError
 		}
 		if s.ID == nil {

@@ -61,6 +61,13 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 		return ds;
 	});
 
+	$scope.toggleRow = function(ds) {
+		if (!ds.topology) {
+			ds.selected = !ds.selected;
+			$scope.onChange();
+		}
+	};
+
 	$scope.selectAll = function($event) {
 		var checkbox = $event.target;
 		if (checkbox.checked) {

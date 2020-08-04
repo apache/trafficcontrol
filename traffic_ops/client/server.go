@@ -178,6 +178,27 @@ func (to *Session) GetServers(params *url.Values, header http.Header) (tc.Server
 	return data, reqInf, err
 }
 
+// GetFirstServer returns the first server in a servers GET response.
+// If no servers match, an error is returned.
+// The 'params' parameter can be used to optionally pass URL "query string
+// parameters" in the request.
+// It returns, in order, the API response that Traffic Ops returned, a request
+// info object, and any error that occurred.
+func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.ServerNullable, ReqInf, error) {
+	serversResponse, reqInf, err := to.GetServers(params, header)
+	var firstServer tc.ServerNullable
+	if err != nil || reqInf.StatusCode == http.StatusNotModified {
+		return firstServer, reqInf, err
+	}
+	for _, firstServer = range serversResponse.Response {
+		return firstServer, reqInf, err
+	}
+
+	err = fmt.Errorf("unable to find server matching params %v", *params)
+	return firstServer, reqInf, err
+}
+
+
 // GetServerDetailsByHostName GETs Servers by the Server hostname.
 func (to *Session) GetServerDetailsByHostName(hostName string, header http.Header) ([]tc.ServerDetailV30, ReqInf, error) {
 	v := url.Values{}

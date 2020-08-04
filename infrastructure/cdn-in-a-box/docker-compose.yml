@@ -164,6 +164,7 @@ services:
     build:
       context: .
       dockerfile: traffic_stats/Dockerfile
+    image: trafficstats
     depends_on:
       - enroller
       - influxdb
