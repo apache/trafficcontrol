@@ -109,7 +109,35 @@ func TestMakeParentDotConfig(t *testing.T) {
 		TCPPort:      80,
 		Type:         "EDGE",
 	}
-	servers := []tc.Server{server}
+
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
+
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	parentConfigParams := []tc.Parameter{}
@@ -236,7 +264,34 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 		TCPPort:      80,
 		Type:         "EDGE",
 	}
-	servers := []tc.Server{server}
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
+
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	parentConfigParams := []tc.Parameter{}
@@ -367,7 +422,35 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 		TCPPort:      80,
 		Type:         "EDGE",
 	}
-	servers := []tc.Server{server}
+
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
+
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	parentConfigParams := []tc.Parameter{}
@@ -416,6 +499,7 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 
 	serverInfo := &ServerInfo{
 		CacheGroupID:                  42,
+		CacheGroupName:                "edgeCG",
 		CDN:                           "myCDN",
 		CDNID:                         43,
 		DomainName:                    "serverdomain.example.net",
@@ -457,7 +541,33 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 	server := serverInfoToServer(serverInfo)
 	server.Cachegroup = "edgeCG"
 
-	servers := []tc.Server{server}
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -485,7 +595,7 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
 	}
 	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
-		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
+		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
 	}
 	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
 		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
@@ -567,7 +677,33 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 	server := serverInfoToServer(serverInfo)
 	server.Cachegroup = "edgeCG"
 
-	servers := []tc.Server{server}
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -690,7 +826,33 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 	server := serverInfoToServer(serverInfo)
 	server.Cachegroup = "edgeCG"
 
-	servers := []tc.Server{server}
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         46,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
 
 	topologies := []tc.Topology{
 		tc.Topology{
@@ -709,6 +871,8 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 
 	serverCapabilities := map[int]map[ServerCapability]struct{}{
 		44: map[ServerCapability]struct{}{"FOO": {}},
+		45: map[ServerCapability]struct{}{"FOO": {}},
+		46: map[ServerCapability]struct{}{"FOO": {}},
 	}
 	parentConfigParams := []tc.Parameter{}
 	cgs := []tc.CacheGroupNullable{}
