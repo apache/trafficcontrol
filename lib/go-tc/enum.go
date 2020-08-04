@@ -52,6 +52,9 @@ type CacheGroupName string
 // DeliveryServiceName is the name of a CDN delivery service.
 type DeliveryServiceName string
 
+// TopologyName is the name of a topology of cachegroups.
+type TopologyName string
+
 // CacheType is the type (or tier) of a CDN cache.
 type CacheType string
 
