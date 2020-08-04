@@ -34,7 +34,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serviceCategoryForm.name), 'has-feedback': hasError(serviceCategoryForm.name)}">
                 <label for="name" class="control-label col-md-2 col-sm-2 col-xs-12">Category Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="name" name="name" type="text" class="form-control" ng-model="serviceCategory.name" required autofocus>
+                    <input id="name" name="name" type="text" class="form-control" ng-model="serviceCategory.name" ng-disabled="!settings.isNew" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serviceCategoryForm.name, 'required')">Required</small>
                     <span ng-show="hasError(serviceCategoryForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
