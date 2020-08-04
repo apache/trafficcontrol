@@ -326,7 +326,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.FirstHeaderRewrite,
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
-		&ds.ServiceCategoryId,
+		&ds.ServiceCategory,
 	)
 
 	if err != nil {

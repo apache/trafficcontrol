@@ -135,7 +135,7 @@ func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullable) (HeaderRewriteDS, err
 		MaxOriginConnections: *ds.MaxOriginConnections,
 		MidHeaderRewrite:     *ds.MidHeaderRewrite,
 		Type:                 *ds.Type,
-		ServiceCategory:      *ds.ServiceCategoryName,
+		ServiceCategory:      *ds.ServiceCategory,
 	}, nil
 }
 
@@ -176,7 +176,7 @@ func MakeHeaderRewriteDotConfig(
 	}
 
 	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategory != "" {
-		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsXmlId, ds.ServiceCategoryName)
+		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsXmlId, ds.ServiceCategory)
 	}
 
 	text += "\n"
