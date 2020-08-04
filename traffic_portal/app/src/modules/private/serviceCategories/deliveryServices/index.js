@@ -21,17 +21,17 @@ module.exports = angular.module('trafficPortal.private.serviceCategories.deliver
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.serviceCategories.deliveryServices', {
-				url: '/{serviceCategoryId}/delivery-services',
+				url: '/{serviceCategory}/delivery-services',
 				views: {
 					serviceCategoriesContent: {
 						templateUrl: 'common/modules/table/serviceCategoryDeliveryServices/table.serviceCategoryDeliveryServices.tpl.html',
 						controller: 'TableServiceCategoryDeliveryServicesController',
 						resolve: {
 							serviceCategory: function($stateParams, serviceCategoryService) {
-								return serviceCategoryService.getServiceCategory($stateParams.serviceCategoryId);
+								return serviceCategoryService.getServiceCategory($stateParams.serviceCategory);
 							},
 							deliveryServices: function(serviceCategory, deliveryServiceService) {
-								return deliveryServiceService.getDeliveryServices({ serviceCategory: serviceCategory.id });
+								return deliveryServiceService.getDeliveryServices({ serviceCategory: serviceCategory.name });
 							}
 						}
 					}

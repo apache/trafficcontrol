@@ -721,7 +721,7 @@ WHERE
 		&dsV30.FirstHeaderRewrite,
 		&dsV30.InnerHeaderRewrite,
 		&dsV30.LastHeaderRewrite,
-		&dsV30.ServiceCategoryId,
+		&dsV30.ServiceCategory,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, http.StatusNotFound, fmt.Errorf("delivery service ID %d not found", *dsV30.ID), nil
@@ -841,7 +841,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.FirstHeaderRewrite,
 		&ds.InnerHeaderRewrite,
 		&ds.LastHeaderRewrite,
-		&ds.ServiceCategoryId,
+		&ds.ServiceCategory,
 		&ds.ID)
 
 	if err != nil {
@@ -1013,7 +1013,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"tenant":           {"ds.tenant_id", api.IsInt},
 		"signingAlgorithm": {"ds.signing_algorithm", nil},
 		"topology":         {"ds.topology", nil},
-		"serviceCategory":  {"ds.service_category", api.IsInt},
+		"serviceCategory":  {"ds.service_category", nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
@@ -1261,8 +1261,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.RegionalGeoBlocking,
 			&ds.RemapText,
 			&ds.RoutingName,
-			&ds.ServiceCategoryId,
-			&ds.ServiceCategoryName,
+			&ds.ServiceCategory,
 			&ds.SigningAlgorithm,
 			&ds.RangeSliceBlockSize,
 			&ds.SSLKeyVersion,
@@ -1788,7 +1787,6 @@ ds.regional_geo_blocking,
 ds.remap_text,
 ds.routing_name,
 ds.service_category,
-service_category.name as service_category_name,
 ds.signing_algorithm,
 ds.range_slice_block_size,
 ds.ssl_key_version,
@@ -1806,7 +1804,6 @@ JOIN type ON ds.type = type.id
 JOIN cdn ON ds.cdn_id = cdn.id
 LEFT JOIN profile ON ds.profile = profile.id
 LEFT JOIN tenant ON ds.tenant_id = tenant.id
-LEFT JOIN service_category ON ds.service_category = service_category.id
 `
 }
 

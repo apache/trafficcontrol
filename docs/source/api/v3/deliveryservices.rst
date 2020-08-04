@@ -50,7 +50,7 @@ Request Structure
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| accessibleTo      | no       | Return the :term:`Delivery Services` accessible from a :term:`Tenant` *or it's children* identified by this integral, unique identifier |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| serviceCategory   | no       | Show only the :term:`Delivery Services` belonging to the :term:`Service Category` identified by this integral, unique identifier        |
+	| serviceCategory   | no       | Show only the :term:`Delivery Services` belonging to the :term:`Service Category` that has this name                                    |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| xmlId             | no       | Show only the :term:`Delivery Service` that has this text-based, unique identifier                                                      |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -135,8 +135,7 @@ Response Structure
 :regexRemap:           A :ref:`ds-regex-remap`
 :regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:            :ref:`ds-raw-remap`
-:serviceCategory:      An integral, unique identifier that corresponds to the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
-:serviceCategoryName:  The :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
+:serviceCategory:      The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 :rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
@@ -249,8 +248,7 @@ Response Structure
 		"ecsEnabled": false,
 		"rangeSliceBlockSize": null,
 		"topology": null
-		"serviceCategory": null,
-		"serviceCategoryName": null
+		"serviceCategory": null
 	}]}
 
 
@@ -318,7 +316,7 @@ Request Structure
 :regexRemap:                A :ref:`ds-regex-remap`
 :regionalGeoBlocking:       A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:                 :ref:`ds-raw-remap`
-:serviceCategory:           An integral, unique identifier that corresponds to the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
+:serviceCategory:           The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated - or ``null`` if there is to be no such category
 :signed:                    ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:          Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 :rangeSliceBlockSize:      An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3. It can only be between (inclusive) 262144 (256KB) - 33554432 (32MB).
@@ -443,7 +441,7 @@ Response Structure
 :regexRemap:           A :ref:`ds-regex-remap`
 :regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:            :ref:`ds-raw-remap`
-:serviceCategory:      An integral, unique identifier that corresponds to the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
+:serviceCategory:      The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 :rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.

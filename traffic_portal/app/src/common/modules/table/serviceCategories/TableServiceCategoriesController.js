@@ -21,8 +21,8 @@ var TableServiceCategoriesController = function(serviceCategories, $scope, $stat
 
     $scope.serviceCategories = serviceCategories;
 
-    $scope.editServiceCategory = function(id) {
-        locationUtils.navigateToPath('/service-categories/' + id);
+    $scope.editServiceCategory = function(name) {
+        locationUtils.navigateToPath('/service-categories/' + encodeURIComponent(name));
     };
 
     $scope.createServiceCategory = function() {

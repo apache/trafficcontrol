@@ -35,8 +35,6 @@ Request Structure
     +-----------+---------------------------------------------------------------------------------------------------------------+
     | Name      | Description                                                                                                   |
     +===========+===============================================================================================================+
-    | id        | Filter for :term:`Service Categories` having this integral, unique identifier                                 |
-    +-----------+---------------------------------------------------------------------------------------------------------------+
     | name      | Filter for :term:`Service Categories` with this name                                                          |
     +-----------+---------------------------------------------------------------------------------------------------------------+
     | tenant    | Return only :term:`Service Categories` belonging to the tenant identified by this integral, unique identifier |
@@ -66,7 +64,6 @@ Request Structure
 
 Response Structure
 ------------------
-:id:          The integral, unique identifier of this :term:`Service Category`
 :name:        This :term:`Service Category`'s name
 :lastUpdated: The date and time at which this :term:`Service Category` was last modified, in ISO format
 :tenantId:    An integral, unique identifier for the :term:`Tenant` that owns this :term:`Service Category`
@@ -90,7 +87,6 @@ Response Structure
     {
         "response": [
             {
-                "id": 5,
                 "lastUpdated": "2020-03-04 15:46:20-07",
                 "name": "SERVICE_CATEGORY_NAME",
                 "tenantId": 1,
@@ -130,7 +126,6 @@ Request Structure
 
 Response Structure
 ------------------
-:id:          The integral, unique identifier of this :term:`Service Category`
 :name:        This :term:`Service Category`'s name
 :lastUpdated: The date and time at which this :term:`Service Category` was last modified, in ISO format
 :tenantId:    An integral, unique identifier for the :term:`Tenant` that owns this :term:`Service Category`
@@ -159,7 +154,6 @@ Response Structure
             }
         ],
         "response": {
-            "id": 1,
             "lastUpdated": "2020-03-11 14:12:20-06",
             "name": "SERVICE_CATEGORY_NAME",
             "tenantId": 1,

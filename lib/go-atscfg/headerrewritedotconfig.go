@@ -45,7 +45,7 @@ type HeaderRewriteDS struct {
 	MaxOriginConnections int
 	MidHeaderRewrite     string
 	Type                 tc.DSType
-	ServiceCategoryName  string
+	ServiceCategory      string
 }
 
 type HeaderRewriteServer struct {
@@ -125,8 +125,8 @@ func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullable) (HeaderRewriteDS, err
 	if ds.MidHeaderRewrite == nil {
 		ds.MidHeaderRewrite = util.StrPtr("")
 	}
-	if ds.ServiceCategoryName == nil {
-		ds.ServiceCategoryName = util.StrPtr("")
+	if ds.ServiceCategory == nil {
+		ds.ServiceCategory = new(string)
 	}
 
 	return HeaderRewriteDS{
@@ -135,7 +135,7 @@ func HeaderRewriteDSFromDS(ds *tc.DeliveryServiceNullable) (HeaderRewriteDS, err
 		MaxOriginConnections: *ds.MaxOriginConnections,
 		MidHeaderRewrite:     *ds.MidHeaderRewrite,
 		Type:                 *ds.Type,
-		ServiceCategoryName:  *ds.ServiceCategoryName,
+		ServiceCategory:      *ds.ServiceCategoryName,
 	}, nil
 }
 
@@ -175,7 +175,7 @@ func MakeHeaderRewriteDotConfig(
 		text += re.ReplaceAllString(ds.EdgeHeaderRewrite, "\n")
 	}
 
-	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategoryName != "" {
+	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategory != "" {
 		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsXmlId, ds.ServiceCategoryName)
 	}
 

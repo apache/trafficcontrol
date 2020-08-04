@@ -21,14 +21,14 @@ module.exports = angular.module('trafficPortal.private.serviceCategories.edit', 
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.serviceCategories.edit', {
-                url: '/{serviceCategoryId:[0-9]{1,8}}',
+                url: '/{serviceCategory}',
                 views: {
                     serviceCategoriesContent: {
                         templateUrl: 'common/modules/form/serviceCategory/form.serviceCategory.tpl.html',
                         controller: 'FormEditServiceCategoryController',
                         resolve: {
                             serviceCategory: function($stateParams, serviceCategoryService) {
-                                return serviceCategoryService.getServiceCategory($stateParams.serviceCategoryId);
+                                return serviceCategoryService.getServiceCategory($stateParams.serviceCategory);
                             }
                         }
                     }

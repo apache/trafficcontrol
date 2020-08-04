@@ -30,8 +30,8 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
-    this.getServiceCategory = function(id) {
-        return $http.get(ENV.api['root'] + 'service_categories', {params: {id: id}}).then(
+    this.getServiceCategory = function(name) {
+        return $http.get(ENV.api['root'] + 'service_categories', {params: {name: name}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -56,7 +56,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.updateServiceCategory = function(serviceCategory) {
-        return $http.put(ENV.api['root'] + 'service_categories/' + serviceCategory.id, serviceCategory).then(
+        return $http.put(ENV.api['root'] + 'service_categories/' + encodeURIComponent(serviceCategory.name), serviceCategory).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;            },
@@ -67,8 +67,8 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
-    this.deleteServiceCategory = function(id) {
-        return $http.delete(ENV.api['root'] + 'service_categories/' + id).then(
+    this.deleteServiceCategory = function(name) {
+        return $http.delete(ENV.api['root'] + 'service_categories/' + encodeURIComponent(name)).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 return result;

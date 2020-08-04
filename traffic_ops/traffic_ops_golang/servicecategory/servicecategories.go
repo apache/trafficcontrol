@@ -50,9 +50,6 @@ func (serviceCategory TOServiceCategory) GetAuditName() string {
 	if serviceCategory.Name != "" {
 		return serviceCategory.Name
 	}
-	if serviceCategory.ID != 0 {
-		return strconv.Itoa(serviceCategory.ID)
-	}
 	if serviceCategory.TenantID != 0 {
 		return strconv.Itoa(serviceCategory.TenantID)
 	}
@@ -60,20 +57,20 @@ func (serviceCategory TOServiceCategory) GetAuditName() string {
 }
 
 func (serviceCategory TOServiceCategory) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{"name", api.GetStringKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
 func (serviceCategory TOServiceCategory) GetKeys() (map[string]interface{}, bool) {
-	if serviceCategory.ID == 0 {
-		return map[string]interface{}{"id": 0}, false
+	if serviceCategory.Name == "" {
+		return map[string]interface{}{"name": ""}, false
 	}
-	return map[string]interface{}{"id": serviceCategory.ID}, true
+	return map[string]interface{}{"name": serviceCategory.Name}, true
 }
 
 func (serviceCategory *TOServiceCategory) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	serviceCategory.ID = i
+	n, _ := keys["name"].(string) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	serviceCategory.Name = n
 }
 
 func (serviceCategory TOServiceCategory) GetType() string {
@@ -82,7 +79,6 @@ func (serviceCategory TOServiceCategory) GetType() string {
 
 func (serviceCategory *TOServiceCategory) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":         dbhelpers.WhereColumnInfo{"sc.id", api.IsInt},
 		"name":       dbhelpers.WhereColumnInfo{"sc.name", nil},
 		"tenantId":   dbhelpers.WhereColumnInfo{"sc.tenant_id", api.IsInt},
 		"tenantName": dbhelpers.WhereColumnInfo{"sc.tenant", nil},
@@ -147,12 +143,11 @@ func (serviceCategory *TOServiceCategory) Delete() (error, error, int) {
 }
 
 func insertQuery() string {
-	return `INSERT INTO service_category (name, tenant_id) VALUES (:name, :tenant_id) RETURNING id,last_updated`
+	return `INSERT INTO service_category (name, tenant_id) VALUES (:name, :tenant_id) RETURNING last_updated`
 }
 
 func selectQuery() string {
 	return `SELECT
-sc.id,
 sc.tenant_id,
 t.name as tenant,
 sc.last_updated,
@@ -166,9 +161,9 @@ func updateQuery() string {
 service_category SET
 name=:name,
 tenant_id=:tenant_id
-WHERE id=:id RETURNING last_updated`
+WHERE name=:name RETURNING last_updated`
 }
 
 func deleteQuery() string {
-	return `DELETE FROM service_category WHERE id=:id`
+	return `DELETE FROM service_category WHERE name=:name`
 }

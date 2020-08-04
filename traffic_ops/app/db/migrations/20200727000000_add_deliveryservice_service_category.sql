@@ -2,7 +2,7 @@
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
 	You may obtain a copy of the License at
-	    http://www.apache.org/licenses/LICENSE-2.0
+		http://www.apache.org/licenses/LICENSE-2.0
 	Unless required by applicable law or agreed to in writing, software
 	distributed under the License is distributed on an "AS IS" BASIS,
 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,12 +13,11 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 CREATE TABLE IF NOT EXISTS service_category (
-                                                id BIGSERIAL PRIMARY KEY,
-                                                name TEXT UNIQUE NOT NULL CHECK (name <> ''),
-                                                tenant_id BIGINT NOT NULL REFERENCES tenant(id),
-                                                last_updated TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+	name TEXT PRIMARY KEY CHECK (name <> '') ON UPDATE CASCADE,
+	tenant_id BIGINT NOT NULL REFERENCES tenant(id),
+	last_updated TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
-ALTER TABLE deliveryservice ADD COLUMN service_category INT REFERENCES service_category(id);
+ALTER TABLE deliveryservice ADD COLUMN service_category TEXT REFERENCES service_category(name);
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back

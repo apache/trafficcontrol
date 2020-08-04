@@ -50,8 +50,8 @@ func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory) (tc
 	return alerts, reqInf, nil
 }
 
-// UpdateServiceCategoryByID updates a service category by its unique numeric ID.
-func (to *Session) UpdateServiceCategoryByID(id int, serviceCategory tc.ServiceCategory) (tc.Alerts, ReqInf, error) {
+// UpdateServiceCategoryByName updates a service category by its unique name.
+func (to *Session) UpdateServiceCategoryByName(name string, serviceCategory tc.ServiceCategory) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(serviceCategory)
@@ -59,7 +59,7 @@ func (to *Session) UpdateServiceCategoryByID(id int, serviceCategory tc.ServiceC
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_SERVICE_CATEGORIES, id)
+	route := fmt.Sprintf("%s/%s", API_SERVICE_CATEGORIES, name)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -90,9 +90,10 @@ func (to *Session) GetServiceCategories(values *url.Values) ([]tc.ServiceCategor
 	return data.Response, reqInf, nil
 }
 
-// DeleteServiceCategoryByID deletes a service category by the service category unique numeric id.
-func (to *Session) DeleteServiceCategoryByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_SERVICE_CATEGORIES, id)
+// DeleteServiceCategoryByName deletes a service category by the service
+// category's unique name.
+func (to *Session) DeleteServiceCategoryByName(name string) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%s", API_SERVICE_CATEGORIES, name)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

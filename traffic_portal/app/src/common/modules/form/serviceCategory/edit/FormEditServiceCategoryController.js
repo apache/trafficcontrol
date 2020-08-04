@@ -23,7 +23,7 @@ var FormEditServiceCategoryController = function(serviceCategory, $scope, $contr
     angular.extend(this, $controller('FormServiceCategoryController', { serviceCategory: serviceCategory, $scope: $scope }));
 
     var deleteServiceCategory = function(serviceCategory) {
-        serviceCategoryService.deleteServiceCategory(serviceCategory.id)
+        serviceCategoryService.deleteServiceCategory(serviceCategory.name)
             .then(function() {
                 locationUtils.navigateToPath('/service-categories');
             });
@@ -60,7 +60,7 @@ var FormEditServiceCategoryController = function(serviceCategory, $scope, $contr
             }
         });
         modalInstance.result.then(function() {
-            deleteServiceCategory(serviceCategory);
+            deleteServiceCategory(serviceCategory.name);
         }, function () {
             // do nothing
         });

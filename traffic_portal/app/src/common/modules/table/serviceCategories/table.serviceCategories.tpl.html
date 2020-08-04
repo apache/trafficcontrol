@@ -38,7 +38,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editServiceCategory(sc.id)" ng-repeat="sc in ::serviceCategories">
+            <tr ng-click="editServiceCategory(sc.name)" ng-repeat="sc in ::serviceCategories">
                 <td name="name" data-search="^{{::sc.name}}$">{{::sc.name}}</td>
                 <td name="tenant" data-search="^{{::sc.tenant}}$">{{::sc.tenant}}</td>
             </tr>

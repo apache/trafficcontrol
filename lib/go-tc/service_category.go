@@ -32,7 +32,6 @@ type ServiceCategoryResponse struct {
 
 // ServiceCategory holds the name, id and associated tenant that comprise a service category.
 type ServiceCategory struct {
-	ID          int       `json:"id" db:"id"`
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        string    `json:"name" db:"name"`
 	TenantID    int       `json:"tenantId" db:"tenant_id"`
