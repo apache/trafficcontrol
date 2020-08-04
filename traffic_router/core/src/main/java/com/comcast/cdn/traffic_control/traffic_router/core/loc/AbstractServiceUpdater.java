@@ -69,15 +69,6 @@ public abstract class AbstractServiceUpdater {
 	}
 
 	/**
-	 * Gets the defaultDatabaseURL.
-	 *
-	 * @return the defaultDatabaseURL
-	 */
-	public String getDefaultDatabaseURL() {
-		return defaultDatabaseURL;
-	}
-
-	/**
 	 * Gets pollingInterval.
 	 *
 	 * @return the pollingInterval
