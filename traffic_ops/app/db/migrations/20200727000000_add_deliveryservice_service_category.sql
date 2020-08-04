@@ -13,11 +13,11 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 CREATE TABLE IF NOT EXISTS service_category (
-	name TEXT PRIMARY KEY CHECK (name <> '') ON UPDATE CASCADE,
+	name TEXT PRIMARY KEY CHECK (name <> ''),
 	tenant_id BIGINT NOT NULL REFERENCES tenant(id),
 	last_updated TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
-ALTER TABLE deliveryservice ADD COLUMN service_category TEXT REFERENCES service_category(name);
+ALTER TABLE deliveryservice ADD COLUMN service_category TEXT REFERENCES service_category(name) ON UPDATE CASCADE;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
