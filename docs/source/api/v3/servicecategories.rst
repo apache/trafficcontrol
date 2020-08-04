@@ -39,7 +39,7 @@ Request Structure
     +-----------+---------------------------------------------------------------------------------------------------------------+
     | name      | Filter for :term:`Service Categories` with this name                                                          |
     +-----------+---------------------------------------------------------------------------------------------------------------+
-    | tenant    | Return only :term:`Service Categories` belonging to the tenant identified by this integral, unique identifier |                                                   |
+    | tenant    | Return only :term:`Service Categories` belonging to the tenant identified by this integral, unique identifier |
     +-----------+---------------------------------------------------------------------------------------------------------------+
     | orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
     |           | array                                                                                                         |
@@ -160,7 +160,7 @@ Response Structure
         ],
         "response": {
             "id": 1,
-            "lastUpdated": "2020-03-11 14:12:20-06",\
+            "lastUpdated": "2020-03-11 14:12:20-06",
             "name": "SERVICE_CATEGORY_NAME",
             "tenantId": 1,
             "tenant": null
