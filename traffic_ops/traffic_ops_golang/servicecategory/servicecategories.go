@@ -69,7 +69,7 @@ func (serviceCategory TOServiceCategory) GetKeys() (map[string]interface{}, bool
 }
 
 func (serviceCategory *TOServiceCategory) SetKeys(keys map[string]interface{}) {
-	n, _ := keys["name"].(string) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	n, _ := keys["name"].(string)
 	serviceCategory.Name = n
 }
 
@@ -143,7 +143,7 @@ func (serviceCategory *TOServiceCategory) Delete() (error, error, int) {
 }
 
 func insertQuery() string {
-	return `INSERT INTO service_category (name, tenant_id) VALUES (:name, :tenant_id) RETURNING last_updated`
+	return `INSERT INTO service_category (name, tenant_id) VALUES (:name, :tenant_id) RETURNING name, last_updated`
 }
 
 func selectQuery() string {
