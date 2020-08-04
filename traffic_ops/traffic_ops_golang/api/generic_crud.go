@@ -80,7 +80,7 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 	}
 	defer resultRows.Close()
 
-	id := 0
+	var id interface{}
 	lastUpdated := tc.TimeNoMod{}
 	rowsAffected := 0
 	for resultRows.Next() {
