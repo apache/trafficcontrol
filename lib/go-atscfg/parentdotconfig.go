@@ -383,6 +383,10 @@ func GetTopologyParentConfigLine(
 	if err != nil {
 		return "", errors.New("getting topology parents for '" + string(ds.Name) + "': skipping! " + err.Error())
 	}
+	if len(parents) == 0 {
+		return "", errors.New("getting topology parents for '" + string(ds.Name) + "': no parents found! skipping! (Does your Topology have a CacheGroup with no servers in it?)")
+	}
+
 	txt += ` parent="` + strings.Join(parents, `;`) + `"`
 	if len(secondaryParents) > 0 {
 		txt += ` secondary_parent="` + strings.Join(secondaryParents, `;`) + `"`
