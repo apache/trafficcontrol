@@ -112,7 +112,11 @@ func WriteStatuses(cfg config.TCCfg, output io.Writer) error {
 // WriteUpdateStatus writes the Traffic Ops server update status to output.
 // Note this is identical to /api/1.x/servers/name/update_status except it omits the '[]' wrapper.
 func WriteServerUpdateStatus(cfg config.TCCfg, output io.Writer) error {
-	status, err := cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
+	status, unsupported, err := cfg.TOClientNew.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
+	if err == nil && unsupported {
+		log.Warnln("ORT newer than Traffic Ops, falling back to previous API Delivery Services!")
+		status, err = cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
+	}
 	if err != nil {
 		return errors.New("getting server update status: " + err.Error())
 	}
