@@ -191,19 +191,19 @@ func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, ca
 		return TopologyPlacement{InTopology: false}
 	}
 
-	topologyHasChildren := false
+	topologyNodeHasChildren := false
 nodeFor:
 	for _, node := range topology.Nodes {
 		for _, parent := range node.Parents {
 			if parent == serverNodeIndex {
-				topologyHasChildren = true
+				topologyNodeHasChildren = true
 				break nodeFor
 			}
 		}
 	}
 
 	cacheTier := TopologyCacheTierFirst
-	if topologyHasChildren {
+	if topologyNodeHasChildren {
 		cacheTier = TopologyCacheTierInner
 	}
 
