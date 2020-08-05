@@ -70,7 +70,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - Removed deprecated Traffic Ops Go Client methods.
-- Configuration generation logic in the TO API (v1) for all files and the "meta" route.
+- Configuration generation logic in the TO API (v1) for all files and the "meta" route - this means that versions of Traffic Ops ORT earlier than 4.0.0 **will not work any longer** with versions of Traffic Ops moving forward.
 - Removed from Traffic Portal the ability to view cache server config files as the contents are no longer reliable through the TO API due to the introduction of atstccfg.
 
 
