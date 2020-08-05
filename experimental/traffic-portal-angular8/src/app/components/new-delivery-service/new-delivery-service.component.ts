@@ -19,6 +19,7 @@ import { first } from 'rxjs/operators';
 import { AuthenticationService } from '../../services';
 import { CDNService, DeliveryServiceService } from '../../services/api';
 
+import { User } from "../../models/user";
 import { bypassable, CDN, DeliveryService, GeoLimit, GeoProvider, Protocol, QStringHandling, RangeRequestHandling, Type } from '../../models';
 
 /**
@@ -113,15 +114,25 @@ export class NewDeliveryServiceComponent implements OnInit {
 					}
 				}
 			);
+			if (!this.auth.currentUserValue || !this.auth.currentUserValue.tenantId) {
+				console.error("Cannot set default CDN - user has no tenant");
+				return;
+			}
 			this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
-				d => {
+				(d: Array<DeliveryService>) => {
 					const cdnsInUse = new Map<number, number>();
 					for (const ds of d) {
-						if (ds.tenantId === this.auth.currentUserValue.tenantId) {
-							if (!cdnsInUse.get(ds.tenantId)) {
+						if (ds.tenantId === undefined) {
+							console.warn("Delivery Service has no tenant");
+							console.debug(ds);
+							continue;
+						}
+						if (ds.tenantId === (this.auth.currentUserValue as User).tenantId) {
+							const usedCDNs = cdnsInUse.get(ds.tenantId);
+							if (!usedCDNs) {
 								cdnsInUse.set(ds.tenantId, 1);
 							} else {
-								cdnsInUse.set(ds.tenantId, cdnsInUse.get(ds.tenantId) + 1);
+								cdnsInUse.set(ds.tenantId, usedCDNs + 1);
 							}
 						}
 					}
@@ -153,7 +164,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		this.cdnAPI.getCDNs().pipe(first()).subscribe(
 			(cdns: Map<string, CDN>) => {
 				this.cdns = new Array<CDN>();
-				let def: CDN;
+				let def: CDN | null = null;
 				cdns.forEach( (c: CDN, name: string) => {
 
 					// this is a special, magic-value CDN that can't have any DSes

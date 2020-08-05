@@ -23,21 +23,23 @@ import { Alert } from '../models/alert';
  * `AlertComponent`.
 */
 export class AlertService {
-	public alertsSubject: BehaviorSubject<Alert>;
-	public alerts: Observable<Alert>;
+	public alertsSubject: BehaviorSubject<Alert|null>;
+	public alerts: Observable<Alert|null>;
 
 	constructor () {
-		this.alertsSubject = new BehaviorSubject<Alert>(null);
+		this.alertsSubject = new BehaviorSubject<Alert|null>(null);
 		this.alerts = this.alertsSubject.asObservable();
 	}
 
+	public newAlert(level: string, text: string): void;
+	public newAlert(alert: Alert): void;
 	/**
 	 * Directly constructs a new UI alert
 	 * @param levelOrAlert Either an {@link Alert} or the level of alert
 	 * @param text Must be defined if `levelOrAlert` is a String - gives the text of the new alert.
 	 * @throws when `levelOrAlert` is a string, but `text` was not provided.
 	 */
-	public newAlert (levelOrAlert: string | Alert, text?: string) {
+	public newAlert (levelOrAlert: string | Alert, text?: string): void {
 		if (typeof levelOrAlert === 'string') {
 			if (text === null || text === undefined) {
 				throw new Error("Can't pass raw level without raw text!");

@@ -69,6 +69,10 @@ export class DeliveryserviceComponent implements OnInit {
 
 	ngOnInit () {
 		const DSID = this.route.snapshot.paramMap.get('id');
+		if (!DSID) {
+			console.error("Missing route 'id' parameter");
+			return;
+		}
 
 		this.to = new Date();
 		this.to.setUTCMilliseconds(0);

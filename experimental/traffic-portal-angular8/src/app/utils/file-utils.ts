@@ -23,10 +23,15 @@
  *	is not a File or Blob, this will default to 'text/plain' for strings, and 'application/json' for all others.
 **/
 export function download(content: Blob|File|string|any, filename?: string, type?: string) {
-	let f: File;
 	if (content instanceof File) {
-		f = content;
-	} else if (!filename) {
+		const exportURL = URL.createObjectURL(content);
+		window.location.assign(exportURL);
+		URL.revokeObjectURL(exportURL);
+		return;
+	}
+
+	let f: File;
+	if (!filename) {
 		filename = 'download';
 	}
 

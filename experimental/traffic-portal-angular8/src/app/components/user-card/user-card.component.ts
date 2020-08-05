@@ -41,6 +41,11 @@ export class UserCardComponent implements OnInit {
 
 	ngOnInit () {
 		this.user = this.user as User;
+		if (this.user.role === undefined) {
+			console.error("User appears to have no role");
+			console.debug(this.user);
+			return;
+		}
 		if (!this.user.roleName) {
 			if (!this.roleMap) {
 				this.api.getRoles(this.user.role).pipe(first()).subscribe(
@@ -55,8 +60,8 @@ export class UserCardComponent implements OnInit {
 						if (!m) {
 							return;
 						}
-						if (m.has(this.user.role)) {
-							this.user.roleName = m.get(this.user.role);
+						if (m.has(this.user.role as number)) {
+							this.user.roleName = m.get(this.user.role as number);
 						} else {
 							console.error('Role ID %d not found in Traffic Ops!');
 						}

@@ -27,7 +27,7 @@ import { UserService } from '../../services/api';
 })
 export class CurrentuserComponent implements OnInit, OnDestroy {
 
-	currentUser: User;
+	currentUser: User | null;
 	private subscription: Subscription;
 
 	constructor(private readonly auth: AuthenticationService, private readonly api: UserService) {

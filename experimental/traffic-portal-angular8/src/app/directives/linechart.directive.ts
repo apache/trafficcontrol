@@ -68,7 +68,12 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 			throw new Error('[linechart] Directive can only be used on a canvas!');
 		}
 
-		this.ctx = (this.element.nativeElement as HTMLCanvasElement).getContext('2d', {alpha: false});
+		const ctx = (this.element.nativeElement as HTMLCanvasElement).getContext('2d', {alpha: false});
+		if (!ctx) {
+			console.error("Failed to get 2D context for chart canvas");
+			return;
+		}
+		this.ctx = ctx;
 
 		if (!this.chartType) {
 			this.chartType = LineChartType.Linear;

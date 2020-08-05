@@ -27,8 +27,8 @@ import { DataPoint, DataSet, DeliveryService, Protocol } from '../../models';
 export class DsCardComponent implements OnInit {
 
 	@Input() deliveryService: DeliveryService;
-	@Input() now?: Date;
-	@Input() today?: Date;
+	@Input() now: Date;
+	@Input() today: Date;
 
 	// Capacity measures
 	available: number;
@@ -39,7 +39,7 @@ export class DsCardComponent implements OnInit {
 	healthy: number;
 
 	// Bandwidth data
-	chartData: Subject<Array<DataSet>>;
+	chartData: Subject<Array<DataSet | null>>;
 	midBandwidthData: DataSet;
 	edgeBandwidthData: DataSet;
 
@@ -95,6 +95,11 @@ export class DsCardComponent implements OnInit {
 	 * 60s intervals starting at 00:00 UTC the current day and ending at the current date/time.
 	*/
 	toggle (e: Event) {
+		if (!this.deliveryService.id) {
+			console.error("Toggling DS card for DS with no ID");
+			console.debug(this.deliveryService);
+			return;
+		}
 		if ((e.target as HTMLDetailsElement).open) {
 			if (!this.loaded) {
 				this.loaded = true;

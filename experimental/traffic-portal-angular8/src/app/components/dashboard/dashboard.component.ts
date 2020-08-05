@@ -62,8 +62,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
 		this.route.queryParamMap.pipe(first()).subscribe(
 			m => {
-				if (m.has('search')) {
-					this.fuzzControl.setValue(decodeURIComponent(m.get('search')));
+				const search = m.get("search");
+				if (search) {
+					this.fuzzControl.setValue(decodeURIComponent(search));
 				}
 			}
 		);

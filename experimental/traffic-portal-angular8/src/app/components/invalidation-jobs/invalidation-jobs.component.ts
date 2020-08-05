@@ -28,10 +28,12 @@ import { DeliveryService, InvalidationJob } from '../../models';
 })
 export class InvalidationJobsComponent implements OnInit {
 
-	deliveryservice: DeliveryService ;
+	deliveryservice: DeliveryService;
 	jobs: Array<InvalidationJob>;
 	now: Date;
 	showDialog: Subject<boolean>;
+
+	dsId: number;
 
 	regexp = new FormControl('/');
 	ttl = new FormControl(178);
@@ -49,8 +51,13 @@ export class InvalidationJobsComponent implements OnInit {
 
 	ngOnInit () {
 		this.now = new Date();
-		const id = parseInt(this.route.snapshot.paramMap.get('id'), 10);
-		this.jobAPI.getInvalidationJobs({dsId: id}).subscribe(
+		const idParam = this.route.snapshot.paramMap.get("id");
+		if (!idParam) {
+			console.error("Missing route 'id' parameter");
+			return;
+		}
+		this.dsId = parseInt(idParam, 10);
+		this.jobAPI.getInvalidationJobs({dsId: this.dsId}).subscribe(
 			r => {
 				// The values returned by the API are not RFC-compliant at the time of this writing,
 				// so we need to do some pre-processing on them.
@@ -62,7 +69,7 @@ export class InvalidationJobsComponent implements OnInit {
 				}
 			}
 		);
-		this.dsAPI.getDeliveryServices(id).subscribe(
+		this.dsAPI.getDeliveryServices(this.dsId).subscribe(
 			(r: DeliveryService) => {
 				this.deliveryservice = r;
 			}
@@ -70,6 +77,9 @@ export class InvalidationJobsComponent implements OnInit {
 	}
 
 	public endDate (j: InvalidationJob): Date {
+		if (!j.parameters) {
+			throw new Error("cannot get end date for job with no parameters");
+		}
 		const tmp = j.parameters.split(':');
 		if (tmp.length !== 2) {
 			throw new Error('Malformed job parameters: "' + j.parameters + '" (id: ' + String(j.id) + ')');
@@ -122,7 +132,7 @@ export class InvalidationJobsComponent implements OnInit {
 		this.jobAPI.createInvalidationJob(job).subscribe(
 			r => {
 				if (r) {
-					this.jobAPI.getInvalidationJobs({dsId: this.deliveryservice.id}).subscribe(
+					this.jobAPI.getInvalidationJobs({dsId: this.dsId}).subscribe(
 						r => {
 							this.jobs = new Array<InvalidationJob>();
 							for (const j of r) {

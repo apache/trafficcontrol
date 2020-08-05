@@ -54,12 +54,12 @@ function constructDataSetFromResponse (r: any): DataSetWithSummary {
 		neight = r.summary.ninetyEightPercentile;
 		mean = r.summary.mean;
 	} else {
-		min = null;
-		max = null;
-		fifth = null;
-		nfifth = null;
-		neight = null;
-		mean = null;
+		min = -1;
+		max = -1;
+		fifth = -1;
+		nfifth = -1;
+		neight = -1;
+		mean = -1;
 	}
 
 	return {
@@ -305,14 +305,14 @@ export class DeliveryServiceService extends APIService {
 				}
 				return output;
 			},
-			{
-				total: null,
-				informational: null,
-				success: null,
-				redirection: null,
-				clientError: null,
-				serverError: null
-			} as TPSData
+			({
+			 				total: null,
+			 				informational: null,
+			 				success: null,
+			 				redirection: null,
+			 				clientError: null,
+			 				serverError: null
+			 			} as unknown) as TPSData
 		)) as Observable<TPSData>;
 	}
 
@@ -349,7 +349,7 @@ export class DeliveryServiceService extends APIService {
 	 * 	passed.
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	*/
-	public getCDNs (id?: number): Observable<Map<string, CDN> | CDN> {
+	public getCDNs (id?: number): Observable<Map<string, CDN> | CDN | null> {
 		const path = '/api/' + this.API_VERSION + '/cdns';
 		if (id) {
 			return this.get(path + '?id=' + String(id)).pipe(map(
@@ -359,6 +359,7 @@ export class DeliveryServiceService extends APIService {
 							return c;
 						}
 					}
+					return null;
 				}
 			));
 		}

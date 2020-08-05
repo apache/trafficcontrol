@@ -50,7 +50,7 @@ export class UsersComponent implements OnInit {
 		if (this.auth.currentUserValue === null) {
 			this.auth.updateCurrentUser().subscribe(
 				v => {
-					if (v) {
+					if (v && this.auth.currentUserValue) {
 						this.myId = this.auth.currentUserValue.id;
 					}
 				}

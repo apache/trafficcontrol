@@ -24,7 +24,7 @@ import { Alert } from '../../models';
 export class AlertComponent implements OnInit {
 
 	dialogElement: HTMLDialogElement;
-	alert: Alert;
+	alert: Alert | null;
 
 	constructor (private readonly alerts: AlertService, @Inject(PLATFORM_ID) private readonly PLATFORM) { }
 

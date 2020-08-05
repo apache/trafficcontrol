@@ -22,15 +22,15 @@ import { UserService } from './api';
 
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
-	private readonly currentUserSubject: BehaviorSubject<User>;
-	public currentUser: Observable<User>;
+	private readonly currentUserSubject: BehaviorSubject<User | null>;
+	public currentUser: Observable<User | null>;
 	private readonly loggedInSubject: BehaviorSubject<boolean>;
 	public loggedIn: Observable<boolean>;
 	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Set<string>>;
 	public currentUserCapabilities: Observable<Set<string>>;
 
 	constructor (private readonly http: HttpClient, private readonly api: UserService) {
-		this.currentUserSubject = new BehaviorSubject<User>(null);
+		this.currentUserSubject = new BehaviorSubject<User | null>(null);
 		this.loggedInSubject = new BehaviorSubject<boolean>(false);
 		this.currentUserCapabilitiesSubject = new BehaviorSubject<Set<string>>(new Set<string>());
 		this.currentUser = this.currentUserSubject.asObservable();
@@ -38,7 +38,7 @@ export class AuthenticationService {
 		this.currentUserCapabilities = this.currentUserCapabilitiesSubject.asObservable();
 	}
 
-	public get currentUserValue (): User {
+	public get currentUserValue (): User | null {
 		return this.currentUserSubject.value;
 	}
 
