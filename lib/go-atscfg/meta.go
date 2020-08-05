@@ -146,6 +146,8 @@ func AddMetaObjConfigDir(
 		configFilesM[fileName] = newFis
 	}
 
+	nameTopologies := MakeTopologyNameMap(topologies)
+
 	for _, ds := range dses {
 		if ds.XMLID == nil {
 			log.Errorln("meta config generation got Delivery Service with nil XMLID - not considering!")
@@ -156,13 +158,7 @@ func AddMetaObjConfigDir(
 		// Note we log errors, but don't return them.
 		// If an individual DS has an error, we don't want to break the rest of the CDN.
 		if ds.Topology != nil && *ds.Topology != "" {
-			topology := tc.Topology{}
-			for _, to := range topologies {
-				if to.Name == *ds.Topology {
-					topology = to
-					break
-				}
-			}
+			topology := nameTopologies[TopologyName(*ds.Topology)]
 
 			placement := getTopologyPlacement(tc.CacheGroupName(server.CacheGroupName), topology, cacheGroups)
 			switch placement.CacheTier {

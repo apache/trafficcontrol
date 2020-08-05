@@ -197,6 +197,8 @@ func MakeParentDotConfig(
 	}
 	parentConfigParams := ParameterWithProfilesToMap(parentConfigParamsWithProfiles)
 
+	nameTopologies := MakeTopologyNameMap(topologies)
+
 	for _, ds := range parentConfigDSes {
 		log.Infoln("parent.config processing ds '" + ds.Name + "'")
 
@@ -208,7 +210,7 @@ func MakeParentDotConfig(
 		// TODO put these in separate functions. No if-statement should be this long.
 		if ds.Topology != "" {
 			log.Infoln("parent.config generating Topology line for ds '" + ds.Name + "'")
-			txt, err := GetTopologyParentConfigLine(server, servers, ds, serverParams, parentConfigParams, topologies, serverCapabilities, cacheGroups)
+			txt, err := GetTopologyParentConfigLine(server, servers, ds, serverParams, parentConfigParams, nameTopologies, serverCapabilities, cacheGroups)
 			if err != nil {
 				log.Errorln(err)
 				continue
@@ -343,7 +345,7 @@ func GetTopologyParentConfigLine(
 	ds ParentConfigDSTopLevel,
 	serverParams map[string]string,
 	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.config
-	topologies []tc.Topology,
+	nameTopologies map[TopologyName]tc.Topology,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 ) (string, error) {
@@ -358,14 +360,7 @@ func GetTopologyParentConfigLine(
 		return "", errors.New("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + ds.OriginFQDN + "': skipping!" + err.Error())
 	}
 
-	// This could be put in a map beforehand to only iterate once, if performance mattered
-	topology := tc.Topology{}
-	for _, to := range topologies {
-		if to.Name == ds.Topology {
-			topology = to
-			break
-		}
-	}
+	topology := nameTopologies[TopologyName(ds.Topology)]
 	if topology.Name == "" {
 		return "", errors.New("DS " + string(ds.Name) + " topology '" + ds.Topology + "' not found in Topologies!")
 	}

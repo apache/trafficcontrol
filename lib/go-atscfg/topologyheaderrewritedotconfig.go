@@ -63,13 +63,8 @@ func MakeTopologyHeaderRewriteDotConfig(
 		return text
 	}
 
-	topology := tc.Topology{}
-	for _, to := range topologies {
-		if to.Name == *ds.Topology {
-			topology = to
-			break
-		}
-	}
+	nameTopologies := MakeTopologyNameMap(topologies)
+	topology := nameTopologies[TopologyName(*ds.Topology)]
 	if topology.Name == "" {
 		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' but its Topology '" + *ds.Topology + "' not found in list of topologies! Returning blank config!")
 		return text

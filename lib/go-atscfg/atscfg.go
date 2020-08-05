@@ -41,6 +41,8 @@ const ContentTypeTextASCII = `text/plain; charset=us-ascii`
 
 const LineCommentHash = "#"
 
+type TopologyName string
+
 type ServerCapability string
 
 type ServerInfo struct {
@@ -232,6 +234,14 @@ nodeFor:
 		}
 	}
 	return TopologyPlacement{InTopology: true, IsLastTier: isLastTier, CacheTier: cacheTier}
+}
+
+func MakeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology {
+	topoNames := map[TopologyName]tc.Topology{}
+	for _, to := range topologies {
+		topoNames[TopologyName(to.Name)] = to
+	}
+	return topoNames
 }
 
 func MakeCGMap(cgs []tc.CacheGroupNullable) map[tc.CacheGroupName]tc.CacheGroupNullable {

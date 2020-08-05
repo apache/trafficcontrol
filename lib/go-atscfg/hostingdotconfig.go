@@ -24,7 +24,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -49,7 +48,7 @@ func MakeHostingDotConfig(
 ) string {
 	text := GenericHeaderComment(server.HostName, toToolName, toURL)
 
-	dsTopologies := hostingMakeDSTopologies(dses, topologies)
+	nameTopologies := MakeTopologyNameMap(topologies)
 
 	lines := []string{}
 	if _, ok := params[ParamRAMDrivePrefix]; ok {
@@ -73,9 +72,11 @@ func MakeHostingDotConfig(
 				continue
 			}
 
-			topology, hasTopology := dsTopologies[tc.DeliveryServiceName(*ds.XMLID)]
-			if hasTopology && !topologyIncludesServer(topology, server) {
-				continue
+			if ds.Topology != nil && *ds.Topology != "" {
+				topology, hasTopology := nameTopologies[TopologyName(*ds.Topology)]
+				if hasTopology && !topologyIncludesServer(topology, server) {
+					continue
+				}
 			}
 
 			seenOrigins[origin] = struct{}{}
@@ -91,24 +92,4 @@ func MakeHostingDotConfig(
 	sort.Strings(lines)
 	text += strings.Join(lines, "")
 	return text
-}
-
-func hostingMakeDSTopologies(dses []tc.DeliveryServiceNullable, topologies []tc.Topology) map[tc.DeliveryServiceName]tc.Topology {
-	dsTops := map[tc.DeliveryServiceName]tc.Topology{}
-	topNames := map[string]tc.Topology{}
-	for _, to := range topologies {
-		topNames[to.Name] = to
-	}
-	for _, ds := range dses {
-		if ds.Topology == nil || ds.XMLID == nil {
-			continue
-		}
-		if to, ok := topNames[*ds.Topology]; ok {
-			dsTops[tc.DeliveryServiceName(*ds.XMLID)] = to
-		} else if *ds.Topology != "" {
-			// TODO propogate this up, so context can be added higher up, once generation is changed to return errors (after config files are removed from the TO API)
-			log.Errorln("Making hosting.config for Delivery Service '" + *ds.XMLID + "': has topology '" + *ds.Topology + "', but that topology doesn't exist! Treating as if DS has no Topology!")
-		}
-	}
-	return dsTops
 }

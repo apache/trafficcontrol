@@ -84,29 +84,12 @@ func MakeRemapDotConfig(
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 ) string {
 	cacheGroups := MakeCGMap(cacheGroupArr)
-
-	dsTopologies := makeDSTopologies(remapDSData, topologies)
+	nameTopologies := MakeTopologyNameMap(topologies)
 	hdr := GenericHeaderComment(server.HostName, toToolName, toURL)
 	if tc.CacheTypeFromString(serverInfo.Type) == tc.CacheTypeMid {
-		return GetServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesCacheKeyConfigParams, remapDSData, hdr, server, dsTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities)
+		return GetServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesCacheKeyConfigParams, remapDSData, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities)
 	}
-	return GetServerConfigRemapDotConfigForEdge(cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, atsMajorVersion, hdr, server, dsTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities)
-}
-
-func makeDSTopologies(dses []RemapConfigDSData, topologies []tc.Topology) map[tc.DeliveryServiceName]tc.Topology {
-	dsTops := map[tc.DeliveryServiceName]tc.Topology{}
-	topNames := map[string]tc.Topology{}
-	for _, to := range topologies {
-		topNames[to.Name] = to
-	}
-	for _, ds := range dses {
-		if to, ok := topNames[ds.Topology]; ok {
-			dsTops[tc.DeliveryServiceName(ds.Name)] = to
-		} else if ds.Topology != "" {
-			log.Errorln("Making remap.config for Delivery Service '" + ds.Name + "': has topology '" + ds.Topology + "', but that topology doesn't exist! Treating as if DS has no Topology!")
-		}
-	}
-	return dsTops
+	return GetServerConfigRemapDotConfigForEdge(cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, atsMajorVersion, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities)
 }
 
 func GetServerConfigRemapDotConfigForMid(
@@ -115,7 +98,7 @@ func GetServerConfigRemapDotConfigForMid(
 	dses []RemapConfigDSData,
 	header string,
 	server tc.Server,
-	topologies map[tc.DeliveryServiceName]tc.Topology,
+	nameTopologies map[TopologyName]tc.Topology,
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
@@ -126,8 +109,8 @@ func GetServerConfigRemapDotConfigForMid(
 			continue
 		}
 
-		topology, hasTopology := topologies[tc.DeliveryServiceName(ds.Name)]
-		if hasTopology && !topologyIncludesServer(topology, server) {
+		topology, hasTopology := nameTopologies[TopologyName(ds.Topology)]
+		if ds.Topology != "" && hasTopology && !topologyIncludesServer(topology, server) {
 			continue
 		}
 		if ds.Type.IsLive() && !ds.Type.IsNational() && !hasTopology {
@@ -211,7 +194,7 @@ func GetServerConfigRemapDotConfigForEdge(
 	atsMajorVersion int,
 	header string,
 	server tc.Server,
-	topologies map[tc.DeliveryServiceName]tc.Topology,
+	nameTopologies map[TopologyName]tc.Topology,
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
@@ -223,8 +206,8 @@ func GetServerConfigRemapDotConfigForEdge(
 			continue
 		}
 
-		topology, hasTopology := topologies[tc.DeliveryServiceName(ds.Name)]
-		if hasTopology && !topologyIncludesServer(topology, server) {
+		topology, hasTopology := nameTopologies[TopologyName(ds.Topology)]
+		if ds.Topology != "" && hasTopology && !topologyIncludesServer(topology, server) {
 			continue
 		}
 		remapText := ""
@@ -249,7 +232,7 @@ func GetServerConfigRemapDotConfigForEdge(
 			if ds.ProfileID != nil {
 				profilecacheKeyConfigParams = profilesCacheKeyConfigParams[*ds.ProfileID]
 			}
-			remapText = BuildEdgeRemapLine(cacheURLConfigParams, atsMajorVersion, serverInfo, serverPackageParamData, remapText, ds, line.From, line.To, profilecacheKeyConfigParams, cacheGroups, topologies)
+			remapText = BuildEdgeRemapLine(cacheURLConfigParams, atsMajorVersion, serverInfo, serverPackageParamData, remapText, ds, line.From, line.To, profilecacheKeyConfigParams, cacheGroups, nameTopologies)
 			if hasTopology {
 				remapText += " # topology '" + topology.Name + "'"
 			}
@@ -279,7 +262,7 @@ func BuildEdgeRemapLine(
 	mapTo string,
 	cacheKeyConfigParams map[string]string,
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
-	topologies map[tc.DeliveryServiceName]tc.Topology,
+	nameTopologies map[TopologyName]tc.Topology,
 ) string {
 	// ds = 'remap' in perl
 	mapFrom = strings.Replace(mapFrom, `__http__`, server.HostName, -1)
@@ -291,7 +274,7 @@ func BuildEdgeRemapLine(
 	}
 
 	if ds.Topology != "" {
-		text += MakeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(server.CacheGroupName), topologies[tc.DeliveryServiceName(ds.Name)], cacheGroups)
+		text += MakeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(server.CacheGroupName), nameTopologies[TopologyName(ds.Topology)], cacheGroups)
 	} else if ds.EdgeHeaderRewrite != nil && *ds.EdgeHeaderRewrite != "" {
 		text += ` @plugin=header_rewrite.so @pparam=` + EdgeHeaderRewriteConfigFileName(ds.Name)
 	}
