@@ -54,8 +54,8 @@ Each object in the returned array\ [1]_ will contain the following fields:
 
 :host_id:              The integral, unique identifier for the server for which the other fields in this object represent the pending updates and revalidation status
 :host_name:            The (short) hostname of the server for which the other fields in this object represent the pending updates and revalidation status
-:parent_pending:       A boolean telling whether or not the :term:`parents` of this server have pending updates
-:parent_reval_pending: A boolean telling whether or not the :term:`parents` of this server have pending revalidation jobs
+:parent_pending:       A boolean telling whether or not any :ref:`Topology` ancestor or :term:`parent` of this server has pending updates
+:parent_reval_pending: A boolean telling whether or not any :ref:`Topology` ancestor or :term:`parent` of this server has pending revalidation jobs
 :reval_pending:        ``true`` if the server has pending revalidation jobs, ``false`` otherwise
 :status:               The name of the status of this server
 

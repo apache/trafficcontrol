@@ -93,7 +93,7 @@ func TestGetSystemInfo(t *testing.T) {
 	}
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT.*WHERE p.config_file = 'global'").WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT.*WHERE p.config_file = \$1`).WillReturnRows(rows)
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
 	tx, err := db.BeginTxx(dbCtx, nil)

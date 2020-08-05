@@ -129,7 +129,7 @@ Subject: {{.InstanceName}} New User Registration` + "\r\n\r" + `
 
 func createRegistrationMsg(addr rfc.EmailAddress, t string, tx *sql.Tx, c config.ConfigPortal) ([]byte, error) {
 	var instanceName string
-	if err := tx.QueryRow(instanceNameQuery).Scan(&instanceName); err != nil {
+	if err := tx.QueryRow(instanceNameQuery, tc.GlobalConfigFileName).Scan(&instanceName); err != nil {
 		return nil, err
 	}
 

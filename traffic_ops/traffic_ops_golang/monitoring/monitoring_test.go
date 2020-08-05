@@ -678,19 +678,17 @@ func createMockMonitor() Monitor {
 				HostName:   "monitorHost",
 				FQDN:       "monitorFqdn.me",
 			},
-			IP:  "1.2.3.4",
-			IP6: "2001::4",
 		},
 	}
 }
 
 func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router Router, caches []Cache, cacheIDs []uint64, cdn string) {
-	serverRows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "ip", "ip6", "profile", "type", "hashId", "serverID"})
+	serverRows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "profile", "type", "hashId", "serverID"})
 	interfaceRows := sqlmock.NewRows([]string{"name", "max_bandwidth", "mtu", "monitor", "server"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "server", "interface"})
-	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, MonitorType, "noHash", 2)
+	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.Profile, MonitorType, "noHash", 2)
 	for index, cache := range caches {
-		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, "127.0.0.1", "2001::4", cache.Profile, cache.Type, cache.HashID, cacheIDs[index])
+		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.Profile, cache.Type, cache.HashID, cacheIDs[index])
 
 		interfaceRows = interfaceRows.AddRow("none", nil, 1500, false, 0)
 		for _, interf := range cache.Interfaces {
@@ -704,7 +702,7 @@ func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router
 			}
 		}
 	}
-	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, "noIp", "noIp6", router.Profile, RouterType, "noHashid", 3)
+	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, router.Profile, RouterType, "noHashid", 3)
 	mock.ExpectQuery("SELECT (.+) FROM interface i (.+)").WithArgs(cdn).WillReturnRows(interfaceRows)
 	mock.ExpectQuery("SELECT (.+) FROM ip_address ip (.+)").WillReturnRows(ipAddressRows)
 	mock.ExpectQuery("SELECT (.+) FROM server me (.+)").WithArgs(cdn).WillReturnRows(serverRows)

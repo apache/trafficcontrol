@@ -49,6 +49,13 @@ func TestGetDetailServers(t *testing.T) {
 		"ilo_password",
 		"ilo_username",
 		"interfaces",
+		"service_ip",
+		"service_ip6",
+		"service_gateway",
+		"service_gateway6",
+		"service_netmask",
+		"interface_name",
+		"interface_mtu",
 		"mgmt_ip_address",
 		"mgmt_ip_gateway",
 		"mgmt_ip_netmask",
@@ -67,6 +74,14 @@ func TestGetDetailServers(t *testing.T) {
 	}
 	rows := sqlmock.NewRows(cols)
 
+	serviceAddress := util.StrPtr("")
+	service6Address := util.StrPtr("")
+	serviceGateway := util.StrPtr("")
+	service6Gateway := util.StrPtr("")
+	serviceNetmask := util.StrPtr("")
+	serviceInterface := util.StrPtr("")
+	serviceMtu := util.StrPtr("")
+
 	for _, sd := range testServerDetails {
 		rows = rows.AddRow(
 			sd.CacheGroup,
@@ -83,6 +98,13 @@ func TestGetDetailServers(t *testing.T) {
 			sd.ILOPassword,
 			sd.ILOUsername,
 			[]byte(`{"{\"ipAddresses\" : [{\"address\" : \"127.0.0.0\", \"gateway\" : null, \"serviceAddress\" : true}], \"max_bandwidth\" : null, \"monitor\" : true, \"mtu\" : 1500, \"name\" : \"eth0\"}"}`),
+			serviceAddress,
+			service6Address,
+			serviceGateway,
+			service6Gateway,
+			serviceNetmask,
+			serviceInterface,
+			serviceMtu,
 			sd.MgmtIPAddress,
 			sd.MgmtIPGateway,
 			sd.MgmtIPNetmask,
