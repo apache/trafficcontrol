@@ -16,47 +16,59 @@
  * This file is for modeling and functionality related to Server objects
 */
 
+export interface IPAddress {
+	address: string;
+	gateway: string | null;
+	serviceAddress: boolean;
+}
+
+export interface Interface {
+	ipAddresses: Array<IPAddress>;
+	maxBandwidth: number | null;
+	monitor: boolean;
+	mtu: number | null;
+	name: string;
+}
+
 export interface Server {
 	cachegroup?: string;
 	cachegroupId: number;
 	cdnId: number;
 	cdnName?: string;
 	domainName: string;
+	guid?: number;
 	hostName: string;
-	httpsPort: number;
-	id?: number;
-	iloIpAddress?: string;
-	iloIpGateWay?: string;
-	iloIPNetmask?: string;
-	iloPassword?: string;
-	iloUsername?: string;
-	ip6Address?: string;
-	ip6Gateway?: string;
-	ipAddress: string;
-	ipGateway?: string;
-	ipNetmask?: string;
+	httpsPort: number | null;
+	id: number | null;
+	iloIpAddress: string | null;
+	iloIpGateway: string | null;
+	iloIpNetmask: string | null;
+	iloPassword: string | null;
+	iloUsername: string | null;
+	interfaces: Array<Interface>;
 	lastUpdated?: Date;
-	mgmtIpAddress?: string;
-	mgmtIpGateway?: string;
-	mgmtIpNetmask?: string;
-	offlineReason?: string;
+	mgmtIpAddress: string | null;
+	mgmtIpGateway: string | null;
+	mgmtIpNetmask: string | null;
+	offlineReason: string | null;
 	physLocation?: string;
 	physLocationId: number;
 	profile?: string;
-	profileDesc?: string;
+	profileDesc?: string | null;
 	profileId: number;
-	rack?: string;
 	revalPending: boolean;
-	routerHostName?: string;
-	routerPortName?: string;
+	rack?: string | null;
+	routerHostName?: string | null;
+	routerPortName?: string | null;
 	status?: string;
 	statusId: number;
-	tcpPort?: number;
+	tcpPort: number | null;
 	type?: string;
 	typeId: number;
 	updPending: boolean;
-	xmppId?: string;
-	xmppPasswd?: string;
+	xmppId?: string | null;
+	xmppPasswd?: string | null;
+
 }
 
 export interface Servercheck {

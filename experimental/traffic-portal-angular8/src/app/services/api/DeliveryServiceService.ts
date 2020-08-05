@@ -19,7 +19,10 @@ import { map, mergeAll, reduce } from 'rxjs/operators';
 
 import { APIService } from './apiservice';
 
-import { DataPoint, DataSet, DataSetWithSummary, DeliveryService, TPSData, Type } from '../../models';
+import { DataPoint, DataSet, DataSetWithSummary, TPSData } from '../../models/data';
+import { DeliveryService } from '../../models/deliveryservice';
+import { Type } from '../../models/type';
+import { CDN, InvalidationJob, Server, User } from "../../models";
 
 function constructDataSetFromResponse (r: any): DataSetWithSummary {
 	if (!r.series || !r.series.name) {
@@ -250,11 +253,13 @@ export class DeliveryServiceService extends APIService {
 	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
 	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior)
 	 */
-	public getAllDSTPSData (d: string,
-	                        start: Date,
-	                        end: Date,
-	                        interval: string,
-	                        useMids?: boolean): Observable<TPSData> {
+	public getAllDSTPSData (
+		d: string,
+		start: Date,
+		end: Date,
+		interval: string,
+		useMids?: boolean
+	): Observable<TPSData> {
 		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?';
 		path += 'interval=' + interval;
 		path += '&deliveryServiceName=' + d;
@@ -335,5 +340,92 @@ export class DeliveryServiceService extends APIService {
 				return r.body.response as Array<Type>;
 			}
 		));
+	}
+
+	/**
+	 * Gets one or all CDNs from Traffic Ops
+	 * @param id The integral, unique identifier of a single CDN to be returned
+	 * @returns An Observable that will emit either a Map of CDN names to full CDN objects, or a single CDN, depending on whether `id` was
+	 * 	passed.
+	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
+	*/
+	public getCDNs (id?: number): Observable<Map<string, CDN> | CDN> {
+		const path = '/api/' + this.API_VERSION + '/cdns';
+		if (id) {
+			return this.get(path + '?id=' + String(id)).pipe(map(
+				r => {
+					for (const c of (r.body.response as Array<CDN>)) {
+						if (c.id === id) {
+							return c;
+						}
+					}
+				}
+			));
+		}
+		return this.get(path).pipe(map(
+			r => {
+				const ret = new Map<string, CDN>();
+				for (const c of (r.body.response as Array<CDN>)) {
+					ret.set(c.name, c);
+				}
+				return ret;
+			}
+		));
+	}
+
+	public getInvalidationJobs (opts?: {id: number} |
+	                                   {userId: number} |
+	                                   {user: User} |
+	                                   {dsId: number} |
+	                                   {deliveryService: DeliveryService}): Observable<Array<InvalidationJob>> {
+		let path = '/api/' + this.API_VERSION + '/jobs';
+		if (opts) {
+			path += '?';
+			if (opts.hasOwnProperty('id')) {
+				path += 'id=' + String((opts as {id: number}).id);
+			} else if (opts.hasOwnProperty('dsId')) {
+				path += 'dsId=' + String((opts as {dsId: number}).dsId);
+			} else if (opts.hasOwnProperty('userId')) {
+				path += 'userId=' + String((opts as {userId: number}).userId);
+			} else if (opts.hasOwnProperty('deliveryService')) {
+				path += 'dsId=' + String((opts as {deliveryService: DeliveryService}).deliveryService.id);
+			} else {
+				path += 'userId=' + String((opts as {user: User}).user.id);
+			}
+		}
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as Array<InvalidationJob>;
+			}
+		));
+	}
+
+	public createInvalidationJob (job: InvalidationJob): Observable<boolean> {
+		const path = '/api/' + this.API_VERSION + '/user/current/jobs';
+		return this.post(path, job).pipe(map(
+			r => true,
+			e => false
+		));
+	}
+
+	public getServers(id: number): Observable<Server>;
+	public getServers(): Observable<Array<Server>>;
+	public getServers(id?: number): Observable<Array<Server> | Server> {
+		const path = '/api/' + this.API_VERSION + '/servers';
+		if (id !== undefined) {
+			return this.get(path + '?id=' + String(id)).pipe(map(
+				r => {
+					return r.body.response as Server;
+				}
+			));
+		}
+
+		return this.get(path).pipe(map(
+			r=>{
+				return r.body.response as Array<Server>;
+			}
+		));
+
+
 	}
 }

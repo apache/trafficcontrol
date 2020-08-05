@@ -23,6 +23,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
+import { AgGridModule } from 'ag-grid-angular';
 
 import { Chart } from 'chart.js';
 
@@ -53,6 +54,7 @@ import { CurrentuserComponent } from './components/currentuser/currentuser.compo
 import { ServersPageComponent } from './components/servers-page/servers-page.component';
 import { ServerCardComponent } from './components/servers-page/server-card/server-card.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { ServersTableComponent } from './components/servers/servers-table/servers-table.component';
 
 Chart.plugins.register({
 	id: 'whiteBackground',
@@ -77,7 +79,8 @@ const appRoutes: Routes = [
 	{ path: 'new.Delivery.Service', component: NewDeliveryServiceComponent},
 	{ path: 'deliveryservice/:id', component: DeliveryserviceComponent},
 	{ path: 'deliveryservice/:id/invalidation-jobs', component: InvalidationJobsComponent},
-	{ path: 'servers', component: ServersPageComponent}
+	{ path: 'servers', component: ServersPageComponent},
+	{ path: 'serverstbl', component: ServersTableComponent}
 ];
 
 @NgModule({
@@ -100,6 +103,7 @@ const appRoutes: Routes = [
 		CurrentuserComponent,
 		ServersPageComponent,
 		ServerCardComponent,
+		ServersTableComponent
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),
@@ -110,7 +114,8 @@ const appRoutes: Routes = [
 		HttpClientModule,
 		ReactiveFormsModule,
 		FormsModule,
-		FontAwesomeModule
+		FontAwesomeModule,
+		AgGridModule.withComponents([])
 	],
 	providers: [
 		{provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
