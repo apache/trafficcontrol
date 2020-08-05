@@ -1,7 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 
-import {first } from 'rxjs/operators';
-
 import { ServerService } from '../../../services/api';
 import { Server } from '../../../models/server';
 
@@ -25,7 +23,7 @@ export class ServersTableComponent implements OnInit {
 	}
 
 	ngOnInit() {
-		this.api.getServers().pipe(first()).subscribe(
+		this.api.getServers().subscribe(
 			(r: Array<Server>) => {
 				this.servers = r;
 			}
