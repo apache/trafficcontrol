@@ -17,7 +17,6 @@ package v3
 
 import (
 	"net/url"
-	"strconv"
 	"testing"
 	"time"
 
@@ -76,14 +75,14 @@ func UpdateTestServiceCategories(t *testing.T) {
 		expectedServiceCategory := firstServiceCategory.Name + "-test-update"
 		remoteServiceCategory.Name = expectedServiceCategory
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateServiceCategoryByID(remoteServiceCategory.ID, remoteServiceCategory)
+		alert, _, err = TOSession.UpdateServiceCategoryByName(firstServiceCategory.Name, remoteServiceCategory)
 		if err != nil {
-			t.Errorf("cannot UPDATE Service Category by id: %v - %v", err, alert)
+			t.Errorf("cannot UPDATE Service Category by name: %v - %v", err, alert)
 		}
 
 		// Retrieve the Service Category to check service category got updated
 		paramsRemote := url.Values{}
-		paramsRemote.Add("id", strconv.Itoa(remoteServiceCategory.ID))
+		paramsRemote.Add("name", remoteServiceCategory.Name)
 		resp, _, err = TOSession.GetServiceCategories(&paramsRemote)
 		if err != nil {
 			t.Errorf("cannot GET Service Category by service category: %v - %v", firstServiceCategory.Name, err)
@@ -96,9 +95,9 @@ func UpdateTestServiceCategories(t *testing.T) {
 
 		// Set the name back to the fixture value so we can delete it after
 		remoteServiceCategory.Name = firstServiceCategory.Name
-		alert, _, err = TOSession.UpdateServiceCategoryByID(remoteServiceCategory.ID, remoteServiceCategory)
+		alert, _, err = TOSession.UpdateServiceCategoryByName(expectedServiceCategory, remoteServiceCategory)
 		if err != nil {
-			t.Errorf("cannot UPDATE Service Category by id: %v - %v", err, alert)
+			t.Errorf("cannot UPDATE Service Category by name: %v - %v", err, alert)
 		}
 	}
 }
@@ -117,9 +116,9 @@ func ServiceCategoryTenancyTest(t *testing.T) {
 	}
 	for _, sc := range serviceCategories {
 		if sc.Name == "serviceCategory1" {
-			alert, _, err = TOSession.UpdateServiceCategoryByID(sc.ID, sc)
+			alert, _, err = TOSession.UpdateServiceCategoryByName(sc.Name, sc)
 			if err != nil {
-				t.Errorf("cannot UPDATE Service Category by id: %v - %v", err, alert)
+				t.Errorf("cannot UPDATE Service Category by name: %v - %v", err, alert)
 			}
 			sc.TenantID = tenant3.ID
 		}
@@ -156,7 +155,7 @@ func DeleteTestServiceCategories(t *testing.T) {
 		if len(resp) > 0 {
 			respServiceCategory := resp[0]
 
-			delResp, _, err := TOSession.DeleteServiceCategoryByID(respServiceCategory.ID)
+			delResp, _, err := TOSession.DeleteServiceCategoryByName(respServiceCategory.Name)
 			if err != nil {
 				t.Errorf("cannot DELETE Service Category by service category: %v - %v", err, delResp)
 			}
