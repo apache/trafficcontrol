@@ -973,6 +973,22 @@ func deleteInterfaces(id int, tx *sql.Tx) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, server tc.ServerNullableV2) (error, *tc.TimeNoMod) {
+	lastUpdated := tc.TimeNoMod{}
+	rows, err := tx.NamedQuery(`select last_updated from server where id=:id`, server)
+	if err != nil {
+		return err, nil
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("no server found with this id"), nil
+	}
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return err, nil
+	}
+	return nil, &lastUpdated
+}
+
 func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
@@ -999,7 +1015,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if *newServer.XMPPID != originalXMPPID {
+		if newServer.XMPPID != nil && *newServer.XMPPID != originalXMPPID {
 			changeXMPPID = true
 		}
 		serviceInterface, err := validateV3(&newServer, tx)
@@ -1069,6 +1085,24 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	if changeXMPPID {
 		api.WriteAlerts(w, r, http.StatusBadRequest, tc.CreateAlerts(tc.ErrorLevel, fmt.Sprintf("server cannot be updated due to requested XMPPID change. XMPIDD is immutable")))
+		return
+	}
+
+	err, existingLastUpdated := CheckIfExistsBeforeUpdate(inf.Tx, server)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
+		return
+	}
+	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(r.Header)
+	existingEtag := rfc.ETag(existingLastUpdated.Time)
+	existingEtag = existingEtag[1:len(existingEtag)-1]
+
+	if r.Header.Get(rfc.IfMatch) != "" && !strings.Contains(r.Header.Get(rfc.IfMatch), existingEtag) {
+		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("header preconditions dont match"), nil)
+		return
+	}
+	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("header preconditions dont match"), nil)
 		return
 	}
 
