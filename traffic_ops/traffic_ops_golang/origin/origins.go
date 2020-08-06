@@ -288,7 +288,7 @@ func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *aut
 //ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (origin *TOOrigin) Update() (error, error, int) {
+func (origin *TOOrigin) Update(http.Header) (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
 	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if userErr != nil || sysErr != nil {

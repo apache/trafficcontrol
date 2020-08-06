@@ -35,6 +35,10 @@ type TORegion struct {
 	tc.Region
 }
 
+func (v *TORegion) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+	panic("implement me")
+}
+
 func (v *TORegion) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = t }
 func (v *TORegion) InsertQuery() string           { return insertQuery() }
 func (v *TORegion) NewReadObj() interface{}       { return &tc.Region{} }
@@ -107,8 +111,8 @@ JOIN division d ON r.division = d.id ` + where + orderBy + pagination +
 	select max(last_updated) as t from last_deleted l where l.table_name='region') as res`
 }
 
-func (rg *TORegion) Update() (error, error, int) { return api.GenericUpdate(rg) }
-func (rg *TORegion) Create() (error, error, int) { return api.GenericCreate(rg) }
+func (rg *TORegion) Update(http.Header) (error, error, int) { return api.GenericUpdate(nil, rg) }
+func (rg *TORegion) Create() (error, error, int)            { return api.GenericCreate(rg) }
 func (rg *TORegion) Delete() (error, error, int) { return api.GenericDelete(rg) }
 
 // OptionsDelete deletes a resource identified either as a route parameter or as a query string parameter.

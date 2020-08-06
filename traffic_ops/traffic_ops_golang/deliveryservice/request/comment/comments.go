@@ -40,6 +40,10 @@ type TODeliveryServiceRequestComment struct {
 	tc.DeliveryServiceRequestCommentNullable
 }
 
+func (v *TODeliveryServiceRequestComment) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+	panic("implement me")
+}
+
 func (v *TODeliveryServiceRequestComment) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODeliveryServiceRequestComment) InsertQuery() string           { return insertQuery() }
 func (v *TODeliveryServiceRequestComment) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
@@ -112,7 +116,7 @@ func (comment *TODeliveryServiceRequestComment) Read(h http.Header, useIMS bool)
 	return api.GenericRead(h, comment, useIMS)
 }
 
-func (comment *TODeliveryServiceRequestComment) Update() (error, error, int) {
+func (comment *TODeliveryServiceRequestComment) Update(http.Header) (error, error, int) {
 	current := TODeliveryServiceRequestComment{}
 	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
@@ -124,7 +128,7 @@ func (comment *TODeliveryServiceRequestComment) Update() (error, error, int) {
 		return errors.New("Comments can only be updated by the author"), nil, http.StatusBadRequest
 	}
 
-	return api.GenericUpdate(comment)
+	return api.GenericUpdate(nil, comment)
 }
 
 func (comment *TODeliveryServiceRequestComment) Delete() (error, error, int) {

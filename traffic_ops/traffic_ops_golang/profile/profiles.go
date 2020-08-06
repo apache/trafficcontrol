@@ -54,10 +54,14 @@ type TOProfile struct {
 	tc.ProfileNullable
 }
 
+func (v *TOProfile) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+	panic("implement me")
+}
+
 func (v *TOProfile) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOProfile) InsertQuery() string           { return insertQuery() }
-func (v *TOProfile) UpdateQuery() string           { return updateQuery() }
-func (v *TOProfile) DeleteQuery() string           { return deleteQuery() }
+func (v *TOProfile) InsertQuery() string { return insertQuery() }
+func (v *TOProfile) UpdateQuery() string { return updateQuery() }
+func (v *TOProfile) DeleteQuery() string { return deleteQuery() }
 
 func (prof TOProfile) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}
@@ -243,8 +247,8 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func (pr *TOProfile) Update() (error, error, int) { return api.GenericUpdate(pr) }
-func (pr *TOProfile) Create() (error, error, int) { return api.GenericCreate(pr) }
+func (pr *TOProfile) Update(http.Header) (error, error, int) { return api.GenericUpdate(nil, pr) }
+func (pr *TOProfile) Create() (error, error, int)            { return api.GenericCreate(pr) }
 func (pr *TOProfile) Delete() (error, error, int) { return api.GenericDelete(pr) }
 
 func updateQuery() string {

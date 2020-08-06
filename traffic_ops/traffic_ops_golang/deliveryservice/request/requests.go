@@ -44,9 +44,13 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
+func (v *TODeliveryServiceRequest) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+	panic("implement me")
+}
+
 func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TODeliveryServiceRequest) InsertQuery() string           { return insertRequestQuery() }
-func (v *TODeliveryServiceRequest) UpdateQuery() string           { return updateRequestQuery() }
+func (v *TODeliveryServiceRequest) InsertQuery() string { return insertRequestQuery() }
+func (v *TODeliveryServiceRequest) UpdateQuery() string { return updateRequestQuery() }
 func (v *TODeliveryServiceRequest) DeleteQuery() string {
 	return `DELETE FROM deliveryservice_request WHERE id = :id`
 }
@@ -198,7 +202,7 @@ func (req TODeliveryServiceRequest) IsTenantAuthorized(user *auth.CurrentUser) (
 //ParsePQUniqueConstraintError is used to determine if a request with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (req *TODeliveryServiceRequest) Update() (error, error, int) {
+func (req *TODeliveryServiceRequest) Update(http.Header) (error, error, int) {
 	if req.ID == nil {
 		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
@@ -226,7 +230,7 @@ func (req *TODeliveryServiceRequest) Update() (error, error, int) {
 	userID := tc.IDNoMod(req.APIInfo().User.ID)
 	req.LastEditedByID = &userID
 
-	return api.GenericUpdate(req)
+	return api.GenericUpdate(nil, req)
 }
 
 // Creator implements the tc.Creator interface
@@ -359,7 +363,7 @@ type deliveryServiceRequestAssignment struct {
 }
 
 // Update assignee only
-func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
+func (req *deliveryServiceRequestAssignment) Update(http.Header) (error, error, int) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only assignee can change
 	if req.ID == nil {
@@ -422,7 +426,7 @@ type deliveryServiceRequestStatus struct {
 	TODeliveryServiceRequest
 }
 
-func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
+func (req *deliveryServiceRequestStatus) Update(http.Header) (error, error, int) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only status can change,  and only according to the established rules
 	// for status transition

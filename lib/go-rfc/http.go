@@ -37,8 +37,6 @@ const (
 	ContentDisposition     = "Content-Disposition"      // RFC6266
 	ApplicationOctetStream = "application/octet-stream" // RFC2046§4.5.2
 	Vary                   = "Vary"                     // RFC7231§7.1.4
-	IfModifiedSince        = "If-Modified-Since"        // RFC7232§3.3
-	LastModified           = "Last-Modified"            // RFC7232§2.2
 )
 
 // AcceptsGzip returns whether r accepts gzip encoding, per RFC7231§5.3.4.
@@ -82,4 +80,9 @@ func ParseHTTPDate(d string) (time.Time, bool) {
 	}
 	return time.Time{}, false
 
+}
+
+// FormatHTTPDate formats t as an RFC7231§7.1.1 HTTP-date.
+func FormatHTTPDate(t time.Time) string {
+	return t.Format(time.RFC1123)
 }

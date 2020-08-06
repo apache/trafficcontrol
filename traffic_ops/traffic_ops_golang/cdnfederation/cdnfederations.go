@@ -44,6 +44,10 @@ type TOCDNFederation struct {
 	TenantID *int `json:"-" db:"tenant_id"`
 }
 
+func (v *TOCDNFederation) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+	panic("implement me")
+}
+
 func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
 func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
@@ -192,7 +196,7 @@ func (fed *TOCDNFederation) Read(h http.Header, useIMS bool) ([]interface{}, err
 	return filteredFederations, nil, nil, errCode, maxTime
 }
 
-func (fed *TOCDNFederation) Update() (error, error, int) {
+func (fed *TOCDNFederation) Update(http.Header) (error, error, int) {
 	userErr, sysErr, errCode := fed.isTenantAuthorized()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
@@ -203,7 +207,7 @@ func (fed *TOCDNFederation) Update() (error, error, int) {
 		fed.XmlId = nil
 		fed.DeliveryServiceIDs = nil
 	}
-	return api.GenericUpdate(fed)
+	return api.GenericUpdate(nil, fed)
 }
 
 // Delete implements the Deleter interface for TOCDNFederation.

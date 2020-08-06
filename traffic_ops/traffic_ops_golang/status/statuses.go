@@ -42,6 +42,10 @@ type TOStatus struct {
 	SQLDescription sql.NullString `json:"-" db:"description"`
 }
 
+func (v *TOStatus) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+	panic("implement me")
+}
+
 func (v *TOStatus) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from ` + tableName + ` s ` + where + orderBy + pagination +
@@ -119,8 +123,8 @@ func (st *TOStatus) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	return readVals, nil, nil, errCode, maxTime
 }
 
-func (st *TOStatus) Update() (error, error, int) { return api.GenericUpdate(st) }
-func (st *TOStatus) Create() (error, error, int) { return api.GenericCreate(st) }
+func (st *TOStatus) Update(http.Header) (error, error, int) { return api.GenericUpdate(nil, st) }
+func (st *TOStatus) Create() (error, error, int)            { return api.GenericCreate(st) }
 func (st *TOStatus) Delete() (error, error, int) { return api.GenericDelete(st) }
 
 func selectQuery() string {

@@ -45,6 +45,10 @@ type TOTenant struct {
 	tc.TenantNullable
 }
 
+func (v *TOTenant) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+	panic("implement me")
+}
+
 func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOTenant) InsertQuery() string           { return insertQuery() }
 func (v *TOTenant) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
@@ -198,7 +202,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(*ten.ParentID, user, ten.APIInfo().Tx.Tx)
 }
 
-func (tn *TOTenant) Update() (error, error, int) { return api.GenericUpdate(tn) }
+func (tn *TOTenant) Update(http.Header) (error, error, int) { return api.GenericUpdate(nil, tn) }
 
 func (ten *TOTenant) Delete() (error, error, int) {
 	result, err := ten.APIInfo().Tx.NamedExec(deleteQuery(), ten)

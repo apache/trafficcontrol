@@ -41,6 +41,10 @@ type TOCDN struct {
 	tc.CDNNullable
 }
 
+func (v *TOCDN) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+	panic("implement me")
+}
+
 func (v *TOCDN) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
@@ -136,9 +140,9 @@ func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, error, error,
 	return api.GenericRead(h, cdn, useIMS)
 }
 
-func (cdn *TOCDN) Update() (error, error, int) {
+func (cdn *TOCDN) Update(http.Header) (error, error, int) {
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	return api.GenericUpdate(cdn)
+	return api.GenericUpdate(nil, cdn)
 }
 
 func (cdn *TOCDN) Delete() (error, error, int) { return api.GenericDelete(cdn) }

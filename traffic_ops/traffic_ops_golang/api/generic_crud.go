@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	ims "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -56,6 +57,7 @@ type GenericUpdater interface {
 	APIInfo() *APIInfo
 	SetLastUpdated(tc.TimeNoMod)
 	UpdateQuery() string
+	CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod)
 }
 
 type GenericDeleter interface {
@@ -213,7 +215,20 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 }
 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.
-func GenericUpdate(val GenericUpdater) (error, error, int) {
+func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
+	err, existingLastUpdated := val.CheckIfExistsBeforeUpdate()
+	if err != nil {
+		return errors.New("no " + val.GetType() + " found with this id"), err, http.StatusNotFound
+	}
+	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
+	existingEtag := rfc.ETag(existingLastUpdated.Time)
+
+	if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	}
+	if existingLastUpdated.UTC().After(iumsTime.UTC()) {
+		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	}
 	rows, err := val.APIInfo().Tx.NamedQuery(val.UpdateQuery(), val)
 	if err != nil {
 		return ParseDBError(err)
@@ -221,7 +236,7 @@ func GenericUpdate(val GenericUpdater) (error, error, int) {
 	defer rows.Close()
 
 	if !rows.Next() {
-		return errors.New("no " + val.GetType() + " found with this id"), nil, http.StatusNotFound
+		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
 	}
 	lastUpdated := tc.TimeNoMod{}
 	if err := rows.Scan(&lastUpdated); err != nil {

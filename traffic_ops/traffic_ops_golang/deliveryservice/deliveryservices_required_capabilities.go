@@ -164,7 +164,7 @@ func (rc RequiredCapability) Validate() error {
 }
 
 // Update implements the api.CRUDer interface.
-func (rc *RequiredCapability) Update() (error, error, int) {
+func (rc *RequiredCapability) Update(http.Header) (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 

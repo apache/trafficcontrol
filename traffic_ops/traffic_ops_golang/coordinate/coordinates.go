@@ -20,6 +20,7 @@ package coordinate
  */
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,9 +51,25 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 		"name": dbhelpers.WhereColumnInfo{"name", nil},
 	}
 }
-func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
-func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
 
+func (v *TOCoordinate) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+	lastUpdated := tc.TimeNoMod{}
+	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from coordinate where id=:id`, v)
+	if err != nil {
+		return err, nil
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("no " + v.GetType() + " found with this id"), nil
+	}
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return err, nil
+	}
+	return nil, &lastUpdated
+}
+
+func (v *TOCoordinate) UpdateQuery() string {return updateQuery()}
+func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
@@ -130,8 +147,9 @@ func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tab
 	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
-func (coord *TOCoordinate) Update() (error, error, int) { return api.GenericUpdate(coord) }
-func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
+func (coord *TOCoordinate) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, coord)
+}
+func (coord *TOCoordinate) Delete() (error, error, int)            { return api.GenericDelete(coord) }
 
 func selectQuery() string {
 	query := `SELECT

@@ -224,7 +224,7 @@ func (st *TOSteeringTargetV11) Create() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func (st *TOSteeringTargetV11) Update() (error, error, int) {
+func (st *TOSteeringTargetV11) Update(http.Header) (error, error, int) {
 	dsIDInt, err := strconv.Atoi(st.ReqInfo.Params["deliveryservice"])
 	if err != nil {
 		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest

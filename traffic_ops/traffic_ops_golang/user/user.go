@@ -246,7 +246,7 @@ func (user *TOUser) privCheck() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func (user *TOUser) Update() (error, error, int) {
+func (user *TOUser) Update(http.Header) (error, error, int) {
 
 	// make sure current user cannot update their own role to a new value
 	if user.ReqInfo.User.ID == *user.ID && user.ReqInfo.User.Role != *user.Role {
@@ -266,7 +266,7 @@ func (user *TOUser) Update() (error, error, int) {
 		}
 	}
 
-	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)
+	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(""), user)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
@@ -376,7 +376,7 @@ func (user *TOUser) SelectQuery() string {
 	LEFT JOIN role r ON u.role = r.id`
 }
 
-func (user *TOUser) UpdateQuery() string {
+func (user *TOUser) UpdateQuery(string) string {
 	return `
 	UPDATE tm_user u SET
 	username=:username,
