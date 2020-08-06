@@ -20,6 +20,7 @@ package staticdnsentry
  */
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -103,6 +104,11 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.IPv6)
 	case "CNAME_RECORD":
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.DNSName)
+		address := *staticDNSEntry.Address
+		lastChar := address[len(address)-1:]
+		if lastChar != "." {
+			addressErr = fmt.Errorf("must be a valid DNS entry. Missing a trailing period at the end")
+		}
 	default:
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required)
 	}

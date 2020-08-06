@@ -50,10 +50,6 @@ var DeliveryServiceUtils = function($window, propertiesModel) {
 		3: "slice"
 	};
 
-	// ... this one allows Static DNS entries with only a trailing period
-	// Source of regex: https://stackoverflow.com/questions/10306690/what-is-a-regular-expression-which-will-match-a-valid-domain-name-without-a-subd/41193739#comment73159724_41193739
-	this.StaticDNSPattern = /^(?=.{1,253}\.?$)(?:(?!-|[^.]+_)[A-Za-z0-9-_]{1,63}(?:\.)){2,}$/;
-
 	this.openCharts = function(ds) {
 		$window.open(
 			propertiesModel.properties.deliveryServices.charts.customLink.baseUrl + ds.xmlId,
