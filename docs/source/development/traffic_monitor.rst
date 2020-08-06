@@ -53,7 +53,7 @@ Project Tree Overview
 * ``srvhttp/`` - HTTP(S) service. Given a map of endpoint functions, which are lambda closures containing aggregated data objects. If HTTPS, the HTTP service will redirect to HTTPS.
 * ``static/`` - Web interface files (markup, styling and scripting)
 * ``threadsafe/`` - Thread-safe objects for storing aggregated data needed by multiple goroutines (typically the aggregator and HTTP server)
-* ``trafficopsdata/`` - Data structure for fetching and storing Traffic Ops data needed from the CDN :term:`Snapshot`. This is primarily mappings, such as :term:`Delivery Service` servers, and server types.
+* ``todata/`` - Data structure for fetching and storing Traffic Ops data needed from the CDN :term:`Snapshot`. This is primarily mappings, such as :term:`Delivery Service` servers, and server types.
 * ``trafficopswrapper/`` - Thread-safe wrapper around the Traffic Ops client. The client used to not be thread-safe, however, it mostly (possibly entirely) is now. But, the wrapper also serves to overwrite the Traffic Ops :file:`monitoring.json` values, which are live, with values from the CDN :term:`Snapshot`.
 
 Architecture

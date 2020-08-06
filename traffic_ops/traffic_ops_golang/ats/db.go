@@ -687,7 +687,7 @@ func GetATSMajorVersion(tx *sql.Tx, serverProfileID atscfg.ProfileID) (int, erro
 
 // GetTMParams returns the global "tm.url" and "tm.rev_proxy.url" parameters, and any error. If either param doesn't exist, an empty string is returned without error.
 func GetTMParams(tx *sql.Tx) (TMParams, error) {
-	rows, err := tx.Query(`SELECT name, value from parameter where config_file = 'global' AND (name = 'tm.url' OR name = 'tm.rev_proxy.url')`)
+	rows, err := tx.Query(`SELECT name, value from parameter where config_file = $1 AND (name = 'tm.url' OR name = 'tm.rev_proxy.url')`, tc.GlobalConfigFileName)
 	if err != nil {
 		return TMParams{}, errors.New("querying: " + err.Error())
 	}
@@ -949,9 +949,9 @@ SELECT
 FROM
   parameter p
 WHERE
-  (p.name = 'tm.toolname' OR p.name = 'tm.url') AND p.config_file = 'global'
+  (p.name = 'tm.toolname' OR p.name = 'tm.url') AND p.config_file = $1
 `
-	rows, err := tx.Query(qry)
+	rows, err := tx.Query(qry, tc.GlobalConfigFileName)
 	if err != nil {
 		return "", "", errors.New("querying: " + err.Error())
 	}
