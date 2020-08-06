@@ -11,101 +11,150 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, ElementRef, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { Router } from '@angular/router';
-import { first } from 'rxjs/operators';
+import { Component, OnInit } from "@angular/core";
+import { FormControl } from "@angular/forms";
+import { Router } from "@angular/router";
 
-import { AuthenticationService } from '../../services';
-import { CDNService, DeliveryServiceService } from '../../services/api';
+import { first } from "rxjs/operators";
 
+import {
+	bypassable,
+	CDN,
+	DeliveryService,
+	GeoLimit,
+	GeoProvider,
+	Protocol,
+	QStringHandling,
+	RangeRequestHandling,
+	Type
+} from "../../models";
 import { User } from "../../models/user";
-import { bypassable, CDN, DeliveryService, GeoLimit, GeoProvider, Protocol, QStringHandling, RangeRequestHandling, Type } from '../../models';
+import { AuthenticationService } from "../../services";
+import { CDNService, DeliveryServiceService } from "../../services/api";
 
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s
-*/
+ */
 const XML_ID_SANITIZE = /[^a-z0-9\-]+/g;
 
 /**
  * A regular expression that matches a valid xml_id
-*/
+ */
 const VALID_XML_ID = /^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/;
 
+// tslint:disable
 /**
  * A regular expression that matches IPv4 addresses
-*/
-const VALID_IPv4 = /^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d\d?)){3}$/;
-/** tslint:disable **/
+ */
+const VALID_IPV4 = /^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d\d?)){3}$/;
 /**
  * A regular expression that matches IPv6 addresses
  * This is huge and ugly, but there's no JS built-in for address parsing afaik.
-*/
-const VALID_IPv6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((::((([\da-fA-F]{1,4})):){5})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((((([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){4})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,1}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){3})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,2}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){2})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,3}(([\da-fA-F]{1,4}))):(([\da-fA-F]{1,4})):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,4}(([\da-fA-F]{1,4}))):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,5}(([\da-fA-F]{1,4}))):)(([\da-fA-F]{1,4})))|(((((([\da-fA-F]{1,4})):){0,6}(([\da-fA-F]{1,4}))):))))$/;
-/** tslint:enable **/
+ */
+const VALID_IPV6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((::((([\da-fA-F]{1,4})):){5})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((((([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){4})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,1}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){3})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,2}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){2})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,3}(([\da-fA-F]{1,4}))):(([\da-fA-F]{1,4})):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,4}(([\da-fA-F]{1,4}))):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,5}(([\da-fA-F]{1,4}))):)(([\da-fA-F]{1,4})))|(((((([\da-fA-F]{1,4})):){0,6}(([\da-fA-F]{1,4}))):))))$/;
+// tslint:enable
 /**
  * A regular expression that matches a valid hostname
-*/
+ */
 const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z0-9])*)*$/;
 
+/**
+ * NewDeliveryServiceComponent is the controller for the new Delivery Service
+ * creation page.
+ */
 @Component({
-	selector: 'app-new-delivery-service',
-	templateUrl: './new-delivery-service.component.html',
-	styleUrls: ['./new-delivery-service.component.scss']
+	selector: "app-new-delivery-service",
+	styleUrls: ["./new-delivery-service.component.scss"],
+	templateUrl: "./new-delivery-service.component.html"
 })
 export class NewDeliveryServiceComponent implements OnInit {
 
 	/** The Delivery Service being created */
-	deliveryService = {} as DeliveryService;
+	public deliveryService: DeliveryService = {
+		active: false,
+		anonymousBlockingEnabled: false,
+		cdnId: -1,
+		deepCachingType: "NEVER",
+		displayName: "",
+		dscp: 0,
+		geoLimit: GeoLimit.None,
+		geoProvider: GeoProvider.MaxMind,
+		initialDispersion: 1,
+		ipv6RoutingEnabled: true,
+		logsEnabled: true,
+		longDesc: "",
+		missLat: 0,
+		missLong: 0,
+		multiSiteOrigin: false,
+		qstringIgnore: QStringHandling.USE,
+		rangeRequestHandling: RangeRequestHandling.NONE,
+		regionalGeoBlocking: false,
+		routingName: "cdn",
+		typeId: -1,
+		xmlId: ""
+	};
 
-	/** A bunch of form controls */
-	activeImmediately = new FormControl();
-	bypassLoc = new FormControl('');
-	cdnObject = new FormControl('');
-	description = new FormControl('');
-	disableIPv6 = new FormControl();
-	displayName = new FormControl('');
-	dsType = new FormControl();
-	infoURL = new FormControl('');
-	originURL = new FormControl('');
-	protocol = new FormControl();
+	/** Allows the user to set 'active' */
+	public activeImmediately = new FormControl();
+	/** Allows the user to set 'bypass*' fields */
+	public bypassLoc = new FormControl("");
+	/** Allows the user to set 'cdn'/'cdnName' */
+	public cdnObject = new FormControl("");
+	/** Allows the user to set the 'longDesc' */
+	public description = new FormControl("");
+	/** Allows the user to set 'ipv6Enabled' */
+	public disableIPv6 = new FormControl();
+	/** Allows the user to set the 'displayName'/'xml_id' */
+	public displayName = new FormControl("");
+	/** Allows the user to set 'type'/'typeId' */
+	public dsType = new FormControl();
+	/** Allows the user to set 'infoUrl' */
+	public infoURL = new FormControl("");
+	/** Allows the user to set 'originFqdn' */
+	public originURL = new FormControl("");
+	/** Allows the user to set 'protocol' */
+	public protocol = new FormControl();
 
-	Protocol = Protocol;
+	/** Need public access to the merged namespace for toString methods. */
+	public Protocol = Protocol;
 
-	cdns: Array<CDN>;
-	dsTypes: Array<Type>;
+	/** The available CDNs from which for the user to choose. */
+	public cdns: Array<CDN>;
 
-	step = 0;
+	/**
+	 * The available useInTable=delivery_service Types from which for the user
+	 * to choose.
+	 */
+	public dsTypes: Array<Type>;
 
-	constructor (private readonly dsAPI: DeliveryServiceService, private readonly cdnAPI: CDNService, private readonly auth: AuthenticationService, private readonly router: Router) { }
+	/** Controls what "step" the user is on; controls which fields are shown. */
+	public step = 0;
+	/** Need public access to models.bypassable in the template. */
+	public bypassable = bypassable;
 
-	ngOnInit () {
+	constructor (
+		private readonly dsAPI: DeliveryServiceService,
+		private readonly cdnAPI: CDNService,
+		private readonly auth: AuthenticationService,
+		private readonly router: Router
+	) { }
+
+	/**
+	 * Initializes all of the extra data needed to construct a Delivery Service
+	 * (types, cdns, etc).
+	 */
+	public ngOnInit(): void {
 		this.auth.updateCurrentUser().subscribe( success => {
 			if (!success || this.auth.currentUserValue === null) {
 				return;
 			}
-			this.deliveryService.active = false;
-			this.deliveryService.anonymousBlockingEnabled = false;
-			this.deliveryService.deepCachingType = 'NEVER';
-			this.deliveryService.dscp = 0;
-			this.deliveryService.geoLimit = GeoLimit.None;
-			this.deliveryService.geoProvider = GeoProvider.MaxMind;
-			this.deliveryService.logsEnabled = true;
-			this.deliveryService.initialDispersion = 1;
-			this.deliveryService.ipv6RoutingEnabled = true;
-			this.deliveryService.missLat = 0.0;
-			this.deliveryService.missLong = 0.0;
-			this.deliveryService.multiSiteOrigin = false;
-			this.deliveryService.qstringIgnore = QStringHandling.USE;
-			this.deliveryService.rangeRequestHandling = RangeRequestHandling.NONE;
-			this.deliveryService.regionalGeoBlocking = false;
 			this.deliveryService.tenant = this.auth.currentUserValue.tenant;
 			this.deliveryService.tenantId = this.auth.currentUserValue.tenantId;
 			this.dsAPI.getDSTypes().pipe(first()).subscribe(
 				(types: Array<Type>) => {
 					this.dsTypes = types;
 					for (const t of types) {
-						if (t.name === 'HTTP') {
+						if (t.name === "HTTP") {
 							this.deliveryService.type = t.name;
 							this.deliveryService.typeId = t.id;
 							this.dsType.setValue(t);
@@ -155,12 +204,13 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 	/**
 	 * Sets the default CDN based on the passed integral, unique identifier.
-	 * @param id The integral, unique identifier of the CDN which is assumed to be the CDN which
-	 * contains more of the current user's tenant's Delivery Services than any other - unless said
-	 * tenant has no Delivery Services, in which case it should be `-1` and the selected CDN will be
-	 * the first CDN in lexigraphical order by name.
-	*/
-	private setDefaultCDN (id: number) {
+	 * @param id The integral, unique identifier of the CDN which is assumed to
+	 * be the CDN which contains more of the current user's tenant's Delivery
+	 * Services than any other - unless said tenant has no Delivery Services, in
+	 * which case it should be `-1` and the selected CDN will be the first CDN
+	 * in lexigraphical order by name.
+	 */
+	private setDefaultCDN(id: number): void {
 		this.cdnAPI.getCDNs().pipe(first()).subscribe(
 			(cdns: Map<string, CDN>) => {
 				this.cdns = new Array<CDN>();
@@ -168,7 +218,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 				cdns.forEach( (c: CDN, name: string) => {
 
 					// this is a special, magic-value CDN that can't have any DSes
-					if (c.name !== 'ALL') {
+					if (c.name !== "ALL") {
 						this.cdns.push(c);
 						if (id > 0) {
 							if (c.id === id) {
@@ -189,13 +239,12 @@ export class NewDeliveryServiceComponent implements OnInit {
 		);
 	}
 
-	public bypassable = bypassable;
-
 	/**
-	 * When a user submits their origin URL, this parses that out into the related DS fields
-	*/
-	setOriginURL () {
-		const parser = document.createElement('a') as HTMLAnchorElement;
+	 * When a user submits their origin URL, this parses that out into the
+	 * related DS fields
+	 */
+	public setOriginURL(): void {
+		const parser = document.createElement("a");
 		parser.href = this.originURL.value;
 		this.deliveryService.orgServerFqdn = parser.origin;
 		if (parser.pathname) {
@@ -203,11 +252,11 @@ export class NewDeliveryServiceComponent implements OnInit {
 		}
 
 		switch (parser.protocol) {
-			case 'http:':
+			case "http:":
 				this.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
 				this.protocol.setValue(Protocol.HTTP_AND_HTTPS);
 				break;
-			case 'https:':
+			case "https:":
 				this.deliveryService.protocol = Protocol.HTTP_TO_HTTPS;
 				this.protocol.setValue(Protocol.HTTP_TO_HTTPS);
 				break;
@@ -221,31 +270,33 @@ export class NewDeliveryServiceComponent implements OnInit {
 			this.deliveryService.active = this.activeImmediately.value;
 		}
 
-		this.deliveryService.displayName = 'Delivery Service for ' + parser.hostname;
+		this.deliveryService.displayName = `Delivery Service for ${parser.hostname}`;
 		this.displayName.setValue(this.deliveryService.displayName);
 		++this.step;
 	}
 
 	/**
-	 * Sets the metadata of the new Delivery Service. This will attempt to make an `xml_id` out of
-	 * the submitted name by casefolding to lower and replacing special characters with `-`. If that
-	 * replacement somehow fails, it will trigger a form validation error and will convert the
-	 * submitted name value to a placeholder while making the actual value an empty string.
-	*/
-	setMetaInformation () {
+	 * Sets the metadata of the new Delivery Service. This will attempt to make
+	 * an `xml_id` out of the submitted name by casefolding to lower and
+	 * replacing special characters with `-`. If that replacement somehow fails,
+	 * it will trigger a form validation error and will convert the submitted
+	 * name value to a placeholder while making the actual value an empty
+	 * string.
+	 */
+	public setMetaInformation(): void {
 		this.deliveryService.displayName = this.displayName.value;
-		this.deliveryService.xmlId = this.deliveryService.displayName.toLocaleLowerCase().replace(XML_ID_SANITIZE, '-');
+		this.deliveryService.xmlId = this.deliveryService.displayName.toLocaleLowerCase().replace(XML_ID_SANITIZE, "-");
 		if (! VALID_XML_ID.test(this.deliveryService.xmlId)) {
 			// According to https://stackoverflow.com/questions/39642547/is-it-possible-to-get-native-element-for-formcontrol
 			// this could instead be implemented with a Directive, but that doesn't really seem like
 			// any less of a hack to me.
-			const nativeDisplayNameElement = document.getElementById('displayName') as HTMLInputElement;
+			const nativeDisplayNameElement = document.getElementById("displayName") as HTMLInputElement;
 			nativeDisplayNameElement.setCustomValidity(
-				'Failed to create a unique key from Delivery Service name. Try using less special characters.'
+				"Failed to create a unique key from Delivery Service name. Try using less special characters."
 			);
 			nativeDisplayNameElement.reportValidity();
-			nativeDisplayNameElement.value = '';
-			nativeDisplayNameElement.setCustomValidity('');
+			nativeDisplayNameElement.value = "";
+			nativeDisplayNameElement.setCustomValidity("");
 			return;
 		}
 		this.deliveryService.longDesc = this.description.value;
@@ -257,11 +308,12 @@ export class NewDeliveryServiceComponent implements OnInit {
 	}
 
 	/**
-	 * Currently merely sets the CDN to which the Delivery Service shall belong. In the future, this
-	 * should probably handle queuing cache assignments and the like, possibly with advanced
-	 * controls for things like Traffic Router DNS and redirects
-	*/
-	setInfrastructureInformation () {
+	 * Currently merely sets the CDN to which the Delivery Service shall belong.
+	 * In the future, this should probably handle queuing cache assignments and
+	 * the like, possibly with advanced controls for things like Traffic Router
+	 * DNS and redirects
+	 */
+	public setInfrastructureInformation(): void {
 		this.deliveryService.cdnName = this.cdnObject.value.name;
 		this.deliveryService.cdnId = this.cdnObject.value.id;
 		if (this.dsType.dirty) {
@@ -279,18 +331,18 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 		if (this.bypassLoc.dirty) {
 			switch (this.deliveryService.type) {
-				case 'DNS':
-				case 'DNS_LIVE':
-				case 'DNS_LIVE_NATNL':
+				case "DNS":
+				case "DNS_LIVE":
+				case "DNS_LIVE_NATNL":
 					try {
 						this.setDNSBypass(this.bypassLoc.value);
 					} catch (e) {
 						console.error(e);
-						const nativeBypassElement = document.getElementById('bypass-loc') as HTMLInputElement;
+						const nativeBypassElement = document.getElementById("bypass-loc") as HTMLInputElement;
 						nativeBypassElement.setCustomValidity(e.message);
 						nativeBypassElement.reportValidity();
-						nativeBypassElement.value = '';
-						nativeBypassElement.setCustomValidity('');
+						nativeBypassElement.value = "";
+						nativeBypassElement.setCustomValidity("");
 						return;
 					}
 					break;
@@ -304,35 +356,36 @@ export class NewDeliveryServiceComponent implements OnInit {
 			v => {
 				if (v) {
 					console.log("New Delivery Service '%s' created", this.deliveryService.displayName);
-					this.router.navigate(['/'], {queryParams: {search: encodeURIComponent(this.deliveryService.displayName)}});
+					this.router.navigate(["/"], {queryParams: {search: encodeURIComponent(this.deliveryService.displayName)}});
 				} else {
-					console.error('Failed to create deliveryService: ', this.deliveryService);
+					console.error("Failed to create deliveryService: ", this.deliveryService);
 				}
 			}
 		);
 	}
 
 	/**
-	 * Sets the appropriate bypass location for the new Delivery Service, assuming it is DNS-routed
+	 * Sets the appropriate bypass location for the new Delivery Service,
+	 * assuming it is DNS-routed.
 	 * @param v Represents a Bypass value - either an IP(v4/v6) address or a hostname.
 	 * @throws {Error} if `v` is not a valid Bypass value
 	 */
-	setDNSBypass (v: string) {
-		if (VALID_IPv6.test(v)) {
+	public setDNSBypass(v: string): void {
+		if (VALID_IPV6.test(v)) {
 			this.deliveryService.dnsBypassIp6 = v;
-		} else if (VALID_IPv4.test(v)) {
+		} else if (VALID_IPV4.test(v)) {
 			this.deliveryService.dnsBypassIp = v;
 		} else if (VALID_HOSTNAME.test(v)) {
 			this.deliveryService.dnsBypassCname = v;
 		} else {
-			throw new Error("'" + v + "' is not a valid IPv4/IPv6 address or hostname!");
+			throw new Error(`"${v} is not a valid IPv4/IPv6 address or hostname`);
 		}
 	}
 
 	/**
-	 * Allows a user to return to the previous step
-	**/
-	previous () {
+	 * Allows a user to return to the previous step.
+	 */
+	public previous(): void {
 		--this.step;
 	}
 }

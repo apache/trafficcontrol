@@ -11,15 +11,22 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input } from '@angular/core';
+import { Component, Input } from "@angular/core";
 
+/**
+ * TpHeaderComponent is the controller for the standard Traffic Portal header.
+ */
 @Component({
-	selector: 'tp-header',
-	templateUrl: './tp-header.component.html',
-	styleUrls: ['./tp-header.component.scss']
+	selector: "tp-header",
+	styleUrls: ["./tp-header.component.scss"],
+	templateUrl: "./tp-header.component.html"
 })
 export class TpHeaderComponent {
 
-	@Input() title?: string;
-
+	/**
+	 * The title to be used in the header.
+	 *
+	 * If not given, defaults to "Traffic Portal".
+	 */
+	@Input() public title?: string;
 }

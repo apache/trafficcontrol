@@ -12,13 +12,14 @@
 * limitations under the License.
 */
 
-import { TestBed, async } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClientModule } from '@angular/common/http';
-import { AppComponent } from './app.component';
-import { AlertComponent } from './components/alert/alert.component';
+import { HttpClientModule } from "@angular/common/http";
+import { TestBed, async } from "@angular/core/testing";
+import { RouterTestingModule } from "@angular/router/testing";
 
-describe('AppComponent', () => {
+import { AppComponent } from "./app.component";
+import { AlertComponent } from "./components/alert/alert.component";
+
+describe("AppComponent", () => {
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
 			declarations: [
@@ -32,7 +33,7 @@ describe('AppComponent', () => {
 		}).compileComponents();
 	}));
 
-	it('should create the app', () => {
+	it("should create the app", () => {
 		const fixture = TestBed.createComponent(AppComponent);
 		const app = fixture.debugElement.componentInstance;
 		expect(app).toBeTruthy();
@@ -41,6 +42,6 @@ describe('AppComponent', () => {
 	it(`should have as title 'Traffic Portal'`, () => {
 		const fixture = TestBed.createComponent(AppComponent);
 		const app = fixture.debugElement.componentInstance;
-		expect(app.title).toEqual('Traffic Portal');
+		expect(app.title).toEqual("Traffic Portal");
 	});
 });

@@ -11,34 +11,33 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
-import { of } from 'rxjs';
+import { HttpClientModule } from "@angular/common/http";
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { RouterTestingModule } from "@angular/router/testing";
 
-import { DeliveryserviceComponent } from './deliveryservice.component';
-import { TpHeaderComponent } from '../tp-header/tp-header.component';
+import { of } from "rxjs";
 
-import { LinechartDirective } from '../../directives/linechart.directive';
+import { DeliveryserviceComponent } from "./deliveryservice.component";
 
-import { DataSet, DataSetWithSummary, DeliveryService, GeoLimit, GeoProvider, TPSData } from '../../models';
+import { LinechartDirective } from "../../directives/linechart.directive";
+import { DeliveryService, GeoLimit, GeoProvider, TPSData } from "../../models";
+import { APIService } from "../../services/api.service";
+import { TpHeaderComponent } from "../tp-header/tp-header.component";
 
-import { APIService } from '../../services/api.service';
 
-
-describe('DeliveryserviceComponent', () => {
+describe("DeliveryserviceComponent", () => {
 	let component: DeliveryserviceComponent;
 	let fixture: ComponentFixture<DeliveryserviceComponent>;
 
 	beforeEach(async(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(['getDeliveryServices', 'getDSKBPS', 'getAllDSTPSData']);
+		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices", "getDSKBPS", "getAllDSTPSData"]);
 		mockAPIService.getDeliveryServices.and.returnValue(of({
 			active: true,
 			anonymousBlockingEnabled: false,
 			cdnId: 0,
-			displayName: 'test DS',
+			displayName: "test DS",
 			dscp: 0,
 			geoLimit: GeoLimit.None,
 			geoProvider: GeoProvider.MaxMind,
@@ -52,65 +51,65 @@ describe('DeliveryserviceComponent', () => {
 			regionalGeoBlocking: false,
 			routingName: "test-DS",
 			typeId: 0,
-			xmlId: 'test-DS'
+			xmlId: "test-DS"
 		} as DeliveryService ));
 		mockAPIService.getDSKBPS.and.returnValue(of({series: {values: []}}), of({series: {values: []}}));
 		mockAPIService.getAllDSTPSData.and.returnValue(of({
-			total: {
-				dataSet: {
-					data: []
-				} as DataSet,
-				min: 0,
-				max: 0,
-				fifthPercentile: 0,
-				ninetyFifthPercentile: 0,
-				ninetyEighthPercentile: 0,
-				mean: 0
-			} as DataSetWithSummary,
-			success: {
-				dataSet: {
-					data: []
-				} as DataSet,
-				min: 0,
-				max: 0,
-				fifthPercentile: 0,
-				ninetyFifthPercentile: 0,
-				ninetyEighthPercentile: 0,
-				mean: 0
-			} as DataSetWithSummary,
-			redirection: {
-				dataSet: {
-					data: []
-				} as DataSet,
-				min: 0,
-				max: 0,
-				fifthPercentile: 0,
-				ninetyFifthPercentile: 0,
-				ninetyEighthPercentile: 0,
-				mean: 0
-			} as DataSetWithSummary,
 			clientError: {
 				dataSet: {
 					data: []
-				} as DataSet,
-				min: 0,
-				max: 0,
+				},
 				fifthPercentile: 0,
-				ninetyFifthPercentile: 0,
+				max: 0,
+				mean: 0,
+				min: 0,
 				ninetyEighthPercentile: 0,
-				mean: 0
-			} as DataSetWithSummary,
+				ninetyFifthPercentile: 0
+			},
+			redirection: {
+				dataSet: {
+					data: []
+				},
+				fifthPercentile: 0,
+				max: 0,
+				mean: 0,
+				min: 0,
+				ninetyEighthPercentile: 0,
+				ninetyFifthPercentile: 0
+			},
 			serverError: {
 				dataSet: {
 					data: []
-				} as DataSet,
-				min: 0,
-				max: 0,
+				},
 				fifthPercentile: 0,
-				ninetyFifthPercentile: 0,
+				max: 0,
+				mean: 0,
+				min: 0,
 				ninetyEighthPercentile: 0,
-				mean: 0
-			} as DataSetWithSummary
+				ninetyFifthPercentile: 0
+			},
+			success: {
+				dataSet: {
+					data: []
+				},
+				fifthPercentile: 0,
+				max: 0,
+				mean: 0,
+				min: 0,
+				ninetyEighthPercentile: 0,
+				ninetyFifthPercentile: 0,
+			},
+			total: {
+				dataSet: {
+					data: []
+				},
+				fifthPercentile: 0,
+				max: 0,
+				mean: 0,
+				min: 0,
+				ninetyEighthPercentile: 0,
+				ninetyFifthPercentile: 0,
+			}
 		} as TPSData));
 
 		TestBed.configureTestingModule({
@@ -136,7 +135,7 @@ describe('DeliveryserviceComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should exist', () => {
+	it("should exist", () => {
 		expect(component).toBeTruthy();
 	});
 
@@ -148,8 +147,8 @@ describe('DeliveryserviceComponent', () => {
 		expect(component.to).toEqual(now);
 		expect(component.from).toEqual(today);
 
-		const nowDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-		const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+		const nowDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+		const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 		expect(nowDate).toEqual(component.toDate.value);
 		expect(nowTime).toEqual(component.toTime.value);
 		expect(nowDate).toEqual(component.fromDate.value);

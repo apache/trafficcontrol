@@ -11,28 +11,39 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { map, first, catchError } from 'rxjs/operators';
+import { Injectable } from "@angular/core";
 
-import { Alert } from '../models/alert';
+import { BehaviorSubject, Observable } from "rxjs";
 
-@Injectable({ providedIn: 'root' })
+import { Alert } from "../models/alert";
+
 /**
- * This class is responsible for populating an alerts Observable that can be subscribed to by the
- * `AlertComponent`.
-*/
+ * This class is responsible for populating an alerts Observable that can be
+ * subscribed to by the `AlertComponent`.
+ */
+@Injectable({ providedIn: "root" })
 export class AlertService {
-	public alertsSubject: BehaviorSubject<Alert|null>;
-	public alerts: Observable<Alert|null>;
+	/** A BehaviorSubject that emits Alerts. */
+	public alertsSubject: BehaviorSubject<Alert | null>;
+	/** An Observable that emits Alerts. */
+	public alerts: Observable<Alert | null>;
 
 	constructor () {
-		this.alertsSubject = new BehaviorSubject<Alert|null>(null);
+		this.alertsSubject = new BehaviorSubject<Alert | null>(null);
 		this.alerts = this.alertsSubject.asObservable();
 	}
 
-	public newAlert(level: string, text: string): void;
-	public newAlert(alert: Alert): void;
+	/**
+	 * Directly constructs a new UI alert.
+	 * @param level The level of the Alert.
+	 * @param text The message content of the Alert.
+	 */
+	public newAlert (level: string, text: string): void;
+	/**
+	 * Directly constructs a new UI alert.
+	 * @param alert The Alert to be raised.
+	 */
+	public newAlert (alert: Alert): void;
 	/**
 	 * Directly constructs a new UI alert
 	 * @param levelOrAlert Either an {@link Alert} or the level of alert
@@ -40,13 +51,13 @@ export class AlertService {
 	 * @throws when `levelOrAlert` is a string, but `text` was not provided.
 	 */
 	public newAlert (levelOrAlert: string | Alert, text?: string): void {
-		if (typeof levelOrAlert === 'string') {
+		if (typeof levelOrAlert === "string") {
 			if (text === null || text === undefined) {
 				throw new Error("Can't pass raw level without raw text!");
 			}
 			this.alertsSubject.next({level: levelOrAlert, text: text} as Alert);
 		} else {
-			this.alertsSubject.next(levelOrAlert as Alert);
+			this.alertsSubject.next(levelOrAlert);
 		}
 	}
 }

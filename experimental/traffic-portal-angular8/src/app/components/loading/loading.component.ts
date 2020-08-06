@@ -11,12 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component } from '@angular/core';
+import { Component } from "@angular/core";
 
+/** LoadingComponent is the controller for a spinning "loading" icon. */
 @Component({
-	selector: 'loading',
-	templateUrl: './loading.component.html',
-	styleUrls: ['./loading.component.scss']
+	selector: "loading",
+	styleUrls: ["./loading.component.scss"],
+	templateUrl: "./loading.component.html"
 })
 export class LoadingComponent {
 

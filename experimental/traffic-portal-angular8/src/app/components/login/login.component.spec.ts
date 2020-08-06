@@ -11,14 +11,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientModule } from "@angular/common/http";
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { RouterTestingModule } from "@angular/router/testing";
 
-import { LoginComponent } from './login.component';
+import { LoginComponent } from "./login.component";
 
-describe('LoginComponent', () => {
+describe("LoginComponent", () => {
 	let component: LoginComponent;
 	let fixture: ComponentFixture<LoginComponent>;
 
@@ -41,7 +41,7 @@ describe('LoginComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should exist', () => {
+	it("should exist", () => {
 		expect(component).toBeTruthy();
 	});
 

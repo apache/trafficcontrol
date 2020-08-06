@@ -13,16 +13,20 @@
 */
 
 /**
- * Returns a fuzzy search "score" for the passed @param{text} against the passed @param{pattern}.
- * The higher a score is, the later in a fuzzy-sorted/searched list the passed text (or the object
- * it represents) ought to appear.
+ * Returns a fuzzy search "score" for the passed 'text' against the passed
+ * 'pattern'. The higher a score is, the later in a fuzzy-sorted/searched list
+ * the passed text (or the object it represents) ought to appear.
  *
  * @param text The text being scored
- * @param pattern The pattern being matched against. This should just be a list of characters, not a regular expression or glob or anything.
- * @param threshold An optional threshold which, if given causes @param{text} which scores above it to not be returned.
- * @returns The score of the passed @param{text}. If not all of the @param{pattern}'s characters could be found within it (or if it exceeds the optional @param{threshold}), this will be Infinity.
-*/
-export function fuzzyScore(text: string, pattern: string, threshold: number = 0): number {
+ * @param pattern The pattern being matched against. This should just be a list
+ * of characters, not a regular expression or glob or anything.
+ * @param threshold An optional threshold which, if given causes text which
+ * scores above it to not be returned.
+ * @returns The score of the passed text. If not all of the pattern's characters
+ * could be found within it (or if it exceeds the optional threshold), this will
+ * be Infinity.
+ */
+export function fuzzyScore (text: string, pattern: string, threshold: number = 0): number {
 	if (pattern.length < 1) {
 		return 0;
 	}

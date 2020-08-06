@@ -11,13 +11,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from "@angular/common/http";
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { UserCardComponent } from './user-card.component';
-import { User } from '../../models';
+import { UserCardComponent } from "./user-card.component";
 
-describe('UserCardComponent', () => {
+import { User } from "../../models";
+
+describe("UserCardComponent", () => {
 	let component: UserCardComponent;
 	let fixture: ComponentFixture<UserCardComponent>;
 
@@ -34,11 +35,11 @@ describe('UserCardComponent', () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(UserCardComponent);
 		component = fixture.componentInstance;
-		component.user = {lastUpdated: new Date(), id: 1, name: 'test', username: 'test', newUser: false} as User;
+		component.user = {lastUpdated: new Date(), id: 1, name: "test", username: "test", newUser: false} as User;
 		fixture.detectChanges();
 	});
 
-	it('should exist', () => {
+	it("should exist", () => {
 		expect(component).toBeTruthy();
 	});
 

@@ -11,9 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule } from "@angular/common";
+import { NgModule } from "@angular/core";
 
+/**
+ * AppRoutingModule provides routing.
+ */
 @NgModule({
 	declarations: [],
 	imports: [

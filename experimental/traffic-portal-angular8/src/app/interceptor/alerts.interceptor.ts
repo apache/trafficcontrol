@@ -11,24 +11,27 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Injectable } from '@angular/core';
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from "@angular/common/http";
+import { Injectable } from "@angular/core";
 
-import { Observable, throwError } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable } from "rxjs";
+import { tap } from "rxjs/operators";
 
-import { AlertService } from '../services';
-import { Alert } from '../models/alert';
+import { Alert } from "../models/alert";
+import { AlertService } from "../services";
 
 /**
- * This class intercepts any and all alerts contained in API responses and passes them to the
- * `AlertService` for display to the user.
-*/
+ * This class intercepts any and all alerts contained in API responses and
+ * passes them to the `AlertService` for display to the user.
+ */
 @Injectable()
 export class AlertInterceptor implements HttpInterceptor {
 	constructor (private readonly alertService: AlertService) {}
 
-	intercept (request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+	/**
+	 * Intercepts HTTP responses and checks for any alerts.
+	 */
+	public intercept (request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 		return next.handle(request).pipe(tap(
 			r => {
 				/* tslint:disable */

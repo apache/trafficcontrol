@@ -13,11 +13,13 @@
 */
 
 /**
- Implements a single comparison between two values
- @returns 0 if ``a===b`` or if both a and b are ``null``, -1 if ``a<b`` or b is ``null`` and a is not, otherwise `1`
- @throws whenever an attempt is made to compare values of different types. This is calculated using ``typeof``, and so only primitive type is considered
-*/
-function cmpr (a, b): number {
+ * Implements a single comparison between two values
+ *
+ * @returns 0 if ``a===b`` or if both a and b are ``null``, -1 if ``a<b`` or b is ``null`` and a is not, otherwise `1`
+ * @throws whenever an attempt is made to compare values of different types.
+ * This is calculated using ``typeof``, and so only primitive type is considered
+ */
+function cmpr (a: unknown, b: unknown): number {
 	if (a === null) {
 		if (b === null) {
 			return 0;
@@ -36,17 +38,19 @@ function cmpr (a, b): number {
 	if (a === b) {
 		return 0;
 	}
-	if (a < b) {
+	if ((a as any) < (b as any)) {
 		return -1;
 	}
 	return 1;
 }
 
 /**
- * Returns the passed array sorted by the properties of each element as given by the caller.
+ * Returns the passed array sorted by the properties of each element as given by
+ * the caller.
  *
- * Array elements which are ``undefined`` are unaffected by the sort (uses ``Array.prototype.sort``).
- * Elements are sorted by each element of the @param{property} array sequentiall, e.g.
+ * Array elements which are ``undefined`` are unaffected by the sort (uses
+ * ``Array.prototype.sort``). Elements are sorted by each element of the
+ * property array sequentiall, e.g.
  * > orderBy([{foo: 1, bar: 2}, {foo: 1, bar: 1}], ['foo', 'bar'])
  * [{foo: 1, bar: 1}, {foo: 1, bar: 2}]
  * ``null`` properties are sorted to later positions than not-``null`` properties.
@@ -59,12 +63,12 @@ function cmpr (a, b): number {
  * @param value The array to be sorted
  * @param property Either a single property name or an array of property names to sort by - in descending order of importance.
  * @returns The sorted array
-*/
+ */
 export function orderBy (value: Array<any>, property: string | Array<string>): Array<any> {
 	return value.sort((a: any, b: any) => {
 
 		let props: Array<string>;
-		if (typeof(property) === 'string') {
+		if (typeof(property) === "string") {
 			props = [property];
 		} else {
 			props = property;
@@ -78,11 +82,11 @@ export function orderBy (value: Array<any>, property: string | Array<string>): A
 
 			let bail = false;
 			if (!a.hasOwnProperty(p)) {
-				console.error('object', a, "has no property '" + p + "'!");
+				console.error("object", a, `has no property "${p}"!`);
 				bail = true;
 			}
 			if (!b.hasOwnProperty(p)) {
-				console.error('object', b, "has no property '" + p + "'!");
+				console.error("object", b, `has no property "${p}"!`);
 				bail = true;
 			}
 

@@ -12,10 +12,14 @@
 * limitations under the License.
 */
 
+type AlertLevel = "info" | "success" | "error" | "warning";
+
 /**
  * Represents a single `alert` object returned by the Traffic Ops API
-*/
+ */
 export interface Alert {
-	level: string;
+	/** What type of alert this is. */
+	level: AlertLevel;
+	/** The message content of the alert. */
 	text: string;
 }

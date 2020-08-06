@@ -11,12 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { ElementRef } from '@angular/core';
-import { OpenableDirective } from './openable.directive';
+import { ElementRef } from "@angular/core";
 
-describe('OpenableDirective', () => {
-	it('should create an instance', () => {
-		const directive = new OpenableDirective(new ElementRef<HTMLDialogElement>(document.createElement('dialog')));
+import { OpenableDirective } from "./openable.directive";
+
+describe("OpenableDirective", () => {
+	it("should create an instance", () => {
+		const directive = new OpenableDirective(new ElementRef<HTMLDialogElement>(document.createElement("dialog")));
 		expect(directive).toBeTruthy();
 	});
 });

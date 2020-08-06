@@ -11,29 +11,36 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from "@angular/core";
 
-import { Subscription } from 'rxjs';
-import { first } from 'rxjs/operators';
+import { Subscription } from "rxjs";
+import { first } from "rxjs/operators";
 
-import { Role, User } from '../../models';
-import { AuthenticationService } from '../../services';
-import { UserService } from '../../services/api';
+import { User } from "../../models";
+import { AuthenticationService } from "../../services";
 
+/**
+ * CurrentuserComponent is the controller for the current user's profile page.
+ */
 @Component({
-	selector: 'currentuser',
-	templateUrl: './currentuser.component.html',
-	styleUrls: ['./currentuser.component.scss']
+	selector: "currentuser",
+	styleUrls: ["./currentuser.component.scss"],
+	templateUrl: "./currentuser.component.html"
 })
 export class CurrentuserComponent implements OnInit, OnDestroy {
 
-	currentUser: User | null;
+	/** The currently logged-in user - or 'null' if not logged-in. */
+	public currentUser: User | null;
 	private subscription: Subscription;
 
-	constructor(private readonly auth: AuthenticationService, private readonly api: UserService) {
+	constructor (private readonly auth: AuthenticationService) {
 	}
 
-	ngOnInit() {
+	/**
+	 * Runs initialization, setting the currently logged-in user from the
+	 * authentication service.
+	 */
+	public ngOnInit(): void {
 		this.currentUser = this.auth.currentUserValue;
 		if (this.currentUser === null) {
 			this.auth.updateCurrentUser().pipe(first()).subscribe(
@@ -51,7 +58,10 @@ export class CurrentuserComponent implements OnInit, OnDestroy {
 		);
 	}
 
-	ngOnDestroy() {
+	/**
+	 * Runs when the component is destroyed - cleans up active subscriptions.
+	 */
+	public ngOnDestroy(): void {
 		this.subscription.unsubscribe();
 	}
 }

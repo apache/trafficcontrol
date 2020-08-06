@@ -14,15 +14,20 @@
 /**
  * This file is for maintaining functionality and modeling related to Apache
  * Traffic Control `Type` objects.
-*/
+ */
 
 /**
  * Models an arbitrary Type of some object in the database
-*/
+ */
 export interface Type {
+	/** A description of the Type. */
 	description?: string;
+	/** An integral, unique identifier for the Type. */
 	id:           number;
+	/** The date/time at which the Type was last updated. */
 	lastUpdated?: Date;
+	/** The Type's name. */
 	name?:        string;
+	/** The database table that uses this Type. */
 	useInTable?:  string;
 }

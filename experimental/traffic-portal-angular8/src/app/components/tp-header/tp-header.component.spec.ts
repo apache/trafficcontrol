@@ -11,11 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { TpHeaderComponent } from './tp-header.component';
+import { TpHeaderComponent } from "./tp-header.component";
 
-describe('TpHeaderComponent', () => {
+describe("TpHeaderComponent", () => {
 	let component: TpHeaderComponent;
 	let fixture: ComponentFixture<TpHeaderComponent>;
 
@@ -32,7 +32,7 @@ describe('TpHeaderComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should exist', () => {
+	it("should exist", () => {
 		expect(component).toBeTruthy();
 	});
 

@@ -12,31 +12,35 @@
 * limitations under the License.
 */
 
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component } from "@angular/core";
+import { Router } from "@angular/router";
 
-import { AuthenticationService } from './services';
-import { User } from './models/user';
+import { User } from "./models/user";
+import { AuthenticationService } from "./services";
 
-@Component({
-	selector: 'app-root',
-	templateUrl: './app.component.html',
-	styleUrls: ['./app.component.scss']
-})
 /**
- * The most basic component that contains everything else. This should be kept pretty simple.
-*/
+ * AppComponent is the most basic component that contains everything else. This
+ * should be kept pretty simple.
+ */
+@Component({
+	selector: "app-root",
+	styleUrls: ["./app.component.scss"],
+	templateUrl: "./app.component.html"
+})
 export class AppComponent {
-	title = 'Traffic Portal';
+	/** The title of the app. */
+	public title = "Traffic Portal";
 
-	currentUser: User | null;
+	/** The currently logged-in user - or 'null' if not logged in. */
+	public currentUser: User | null;
 
 	constructor (private readonly router: Router, private readonly auth: AuthenticationService) {
 		this.auth.currentUser.subscribe(x => this.currentUser = x);
 	}
 
-	logout () {
+	/** Logs the current user out. */
+	public logout(): void {
 		this.auth.logout();
-		this.router.navigate(['/login']);
+		this.router.navigate(["/login"]);
 	}
 }

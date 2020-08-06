@@ -11,27 +11,26 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
-import { RouterTestingModule } from '@angular/router/testing';
-import { of } from 'rxjs';
+import { HttpClientModule } from "@angular/common/http";
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { RouterTestingModule } from "@angular/router/testing";
 
-import { DsCardComponent } from './ds-card.component';
-import { LoadingComponent } from '../loading/loading.component';
+import { of } from "rxjs";
 
-import { LinechartDirective } from '../../directives/linechart.directive';
+import { DsCardComponent } from "./ds-card.component";
 
-import { DeliveryService, GeoLimit, GeoProvider } from '../../models';
+import { LinechartDirective } from "../../directives/linechart.directive";
+import { DeliveryService } from "../../models";
+import { APIService } from "../../services/api.service";
+import { LoadingComponent } from "../loading/loading.component";
 
-import { APIService } from '../../services/api.service';
-
-describe('DsCardComponent', () => {
+describe("DsCardComponent", () => {
 	let component: DsCardComponent;
 	let fixture: ComponentFixture<DsCardComponent>;
 
 	beforeEach(async(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(['getDSKBPS', 'getDSCapacity', 'getDSHealth']);
+		const mockAPIService = jasmine.createSpyObj(["getDSKBPS", "getDSCapacity", "getDSHealth"]);
 		mockAPIService.getDSKBPS.and.returnValue(of([]), of([]));
 		mockAPIService.getDSCapacity.and.returnValue(of({
 			availablePercent: 34,
@@ -39,8 +38,8 @@ describe('DsCardComponent', () => {
 			utilized: 24
 		}));
 		mockAPIService.getDSHealth.and.returnValue(of({
-			totalOnline: 80,
-			totalOffline: 20
+			totalOffline: 20,
+			totalOnline: 80
 		}));
 
 		TestBed.configureTestingModule({
@@ -65,7 +64,7 @@ describe('DsCardComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should exist', () => {
+	it("should exist", () => {
 		expect(component).toBeTruthy();
 	});
 

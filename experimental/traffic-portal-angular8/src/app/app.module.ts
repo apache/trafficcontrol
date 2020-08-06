@@ -16,53 +16,50 @@
  * This file contains the definition for the entire app. Its syntax is a bit arcane, but hopefully
  * by copy/pasting any novice can add a new component - though honestly you should just use
  * `ng generate` to create new things (and then fix formatting/missing license)
-*/
+ */
 
-import { BrowserModule } from '@angular/platform-browser';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
-import { AgGridModule } from 'ag-grid-angular';
+import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
+import { NgModule } from "@angular/core";
+import { ReactiveFormsModule, FormsModule } from "@angular/forms";
+import { BrowserModule } from "@angular/platform-browser";
+import { Routes, RouterModule } from "@angular/router";
 
-import { Chart } from 'chart.js';
+import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 
-// Routing
-import { AppRoutingModule } from './app-routing.module';
-import { ErrorInterceptor } from './interceptor/error.interceptor';
-import { AlertInterceptor } from './interceptor/alerts.interceptor';
 
-// Components
-import { AppComponent } from './app.component';
-import { AlertComponent } from './components/alert/alert.component';
-import { DsCardComponent } from './components/ds-card/ds-card.component';
-import { LoginComponent } from './components/login/login.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-import { UsersComponent } from './components/users/users.component';
-import { NewDeliveryServiceComponent } from './components/new-delivery-service/new-delivery-service.component';
-import { TpHeaderComponent } from './components/tp-header/tp-header.component';
-import { LoadingComponent } from './components/loading/loading.component';
-import { UserCardComponent } from './components/user-card/user-card.component';
-import { DeliveryserviceComponent } from './components/deliveryservice/deliveryservice.component';
-import { InvalidationJobsComponent } from './components/invalidation-jobs/invalidation-jobs.component';
+import { AppRoutingModule } from "./app-routing.module";
+import { AppComponent } from "./app.component";
+import { AlertComponent } from "./components/alert/alert.component";
+import { CurrentuserComponent } from "./components/currentuser/currentuser.component";
+import { DashboardComponent } from "./components/dashboard/dashboard.component";
+import { DeliveryserviceComponent } from "./components/deliveryservice/deliveryservice.component";
+import { DsCardComponent } from "./components/ds-card/ds-card.component";
+import { InvalidationJobsComponent } from "./components/invalidation-jobs/invalidation-jobs.component";
+import { LoadingComponent } from "./components/loading/loading.component";
+import { LoginComponent } from "./components/login/login.component";
+import { NewDeliveryServiceComponent } from "./components/new-delivery-service/new-delivery-service.component";
+import { ServersTableComponent } from "./components/servers/servers-table/servers-table.component";
+import { TpHeaderComponent } from "./components/tp-header/tp-header.component";
+import { UserCardComponent } from "./components/user-card/user-card.component";
+import { UsersComponent } from "./components/users/users.component";
+import { ServersPageComponent } from "./components/servers-page/servers-page.component";
+import { ServerCardComponent } from "./components/servers-page/server-card/server-card.component";
+import { CustomvalidityDirective } from "./directives/customvalidity.directive";
+import { LinechartDirective } from "./directives/linechart.directive";
+import { OpenableDirective } from "./directives/openable.directive";
+import { AlertInterceptor } from "./interceptor/alerts.interceptor";
+import { ErrorInterceptor } from "./interceptor/error.interceptor";
 
-// Directives
-import { LinechartDirective } from './directives/linechart.directive';
-import { OpenableDirective } from './directives/openable.directive';
-import { CustomvalidityDirective } from './directives/customvalidity.directive';
-import { CurrentuserComponent } from './components/currentuser/currentuser.component';
-import { ServersPageComponent } from './components/servers-page/servers-page.component';
-import { ServerCardComponent } from './components/servers-page/server-card/server-card.component';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { ServersTableComponent } from './components/servers/servers-table/servers-table.component';
+import { AgGridModule } from "ag-grid-angular";
+import { Chart } from "chart.js";
 
 Chart.plugins.register({
-	id: 'whiteBackground',
 	beforeDraw: (chartInstance: any) => {
 		const ctx = chartInstance.chart.ctx;
-		ctx.fillStyle = 'white';
+		ctx.fillStyle = "white";
 		ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
-	}
+	},
+	id: "whiteBackground"
 });
 
 /**
@@ -70,20 +67,25 @@ Chart.plugins.register({
  * element should contain a `path` key for the path value, a component which will be inserted at the
  * `<router-outlet>` when the user navigates to `path`, and an optional `canActivate` key which
  * should be a list of services that implement the `CanActivate` interface.
-*/
+ */
 const appRoutes: Routes = [
-	{ path: '', component: DashboardComponent },
-	{ path: 'login', component: LoginComponent },
-	{ path: 'users', component: UsersComponent},
-	{ path: 'me', component: CurrentuserComponent},
-	{ path: 'new.Delivery.Service', component: NewDeliveryServiceComponent},
-	{ path: 'deliveryservice/:id', component: DeliveryserviceComponent},
-	{ path: 'deliveryservice/:id/invalidation-jobs', component: InvalidationJobsComponent},
-	{ path: 'servers', component: ServersPageComponent},
-	{ path: 'serverstbl', component: ServersTableComponent}
+	{ path: "", component: DashboardComponent },
+	{ path: "login", component: LoginComponent },
+	{ path: "users", component: UsersComponent},
+	{ path: "me", component: CurrentuserComponent},
+	{ path: "new.Delivery.Service", component: NewDeliveryServiceComponent},
+	{ path: "deliveryservice/:id", component: DeliveryserviceComponent},
+	{ path: "deliveryservice/:id/invalidation-jobs", component: InvalidationJobsComponent},
+	{ path: "servers", component: ServersPageComponent},
+	{ path: "serverstbl", component: ServersTableComponent}
 ];
 
+/**
+ * AppModule is the module that contains the entire app - all components,
+ * services and directives.
+ */
 @NgModule({
+	bootstrap: [AppComponent],
 	declarations: [
 		AppComponent,
 		LoginComponent,
@@ -106,9 +108,9 @@ const appRoutes: Routes = [
 		ServersTableComponent
 	],
 	imports: [
-		BrowserModule.withServerTransition({ appId: 'serverApp' }),
+		BrowserModule.withServerTransition({ appId: "serverApp" }),
 		RouterModule.forRoot(appRoutes, {
-			initialNavigation: 'enabled'
+			initialNavigation: "enabled"
 		}),
 		AppRoutingModule,
 		HttpClientModule,
@@ -120,7 +122,6 @@ const appRoutes: Routes = [
 	providers: [
 		{provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
 		{provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor, multi: true}
-	],
-	bootstrap: [AppComponent]
+	]
 })
 export class AppModule { }

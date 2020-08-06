@@ -11,45 +11,72 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { Component, OnInit } from "@angular/core";
+import { FormControl } from "@angular/forms";
+import { ActivatedRoute } from "@angular/router";
 
-import { Subject } from 'rxjs';
+import { Subject } from "rxjs";
 
-import { DeliveryServiceService, InvalidationJobService } from '../../services/api';
+import { DeliveryService, InvalidationJob } from "../../models";
+import { DeliveryServiceService, InvalidationJobService } from "../../services/api";
 
-import { DeliveryService, InvalidationJob } from '../../models';
-
+/**
+ * InvalidationJobsComponent is the controller for the page that displays the
+ * content invalidation jobs running for a Delivery Service.
+ */
 @Component({
-	selector: 'invalidation-jobs',
-	templateUrl: './invalidation-jobs.component.html',
-	styleUrls: ['./invalidation-jobs.component.scss']
+	selector: "invalidation-jobs",
+	styleUrls: ["./invalidation-jobs.component.scss"],
+	templateUrl: "./invalidation-jobs.component.html"
 })
 export class InvalidationJobsComponent implements OnInit {
 
-	deliveryservice: DeliveryService;
-	jobs: Array<InvalidationJob>;
-	now: Date;
-	showDialog: Subject<boolean>;
+	/** The Delivery Service for which jobs are being described. */
+	public deliveryservice: DeliveryService;
 
-	dsId: number;
+	/** All of the jobs for the described Delivery Service. */
+	public jobs: Array<InvalidationJob>;
 
-	regexp = new FormControl('/');
-	ttl = new FormControl(178);
-	startDate = new FormControl('');
-	startTime = new FormControl('');
-	regexpIsValid: Subject<string>;
+	/** The current date/time when the page loads */
+	public now: Date;
+
+	/** Whether or not to show the dialog for creating a new job. */
+	public showDialog: Subject<boolean>;
+
+	private dsId: number;
 
 
-	constructor (private readonly route: ActivatedRoute, private readonly jobAPI: InvalidationJobService, private readonly dsAPI: DeliveryServiceService) {
+	/** Control for users to enter new content invalidation jobs. */
+	public regexp = new FormControl("/");
+	/** Control for users to enter a new job's TTL. */
+	public ttl = new FormControl(178);
+	/** Control for users to enter the starting date for a new job. */
+	public startDate = new FormControl("");
+	/** Control for users to enter the starting time for a new job. */
+	public startTime = new FormControl("");
+	/**
+	 * Sets a customvalidity message when the user-entered regular expression is
+	 * not valid.
+	 */
+	public regexpIsValid: Subject<string>;
+
+
+	constructor (
+		private readonly route: ActivatedRoute,
+		private readonly jobAPI: InvalidationJobService,
+		private readonly dsAPI: DeliveryServiceService
+	) {
 		this.deliveryservice = {active: true} as DeliveryService;
 		this.jobs = new Array<InvalidationJob>();
 		this.showDialog = new Subject<boolean>();
 		this.regexpIsValid = new Subject<string>();
 	}
 
-	ngOnInit () {
+	/**
+	 * Runs initialization, fetching the jobs and Delivery Service data from
+	 * Traffic Ops and setting the pageload date/time.
+	 */
+	public ngOnInit(): void {
 		this.now = new Date();
 		const idParam = this.route.snapshot.paramMap.get("id");
 		if (!idParam) {
@@ -62,9 +89,9 @@ export class InvalidationJobsComponent implements OnInit {
 				// The values returned by the API are not RFC-compliant at the time of this writing,
 				// so we need to do some pre-processing on them.
 				for (const j of r) {
-					const tmp = Array.from(String(j.startTime).split(' ').join('T'));
+					const tmp = Array.from(String(j.startTime).split(" ").join("T"));
 					tmp.splice(-3, 3);
-					j.startTime = new Date(tmp.join(''));
+					j.startTime = new Date(tmp.join(""));
 					this.jobs.push(j);
 				}
 			}
@@ -76,56 +103,77 @@ export class InvalidationJobsComponent implements OnInit {
 		);
 	}
 
-	public endDate (j: InvalidationJob): Date {
+	/** Gets the ending date and time for a content invalidation job. */
+	public endDate(j: InvalidationJob): Date {
 		if (!j.parameters) {
 			throw new Error("cannot get end date for job with no parameters");
 		}
-		const tmp = j.parameters.split(':');
+		const tmp = j.parameters.split(":");
 		if (tmp.length !== 2) {
-			throw new Error('Malformed job parameters: "' + j.parameters + '" (id: ' + String(j.id) + ')');
+			throw new Error(`Malformed job parameters: "${j.parameters}" (id: ${j.id})`);
 		}
 		const ttl = parseInt(tmp[1], 10);
 		if (isNaN(ttl)) {
-			throw new Error('Invalid TTL: "' + tmp[1] + '" (job id: ' + String(j.id) + ')');
+			throw new Error(`Invalid TTL: "${tmp[1]}" (job id: ${j.id})`);
 		}
-		return new Date(new Date(j.startTime.getTime() + ttl*60*60*1000));
+		return new Date(new Date(j.startTime.getTime() + ttl * 60 * 60 * 1000));
 	}
 
-	public newJob (e?: Event) {
+	/**
+	 * Creates a new job.
+	 *
+	 * @param e The DOM event that triggered the creation.
+	 */
+	public newJob(e?: Event): void {
 		if (e) {
 			e.preventDefault();
+			e.stopPropagation();
 		}
 
 		const now = new Date();
 		now.setUTCMilliseconds(0);
 
-		this.startDate.setValue(String(now.getFullYear()).padStart(4, '0') + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'));
-		this.startTime.setValue(String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
+		const year = String(now.getFullYear()).padStart(4, "0");
+		const month = String(now.getMonth()+1).padStart(2, "0");
+		const day = String(now.getDate()).padStart(2, "0");
+		this.startDate.setValue(`${year}-${month}-${day}`);
+
+		const hours = String(now.getHours()).padStart(2, "0");
+		const minutes = String(now.getMinutes()).padStart(2, "0");
+		this.startTime.setValue(`${hours}:${minutes}`);
 
 		this.showDialog.next(true);
 	}
 
-	public closeDialog (e: Event) {
+	/**
+	 * Closes the "new content invalidation job" dialog, canceling the creation.
+	 */
+	public closeDialog(e: Event): void {
 		e.preventDefault();
+		e.stopPropagation();
 		this.showDialog.next(false);
 	}
 
-	public submitDialog (e: Event) {
+	/**
+	 * Closes the "new content invalidation job" dialog, creating the new job.
+	 */
+	public submitDialog(e: Event): void {
 		e.preventDefault();
+		e.stopPropagation();
 
 		let re: RegExp;
 		try {
 			re = new RegExp(this.regexp.value);
-		} catch (e) {
-			this.regexpIsValid.next('Must be a valid regular expression! (' + e.toString() + ')');
+		} catch (err) {
+			this.regexpIsValid.next(`Must be a valid regular expression! (${err})`);
 			return;
 		}
 
 		const job = {
 			dsId: this.deliveryservice.id,
-			parameters: 'TTL:' + String(this.ttl.value),
-			regex: re.toString().replace(/^\/|\/$/g, '').replace('\\/', '/'),
-			startTime: this.startDate.value.concat(' ', this.startTime.value + ':00'),
+			parameters: `TTL:${this.ttl.value}`,
+			regex: re.toString().replace(/^\/|\/$/g, "").replace("\\/", "/"),
+			startTime: this.startDate.value.concat(" ", `${this.startTime.value}:00`),
 			ttl: this.ttl.value
 		};
 
@@ -133,12 +181,12 @@ export class InvalidationJobsComponent implements OnInit {
 			r => {
 				if (r) {
 					this.jobAPI.getInvalidationJobs({dsId: this.dsId}).subscribe(
-						r => {
+						resp => {
 							this.jobs = new Array<InvalidationJob>();
-							for (const j of r) {
-								const tmp = Array.from(String(j.startTime).replace(' ', 'T'));
+							for (const j of resp) {
+								const tmp = Array.from(String(j.startTime).replace(" ", "T"));
 								tmp.splice(-3, 3);
-								j.startTime = new Date(tmp.join(''));
+								j.startTime = new Date(tmp.join(""));
 								this.jobs.push(j);
 							}
 						}
@@ -148,10 +196,10 @@ export class InvalidationJobsComponent implements OnInit {
 					console.warn("failure");
 				}
 			},
-			e => {
-				console.error("error: ", e);
+			err => {
+				console.error("error: ", err);
 			}
-		)
+		);
 	}
 
 }

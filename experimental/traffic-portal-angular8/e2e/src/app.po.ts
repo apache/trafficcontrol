@@ -12,14 +12,24 @@
 * limitations under the License.
 */
 
-import { browser, by, element } from 'protractor';
+import { browser, by, element } from "protractor";
 
+/**
+ * AppPage is the main page of the app, for end-to-end testing purposes.
+ */
 export class AppPage {
-	navigateTo() {
+
+	/**
+	 * Navigates to the base URL.
+	 */
+	public async navigateTo(): Promise<any> {
 		return browser.get(browser.baseUrl) as Promise<any>;
 	}
 
-	getTitleText() {
-		return element(by.css('app-root .content span')).getText() as Promise<string>;
+	/**
+	 * Gets the text from the title element.
+	 */
+	public async getTitleText(): Promise<string> {
+		return element(by.css("app-root .content span")).getText() as Promise<string>;
 	}
 }

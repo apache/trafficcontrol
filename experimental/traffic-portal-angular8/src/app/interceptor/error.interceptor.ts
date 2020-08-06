@@ -11,32 +11,37 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Injectable } from '@angular/core';
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from "@angular/common/http";
+import { Injectable } from "@angular/core";
+import { Router } from "@angular/router";
 
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, throwError } from "rxjs";
+import { catchError } from "rxjs/operators";
 
-import { AlertService, AuthenticationService } from '../services';
-import { Alert } from '../models/alert';
+import { Alert } from "../models/alert";
+import { AlertService, AuthenticationService } from "../services";
 
 /**
- * This class intercepts any and all HTTP error responses and checks for authorization problems. It
- * then redirects the user back to login.
-*/
+ * This class intercepts any and all HTTP error responses and checks for
+ * authorization problems. It then redirects the user back to login.
+ */
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
 
-	/* tslint:disable */
-	constructor (private readonly authenticationService: AuthenticationService,
-	             private readonly router: Router,
-	             private readonly alerts: AlertService) {}
-	/* tslint:enable */
+	constructor (
+		private readonly authenticationService: AuthenticationService,
+		private readonly router: Router,
+		private readonly alerts: AlertService
+	) {}
 
-	intercept (request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+	/**
+	 * Intercepts HTTP responses and checks for erroneous responses, displaying
+	 * appropriate error Alerts and redirecting unauthenticated users to the
+	 * login form.
+	 */
+	public intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 		return next.handle(request).pipe(catchError(err => {
-			console.error('HTTP Error: ', err);
+			console.error("HTTP Error: ", err);
 
 			/* tslint:disable */
 			if (err.hasOwnProperty('error') && err['error'].hasOwnProperty('alerts')) {
@@ -47,10 +52,10 @@ export class ErrorInterceptor implements HttpInterceptor {
 			}
 			if (err.status === 401 || err.status === 403) {
 				this.authenticationService.logout();
-				this.router.navigate(['/login']);
+				this.router.navigate(["/login"]);
 			}
 
-			const error = err.error && err.error.message ? err.error.message : err.statusText;
+			// const error = err.error && err.error.message ? err.error.message : err.statusText;
 			return throwError(err);
 		}));
 	}

@@ -11,64 +11,94 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { AfterViewInit, Directive, ElementRef, OnDestroy } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, OnDestroy } from "@angular/core";
 
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription } from "rxjs";
 
-import { Chart } from 'chart.js'; // TODO: use plotly instead for WebGL-capabale browsers?
+import { DataSet } from "../models/data";
 
-import { DataSet } from '../models/data';
+import { Chart } from "chart.js"; // TODO: use plotly instead for WebGL-capabale browsers?
 
+/**
+ * LineChartType enumerates the valid types of charts.
+ */
 export enum LineChartType {
-	Category = 'category',
-	Linear = 'linear',
-	Logarithmic = 'logarithmic',
-	Time = 'time'
+	/**
+	 * Plots category proportions.
+	 */
+	Category = "category",
+	/**
+	 * Scatter plots.
+	 */
+	Linear = "linear",
+	/**
+	 * Logarithmic-scale scatter plots.
+	 */
+	Logarithmic = "logarithmic",
+	/**
+	 * Time-series data.
+	 */
+	Time = "time"
 }
 
+/**
+ * LinechartDirective decorates canvases by creating a rendering context for
+ * ChartJS charts.
+ */
 @Directive({
-	selector: '[linechart]',
 	inputs: [
-		'chartTitle',
-		'chartLabels',
-		'chartDataSets',
-		'chartType',
-		'chartXAxisLabel',
-		'chartYAxisLabel',
-		'chartLabelCallback',
-		'chartDisplayLegend'
-	]
+		"chartTitle",
+		"chartLabels",
+		"chartDataSets",
+		"chartType",
+		"chartXAxisLabel",
+		"chartYAxisLabel",
+		"chartLabelCallback",
+		"chartDisplayLegend"
+	],
+	selector: "[linechart]",
 })
 export class LinechartDirective implements AfterViewInit, OnDestroy {
 
-	ctx: CanvasRenderingContext2D; // | WebGLRenderingContext;
-	chart: Chart;
+	private ctx: CanvasRenderingContext2D; // | WebGLRenderingContext;
+	private chart: Chart;
 
-	chartTitle?: string;
-	chartLabels?: any[];
-	chartDataSets: Observable<DataSet[]>;
-	chartType?: LineChartType;
-	chartXAxisLabel?: string;
-	chartYAxisLabel?: string;
-	chartLabelCallback?: (v: any, i: number, va: any[]) => any;
-	chartDisplayLegend?: boolean;
+	/** The title of the chart. */
+	public chartTitle?: string;
+	/** Labels for the datasets. */
+	public chartLabels?: any[];
+	/** Data to be plotted by the chart. */
+	public chartDataSets: Observable<DataSet[]>;
+	/** The type of the chart. */
+	public chartType?: LineChartType;
+	/** A label for the X-axis of the chart. */
+	public chartXAxisLabel?: string;
+	/** A label for the Y-axis of the chart. */
+	public chartYAxisLabel?: string;
+	/** A callback for the label of each data point, to be optionally provided. */
+	public chartLabelCallback?: (v: any, i: number, va: any[]) => any;
+	/** Whether or not to display the chart's legend. */
+	public chartDisplayLegend?: boolean;
 
 	private subscription: Subscription;
 	private opts: any;
 
 	constructor (private readonly element: ElementRef) { }
 
-	ngAfterViewInit () {
+	/**
+	 * Initializes the chart using the input data.
+	 */
+	public ngAfterViewInit (): void {
 		if (this.element.nativeElement === null) {
-			console.warn('Use of DOM directive in non-DOM context!');
+			console.warn("Use of DOM directive in non-DOM context!");
 			return;
 		}
 
 		if (!(this.element.nativeElement instanceof HTMLCanvasElement)) {
-			throw new Error('[linechart] Directive can only be used on a canvas!');
+			throw new Error("[linechart] Directive can only be used on a canvas!");
 		}
 
-		const ctx = (this.element.nativeElement as HTMLCanvasElement).getContext('2d', {alpha: false});
+		const ctx = (this.element.nativeElement as HTMLCanvasElement).getContext("2d", {alpha: false});
 		if (!ctx) {
 			console.error("Failed to get 2D context for chart canvas");
 			return;
@@ -84,7 +114,6 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		}
 
 		this.opts = {
-			type: 'line',
 			data: {
 				datasets: [],
 			},
@@ -92,42 +121,49 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 				legend: {
 					display: true
 				},
-				tooltips: {
-					intersect: false,
-					mode: 'x'
+				scales: {
+					xAxes: [{
+						display: true,
+						scaleLabel: {
+							display: this.chartXAxisLabel ? true : false,
+							labelString: this.chartXAxisLabel
+						},
+						type: this.chartType,
+					}],
+					yAxes: [{
+						display: true,
+						scaleLabel: {
+							display: this.chartYAxisLabel ? true : false,
+							labelString: this.chartYAxisLabel
+						},
+						ticks: {
+							suggestedMin: 0
+						}
+					}]
 				},
 				title: {
 					display: this.chartTitle ? true : false,
 					text: this.chartTitle
 				},
-				scales: {
-					xAxes: [{
-						display: true,
-						type: this.chartType,
-						scaleLabel: {
-							display: this.chartXAxisLabel ? true : false,
-							labelString: this.chartXAxisLabel
-						}
-					}],
-					yAxes: [{
-						display: true,
-						ticks: {
-							suggestedMin: 0
-						},
-						scaleLabel: {
-							display: this.chartYAxisLabel ? true : false,
-							labelString: this.chartYAxisLabel
-						}
-					}]
+				tooltips: {
+					intersect: false,
+					mode: "x"
 				}
-			}
+			},
+			type: "line"
 		};
 
-		this.subscription = this.chartDataSets.subscribe((data: DataSet[]) => {this.dataLoad(data); },
-		                                                 (e: Error) => {this.dataError(e); });
+		this.subscription = this.chartDataSets.subscribe(
+			(data: DataSet[]) => {
+				this.dataLoad(data);
+			},
+			(e: Error) => {
+				this.dataError(e);
+			}
+		);
 	}
 
-	private destroyChart () {
+	private destroyChart(): void {
 		if (this.chart) {
 			this.chart.clear();
 			this.chart.destroy();
@@ -138,7 +174,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	}
 
 
-	private dataLoad (data: DataSet[]) {
+	private dataLoad(data: DataSet[]): void {
 		this.destroyChart();
 
 		if (data === null || data === undefined || data.some(x => x === null)) {
@@ -151,23 +187,24 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.chart = new Chart(this.ctx, this.opts);
 	}
 
-	private dataError (e: Error) {
+	private dataError(e: Error): void {
 		this.destroyChart();
-		this.ctx.font = '30px serif';
-		this.ctx.fillStyle = 'black';
-		this.ctx.textAlign = 'center';
-		this.ctx.fillText('Error Fetching Data', this.element.nativeElement.width / 2., this.element.nativeElement.height / 2.);
+		this.ctx.font = "30px serif";
+		this.ctx.fillStyle = "black";
+		this.ctx.textAlign = "center";
+		this.ctx.fillText("Error Fetching Data", this.element.nativeElement.width / 2, this.element.nativeElement.height / 2);
 	}
 
-	private noData () {
+	private noData(): void {
 		this.destroyChart();
-		this.ctx.font = '30px serif';
-		this.ctx.fillStyle = 'black';
-		this.ctx.textAlign = 'center';
-		this.ctx.fillText('No Data', this.element.nativeElement.width / 2., this.element.nativeElement.height / 2.);
+		this.ctx.font = "30px serif";
+		this.ctx.fillStyle = "black";
+		this.ctx.textAlign = "center";
+		this.ctx.fillText("No Data", this.element.nativeElement.width / 2, this.element.nativeElement.height / 2);
 	}
 
-	ngOnDestroy () {
+	/** Cleans up chart resources on element destruction. */
+	public ngOnDestroy(): void {
 		this.destroyChart();
 
 		if (this.subscription) {

@@ -13,6 +13,7 @@
 * limitations under the License.
 */
 
+/** The execution environment - production flavor. */
 export const environment = {
 	production: true,
 	APIVersion: "1.4"

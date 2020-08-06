@@ -11,23 +11,29 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from "@angular/core";
 
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription } from "rxjs";
 
+/**
+ * OpenableDirective allows or toggle-able dialogs. This is essentially a
+ * polyfill for browsers that don't support true dialog elements.
+ */
 @Directive({
 	selector: "dialog[openable]"
 })
 export class OpenableDirective implements AfterViewInit, OnDestroy {
-	@Input('toggle') toggle: Observable<boolean>;
+	/** An Observable that emits toggle states for the dialog. */
+	@Input("toggle") public toggle: Observable<boolean>;
 
 	private subscription: Subscription;
 
 	constructor (private readonly element: ElementRef) { }
 
-	ngAfterViewInit () {
+	/** Initializes toggle listening. */
+	public ngAfterViewInit(): void {
 		if (!this.element.nativeElement) {
-			console.warn('Use of DOM directive in non-DOM context!');
+			console.warn("Use of DOM directive in non-DOM context!");
 			return;
 		}
 
@@ -37,12 +43,12 @@ export class OpenableDirective implements AfterViewInit, OnDestroy {
 					if (!this.element.nativeElement.open) {
 						this.element.nativeElement.showModal();
 					} else {
-						console.warn('Attempted to open dialog that is already open!');
+						console.warn("Attempted to open dialog that is already open!");
 					}
 				} else if (this.element.nativeElement.open) {
 					this.element.nativeElement.close();
 				} else {
-					console.warn('Attempted to close dialog that is already closed!');
+					console.warn("Attempted to close dialog that is already closed!");
 				}
 			},
 			e => {
@@ -51,7 +57,8 @@ export class OpenableDirective implements AfterViewInit, OnDestroy {
 		);
 	}
 
-	ngOnDestroy () {
+	/** cleans up subscriptions on element destruction. */
+	public ngOnDestroy(): void {
 		this.subscription.unsubscribe();
 	}
 }

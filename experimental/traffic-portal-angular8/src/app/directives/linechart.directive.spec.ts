@@ -11,10 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { LinechartDirective } from './linechart.directive';
+import { LinechartDirective } from "./linechart.directive";
 
-describe('LinechartDirective', () => {
-	it('should create an instance', () => {
+describe("LinechartDirective", () => {
+	it("should create an instance", () => {
 		const directive = new LinechartDirective(null);
 		expect(directive).toBeTruthy();
 	});

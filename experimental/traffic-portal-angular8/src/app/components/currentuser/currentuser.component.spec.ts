@@ -11,15 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from "@angular/common/http";
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { CurrentuserComponent } from './currentuser.component';
-import { TpHeaderComponent } from '../tp-header/tp-header.component';
+import { CurrentuserComponent } from "./currentuser.component";
 
-import { User } from '../../models';
+import { User } from "../../models";
+import { TpHeaderComponent } from "../tp-header/tp-header.component";
 
-describe('CurrentuserComponent', () => {
+describe("CurrentuserComponent", () => {
 	let component: CurrentuserComponent;
 	let fixture: ComponentFixture<CurrentuserComponent>;
 
@@ -41,16 +41,16 @@ describe('CurrentuserComponent', () => {
 		component = fixture.componentInstance;
 		component.currentUser = {
 			id: 1,
-			newUser:false,
+			newUser: false,
 			username: "test"
 		} as User;
 		fixture.detectChanges();
 	});
 
-	it('should create', () => {
+	it("should create", () => {
 		component.currentUser = {
 			id: 1,
-			newUser:false,
+			newUser: false,
 			username: "test"
 		} as User;
 		expect(component).toBeTruthy();

@@ -11,21 +11,20 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientModule } from "@angular/common/http";
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { RouterTestingModule } from "@angular/router/testing";
 
-import { DashboardComponent } from './dashboard.component';
-import { DsCardComponent } from '../ds-card/ds-card.component';
-import { LoadingComponent } from '../loading/loading.component';
-import { TpHeaderComponent } from '../tp-header/tp-header.component';
+import { DashboardComponent } from "./dashboard.component";
 
-import { DeliveryService } from '../../models';
+import { LinechartDirective } from "../../directives/linechart.directive";
+import { DeliveryService } from "../../models";
+import { DsCardComponent } from "../ds-card/ds-card.component";
+import { LoadingComponent } from "../loading/loading.component";
+import { TpHeaderComponent } from "../tp-header/tp-header.component";
 
-import { LinechartDirective } from '../../directives/linechart.directive';
-
-describe('DashboardComponent', () => {
+describe("DashboardComponent", () => {
 	let component: DashboardComponent;
 	let fixture: ComponentFixture<DashboardComponent>;
 
@@ -53,27 +52,27 @@ describe('DashboardComponent', () => {
 		component = fixture.componentInstance;
 		component.deliveryServices = [
 			{
-				displayName: 'FIZZbuzz'
+				displayName: "FIZZbuzz"
 			} as DeliveryService,
 			{
-				displayName: 'fooBAR'
+				displayName: "fooBAR"
 			} as DeliveryService
 		];
 		fixture.detectChanges();
 	});
 
-	it('should exist', () => {
+	it("should exist", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it('should implement fuzzy search', () => {
+	it("should implement fuzzy search", () => {
 		// letter exclusion
-		component.fuzzControl.setValue('z');
+		component.fuzzControl.setValue("z");
 		expect(component.fuzzy(component.deliveryServices[0])).toBeTruthy();
 		expect(component.fuzzy(component.deliveryServices[1])).toBeFalsy();
 
 		// matches case-insensitively
-		component.fuzzControl.setValue('fb');
+		component.fuzzControl.setValue("fb");
 		expect(component.fuzzy(component.deliveryServices[0])).toBeTruthy();
 		expect(component.fuzzy(component.deliveryServices[1])).toBeTruthy();
 

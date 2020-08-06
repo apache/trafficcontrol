@@ -11,29 +11,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
-import { of } from 'rxjs';
+import { HttpClientModule } from "@angular/common/http";
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { RouterTestingModule } from "@angular/router/testing";
 
-import { InvalidationJobsComponent } from './invalidation-jobs.component';
-import { TpHeaderComponent } from '../tp-header/tp-header.component';
+import { of } from "rxjs";
 
-import { OpenableDirective } from '../../directives/openable.directive';
-import { CustomvalidityDirective } from '../../directives/customvalidity.directive';
+import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
-import { APIService } from '../../services/api.service';
+import { CustomvalidityDirective } from "../../directives/customvalidity.directive";
+import { OpenableDirective } from "../../directives/openable.directive";
+import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from "../../models";
+import { APIService } from "../../services/api.service";
+import { TpHeaderComponent } from "../tp-header/tp-header.component";
 
-import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from '../../models';
-
-describe('InvalidationJobsComponent', () => {
+describe("InvalidationJobsComponent", () => {
 	let component: InvalidationJobsComponent;
 	let fixture: ComponentFixture<InvalidationJobsComponent>;
 
 	beforeEach(async(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(['getInvalidationJobs', 'getDeliveryServices']);
+		const mockAPIService = jasmine.createSpyObj(["getInvalidationJobs", "getDeliveryServices"]);
 		mockAPIService.getInvalidationJobs.and.returnValue(of({
 			startTime: new Date(),
 		} as InvalidationJob));
@@ -41,7 +40,7 @@ describe('InvalidationJobsComponent', () => {
 			active: true,
 			anonymousBlockingEnabled: false,
 			cdnId: 0,
-			displayName: 'test DS',
+			displayName: "test DS",
 			dscp: 0,
 			geoLimit: GeoLimit.None,
 			geoProvider: GeoProvider.MaxMind,
@@ -55,7 +54,7 @@ describe('InvalidationJobsComponent', () => {
 			regionalGeoBlocking: false,
 			routingName: "test-DS",
 			typeId: 0,
-			xmlId: 'test-DS'
+			xmlId: "test-DS"
 		} as DeliveryService));
 
 		TestBed.configureTestingModule({
@@ -83,7 +82,7 @@ describe('InvalidationJobsComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should create', () => {
+	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
 

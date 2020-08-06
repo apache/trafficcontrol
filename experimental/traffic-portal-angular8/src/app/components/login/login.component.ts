@@ -11,43 +11,49 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
-import { first } from 'rxjs/operators';
+import { Component, OnInit } from "@angular/core";
+import { FormControl } from "@angular/forms";
+import { Router, ActivatedRoute } from "@angular/router";
 
-import { AuthenticationService } from '../../services';
+import { first } from "rxjs/operators";
 
-@Component({
-	selector: 'login',
-	templateUrl: './login.component.html',
-	styleUrls: ['./login.component.scss']
-})
+import { AuthenticationService } from "../../services";
+
 /**
- * Controller for the `/login` page, handles form submission
-*/
+ * LoginComponent is the controller for the user login form.
+ */
+@Component({
+	selector: "login",
+	styleUrls: ["./login.component.scss"],
+	templateUrl: "./login.component.html"
+})
 export class LoginComponent implements OnInit {
-	returnURL: string;
+	private returnURL: string;
 
-	u = new FormControl('');
-	p = new FormControl('');
+	/** The user-entered username. */
+	public u = new FormControl("");
+	/** The user-entered password. */
+	public p = new FormControl("");
 
-	/* tslint:disable */
-	constructor (private readonly route: ActivatedRoute,
-	             private readonly router: Router,
-	             private  readonly auth: AuthenticationService) { }
-	/* tslint:enable */
+	constructor (
+		private readonly route: ActivatedRoute,
+		private readonly router: Router,
+		private readonly auth: AuthenticationService) { }
 
-	ngOnInit () {
-		this.returnURL = this.route.snapshot.queryParams.returnUrl || '/';
+	/**
+	 * Runs initialization, setting up the post-login redirection from the query
+	 * string parameters.
+	 */
+	public ngOnInit(): void {
+		this.returnURL = this.route.snapshot.queryParams.returnUrl || "/";
 	}
 
 	/**
 	 * Handles submission of the Login form, and redirects the user back to their requested page
 	 * should it be succesful. If the user had not yet requested a page, they will be redirected to
 	 * `/`
-	*/
-	submitLogin (): void {
+	 */
+	public submitLogin(): void {
 		this.auth.login(this.u.value, this.p.value).pipe(first()).subscribe(
 			(response) => {
 				if (response) {

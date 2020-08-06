@@ -11,30 +11,42 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { Component, OnInit } from "@angular/core";
+import { FormControl } from "@angular/forms";
 
-import { BehaviorSubject, Observable } from 'rxjs';
-import { first } from 'rxjs/operators';
+import { BehaviorSubject, Observable } from "rxjs";
+import { first } from "rxjs/operators";
 
-import { AuthenticationService } from '../../services';
-import { UserService } from '../../services/api';
-import { Role, User } from '../../models';
-import { orderBy } from '../../utils';
+import { Role, User } from "../../models";
+import { AuthenticationService } from "../../services";
+import { UserService } from "../../services/api";
+import { orderBy } from "../../utils";
 
+/**
+ * UsersComponent is the controller for the "users" page.
+ */
 @Component({
-	selector: 'users',
-	templateUrl: './users.component.html',
-	styleUrls: ['./users.component.scss']
+	selector: "users",
+	styleUrls: ["./users.component.scss"],
+	templateUrl: "./users.component.html"
 })
 export class UsersComponent implements OnInit {
 
-	users: Array<User>;
-	fuzzControl = new FormControl('');
-	loading: boolean;
-	myId: number;
+	/** All (visible) users. */
+	public users: Array<User>;
+
+	/** Fuzzy search control. */
+	public fuzzControl = new FormControl("");
+
+	/** Whether or not user data is still loading. */
+	public loading: boolean;
+
+	/** The ID of the currently logged-in user. */
+	public myId: number;
 
 	private readonly rolesMapSubject: BehaviorSubject<Map<number, string>>;
+
+	/** Maps role IDs to role Names. */
 	public rolesMap: Observable<Map<number, string>>;
 
 	constructor (private readonly api: UserService, private readonly auth: AuthenticationService) {
@@ -45,7 +57,10 @@ export class UsersComponent implements OnInit {
 		this.myId = -1;
 	}
 
-	ngOnInit () {
+	/**
+	 * Initializes data like a map of role ids to their names.
+	 */
+	public ngOnInit(): void {
 		// User may have navigated directly with a valid cookie - in which case current user is null
 		if (this.auth.currentUserValue === null) {
 			this.auth.updateCurrentUser().subscribe(
@@ -61,7 +76,7 @@ export class UsersComponent implements OnInit {
 
 		this.api.getUsers().pipe(first()).subscribe(
 			(r: Array<User>) => {
-				this.users = orderBy(r, 'fullName') as Array<User>;
+				this.users = orderBy(r, "fullName") as Array<User>;
 				this.loading = false;
 			}
 		);
@@ -81,8 +96,8 @@ export class UsersComponent implements OnInit {
 	 * Implements a fuzzy search over usernames
 	 * @param u The user being checked for a fuzzy match (currently uses the username)
 	 * @returns `true` if `u` is a fuzzy match for the `fuzzControl` value, `false` otherwise
-	*/
-	fuzzy (u: User): boolean {
+	 */
+	public fuzzy (u: User): boolean {
 		if (!this.fuzzControl.value) {
 			return true;
 		}

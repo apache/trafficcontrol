@@ -11,13 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { ElementRef } from '@angular/core';
+import { ElementRef } from "@angular/core";
 
-import { CustomvalidityDirective } from './customvalidity.directive';
+import { CustomvalidityDirective } from "./customvalidity.directive";
 
-describe('CustomvalidityDirective', () => {
-	it('should create an instance', () => {
-		const directive = new CustomvalidityDirective(new ElementRef(document.createElement('input')));
+describe("CustomvalidityDirective", () => {
+	it("should create an instance", () => {
+		const directive = new CustomvalidityDirective(new ElementRef(document.createElement("input")));
 		expect(directive).toBeTruthy();
 	});
 });

@@ -11,50 +11,61 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { AlertService } from '../../services';
-import { Alert } from '../../models';
+import { isPlatformBrowser } from "@angular/common";
+import { Component, Inject, OnInit, PLATFORM_ID } from "@angular/core";
 
+import { Alert } from "../../models";
+import { AlertService } from "../../services";
+
+/**
+ * AlertComponent is the controller for alert message popups.
+ */
 @Component({
-	selector: 'alert',
-	templateUrl: './alert.component.html',
-	styleUrls: ['./alert.component.scss']
+	selector: "alert",
+	styleUrls: ["./alert.component.scss"],
+	templateUrl: "./alert.component.html"
 })
 export class AlertComponent implements OnInit {
 
-	dialogElement: HTMLDialogElement;
-	alert: Alert | null;
+	/** The raw HTML element that serves as the base of the component. */
+	public dialogElement: HTMLDialogElement;
 
-	constructor (private readonly alerts: AlertService, @Inject(PLATFORM_ID) private readonly PLATFORM) { }
+	/** The Alert being displayed. */
+	public alert: Alert | null;
 
-	ngOnInit () {
+	constructor (private readonly alerts: AlertService, @Inject(PLATFORM_ID) private readonly PLATFORM: Object) { }
+
+	/**
+	 * Runs initialization code, setting up the current alert from the alerts
+	 * service.
+	 */
+	public ngOnInit(): void {
 		if (!isPlatformBrowser(this.PLATFORM)) {
 			return;
 		}
-		this.dialogElement = document.getElementById('alert') as HTMLDialogElement;
+		this.dialogElement = document.getElementById("alert") as HTMLDialogElement;
 		this.alerts.alerts.subscribe(
 			(a: Alert) => {
 				if (a) {
 					this.alert = a;
-					if (a.text === '') {
-						a.text = 'Unknown';
+					if (a.text === "") {
+						a.text = "Unknown";
 					}
 					switch (a.level) {
-						case 'success':
-							console.log('alert: ', a.text);
+						case "success":
+							console.log("alert: ", a.text);
 							break;
-						case 'info':
-							console.debug('alert: ', a.text);
+						case "info":
+							console.debug("alert: ", a.text);
 							break;
-						case 'warning':
-							console.warn('alert: ', a.text);
+						case "warning":
+							console.warn("alert: ", a.text);
 							break;
-						case 'error':
-							console.error('alert: ', a.text);
+						case "error":
+							console.error("alert: ", a.text);
 							break;
 						default:
-							console.log('unknown alert: ', a.text);
+							console.log("unknown alert: ", a.text);
 							break;
 					}
 					this.dialogElement.showModal();
@@ -63,7 +74,10 @@ export class AlertComponent implements OnInit {
 		);
 	}
 
-	close () {
+	/**
+	 * Closes the dialog.
+	 */
+	public close(): void {
 		this.dialogElement.close();
 		this.alert = null;
 	}

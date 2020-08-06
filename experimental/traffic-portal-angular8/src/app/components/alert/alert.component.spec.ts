@@ -11,11 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { AlertComponent } from './alert.component';
+import { AlertComponent } from "./alert.component";
 
-describe('AlertComponent', () => {
+describe("AlertComponent", () => {
 	let component: AlertComponent;
 	let fixture: ComponentFixture<AlertComponent>;
 
@@ -32,7 +32,7 @@ describe('AlertComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should exist', () => {
+	it("should exist", () => {
 		expect(component).toBeTruthy();
 	});
 });

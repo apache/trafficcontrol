@@ -11,22 +11,21 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-import { of } from 'rxjs';
+import { HttpClientModule } from "@angular/common/http";
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 
-import { UsersComponent } from './users.component';
+import { of } from "rxjs";
 
-import { LoadingComponent } from '../loading/loading.component';
-import { TpHeaderComponent } from '../tp-header/tp-header.component';
-import { UserCardComponent } from '../user-card/user-card.component';
+import { UsersComponent } from "./users.component";
 
-import { APIService } from '../../services/api.service';
+import { User } from "../../models";
+import { APIService } from "../../services/api.service";
+import { LoadingComponent } from "../loading/loading.component";
+import { TpHeaderComponent } from "../tp-header/tp-header.component";
+import { UserCardComponent } from "../user-card/user-card.component";
 
-import { User } from '../../models';
-
-describe('UsersComponent', () => {
+describe("UsersComponent", () => {
 	let component: UsersComponent;
 	let fixture: ComponentFixture<UsersComponent>;
 
@@ -64,7 +63,7 @@ describe('UsersComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should exist', () => {
+	it("should exist", () => {
 		expect(component).toBeTruthy();
 	});
 

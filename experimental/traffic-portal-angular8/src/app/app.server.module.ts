@@ -12,17 +12,20 @@
 * limitations under the License.
 */
 
-import { NgModule } from '@angular/core';
-import { ServerModule } from '@angular/platform-server';
+import { NgModule } from "@angular/core";
+import { ServerModule } from "@angular/platform-server";
 
-import { AppModule } from './app.module';
-import { AppComponent } from './app.component';
+import { AppComponent } from "./app.component";
+import { AppModule } from "./app.module";
 
+/**
+ * AppServerModule is the base module for the server part of the app.
+ */
 @NgModule({
+	bootstrap: [AppComponent],
 	imports: [
 		AppModule,
 		ServerModule,
-	],
-	bootstrap: [AppComponent],
+	]
 })
 export class AppServerModule {}

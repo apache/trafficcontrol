@@ -11,25 +11,35 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Injectable } from "@angular/core";
 
-import { BehaviorSubject, Observable } from 'rxjs';
-import { first, map } from 'rxjs/operators';
+import { BehaviorSubject, Observable } from "rxjs";
+import { first, map } from "rxjs/operators";
 
-import { Role, User } from '../models/user';
-import { UserService } from './api';
+import { UserService } from "./api";
 
-@Injectable({ providedIn: 'root' })
+import { Role, User } from "../models";
+
+/**
+ * AuthenticationService handles authentication with the Traffic Ops server and
+ * providing properties of the current user to service consumers.
+ */
+@Injectable({ providedIn: "root" })
 export class AuthenticationService {
 	private readonly currentUserSubject: BehaviorSubject<User | null>;
+
+	/** An observable that emits the current user, or 'null' if they are not logged in. */
 	public currentUser: Observable<User | null>;
 	private readonly loggedInSubject: BehaviorSubject<boolean>;
+
+	/** An Observable that emits whether or not the current user is logged in. */
 	public loggedIn: Observable<boolean>;
 	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Set<string>>;
+
+	/** An Observable that emits the current user's capabilities. */
 	public currentUserCapabilities: Observable<Set<string>>;
 
-	constructor (private readonly http: HttpClient, private readonly api: UserService) {
+	constructor (private readonly api: UserService) {
 		this.currentUserSubject = new BehaviorSubject<User | null>(null);
 		this.loggedInSubject = new BehaviorSubject<boolean>(false);
 		this.currentUserCapabilitiesSubject = new BehaviorSubject<Set<string>>(new Set<string>());
@@ -38,14 +48,17 @@ export class AuthenticationService {
 		this.currentUserCapabilities = this.currentUserCapabilitiesSubject.asObservable();
 	}
 
+	/** The current user's User, or 'null' if they are not logged in. */
 	public get currentUserValue (): User | null {
 		return this.currentUserSubject.value;
 	}
 
+	/** Whether or not the current user is logged in. */
 	public get loggedInValue (): boolean {
 		return this.loggedInSubject.value;
 	}
 
+	/** The Capabilities of the current user. */
 	public get currentUserCapabilitiesValue (): Set<string> {
 		return this.currentUserCapabilitiesSubject.value;
 	}
@@ -53,8 +66,8 @@ export class AuthenticationService {
 	/**
 	 * Updates the current user, and provides a way for callers to check if the update was succesful
 	 * @returns An `Observable` which will emit a boolean value indicating the success of the update
-	*/
-	updateCurrentUser (): Observable<boolean> {
+	 */
+	public updateCurrentUser (): Observable<boolean> {
 		return this.api.getCurrentUser().pipe(first()).pipe(map(
 			(u: User) => {
 				this.currentUserSubject.next(u);
@@ -68,17 +81,20 @@ export class AuthenticationService {
 				return true;
 			},
 			e => {
-				console.error('Failed to update current user');
-				console.debug('User update error: ', e);
+				console.error("Failed to update current user");
+				console.debug("User update error: ", e);
 				return false;
 			}
 		));
 	}
 
 	/**
-	 * Logs in a user and, on succesful login, updates the current user.
-	*/
-	login (u: string, p: string): Observable<boolean> {
+	 * Logs in a user and, on successful login, updates the current user.
+	 *
+	 * @param u The user's username.
+	 * @param p The user's password.
+	 */
+	public login (u: string, p: string): Observable<boolean> {
 		return this.api.login(u, p).pipe(map(
 			(resp) => {
 				if (resp && resp.status === 200) {
@@ -91,7 +107,8 @@ export class AuthenticationService {
 		));
 	}
 
-	logout () {
+	/** Logs the currently logged-in user out. */
+	public logout(): void {
 		this.currentUserSubject.next(null);
 		this.loggedInSubject.next(false);
 	}

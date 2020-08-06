@@ -11,10 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { fuzzyScore } from './fuzzy';
+import { fuzzyScore } from "./fuzzy";
 
-describe('fuzzyScore', () => {
-	it ('scores properly', () => {
+describe("fuzzyScore", () => {
+	it ("scores properly", () => {
 		const pattern = "test";
 		expect(fuzzyScore("testquest", pattern)).toEqual(0);
 		expect(fuzzyScore("questtest", pattern)).toEqual(5);
@@ -25,13 +25,13 @@ describe('fuzzyScore', () => {
 		expect(fuzzyScore("the best", pattern)).toEqual(4);
 	});
 
-	it ('respects thresholds', () => {
+	it ("respects thresholds", () => {
 		const pattern = "test";
 		expect(fuzzyScore("testquest", pattern, 1)).toEqual(0);
 		expect(fuzzyScore("questtest", pattern, 1)).toEqual(Infinity);
 	});
 
-	it ('handles empty patterns', () => {
+	it ("handles empty patterns", () => {
 		expect(fuzzyScore("test", "")).toEqual(0);
 	});
 });

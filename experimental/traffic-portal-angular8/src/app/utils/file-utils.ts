@@ -16,35 +16,35 @@
  * Causes the browser to initiate a download
  *
  * @param content Should be a File, data Blob, raw data string, or some arbitrary object. Arbitrary objects will be
- *	converted to JSON via JSON.stringify.
+ * converted to JSON via JSON.stringify.
  * @param filename Will be the name of the file to download. If not given and the {@link content} is not a File,
- *	will default to 'download'.
+ * will default to 'download'.
  * @param type The MIME type of the download - used as a hint for file extensions. If not given and {@link content}
- *	is not a File or Blob, this will default to 'text/plain' for strings, and 'application/json' for all others.
-**/
-export function download(content: Blob|File|string|any, filename?: string, type?: string) {
+ * is not a File or Blob, this will default to 'text/plain' for strings, and 'application/json' for all others.
+ */
+export function download (content: Blob | File | string | any, filename?: string, type?: string): void {
 	if (content instanceof File) {
-		const exportURL = URL.createObjectURL(content);
-		window.location.assign(exportURL);
-		URL.revokeObjectURL(exportURL);
+		const url = URL.createObjectURL(content);
+		window.location.assign(url);
+		URL.revokeObjectURL(url);
 		return;
 	}
 
 	let f: File;
 	if (!filename) {
-		filename = 'download';
+		filename = "download";
 	}
 
 	if (content instanceof Blob) {
 		f = new File([content], filename);
-	} else if (typeof(content) === 'string') {
+	} else if (typeof(content) === "string") {
 		if (!type) {
-			type = 'text/plain';
+			type = "text/plain";
 		}
 		f = new File([content], filename, {type: type});
 	} else {
 		if (!type) {
-			type = 'application/json';
+			type = "application/json";
 		}
 		f = new File([JSON.stringify(content)], filename, {type: type});
 	}
