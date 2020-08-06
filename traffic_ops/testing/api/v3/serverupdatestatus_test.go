@@ -482,5 +482,23 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		if updateStatusByCacheGroup[otherEdgeCacheGroup].ParentPending {
 			t.Fatalf("expected UpdPending: %t, actual: %t", false, updateStatusByCacheGroup[otherEdgeCacheGroup].ParentPending)
 		}
+
+		edgeHostName := *cachesByCacheGroup[edgeCacheGroup].HostName
+		*cachesByCacheGroup[edgeCacheGroup].HostName = *cachesByCacheGroup[midCacheGroup].HostName
+		_, _, err = TOSession.UpdateServerByID(*cachesByCacheGroup[edgeCacheGroup].ID, cachesByCacheGroup[edgeCacheGroup])
+		if err != nil {
+			t.Fatalf("unable to update %s's hostname to %s: %s", edgeHostName, *cachesByCacheGroup[midCacheGroup].HostName, err)
+		}
+
+		_, _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[midCacheGroup].HostName, nil)
+		if err != nil {
+			t.Fatalf("expected no error getting server updates for a non-unique hostname %s, got %s", *cachesByCacheGroup[midCacheGroup].HostName, err)
+		}
+
+		*cachesByCacheGroup[edgeCacheGroup].HostName = edgeHostName
+		_, _, err = TOSession.UpdateServerByID(*cachesByCacheGroup[edgeCacheGroup].ID, cachesByCacheGroup[edgeCacheGroup])
+		if err != nil {
+			t.Fatalf("unable to revert %s's hostname back to %s: %s", edgeHostName, edgeHostName, err)
+		}
 	})
 }

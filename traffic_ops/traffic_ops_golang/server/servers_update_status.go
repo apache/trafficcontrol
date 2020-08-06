@@ -57,7 +57,7 @@ WITH RECURSIVE topology_ancestors AS (
 /* This is the base case of the recursive CTE, the topology node for the
  * cachegroup containing server $4.
  */
-	SELECT tcp.child parent, tc.cachegroup
+	SELECT tcp.child parent, NULL cachegroup
 	FROM "server" s
 	JOIN cachegroup c ON s.cachegroup = c.id
 	JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
@@ -77,8 +77,6 @@ SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status
 FROM server s
 JOIN cachegroup c ON s.cachegroup = c.id
 JOIN topology_ancestors ta ON c."name" = ta.cachegroup
-/* Filter out cachegroup of host_name $4 */
-WHERE s.cachegroup != (SELECT s.cachegroup FROM server s WHERE s.host_name = $4)
 ), parentservers AS (
 	SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status
 		FROM server ps
@@ -206,7 +204,7 @@ ORDER BY s.id
 	var rows *sql.Rows
 	var err error
 	if hostName == "all" {
-		rows, err = tx.Query(baseSelectStatement + groupBy, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName)
+		rows, err = tx.Query(baseSelectStatement+groupBy, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName)
 		if err != nil {
 			log.Errorf("could not execute select server update status query: %s\n", err)
 			return nil, tc.DBError
