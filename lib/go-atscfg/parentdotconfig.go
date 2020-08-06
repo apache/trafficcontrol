@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"errors"
 	"net/url"
 	"regexp"
 	"sort"
@@ -59,15 +60,15 @@ const ParentConfigCacheParamNotAParent = "not_a_parent"
 const DeliveryServicesAllParentsKey = "all_parents"
 
 type ParentConfigDS struct {
-	Name            tc.DeliveryServiceName
-	QStringIgnore   tc.QStringIgnore
-	OriginFQDN      string
-	MultiSiteOrigin bool
-	OriginShield    string
-	Type            tc.DSType
-	QStringHandling string
-
+	Name                 tc.DeliveryServiceName
+	QStringIgnore        tc.QStringIgnore
+	OriginFQDN           string
+	MultiSiteOrigin      bool
+	OriginShield         string
+	Type                 tc.DSType
+	QStringHandling      string
 	RequiredCapabilities map[ServerCapability]struct{}
+	Topology             string
 }
 
 type ParentConfigDSTopLevel struct {
@@ -142,18 +143,20 @@ func DefaultProfileCache() ProfileCache {
 
 // CGServer is the server table data needed when selecting the servers assigned to a cachegroup.
 type CGServer struct {
-	ServerID     ServerID
-	ServerHost   string
-	ServerIP     string
-	ServerPort   int
-	CacheGroupID int
-	Status       int
-	Type         int
-	ProfileID    ProfileID
-	CDN          int
-	TypeName     string
-	Domain       string
-	Capabilities map[ServerCapability]struct{}
+	ServerID       ServerID
+	ServerHost     string
+	ServerIP       string
+	ServerPort     int
+	CacheGroupID   int
+	CacheGroupName string
+	Status         int
+	Type           int
+	ProfileID      ProfileID
+	ProfileName    string
+	CDN            int
+	TypeName       string
+	Domain         string
+	Capabilities   map[ServerCapability]struct{}
 }
 
 type OriginURI struct {
@@ -170,45 +173,63 @@ func MakeParentDotConfig(
 	parentConfigDSes []ParentConfigDSTopLevel, // getParentConfigDSTopLevel(cdn) OR getParentConfigDS(server) (TODO determine how to handle non-top missing MSO?)
 	serverParams map[string]string, // getParentConfigServerProfileParams(serverID)
 	parentInfos map[OriginHost][]ParentInfo, // getParentInfo(profileID, parentCachegroupID, secondaryParentCachegroupID)
+	server tc.Server,
+	servers []tc.Server,
+	topologies []tc.Topology,
+	tcParentConfigParams []tc.Parameter,
+	serverCapabilities map[int]map[ServerCapability]struct{},
+	cacheGroupArr []tc.CacheGroupNullable,
 ) string {
+	cacheGroups := MakeCGMap(cacheGroupArr)
+
 	sort.Sort(ParentConfigDSTopLevelSortByName(parentConfigDSes))
 
 	nameVersionStr := GetNameVersionStringFromToolNameAndURL(toToolName, toURL)
 	hdr := HeaderCommentWithTOVersionStr(serverInfo.HostName, nameVersionStr)
 
 	textArr := []string{}
-	text := ""
-	// TODO put these in separate functions. No if-statement should be this long.
-	if serverInfo.IsTopLevelCache() {
-		uniqueOrigins := map[string]struct{}{}
+	processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
 
-		for _, ds := range parentConfigDSes {
+	parentConfigParamsWithProfiles, err := TCParamsToParamsWithProfiles(tcParentConfigParams)
+	if err != nil {
+		log.Errorln("parent.config generation: error getting profiles from Traffic Ops Parameters, Parameters will not be considered for generation! : " + err.Error())
+		parentConfigParamsWithProfiles = []ParameterWithProfiles{}
+	}
+	parentConfigParams := ParameterWithProfilesToMap(parentConfigParamsWithProfiles)
+
+	nameTopologies := MakeTopologyNameMap(topologies)
+
+	for _, ds := range parentConfigDSes {
+		log.Infoln("parent.config processing ds '" + ds.Name + "'")
+
+		if existingDS, ok := processedOriginsToDSNames[ds.OriginFQDN]; ok {
+			log.Errorln("parent.config generation: duplicate origin! services '" + string(ds.Name) + "' and '" + string(existingDS) + "' share origin '" + ds.OriginFQDN + "': skipping '" + string(ds.Name) + "'!")
+			continue
+		}
+
+		// TODO put these in separate functions. No if-statement should be this long.
+		if ds.Topology != "" {
+			log.Infoln("parent.config generating Topology line for ds '" + ds.Name + "'")
+			txt, err := GetTopologyParentConfigLine(server, servers, ds, serverParams, parentConfigParams, nameTopologies, serverCapabilities, cacheGroups)
+			if err != nil {
+				log.Errorln(err)
+				continue
+			}
+			if txt != "" { // will be empty with no error if this server isn't in the Topology, or if it doesn't have the Required Capabilities
+				textArr = append(textArr, txt)
+			}
+		} else if serverInfo.IsTopLevelCache() {
+			log.Infoln("parent.config generating top level line for ds '" + ds.Name + "'")
 			parentQStr := "ignore"
 			if ds.QStringHandling == "" && ds.MSOAlgorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 				parentQStr = "consider"
 			}
 
-			orgURIStr := ds.OriginFQDN
-			orgURI, err := url.Parse(orgURIStr) // TODO verify origin is always a host:port
+			orgURI, err := GetOriginURI(ds.OriginFQDN)
 			if err != nil {
-				log.Errorln("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + orgURIStr + "', skipping! : " + err.Error())
+				log.Errorln("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + ds.OriginFQDN + "': skipping!" + err.Error())
 				continue
 			}
-			// TODO put in function, to remove duplication
-			if orgURI.Port() == "" {
-				if orgURI.Scheme == "http" {
-					orgURI.Host += ":80"
-				} else if orgURI.Scheme == "https" {
-					orgURI.Host += ":443"
-				} else {
-					log.Errorln("parent.config generation: delivery service '" + string(ds.Name) + "' origin  URI: '" + orgURIStr + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
-				}
-			}
-
-			if _, ok := uniqueOrigins[ds.OriginFQDN]; ok {
-				continue // TODO warn?
-			}
-			uniqueOrigins[ds.OriginFQDN] = struct{}{}
 
 			textLine := ""
 
@@ -246,46 +267,23 @@ func MakeParentDotConfig(
 				textLine += "\n" // TODO remove, and join later on "\n" instead of ""?
 				textArr = append(textArr, textLine)
 			}
-		}
-		sort.Sort(sort.StringSlice(textArr))
-		text = hdr + strings.Join(textArr, "")
-	} else {
-		processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
+		} else {
+			log.Infoln("parent.config generating non-top level line for ds '" + ds.Name + "'")
+			queryStringHandling := serverParams[ParentConfigParamQStringHandling] // "qsh" in Perl
 
-		queryStringHandling := serverParams[ParentConfigParamQStringHandling] // "qsh" in Perl
+			roundRobin := `round_robin=consistent_hash`
+			goDirect := `go_direct=false`
 
-		roundRobin := `round_robin=consistent_hash`
-		goDirect := `go_direct=false`
-
-		for _, ds := range parentConfigDSes {
 			parents, secondaryParents := getParentStrs(ds, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
 
 			text := ""
-			originFQDN := ds.OriginFQDN
-			if originFQDN == "" {
+			if ds.OriginFQDN == "" {
 				continue // TODO warn? (Perl doesn't)
 			}
-
-			orgURI, err := url.Parse(originFQDN) // TODO verify
+			orgURI, err := GetOriginURI(ds.OriginFQDN)
 			if err != nil {
-				log.Errorln("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + originFQDN + "': skipping!" + err.Error())
+				log.Errorln("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + ds.OriginFQDN + "': skipping!" + err.Error())
 				continue
-			}
-
-			if existingDS, ok := processedOriginsToDSNames[originFQDN]; ok {
-				log.Errorln("parent.config generation: duplicate origin! services '" + string(ds.Name) + "' and '" + string(existingDS) + "' share origin '" + orgURI.Host + "': skipping '" + string(ds.Name) + "'!")
-				continue
-			}
-
-			// TODO put in function, to remove duplication
-			if orgURI.Port() == "" {
-				if orgURI.Scheme == "http" {
-					orgURI.Host += ":80"
-				} else if orgURI.Scheme == "https" {
-					orgURI.Host += ":443"
-				} else {
-					log.Errorln("parent.config generation non-top-level: ds '" + string(ds.Name) + "' origin  URI: '" + originFQDN + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
-				}
 			}
 
 			// TODO encode this in a DSType func, IsGoDirect() ?
@@ -316,12 +314,15 @@ func MakeParentDotConfig(
 				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
 			}
 			textArr = append(textArr, text)
-			processedOriginsToDSNames[originFQDN] = ds.Name
 		}
+		processedOriginsToDSNames[ds.OriginFQDN] = ds.Name
+	}
 
+	// TODO determine if this is necessary. It's super-dangerous, and moreover ignores Server Capabilitites.
+	defaultDestText := ""
+	if !serverInfo.IsTopLevelCache() {
 		parents, secondaryParents := getParentStrs(ParentConfigDSTopLevel{}, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
-		// TODO determine if this is necessary. It's super-dangerous, and moreover ignores Server Capabilitites.
-		defaultDestText := `dest_domain=. ` + parents
+		defaultDestText = `dest_domain=. ` + parents
 		if serverParams[ParentConfigParamAlgorithm] == tc.AlgorithmConsistentHash {
 			defaultDestText += secondaryParents
 		}
@@ -331,11 +332,263 @@ func MakeParentDotConfig(
 			defaultDestText += ` qstring=` + qStr
 		}
 		defaultDestText += "\n"
-
-		sort.Sort(sort.StringSlice(textArr))
-		text = hdr + strings.Join(textArr, "") + defaultDestText
 	}
+
+	sort.Sort(sort.StringSlice(textArr))
+	text := hdr + strings.Join(textArr, "") + defaultDestText
 	return text
+}
+
+func GetTopologyParentConfigLine(
+	server tc.Server,
+	servers []tc.Server,
+	ds ParentConfigDSTopLevel,
+	serverParams map[string]string,
+	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.config
+	nameTopologies map[TopologyName]tc.Topology,
+	serverCapabilities map[int]map[ServerCapability]struct{},
+	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
+) (string, error) {
+	txt := ""
+
+	if !HasRequiredCapabilities(serverCapabilities[server.ID], ds.RequiredCapabilities) {
+		return "", nil
+	}
+
+	orgURI, err := GetOriginURI(ds.OriginFQDN)
+	if err != nil {
+		return "", errors.New("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + ds.OriginFQDN + "': skipping!" + err.Error())
+	}
+
+	topology := nameTopologies[TopologyName(ds.Topology)]
+	if topology.Name == "" {
+		return "", errors.New("DS " + string(ds.Name) + " topology '" + ds.Topology + "' not found in Topologies!")
+	}
+
+	txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
+
+	log.Errorf("DEBUG topo GetTopologyParentConfigLine calling getTopologyPlacement cg '" + server.Cachegroup + "'\n")
+	serverPlacement := getTopologyPlacement(tc.CacheGroupName(server.Cachegroup), topology, cacheGroups)
+	if !serverPlacement.InTopology {
+		return "", nil // server isn't in topology, no error
+	}
+	// TODO add Topology/Capabilities to remap.config
+
+	parents, secondaryParents, err := GetTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities)
+	if err != nil {
+		return "", errors.New("getting topology parents for '" + string(ds.Name) + "': skipping! " + err.Error())
+	}
+	if len(parents) == 0 {
+		return "", errors.New("getting topology parents for '" + string(ds.Name) + "': no parents found! skipping! (Does your Topology have a CacheGroup with no servers in it?)")
+	}
+
+	txt += ` parent="` + strings.Join(parents, `;`) + `"`
+	if len(secondaryParents) > 0 {
+		txt += ` secondary_parent="` + strings.Join(secondaryParents, `;`) + `"`
+	}
+	txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastTier)
+	txt += ` go_direct=` + getTopologyGoDirect(ds, serverPlacement.IsLastTier)
+	txt += ` qstring=` + getTopologyQueryString(ds, serverParams, serverPlacement.IsLastTier)
+	txt += getTopologyParentIsProxyStr(serverPlacement.IsLastTier)
+	txt += " # topology '" + ds.Topology + "'"
+	txt += "\n"
+	return txt, nil
+}
+
+func getTopologyParentIsProxyStr(serverIsLastTier bool) string {
+	if serverIsLastTier {
+		return ` parent_is_proxy=false`
+	}
+	return ""
+}
+
+func getTopologyRoundRobin(ds ParentConfigDSTopLevel, serverParams map[string]string, serverIsLastTier bool) string {
+	roundRobinConsistentHash := "consistent_hash"
+	if !serverIsLastTier {
+		return roundRobinConsistentHash
+	}
+	if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; ds.OriginShield != "" && strings.TrimSpace(parentSelectAlg) != "" {
+		return parentSelectAlg
+	}
+	if ds.MultiSiteOrigin {
+		return ds.MSOAlgorithm
+	}
+	return roundRobinConsistentHash
+}
+
+func getTopologyGoDirect(ds ParentConfigDSTopLevel, serverIsLastTier bool) string {
+	if !serverIsLastTier {
+		return "false"
+	}
+	if ds.OriginShield != "" {
+		return "true"
+	}
+	if ds.MultiSiteOrigin {
+		return "false"
+	}
+	return "true"
+}
+
+func getTopologyQueryString(ds ParentConfigDSTopLevel, serverParams map[string]string, serverIsLastTier bool) string {
+	if serverIsLastTier {
+		if ds.MultiSiteOrigin && ds.QStringHandling == "" && ds.MSOAlgorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp {
+			return "consider"
+		}
+		return "ignore"
+	}
+
+	if param := serverParams[ParentConfigParamQStringHandling]; param != "" {
+		return param
+	}
+	if ds.QStringHandling != "" {
+		return ds.QStringHandling
+	}
+	if ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp {
+		return "consider"
+	}
+	return "ignore"
+}
+
+// serverParentageParams gets the Parameters used for parent= line, or defaults if they don't exist
+// Returns the Parameters used for parent= lines, for the given server.
+func serverParentageParams(sv tc.Server, params []ParameterWithProfilesMap) ProfileCache {
+	// TODO deduplicate with atstccfg/parentdotconfig.go
+	profileCache := DefaultProfileCache()
+	profileCache.Port = sv.TCPPort
+	for _, param := range params {
+		if _, ok := param.ProfileNames[sv.Profile]; !ok {
+			continue
+		}
+		switch param.Name {
+		case ParentConfigCacheParamWeight:
+			profileCache.Weight = param.Value
+		case ParentConfigCacheParamPort:
+			i, err := strconv.ParseInt(param.Value, 10, 64)
+			if err != nil {
+				log.Errorln("parent.config generation: port param is not an integer, skipping! : " + err.Error())
+			} else {
+				profileCache.Port = int(i)
+			}
+		case ParentConfigCacheParamUseIP:
+			profileCache.UseIP = param.Value == "1"
+		case ParentConfigCacheParamRank:
+			i, err := strconv.ParseInt(param.Value, 10, 64)
+			if err != nil {
+				log.Errorln("parent.config generation: rank param is not an integer, skipping! : " + err.Error())
+			} else {
+				profileCache.Rank = int(i)
+			}
+		case ParentConfigCacheParamNotAParent:
+			profileCache.NotAParent = param.Value != "false"
+		}
+	}
+	return profileCache
+}
+
+func serverParentStr(sv tc.Server, params []ParameterWithProfilesMap) string {
+	svParams := serverParentageParams(sv, params)
+	if svParams.NotAParent {
+		return ""
+	}
+	host := ""
+	if svParams.UseIP {
+		host = sv.IPAddress
+	} else {
+		host = sv.HostName + "." + sv.DomainName
+	}
+	return host + ":" + strconv.Itoa(svParams.Port) + "|" + svParams.Weight
+}
+
+func GetTopologyParents(
+	server tc.Server,
+	ds ParentConfigDSTopLevel,
+	servers []tc.Server,
+	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.confign
+	topology tc.Topology,
+	serverIsLastTier bool,
+	serverCapabilities map[int]map[ServerCapability]struct{},
+) ([]string, []string, error) {
+	// If it's the last tier, then the parent is the origin.
+	// Note this doesn't include MSO, whose final tier cachegroup points to the origin cachegroup.
+	if serverIsLastTier {
+		orgURI, err := GetOriginURI(ds.OriginFQDN) // TODO pass, instead of calling again
+		if err != nil {
+			return nil, nil, err
+		}
+		return []string{orgURI.Host}, nil, nil
+	}
+
+	svNode := tc.TopologyNode{}
+	for _, node := range topology.Nodes {
+		if node.Cachegroup == server.Cachegroup {
+			svNode = node
+			break
+		}
+	}
+	if svNode.Cachegroup == "" {
+		return nil, nil, errors.New("This server '" + server.HostName + "' not in DS " + string(ds.Name) + " topology, skipping")
+	}
+
+	if len(svNode.Parents) == 0 {
+		return nil, nil, errors.New("DS " + string(ds.Name) + " topology '" + ds.Topology + "' is last tier, but NonLastTier called! Should never happen")
+	}
+	if numParents := len(svNode.Parents); numParents > 2 {
+		log.Errorln("DS " + string(ds.Name) + " topology '" + ds.Topology + "' has " + strconv.Itoa(numParents) + " parent nodes, but Apache Traffic Server only supports Primary and Secondary (2) lists of parents. CacheGroup nodes after the first 2 will be ignored!")
+	}
+	if len(topology.Nodes) <= svNode.Parents[0] {
+		return nil, nil, errors.New("DS " + string(ds.Name) + " topology '" + ds.Topology + "' node parent " + strconv.Itoa(svNode.Parents[0]) + " greater than number of topology nodes " + strconv.Itoa(len(topology.Nodes)) + ". Cannot create parents!")
+	}
+	if len(svNode.Parents) > 1 && len(topology.Nodes) <= svNode.Parents[1] {
+		log.Errorln("DS " + string(ds.Name) + " topology '" + ds.Topology + "' node secondary parent " + strconv.Itoa(svNode.Parents[1]) + " greater than number of topology nodes " + strconv.Itoa(len(topology.Nodes)) + ". Secondary parent will be ignored!")
+	}
+
+	parentCG := topology.Nodes[svNode.Parents[0]].Cachegroup
+	secondaryParentCG := ""
+	if len(svNode.Parents) > 1 && len(topology.Nodes) > svNode.Parents[1] {
+		secondaryParentCG = topology.Nodes[svNode.Parents[1]].Cachegroup
+	}
+
+	if parentCG == "" {
+		return nil, nil, errors.New("Server '" + server.HostName + "' DS " + string(ds.Name) + " topology '" + ds.Topology + "' cachegroup '" + server.Cachegroup + "' topology node parent " + strconv.Itoa(svNode.Parents[0]) + " is not in the topology!")
+	}
+
+	parentStrs := []string{}
+	secondaryParentStrs := []string{}
+	for _, sv := range servers {
+		if tc.CacheType(sv.Type) != tc.CacheTypeEdge && tc.CacheType(sv.Type) != tc.CacheTypeMid && sv.Type != tc.OriginTypeName {
+			continue // only consider edges, mids, and origins in the CacheGroup.
+		}
+		if !HasRequiredCapabilities(serverCapabilities[sv.ID], ds.RequiredCapabilities) {
+			continue
+		}
+		if sv.Cachegroup == parentCG {
+			parentStr := serverParentStr(sv, parentConfigParams)
+			if parentStr != "" { // will be empty if server is not_a_parent (possibly other reasons)
+				parentStrs = append(parentStrs, parentStr)
+			}
+		}
+		if sv.Cachegroup == secondaryParentCG {
+			secondaryParentStrs = append(secondaryParentStrs, serverParentStr(sv, parentConfigParams))
+		}
+	}
+	return parentStrs, secondaryParentStrs, nil
+}
+
+func GetOriginURI(fqdn string) (*url.URL, error) {
+	orgURI, err := url.Parse(fqdn) // TODO verify origin is always a host:port
+	if err != nil {
+		return nil, errors.New("parsing: " + err.Error())
+	}
+	if orgURI.Port() == "" {
+		if orgURI.Scheme == "http" {
+			orgURI.Host += ":80"
+		} else if orgURI.Scheme == "https" {
+			orgURI.Host += ":443"
+		} else {
+			log.Errorln("parent.config generation non-top-level: origin '" + fqdn + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
+		}
+	}
+	return orgURI, nil
 }
 
 // getParentStrs returns the parents= and secondary_parents= strings for ATS parent.config lines.

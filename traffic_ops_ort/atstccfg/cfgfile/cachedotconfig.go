@@ -58,7 +58,7 @@ func GetConfigFileProfileCacheDotConfig(toData *config.TOData) (string, string, 
 		if *ds.OrgServerFQDN == "" {
 			continue // TODO warn? err?
 		}
-		if _, ok := dsIDs[*ds.ID]; !ok {
+		if _, ok := dsIDs[*ds.ID]; !ok && ds.Topology == nil {
 			continue
 		}
 		origin := *ds.OrgServerFQDN

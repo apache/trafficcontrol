@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Traffic Ops: Added new topology-based delivery service fields for header rewrites: `firstHeaderRewrite`, `innerHeaderRewrite`, `lastHeaderRewrite`
     - Traffic Ops: Added validation to prohibit assigning caches to topology-based delivery services
     - Traffic Ops: Consider Topologies parentage when queueing or checking server updates
+    - ORT: Added Topologies to Config Generation.
     - Traffic Portal: Added the ability to create, read, update and delete flexible topologies.
     - Traffic Portal: Added the ability to assign topologies to delivery services.
     - Traffic Portal: Added the ability to view all delivery services and cache groups associated with a topology.
@@ -54,6 +55,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Changed some Traffic Ops Go Client methods to use `DeliveryServiceNullable` inputs and outputs.
 - Changed Traffic Portal to use Traffic Ops API v3
 - Changed ORT Config Generation to be deterministic, which will prevent spurious diffs when nothing actually changed.
+- Changed ORT to find the local ATS config directory and use it when location Parameters don't exist for many required configs, including all Delivery Service files (Header Rewrites, Regex Remap, URL Sig, URI Signing).
 - Changed the access logs in Traffic Ops to now show the route ID with every API endpoint call. The Route ID is appended to the end of the access log line.
 - [Multiple Interface Servers](https://github.com/apache/trafficcontrol/blob/master/blueprints/multi-interface-servers.md)
     - Interface data is constructed from IP Address/Gateway/Netmask (and their IPv6 counterparts) and Interface Name and Interface MTU fields on services. These **MUST** have proper, valid data before attempting to upgrade or the upgrade **WILL** fail. In particular IP fields need to be valid IP addresses/netmasks, and MTU must only be positive integers of at least 1280.

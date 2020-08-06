@@ -20,9 +20,7 @@ package cfgfile
  */
 
 import (
-	"encoding/json"
 	"errors"
-	"strconv"
 	"strings"
 	"time"
 
@@ -121,6 +119,27 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 			}
 			toData.DeliveryServices = dses
 
+			allDSesHaveTopologies := true
+			for _, ds := range toData.DeliveryServices {
+				if ds.CDNID == nil || *ds.CDNID != server.CDNID {
+					continue
+				}
+				if ds.Topology == nil {
+					allDSesHaveTopologies = false
+					break
+				}
+			}
+
+			dssF := func() error {
+				defer func(start time.Time) { log.Infof("dssF took %v\n", time.Since(start)) }(time.Now())
+				dss, err := cfg.TOClient.GetDeliveryServiceServers(nil, nil)
+				if err != nil {
+					return errors.New("getting delivery service servers: " + err.Error())
+				}
+				toData.DeliveryServiceServers = dss
+				return nil
+			}
+
 			uriSignKeysF := func() error {
 				defer func(start time.Time) { log.Infof("uriF took %v\n", time.Since(start)) }(time.Now())
 				uriSigningKeys := map[tc.DeliveryServiceName][]byte{}
@@ -177,6 +196,12 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 			if !cfg.RevalOnly {
 				fs = append([]func() error{uriSignKeysF, urlSigKeysF}, fs...) // skip keys for reval-only, which doesn't need them
 			}
+			if !cfg.RevalOnly && !allDSesHaveTopologies {
+				// skip DSS if reval-only (which doesn't need DSS)
+				// or if all DSes have Topologies (which don't use DSS)
+				fs = append([]func() error{dssF}, fs...)
+			}
+
 			return util.JoinErrs(runParallel(fs))
 		}
 		serverParamsF := func() error {
@@ -231,15 +256,6 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 			return errors.New("getting scope parameters: " + err.Error())
 		}
 		toData.ScopeParams = scopeParams
-		return nil
-	}
-	dssF := func() error {
-		defer func(start time.Time) { log.Infof("dssF took %v\n", time.Since(start)) }(time.Now())
-		dss, err := cfg.TOClient.GetDeliveryServiceServers(nil, nil)
-		if err != nil {
-			return errors.New("getting delivery service servers: " + err.Error())
-		}
-		toData.DeliveryServiceServers = dss
 		return nil
 	}
 	jobsF := func() error {
@@ -301,10 +317,24 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		return nil
 	}
 
+	topologiesF := func() error {
+		defer func(start time.Time) { log.Infof("topologiesF took %v\n", time.Since(start)) }(time.Now())
+		topologies, unsupported, err := cfg.TOClientNew.GetTopologies()
+		if err != nil {
+			return errors.New("getting topologies: " + err.Error())
+		}
+		if unsupported {
+			log.Warnln("Traffic Ops didn't support Topologies, topologies will be not be used for config generation!")
+			return nil
+		}
+		toData.Topologies = topologies
+		return nil
+	}
+
 	fs := []func() error{serversF, cgF, scopeParamsF, jobsF}
 	if !cfg.RevalOnly {
 		// skip data not needed for reval, if we're reval-only
-		fs = append([]func() error{dssF, dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF}, fs...)
+		fs = append([]func() error{dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF, topologiesF}, fs...)
 	}
 	errs := runParallel(fs)
 	return toData, util.JoinErrs(errs)
@@ -347,45 +377,6 @@ func FilterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverI
 		filtered = append(filtered, dss)
 	}
 	return filtered
-}
-
-// TCParamsToParamsWithProfiles unmarshals the Profiles that the tc struct doesn't.
-func TCParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]ParameterWithProfiles, error) {
-	params := make([]ParameterWithProfiles, 0, len(tcParams))
-	for _, tcParam := range tcParams {
-		param := ParameterWithProfiles{Parameter: tcParam}
-
-		profiles := []string{}
-		if err := json.Unmarshal(tcParam.Profiles, &profiles); err != nil {
-			return nil, errors.New("unmarshalling JSON from parameter '" + strconv.Itoa(param.ID) + "': " + err.Error())
-		}
-		param.ProfileNames = profiles
-		param.Profiles = nil
-		params = append(params, param)
-	}
-	return params, nil
-}
-
-type ParameterWithProfiles struct {
-	tc.Parameter
-	ProfileNames []string
-}
-
-type ParameterWithProfilesMap struct {
-	tc.Parameter
-	ProfileNames map[string]struct{}
-}
-
-func ParameterWithProfilesToMap(tcParams []ParameterWithProfiles) []ParameterWithProfilesMap {
-	params := []ParameterWithProfilesMap{}
-	for _, tcParam := range tcParams {
-		param := ParameterWithProfilesMap{Parameter: tcParam.Parameter, ProfileNames: map[string]struct{}{}}
-		for _, profile := range tcParam.ProfileNames {
-			param.ProfileNames[profile] = struct{}{}
-		}
-		params = append(params, param)
-	}
-	return params
 }
 
 // FilterParams filters params and returns only the parameters which match configFile, name, and value.
