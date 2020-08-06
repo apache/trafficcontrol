@@ -121,7 +121,7 @@ func (ssc TOServerServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (ssc *TOServerServerCapability) Update(http.Header) (error, error, int) {
+func (ssc *TOServerServerCapability) Update(h http.Header) (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 

@@ -516,7 +516,7 @@ LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.i
 }
 
 //The TOCacheGroup implementation of the Updater interface
-func (cg *TOCacheGroup) Update(http.Header) (error, error, int) {
+func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
@@ -531,6 +531,7 @@ func (cg *TOCacheGroup) Update(http.Header) (error, error, int) {
 		cg.FallbackToClosest = &fbc
 	}
 
+	// ToDo: Srijeet change here
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode

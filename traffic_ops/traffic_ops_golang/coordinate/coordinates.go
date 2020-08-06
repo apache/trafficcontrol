@@ -68,7 +68,7 @@ func (v *TOCoordinate) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
 	return nil, &lastUpdated
 }
 
-func (v *TOCoordinate) UpdateQuery() string {return updateQuery()}
+func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
 func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
@@ -147,9 +147,10 @@ func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tab
 	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
-func (coord *TOCoordinate) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, coord)
+func (coord *TOCoordinate) Update(h http.Header) (error, error, int) {
+	return api.GenericUpdate(h, coord)
 }
-func (coord *TOCoordinate) Delete() (error, error, int)            { return api.GenericDelete(coord) }
+func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 
 func selectQuery() string {
 	query := `SELECT

@@ -61,8 +61,8 @@ func (v *TODeliveryServiceRequest) CheckIfExistsBeforeUpdate() (error, *tc.TimeN
 }
 
 func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TODeliveryServiceRequest) InsertQuery() string { return insertRequestQuery() }
-func (v *TODeliveryServiceRequest) UpdateQuery() string { return updateRequestQuery() }
+func (v *TODeliveryServiceRequest) InsertQuery() string           { return insertRequestQuery() }
+func (v *TODeliveryServiceRequest) UpdateQuery() string           { return updateRequestQuery() }
 func (v *TODeliveryServiceRequest) DeleteQuery() string {
 	return `DELETE FROM deliveryservice_request WHERE id = :id`
 }
@@ -399,6 +399,7 @@ func (req *deliveryServiceRequestAssignment) Update(http.Header) (error, error, 
 	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.AssigneeID = assigneeID
 
+	// ToDo: Srijeet change here
 	// LastEditedBy field should not change with status update
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, req.AssigneeID, *req.ID); err != nil {
 		return api.ParseDBError(err)
@@ -462,7 +463,7 @@ func (req *deliveryServiceRequestStatus) Update(http.Header) (error, error, int)
 	req.Status = st
 
 	// LastEditedBy field should not change with status update
-
+	// ToDo: Srijeet change here
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {
 		return api.ParseDBError(err)
 	}

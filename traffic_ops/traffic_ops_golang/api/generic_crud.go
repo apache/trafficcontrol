@@ -222,7 +222,6 @@ func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
 	}
 	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
 	existingEtag := rfc.ETag(existingLastUpdated.Time)
-	existingEtag = existingEtag[1:len(existingEtag)-1]
 
 	if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
 		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed

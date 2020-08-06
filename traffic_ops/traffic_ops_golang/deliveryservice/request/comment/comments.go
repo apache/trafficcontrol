@@ -128,7 +128,7 @@ func (comment *TODeliveryServiceRequestComment) Read(h http.Header, useIMS bool)
 	return api.GenericRead(h, comment, useIMS)
 }
 
-func (comment *TODeliveryServiceRequestComment) Update(http.Header) (error, error, int) {
+func (comment *TODeliveryServiceRequestComment) Update(h http.Header) (error, error, int) {
 	current := TODeliveryServiceRequestComment{}
 	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
@@ -140,7 +140,7 @@ func (comment *TODeliveryServiceRequestComment) Update(http.Header) (error, erro
 		return errors.New("Comments can only be updated by the author"), nil, http.StatusBadRequest
 	}
 
-	return api.GenericUpdate(nil, comment)
+	return api.GenericUpdate(h, comment)
 }
 
 func (comment *TODeliveryServiceRequestComment) Delete() (error, error, int) {

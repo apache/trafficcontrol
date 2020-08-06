@@ -137,9 +137,11 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	return api.GenericRead(h, en, useIMS)
 }
-func (en *TOStaticDNSEntry) Create() (error, error, int)            { return api.GenericCreate(en) }
-func (en *TOStaticDNSEntry) Update(http.Header) (error, error, int) { return api.GenericUpdate(nil, en) }
-func (en *TOStaticDNSEntry) Delete() (error, error, int)            { return api.GenericDelete(en) }
+func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
+func (en *TOStaticDNSEntry) Update(h http.Header) (error, error, int) {
+	return api.GenericUpdate(h, en)
+}
+func (en *TOStaticDNSEntry) Delete() (error, error, int) { return api.GenericDelete(en) }
 func (v *TOStaticDNSEntry) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(sde.last_updated) as t FROM staticdnsentry as sde

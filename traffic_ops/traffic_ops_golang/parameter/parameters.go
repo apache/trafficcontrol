@@ -190,11 +190,11 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 	return params, nil, nil, code, &maxTime
 }
 
-func (pa *TOParameter) Update(http.Header) (error, error, int) {
+func (pa *TOParameter) Update(h http.Header) (error, error, int) {
 	if pa.Value == nil {
 		pa.Value = util.StrPtr("")
 	}
-	return api.GenericUpdate(nil, pa)
+	return api.GenericUpdate(h, pa)
 }
 
 func (pa *TOParameter) Delete() (error, error, int) { return api.GenericDelete(pa) }

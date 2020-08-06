@@ -153,9 +153,9 @@ func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, error, error,
 	return api.GenericRead(h, cdn, useIMS)
 }
 
-func (cdn *TOCDN) Update(http.Header) (error, error, int) {
+func (cdn *TOCDN) Update(h http.Header) (error, error, int) {
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	return api.GenericUpdate(nil, cdn)
+	return api.GenericUpdate(h, cdn)
 }
 
 func (cdn *TOCDN) Delete() (error, error, int) { return api.GenericDelete(cdn) }

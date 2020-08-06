@@ -208,7 +208,7 @@ func (fed *TOCDNFederation) Read(h http.Header, useIMS bool) ([]interface{}, err
 	return filteredFederations, nil, nil, errCode, maxTime
 }
 
-func (fed *TOCDNFederation) Update(http.Header) (error, error, int) {
+func (fed *TOCDNFederation) Update(h http.Header) (error, error, int) {
 	userErr, sysErr, errCode := fed.isTenantAuthorized()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
@@ -219,7 +219,7 @@ func (fed *TOCDNFederation) Update(http.Header) (error, error, int) {
 		fed.XmlId = nil
 		fed.DeliveryServiceIDs = nil
 	}
-	return api.GenericUpdate(nil, fed)
+	return api.GenericUpdate(h, fed)
 }
 
 // Delete implements the Deleter interface for TOCDNFederation.

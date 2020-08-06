@@ -434,8 +434,9 @@ func (topology *TOTopology) setDescription() (error, error, int) {
 }
 
 // Update is a requirement of the api.Updater interface.
-func (topology *TOTopology) Update(http.Header) (error, error, int) {
-	topologies, userErr, sysErr, errCode, _ := topology.Read(nil, false)
+func (topology *TOTopology) Update(h http.Header) (error, error, int) {
+	// ToDo: Srijeet change here
+	topologies, userErr, sysErr, errCode, _ := topology.Read(h, false)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
