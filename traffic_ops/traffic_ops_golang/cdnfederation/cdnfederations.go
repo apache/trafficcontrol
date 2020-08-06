@@ -45,7 +45,19 @@ type TOCDNFederation struct {
 }
 
 func (v *TOCDNFederation) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
-	panic("implement me")
+	lastUpdated := tc.TimeNoMod{}
+	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from federation where id=:id`, v)
+	if err != nil {
+		return err, nil
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("no " + v.GetType() + " found with this id"), nil
+	}
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return err, nil
+	}
+	return nil, &lastUpdated
 }
 
 func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }

@@ -20,6 +20,7 @@ package physlocation
  */
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -40,7 +41,19 @@ type TOPhysLocation struct {
 }
 
 func (v *TOPhysLocation) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
-	panic("implement me")
+	lastUpdated := tc.TimeNoMod{}
+	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from phys_location where id=:id`, v)
+	if err != nil {
+		return err, nil
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("no " + v.GetType() + " found with this id"), nil
+	}
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return err, nil
+	}
+	return nil, &lastUpdated
 }
 
 func (v *TOPhysLocation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
