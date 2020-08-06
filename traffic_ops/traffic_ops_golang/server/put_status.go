@@ -115,7 +115,7 @@ WITH RECURSIVE topology_descendants AS (
 /* This is the base case of the recursive CTE, the topology node for the
  * cachegroup containing cachegroup $2.
  */
-	SELECT tcp.parent child, tc.cachegroup
+	SELECT tcp.parent child, NULL cachegroup
 	FROM cachegroup c
 	JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
 	JOIN topology_cachegroup_parents tcp ON tc.id = tcp.parent
@@ -133,8 +133,6 @@ UNION ALL
 SELECT c.id
 FROM cachegroup c
 JOIN topology_descendants td ON c."name" = td.cachegroup
-/* Filter out cachegroup id $2 */
-WHERE c.id != $2
 )
 UPDATE server
 SET upd_pending = TRUE
