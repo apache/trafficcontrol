@@ -891,3 +891,21 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 		t.Errorf("expected no parent 'dest_domain=ds2.example.net' without necessary required capabilities, actual: '%v'", txt)
 	}
 }
+
+// serverInfoToServer is for tests, and does NOT copy all data, do NOT use for real code.
+func serverInfoToServer(si *ServerInfo) tc.Server {
+	return tc.Server{
+		CachegroupID: si.CacheGroupID,
+		CDNName:      string(si.CDN),
+		CDNID:        si.CDNID,
+		DomainName:   si.DomainName,
+		HostName:     si.HostName,
+		HTTPSPort:    si.HTTPSPort,
+		ID:           si.ID,
+		IPAddress:    si.IP,
+		ProfileID:    int(si.ProfileID),
+		Profile:      si.ProfileName,
+		TCPPort:      si.Port,
+		Type:         si.Type,
+	}
+}

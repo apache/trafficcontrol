@@ -28,7 +28,7 @@ import (
 )
 
 func TestMakeHostingDotConfig(t *testing.T) {
-	server := tc.Server{HostName: "server0"}
+	server := &tc.Server{HostName: "server0"}
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	params := map[string]string{
@@ -92,7 +92,7 @@ func TestMakeHostingDotConfig(t *testing.T) {
 }
 
 func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
-	server := tc.Server{HostName: "server0", Cachegroup: "edgeCG"}
+	server := &tc.Server{HostName: "server0", Cachegroup: "edgeCG"}
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
 	params := map[string]string{

@@ -39,7 +39,7 @@ const ServerHostingDotConfigMidIncludeInactive = false
 const ServerHostingDotConfigEdgeIncludeInactive = true
 
 func MakeHostingDotConfig(
-	server tc.Server,
+	server *tc.Server,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	params map[string]string, // map[name]value - config file should always be storage.config

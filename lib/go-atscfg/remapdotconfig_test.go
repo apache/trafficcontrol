@@ -31,78 +31,111 @@ func TestMakeRemapDotConfig(t *testing.T) {
 	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     string(serverName),
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		// ParentCacheGroupID:            45,
+		// ParentCacheGroupType:          "CGType4",
+		ProfileID: 46,
+		Profile:   "MyProfile",
+		TCPPort:   12080,
+		// SecondaryParentCacheGroupID:   47,
+		// SecondaryParentCacheGroupType: "MySecondaryParentCG",
+		Type: "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
@@ -121,11 +154,7 @@ func TestMakeRemapDotConfig(t *testing.T) {
 	}
 
 	if !strings.Contains(remapLine, "http://myregexpattern") {
-		t.Errorf("expected to contain routing name, actual '%v'", txt)
-	}
-
-	if !strings.Contains(remapLine, "http://myregexpattern") {
-		t.Errorf("expected to contain routing name, actual '%v'", txt)
+		t.Errorf("expected to contain regex pattern, actual '%v'", txt)
 	}
 
 	if !strings.Contains(remapLine, "origin.example.test") {
@@ -134,85 +163,119 @@ func TestMakeRemapDotConfig(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, string(server.HostName), toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -222,90 +285,124 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMid(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
 	if len(txtLines) != 2 {
-		t.Errorf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+		t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
 	}
 
 	remapLine := txtLines[1]
@@ -324,85 +421,119 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = nil
+	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr(""),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -412,85 +543,119 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               nil,
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -500,113 +665,158 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	ds2 := tc.DeliveryServiceNullable{}
+	ds2.ID = util.IntPtr(49)
+	dsType2 := tc.DSType("HTTP_LIVE_NATNL")
+	ds2.Type = &dsType2
+	ds2.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds2.MidHeaderRewrite = util.StrPtr("mymidrewrite2")
+	ds2.CacheURL = util.StrPtr("mycacheurl2")
+	ds2.RangeRequestHandling = util.IntPtr(0)
+	ds2.RemapText = util.StrPtr("myremaptext")
+	ds2.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds2.SigningAlgorithm = util.StrPtr("url_sig")
+	ds2.XMLID = util.StrPtr("mydsname")
+	ds2.QStringIgnore = util.IntPtr(0)
+	ds2.RegexRemap = util.StrPtr("myregexremap")
+	ds2.FQPacingRate = util.IntPtr(0)
+	ds2.DSCP = util.IntPtr(0)
+	ds2.RoutingName = util.StrPtr("myroutingname")
+	ds2.MultiSiteOrigin = util.BoolPtr(false)
+	ds2.OriginShield = util.StrPtr("myoriginshield")
+	ds2.ProfileID = util.IntPtr(49)
+	ds2.Protocol = util.IntPtr(0)
+	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds2.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds, ds2}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
+		},
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds2.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
-		RemapConfigDSData{
-			ID:                       49,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite2"),
-			CacheURL:                 util.StrPtr("mycacheurl2"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname2": "cachekeyparamval2"},
-			RemapText:                util.StrPtr("myremaptext2"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite2"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname2",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap2"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname2"),
-			MultiSiteOrigin:          util.StrPtr("mymso2"),
-			Pattern:                  util.StrPtr("myregexpattern2"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain2"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum2"),
-			OriginShield:             util.StrPtr("myoriginshield2"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+		tc.DeliveryServiceRegexes{
+			DSName: *ds2.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern2",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -616,85 +826,120 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = nil
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         nil,
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -727,85 +972,120 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = nil
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr(""),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -829,85 +1109,120 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 6
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr(""),
-			CacheURL:                 util.StrPtr(""), // no cacheurl, so we can see if the qstring puts one in
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "6",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -938,85 +1253,120 @@ func TestMakeRemapDotConfigMidQStringPassUpATS7CacheKey(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 5
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr(""),
-			CacheURL:                 util.StrPtr(""), // no cacheurl, so we can see if the qstring puts one in
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "5",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeyparamname",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyparamval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1047,88 +1397,133 @@ func TestMakeRemapDotConfigMidQStringPassUpATS5CacheURL(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		42: map[string]string{
-			"shouldnotexist": "shouldnotexisteither",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr(""),
-			CacheURL:                 util.StrPtr("mycacheurl"), // cacheurl, so it gets added twice, also with qstring
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1160,88 +1555,133 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		42: map[string]string{
-			"shouldnotexist": "shouldnotexisteither",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr(""),
-			CacheURL:                 util.StrPtr("mycacheurl"), // cacheurl, so it gets added twice, also with qstring
-			RangeRequestHandling:     util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest)),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1265,89 +1705,133 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		42: map[string]string{
-			"shouldnotexist": "shouldnotexisteither",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("origin.example.test"),
-			MidHeaderRewrite:         util.StrPtr(""),
-			CacheURL:                 util.StrPtr("mycacheurl"), // cacheurl, so it gets added twice, also with qstring
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingSlice),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-			RangeSliceBlockSize:      util.IntPtr(262144),
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1375,113 +1859,158 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "MID",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("") // should be excluded
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	ds2 := tc.DeliveryServiceNullable{}
+	ds2.ID = util.IntPtr(48)
+	dsType2 := tc.DSType("HTTP_LIVE_NATNL")
+	ds2.Type = &dsType2
+	ds2.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds2.MidHeaderRewrite = util.StrPtr("")
+	ds2.CacheURL = util.StrPtr("")
+	ds2.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
+	ds2.RemapText = util.StrPtr("myremaptext")
+	ds2.EdgeHeaderRewrite = nil
+	ds2.SigningAlgorithm = util.StrPtr("url_sig")
+	ds2.XMLID = util.StrPtr("mydsname")
+	ds2.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds2.RegexRemap = util.StrPtr("myregexremap")
+	ds2.FQPacingRate = util.IntPtr(0)
+	ds2.DSCP = util.IntPtr(0)
+	ds2.RoutingName = util.StrPtr("myroutingname")
+	ds2.MultiSiteOrigin = util.BoolPtr(false)
+	ds2.OriginShield = util.StrPtr("myoriginshield")
+	ds2.ProfileID = util.IntPtr(49)
+	ds2.ProfileName = util.StrPtr("dsprofile")
+	ds2.Protocol = util.IntPtr(0)
+	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds2.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds, ds2}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               nil, // this DS should not be included
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"), // this DS should be included
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1491,113 +2020,173 @@ func TestMakeRemapDotConfigFirstExcludedSecondIncluded(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigAnyMap(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("ANY_MAP")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.StrPtr("") // should not be included, any map requires remap text
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	ds2 := tc.DeliveryServiceNullable{}
+	ds2.ID = util.IntPtr(49)
+	dsType2 := tc.DSType("ANY_MAP")
+	ds2.Type = &dsType2
+	ds2.OrgServerFQDN = util.StrPtr("myorigin")
+	ds2.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+	ds2.CacheURL = util.StrPtr("mycacheurl")
+	ds2.RangeRequestHandling = util.IntPtr(0)
+	ds2.RemapText = util.StrPtr("myremaptext")
+	ds2.EdgeHeaderRewrite = util.StrPtr("myedgerewrite")
+	ds2.SigningAlgorithm = util.StrPtr("url_sig")
+	ds2.XMLID = util.StrPtr("mydsname2")
+	ds2.QStringIgnore = util.IntPtr(0)
+	ds2.RegexRemap = util.StrPtr("myregexremap")
+	ds2.FQPacingRate = util.IntPtr(0)
+	ds2.DSCP = util.IntPtr(0)
+	ds2.RoutingName = util.StrPtr("myroutingname")
+	ds2.MultiSiteOrigin = util.BoolPtr(false)
+	ds2.OriginShield = util.StrPtr("myoriginshield")
+	ds2.ProfileID = util.IntPtr(49)
+	ds2.ProfileName = util.StrPtr("dsprofile")
+	ds2.Protocol = util.IntPtr(0)
+	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds2.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds, ds2}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
+		},
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds2.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "ANY_MAP",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                nil, // this DS shouldn't be included - anymap with nil remap text
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
 		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "ANY_MAP",
-			OriginFQDN:               util.StrPtr("myorigin"), // this DS should be included
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+		tc.DeliveryServiceRegexes{
+			DSName: *ds2.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern2",
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
+	txt = strings.Replace(txt, "\n\n", "\n", -1)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1618,365 +2207,422 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
+	dses := []tc.DeliveryServiceNullable{}
+	{ // see regexes - has invalid regex type
+		ds := tc.DeliveryServiceNullable{}
+		ds.ID = util.IntPtr(1)
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		ds.OrgServerFQDN = util.StrPtr("myorigin")
+		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+		ds.CacheURL = util.StrPtr("mycacheurl")
+		ds.RangeRequestHandling = util.IntPtr(0)
+		ds.RemapText = util.StrPtr("myreamptext")
+		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.StrPtr("url_sig")
+		ds.XMLID = util.StrPtr("ds")
+		ds.QStringIgnore = util.IntPtr(0)
+		ds.RegexRemap = util.StrPtr("myregexremap")
+		ds.FQPacingRate = util.IntPtr(0)
+		ds.DSCP = util.IntPtr(0)
+		ds.RoutingName = util.StrPtr("myroutingname")
+		ds.MultiSiteOrigin = util.BoolPtr(false)
+		ds.OriginShield = util.StrPtr("myoriginshield")
+		ds.ProfileID = util.IntPtr(49)
+		ds.ProfileName = util.StrPtr("dsprofile")
+		ds.Protocol = util.IntPtr(0)
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+		ds.Active = util.BoolPtr(true)
+		dses = append(dses, ds)
+	}
+	{ // see regexes - has invalid regex type
+		ds := tc.DeliveryServiceNullable{}
+		ds.ID = util.IntPtr(2)
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		ds.OrgServerFQDN = util.StrPtr("myorigin")
+		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+		ds.CacheURL = util.StrPtr("mycacheurl")
+		ds.RangeRequestHandling = util.IntPtr(0)
+		ds.RemapText = util.StrPtr("myremaptext")
+		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.StrPtr("url_sig")
+		ds.XMLID = util.StrPtr("ds2")
+		ds.QStringIgnore = util.IntPtr(0)
+		ds.RegexRemap = util.StrPtr("myregexremap")
+		ds.FQPacingRate = util.IntPtr(0)
+		ds.DSCP = util.IntPtr(0)
+		ds.RoutingName = util.StrPtr("myroutingname")
+		ds.MultiSiteOrigin = util.BoolPtr(false)
+		ds.OriginShield = util.StrPtr("myoriginshield")
+		ds.ProfileID = util.IntPtr(49)
+		ds.ProfileName = util.StrPtr("dsprofile")
+		ds.Protocol = util.IntPtr(0)
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+		ds.Active = util.BoolPtr(true)
+		dses = append(dses, ds)
+	}
+	{ // see regexes - has invalid regex type
+		ds := tc.DeliveryServiceNullable{}
+		ds.ID = util.IntPtr(3)
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		ds.OrgServerFQDN = util.StrPtr("myorigin")
+		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+		ds.CacheURL = util.StrPtr("mycacheurl")
+		ds.RangeRequestHandling = util.IntPtr(0)
+		ds.RemapText = util.StrPtr("myremaptext")
+		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.StrPtr("url_sig")
+		ds.XMLID = util.StrPtr("ds3")
+		ds.QStringIgnore = util.IntPtr(0)
+		ds.RegexRemap = util.StrPtr("myregexremap")
+		ds.FQPacingRate = util.IntPtr(0)
+		ds.DSCP = util.IntPtr(0)
+		ds.RoutingName = util.StrPtr("myroutingname")
+		ds.MultiSiteOrigin = util.BoolPtr(false)
+		ds.OriginShield = util.StrPtr("myoriginshield")
+		ds.ProfileID = util.IntPtr(49)
+		ds.ProfileName = util.StrPtr("dsprofile")
+		ds.Protocol = util.IntPtr(0)
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+		ds.Active = util.BoolPtr(true)
+		dses = append(dses, ds)
+	}
+	{ // see regexes - has invalid regex type
+		ds := tc.DeliveryServiceNullable{}
+		ds.ID = util.IntPtr(4)
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		ds.OrgServerFQDN = util.StrPtr("myorigin")
+		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+		ds.CacheURL = util.StrPtr("mycacheurl")
+		ds.RangeRequestHandling = util.IntPtr(0)
+		ds.RemapText = util.StrPtr("myremaptext")
+		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.StrPtr("url_sig")
+		ds.XMLID = util.StrPtr("ds4")
+		ds.QStringIgnore = util.IntPtr(0)
+		ds.RegexRemap = util.StrPtr("myregexremap")
+		ds.FQPacingRate = util.IntPtr(0)
+		ds.DSCP = util.IntPtr(0)
+		ds.RoutingName = util.StrPtr("myroutingname")
+		ds.MultiSiteOrigin = util.BoolPtr(false)
+		ds.OriginShield = util.StrPtr("myoriginshield")
+		ds.ProfileID = util.IntPtr(49)
+		ds.ProfileName = util.StrPtr("dsprofile")
+		ds.Protocol = util.IntPtr(0)
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+		ds.Active = util.BoolPtr(true)
+		dses = append(dses, ds)
+	}
+	{ // see regexes - has invalid regex type
+		ds := tc.DeliveryServiceNullable{}
+		ds.ID = util.IntPtr(5)
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		ds.OrgServerFQDN = util.StrPtr("myorigin")
+		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+		ds.CacheURL = util.StrPtr("mycacheurl")
+		ds.RangeRequestHandling = util.IntPtr(0)
+		ds.RemapText = util.StrPtr("myremaptext")
+		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.StrPtr("url_sig")
+		ds.XMLID = util.StrPtr("ds5")
+		ds.QStringIgnore = util.IntPtr(0)
+		ds.RegexRemap = util.StrPtr("myregexremap")
+		ds.FQPacingRate = util.IntPtr(0)
+		ds.DSCP = util.IntPtr(0)
+		ds.RoutingName = util.StrPtr("myroutingname")
+		ds.MultiSiteOrigin = util.BoolPtr(false)
+		ds.OriginShield = util.StrPtr("myoriginshield")
+		ds.ProfileID = util.IntPtr(49)
+		ds.ProfileName = util.StrPtr("dsprofile")
+		ds.Protocol = util.IntPtr(0)
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+		ds.Active = util.BoolPtr(true)
+		dses = append(dses, ds)
+	}
+	{
+		ds := tc.DeliveryServiceNullable{}
+		ds.ID = util.IntPtr(6)
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		ds.OrgServerFQDN = nil // nil origin should not be included
+		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+		ds.CacheURL = util.StrPtr("mycacheurl")
+		ds.RangeRequestHandling = util.IntPtr(0)
+		ds.RemapText = util.StrPtr("myremaptext")
+		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.StrPtr("url_sig")
+		ds.XMLID = util.StrPtr("ds6")
+		ds.QStringIgnore = util.IntPtr(0)
+		ds.RegexRemap = util.StrPtr("myregexremap")
+		ds.FQPacingRate = util.IntPtr(0)
+		ds.DSCP = util.IntPtr(0)
+		ds.RoutingName = util.StrPtr("myroutingname")
+		ds.MultiSiteOrigin = util.BoolPtr(false)
+		ds.OriginShield = util.StrPtr("myoriginshield")
+		ds.ProfileID = util.IntPtr(49)
+		ds.ProfileName = util.StrPtr("dsprofile")
+		ds.Protocol = util.IntPtr(0)
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+		ds.Active = util.BoolPtr(true)
+		dses = append(dses, ds)
+	}
+	{
+		ds := tc.DeliveryServiceNullable{}
+		ds.ID = util.IntPtr(7)
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		ds.OrgServerFQDN = util.StrPtr("") // empty origin should not be included
+		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+		ds.CacheURL = util.StrPtr("mycacheurl")
+		ds.RangeRequestHandling = util.IntPtr(0)
+		ds.RemapText = util.StrPtr("myremaptext")
+		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.StrPtr("url_sig")
+		ds.XMLID = util.StrPtr("ds7")
+		ds.QStringIgnore = util.IntPtr(0)
+		ds.RegexRemap = util.StrPtr("myregexremap")
+		ds.FQPacingRate = util.IntPtr(0)
+		ds.DSCP = util.IntPtr(0)
+		ds.RoutingName = util.StrPtr("myroutingname")
+		ds.MultiSiteOrigin = util.BoolPtr(false)
+		ds.OriginShield = util.StrPtr("myoriginshield")
+		ds.ProfileID = util.IntPtr(49)
+		ds.ProfileName = util.StrPtr("dsprofile")
+		ds.Protocol = util.IntPtr(0)
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+		ds.Active = util.BoolPtr(true)
+		dses = append(dses, ds)
+	}
+	{ // see regexes - nil pattern
+		ds := tc.DeliveryServiceNullable{}
+		ds.ID = util.IntPtr(8)
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		ds.OrgServerFQDN = util.StrPtr("") // empty origin should not be included
+		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+		ds.CacheURL = util.StrPtr("mycacheurl")
+		ds.RangeRequestHandling = util.IntPtr(0)
+		ds.RemapText = util.StrPtr("myremaptext")
+		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.StrPtr("url_sig")
+		ds.XMLID = util.StrPtr("ds8")
+		ds.QStringIgnore = util.IntPtr(0)
+		ds.RegexRemap = util.StrPtr("myregexremap")
+		ds.FQPacingRate = util.IntPtr(0)
+		ds.DSCP = util.IntPtr(0)
+		ds.RoutingName = util.StrPtr("myroutingname")
+		ds.MultiSiteOrigin = util.BoolPtr(false)
+		ds.OriginShield = util.StrPtr("myoriginshield")
+		ds.ProfileID = util.IntPtr(49)
+		ds.ProfileName = util.StrPtr("dsprofile")
+		ds.Protocol = nil // nil protocol shouldn't be included
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+		ds.Active = util.BoolPtr(true)
+		dses = append(dses, ds)
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                nil, // nil regex should not be included
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(1),
 		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypePathRegex)), // non-host regex should not be included
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(2),
 		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeSteeringRegex)), // non-host regex should not be included
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(3),
 		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHeaderRegex)), // non-host regex should not be included
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(4),
 		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(""), // non-host regex should not be included
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(5),
 		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr("nonexistenttype"), // non-host regex should not be included
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(6),
 		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               nil, // nil origin should not be included
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(7),
 		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr(""),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  nil, // nil pattern shouldn't be included
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 nil, // nil protocol shouldn't be included
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   nil, // nil domain shouldn't be included
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(8),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: "ds",
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypePathRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
+		},
+		tc.DeliveryServiceRegexes{
+			DSName: "ds2",
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeSteeringRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern2",
+				},
+			},
+		},
+		tc.DeliveryServiceRegexes{
+			DSName: "ds3",
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHeaderRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern2",
+				},
+			},
+		},
+		tc.DeliveryServiceRegexes{
+			DSName: "ds4",
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      "",
+					SetNumber: 0,
+					Pattern:   "myregexpattern2",
+				},
+			},
+		},
+		tc.DeliveryServiceRegexes{
+			DSName: "ds5",
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      "nonexistenttype",
+					SetNumber: 0,
+					Pattern:   "myregexpattern2",
+				},
+			},
+		},
+		tc.DeliveryServiceRegexes{
+			DSName: "ds6",
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern2",
+				},
+			},
+		},
+		tc.DeliveryServiceRegexes{
+			DSName: "ds7",
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern2",
+				},
+			},
+		},
+		tc.DeliveryServiceRegexes{
+			DSName: "ds8",
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "",
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -1987,85 +2633,133 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`.*\.mypattern\..*`), // common host regex syntax, should be replaced
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`, // common host regex syntax, should be replaced
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2093,85 +2787,133 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`.*\.mypattern\..*`), // common host regex syntax, should be replaced
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTP)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`, // common host regex syntax, should be replaced
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2199,85 +2941,133 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`.*\.mypattern\..*`), // common host regex syntax, should be replaced
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`, // common host regex syntax, should be replaced
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2305,85 +3095,133 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`.*\.mypattern\..*`), // common host regex syntax, should be replaced
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`, // common host regex syntax, should be replaced
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2411,85 +3249,133 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`myliteralpattern__http__foo`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2507,91 +3393,145 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 		t.Errorf("expected literal pattern to replace '__http__', actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "myliteralpattern"+serverInfo.HostName+"foo") {
+	if !strings.Contains(remapLine, "myliteralpattern"+server.HostName+"foo") {
 		t.Errorf("expected literal pattern to replace __http__ with server name, actual '%v'", txt)
 	}
 }
 
 func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2615,85 +3555,139 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2717,85 +3711,139 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2823,85 +3871,139 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr(""),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -2929,85 +4031,139 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3035,85 +4191,139 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3136,85 +4346,139 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("uri_signing")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("uri_signing"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3237,85 +4501,139 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = nil
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         nil,
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3338,85 +4656,139 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr(""),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3439,85 +4811,139 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3540,85 +4966,139 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreDropAtEdge))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreDropAtEdge)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3639,85 +5119,139 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3737,90 +5271,143 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testing.T) {
-
 	// ATS doesn't allow multiple inclusions of the same plugin.
 	// Currently, if there's both a QString cachekey inclusion, and a cache key parameter,
 	// the make func adds both, and logs a warning.
 
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3844,85 +5431,114 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -3942,85 +5558,109 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testing.T) {
-	serverName := tc.CacheName("server0")
+
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 5 // ats <6 uses cacheurl, not cache key
 
-	cacheURLConfigParams := map[string]string{
-		"notlocation": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 nil,
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "5",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4044,88 +5684,110 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 }
 
 func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCacheURL(t *testing.T) {
-
 	// Currently, the make func should log an error if the QString results in a cacheurl plugin, and there's also a cacheurl, but it should generate it anyway.
 
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 5 // ats <6 uses cacheurl, not cache key
 
-	cacheURLConfigParams := map[string]string{
-		"notlocation": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "5",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4156,85 +5818,108 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 
 	// Currently, the make func should log an error if the QString results in a cacheurl plugin, and there's also a cacheurl, but it should generate it anyway.
 
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 5 // ats <6 uses cacheurl, not cache key
 
-	cacheURLConfigParams := map[string]string{
-		"notlocation": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "MID",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "5",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4262,85 +5947,108 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 }
 
 func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dses := []tc.DeliveryServiceNullable{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4360,88 +6068,139 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4473,88 +6232,139 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4578,88 +6388,139 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4679,88 +6540,139 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = nil
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     nil,
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4784,88 +6696,139 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingDontCache)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingDontCache),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4889,88 +6852,139 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingBackgroundFetch)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingBackgroundFetch),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -4994,89 +7008,140 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.RangeSliceBlockSize = util.IntPtr(262144)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingSlice),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-			RangeSliceBlockSize:      util.IntPtr(262144),
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5104,89 +7169,140 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua __RANGE_DIRECTIVE__")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.RangeSliceBlockSize = util.IntPtr(262144)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingSlice),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua __RANGE_DIRECTIVE__"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-			RangeSliceBlockSize:      util.IntPtr(262144),
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5227,89 +7343,140 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.RangeSliceBlockSize = util.IntPtr(262144)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingSlice),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-			RangeSliceBlockSize:      util.IntPtr(262144),
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5344,88 +7511,139 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5449,88 +7667,139 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = nil
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             nil,
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5550,88 +7819,139 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(-42)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(-42),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5651,88 +7971,139 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5752,88 +8123,139 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE_NATNL",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(314159),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`mypattern`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5857,88 +8279,139 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS_LIVE")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "DNS_LIVE",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(314159),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`.*\.mypattern\..*`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -5958,88 +8431,139 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS_LIVE")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = nil
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "DNS_LIVE",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(314159),
-			DSCP:                     0,
-			RoutingName:              nil,
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`.*\.mypattern\..*`),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6049,88 +8573,139 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 }
 
 func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
-	serverName := tc.CacheName("server0")
 	toToolName := "to0"
 	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
 
-	cacheURLConfigParams := map[string]string{
-		"location": "notinconfig",
+	server := &tc.Server{
+		CachegroupID: 42,
+		CDNName:      "mycdn",
+		CDNID:        43,
+		HostName:     "server0",
+		HTTPSPort:    12443,
+		ID:           44,
+		IPAddress:    "192.168.2.4",
+		ProfileID:    46,
+		Profile:      "MyProfile",
+		TCPPort:      12080,
+		Type:         "EDGE",
 	}
 
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		49: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-		44: map[string]string{
-			"shouldnotincludeotherprofile": "shouldnotincludeotherprofileval",
-		},
-	}
+	ds := tc.DeliveryServiceNullable{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS_LIVE")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.CacheURL = util.StrPtr("mycacheurl")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = nil
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
 
-	serverPackageParamData := map[string]string{
-		"dscp_remap_no": "notused",
-	}
+	dses := []tc.DeliveryServiceNullable{ds}
 
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "DNS_LIVE",
-			OriginFQDN:               util.StrPtr("myorigin"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr(""),
-			RangeRequestHandling:     util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        nil,
-			SigningAlgorithm:         util.StrPtr("foo"),
-			Name:                     "mydsname",
-			QStringIgnore:            util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp)),
-			RegexRemap:               util.StrPtr(""),
-			FQPacingRate:             util.IntPtr(314159),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr(`.*\.mypattern\..*`),
-			RegexType:                nil,
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(int(tc.DSProtocolHTTPToHTTPS)),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
 		},
 	}
 
-	server := serverInfoToServer(serverInfo)
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      "",
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
 	topologies := []tc.Topology{}
 	cgs := []tc.CacheGroupNullable{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
+
+	txt := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, toToolName, toURL, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
 
 	txt = strings.TrimSpace(txt)
 
-	testComment(t, txt, string(serverName), toToolName, toURL)
+	testComment(t, txt, server.HostName, toToolName, toURL)
 
 	txtLines := strings.Split(txt, "\n")
 
@@ -6138,334 +8713,4 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 		t.Fatalf("expected no remaps for DS with nil regex type, actual: '%v' count %v", txt, len(txtLines))
 	}
 
-}
-
-func TestMakeRemapDotConfigTopologies(t *testing.T) {
-	serverName := tc.CacheName("server0")
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
-
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
-	}
-
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-	}
-
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE",
-			OriginFQDN:               util.StrPtr("origin0.example.test"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname0",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-			Topology:                 "t0",
-		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE",
-			OriginFQDN:               util.StrPtr("origin1.example.test"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname1",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-			Topology:                 "t1",
-		},
-	}
-
-	server := serverInfoToServer(serverInfo)
-	server.Cachegroup = "edgeCG"
-
-	topologies := []tc.Topology{
-		tc.Topology{
-			Name: "t0",
-			Nodes: []tc.TopologyNode{
-				tc.TopologyNode{
-					Cachegroup: "edgeCG",
-					Parents:    []int{1},
-				},
-				tc.TopologyNode{
-					Cachegroup: "midCG",
-				},
-			},
-		},
-		tc.Topology{
-			Name: "t1",
-			Nodes: []tc.TopologyNode{
-				tc.TopologyNode{
-					Cachegroup: "otherEdgeCG",
-					Parents:    []int{1},
-				},
-				tc.TopologyNode{
-					Cachegroup: "midCG",
-				},
-			},
-		},
-	}
-
-	cgs := []tc.CacheGroupNullable{}
-	serverCapabilities := map[int]map[ServerCapability]struct{}{}
-	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
-
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
-
-	txt = strings.TrimSpace(txt)
-
-	testComment(t, txt, string(serverName), toToolName, toURL)
-
-	if !strings.Contains(txt, "origin0") {
-		t.Errorf("expected to contain DS with edge in topology, actual '%v'", txt)
-	}
-
-	if strings.Contains(txt, "origin1") {
-		t.Errorf("expected to not contain DS with edge not in topology, actual '%v'", txt)
-	}
-}
-
-func TestMakeRemapDotConfigTopologyCapabilities(t *testing.T) {
-	serverName := tc.CacheName("server0")
-	toToolName := "to0"
-	toURL := "trafficops.example.net"
-	atsMajorVersion := 7
-
-	cacheURLConfigParams := map[string]string{
-		"not_location": "notinconfig",
-	}
-
-	dsProfilesCacheKeyConfigParams := map[int]map[string]string{
-		46: map[string]string{
-			"cachekeykey": "cachekeyval",
-		},
-	}
-
-	serverPackageParamData := map[string]string{
-		"serverpkgval": "serverpkgval __HOSTNAME__ foo",
-	}
-
-	serverInfo := &ServerInfo{
-		CacheGroupID:                  42,
-		CDN:                           "mycdn",
-		CDNID:                         43,
-		DomainName:                    "mydomain",
-		HostName:                      string(serverName),
-		HTTPSPort:                     12443,
-		ID:                            44,
-		IP:                            "192.168.2.4",
-		ParentCacheGroupID:            45,
-		ParentCacheGroupType:          "CGType4",
-		ProfileID:                     46,
-		ProfileName:                   "MyProfile",
-		Port:                          12080,
-		SecondaryParentCacheGroupID:   47,
-		SecondaryParentCacheGroupType: "MySecondaryParentCG",
-		Type:                          "EDGE",
-	}
-
-	remapDSData := []RemapConfigDSData{
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE",
-			OriginFQDN:               util.StrPtr("origin0.example.test"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname0",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-			Topology:                 "t0",
-		},
-		RemapConfigDSData{
-			ID:                       48,
-			Type:                     "HTTP_LIVE",
-			OriginFQDN:               util.StrPtr("origin1.example.test"),
-			MidHeaderRewrite:         util.StrPtr("mymidrewrite"),
-			CacheURL:                 util.StrPtr("mycacheurl"),
-			RangeRequestHandling:     util.IntPtr(0),
-			CacheKeyConfigParams:     map[string]string{"cachekeyparamname": "cachekeyparamval"},
-			RemapText:                util.StrPtr("myremaptext"),
-			EdgeHeaderRewrite:        util.StrPtr("myedgeheaderrewrite"),
-			SigningAlgorithm:         util.StrPtr("url_sig"),
-			Name:                     "mydsname1",
-			QStringIgnore:            util.IntPtr(0),
-			RegexRemap:               util.StrPtr("myregexremap"),
-			FQPacingRate:             util.IntPtr(0),
-			DSCP:                     0,
-			RoutingName:              util.StrPtr("myroutingname"),
-			MultiSiteOrigin:          util.StrPtr("mymso"),
-			Pattern:                  util.StrPtr("myregexpattern"),
-			RegexType:                util.StrPtr(string(tc.DSMatchTypeHostRegex)),
-			Domain:                   util.StrPtr("mydomain"),
-			RegexSetNumber:           util.StrPtr("myregexsetnum"),
-			OriginShield:             util.StrPtr("myoriginshield"),
-			ProfileID:                util.IntPtr(49),
-			Protocol:                 util.IntPtr(0),
-			AnonymousBlockingEnabled: util.BoolPtr(false),
-			Active:                   true,
-			Topology:                 "t1",
-		},
-	}
-
-	server := serverInfoToServer(serverInfo)
-	server.Cachegroup = "edgeCG"
-
-	topologies := []tc.Topology{
-		tc.Topology{
-			Name: "t0",
-			Nodes: []tc.TopologyNode{
-				tc.TopologyNode{
-					Cachegroup: "edgeCG",
-					Parents:    []int{1},
-				},
-				tc.TopologyNode{
-					Cachegroup: "midCG",
-				},
-			},
-		},
-		tc.Topology{
-			Name: "t1",
-			Nodes: []tc.TopologyNode{
-				tc.TopologyNode{
-					Cachegroup: "otherEdgeCG",
-					Parents:    []int{1},
-				},
-				tc.TopologyNode{
-					Cachegroup: "midCG",
-				},
-			},
-		},
-	}
-
-	cgs := []tc.CacheGroupNullable{}
-	serverCapabilities := map[int]map[ServerCapability]struct{}{
-		serverInfo.ID: map[ServerCapability]struct{}{
-			"capx": {},
-		},
-	}
-	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{
-		remapDSData[0].ID: map[ServerCapability]struct{}{
-			"capx": {},
-		},
-	}
-
-	txt := MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
-
-	txt = strings.TrimSpace(txt)
-
-	testComment(t, txt, string(serverName), toToolName, toURL)
-
-	if !strings.Contains(txt, "origin0") {
-		t.Errorf("expected to contain DS with edge in topology, actual '%v'", txt)
-	}
-
-	if strings.Contains(txt, "origin1") {
-		t.Errorf("expected to not contain DS with edge not in topology, actual '%v'", txt)
-	}
-
-	serverCapabilities[serverInfo.ID] = map[ServerCapability]struct{}{}
-	txt = MakeRemapDotConfig(server, toToolName, toURL, atsMajorVersion, cacheURLConfigParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapDSData, topologies, cgs, serverCapabilities, dsRequiredCapabilities)
-	if strings.Contains(txt, "origin1") {
-		t.Errorf("expected to not contain DS with edge missing required capabilities, actual '%v'", txt)
-	}
-}
-
-// serverInfoToServer is for tests, and does NOT copy all data, do NOT use for real code.
-func serverInfoToServer(si *ServerInfo) tc.Server {
-	return tc.Server{
-		CachegroupID: si.CacheGroupID,
-		CDNName:      string(si.CDN),
-		CDNID:        si.CDNID,
-		DomainName:   si.DomainName,
-		HostName:     si.HostName,
-		HTTPSPort:    si.HTTPSPort,
-		ID:           si.ID,
-		IPAddress:    si.IP,
-		ProfileID:    int(si.ProfileID),
-		Profile:      si.ProfileName,
-		TCPPort:      si.Port,
-		Type:         si.Type,
-	}
 }
