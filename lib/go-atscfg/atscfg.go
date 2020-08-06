@@ -141,7 +141,7 @@ func GetConfigFile(prefix string, xmlId string) string {
 }
 
 // topologyIncludesServer returns whether the given topology includes the given server
-func topologyIncludesServer(topology tc.Topology, server tc.Server) bool {
+func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 	for _, node := range topology.Nodes {
 		if node.Cachegroup == server.Cachegroup {
 			return true
@@ -293,4 +293,103 @@ func ParameterWithProfilesToMap(tcParams []ParameterWithProfiles) []ParameterWit
 		params = append(params, param)
 	}
 	return params
+}
+
+func FilterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverIDs map[int]struct{}) []tc.DeliveryServiceServer {
+	// TODO filter only DSes on this server's CDN? Does anything ever needs DSS cross-CDN? Surely not.
+	//      Then, we can remove a bunch of config files that filter only DSes on the current cdn.
+	filtered := []tc.DeliveryServiceServer{}
+	for _, dss := range dsses {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			continue // TODO warn?
+		}
+		if len(dsIDs) > 0 {
+			if _, ok := dsIDs[*dss.DeliveryService]; !ok {
+				continue
+			}
+		}
+		if len(serverIDs) > 0 {
+			if _, ok := serverIDs[*dss.Server]; !ok {
+				continue
+			}
+		}
+		filtered = append(filtered, dss)
+	}
+	return filtered
+}
+
+// FilterParams filters params and returns only the parameters which match configFile, name, and value.
+// If configFile, name, or value is the empty string, it is not filtered.
+// Returns a slice of parameters.
+func FilterParams(params []tc.Parameter, configFile string, name string, value string, omitName string) []tc.Parameter {
+	filtered := []tc.Parameter{}
+	for _, param := range params {
+		if configFile != "" && param.ConfigFile != configFile {
+			continue
+		}
+		if name != "" && param.Name != name {
+			continue
+		}
+		if value != "" && param.Value != value {
+			continue
+		}
+		if omitName != "" && param.Name == omitName {
+			continue
+		}
+		filtered = append(filtered, param)
+	}
+	return filtered
+}
+
+// ParamsToMap converts a []tc.Parameter to a map[paramName]paramValue.
+// If multiple params have the same value, the first one in params will be used an an error will be logged.
+// See ParamArrToMultiMap.
+func ParamsToMap(params []tc.Parameter) map[string]string {
+	mp := map[string]string{}
+	for _, param := range params {
+		if val, ok := mp[param.Name]; ok {
+			if val < param.Value {
+				log.Errorln("config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + param.Value + "'")
+				continue
+			} else {
+				log.Errorln("config generation got multiple parameters for name '" + param.Name + "' - ignoring '" + val + "'")
+			}
+		}
+		mp[param.Name] = param.Value
+	}
+	return mp
+}
+
+// ParamArrToMultiMap converts a []tc.Parameter to a map[paramName][]paramValue.
+func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
+	mp := map[string][]string{}
+	for _, param := range params {
+		mp[param.Name] = append(mp[param.Name], param.Value)
+	}
+	return mp
+}
+
+// GetTOToolNameAndURL takes the Global Parameters and returns the Traffic Ops Tool Name and URL, as set in the tc.GlobalProfileName Profile 'tm.toolname' and 'tm.url' name Parameters.
+func GetTOToolNameAndURL(globalParams []tc.Parameter) (string, string) {
+	// TODO move somewhere generic
+	toToolName := ""
+	toURL := ""
+	for _, param := range globalParams {
+		if param.Name == "tm.toolname" {
+			toToolName = param.Value
+		} else if param.Name == "tm.url" {
+			toURL = param.Value
+		}
+		if toToolName != "" && toURL != "" {
+			break
+		}
+	}
+	// TODO error here? Perl doesn't.
+	if toToolName == "" {
+		log.Warnln("Global Parameter tm.toolname not found, config may not be constructed properly!")
+	}
+	if toURL == "" {
+		log.Warnln("Global Parameter tm.url not found, config may not be constructed properly!")
+	}
+	return toToolName, toURL
 }

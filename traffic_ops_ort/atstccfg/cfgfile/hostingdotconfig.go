@@ -108,5 +108,5 @@ func GetConfigFileServerHostingDotConfig(toData *config.TOData) (string, string,
 		filteredDSes = append(filteredDSes, ds)
 	}
 
-	return atscfg.MakeHostingDotConfig(toData.Server, toData.TOToolName, toData.TOURL, fileParams, filteredDSes, toData.Topologies), atscfg.ContentTypeHostingDotConfig, atscfg.LineCommentHostingDotConfig, nil
+	return atscfg.MakeHostingDotConfig(&toData.Server, toData.TOToolName, toData.TOURL, fileParams, filteredDSes, toData.Topologies), atscfg.ContentTypeHostingDotConfig, atscfg.LineCommentHostingDotConfig, nil
 }

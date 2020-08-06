@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
 )
 
 const TrafficOpsProxyParameterName = `tm.rev_proxy.url`
@@ -49,7 +48,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, error) {
 		return nil, errors.New("getting global parameters: " + err.Error())
 	}
 	toData.GlobalParams = globalParams
-	toData.TOToolName, toData.TOURL = toreq.GetTOToolNameAndURL(globalParams)
+	toData.TOToolName, toData.TOURL = atscfg.GetTOToolNameAndURL(globalParams)
 
 	if !cfg.DisableProxy {
 		toProxyURLStr := ""

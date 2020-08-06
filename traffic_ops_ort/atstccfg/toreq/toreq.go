@@ -118,30 +118,6 @@ func (cl *TOClient) GetGlobalParameters() ([]tc.Parameter, error) {
 	return globalParams, nil
 }
 
-func GetTOToolNameAndURL(globalParams []tc.Parameter) (string, string) {
-	// TODO move somewhere generic
-	toToolName := ""
-	toURL := ""
-	for _, param := range globalParams {
-		if param.Name == "tm.toolname" {
-			toToolName = param.Value
-		} else if param.Name == "tm.url" {
-			toURL = param.Value
-		}
-		if toToolName != "" && toURL != "" {
-			break
-		}
-	}
-	// TODO error here? Perl doesn't.
-	if toToolName == "" {
-		log.Warnln("Global Parameter tm.toolname not found, config may not be constructed properly!")
-	}
-	if toURL == "" {
-		log.Warnln("Global Parameter tm.url not found, config may not be constructed properly!")
-	}
-	return toToolName, toURL
-}
-
 func (cl *TOClient) GetServers() ([]tc.Server, error) {
 	servers := []tc.Server{}
 	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
