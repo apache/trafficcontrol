@@ -133,7 +133,7 @@ Creates a new, static DNS entry.
 
 Request Structure
 -----------------
-:address:      If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server that is required to end with a trailing period (eg:cdn.test.com. is the right usage but cdn.test.com will error), otherwise it is the IP address to which ``host`` shall be resolved
+:address:      If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server that is required to end with a trailing period (eg:cdn.test.com. is the right usage but cdn.test.com will throw an error), otherwise it is the IP address to which ``host`` shall be resolved
 :cachegroupId: An optional, integer that is the :ref:`ID of a Cache Group <cache-group-id>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
@@ -234,7 +234,7 @@ Request Structure
 	|  id  | The integral, unique identifier of the static DNS entry to modify |
 	+------+-------------------------------------------------------------------+
 
-:address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server that is required to end with a trailing period (eg:cdn.test.com. is right usage but cdn.test.com will error), otherwise it is the IP address to which ``host`` shall be resolved
+:address:           If ``typeId`` identifies a ``CNAME`` type record, this is the Canonical Name (CNAME) of the server that is required to end with a trailing period (eg:cdn.test.com. is right usage but cdn.test.com will throw an error), otherwise it is the IP address to which ``host`` shall be resolved
 :cachegroupId: An optional, integer that is the :ref:`ID of a Cache Group <cache-group-id>` which will service this static DNS entry
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.

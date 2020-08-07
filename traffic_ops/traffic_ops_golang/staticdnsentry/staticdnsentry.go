@@ -106,8 +106,8 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.DNSName)
 		address := *staticDNSEntry.Address
 		lastChar := address[len(address)-1:]
-		if lastChar != "." {
-			addressErr = fmt.Errorf("must be a valid DNS entry. Missing a trailing period at the end")
+		if lastChar != "." && addressErr == nil {
+			addressErr = fmt.Errorf("must be a valid DNS name. Missing a trailing period at the end")
 		}
 	default:
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required)
