@@ -131,7 +131,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	expectedAlerts := []tc.Alerts{
 		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address", "error"}}},
 		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name", "error"}}},
-		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name. Missing a trailing period at the end", "error"}}},
+		tc.Alerts{[]tc.Alert{tc.Alert{"'address' for type: CNAME_RECORD must have a trailing period", "error"}}},
 		tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address", "error"}}}}
 
 	// A_RECORD

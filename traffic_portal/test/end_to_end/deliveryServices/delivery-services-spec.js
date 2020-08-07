@@ -338,12 +338,11 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		pageData.viewStaticCapabilitiesMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/static-dns-entries");
 		pageData.addStaticDNSBtn.click();
-		// expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
 		// set host name
 		pageData.host.sendKeys(mockVals.staticDNShostName);
-		// set type ID
-		pageData.typeId.click();
-		commonFunctions.selectDropdownbyNum(pageData.typeId, 3);
+		// set type ID to CNAME_RECORD's id
+		pageData.staticDNStypeId.click();
+		commonFunctions.selectDropdownbyNum(pageData.staticDNStypeId, 3);
 		// set ttl
 		pageData.ttl.sendKeys(mockVals.staticDNSTTL);
 		// set address
