@@ -29,12 +29,12 @@ import (
  */
 
 const (
-	IfModifiedSince = "If-Modified-Since" // RFC7232§3.3
-	LastModified = "Last-Modified" // RFC7232§2.2
-	ETagHeader = "ETag"
-	IfMatch = "If-Match"
+	IfModifiedSince   = "If-Modified-Since" // RFC7232§3.3
+	LastModified      = "Last-Modified"     // RFC7232§2.2
+	ETagHeader        = "ETag"
+	IfMatch           = "If-Match"
 	IfUnmodifiedSince = "If-Unmodified-Since"
-	ETagVersion = 1
+	ETagVersion       = 1
 )
 
 // ETag takes the last time the object was modified, and returns an ETag string. Note the string is the complete header value, including quotes. ETags must be quoted strings.
@@ -43,7 +43,7 @@ func ETag(t time.Time) string {
 }
 
 // GetETagOrIfUnmodifiedSinceTime parses the http header and returns a list of Etags/ an "if-unmodified-since" time to compare to, in that order.
-func GetETagOrIfUnmodifiedSinceTime (h http.Header) ([]string, *time.Time) {
+func GetETagOrIfUnmodifiedSinceTime(h http.Header) ([]string, *time.Time) {
 	valIUMS := h.Get(IfUnmodifiedSince)
 	valIfMatch := h.Get(IfMatch)
 	// Check the If-Match header first, if that exists, go off of that. If not, check for If-Unmodified-Since header.
@@ -53,7 +53,8 @@ func GetETagOrIfUnmodifiedSinceTime (h http.Header) ([]string, *time.Time) {
 		return eTagsTimeList, nil
 	}
 	if valIUMS != "" {
-		t, ok := ParseHTTPDate(valIUMS); if ok {
+		t, ok := ParseHTTPDate(valIUMS)
+		if ok {
 			return nil, &t
 		} else {
 			return nil, nil
@@ -98,13 +99,13 @@ func ParseEtagsList(eTags []string) []string {
 	if eTags != nil {
 		for _, tag := range eTags {
 			tag = strings.TrimSpace(tag)
-			t, err := ParseETag(`"`+tag+`"`)
+			t, err := ParseETag(`"` + tag + `"`)
 			if err != nil {
 				log.Warnf("Couldn't parse etag %v. err: %v", tag, err.Error())
 				continue
 			}
 			tagTime := t.Format("2006-01-02 15:04:05.000000-07")
-			tagTimes = append(tagTimes, `"` + tagTime + `"`)
+			tagTimes = append(tagTimes, `"`+tagTime+`"`)
 		}
 	}
 	return tagTimes
