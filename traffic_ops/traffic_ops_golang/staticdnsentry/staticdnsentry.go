@@ -105,9 +105,11 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	case "CNAME_RECORD":
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.DNSName)
 		address := *staticDNSEntry.Address
-		lastChar := address[len(address)-1:]
-		if lastChar != "." && addressErr == nil {
-			addressErr = fmt.Errorf("for type: CNAME_RECORD must have a trailing period")
+		if len(address) != 0 {
+			lastChar := address[len(address)-1:]
+			if lastChar != "." && addressErr == nil {
+				addressErr = fmt.Errorf("for type: CNAME_RECORD must have a trailing period")
+			}
 		}
 	default:
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required)
