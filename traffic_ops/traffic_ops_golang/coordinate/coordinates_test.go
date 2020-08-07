@@ -106,7 +106,7 @@ func TestFuncs(t *testing.T) {
 	if strings.Index(insertQuery(), "INSERT") != 0 {
 		t.Errorf("expected insertQuery to start with INSERT")
 	}
-	if strings.Index(updateQuery(""), "UPDATE") != 0 {
+	if strings.Index(updateQuery(), "UPDATE") != 0 {
 		t.Errorf("expected updateQuery to start with UPDATE")
 	}
 	if strings.Index(deleteQuery(), "DELETE") != 0 {

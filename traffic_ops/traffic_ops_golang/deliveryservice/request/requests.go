@@ -22,9 +22,11 @@ package request
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -375,7 +377,7 @@ type deliveryServiceRequestAssignment struct {
 }
 
 // Update assignee only
-func (req *deliveryServiceRequestAssignment) Update(http.Header) (error, error, int) {
+func (req *deliveryServiceRequestAssignment) Update(h http.Header) (error, error, int) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only assignee can change
 	if req.ID == nil {
@@ -399,7 +401,20 @@ func (req *deliveryServiceRequestAssignment) Update(http.Header) (error, error, 
 	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.AssigneeID = assigneeID
 
-	// ToDo: Srijeet change here
+	err, existingLastUpdated := CheckIfExistsBeforeUpdate(req.ReqInfo.Tx, *req.ID)
+	if err != nil {
+		return errors.New("no delivery service request found with this id"), nil, http.StatusNotFound
+	}
+	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
+	existingEtag := rfc.ETag(existingLastUpdated.Time)
+
+	if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	}
+	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	}
+
 	// LastEditedBy field should not change with status update
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, req.AssigneeID, *req.ID); err != nil {
 		return api.ParseDBError(err)
@@ -410,6 +425,22 @@ func (req *deliveryServiceRequestAssignment) Update(http.Header) (error, error, 
 	}
 
 	return nil, nil, http.StatusOK
+}
+
+func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, dsReqID int) (error, *tc.TimeNoMod) {
+	lastUpdated := tc.TimeNoMod{}
+	rows, err := tx.Query(`select last_updated from deliveryservice_request where id=$1`, dsReqID)
+	if err != nil {
+		return err, nil
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("no delivery service request found with this id"), nil
+	}
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return err, nil
+	}
+	return nil, &lastUpdated
 }
 
 func (req deliveryServiceRequestAssignment) Validate() error {
@@ -439,7 +470,7 @@ type deliveryServiceRequestStatus struct {
 	TODeliveryServiceRequest
 }
 
-func (req *deliveryServiceRequestStatus) Update(http.Header) (error, error, int) {
+func (req *deliveryServiceRequestStatus) Update(h http.Header) (error, error, int) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only status can change,  and only according to the established rules
 	// for status transition
@@ -463,7 +494,17 @@ func (req *deliveryServiceRequestStatus) Update(http.Header) (error, error, int)
 	req.Status = st
 
 	// LastEditedBy field should not change with status update
-	// ToDo: Srijeet change here
+	existingLastUpdated := current.LastUpdated
+	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
+	existingEtag := rfc.ETag(existingLastUpdated.Time)
+
+	if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	}
+	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	}
+
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {
 		return api.ParseDBError(err)
 	}

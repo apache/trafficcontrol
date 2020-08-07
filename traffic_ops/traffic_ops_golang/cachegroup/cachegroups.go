@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
@@ -531,7 +532,20 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 		cg.FallbackToClosest = &fbc
 	}
 
-	// ToDo: Srijeet change here
+	e, existingLastUpdated := CheckIfExistsBeforeUpdate(cg.ReqInfo.Tx, *cg.ID)
+	if e != nil {
+		return errors.New("no delivery service request found with this id"), nil, http.StatusNotFound
+	}
+	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
+	existingEtag := rfc.ETag(existingLastUpdated.Time)
+
+	if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	}
+	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	}
+
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
@@ -566,6 +580,22 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 	}
 
 	return nil, nil, http.StatusOK
+}
+
+func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, cgID int) (error, *tc.TimeNoMod) {
+	lastUpdated := tc.TimeNoMod{}
+	rows, err := tx.Query(`select last_updated from cachegroup where id = $1`, cgID)
+	if err != nil {
+		return err, nil
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("no cachegroup found with this id"), nil
+	}
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return err, nil
+	}
+	return nil, &lastUpdated
 }
 
 func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {

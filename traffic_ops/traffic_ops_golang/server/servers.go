@@ -1095,7 +1095,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(r.Header)
 	existingEtag := rfc.ETag(existingLastUpdated.Time)
-	//existingEtag = existingEtag[1 : len(existingEtag)-1]
 
 	if r.Header.Get(rfc.IfMatch) != "" && !strings.Contains(r.Header.Get(rfc.IfMatch), existingEtag) {
 		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("header preconditions dont match"), nil)

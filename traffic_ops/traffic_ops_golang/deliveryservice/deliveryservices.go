@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
@@ -779,6 +780,19 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
+	err, existingLastUpdated := CheckIfExistsBeforeUpdate(inf.Tx, *ds.ID)
+	if err != nil {
+		return nil, http.StatusNotFound, errors.New("no deliveryservice found with this id"), nil
+	}
+	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(r.Header)
+	existingEtag := rfc.ETag(existingLastUpdated.Time)
+	if r.Header.Get(rfc.IfMatch) != "" && !strings.Contains(r.Header.Get(rfc.IfMatch), existingEtag) {
+		return nil, http.StatusPreconditionFailed, errors.New("header preconditions dont match"), nil
+	}
+	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+		return nil, http.StatusPreconditionFailed, errors.New("header preconditions dont match"), nil
+	}
+
 	resultRows, err := tx.Query(updateDSQuery(),
 		&ds.Active,
 		&ds.CacheURL,
@@ -938,6 +952,22 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	}
 	dsLatest := tc.DeliveryServiceNullableV30(*ds)
 	return &dsLatest, http.StatusOK, nil, nil
+}
+
+func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, dsID int) (error, *tc.TimeNoMod) {
+	lastUpdated := tc.TimeNoMod{}
+	rows, err := tx.Query(`SELECT last_updated FROM deliveryservice WHERE id = $1`, dsID)
+	if err != nil {
+		return err, nil
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("no delivery service found with this id"), nil
+	}
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return err, nil
+	}
+	return nil, &lastUpdated
 }
 
 //Delete is the DeliveryService implementation of the Deleter interface.

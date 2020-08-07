@@ -23,11 +23,10 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"net/http"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"net/http"
 )
 
 const safeUpdateQuery = `
@@ -65,7 +64,6 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %s", err), nil)
 		return
 	}
-
 	if ok, err := updateDSSafe(tx, dsID, dsr); err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Updating Delivery Service (safe): %s", err))
 		return
