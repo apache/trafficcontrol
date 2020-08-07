@@ -89,6 +89,16 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 			return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
 		}
 	}
+
+	switch id.(type) {
+	case int64:
+		// ahhh generics in a language without generics
+		// sql.Driver values return int64s from integral database data
+		// but our objects all use ambiguous-width ints for their IDs
+		// so naturally this suffers from overflow issues, but c'est la vie
+		id = int(id.(int64))
+	default:
+	}
 	if rowsAffected == 0 {
 		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no id was returned"), http.StatusInternalServerError
 	} else if rowsAffected > 1 {
