@@ -61,41 +61,66 @@ func UpdateTestServiceCategories(t *testing.T) {
 	if len(testData.ServiceCategories) > 0 {
 		firstServiceCategory = testData.ServiceCategories[0]
 	} else {
-		t.Errorf("cannot UPDATE Service Category, test data does not have service categories")
+		t.Fatalf("cannot UPDATE Service Category, test data does not have service categories")
 	}
-	// Retrieve the Service Category by service category so we can get the id for the Update
-	paramsFirst := url.Values{}
-	paramsFirst.Add("name", firstServiceCategory.Name)
-	resp, _, err := TOSession.GetServiceCategories(&paramsFirst)
+
+	tenants, _, err := TOSession.Tenants(nil)
 	if err != nil {
-		t.Errorf("cannot GET Service Category by service category: %v - %v", firstServiceCategory.Name, err)
+		t.Fatalf("Failed to get tenants: %v", err)
+	}
+	if len(tenants) < 2 {
+		t.Fatalf("Need at least two tenants to test changing tenant; got: %d", len(tenants))
+	}
+
+	// Retrieve the Service Category by service category so we can get the id for the Update
+	params := url.Values{}
+	params.Add("name", firstServiceCategory.Name)
+	resp, _, err := TOSession.GetServiceCategories(&params)
+	if err != nil {
+		t.Errorf("cannot GET Service Category by name: %v - %v", firstServiceCategory.Name, err)
 	}
 	if len(resp) > 0 {
 		remoteServiceCategory := resp[0]
-		expectedServiceCategory := firstServiceCategory.Name + "-test-update"
-		remoteServiceCategory.Name = expectedServiceCategory
+
+		originalTenant := remoteServiceCategory.TenantID
+		found := false
+		for _, tenant := range tenants {
+			if tenant.ID != originalTenant {
+				remoteServiceCategory.TenantID = tenant.ID
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatal("Could not find tenant that isn't the same as the remote service category's tenant")
+		}
+
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateServiceCategoryByName(firstServiceCategory.Name, remoteServiceCategory)
+		alert, _, err = TOSession.UpdateServiceCategoryByName(remoteServiceCategory.Name, remoteServiceCategory)
 		if err != nil {
 			t.Errorf("cannot UPDATE Service Category by name: %v - %v", err, alert)
 		}
+		t.Logf("alerts: %v", alert)
 
 		// Retrieve the Service Category to check service category got updated
-		paramsRemote := url.Values{}
-		paramsRemote.Add("name", remoteServiceCategory.Name)
-		resp, _, err = TOSession.GetServiceCategories(&paramsRemote)
+		resp, _, err = TOSession.GetServiceCategories(&params)
 		if err != nil {
 			t.Errorf("cannot GET Service Category by service category: %v - %v", firstServiceCategory.Name, err)
 		}
+		if len(resp) < 1 {
+			t.Fatal("empty response getting Service Category after update")
+		} else if len(resp) > 1 {
+			t.Errorf("expected a name to uniquely identify exactly one Service Category, got: %d", len(resp))
+		}
 
 		respServiceCategory := resp[0]
-		if respServiceCategory.Name != expectedServiceCategory {
-			t.Errorf("results do not match actual: %s, expected: %s", respServiceCategory.Name, expectedServiceCategory)
+		if respServiceCategory.TenantID != remoteServiceCategory.TenantID {
+			t.Errorf("results do not match; want: %d, got: %d", remoteServiceCategory.TenantID, respServiceCategory.TenantID)
 		}
 
 		// Set the name back to the fixture value so we can delete it after
-		remoteServiceCategory.Name = firstServiceCategory.Name
-		alert, _, err = TOSession.UpdateServiceCategoryByName(expectedServiceCategory, remoteServiceCategory)
+		remoteServiceCategory.TenantID = originalTenant
+		alert, _, err = TOSession.UpdateServiceCategoryByName(remoteServiceCategory.Name, remoteServiceCategory)
 		if err != nil {
 			t.Errorf("cannot UPDATE Service Category by name: %v - %v", err, alert)
 		}
