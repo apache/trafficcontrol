@@ -62,7 +62,7 @@ public class AbstractResourceWatcherTest {
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws InterruptedException {
         federationsWatcher = (FederationsWatcher) context.getBean("federationsWatcher");
         steeringWatcher = (SteeringWatcher) context.getBean("steeringWatcher");
         steeringRegistry = (SteeringRegistry) context.getBean("steeringRegistry");
