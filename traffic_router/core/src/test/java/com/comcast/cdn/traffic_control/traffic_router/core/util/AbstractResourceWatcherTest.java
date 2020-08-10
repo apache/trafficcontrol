@@ -108,5 +108,4 @@ public class AbstractResourceWatcherTest {
         assertThat(config.get(federationsWatcher.getWatcherConfigPrefix() + ".polling.url").asText(), endsWith("api/3.0/notAFederationsEndpoint"));
         assertThat(federationsWatcher.getDataBaseURL(), endsWith("api/3.0/notAFederationsEndpoint"));
     }
-
 }
