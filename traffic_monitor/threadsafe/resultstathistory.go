@@ -423,7 +423,6 @@ func StatsMarshall(
 						stats.Caches[cacheId].Interfaces[interfaceName] = map[string][]cache.ResultStatVal{}
 					}
 					stats.Caches[cacheId].Interfaces[interfaceName][stat] = append(stats.Caches[cacheId].Interfaces[interfaceName][stat], val)
-					// Todo add for each interface?
 					historyCount += val.Span
 				}
 				return true
@@ -451,7 +450,6 @@ func StatsMarshall(
 				if !filter.UseStat(stat) {
 					continue
 				}
-				// Need to actually handle interfaces, needs vitals to be refactored
 				rv := cache.ResultStatVal{
 					Span: 1,
 					Time: t,
