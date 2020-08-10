@@ -37,7 +37,7 @@ RUN yum -y install epel-release && \
 ADD $TRAFFIC_ROUTER_RPM /traffic_router.rpm
 ADD $TOMCAT_RPM /tomcat.rpm
 
-RUN yum -y install /traffic_router.rpm /tomcat.rpm && \
+RUN rpm -Uvh /traffic_router.rpm /tomcat.rpm && \
     find /usr/lib* -name libtc\* -exec ln -sfv {} /opt/tomcat/lib \;
 
 ADD enroller/server_template.json \
