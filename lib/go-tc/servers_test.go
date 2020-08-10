@@ -465,6 +465,192 @@ func TestInterfaceInfoToLegacyInterfaces(t *testing.T) {
 	}
 }
 
+func ensureNoNulls(s ServerNullableV2, t *testing.T) {
+	if s.Cachegroup == nil {
+		t.Error("nullable conversion gave nil Cachegroup")
+	}
+
+	if s.CachegroupID == nil {
+		t.Error("nullable conversion gave nil CachegroupID")
+	}
+
+	if s.CDNID == nil {
+		t.Error("nullable conversion gave nil CDNID")
+	}
+
+	if s.CDNName == nil {
+		t.Error("nullable conversion gave nil CDNName")
+	}
+
+	if s.DeliveryServices == nil {
+		t.Error("nullable conversion gave nil DeliveryServices")
+	}
+
+	if s.DomainName == nil {
+		t.Error("nullable conversion gave nil DomainName")
+	}
+
+	if s.FQDN == nil {
+		t.Error("nullable conversion gave nil FQDN")
+	}
+
+	if s.GUID == nil {
+		t.Error("nullable conversion gave nil GUID")
+	}
+
+	if s.HostName == nil {
+		t.Error("nullable conversion gave nil HostName")
+	}
+
+	if s.HTTPSPort == nil {
+		t.Error("nullable conversion gave nil HTTPSPort")
+	}
+
+	if s.ID == nil {
+		t.Error("nullable conversion gave nil ID")
+	}
+
+	if s.ILOIPAddress == nil {
+		t.Error("nullable conversion gave nil ILOIPAddress")
+	}
+
+	if s.ILOIPGateway == nil {
+		t.Error("nullable conversion gave nil ILOIPGateway")
+	}
+
+	if s.ILOIPNetmask == nil {
+		t.Error("nullable conversion gave nil ILOIPNetmask")
+	}
+
+	if s.ILOPassword == nil {
+		t.Error("nullable conversion gave nil ILOPassword")
+	}
+
+	if s.ILOUsername == nil {
+		t.Error("nullable conversion gave nil ILOUsername")
+	}
+
+	if s.InterfaceMtu == nil {
+		t.Error("nullable conversion gave nil InterfaceMtu")
+	}
+
+	if s.InterfaceName == nil {
+		t.Error("nullable conversion gave nil InterfaceName")
+	}
+
+	if s.IP6Address == nil {
+		t.Error("nullable conversion gave nil IP6Address")
+	}
+
+	if s.IP6IsService == nil {
+		t.Error("nullable conversion gave nil IP6IsService")
+	}
+
+	if s.IP6Gateway == nil {
+		t.Error("nullable conversion gave nil IP6Gateway")
+	}
+
+	if s.IPAddress == nil {
+		t.Error("nullable conversion gave nil IPAddress")
+	}
+
+	if s.IPIsService == nil {
+		t.Error("nullable conversion gave nil IPIsService")
+	}
+
+	if s.IPGateway == nil {
+		t.Error("nullable conversion gave nil IPGateway")
+	}
+
+	if s.IPNetmask == nil {
+		t.Error("nullable conversion gave nil IPNetmask")
+	}
+
+	if s.LastUpdated == nil {
+		t.Error("nullable conversion gave nil LastUpdated")
+	}
+
+	if s.MgmtIPAddress == nil {
+		t.Error("nullable conversion gave nil MgmtIPAddress")
+	}
+
+	if s.MgmtIPGateway == nil {
+		t.Error("nullable conversion gave nil MgmtIPGateway")
+	}
+
+	if s.MgmtIPNetmask == nil {
+		t.Error("nullable conversion gave nil MgmtIPNetmask")
+	}
+
+	if s.OfflineReason == nil {
+		t.Error("nullable conversion gave nil OfflineReason")
+	}
+
+	if s.PhysLocation == nil {
+		t.Error("nullable conversion gave nil PhysLocation")
+	}
+
+	if s.PhysLocationID == nil {
+		t.Error("nullable conversion gave nil PhysLocationID")
+	}
+
+	if s.Profile == nil {
+		t.Error("nullable conversion gave nil Profile")
+	}
+
+	if s.ProfileDesc == nil {
+		t.Error("nullable conversion gave nil ProfileDesc")
+	}
+
+	if s.ProfileID == nil {
+		t.Error("nullable conversion gave nil ProfileID")
+	}
+
+	if s.Rack == nil {
+		t.Error("nullable conversion gave nil Rack")
+	}
+
+	if s.RevalPending == nil {
+		t.Error("nullable conversion gave nil RevalPending")
+	}
+
+	if s.RouterHostName == nil {
+		t.Error("nullable conversion gave nil RouterHostName")
+	}
+
+	if s.RouterPortName == nil {
+		t.Error("nullable conversion gave nil RouterPortName")
+	}
+
+	if s.Status == nil {
+		t.Error("nullable conversion gave nil Status")
+	}
+
+	if s.StatusID == nil {
+		t.Error("nullable conversion gave nil StatusID")
+	}
+
+	if s.TCPPort == nil {
+		t.Error("nullable conversion gave nil TCPPort")
+	}
+
+	if s.TypeID == nil {
+		t.Error("nullable conversion gave nil TypeID")
+	}
+
+	if s.UpdPending == nil {
+		t.Error("nullable conversion gave nil UpdPending")
+	}
+
+	if s.XMPPID == nil {
+		t.Error("nullable conversion gave nil XMPPID")
+	}
+
+	if s.XMPPPasswd == nil {
+		t.Error("nullable conversion gave nil XMPPPasswd")
+	}
+}
+
 func TestServer_ToNullable(t *testing.T) {
 	fqdn := "testFQDN"
 	srv := Server{
@@ -520,33 +706,36 @@ func TestServer_ToNullable(t *testing.T) {
 
 	nullable := srv.ToNullable()
 
-	if nullable.Cachegroup == nil {
-		t.Error("nullable conversion gave nil Cachegroup")
-	} else if *nullable.Cachegroup != srv.Cachegroup {
+	if nullable.FqdnTime != srv.FqdnTime {
+		t.Errorf("Incorrect FqdnTime after nullable conversion; want: '%s', got: '%s'", srv.FqdnTime, nullable.FqdnTime)
+	}
+
+	if nullable.Type != srv.Type {
+		t.Errorf("Incorrect Type after nullable conversion; want: '%s', got: '%s'", srv.Type, nullable.Type)
+	}
+
+	noNulls := t.Run("check nullable-converted server for null values", func(t *testing.T) { ensureNoNulls(nullable, t) })
+	if !noNulls {
+		t.Fatal("Cannot check nullable server field referred-to values - null values found")
+	}
+
+	if *nullable.Cachegroup != srv.Cachegroup {
 		t.Errorf("Incorrect Cachegroup after nullable conversion; want: '%s', got: '%s'", srv.Cachegroup, *nullable.Cachegroup)
 	}
 
-	if nullable.CachegroupID == nil {
-		t.Error("nullable conversion gave nil CachegroupID")
-	} else if *nullable.CachegroupID != srv.CachegroupID {
+	if *nullable.CachegroupID != srv.CachegroupID {
 		t.Errorf("Incorrect CachegroupID after nullable conversion; want: %d, got: %d", srv.CachegroupID, *nullable.CachegroupID)
 	}
 
-	if nullable.CDNID == nil {
-		t.Error("nullable conversion gave nil CDNID")
-	} else if *nullable.CDNID != srv.CDNID {
+	if *nullable.CDNID != srv.CDNID {
 		t.Errorf("Incorrect CDNID after nullable conversion; want: %d, got: %d", srv.CDNID, *nullable.CDNID)
 	}
 
-	if nullable.CDNName == nil {
-		t.Error("nullable conversion gave nil CDNName")
-	} else if *nullable.CDNName != srv.CDNName {
+	if *nullable.CDNName != srv.CDNName {
 		t.Errorf("Incorrect CDNName after nullable conversion; want: '%s', got: '%s'", srv.CDNName, *nullable.CDNName)
 	}
 
-	if nullable.DeliveryServices == nil {
-		t.Error("nullable conversion gave nil DeliveryServices")
-	} else if len(*nullable.DeliveryServices) != len(srv.DeliveryServices) {
+	if len(*nullable.DeliveryServices) != len(srv.DeliveryServices) {
 		t.Errorf("Incorrect number of DeliveryServices after nullable conversion; want: %d, got: %d", len(srv.DeliveryServices), len(*nullable.DeliveryServices))
 	} else {
 		for k, v := range srv.DeliveryServices {
@@ -567,257 +756,167 @@ func TestServer_ToNullable(t *testing.T) {
 		}
 	}
 
-	if nullable.DomainName == nil {
-		t.Error("nullable conversion gave nil DomainName")
-	} else if *nullable.DomainName != srv.DomainName {
+	if *nullable.DomainName != srv.DomainName {
 		t.Errorf("Incorrect DomainName after nullable conversion; want: '%s', got: '%s'", srv.DomainName, *nullable.DomainName)
 	}
 
-	if nullable.FQDN == nil {
-		t.Error("nullable conversion gave nil FQDN")
-	} else if *nullable.FQDN != fqdn {
+	if *nullable.FQDN != fqdn {
 		t.Errorf("Incorrect FQDN after nullable conversion; want: '%s', got: '%s'", fqdn, *nullable.FQDN)
 	}
 
-	if nullable.FqdnTime != srv.FqdnTime {
-		t.Errorf("Incorrect FqdnTime after nullable conversion; want: '%s', got: '%s'", srv.FqdnTime, nullable.FqdnTime)
-	}
-
-	if nullable.GUID == nil {
-		t.Error("nullable conversion gave nil GUID")
-	} else if *nullable.GUID != srv.GUID {
+	if *nullable.GUID != srv.GUID {
 		t.Errorf("Incorrect GUID after nullable conversion; want: '%s', got: '%s'", srv.GUID, *nullable.GUID)
 	}
 
-	if nullable.HostName == nil {
-		t.Error("nullable conversion gave nil HostName")
-	} else if *nullable.HostName != srv.HostName {
+	if *nullable.HostName != srv.HostName {
 		t.Errorf("Incorrect HostName after nullable conversion; want: '%s', got: '%s'", srv.HostName, *nullable.HostName)
 	}
 
-	if nullable.HTTPSPort == nil {
-		t.Error("nullable conversion gave nil HTTPSPort")
-	} else if *nullable.HTTPSPort != srv.HTTPSPort {
+	if *nullable.HTTPSPort != srv.HTTPSPort {
 		t.Errorf("Incorrect HTTPSPort after nullable conversion; want: %d, got: %d", srv.HTTPSPort, *nullable.HTTPSPort)
 	}
 
-	if nullable.ID == nil {
-		t.Error("nullable conversion gave nil ID")
-	} else if *nullable.ID != srv.ID {
+	if *nullable.ID != srv.ID {
 		t.Errorf("Incorrect ID after nullable conversion; want: %d, got: %d", srv.ID, *nullable.ID)
 	}
 
-	if nullable.ILOIPAddress == nil {
-		t.Error("nullable conversion gave nil ILOIPAddress")
-	} else if *nullable.ILOIPAddress != srv.ILOIPAddress {
+	if *nullable.ILOIPAddress != srv.ILOIPAddress {
 		t.Errorf("Incorrect ILOIPAddress after nullable conversion; want: '%s', got: '%s'", srv.ILOIPAddress, *nullable.ILOIPAddress)
 	}
 
-	if nullable.ILOIPGateway == nil {
-		t.Error("nullable conversion gave nil ILOIPGateway")
-	} else if *nullable.ILOIPGateway != srv.ILOIPGateway {
+	if *nullable.ILOIPGateway != srv.ILOIPGateway {
 		t.Errorf("Incorrect ILOIPGateway after nullable conversion; want: '%s', got: '%s'", srv.ILOIPGateway, *nullable.ILOIPGateway)
 	}
 
-	if nullable.ILOIPNetmask == nil {
-		t.Error("nullable conversion gave nil ILOIPNetmask")
-	} else if *nullable.ILOIPNetmask != srv.ILOIPNetmask {
+	if *nullable.ILOIPNetmask != srv.ILOIPNetmask {
 		t.Errorf("Incorrect ILOIPNetmask after nullable conversion; want: '%s', got: '%s'", srv.ILOIPNetmask, *nullable.ILOIPNetmask)
 	}
 
-	if nullable.ILOPassword == nil {
-		t.Error("nullable conversion gave nil ILOPassword")
-	} else if *nullable.ILOPassword != srv.ILOPassword {
+	if *nullable.ILOPassword != srv.ILOPassword {
 		t.Errorf("Incorrect ILOPassword after nullable conversion; want: '%s', got: '%s'", srv.ILOPassword, *nullable.ILOPassword)
 	}
 
-	if nullable.ILOUsername == nil {
-		t.Error("nullable conversion gave nil ILOUsername")
-	} else if *nullable.ILOUsername != srv.ILOUsername {
+	if *nullable.ILOUsername != srv.ILOUsername {
 		t.Errorf("Incorrect ILOUsername after nullable conversion; want: '%s', got: '%s'", srv.ILOUsername, *nullable.ILOUsername)
 	}
 
-	if nullable.InterfaceMtu == nil {
-		t.Error("nullable conversion gave nil InterfaceMtu")
-	} else if *nullable.InterfaceMtu != srv.InterfaceMtu {
+	if *nullable.InterfaceMtu != srv.InterfaceMtu {
 		t.Errorf("Incorrect InterfaceMtu after nullable conversion; want: %d, got: %d", srv.InterfaceMtu, *nullable.InterfaceMtu)
 	}
 
-	if nullable.InterfaceName == nil {
-		t.Error("nullable conversion gave nil InterfaceName")
-	} else if *nullable.InterfaceName != srv.InterfaceName {
+	if *nullable.InterfaceName != srv.InterfaceName {
 		t.Errorf("Incorrect InterfaceName after nullable conversion; want: '%s', got: '%s'", srv.InterfaceName, *nullable.InterfaceName)
 	}
 
-	if nullable.IP6Address == nil {
-		t.Error("nullable conversion gave nil IP6Address")
-	} else if *nullable.IP6Address != srv.IP6Address {
+	if *nullable.IP6Address != srv.IP6Address {
 		t.Errorf("Incorrect IP6Address after nullable conversion; want: '%s', got: '%s'", srv.IP6Address, *nullable.IP6Address)
 	}
 
-	if nullable.IP6IsService == nil {
-		t.Error("nullable conversion gave nil IP6IsService")
-	} else if *nullable.IP6IsService != srv.IP6IsService {
+	if *nullable.IP6IsService != srv.IP6IsService {
 		t.Errorf("Incorrect IP6IsService after nullable conversion; want: %t, got: %t", srv.IP6IsService, *nullable.IP6IsService)
 	}
 
-	if nullable.IP6Gateway == nil {
-		t.Error("nullable conversion gave nil IP6Gateway")
-	} else if *nullable.IP6Gateway != srv.IP6Gateway {
+	if *nullable.IP6Gateway != srv.IP6Gateway {
 		t.Errorf("Incorrect IP6Gateway after nullable conversion; want: '%s', got: '%s'", srv.IP6Gateway, *nullable.IP6Gateway)
 	}
 
-	if nullable.IPAddress == nil {
-		t.Error("nullable conversion gave nil IPAddress")
-	} else if *nullable.IPAddress != srv.IPAddress {
+	if *nullable.IPAddress != srv.IPAddress {
 		t.Errorf("Incorrect IPAddress after nullable conversion; want: '%s', got: '%s'", srv.IPAddress, *nullable.IPAddress)
 	}
 
-	if nullable.IPIsService == nil {
-		t.Error("nullable conversion gave nil IPIsService")
-	} else if *nullable.IPIsService != srv.IPIsService {
+	if *nullable.IPIsService != srv.IPIsService {
 		t.Errorf("Incorrect IPIsService after nullable conversion; want: %t, got: %t", srv.IPIsService, *nullable.IPIsService)
 	}
 
-	if nullable.IPGateway == nil {
-		t.Error("nullable conversion gave nil IPGateway")
-	} else if *nullable.IPGateway != srv.IPGateway {
+	if *nullable.IPGateway != srv.IPGateway {
 		t.Errorf("Incorrect IPGateway after nullable conversion; want: '%s', got: '%s'", srv.IPGateway, *nullable.IPGateway)
 	}
 
-	if nullable.IPNetmask == nil {
-		t.Error("nullable conversion gave nil IPNetmask")
-	} else if *nullable.IPNetmask != srv.IPNetmask {
+	if *nullable.IPNetmask != srv.IPNetmask {
 		t.Errorf("Incorrect IPNetmask after nullable conversion; want: '%s', got: '%s'", srv.IPNetmask, *nullable.IPNetmask)
 	}
 
-	if nullable.LastUpdated == nil {
-		t.Error("nullable conversion gave nil LastUpdated")
-	} else if *nullable.LastUpdated != srv.LastUpdated {
+	if *nullable.LastUpdated != srv.LastUpdated {
 		t.Errorf("Incorrect LastUpdated after nullable conversion; want: '%s', got: '%s'", srv.LastUpdated, *nullable.LastUpdated)
 	}
 
-	if nullable.MgmtIPAddress == nil {
-		t.Error("nullable conversion gave nil MgmtIPAddress")
-	} else if *nullable.MgmtIPAddress != srv.MgmtIPAddress {
+	if *nullable.MgmtIPAddress != srv.MgmtIPAddress {
 		t.Errorf("Incorrect MgmtIPAddress after nullable conversion; want: '%s', got: '%s'", srv.MgmtIPAddress, *nullable.MgmtIPAddress)
 	}
 
-	if nullable.MgmtIPGateway == nil {
-		t.Error("nullable conversion gave nil MgmtIPGateway")
-	} else if *nullable.MgmtIPGateway != srv.MgmtIPGateway {
+	if *nullable.MgmtIPGateway != srv.MgmtIPGateway {
 		t.Errorf("Incorrect MgmtIPGateway after nullable conversion; want: '%s', got: '%s'", srv.MgmtIPGateway, *nullable.MgmtIPGateway)
 	}
 
-	if nullable.MgmtIPNetmask == nil {
-		t.Error("nullable conversion gave nil MgmtIPNetmask")
-	} else if *nullable.MgmtIPNetmask != srv.MgmtIPNetmask {
+	if *nullable.MgmtIPNetmask != srv.MgmtIPNetmask {
 		t.Errorf("Incorrect MgmtIPNetmask after nullable conversion; want: '%s', got: '%s'", srv.MgmtIPNetmask, *nullable.MgmtIPNetmask)
 	}
 
-	if nullable.OfflineReason == nil {
-		t.Error("nullable conversion gave nil OfflineReason")
-	} else if *nullable.OfflineReason != srv.OfflineReason {
+	if *nullable.OfflineReason != srv.OfflineReason {
 		t.Errorf("Incorrect OfflineReason after nullable conversion; want: '%s', got: '%s'", srv.OfflineReason, *nullable.OfflineReason)
 	}
 
-	if nullable.PhysLocation == nil {
-		t.Error("nullable conversion gave nil PhysLocation")
-	} else if *nullable.PhysLocation != srv.PhysLocation {
+	if *nullable.PhysLocation != srv.PhysLocation {
 		t.Errorf("Incorrect PhysLocation after nullable conversion; want: '%s', got: '%s'", srv.PhysLocation, *nullable.PhysLocation)
 	}
 
-	if nullable.PhysLocationID == nil {
-		t.Error("nullable conversion gave nil PhysLocationID")
-	} else if *nullable.PhysLocationID != srv.PhysLocationID {
+	if *nullable.PhysLocationID != srv.PhysLocationID {
 		t.Errorf("Incorrect PhysLocationID after nullable conversion; want: %d, got: %d", srv.PhysLocationID, *nullable.PhysLocationID)
 	}
 
-	if nullable.Profile == nil {
-		t.Error("nullable conversion gave nil Profile")
-	} else if *nullable.Profile != srv.Profile {
+	if *nullable.Profile != srv.Profile {
 		t.Errorf("Incorrect Profile after nullable conversion; want: '%s', got: '%s'", srv.Profile, *nullable.Profile)
 	}
 
-	if nullable.ProfileDesc == nil {
-		t.Error("nullable conversion gave nil ProfileDesc")
-	} else if *nullable.ProfileDesc != srv.ProfileDesc {
+	if *nullable.ProfileDesc != srv.ProfileDesc {
 		t.Errorf("Incorrect ProfileDesc after nullable conversion; want: '%s', got: '%s'", srv.ProfileDesc, *nullable.ProfileDesc)
 	}
 
-	if nullable.ProfileID == nil {
-		t.Error("nullable conversion gave nil ProfileID")
-	} else if *nullable.ProfileID != srv.ProfileID {
+	if *nullable.ProfileID != srv.ProfileID {
 		t.Errorf("Incorrect ProfileID after nullable conversion; want: %d, got: %d", srv.ProfileID, *nullable.ProfileID)
 	}
 
-	if nullable.Rack == nil {
-		t.Error("nullable conversion gave nil Rack")
-	} else if *nullable.Rack != srv.Rack {
+	if *nullable.Rack != srv.Rack {
 		t.Errorf("Incorrect Rack after nullable conversion; want: '%s', got: '%s'", srv.Rack, *nullable.Rack)
 	}
 
-	if nullable.RevalPending == nil {
-		t.Error("nullable conversion gave nil RevalPending")
-	} else if *nullable.RevalPending != srv.RevalPending {
+	if *nullable.RevalPending != srv.RevalPending {
 		t.Errorf("Incorrect RevalPending after nullable conversion; want: %t, got: %t", srv.RevalPending, *nullable.RevalPending)
 	}
 
-	if nullable.RouterHostName == nil {
-		t.Error("nullable conversion gave nil RouterHostName")
-	} else if *nullable.RouterHostName != srv.RouterHostName {
+	if *nullable.RouterHostName != srv.RouterHostName {
 		t.Errorf("Incorrect RouterHostName after nullable conversion; want: '%s', got: '%s'", srv.RouterHostName, *nullable.RouterHostName)
 	}
 
-	if nullable.RouterPortName == nil {
-		t.Error("nullable conversion gave nil RouterPortName")
-	} else if *nullable.RouterPortName != srv.RouterPortName {
+	if *nullable.RouterPortName != srv.RouterPortName {
 		t.Errorf("Incorrect RouterPortName after nullable conversion; want: '%s', got: '%s'", srv.RouterPortName, *nullable.RouterPortName)
 	}
 
-	if nullable.Status == nil {
-		t.Error("nullable conversion gave nil Status")
-	} else if *nullable.Status != srv.Status {
+	if *nullable.Status != srv.Status {
 		t.Errorf("Incorrect Status after nullable conversion; want: '%s', got: '%s'", srv.Status, *nullable.Status)
 	}
 
-	if nullable.StatusID == nil {
-		t.Error("nullable conversion gave nil StatusID")
-	} else if *nullable.StatusID != srv.StatusID {
+	if *nullable.StatusID != srv.StatusID {
 		t.Errorf("Incorrect StatusID after nullable conversion; want: %d, got: %d", srv.StatusID, *nullable.StatusID)
 	}
 
-	if nullable.TCPPort == nil {
-		t.Error("nullable conversion gave nil TCPPort")
-	} else if *nullable.TCPPort != srv.TCPPort {
+	if *nullable.TCPPort != srv.TCPPort {
 		t.Errorf("Incorrect TCPPort after nullable conversion; want: %d, got: %d", srv.TCPPort, *nullable.TCPPort)
 	}
 
-	if nullable.Type != srv.Type {
-		t.Errorf("Incorrect Type after nullable conversion; want: '%s', got: '%s'", srv.Type, nullable.Type)
-	}
-
-	if nullable.TypeID == nil {
-		t.Error("nullable conversion gave nil TypeID")
-	} else if *nullable.TypeID != srv.TypeID {
+	if *nullable.TypeID != srv.TypeID {
 		t.Errorf("Incorrect TypeID after nullable conversion; want: %d, got: %d", srv.TypeID, *nullable.TypeID)
 	}
 
-	if nullable.UpdPending == nil {
-		t.Error("nullable conversion gave nil UpdPending")
-	} else if *nullable.UpdPending != srv.UpdPending {
+	if *nullable.UpdPending != srv.UpdPending {
 		t.Errorf("Incorrect UpdPending after nullable conversion; want: %t, got: %t", srv.UpdPending, *nullable.UpdPending)
 	}
 
-	if nullable.XMPPID == nil {
-		t.Error("nullable conversion gave nil XMPPID")
-	} else if *nullable.XMPPID != srv.XMPPID {
+	if *nullable.XMPPID != srv.XMPPID {
 		t.Errorf("Incorrect XMPPID after nullable conversion; want: '%s', got: '%s'", srv.XMPPID, *nullable.XMPPID)
 	}
 
-	if nullable.XMPPPasswd == nil {
-		t.Error("nullable conversion gave nil XMPPPasswd")
-	} else if *nullable.XMPPPasswd != srv.XMPPPasswd {
+	if *nullable.XMPPPasswd != srv.XMPPPasswd {
 		t.Errorf("Incorrect XMPPPasswd after nullable conversion; want: '%s', got: '%s'", srv.XMPPPasswd, *nullable.XMPPPasswd)
 	}
 }
@@ -879,46 +978,41 @@ func TestServerNullableV2_Upgrade(t *testing.T) {
 	// nullable v2 server
 	nullable := srv.ToNullable()
 
+	noNulls := t.Run("check nullable-converted server for null values", func(t *testing.T) { ensureNoNulls(nullable, t) })
+	if !noNulls {
+		t.Fatal("Cannot check nullable server field referred-to values - null values found")
+	}
+
 	upgraded, err := nullable.Upgrade()
 	if err != nil {
 		t.Fatalf("Unexpected error upgrading server: %v", err)
 	}
 
-	if nullable.Cachegroup == nil {
-		t.Error("Unexpectedly nil Cachegroup in nullable-converted server")
-	} else if upgraded.Cachegroup == nil {
+	if upgraded.Cachegroup == nil {
 		t.Error("upgraded conversion gave nil Cachegroup")
 	} else if *upgraded.Cachegroup != *nullable.Cachegroup {
 		t.Errorf("Incorrect Cachegroup after upgraded conversion; want: '%s', got: '%s'", *nullable.Cachegroup, *upgraded.Cachegroup)
 	}
 
-	if nullable.CachegroupID == nil {
-		t.Error("Unexpectedly nil CachegroupID in nullable-converted server")
-	} else if upgraded.CachegroupID == nil {
+	if upgraded.CachegroupID == nil {
 		t.Error("upgraded conversion gave nil CachegroupID")
 	} else if *upgraded.CachegroupID != *nullable.CachegroupID {
 		t.Errorf("Incorrect CachegroupID after upgraded conversion; want: %d, got: %d", *nullable.CachegroupID, *upgraded.CachegroupID)
 	}
 
-	if nullable.CDNID == nil {
-		t.Error("Unexpectedly nil CDNID in nullable-converted server")
-	} else if upgraded.CDNID == nil {
+	if upgraded.CDNID == nil {
 		t.Error("upgraded conversion gave nil CDNID")
 	} else if *upgraded.CDNID != *nullable.CDNID {
 		t.Errorf("Incorrect CDNID after upgraded conversion; want: %d, got: %d", *nullable.CDNID, *upgraded.CDNID)
 	}
 
-	if nullable.CDNName == nil {
-		t.Error("Unexpectedly nil CDNName in nullable-converted server")
-	} else if upgraded.CDNName == nil {
+	if upgraded.CDNName == nil {
 		t.Error("upgraded conversion gave nil CDNName")
 	} else if *upgraded.CDNName != *nullable.CDNName {
 		t.Errorf("Incorrect CDNName after upgraded conversion; want: '%s', got: '%s'", *nullable.CDNName, *upgraded.CDNName)
 	}
 
-	if nullable.DeliveryServices == nil {
-		t.Error("Unexpectedly nil DeliveryServices in nullable-converted server")
-	} else if upgraded.DeliveryServices == nil {
+	if upgraded.DeliveryServices == nil {
 		t.Error("upgraded conversion gave nil DeliveryServices")
 	} else if len(*upgraded.DeliveryServices) != len(*nullable.DeliveryServices) {
 		t.Errorf("Incorrect number of DeliveryServices after upgraded conversion; want: %d, got: %d", len(*nullable.DeliveryServices), len(*upgraded.DeliveryServices))
@@ -941,17 +1035,13 @@ func TestServerNullableV2_Upgrade(t *testing.T) {
 		}
 	}
 
-	if nullable.DomainName == nil {
-		t.Error("Unexpectedly nil DomainName in nullable-converted server")
-	} else if upgraded.DomainName == nil {
+	if upgraded.DomainName == nil {
 		t.Error("upgraded conversion gave nil DomainName")
 	} else if *upgraded.DomainName != *nullable.DomainName {
 		t.Errorf("Incorrect DomainName after upgraded conversion; want: '%s', got: '%s'", *nullable.DomainName, *upgraded.DomainName)
 	}
 
-	if nullable.FQDN == nil {
-		t.Error("Unexpectedly nil FQDN in nullable-converted server")
-	} else if upgraded.FQDN == nil {
+	if upgraded.FQDN == nil {
 		t.Error("upgraded conversion gave nil FQDN")
 	} else if *upgraded.FQDN != fqdn {
 		t.Errorf("Incorrect FQDN after upgraded conversion; want: '%s', got: '%s'", fqdn, *upgraded.FQDN)
@@ -961,156 +1051,166 @@ func TestServerNullableV2_Upgrade(t *testing.T) {
 		t.Errorf("Incorrect FqdnTime after upgraded conversion; want: '%s', got: '%s'", nullable.FqdnTime, upgraded.FqdnTime)
 	}
 
-	if nullable.GUID == nil {
-		t.Error("Unexpectedly nil GUID in nullable-converted server")
-	} else if upgraded.GUID == nil {
+	if upgraded.GUID == nil {
 		t.Error("upgraded conversion gave nil GUID")
 	} else if *upgraded.GUID != *nullable.GUID {
 		t.Errorf("Incorrect GUID after upgraded conversion; want: '%s', got: '%s'", *nullable.GUID, *upgraded.GUID)
 	}
 
-	if nullable.HostName == nil {
-		t.Error("Unexpectedly nil HostName in nullable-converted server")
-	} else if upgraded.HostName == nil {
+	if upgraded.HostName == nil {
 		t.Error("upgraded conversion gave nil HostName")
 	} else if *upgraded.HostName != *nullable.HostName {
 		t.Errorf("Incorrect HostName after upgraded conversion; want: '%s', got: '%s'", *nullable.HostName, *upgraded.HostName)
 	}
 
-	if nullable.HTTPSPort == nil {
-		t.Error("Unexpectedly nil HTTPSPort in nullable-converted server")
-	} else if upgraded.HTTPSPort == nil {
+	if upgraded.HTTPSPort == nil {
 		t.Error("upgraded conversion gave nil HTTPSPort")
 	} else if *upgraded.HTTPSPort != *nullable.HTTPSPort {
 		t.Errorf("Incorrect HTTPSPort after upgraded conversion; want: %d, got: %d", *nullable.HTTPSPort, *upgraded.HTTPSPort)
 	}
 
-	if nullable.ID == nil {
-		t.Error("Unexpectedly nil ID in nullable-converted server")
-	} else if upgraded.ID == nil {
+	if upgraded.ID == nil {
 		t.Error("upgraded conversion gave nil ID")
 	} else if *upgraded.ID != *nullable.ID {
 		t.Errorf("Incorrect ID after upgraded conversion; want: %d, got: %d", *nullable.ID, *upgraded.ID)
 	}
 
-	if nullable.ILOIPAddress == nil {
-		t.Error("Unexpectedly nil ILOIPAddress in nullable-converted server")
-	} else if upgraded.ILOIPAddress == nil {
+	if upgraded.ILOIPAddress == nil {
 		t.Error("upgraded conversion gave nil ILOIPAddress")
 	} else if *upgraded.ILOIPAddress != *nullable.ILOIPAddress {
 		t.Errorf("Incorrect ILOIPAddress after upgraded conversion; want: '%s', got: '%s'", *nullable.ILOIPAddress, *upgraded.ILOIPAddress)
 	}
 
-	if nullable.ILOIPGateway == nil {
-		t.Error("Unexpectedly nil ILOIPGateway in nullable-converted server")
-	} else if upgraded.ILOIPGateway == nil {
+	if upgraded.ILOIPGateway == nil {
 		t.Error("upgraded conversion gave nil ILOIPGateway")
 	} else if *upgraded.ILOIPGateway != *nullable.ILOIPGateway {
 		t.Errorf("Incorrect ILOIPGateway after upgraded conversion; want: '%s', got: '%s'", *nullable.ILOIPGateway, *upgraded.ILOIPGateway)
 	}
 
-	if nullable.ILOIPNetmask == nil {
-		t.Error("Unexpectedly nil ILOIPNetmask in nullable-converted server")
-	} else if upgraded.ILOIPNetmask == nil {
+	if upgraded.ILOIPNetmask == nil {
 		t.Error("upgraded conversion gave nil ILOIPNetmask")
 	} else if *upgraded.ILOIPNetmask != *nullable.ILOIPNetmask {
 		t.Errorf("Incorrect ILOIPNetmask after upgraded conversion; want: '%s', got: '%s'", *nullable.ILOIPNetmask, *upgraded.ILOIPNetmask)
 	}
 
-	if nullable.ILOPassword == nil {
-		t.Error("Unexpectedly nil ILOPassword in nullable-converted server")
-	} else if upgraded.ILOPassword == nil {
+	if upgraded.ILOPassword == nil {
 		t.Error("upgraded conversion gave nil ILOPassword")
 	} else if *upgraded.ILOPassword != *nullable.ILOPassword {
 		t.Errorf("Incorrect ILOPassword after upgraded conversion; want: '%s', got: '%s'", *nullable.ILOPassword, *upgraded.ILOPassword)
 	}
 
-	if nullable.ILOUsername == nil {
-		t.Error("Unexpectedly nil ILOUsername in nullable-converted server")
-	} else if upgraded.ILOUsername == nil {
+	if upgraded.ILOUsername == nil {
 		t.Error("upgraded conversion gave nil ILOUsername")
 	} else if *upgraded.ILOUsername != *nullable.ILOUsername {
 		t.Errorf("Incorrect ILOUsername after upgraded conversion; want: '%s', got: '%s'", *nullable.ILOUsername, *upgraded.ILOUsername)
 	}
 
-	checkInterfaces := true
-	if nullable.InterfaceMtu == nil {
-		t.Error("Unexpectedly nil InterfaceMtu in nullable-converted server")
-		checkInterfaces = false
-	}
-	if nullable.InterfaceName == nil {
-		t.Error("Unexpectedly nil InterfaceName in nullable-converted server")
-		checkInterfaces = false
-	}
-	if nullable.IP6Address == nil {
-		t.Error("Unexpectedly nil IP6Address in nullable-converted server")
-		checkInterfaces = false
-	}
-	if nullable.IP6IsService == nil {
-		t.Error("Unexpectedly nil IP6IsService in nullable-converted server")
-		checkInterfaces = false
-	}
-	if nullable.IP6Gateway == nil {
-		t.Error("Unexpectedly nil IP6Gateway in nullable-converted server")
-		checkInterfaces = false
-	}
-	if nullable.IPAddress == nil {
-		t.Error("Unexpectedly nil IPAddress in nullable-converted server")
-		checkInterfaces = false
-	}
-	if nullable.IPIsService == nil {
-		t.Error("Unexpectedly nil IPIsService in nullable-converted server")
-		checkInterfaces = false
-	}
-	if nullable.IPGateway == nil {
-		t.Error("Unexpectedly nil IPGateway in nullable-converted server")
-		checkInterfaces = false
-	}
-	if nullable.IPNetmask == nil {
-		t.Error("Unexpectedly nil IPNetmask in nullable-converted server")
-		checkInterfaces = false
-	}
+	infLen := len(upgraded.Interfaces)
+	if infLen < 1 {
+		t.Error("Expected exactly one interface after upgrade, got: 0")
+	} else {
+		if infLen > 1 {
+			t.Errorf("Expected exactly one interface after upgrade, got: %d", infLen)
+		}
 
-	if checkInterfaces {
-		infLen := len(upgraded.Interfaces)
-		if infLen < 1 {
-			t.Error("Expected exactly one interface after upgrade, got: 0")
+		inf := upgraded.Interfaces[0]
+		if inf.Name != *nullable.InterfaceName {
+			t.Errorf("Incorrect interface name after upgrade; want: '%s', got: '%s'", *nullable.InterfaceName, inf.Name)
+		}
+
+		if inf.MTU == nil {
+			t.Error("Unexpectedly nil Interface MTU after upgrade")
+		} else if *inf.MTU != uint64(*nullable.InterfaceMtu) {
+			t.Errorf("Incorrect Interface MTU after upgrade; want: %d, got: %d", *nullable.InterfaceMtu, *inf.MTU)
+		}
+
+		if inf.Monitor {
+			t.Error("Incorrect Interface Monitor after upgrade; want: false, got: true")
+		}
+
+		if inf.MaxBandwidth != nil {
+			t.Error("Unexpectedly non-nil Interface MaxBandwidth after upgrade")
+		}
+
+		if len(inf.IPAddresses) != 2 {
+			t.Errorf("Incorrect number of IP Addresses after upgrade; want: 2, got: %d", len(inf.IPAddresses))
 		} else {
-			if infLen > 1 {
-				t.Errorf("Expected exactly one interface after upgrade, got: %d", infLen)
+			ip := inf.IPAddresses[0]
+			cidrIndex := strings.Index(ip.Address, "/")
+			addr := ip.Address
+			if cidrIndex >= 0 {
+				addr = addr[:cidrIndex]
 			}
 
-			inf := upgraded.Interfaces[0]
-			if inf.Name != *nullable.InterfaceName {
-				t.Errorf("Incorrect interface name after upgrade; want: '%s', got: '%s'", *nullable.InterfaceName, inf.Name)
-			}
+			// TODO: calculate and verify netmask
+			if addr == *nullable.IPAddress {
+				if ip.Gateway == nil {
+					t.Error("Unexpectedly nil IPv4 Gateway after upgrade")
+				} else if *ip.Gateway != *nullable.IPGateway {
+					t.Errorf("Incorrect IPv4 Gateway after upgrade; want: '%s', got: '%s'", *nullable.IPGateway, *ip.Gateway)
+				}
 
-			if inf.MTU == nil {
-				t.Error("Unexpectedly nil Interface MTU after upgrade")
-			} else if *inf.MTU != uint64(*nullable.InterfaceMtu) {
-				t.Errorf("Incorrect Interface MTU after upgrade; want: %d, got: %d", *nullable.InterfaceMtu, *inf.MTU)
-			}
+				if ip.ServiceAddress != *nullable.IPIsService {
+					t.Errorf("Incorrect IPv4 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IPIsService, ip.ServiceAddress)
+				}
 
-			if inf.Monitor {
-				t.Error("Incorrect Interface Monitor after upgrade; want: false, got: true")
-			}
+				secondIP := inf.IPAddresses[1]
+				if secondIP.Address != *nullable.IP6Address {
+					t.Errorf("Incorrect IPv6 Address after upgrade; want: '%s', got: '%s'", *nullable.IP6Address, secondIP.Address)
+				} else {
+					if secondIP.Gateway == nil {
+						t.Error("Unexpectedly nil IPv6 Gateway after upgrade")
+					} else if *secondIP.Gateway != *nullable.IP6Gateway {
+						t.Errorf("Incorrect IPv6 Gateway after upgrade; want: '%s', got: '%s'", *nullable.IP6Gateway, *secondIP.Gateway)
+					}
 
-			if inf.MaxBandwidth != nil {
-				t.Error("Unexpectedly non-nil Interface MaxBandwidth after upgrade")
-			}
+					if secondIP.ServiceAddress != *nullable.IP6IsService {
+						t.Errorf("Incorrect IPv6 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IP6IsService, secondIP.ServiceAddress)
+					}
+				}
+			} else if ip.Address == *nullable.IP6Address {
+				if ip.Gateway == nil {
+					t.Error("Unexpectedly nil IPv6 Gateway after upgrade")
+				} else if *ip.Gateway != *nullable.IP6Gateway {
+					t.Errorf("Incorrect IPv6 Gateway after upgrade; want: '%s', got: '%s'", *nullable.IP6Gateway, *ip.Gateway)
+				}
 
-			if len(inf.IPAddresses) != 2 {
-				t.Errorf("Incorrect number of IP Addresses after upgrade; want: 2, got: %d", len(inf.IPAddresses))
+				if ip.ServiceAddress != *nullable.IP6IsService {
+					t.Errorf("Incorrect IPv6 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IP6IsService, ip.ServiceAddress)
+				}
+
+				secondIP := inf.IPAddresses[1]
+				cidrIndex = strings.Index(secondIP.Address, "/")
+				addr = secondIP.Address
+				if cidrIndex >= 0 {
+					addr = addr[:cidrIndex]
+				}
+				// TODO: calculate and verify netmask
+				if addr != *nullable.IPAddress {
+					t.Errorf("Incorrect IPv4 Address after upgrade; want: '%s', got: '%s'", *nullable.IPAddress, secondIP.Address)
+				} else {
+					if secondIP.Gateway == nil {
+						t.Error("Unexpectedly nil IPv4 Gateway after upgrade")
+					} else if *secondIP.Gateway != *nullable.IPGateway {
+						t.Errorf("Incorrect IPv4 Gateway after upgrade; want: '%s', got: '%s'", *nullable.IPGateway, *secondIP.Gateway)
+					}
+
+					if secondIP.ServiceAddress != *nullable.IPIsService {
+						t.Errorf("Incorrect IPv4 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IPIsService, secondIP.ServiceAddress)
+					}
+				}
+
 			} else {
-				ip := inf.IPAddresses[0]
-				cidrIndex := strings.Index(ip.Address, "/")
-				addr := ip.Address
+				t.Errorf("Unknown IP address '%s' found in interface after upgrade", ip.Address)
+				ip = inf.IPAddresses[1]
+				cidrIndex = strings.Index(ip.Address, "/")
+				addr = ip.Address
 				if cidrIndex >= 0 {
 					addr = addr[:cidrIndex]
 				}
 
-				// TODO: calculate and verify netmask
 				if addr == *nullable.IPAddress {
+					t.Error("Missing IPv6 address after upgrade")
 					if ip.Gateway == nil {
 						t.Error("Unexpectedly nil IPv4 Gateway after upgrade")
 					} else if *ip.Gateway != *nullable.IPGateway {
@@ -1120,22 +1220,8 @@ func TestServerNullableV2_Upgrade(t *testing.T) {
 					if ip.ServiceAddress != *nullable.IPIsService {
 						t.Errorf("Incorrect IPv4 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IPIsService, ip.ServiceAddress)
 					}
-
-					secondIP := inf.IPAddresses[1]
-					if secondIP.Address != *nullable.IP6Address {
-						t.Errorf("Incorrect IPv6 Address after upgrade; want: '%s', got: '%s'", *nullable.IP6Address, secondIP.Address)
-					} else {
-						if secondIP.Gateway == nil {
-							t.Error("Unexpectedly nil IPv6 Gateway after upgrade")
-						} else if *secondIP.Gateway != *nullable.IP6Gateway {
-							t.Errorf("Incorrect IPv6 Gateway after upgrade; want: '%s', got: '%s'", *nullable.IP6Gateway, *secondIP.Gateway)
-						}
-
-						if secondIP.ServiceAddress != *nullable.IP6IsService {
-							t.Errorf("Incorrect IPv6 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IP6IsService, secondIP.ServiceAddress)
-						}
-					}
 				} else if ip.Address == *nullable.IP6Address {
+					t.Error("Missing IPv4 address after upgrade")
 					if ip.Gateway == nil {
 						t.Error("Unexpectedly nil IPv6 Gateway after upgrade")
 					} else if *ip.Gateway != *nullable.IP6Gateway {
@@ -1145,199 +1231,111 @@ func TestServerNullableV2_Upgrade(t *testing.T) {
 					if ip.ServiceAddress != *nullable.IP6IsService {
 						t.Errorf("Incorrect IPv6 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IP6IsService, ip.ServiceAddress)
 					}
-
-					secondIP := inf.IPAddresses[1]
-					cidrIndex = strings.Index(secondIP.Address, "/")
-					addr = secondIP.Address
-					if cidrIndex >= 0 {
-						addr = addr[:cidrIndex]
-					}
-					// TODO: calculate and verify netmask
-					if addr != *nullable.IPAddress {
-						t.Errorf("Incorrect IPv4 Address after upgrade; want: '%s', got: '%s'", *nullable.IPAddress, secondIP.Address)
-					} else {
-						if secondIP.Gateway == nil {
-							t.Error("Unexpectedly nil IPv4 Gateway after upgrade")
-						} else if *secondIP.Gateway != *nullable.IPGateway {
-							t.Errorf("Incorrect IPv4 Gateway after upgrade; want: '%s', got: '%s'", *nullable.IPGateway, *secondIP.Gateway)
-						}
-
-						if secondIP.ServiceAddress != *nullable.IPIsService {
-							t.Errorf("Incorrect IPv4 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IPIsService, secondIP.ServiceAddress)
-						}
-					}
-
 				} else {
 					t.Errorf("Unknown IP address '%s' found in interface after upgrade", ip.Address)
-					ip = inf.IPAddresses[1]
-					cidrIndex = strings.Index(ip.Address, "/")
-					addr = ip.Address
-					if cidrIndex >= 0 {
-						addr = addr[:cidrIndex]
-					}
-
-					if addr == *nullable.IPAddress {
-						t.Error("Missing IPv6 address after upgrade")
-						if ip.Gateway == nil {
-							t.Error("Unexpectedly nil IPv4 Gateway after upgrade")
-						} else if *ip.Gateway != *nullable.IPGateway {
-							t.Errorf("Incorrect IPv4 Gateway after upgrade; want: '%s', got: '%s'", *nullable.IPGateway, *ip.Gateway)
-						}
-
-						if ip.ServiceAddress != *nullable.IPIsService {
-							t.Errorf("Incorrect IPv4 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IPIsService, ip.ServiceAddress)
-						}
-					} else if ip.Address == *nullable.IP6Address {
-						t.Error("Missing IPv4 address after upgrade")
-						if ip.Gateway == nil {
-							t.Error("Unexpectedly nil IPv6 Gateway after upgrade")
-						} else if *ip.Gateway != *nullable.IP6Gateway {
-							t.Errorf("Incorrect IPv6 Gateway after upgrade; want: '%s', got: '%s'", *nullable.IP6Gateway, *ip.Gateway)
-						}
-
-						if ip.ServiceAddress != *nullable.IP6IsService {
-							t.Errorf("Incorrect IPv6 ServiceAddress value after upgrade; want: %t, got: %t", *nullable.IP6IsService, ip.ServiceAddress)
-						}
-					} else {
-						t.Errorf("Unknown IP address '%s' found in interface after upgrade", ip.Address)
-						t.Error("Missing both IPv4 and IPv6 address after upgrade")
-					}
+					t.Error("Missing both IPv4 and IPv6 address after upgrade")
 				}
 			}
 		}
 	}
 
-	if nullable.LastUpdated == nil {
-		t.Error("Unexpectedly nil LastUpdated in nullable-converted server")
-	} else if upgraded.LastUpdated == nil {
+	if upgraded.LastUpdated == nil {
 		t.Error("upgraded conversion gave nil LastUpdated")
 	} else if *upgraded.LastUpdated != *nullable.LastUpdated {
 		t.Errorf("Incorrect LastUpdated after upgraded conversion; want: '%s', got: '%s'", *nullable.LastUpdated, *upgraded.LastUpdated)
 	}
 
-	if nullable.MgmtIPAddress == nil {
-		t.Error("Unexpectedly nil MgmtIPAddress in nullable-converted server")
-	} else if upgraded.MgmtIPAddress == nil {
+	if upgraded.MgmtIPAddress == nil {
 		t.Error("upgraded conversion gave nil MgmtIPAddress")
 	} else if *upgraded.MgmtIPAddress != *nullable.MgmtIPAddress {
 		t.Errorf("Incorrect MgmtIPAddress after upgraded conversion; want: '%s', got: '%s'", *nullable.MgmtIPAddress, *upgraded.MgmtIPAddress)
 	}
 
-	if nullable.MgmtIPGateway == nil {
-		t.Error("Unexpectedly nil MgmtIPGateway in nullable-converted server")
-	} else if upgraded.MgmtIPGateway == nil {
+	if upgraded.MgmtIPGateway == nil {
 		t.Error("upgraded conversion gave nil MgmtIPGateway")
 	} else if *upgraded.MgmtIPGateway != *nullable.MgmtIPGateway {
 		t.Errorf("Incorrect MgmtIPGateway after upgraded conversion; want: '%s', got: '%s'", *nullable.MgmtIPGateway, *upgraded.MgmtIPGateway)
 	}
 
-	if nullable.MgmtIPNetmask == nil {
-		t.Error("Unexpectedly nil MgmtIPNetmask in nullable-converted server")
-	} else if upgraded.MgmtIPNetmask == nil {
+	if upgraded.MgmtIPNetmask == nil {
 		t.Error("upgraded conversion gave nil MgmtIPNetmask")
 	} else if *upgraded.MgmtIPNetmask != *nullable.MgmtIPNetmask {
 		t.Errorf("Incorrect MgmtIPNetmask after upgraded conversion; want: '%s', got: '%s'", *nullable.MgmtIPNetmask, *upgraded.MgmtIPNetmask)
 	}
 
-	if nullable.OfflineReason == nil {
-		t.Error("Unexpectedly nil OfflineReason in nullable-converted server")
-	} else if upgraded.OfflineReason == nil {
+	if upgraded.OfflineReason == nil {
 		t.Error("upgraded conversion gave nil OfflineReason")
 	} else if *upgraded.OfflineReason != *nullable.OfflineReason {
 		t.Errorf("Incorrect OfflineReason after upgraded conversion; want: '%s', got: '%s'", *nullable.OfflineReason, *upgraded.OfflineReason)
 	}
 
-	if nullable.PhysLocation == nil {
-		t.Error("Unexpectedly nil PhysLocation in nullable-converted server")
-	} else if upgraded.PhysLocation == nil {
+	if upgraded.PhysLocation == nil {
 		t.Error("upgraded conversion gave nil PhysLocation")
 	} else if *upgraded.PhysLocation != *nullable.PhysLocation {
 		t.Errorf("Incorrect PhysLocation after upgraded conversion; want: '%s', got: '%s'", *nullable.PhysLocation, *upgraded.PhysLocation)
 	}
 
-	if nullable.PhysLocationID == nil {
-		t.Error("Unexpectedly nil PhysLocationID in nullable-converted server")
-	} else if upgraded.PhysLocationID == nil {
+	if upgraded.PhysLocationID == nil {
 		t.Error("upgraded conversion gave nil PhysLocationID")
 	} else if *upgraded.PhysLocationID != *nullable.PhysLocationID {
 		t.Errorf("Incorrect PhysLocationID after upgraded conversion; want: %d, got: %d", *nullable.PhysLocationID, *upgraded.PhysLocationID)
 	}
 
-	if nullable.Profile == nil {
-		t.Error("Unexpectedly nil Profile in nullable-converted server")
-	} else if upgraded.Profile == nil {
+	if upgraded.Profile == nil {
 		t.Error("upgraded conversion gave nil Profile")
 	} else if *upgraded.Profile != *nullable.Profile {
 		t.Errorf("Incorrect Profile after upgraded conversion; want: '%s', got: '%s'", *nullable.Profile, *upgraded.Profile)
 	}
 
-	if nullable.ProfileDesc == nil {
-		t.Error("Unexpectedly nil ProfileDesc in nullable-converted server")
-	} else if upgraded.ProfileDesc == nil {
+	if upgraded.ProfileDesc == nil {
 		t.Error("upgraded conversion gave nil ProfileDesc")
 	} else if *upgraded.ProfileDesc != *nullable.ProfileDesc {
 		t.Errorf("Incorrect ProfileDesc after upgraded conversion; want: '%s', got: '%s'", *nullable.ProfileDesc, *upgraded.ProfileDesc)
 	}
 
-	if nullable.ProfileID == nil {
-		t.Error("Unexpectedly nil ProfileID in nullable-converted server")
-	} else if upgraded.ProfileID == nil {
+	if upgraded.ProfileID == nil {
 		t.Error("upgraded conversion gave nil ProfileID")
 	} else if *upgraded.ProfileID != *nullable.ProfileID {
 		t.Errorf("Incorrect ProfileID after upgraded conversion; want: %d, got: %d", *nullable.ProfileID, *upgraded.ProfileID)
 	}
 
-	if nullable.Rack == nil {
-		t.Error("Unexpectedly nil Rack in nullable-converted server")
-	} else if upgraded.Rack == nil {
+	if upgraded.Rack == nil {
 		t.Error("upgraded conversion gave nil Rack")
 	} else if *upgraded.Rack != *nullable.Rack {
 		t.Errorf("Incorrect Rack after upgraded conversion; want: '%s', got: '%s'", *nullable.Rack, *upgraded.Rack)
 	}
 
-	if nullable.RevalPending == nil {
-		t.Error("Unexpectedly nil RevalPending in nullable-converted server")
-	} else if upgraded.RevalPending == nil {
+	if upgraded.RevalPending == nil {
 		t.Error("upgraded conversion gave nil RevalPending")
 	} else if *upgraded.RevalPending != *nullable.RevalPending {
 		t.Errorf("Incorrect RevalPending after upgraded conversion; want: %t, got: %t", *nullable.RevalPending, *upgraded.RevalPending)
 	}
 
-	if nullable.RouterHostName == nil {
-		t.Error("Unexpectedly nil RouterHostName in nullable-converted server")
-	} else if upgraded.RouterHostName == nil {
+	if upgraded.RouterHostName == nil {
 		t.Error("upgraded conversion gave nil RouterHostName")
 	} else if *upgraded.RouterHostName != *nullable.RouterHostName {
 		t.Errorf("Incorrect RouterHostName after upgraded conversion; want: '%s', got: '%s'", *nullable.RouterHostName, *upgraded.RouterHostName)
 	}
 
-	if nullable.RouterPortName == nil {
-		t.Error("Unexpectedly nil RouterPortName in nullable-converted server")
-	} else if upgraded.RouterPortName == nil {
+	if upgraded.RouterPortName == nil {
 		t.Error("upgraded conversion gave nil RouterPortName")
 	} else if *upgraded.RouterPortName != *nullable.RouterPortName {
 		t.Errorf("Incorrect RouterPortName after upgraded conversion; want: '%s', got: '%s'", *nullable.RouterPortName, *upgraded.RouterPortName)
 	}
 
-	if nullable.Status == nil {
-		t.Error("Unexpectedly nil Status in nullable-converted server")
-	} else if upgraded.Status == nil {
+	if upgraded.Status == nil {
 		t.Error("upgraded conversion gave nil Status")
 	} else if *upgraded.Status != *nullable.Status {
 		t.Errorf("Incorrect Status after upgraded conversion; want: '%s', got: '%s'", *nullable.Status, *upgraded.Status)
 	}
 
-	if nullable.StatusID == nil {
-		t.Error("Unexpectedly nil StatusID in nullable-converted server")
-	} else if upgraded.StatusID == nil {
+	if upgraded.StatusID == nil {
 		t.Error("upgraded conversion gave nil StatusID")
 	} else if *upgraded.StatusID != *nullable.StatusID {
 		t.Errorf("Incorrect StatusID after upgraded conversion; want: %d, got: %d", *nullable.StatusID, *upgraded.StatusID)
 	}
 
-	if nullable.TCPPort == nil {
-		t.Error("Unexpectedly nil TCPPort in nullable-converted server")
-	} else if upgraded.TCPPort == nil {
+	if upgraded.TCPPort == nil {
 		t.Error("upgraded conversion gave nil TCPPort")
 	} else if *upgraded.TCPPort != *nullable.TCPPort {
 		t.Errorf("Incorrect TCPPort after upgraded conversion; want: %d, got: %d", *nullable.TCPPort, *upgraded.TCPPort)
@@ -1347,33 +1345,25 @@ func TestServerNullableV2_Upgrade(t *testing.T) {
 		t.Errorf("Incorrect Type after upgraded conversion; want: '%s', got: '%s'", nullable.Type, upgraded.Type)
 	}
 
-	if nullable.TypeID == nil {
-		t.Error("Unexpectedly nil TypeID in nullable-converted server")
-	} else if upgraded.TypeID == nil {
+	if upgraded.TypeID == nil {
 		t.Error("upgraded conversion gave nil TypeID")
 	} else if *upgraded.TypeID != *nullable.TypeID {
 		t.Errorf("Incorrect TypeID after upgraded conversion; want: %d, got: %d", *nullable.TypeID, *upgraded.TypeID)
 	}
 
-	if nullable.UpdPending == nil {
-		t.Error("Unexpectedly nil UpdPending in nullable-converted server")
-	} else if upgraded.UpdPending == nil {
+	if upgraded.UpdPending == nil {
 		t.Error("upgraded conversion gave nil UpdPending")
 	} else if *upgraded.UpdPending != *nullable.UpdPending {
 		t.Errorf("Incorrect UpdPending after upgraded conversion; want: %t, got: %t", *nullable.UpdPending, *upgraded.UpdPending)
 	}
 
-	if nullable.XMPPID == nil {
-		t.Error("Unexpectedly nil XMPPID in nullable-converted server")
-	} else if upgraded.XMPPID == nil {
+	if upgraded.XMPPID == nil {
 		t.Error("upgraded conversion gave nil XMPPID")
 	} else if *upgraded.XMPPID != *nullable.XMPPID {
 		t.Errorf("Incorrect XMPPID after upgraded conversion; want: '%s', got: '%s'", *nullable.XMPPID, *upgraded.XMPPID)
 	}
 
-	if nullable.XMPPPasswd == nil {
-		t.Error("Unexpectedly nil XMPPPasswd in nullable-converted server")
-	} else if upgraded.XMPPPasswd == nil {
+	if upgraded.XMPPPasswd == nil {
 		t.Error("upgraded conversion gave nil XMPPPasswd")
 	} else if *upgraded.XMPPPasswd != *nullable.XMPPPasswd {
 		t.Errorf("Incorrect XMPPPasswd after upgraded conversion; want: '%s', got: '%s'", *nullable.XMPPPasswd, *upgraded.XMPPPasswd)
