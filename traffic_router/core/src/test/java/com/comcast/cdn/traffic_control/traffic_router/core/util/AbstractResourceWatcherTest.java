@@ -19,7 +19,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.TestBase;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.*;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,7 +41,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
 
 
 @Category(IntegrationTest.class)
@@ -56,7 +56,7 @@ public class AbstractResourceWatcherTest {
     private static ApplicationContext context;
 
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
+    public static void setUpBeforeClass() {
         assertThat("Copy core/src/main/conf/traffic_monitor.properties to core/src/test/conf and set 'traffic_monitor.bootstrap.hosts' to a real traffic monitor", Files.exists(Paths.get(TestBase.monitorPropertiesPath)), equalTo(true));
         context = TestBase.getContext();
     }
@@ -82,7 +82,7 @@ public class AbstractResourceWatcherTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
         CacheRegister cacheRegister = trafficRouter.getCacheRegister();
         JsonNode config = cacheRegister.getConfig();
