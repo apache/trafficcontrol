@@ -183,10 +183,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         $location.path($location.path() + '/capabilities');
     };
 
-    $scope.viewConfigFiles = function() {
-        $location.path($location.path() + '/config-files');
-    };
-
     $scope.viewDeliveryServices = function() {
         $location.path($location.path() + '/delivery-services');
     };
