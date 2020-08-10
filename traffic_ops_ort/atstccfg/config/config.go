@@ -297,4 +297,8 @@ type TOData struct {
 
 	// SSLKeys must be all the ssl keys for the server's cdn.
 	SSLKeys []tc.CDNSSLKeys
+
+	// Topologies must be all the topologies for the server's cdn.
+	// May incude topologies of other cdns.
+	Topologies []tc.Topology
 }

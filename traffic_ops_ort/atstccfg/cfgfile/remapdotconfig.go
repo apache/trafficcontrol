@@ -96,7 +96,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 		if ds.Active == nil {
 			continue // TODO log?
 		}
-		if _, ok := dssMap[*ds.ID]; !ok {
+		if _, ok := dssMap[*ds.ID]; !ok && ds.Topology == nil {
 			continue
 		}
 		if !useInactive && !*ds.Active {
@@ -116,10 +116,14 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 		if ds.ID == nil || ds.Type == nil || ds.XMLID == nil || ds.DSCP == nil || ds.Active == nil {
 			continue // TODO log error?
 		}
+		dsTopology := ""
+		if ds.Topology != nil {
+			dsTopology = *ds.Topology
+		}
 		// TODO sort by DS ID? the old Perl query does, but it shouldn't be necessary, except for determinism.
 		// TODO warn if no regexes?
 		for _, dsRegex := range dsRegexMap[tc.DeliveryServiceName(*ds.XMLID)] {
-			remapConfigDSData = append(remapConfigDSData, atscfg.RemapConfigDSData{
+			rds := atscfg.RemapConfigDSData{
 				ID:                       *ds.ID,
 				Type:                     *ds.Type,
 				OriginFQDN:               ds.OrgServerFQDN,
@@ -144,7 +148,18 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 				AnonymousBlockingEnabled: ds.AnonymousBlockingEnabled,
 				Active:                   *ds.Active,
 				RangeSliceBlockSize:      ds.RangeSliceBlockSize,
-			})
+				Topology:                 dsTopology,
+			}
+			if ds.FirstHeaderRewrite != nil {
+				rds.FirstHeaderRewrite = *ds.FirstHeaderRewrite
+			}
+			if ds.InnerHeaderRewrite != nil {
+				rds.InnerHeaderRewrite = *ds.InnerHeaderRewrite
+			}
+			if ds.LastHeaderRewrite != nil {
+				rds.LastHeaderRewrite = *ds.LastHeaderRewrite
+			}
+			remapConfigDSData = append(remapConfigDSData, rds)
 		}
 	}
 
@@ -181,12 +196,12 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 
 	cacheURLParams := ParamsToMap(FilterParams(toData.ServerParams, atscfg.CacheURLParameterConfigFile, "", "", ""))
 
-	cacheKeyParamsWithProfiles, err := TCParamsToParamsWithProfiles(toData.CacheKeyParams)
+	cacheKeyParamsWithProfiles, err := atscfg.TCParamsToParamsWithProfiles(toData.CacheKeyParams)
 	if err != nil {
 		return "", "", "", errors.New("decoding cache key parameter profiles: " + err.Error())
 	}
 
-	cacheKeyParamsWithProfilesMap := ParameterWithProfilesToMap(cacheKeyParamsWithProfiles)
+	cacheKeyParamsWithProfilesMap := atscfg.ParameterWithProfilesToMap(cacheKeyParamsWithProfiles)
 
 	dsProfileNamesToIDs := map[string]int{}
 	for _, ds := range filteredDSes {
@@ -272,6 +287,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 
 	serverInfo := &atscfg.ServerInfo{
 		CacheGroupID:                  toData.Server.CachegroupID,
+		CacheGroupName:                toData.Server.Cachegroup,
 		CDN:                           tc.CDNName(toData.Server.CDNName),
 		CDNID:                         toData.Server.CDNID,
 		DomainName:                    toData.CDN.DomainName, // note this is intentionally the CDN domain, not the server domain. It's what's remapped to.
@@ -288,7 +304,7 @@ func GetConfigFileServerRemapDotConfig(toData *config.TOData) (string, string, s
 		SecondaryParentCacheGroupType: secondaryParentCGType,
 		Type:                          toData.Server.Type,
 	}
-	return atscfg.MakeRemapDotConfig(tc.CacheName(toData.Server.HostName), toData.TOToolName, toData.TOURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData), atscfg.ContentTypeRemapDotConfig, atscfg.LineCommentRemapDotConfig, nil
+	return atscfg.MakeRemapDotConfig(toData.Server, toData.TOToolName, toData.TOURL, atsMajorVer, cacheURLParams, dsProfilesCacheKeyConfigParams, serverPackageParamData, serverInfo, remapConfigDSData, toData.Topologies, toData.CacheGroups, toData.ServerCapabilities, toData.DSRequiredCapabilities), atscfg.ContentTypeRemapDotConfig, atscfg.LineCommentRemapDotConfig, nil
 }
 
 type DeliveryServiceRegexesSortByTypeThenSetNum []tc.DeliveryServiceRegex

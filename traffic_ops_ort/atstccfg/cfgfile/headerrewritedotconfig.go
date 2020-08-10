@@ -70,7 +70,7 @@ func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (stri
 		if server.CDNName != *tcDS.CDNName {
 			continue
 		}
-		if _, ok := dsServerIDs[server.ID]; !ok {
+		if _, ok := dsServerIDs[server.ID]; !ok && tcDS.Topology == nil {
 			continue
 		}
 		cfgServer, err := atscfg.HeaderRewriteServerFromServerNotNullable(server)

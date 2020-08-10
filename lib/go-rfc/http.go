@@ -28,15 +28,16 @@ import (
 )
 
 const (
-	ApplicationJSON        = "application/json"         // RFC4627§6
-	Gzip                   = "gzip"                     // RFC7230§4.2.3
-	ContentType            = "Content-Type"             // RFC7231§3.1.1.5
-	ContentEncoding        = "Content-Encoding"         // RFC7231§3.1.2.2
-	ContentTypeTextPlain   = "text/plain"               // RFC2046§4.1
-	AcceptEncoding         = "Accept-Encoding"          // RFC7231§5.3.4
-	ContentDisposition     = "Content-Disposition"      // RFC6266
-	ApplicationOctetStream = "application/octet-stream" // RFC2046§4.5.2
-	Vary                   = "Vary"                     // RFC7231§7.1.4
+	ApplicationJSON           = "application/json"         // RFC4627§6
+	Gzip                      = "gzip"                     // RFC7230§4.2.3
+	ContentType               = "Content-Type"             // RFC7231§3.1.1.5
+	ContentEncoding           = "Content-Encoding"         // RFC7231§3.1.2.2
+	ContentTypeTextPlain      = "text/plain"               // RFC2046§4.1
+	ContentTypeMultiPartMixed = "multipart/mixed"          // RFC1341§7.2
+	AcceptEncoding            = "Accept-Encoding"          // RFC7231§5.3.4
+	ContentDisposition        = "Content-Disposition"      // RFC6266
+	ApplicationOctetStream    = "application/octet-stream" // RFC2046§4.5.2
+	Vary                      = "Vary"                     // RFC7231§7.1.4
 )
 
 // AcceptsGzip returns whether r accepts gzip encoding, per RFC7231§5.3.4.

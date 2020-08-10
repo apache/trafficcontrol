@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
@@ -167,7 +168,12 @@ func GetConfigFileServer(toData *config.TOData, fileName string) (string, string
 	contentType := ""
 	lineComment := ""
 	err := error(nil)
-	if getCfgFunc, ok := ServerConfigFileFuncs()[fileName]; ok {
+
+	if strings.HasPrefix(fileName, atscfg.HeaderRewriteFirstPrefix) ||
+		strings.HasPrefix(fileName, atscfg.HeaderRewriteInnerPrefix) ||
+		strings.HasPrefix(fileName, atscfg.HeaderRewriteLastPrefix) {
+		txt, contentType, lineComment, err = GetConfigFileServerTopologyHeaderRewrite(toData, fileName)
+	} else if getCfgFunc, ok := ServerConfigFileFuncs()[fileName]; ok {
 		txt, contentType, lineComment, err = getCfgFunc(toData)
 	} else {
 		txt, contentType, lineComment, err = GetConfigFileServerUnknownConfig(toData, fileName)

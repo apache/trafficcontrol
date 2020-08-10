@@ -52,19 +52,6 @@ func GetConfigFileCDNHeaderRewriteMid(toData *config.TOData, fileName string) (s
 		return "", "", "", errors.New("converting ds to config ds: " + err.Error())
 	}
 
-	dsServers := FilterDSS(toData.DeliveryServiceServers, map[int]struct{}{cfgDS.ID: {}}, nil)
-
-	dsServerIDs := map[int]struct{}{}
-	for _, dss := range dsServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			continue // TODO warn?
-		}
-		if *dss.DeliveryService != *tcDS.ID {
-			continue
-		}
-		dsServerIDs[*dss.Server] = struct{}{}
-	}
-
 	serverCGs := map[tc.CacheGroupName]struct{}{}
 	for _, sv := range toData.Servers {
 		if sv.CDNName != toData.Server.CDNName {
