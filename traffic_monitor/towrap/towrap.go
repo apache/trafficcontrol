@@ -437,7 +437,7 @@ func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfigMap(cdn string) (*tc.Tra
 	return m.Upgrade(), e
 }
 
-// TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the
+// trafficMonitorConfigMapRaw returns the Traffic Monitor config map from the
 // Traffic Ops, directly from the monitoring.json endpoint. This is not usually
 // what is needed, rather monitoring needs the snapshotted CRConfig data, which
 // is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple
@@ -491,7 +491,7 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	return configMap, err
 }
 
-// LegacyTrafficMonitorConfigMap returns the Traffic Monitor config map from the
+// TrafficMonitorConfigMap returns the Traffic Monitor config map from the
 // Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
 	mc, err := s.trafficMonitorConfigMapRaw(cdn)

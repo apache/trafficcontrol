@@ -198,7 +198,8 @@ func EvalAggregate(result cache.ResultInfo, resultStats *threadsafe.ResultStatVa
 	return avail, eventDescVal, eventMsg
 }
 
-// gets a function to process an availability tuple based on the protocol used.
+// getProcessAvailableTuple gets a function to process an availability tuple
+// based on the protocol used.
 func getProcessAvailableTuple(protocol config.PollingProtocol) func(cache.AvailableTuple, tc.TrafficServer) bool {
 	switch protocol {
 	case config.IPv4Only:

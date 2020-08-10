@@ -115,8 +115,8 @@ func (h ResultStatHistory) Range(f func(cacheName string, val CacheStatHistory) 
 	})
 }
 
-// This is just a convenience structure used only for passing data about a
-// single statistic for a network interface into
+// interfaceStat is just a convenience structure used only for passing data
+// about a single statistic for a network interface into
 // compareAndAppendStatForInterface.
 type interfaceStat struct {
 	InterfaceName string
@@ -125,9 +125,10 @@ type interfaceStat struct {
 	Time          time.Time
 }
 
-// This is a little helper function used to compare a single stat for a single
-// network interface to its historical values and do the appropriate appending
-// and management of the history to ensure it never exceeds `limit`.
+// compareAndAppendStatForInterface is a little helper function used to compare
+// a single stat for a single network interface to its historical values and do
+// the appropriate appending and management of the history to ensure it never
+// exceeds `limit`.
 func compareAndAppendStatForInterface(history []cache.ResultStatVal, errs strings.Builder, limit uint64, stat interfaceStat) []cache.ResultStatVal {
 	if history == nil {
 		history = make([]cache.ResultStatVal, 0, limit)
