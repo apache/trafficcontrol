@@ -514,7 +514,7 @@ and p.id = $1
 			if err != nil {
 				errs = append(errs, errors.New("unable to determine service address uniqueness"))
 			} else if (ipaddress == ipv4 || ipaddress == ipv6) && (s.ID == nil || *s.ID != id) {
-				errs = append(errs, errors.New("there exists a server on the same profile that has the same service address"))
+				errs = append(errs, errors.New(fmt.Sprintf("there exists a server with id %v on the same profile that has the same service address %s", id, ipaddress)))
 			}
 		}
 	}
