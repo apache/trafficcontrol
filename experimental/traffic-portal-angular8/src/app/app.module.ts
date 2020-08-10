@@ -52,6 +52,7 @@ import { ErrorInterceptor } from "./interceptor/error.interceptor";
 
 import { AgGridModule } from "ag-grid-angular";
 import { Chart } from "chart.js";
+import { SSHCellRendererComponent } from './components/table-components/ssh-cell-renderer/ssh-cell-renderer.component';
 
 Chart.plugins.register({
 	beforeDraw: (chartInstance: any) => {
@@ -106,6 +107,9 @@ const appRoutes: Routes = [
 		ServersPageComponent,
 		ServerCardComponent,
 		ServersTableComponent
+	],
+	entryComponents: [
+		SSHCellRendererComponent
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: "serverApp" }),

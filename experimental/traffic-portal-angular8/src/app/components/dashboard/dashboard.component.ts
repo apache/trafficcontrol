@@ -42,7 +42,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	 * The set of Delivery Services filtered according to the search box text.
 	 */
 	public get filteredDSes(): DeliveryService[] {
-
+		if (!this.deliveryServices) {
+			return [];
+		}
 		return this.deliveryServices.map(x => [x, fuzzyScore(x.displayName, this.fuzzControl.value)]).filter(x => x[1] !== Infinity).sort(
 			(a, b) => {
 				if (a[1] > b[1]) {
