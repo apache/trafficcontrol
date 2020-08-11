@@ -786,11 +786,13 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 	}
 	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(r.Header)
 	existingEtag := rfc.ETag(existingLastUpdated.Time)
-	if r.Header.Get(rfc.IfMatch) != "" && !strings.Contains(r.Header.Get(rfc.IfMatch), existingEtag) {
-		return nil, http.StatusPreconditionFailed, errors.New("header preconditions dont match"), nil
-	}
-	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-		return nil, http.StatusPreconditionFailed, errors.New("header preconditions dont match"), nil
+	if r.Header != nil {
+		if r.Header.Get(rfc.IfMatch) != "" && !strings.Contains(r.Header.Get(rfc.IfMatch), existingEtag) {
+			return nil, http.StatusPreconditionFailed, errors.New("resource was modified"), nil
+		}
+		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+			return nil, http.StatusPreconditionFailed, errors.New("resource was modified"), nil
+		}
 	}
 
 	resultRows, err := tx.Query(updateDSQuery(),

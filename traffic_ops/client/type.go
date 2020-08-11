@@ -49,7 +49,7 @@ func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
 }
 
 // UpdateTypeByID updates a Type by ID.
-func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateTypeByID(id int, typ tc.Type, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(typ)
@@ -58,7 +58,10 @@ func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_TYPES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}

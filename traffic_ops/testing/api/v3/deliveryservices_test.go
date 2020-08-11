@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -40,7 +41,9 @@ func TestDeliveryServices(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestDeliveryServices(t)
+		UpdateTestDeliveryServicesWithHeaders(t, header)
 		UpdateNullableTestDeliveryServices(t)
 		UpdateDeliveryServiceWithInvalidRemapText(t)
 		UpdateDeliveryServiceWithInvalidSliceRangeRequest(t)
@@ -51,7 +54,49 @@ func TestDeliveryServices(t *testing.T) {
 		DeliveryServiceMinorVersionsTest(t)
 		DeliveryServiceTenancyTest(t)
 		PostDeliveryServiceTest(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestDeliveryServicesWithHeaders(t, header)
 	})
+}
+
+func UpdateTestDeliveryServicesWithHeaders(t *testing.T, header http.Header) {
+	firstDS := testData.DeliveryServices[0]
+
+	dses, _, err := TOSession.GetDeliveryServicesNullable(header)
+	if err != nil {
+		t.Errorf("cannot GET Delivery Services: %v", err)
+	}
+
+	remoteDS := tc.DeliveryServiceNullable{}
+	found := false
+	for _, ds := range dses {
+		if *ds.XMLID == *firstDS.XMLID {
+			found = true
+			remoteDS = ds
+			break
+		}
+	}
+	if !found {
+		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
+	}
+
+	updatedLongDesc := "something different"
+	updatedMaxDNSAnswers := 164598
+	updatedMaxOriginConnections := 100
+	remoteDS.LongDesc = &updatedLongDesc
+	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
+	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
+	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
+
+	_, err = TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS, header)
+	if err == nil {
+		t.Errorf("expected precondition failed error, got none")
+	}
+	if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
+		t.Errorf("expected error to be related to 'precondition failed', but instead is realted to %v", err.Error())
+	}
 }
 
 func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
@@ -110,7 +155,7 @@ func CreateTestDeliveryServices(t *testing.T) {
 func GetTestDeliveryServicesIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	_, reqInf, err := TOSession.GetDeliveryServicesNullable(header)
@@ -178,7 +223,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
 	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
 
-	if updateResp, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS); err != nil {
+	if updateResp, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS, nil); err != nil {
 		t.Errorf("cannot UPDATE DeliveryService by ID: %v - %v", err, updateResp)
 	}
 
@@ -227,7 +272,7 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 	remoteDS.LongDesc = &updatedLongDesc
 	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
 
-	if updateResp, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS); err != nil {
+	if updateResp, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS, nil); err != nil {
 		t.Fatalf("cannot UPDATE DeliveryService by ID: %v - %v", err, updateResp)
 	}
 
@@ -263,7 +308,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		if *ds.Type == tc.DSTypeClientSteering {
 			found = true
 			ds.Topology = util.StrPtr("my-topology")
-			if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), &ds); err == nil {
+			if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), &ds, nil); err == nil {
 				t.Errorf("assigning topology to CLIENT_STEERING delivery service - expected: error, actual: no error")
 			}
 		}
@@ -288,7 +333,7 @@ func UpdateDeliveryServiceTopologyHeaderRewriteFields(t *testing.T) {
 		ds.FirstHeaderRewrite = util.StrPtr("foo")
 		ds.InnerHeaderRewrite = util.StrPtr("bar")
 		ds.LastHeaderRewrite = util.StrPtr("baz")
-		_, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), &ds)
+		_, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), &ds, nil)
 		if ds.Topology != nil && err != nil {
 			t.Errorf("expected: no error updating topology-based header rewrite fields for topology-based DS, actual: %v", err)
 		}
@@ -300,7 +345,7 @@ func UpdateDeliveryServiceTopologyHeaderRewriteFields(t *testing.T) {
 		ds.LastHeaderRewrite = nil
 		ds.EdgeHeaderRewrite = util.StrPtr("foo")
 		ds.MidHeaderRewrite = util.StrPtr("bar")
-		_, err = TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), &ds)
+		_, err = TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), &ds, nil)
 		if ds.Topology != nil && err == nil {
 			t.Errorf("expected: error updating legacy header rewrite fields for topology-based DS, actual: nil")
 		}
@@ -341,7 +386,7 @@ func UpdateDeliveryServiceWithInvalidRemapText(t *testing.T) {
 	updatedRemapText := "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua\nline2"
 	remoteDS.RemapText = &updatedRemapText
 
-	if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS); err == nil {
+	if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS, nil); err == nil {
 		t.Errorf("Delivery service updated with invalid remap text: %v", updatedRemapText)
 	}
 }
@@ -411,7 +456,7 @@ func UpdateDeliveryServiceWithInvalidSliceRangeRequest(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			remoteDS.RangeSliceBlockSize = tc.slicePluginSize
 			remoteDS.RangeRequestHandling = tc.rangeRequestSetting
-			if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS); err == nil {
+			if _, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS, nil); err == nil {
 				t.Error("Delivery service updated with invalid slice plugin configuration")
 			}
 		})
@@ -624,7 +669,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot update tenant3user's deliveryservice
-	if _, err = tenant4TOClient.UpdateDeliveryServiceNullable(string(*tenant3DS.ID), &tenant3DS); err == nil {
+	if _, err = tenant4TOClient.UpdateDeliveryServiceNullable(string(*tenant3DS.ID), &tenant3DS, nil); err == nil {
 		t.Errorf("expected tenant4user to be unable to update tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
 	}
 

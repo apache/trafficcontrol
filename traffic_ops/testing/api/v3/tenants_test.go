@@ -16,6 +16,8 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"strconv"
 	"strings"
 	"testing"
@@ -29,7 +31,41 @@ func TestTenants(t *testing.T) {
 	WithObjs(t, []TCObj{Tenants}, func() {
 		GetTestTenants(t)
 		UpdateTestTenants(t)
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfUnmodifiedSince, time)
+		UpdateTestTenantsWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestTenantsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
+	// Retrieve the Tenant by name so we can get the id for the Update
+	name := "tenant2"
+	parentName := "tenant1"
+	modTenant, _, err := TOSession.TenantByName(name, header)
+	if err != nil {
+		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
+	}
+
+	newParent, _, err := TOSession.TenantByName(parentName, header)
+	if err != nil {
+		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
+	}
+	modTenant.ParentID = newParent.ID
+
+	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant, header)
+	if err == nil {
+		t.Fatalf("expected a precondition failed error, got none")
+	}
+	if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
+		t.Errorf("expected a precondition failed error, got %v instead", err.Error())
+	}
 }
 
 func TestTenantsActive(t *testing.T) {
@@ -94,7 +130,7 @@ func UpdateTestTenants(t *testing.T) {
 	}
 	modTenant.ParentID = newParent.ID
 
-	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant)
+	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE Tenant by id: %v", err)
 	}
@@ -268,7 +304,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 		if tn.Name == "root" {
 			continue
 		}
-		if _, err := TOSession.UpdateTenant(strconv.Itoa(tn.ID), &tn); err != nil {
+		if _, err := TOSession.UpdateTenant(strconv.Itoa(tn.ID), &tn, nil); err != nil {
 			t.Fatalf("restoring original tenants: " + err.Error())
 		}
 	}
@@ -280,7 +316,7 @@ func setTenantActive(t *testing.T, name string, active bool) {
 		t.Fatalf("cannot GET Tenant by name: %s - %v", name, err)
 	}
 	tn.Active = active
-	_, err = TOSession.UpdateTenant(strconv.Itoa(tn.ID), tn)
+	_, err = TOSession.UpdateTenant(strconv.Itoa(tn.ID), tn, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Tenant by id: %v", err)
 	}

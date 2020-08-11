@@ -216,7 +216,7 @@ func (req TODeliveryServiceRequest) IsTenantAuthorized(user *auth.CurrentUser) (
 //ParsePQUniqueConstraintError is used to determine if a request with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (req *TODeliveryServiceRequest) Update(http.Header) (error, error, int) {
+func (req *TODeliveryServiceRequest) Update(h http.Header) (error, error, int) {
 	if req.ID == nil {
 		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
@@ -244,7 +244,7 @@ func (req *TODeliveryServiceRequest) Update(http.Header) (error, error, int) {
 	userID := tc.IDNoMod(req.APIInfo().User.ID)
 	req.LastEditedByID = &userID
 
-	return api.GenericUpdate(nil, req)
+	return api.GenericUpdate(h, req)
 }
 
 // Creator implements the tc.Creator interface
@@ -408,11 +408,13 @@ func (req *deliveryServiceRequestAssignment) Update(h http.Header) (error, error
 	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
 	existingEtag := rfc.ETag(existingLastUpdated.Time)
 
-	if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
-	}
-	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	if h != nil {
+		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
+		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
 	}
 
 	// LastEditedBy field should not change with status update
@@ -498,11 +500,13 @@ func (req *deliveryServiceRequestStatus) Update(h http.Header) (error, error, in
 	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
 	existingEtag := rfc.ETag(existingLastUpdated.Time)
 
-	if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
-	}
-	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	if h != nil {
+		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
+		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
 	}
 
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {

@@ -36,7 +36,7 @@ func AllCDNsCanSnapshot(t *testing.T) {
 	}
 
 	for _, cdn := range testData.CDNs {
-		_, err := TOSession.SnapshotCRConfig(cdn.Name)
+		_, err := TOSession.SnapshotCRConfig(cdn.Name, nil)
 		if err != nil {
 			t.Error(err)
 			continue

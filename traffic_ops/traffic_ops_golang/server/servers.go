@@ -1096,13 +1096,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(r.Header)
 	existingEtag := rfc.ETag(existingLastUpdated.Time)
 
-	if r.Header.Get(rfc.IfMatch) != "" && !strings.Contains(r.Header.Get(rfc.IfMatch), existingEtag) {
-		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("header preconditions dont match"), nil)
-		return
-	}
-	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("header preconditions dont match"), nil)
-		return
+	if r.Header != nil {
+		if r.Header.Get(rfc.IfMatch) != "" && !strings.Contains(r.Header.Get(rfc.IfMatch), existingEtag) {
+			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("resource was modified"), nil)
+			return
+		}
+		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("resource was modified"), nil)
+			return
+		}
 	}
 
 	rows, err := inf.Tx.NamedQuery(updateQuery, server)

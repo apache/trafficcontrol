@@ -93,7 +93,7 @@ func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntry) (tc.Alerts, ReqI
 }
 
 // UpdateStaticDNSEntryByID updates a Static DNS Entry by ID.
-func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.Alerts, ReqInf, int, error) {
+func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry, header http.Header) (tc.Alerts, ReqInf, int, error) {
 	// fill in missing IDs from names
 	staticDNSEntryIDs(to, &sdns)
 	var remoteAddr net.Addr
@@ -103,7 +103,7 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.
 		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody, header)
 	if resp != nil {
 		defer resp.Body.Close()
 		var alerts tc.Alerts

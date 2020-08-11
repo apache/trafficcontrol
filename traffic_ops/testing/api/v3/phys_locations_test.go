@@ -35,16 +35,41 @@ func TestPhysLocations(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestPhysLocations(t)
+		UpdateTestPhysLocationsWithHeaders(t, header)
 		GetTestPhysLocations(t)
 		GetTestPhysLocationsIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestPhysLocationsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestPhysLocationsWithHeaders(t *testing.T, header http.Header) {
+	firstPhysLocation := testData.PhysLocations[0]
+	// Retrieve the PhysLocation by name so we can get the id for the Update
+	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name, header)
+	if err != nil {
+		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
+	}
+	remotePhysLocation := resp[0]
+	expectedPhysLocationCity := "city1"
+	remotePhysLocation.City = expectedPhysLocationCity
+	_, reqInf, err := TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestPhysLocationsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, cdn := range testData.PhysLocations {
@@ -107,7 +132,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 	expectedPhysLocationCity := "city1"
 	remotePhysLocation.City = expectedPhysLocationCity
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation)
+	alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE PhysLocation by id: %v - %v", err, alert)
 	}

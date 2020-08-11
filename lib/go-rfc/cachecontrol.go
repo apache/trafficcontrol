@@ -44,6 +44,9 @@ func ETag(t time.Time) string {
 
 // GetETagOrIfUnmodifiedSinceTime parses the http header and returns a list of Etags/ an "if-unmodified-since" time to compare to, in that order.
 func GetETagOrIfUnmodifiedSinceTime(h http.Header) ([]string, *time.Time) {
+	if h == nil {
+		return nil, nil
+	}
 	valIUMS := h.Get(IfUnmodifiedSince)
 	valIfMatch := h.Get(IfMatch)
 	// Check the If-Match header first, if that exists, go off of that. If not, check for If-Unmodified-Since header.

@@ -33,12 +33,81 @@ func TestServers(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestServers(t)
+		UpdateTestServersWithHeaders(t, header)
 		GetTestServersDetails(t)
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestServersWithHeaders(t, header)
 	})
+}
+
+func UpdateTestServersWithHeaders(t *testing.T, header http.Header) {
+	if len(testData.Servers) < 1 {
+		t.Fatal("Need at least one server to test updating")
+	}
+
+	firstServer := testData.Servers[0]
+	if firstServer.HostName == nil {
+		t.Fatalf("First test server had nil hostname: %+v", firstServer)
+	}
+
+	hostName := *firstServer.HostName
+	params := url.Values{}
+	params.Add("hostName", hostName)
+
+	// Retrieve the server by hostname so we can get the id for the Update
+	resp, _, err := TOSession.GetServers(&params, header)
+	if err != nil {
+		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
+	}
+	if len(resp.Response) > 1 {
+		t.Errorf("Expected exactly one server to exist by hostname '%s' - actual: %d", hostName, len(resp.Response))
+		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
+	}
+
+	remoteServer := resp.Response[0]
+	if remoteServer.ID == nil {
+		t.Fatalf("Got null ID for server '%s'", hostName)
+	}
+
+	// Creating idParam to get server when hostname changes.
+	id := fmt.Sprintf("%v", *resp.Response[0].ID)
+	idParam := url.Values{}
+	idParam.Add("id", id)
+
+	infs := remoteServer.Interfaces
+	if len(infs) < 1 {
+		t.Fatalf("Expected server '%s' to have at least one network interface", hostName)
+	}
+	inf := infs[0]
+
+	updatedServerInterface := "bond1"
+	updatedServerRack := "RR 119.03"
+	updatedHostName := "atl-edge-01"
+
+	// update rack, interfaceName and hostName values on server
+	inf.Name = updatedServerInterface
+	infs[0] = inf
+	remoteServer.Interfaces = infs
+	remoteServer.Rack = &updatedServerRack
+	remoteServer.HostName = &updatedHostName
+
+	_, reqInf, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestServersIMSAfterChange(t *testing.T, header http.Header) {
@@ -290,7 +359,7 @@ func UpdateTestServers(t *testing.T) {
 	remoteServer.Rack = &updatedServerRack
 	remoteServer.HostName = &updatedHostName
 
-	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
 	}
@@ -339,7 +408,7 @@ func UpdateTestServers(t *testing.T) {
 
 	//Check to verify XMPPID never gets updated
 	remoteServer.XMPPID = &updatedXMPPID
-	al, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	al, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Logf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, al)
 	}
@@ -347,7 +416,7 @@ func UpdateTestServers(t *testing.T) {
 	//Change back hostname and xmppid to its original name for other tests to pass
 	remoteServer.HostName = &originalHostname
 	remoteServer.XMPPID = &originalXMPIDD
-	alert, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	alert, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer, nil)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
 	}
@@ -386,7 +455,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Attempt Update - should fail
-	alerts, _, err = TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	alerts, _, err = TOSession.UpdateServerByID(*remoteServer.ID, remoteServer, nil)
 	if err == nil {
 		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
 	} else {

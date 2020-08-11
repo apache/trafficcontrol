@@ -47,10 +47,13 @@ func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 }
 
 // SnapshotCRConfig snapshots a CDN by name.
-func (to *Session) SnapshotCRConfig(cdn string) (ReqInf, error) {
+func (to *Session) SnapshotCRConfig(cdn string, header http.Header) (ReqInf, error) {
 	uri := fmt.Sprintf("%s?cdn=%s", API_SNAPSHOT, url.QueryEscape(cdn))
-	_, remoteAddr, err := to.request(http.MethodPut, uri, nil, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, uri, nil, header)
 	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	return reqInf, err
 }
 

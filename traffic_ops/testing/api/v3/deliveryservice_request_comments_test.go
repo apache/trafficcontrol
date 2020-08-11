@@ -31,11 +31,32 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestDeliveryServiceRequestComments(t)
+		UpdateTestDeliveryServiceRequestCommentsWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestDeliveryServiceRequestCommentsWithHeaders(t, header)
 		GetTestDeliveryServiceRequestComments(t)
 		GetTestDeliveryServiceRequestCommentsIMSAfterChange(t, header)
 	})
+}
+
+func UpdateTestDeliveryServiceRequestCommentsWithHeaders(t *testing.T, header http.Header) {
+	comments, _, err := TOSession.GetDeliveryServiceRequestComments(header)
+
+	firstComment := comments[0]
+	newFirstCommentValue := "new comment value"
+	firstComment.Value = newFirstCommentValue
+
+	_, reqInf, err := TOSession.UpdateDeliveryServiceRequestCommentByID(firstComment.ID, firstComment, header)
+	if err == nil {
+		t.Errorf("expected precondition failed error, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header http.Header) {
@@ -47,7 +68,7 @@ func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header ht
 		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	_, reqInf, err = TOSession.GetDeliveryServiceRequestComments(header)
@@ -93,7 +114,7 @@ func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 	firstComment.Value = newFirstCommentValue
 
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateDeliveryServiceRequestCommentByID(firstComment.ID, firstComment)
+	alert, _, err = TOSession.UpdateDeliveryServiceRequestCommentByID(firstComment.ID, firstComment, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE delivery service request comment by id: %v - %v", err, alert)
 	}
@@ -113,7 +134,7 @@ func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 func GetTestDeliveryServiceRequestCommentsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	_, reqInf, err := TOSession.GetDeliveryServiceRequestComments(header)

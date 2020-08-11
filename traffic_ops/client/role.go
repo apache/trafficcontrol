@@ -51,7 +51,7 @@ func (to *Session) CreateRole(region tc.Role) (tc.Alerts, ReqInf, int, error) {
 }
 
 // UpdateRoleByID updates a Role by ID.
-func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, int, error) {
+func (to *Session) UpdateRoleByID(id int, region tc.Role, header http.Header) (tc.Alerts, ReqInf, int, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(region)
@@ -60,7 +60,7 @@ func (to *Session) UpdateRoleByID(id int, region tc.Role) (tc.Alerts, ReqInf, in
 		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s/?id=%d", API_ROLES, id)
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody, header)
 	if resp != nil {
 		defer resp.Body.Close()
 		var alerts tc.Alerts

@@ -40,11 +40,36 @@ func TestRoles(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestRoles(t)
 		GetTestRoles(t)
+		UpdateTestRolesWithHeaders(t, header)
 		GetTestRolesIMSAfterChange(t, header)
 		VerifyGetRolesOrder(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestRolesWithHeaders(t, header)
 	})
+}
+
+func UpdateTestRolesWithHeaders(t *testing.T, header http.Header) {
+	t.Logf("testData.Roles contains: %+v\n", testData.Roles)
+	firstRole := testData.Roles[0]
+	// Retrieve the Role by role so we can get the id for the Update
+	resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name, header)
+	t.Log("Status Code: ", status)
+	if err != nil {
+		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
+	}
+	t.Logf("got response: %+v\n", resp)
+	remoteRole := resp[0]
+	expectedRole := "new admin2"
+	remoteRole.Name = &expectedRole
+	_, reqInf, status, _ := TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole, header)
+	if status != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestRolesIMSAfterChange(t *testing.T, header http.Header) {
@@ -72,7 +97,7 @@ func GetTestRolesIMSAfterChange(t *testing.T, header http.Header) {
 func GetTestRolesIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	role := testData.Roles[roleGood]
@@ -117,7 +142,7 @@ func UpdateTestRoles(t *testing.T) {
 	expectedRole := "new admin2"
 	remoteRole.Name = &expectedRole
 	var alert tc.Alerts
-	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole)
+	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)
@@ -136,7 +161,7 @@ func UpdateTestRoles(t *testing.T) {
 
 	// Set the name back to the fixture value so we can delete it after
 	remoteRole.Name = firstRole.Name
-	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole)
+	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)

@@ -236,13 +236,13 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 
 // UpdateDeliveryServiceNullable updates the DeliveryService matching the ID it's
 // passed with the DeliveryService it is passed.
-func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable) (*tc.UpdateDeliveryServiceNullableResponse, error) {
+func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable, header http.Header) (*tc.UpdateDeliveryServiceNullableResponse, error) {
 	var data tc.UpdateDeliveryServiceNullableResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err
 	}
-	_, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), jsonReq, &data)
+	_, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICE_ID, id), jsonReq, &data, header)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +370,7 @@ func (to *Session) UpdateDeliveryServiceSafe(id int, ds tc.DeliveryServiceSafeUp
 		return resp.Response, reqInf, err
 	}
 
-	if reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &resp); err != nil {
+	if reqInf, err = put(to, fmt.Sprintf(API_DELIVERY_SERVICES_SAFE_UPDATE, id), req, &resp, nil); err != nil {
 		return resp.Response, reqInf, err
 	}
 

@@ -23,9 +23,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -297,19 +299,33 @@ func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 
 	isPrimary := false
 	ds := 0
-	q := `SELECT is_primary, deliveryservice FROM origin WHERE id = $1`
-	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds); err != nil {
+	var existingLastUpdated *tc.TimeNoMod
+
+	q := `SELECT is_primary, deliveryservice, last_updated FROM origin WHERE id = $1`
+	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds, &existingLastUpdated); err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("origin not found"), nil, http.StatusNotFound
 		}
 		return nil, errors.New("origin update: querying: " + err.Error()), http.StatusInternalServerError
 	}
+
+	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
+	existingEtag := rfc.ETag(existingLastUpdated.Time)
+
+	if h != nil {
+		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
+		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
+	}
+
 	if isPrimary && *origin.DeliveryServiceID != ds {
 		return errors.New("cannot update the delivery service of a primary origin"), nil, http.StatusBadRequest
 	}
 
 	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
-	// ToDo : Srijeet change here
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(updateQuery(), origin)
 	if err != nil {
 		return api.ParseDBError(err)

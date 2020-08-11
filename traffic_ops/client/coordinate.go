@@ -48,7 +48,7 @@ func (to *Session) CreateCoordinate(coordinate tc.Coordinate) (tc.Alerts, ReqInf
 }
 
 // Update a Coordinate by ID
-func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(coordinate)
@@ -57,7 +57,10 @@ func (to *Session) UpdateCoordinateByID(id int, coordinate tc.Coordinate) (tc.Al
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_COORDINATES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}

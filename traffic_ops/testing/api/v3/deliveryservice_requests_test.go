@@ -42,9 +42,37 @@ func TestDeliveryServiceRequests(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestDeliveryServiceRequests(t)
+		UpdateTestDeliveryServiceRequestsWithHeaders(t, header)
 		GetTestDeliveryServiceRequestsIMSAfterChange(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestDeliveryServiceRequestsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Header) {
+	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
+	dsr := testData.DeliveryServiceRequests[dsrGood]
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID, header)
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v", dsr.DeliveryService.XMLID, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("Length of GET DeliveryServiceRequest is 0")
+	}
+	respDSR := resp[0]
+	respDSR.DeliveryService.DisplayName = "new display name"
+
+	_, reqInf, err := TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Header) {
@@ -225,7 +253,7 @@ func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequ
 	ID := dsr.ID
 	dsr.Status = tc.RequestStatus("submitted")
 
-	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByID(ID, dsr)
+	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByID(ID, dsr, nil)
 	if err != nil {
 		t.Errorf("Error updating deliveryservice_request: %v", err)
 		return alerts, dsr
@@ -246,7 +274,7 @@ func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequ
 func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	dsr := testData.DeliveryServiceRequests[dsrGood]
@@ -282,7 +310,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	expDisplayName := "new display name"
 	respDSR.DeliveryService.DisplayName = expDisplayName
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR)
+	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR, nil)
 	t.Log("Response: ", alert)
 	if err != nil {
 		t.Errorf("cannot UPDATE DeliveryServiceRequest by id: %v - %v", err, alert)

@@ -190,7 +190,7 @@ func (to *Session) GetDeliveryServiceRequestByID(id int, header http.Header) ([]
 }
 
 // Update a DeliveryServiceRequest by ID
-func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
 
@@ -200,7 +200,10 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}

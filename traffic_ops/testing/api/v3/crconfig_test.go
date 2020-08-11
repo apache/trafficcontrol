@@ -17,10 +17,9 @@ package v3
 
 import (
 	"encoding/json"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCRConfig(t *testing.T) {
@@ -82,7 +81,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
 
-	_, err = TOSession.SnapshotCRConfig(cdn)
+	_, err = TOSession.SnapshotCRConfig(cdn, nil)
 	if err != nil {
 		t.Errorf("SnapshotCRConfig err expected nil, actual %+v", err)
 	}
@@ -143,7 +142,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 func SnapshotTestCDNbyName(t *testing.T) {
 
 	firstCDN := testData.CDNs[0]
-	_, err := TOSession.SnapshotCRConfig(firstCDN.Name)
+	_, err := TOSession.SnapshotCRConfig(firstCDN.Name, nil)
 	if err != nil {
 		t.Errorf("failed to snapshot CDN by name: %v", err)
 	}
@@ -152,7 +151,7 @@ func SnapshotTestCDNbyName(t *testing.T) {
 func SnapshotTestCDNbyInvalidName(t *testing.T) {
 
 	invalidCDNName := "cdn-invalid"
-	_, err := TOSession.SnapshotCRConfig(invalidCDNName)
+	_, err := TOSession.SnapshotCRConfig(invalidCDNName, nil)
 	if err == nil {
 		t.Errorf("snapshot occurred on invalid cdn name: %v - %v", invalidCDNName, err)
 	}

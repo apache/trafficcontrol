@@ -223,12 +223,15 @@ func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
 	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
 	existingEtag := rfc.ETag(existingLastUpdated.Time)
 
-	if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	if h != nil {
+		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
+		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
 	}
-	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
-	}
+
 	rows, err := val.APIInfo().Tx.NamedQuery(val.UpdateQuery(), val)
 	if err != nil {
 		return ParseDBError(err)
@@ -236,7 +239,7 @@ func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
 	defer rows.Close()
 
 	if !rows.Next() {
-		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 	lastUpdated := tc.TimeNoMod{}
 	if err := rows.Scan(&lastUpdated); err != nil {

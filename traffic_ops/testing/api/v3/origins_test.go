@@ -16,6 +16,8 @@ package v3
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"net/http"
 	"reflect"
 	"strings"
 	"testing"
@@ -28,12 +30,45 @@ import (
 
 func TestOrigins(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Users, Topologies, DeliveryServices, Coordinates, Origins}, func() {
+		currentTime := time.Now().UTC().Add(-5 * time.Second)
+		time := currentTime.Format(time.RFC1123)
+		var header http.Header
+		header = make(map[string][]string)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestOrigins(t)
+		UpdateTestOriginsWithHeaders(t, header)
 		GetTestOrigins(t)
 		NotFoundDeleteTest(t)
 		OriginTenancyTest(t)
 		VerifyPaginationSupport(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestOriginsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestOriginsWithHeaders(t *testing.T, header http.Header) {
+	firstOrigin := testData.Origins[0]
+	// Retrieve the origin by name so we can get the id for the Update
+	resp, _, err := TOSession.GetOriginByName(*firstOrigin.Name)
+	if err != nil {
+		t.Errorf("cannot GET origin by name: %v - %v", *firstOrigin.Name, err)
+	}
+	remoteOrigin := resp[0]
+	updatedPort := 4321
+	updatedFQDN := "updated.example.com"
+
+	// update port and FQDN values on origin
+	remoteOrigin.Port = &updatedPort
+	remoteOrigin.FQDN = &updatedFQDN
+	_, reqInf, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func CreateTestOrigins(t *testing.T) {
@@ -83,7 +118,7 @@ func UpdateTestOrigins(t *testing.T) {
 	// update port and FQDN values on origin
 	remoteOrigin.Port = &updatedPort
 	remoteOrigin.FQDN = &updatedFQDN
-	updResp, _, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin)
+	updResp, _, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE Origin by name: %v - %v", err, updResp.Alerts)
 	}
@@ -139,7 +174,7 @@ func OriginTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot update tenant3user's origin
-	if _, _, err = tenant4TOClient.UpdateOriginByID(*tenant3Origin.ID, tenant3Origin); err == nil {
+	if _, _, err = tenant4TOClient.UpdateOriginByID(*tenant3Origin.ID, tenant3Origin, nil); err == nil {
 		t.Error("expected tenant4user to be unable to update tenant3's origin")
 	}
 

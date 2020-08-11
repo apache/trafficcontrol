@@ -32,10 +32,34 @@ func TestCDNs(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestCDNs(t)
+		UpdateTestCDNsWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestCDNsWithHeaders(t, header)
 		GetTestCDNs(t)
 		GetTestCDNsIMSAfterChange(t, header)
 	})
+}
+
+func UpdateTestCDNsWithHeaders(t *testing.T, header http.Header) {
+	firstCDN := testData.CDNs[0]
+	// Retrieve the CDN by name so we can get the id for the Update
+	resp, _, err := TOSession.GetCDNByName(firstCDN.Name, header)
+	if err != nil {
+		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
+	}
+	remoteCDN := resp[0]
+	remoteCDN.DomainName = "domain2"
+	_, reqInf, err := TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, header)
+	if err == nil {
+		t.Errorf("Expected error about Precondition Failed, got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestCDNsIMSAfterChange(t *testing.T, header http.Header) {
@@ -67,7 +91,7 @@ func GetTestCDNsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
 	for _, cdn := range testData.CDNs {
-		futureTime := time.Now().AddDate(0,0,1)
+		futureTime := time.Now().AddDate(0, 0, 1)
 		time := futureTime.Format(time.RFC1123)
 		header.Set(rfc.IfModifiedSince, time)
 		_, reqInf, err := TOSession.GetCDNByName(cdn.Name, header)
@@ -104,7 +128,7 @@ func UpdateTestCDNs(t *testing.T) {
 	expectedCDNDomain := "domain2"
 	remoteCDN.DomainName = expectedCDNDomain
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
+	alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE CDN by id: %v - %v", err, alert)
 	}

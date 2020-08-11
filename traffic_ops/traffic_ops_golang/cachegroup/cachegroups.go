@@ -539,11 +539,13 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
 	existingEtag := rfc.ETag(existingLastUpdated.Time)
 
-	if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
-	}
-	if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-		return errors.New("header preconditions dont match"), nil, http.StatusPreconditionFailed
+	if h != nil {
+		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
+		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
 	}
 
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()

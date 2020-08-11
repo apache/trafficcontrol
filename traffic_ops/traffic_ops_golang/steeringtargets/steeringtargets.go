@@ -23,9 +23,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -244,7 +246,22 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	// ToDo : Srijeet change here
+	err, existingLastUpdated := CheckIfExistsBeforeUpdate(st.ReqInfo.Tx, st)
+	if err != nil {
+		return errors.New("no server found with this id"), nil, http.StatusNotFound
+	}
+	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
+	existingEtag := rfc.ETag(existingLastUpdated.Time)
+
+	if h != nil {
+		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
+		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		}
+	}
+
 	rows, err := st.ReqInfo.Tx.NamedQuery(updateQuery(), st)
 	if err != nil {
 		return api.ParseDBError(err)
@@ -267,6 +284,22 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 		return nil, errors.New("too many ids returned from steering target update"), http.StatusInternalServerError
 	}
 	return nil, nil, http.StatusOK
+}
+
+func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, st *TOSteeringTargetV11) (error, *tc.TimeNoMod) {
+	lastUpdated := tc.TimeNoMod{}
+	rows, err := tx.NamedQuery(`select last_updated from steering_target where deliveryservice=:deliveryservice and target=:target`, st)
+	if err != nil {
+		return err, nil
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("no server found with this id"), nil
+	}
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return err, nil
+	}
+	return nil, &lastUpdated
 }
 
 func (st *TOSteeringTargetV11) Delete() (error, error, int) {

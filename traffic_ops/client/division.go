@@ -48,7 +48,7 @@ func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, ReqInf, erro
 }
 
 // Update a Division by ID
-func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateDivisionByID(id int, division tc.Division, header http.Header) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(division)
@@ -57,7 +57,10 @@ func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, 
 		return tc.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_DIVISIONS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}

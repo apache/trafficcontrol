@@ -73,7 +73,7 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 }
 
 // UpdateProfileByID updates a Profile by ID.
-func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateProfileByID(id int, pl tc.Profile, header http.Header) (tc.Alerts, ReqInf, error) {
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 
 	reqBody, err := json.Marshal(pl)
@@ -82,7 +82,10 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 	}
 
 	route := fmt.Sprintf("%s/%d", API_PROFILES, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, header)
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

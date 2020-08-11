@@ -106,13 +106,13 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 
 // UpdateTenant updates the Tenant matching the ID it's passed with
 // the Tenant it is passed.
-func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, error) {
+func (to *Session) UpdateTenant(id string, t *tc.Tenant, header http.Header) (*tc.TenantResponse, error) {
 	var data tc.TenantResponse
 	jsonReq, err := json.Marshal(t)
 	if err != nil {
 		return nil, err
 	}
-	_, err = put(to, fmt.Sprintf(API_TENANT_ID, id), jsonReq, &data)
+	_, err = put(to, fmt.Sprintf(API_TENANT_ID, id), jsonReq, &data, header)
 	if err != nil {
 		return nil, err
 	}

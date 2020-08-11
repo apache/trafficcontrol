@@ -33,9 +33,34 @@ func TestCoordinates(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestCoordinates(t)
+		UpdateTestCoordinatesWithHeaders(t, header)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestCoordinatesWithHeaders(t, header)
 		GetTestCoordinatesIMSAfterChange(t, header)
 	})
+}
+
+func UpdateTestCoordinatesWithHeaders(t *testing.T, header http.Header) {
+	firstCoord := testData.Coordinates[0]
+	resp, _, err := TOSession.GetCoordinateByName(firstCoord.Name, nil)
+	if err != nil {
+		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
+	}
+	coord := resp[0]
+	expectedLat := 12.34
+	coord.Latitude = expectedLat
+
+	_, reqInf, err := TOSession.UpdateCoordinateByID(coord.ID, coord, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestCoordinatesIMSAfterChange(t *testing.T, header http.Header) {
@@ -66,7 +91,7 @@ func GetTestCoordinatesIMSAfterChange(t *testing.T, header http.Header) {
 func GetTestCoordinatesIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, coord := range testData.Coordinates {
@@ -110,7 +135,7 @@ func UpdateTestCoordinates(t *testing.T) {
 	coord.Latitude = expectedLat
 
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateCoordinateByID(coord.ID, coord)
+	alert, _, err = TOSession.UpdateCoordinateByID(coord.ID, coord, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE Coordinate by id: %v - %v", err, alert)
 	}

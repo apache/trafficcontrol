@@ -33,17 +33,41 @@ func TestRegions(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
+		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestRegions(t)
+		UpdateTestRegionsWithHeaders(t, header)
 		GetTestRegions(t)
 		GetTestRegionsIMSAfterChange(t, header)
 		DeleteTestRegionsByName(t)
+		header = make(map[string][]string)
+		etag := rfc.ETag(currentTime)
+		header.Set(rfc.IfMatch, etag)
+		UpdateTestRegionsWithHeaders(t, header)
 	})
+}
+
+func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
+	firstRegion := testData.Regions[0]
+	// Retrieve the Region by region so we can get the id for the Update
+	resp, _, err := TOSession.GetRegionByName(firstRegion.Name, header)
+	if err != nil {
+		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
+	}
+	remoteRegion := resp[0]
+	remoteRegion.Name = "OFFLINE-TEST"
+	_, reqInf, err := TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, header)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	}
 }
 
 func GetTestRegionsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, region := range testData.Regions {
@@ -105,7 +129,7 @@ func UpdateTestRegions(t *testing.T) {
 	expectedRegion := "OFFLINE-TEST"
 	remoteRegion.Name = expectedRegion
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
+	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
 	}
@@ -122,7 +146,7 @@ func UpdateTestRegions(t *testing.T) {
 
 	// Set the name back to the fixture value so we can delete it after
 	remoteRegion.Name = firstRegion.Name
-	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
+	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
 	}
