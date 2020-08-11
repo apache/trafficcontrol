@@ -44,7 +44,7 @@ type TOCDNFederation struct {
 	TenantID *int `json:"-" db:"tenant_id"`
 }
 
-func (v *TOCDNFederation) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOCDNFederation) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from federation where id=:id`, v)
 	if err != nil {

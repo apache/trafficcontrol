@@ -39,7 +39,7 @@ type TOStaticDNSEntry struct {
 	tc.StaticDNSEntryNullable
 }
 
-func (v *TOStaticDNSEntry) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOStaticDNSEntry) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from staticdnsentry where id=:id`, v)
 	if err != nil {

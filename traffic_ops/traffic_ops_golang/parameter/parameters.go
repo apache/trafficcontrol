@@ -55,7 +55,7 @@ type TOParameter struct {
 	tc.ParameterNullable
 }
 
-func (v *TOParameter) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOParameter) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from parameter where id=:id`, v)
 	if err != nil {

@@ -42,7 +42,7 @@ type TOType struct {
 	tc.TypeNullable
 }
 
-func (v *TOType) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOType) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from type where id=:id`, v)
 	if err != nil {

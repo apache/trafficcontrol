@@ -45,7 +45,7 @@ type TORole struct {
 	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
 }
 
-func (v *TORole) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TORole) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from role where id=:id`, v)
 	if err != nil {

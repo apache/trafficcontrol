@@ -23,12 +23,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	ims "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
-	"net/http"
-	"strings"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -57,7 +57,7 @@ type GenericUpdater interface {
 	APIInfo() *APIInfo
 	SetLastUpdated(tc.TimeNoMod)
 	UpdateQuery() string
-	CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod)
+	GetLastUpdated() (error, *tc.TimeNoMod)
 }
 
 type GenericDeleter interface {
@@ -216,20 +216,12 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.
 func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
-	err, existingLastUpdated := val.CheckIfExistsBeforeUpdate()
+	err, existingLastUpdated := val.GetLastUpdated()
 	if err != nil {
 		return errors.New("no " + val.GetType() + " found with this id"), err, http.StatusNotFound
 	}
-	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
-	existingEtag := rfc.ETag(existingLastUpdated.Time)
-
-	if h != nil {
-		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
-		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
+	if !IsUnmodified(h, existingLastUpdated) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 
 	rows, err := val.APIInfo().Tx.NamedQuery(val.UpdateQuery(), val)

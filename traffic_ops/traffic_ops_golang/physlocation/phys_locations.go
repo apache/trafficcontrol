@@ -40,7 +40,7 @@ type TOPhysLocation struct {
 	tc.PhysLocationNullable
 }
 
-func (v *TOPhysLocation) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOPhysLocation) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from phys_location where id=:id`, v)
 	if err != nil {

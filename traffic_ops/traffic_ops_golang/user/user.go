@@ -23,15 +23,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -39,6 +35,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -250,22 +247,6 @@ func (user *TOUser) privCheck() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, userID int) (error, *tc.TimeNoMod) {
-	lastUpdated := tc.TimeNoMod{}
-	rows, err := tx.Query(`select last_updated from tm_user where id = $1`, userID)
-	if err != nil {
-		return err, nil
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		return errors.New("no tm_user found with this id"), nil
-	}
-	if err := rows.Scan(&lastUpdated); err != nil {
-		return err, nil
-	}
-	return nil, &lastUpdated
-}
-
 func (user *TOUser) Update(h http.Header) (error, error, int) {
 
 	// make sure current user cannot update their own role to a new value
@@ -285,21 +266,12 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 			return nil, err, http.StatusInternalServerError
 		}
 	}
-
-	err, existingLastUpdated := CheckIfExistsBeforeUpdate(user.ReqInfo.Tx, *user.ID)
+	err, existingLastUpdated := api.GetLastUpdated(user.ReqInfo.Tx, *user.ID, "tm_user")
 	if err != nil {
 		return errors.New("no server found with this id"), nil, http.StatusNotFound
 	}
-	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
-	existingEtag := rfc.ETag(existingLastUpdated.Time)
-
-	if h != nil {
-		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
-		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
+	if !api.IsUnmodified(h, existingLastUpdated) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)

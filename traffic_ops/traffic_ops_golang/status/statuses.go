@@ -43,7 +43,7 @@ type TOStatus struct {
 	SQLDescription sql.NullString `json:"-" db:"description"`
 }
 
-func (v *TOStatus) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOStatus) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from status where id=:id`, v)
 	if err != nil {

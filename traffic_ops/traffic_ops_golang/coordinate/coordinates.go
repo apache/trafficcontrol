@@ -52,7 +52,7 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 
-func (v *TOCoordinate) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOCoordinate) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from coordinate where id=:id`, v)
 	if err != nil {

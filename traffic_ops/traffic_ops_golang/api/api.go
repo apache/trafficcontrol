@@ -986,3 +986,36 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 		return tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
 	}
 }
+
+// GetLastUpdated checks for the resource in the database, and returns its last_updated timestamp, if available
+func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (error, *tc.TimeNoMod) {
+	lastUpdated := tc.TimeNoMod{}
+	rows, err := tx.Query(`select last_updated from `+tableName+` where id=$1`, ID)
+	if err != nil {
+		return err, nil
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("no resource found with this id"), nil
+	}
+	if err := rows.Scan(&lastUpdated); err != nil {
+		return err, nil
+	}
+	return nil, &lastUpdated
+}
+
+// IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers
+func IsUnmodified(h http.Header, existingLastUpdated *tc.TimeNoMod) bool {
+	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
+	existingEtag := rfc.ETag(existingLastUpdated.Time)
+
+	if h != nil {
+		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
+			return false
+		}
+		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
+			return false
+		}
+	}
+	return true
+}

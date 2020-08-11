@@ -973,22 +973,6 @@ func deleteInterfaces(id int, tx *sql.Tx) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, server tc.ServerNullableV2) (error, *tc.TimeNoMod) {
-	lastUpdated := tc.TimeNoMod{}
-	rows, err := tx.NamedQuery(`select last_updated from server where id=:id`, server)
-	if err != nil {
-		return err, nil
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		return errors.New("no server found with this id"), nil
-	}
-	if err := rows.Scan(&lastUpdated); err != nil {
-		return err, nil
-	}
-	return nil, &lastUpdated
-}
-
 func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
@@ -1088,23 +1072,14 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err, existingLastUpdated := CheckIfExistsBeforeUpdate(inf.Tx, server)
+	err, existingLastUpdated := api.GetLastUpdated(inf.Tx, *server.ID, "server")
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
 		return
 	}
-	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(r.Header)
-	existingEtag := rfc.ETag(existingLastUpdated.Time)
-
-	if r.Header != nil {
-		if r.Header.Get(rfc.IfMatch) != "" && !strings.Contains(r.Header.Get(rfc.IfMatch), existingEtag) {
-			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("resource was modified"), nil)
-			return
-		}
-		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("resource was modified"), nil)
-			return
-		}
+	if !api.IsUnmodified(r.Header, existingLastUpdated) {
+		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, errors.New("resource was modified"), nil)
+		return
 	}
 
 	rows, err := inf.Tx.NamedQuery(updateQuery, server)

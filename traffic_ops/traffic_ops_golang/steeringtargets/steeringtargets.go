@@ -22,13 +22,12 @@ package steeringtargets
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -245,21 +244,12 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 	if userErr, sysErr, errCode := tenant.CheckID(st.ReqInfo.Tx.Tx, st.ReqInfo.User, int(*st.DeliveryServiceID)); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-
 	err, existingLastUpdated := CheckIfExistsBeforeUpdate(st.ReqInfo.Tx, st)
 	if err != nil {
-		return errors.New("no server found with this id"), nil, http.StatusNotFound
+		return errors.New("no steering target found with this id"), nil, http.StatusNotFound
 	}
-	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
-	existingEtag := rfc.ETag(existingLastUpdated.Time)
-
-	if h != nil {
-		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
-		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
+	if !api.IsUnmodified(h, existingLastUpdated) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 
 	rows, err := st.ReqInfo.Tx.NamedQuery(updateQuery(), st)

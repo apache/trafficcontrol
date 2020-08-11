@@ -22,12 +22,11 @@ package request
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -46,7 +45,7 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
-func (v *TODeliveryServiceRequest) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TODeliveryServiceRequest) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from deliveryservice_request where id=:id`, v)
 	if err != nil {
@@ -401,20 +400,12 @@ func (req *deliveryServiceRequestAssignment) Update(h http.Header) (error, error
 	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.AssigneeID = assigneeID
 
-	err, existingLastUpdated := CheckIfExistsBeforeUpdate(req.ReqInfo.Tx, *req.ID)
+	err, existingLastUpdated := api.GetLastUpdated(req.ReqInfo.Tx, *req.ID, "deliveryservice_request")
 	if err != nil {
 		return errors.New("no delivery service request found with this id"), nil, http.StatusNotFound
 	}
-	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
-	existingEtag := rfc.ETag(existingLastUpdated.Time)
-
-	if h != nil {
-		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
-		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
+	if !api.IsUnmodified(h, existingLastUpdated) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 
 	// LastEditedBy field should not change with status update
@@ -427,22 +418,6 @@ func (req *deliveryServiceRequestAssignment) Update(h http.Header) (error, error
 	}
 
 	return nil, nil, http.StatusOK
-}
-
-func CheckIfExistsBeforeUpdate(tx *sqlx.Tx, dsReqID int) (error, *tc.TimeNoMod) {
-	lastUpdated := tc.TimeNoMod{}
-	rows, err := tx.Query(`select last_updated from deliveryservice_request where id=$1`, dsReqID)
-	if err != nil {
-		return err, nil
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		return errors.New("no delivery service request found with this id"), nil
-	}
-	if err := rows.Scan(&lastUpdated); err != nil {
-		return err, nil
-	}
-	return nil, &lastUpdated
 }
 
 func (req deliveryServiceRequestAssignment) Validate() error {
@@ -497,16 +472,8 @@ func (req *deliveryServiceRequestStatus) Update(h http.Header) (error, error, in
 
 	// LastEditedBy field should not change with status update
 	existingLastUpdated := current.LastUpdated
-	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
-	existingEtag := rfc.ETag(existingLastUpdated.Time)
-
-	if h != nil {
-		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
-		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
+	if !api.IsUnmodified(h, existingLastUpdated) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {

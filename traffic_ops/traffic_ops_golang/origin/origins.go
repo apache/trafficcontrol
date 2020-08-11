@@ -23,12 +23,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -309,16 +308,8 @@ func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 		return nil, errors.New("origin update: querying: " + err.Error()), http.StatusInternalServerError
 	}
 
-	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
-	existingEtag := rfc.ETag(existingLastUpdated.Time)
-
-	if h != nil {
-		if h.Get(rfc.IfMatch) != "" && !strings.Contains(h.Get(rfc.IfMatch), existingEtag) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
-		if iumsTime != nil && existingLastUpdated.UTC().After(iumsTime.UTC()) {
-			return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
-		}
+	if !api.IsUnmodified(h, existingLastUpdated) {
+		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
 	}
 
 	if isPrimary && *origin.DeliveryServiceID != ds {

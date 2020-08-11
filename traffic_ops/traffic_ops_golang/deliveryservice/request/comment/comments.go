@@ -40,7 +40,7 @@ type TODeliveryServiceRequestComment struct {
 	tc.DeliveryServiceRequestCommentNullable
 }
 
-func (v *TODeliveryServiceRequestComment) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TODeliveryServiceRequestComment) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from deliveryservice_request_comment where id=:id`, v)
 	if err != nil {

@@ -45,7 +45,7 @@ type TOTenant struct {
 	tc.TenantNullable
 }
 
-func (v *TOTenant) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOTenant) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from tenant where id=:id`, v)
 	if err != nil {

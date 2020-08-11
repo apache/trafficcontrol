@@ -42,7 +42,7 @@ type TOCDN struct {
 	tc.CDNNullable
 }
 
-func (v *TOCDN) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOCDN) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from cdn where id=:id`, v)
 	if err != nil {

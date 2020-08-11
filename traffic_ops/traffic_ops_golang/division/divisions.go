@@ -41,7 +41,7 @@ type TODivision struct {
 	tc.DivisionNullable
 }
 
-func (v *TODivision) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TODivision) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from division where id=:id`, v)
 	if err != nil {

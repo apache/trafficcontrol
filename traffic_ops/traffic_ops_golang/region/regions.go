@@ -35,7 +35,7 @@ type TORegion struct {
 	tc.Region
 }
 
-func (v *TORegion) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TORegion) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from region where id=:id`, v)
 	if err != nil {

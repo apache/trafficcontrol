@@ -54,7 +54,7 @@ type TOProfile struct {
 	tc.ProfileNullable
 }
 
-func (v *TOProfile) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOProfile) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from profile where id=:id`, v)
 	if err != nil {

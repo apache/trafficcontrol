@@ -43,7 +43,7 @@ type TOASNV11 struct {
 	tc.ASNNullable
 }
 
-func (v *TOASNV11) CheckIfExistsBeforeUpdate() (error, *tc.TimeNoMod) {
+func (v *TOASNV11) GetLastUpdated() (error, *tc.TimeNoMod) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from asn where id=:id`, v)
 	if err != nil {
