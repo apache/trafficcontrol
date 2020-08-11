@@ -61,6 +61,23 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 `
 
+const deliveryServiceServersJoin = `
+FULL OUTER JOIN (
+SELECT
+	td.id deliveryservice,
+	s.id "server"
+FROM "server" s
+JOIN cachegroup c on s.cachegroup = c.id
+LEFT JOIN topology_cachegroup tc ON c.name = tc.cachegroup
+LEFT JOIN deliveryservice td ON td.topology = tc.topology
+UNION
+SELECT
+	dss.deliveryservice,
+	dss."server"
+FROM deliveryservice_server dss
+) dss ON dss.server = s.id
+`
+
 const serverCountQuery = `
 SELECT COUNT(s.id)
 ` + serversFromAndJoin
@@ -651,9 +668,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 			return nil, 0, errors.New("Forbidden"), sysErr, http.StatusForbidden, nil
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
-		queryAddition = `
-			FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
-		`
+		queryAddition = deliveryServiceServersJoin
 		// depending on ds type, also need to add mids
 		dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
