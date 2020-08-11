@@ -80,6 +80,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercheck"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercheck/extensions"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servicecategory"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/staticdnsentry"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/status"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/steering"
@@ -414,6 +415,12 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{3, 0}, http.MethodPost, `deliveryservices/{dsid}/regexes/?$`, deliveryservicesregexes.Post, auth.PrivLevelOperations, Authenticated, nil, 2127378003, noPerlBypass},
 		{api.Version{3, 0}, http.MethodPut, `deliveryservices/{dsid}/regexes/{regexid}?$`, deliveryservicesregexes.Put, auth.PrivLevelOperations, Authenticated, nil, 22483396913, noPerlBypass},
 		{api.Version{3, 0}, http.MethodDelete, `deliveryservices/{dsid}/regexes/{regexid}?$`, deliveryservicesregexes.Delete, auth.PrivLevelOperations, Authenticated, nil, 22467316633, noPerlBypass},
+
+		//ServiceCategories
+		{api.Version{3, 0}, http.MethodGet, `service_categories/?$`, api.ReadHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelReadOnly, Authenticated, nil, 1085181543, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPut, `service_categories/{name}/?$`, api.UpdateHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, Authenticated, nil, 306369141, noPerlBypass},
+		{api.Version{3, 0}, http.MethodPost, `service_categories/?$`, api.CreateHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, Authenticated, nil, 553713801, noPerlBypass},
+		{api.Version{3, 0}, http.MethodDelete, `service_categories/{name}$`, api.DeleteHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, Authenticated, nil, 1325382238, noPerlBypass},
 
 		//StaticDNSEntries
 		{api.Version{3, 0}, http.MethodGet, `staticdnsentries/?$`, api.ReadHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelReadOnly, Authenticated, nil, 2289394773, noPerlBypass},
