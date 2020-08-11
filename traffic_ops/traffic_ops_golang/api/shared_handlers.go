@@ -168,8 +168,9 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 			return
 		}
 		if maxTime != nil {
+			truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
 			// RFC1123
-			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 			w.Header().Add(rfc.LastModified, date)
 		}
 		w.WriteHeader(errCode)

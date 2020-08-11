@@ -123,8 +123,9 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if maxTime != nil {
+		truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
 		// RFC1123
-		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+		date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 		w.Header().Add(rfc.LastModified, date)
 	}
 	// statusnotmodified
@@ -185,8 +186,9 @@ func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
 
 	results, err, maxTime := dss.readDSS(r.Header, inf.Tx, inf.User, inf.Params, inf.IntParams, dsIDs, serverIDs, useIMS)
 	if maxTime != nil {
+		truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
 		// RFC1123
-		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+		date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 		w.Header().Add(rfc.LastModified, date)
 	}
 	if err != nil {

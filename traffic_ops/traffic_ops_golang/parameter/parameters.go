@@ -56,19 +56,7 @@ type TOParameter struct {
 }
 
 func (v *TOParameter) GetLastUpdated() (error, *tc.TimeNoMod) {
-	lastUpdated := tc.TimeNoMod{}
-	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from parameter where id=:id`, v)
-	if err != nil {
-		return err, nil
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		return errors.New("no " + v.GetType() + " found with this id"), nil
-	}
-	if err := rows.Scan(&lastUpdated); err != nil {
-		return err, nil
-	}
-	return nil, &lastUpdated
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "parameter")
 }
 
 // AllowMultipleCreates indicates whether an array can be POSTed using the shared Create handler

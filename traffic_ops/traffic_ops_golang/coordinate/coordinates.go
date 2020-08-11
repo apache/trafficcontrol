@@ -20,7 +20,6 @@ package coordinate
  */
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -53,19 +52,7 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 
 func (v *TOCoordinate) GetLastUpdated() (error, *tc.TimeNoMod) {
-	lastUpdated := tc.TimeNoMod{}
-	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from coordinate where id=:id`, v)
-	if err != nil {
-		return err, nil
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		return errors.New("no " + v.GetType() + " found with this id"), nil
-	}
-	if err := rows.Scan(&lastUpdated); err != nil {
-		return err, nil
-	}
-	return nil, &lastUpdated
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "coordinate")
 }
 
 func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }

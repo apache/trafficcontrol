@@ -21,7 +21,6 @@ package status
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -44,19 +43,7 @@ type TOStatus struct {
 }
 
 func (v *TOStatus) GetLastUpdated() (error, *tc.TimeNoMod) {
-	lastUpdated := tc.TimeNoMod{}
-	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from status where id=:id`, v)
-	if err != nil {
-		return err, nil
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		return errors.New("no " + v.GetType() + " found with this id"), nil
-	}
-	if err := rows.Scan(&lastUpdated); err != nil {
-		return err, nil
-	}
-	return nil, &lastUpdated
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "status")
 }
 
 func (v *TOStatus) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {

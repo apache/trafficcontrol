@@ -515,8 +515,9 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	servers, serverCount, userErr, sysErr, errCode, maxTime = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS)
 	if maxTime != nil {
+		truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
 		// RFC1123
-		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+		date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 		w.Header().Add(rfc.LastModified, date)
 	}
 	if errCode == http.StatusNotModified {

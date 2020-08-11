@@ -55,19 +55,7 @@ type TOProfile struct {
 }
 
 func (v *TOProfile) GetLastUpdated() (error, *tc.TimeNoMod) {
-	lastUpdated := tc.TimeNoMod{}
-	rows, err := v.APIInfo().Tx.NamedQuery(`select last_updated from profile where id=:id`, v)
-	if err != nil {
-		return err, nil
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		return errors.New("no " + v.GetType() + " found with this id"), nil
-	}
-	if err := rows.Scan(&lastUpdated); err != nil {
-		return err, nil
-	}
-	return nil, &lastUpdated
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "profile")
 }
 
 func (v *TOProfile) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }

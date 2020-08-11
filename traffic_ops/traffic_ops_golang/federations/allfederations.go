@@ -58,8 +58,9 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		feds, err, code, maxTime = getAllFederationsForCDN(inf.Tx.Tx, cdnName, useIMS, r.Header)
 		if code == http.StatusNotModified {
 			if maxTime != nil {
+				truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
 				// RFC1123
-				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+				date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 				w.Header().Add(rfc.LastModified, date)
 			}
 			w.WriteHeader(code)
@@ -75,8 +76,9 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		feds, err, code, maxTime = getAllFederations(inf.Tx.Tx, useIMS, r.Header)
 		if code == http.StatusNotModified {
 			if maxTime != nil {
+				truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
 				// RFC1123
-				date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+				date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 				w.Header().Add(rfc.LastModified, date)
 			}
 			w.WriteHeader(code)
@@ -92,8 +94,9 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	fedsResolvers, err, code, maxTime := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds), useIMS, r.Header)
 	if code == http.StatusNotModified {
 		if maxTime != nil {
+			truncatedTime := maxTime.Truncate(time.Second).Add(time.Second)
 			// RFC1123
-			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			date := truncatedTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
 			w.Header().Add(rfc.LastModified, date)
 		}
 		w.WriteHeader(code)
