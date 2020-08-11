@@ -62,7 +62,7 @@ under the License.
                         <ul>
                             <li>Type:A_RECORD, address should be an IPv4 address.</li>
                             <li>Type:AAAA_RECORD, address should be an IPv6 address.</li>
-                            <li>Type:CNAME, address must end with a trailing period.</li>
+                            <li>Type:CNAME, address must be a valid DNS name ending with a trailing period.</li>
                             <li>Type:TXT_RECORD, address cannot be blank.</li>
                         </ul>
                     </div>
@@ -70,7 +70,7 @@ under the License.
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="address" name="address" type="text" class="form-control" ng-model="staticDnsEntry.address"
-                           required title= "Address must be: an IPv4, if type:A_RECORD; an IPv6, if type: AAAA_RECORD; end with a trailing period if type:CNAME_RECORD; cannot be blank; if type: TXT_RECORD">
+                           required title="Address must be: an IPv4, if type:A_RECORD; an IPv6, if type: AAAA_RECORD; end with a trailing period if type:CNAME_RECORD; cannot be blank; if type: TXT_RECORD">
                     <small class="input-error" ng-show="hasPropertyError(dsStaticDnsEntryForm.address, 'required')">Required</small>
                     <span ng-show="hasError(dsStaticDnsEntryForm.address)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
