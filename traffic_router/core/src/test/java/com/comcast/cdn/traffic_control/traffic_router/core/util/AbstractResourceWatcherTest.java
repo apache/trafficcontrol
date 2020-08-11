@@ -54,6 +54,7 @@ public class AbstractResourceWatcherTest {
     private TrafficRouterManager trafficRouterManager;
     private SteeringRegistry steeringRegistry;
     private static ApplicationContext context;
+    private String oldFedUrl;
 
     @BeforeClass
     public static void setUpBeforeClass() {
@@ -68,6 +69,11 @@ public class AbstractResourceWatcherTest {
         steeringRegistry = (SteeringRegistry) context.getBean("steeringRegistry");
         trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
         trafficRouterManager.getTrafficRouter().setApplicationContext(context);
+
+        TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
+        CacheRegister cacheRegister = trafficRouter.getCacheRegister();
+        JsonNode config = cacheRegister.getConfig();
+        oldFedUrl = config.get(federationsWatcher.getWatcherConfigPrefix() + ".polling.url") != null ? config.get(federationsWatcher.getWatcherConfigPrefix() + ".polling.url").asText() : "";
 
         while (!federationsWatcher.isLoaded()) {
             LOGGER.info("Waiting for a valid federations database before proceeding");
@@ -86,7 +92,11 @@ public class AbstractResourceWatcherTest {
         TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
         CacheRegister cacheRegister = trafficRouter.getCacheRegister();
         JsonNode config = cacheRegister.getConfig();
-        config = ((ObjectNode) config).put(federationsWatcher.getWatcherConfigPrefix() + ".polling.url", DEFAULT_FEDERATION_DATA_URL);
+        if (oldFedUrl != null && !oldFedUrl.isEmpty()) {
+            config = ((ObjectNode) config).put(federationsWatcher.getWatcherConfigPrefix() + ".polling.url", oldFedUrl);
+        } else {
+            config = ((ObjectNode) config).remove(federationsWatcher.getWatcherConfigPrefix() + ".polling.url");
+        }
         federationsWatcher.configure(config);
         assertThat(federationsWatcher.getDataBaseURL(), endsWith(DEFAULT_FEDERATION_DATA_URL.split("api")[1]));
     }
@@ -103,6 +113,7 @@ public class AbstractResourceWatcherTest {
 
         String newFedsUrl = "https://${toHostname}/api/3.0/notAFederationsEndpoint";
         config = ((ObjectNode) config).put(federationsWatcher.getWatcherConfigPrefix() + ".polling.url", newFedsUrl);
+        federationsWatcher.trafficOpsUtils.setConfig(config);
         federationsWatcher.configure(config);
         config = cacheRegister.getConfig();
         assertThat(config.get(federationsWatcher.getWatcherConfigPrefix() + ".polling.url").asText(), endsWith("api/3.0/notAFederationsEndpoint"));
