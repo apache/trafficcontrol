@@ -42,7 +42,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
-    - name: Run Traffic Ops unit tests
+    - name: Run Grove unit tests
       uses: ./.github/actions/go-test
       with:
         dir: ./grove/...
@@ -53,7 +53,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
-    - name: Run Traffic Ops unit tests
+    - name: Run lib unit tests
       uses: ./.github/actions/go-test
       with:
         dir: ./lib/...
@@ -64,7 +64,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
-    - name: Run Traffic Ops unit tests
+    - name: Run Traffic Monitor unit tests
       uses: ./.github/actions/go-test
       with:
         dir: ./traffic_monitor/...
@@ -86,7 +86,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
-    - name: Run Traffic Ops unit tests
+    - name: Run Traffic Ops ORT unit tests
       uses: ./.github/actions/go-test
       with:
         dir: ./traffic_ops_ort/atstccfg/...
