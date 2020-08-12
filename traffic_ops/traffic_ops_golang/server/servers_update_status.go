@@ -57,7 +57,7 @@ WITH RECURSIVE topology_ancestors AS (
 /* This is the base case of the recursive CTE, the topology node for the
  * cachegroup containing server $4.
  */
-	SELECT tcp.child parent, tc.cachegroup
+	SELECT tcp.child parent, NULL cachegroup, s.id base_server_id
 	FROM "server" s
 	JOIN cachegroup c ON s.cachegroup = c.id
 	JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
@@ -65,7 +65,7 @@ WITH RECURSIVE topology_ancestors AS (
 	WHERE s.host_name = $4
 UNION ALL
 /* Find all direct topology parent nodes tc of a given topology ancestor ta. */
-	SELECT tcp.parent, tc.cachegroup
+	SELECT tcp.parent, tc.cachegroup, ta.base_server_id
 	FROM topology_ancestors ta, topology_cachegroup_parents tcp
 	JOIN topology_cachegroup tc ON tcp.parent = tc.id
 	WHERE ta.parent = tcp.child
@@ -73,12 +73,10 @@ UNION ALL
  * ancestor topology node found by topology_ancestors.
  */
 ), server_topology_ancestors AS (
-SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status
+SELECT s.id, s.cachegroup, s.cdn_id, s.upd_pending, s.reval_pending, s.status, ta.base_server_id
 FROM server s
 JOIN cachegroup c ON s.cachegroup = c.id
 JOIN topology_ancestors ta ON c."name" = ta.cachegroup
-/* Filter out cachegroup of host_name $4 */
-WHERE s.cachegroup != (SELECT s.cachegroup FROM server s WHERE s.host_name = $4)
 ), parentservers AS (
 	SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending, ps.status
 		FROM server ps
@@ -101,12 +99,12 @@ SELECT
 	status.name AS status,
 		/* True if the cachegroup parent or any ancestor topology node has pending updates. */
 		TRUE IN (
-			SELECT sta.upd_pending FROM server_topology_ancestors sta
+			SELECT sta.upd_pending FROM server_topology_ancestors sta WHERE sta.base_server_id = s.id
 			UNION SELECT COALESCE(BOOL_OR(ps.upd_pending), FALSE)
 		) AS parent_upd_pending,
 		/* True if the cachegroup parent or any ancestor topology node has pending revalidation. */
 		TRUE IN (
-			SELECT sta.reval_pending FROM server_topology_ancestors sta
+			SELECT sta.reval_pending FROM server_topology_ancestors sta WHERE sta.base_server_id = s.id
 			UNION SELECT COALESCE(BOOL_OR(ps.reval_pending), FALSE)
 		) AS parent_reval_pending
 	FROM use_reval_pending,
@@ -206,7 +204,7 @@ ORDER BY s.id
 	var rows *sql.Rows
 	var err error
 	if hostName == "all" {
-		rows, err = tx.Query(baseSelectStatement + groupBy, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName)
+		rows, err = tx.Query(baseSelectStatement+groupBy, tc.CacheStatusOffline, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName)
 		if err != nil {
 			log.Errorf("could not execute select server update status query: %s\n", err)
 			return nil, tc.DBError

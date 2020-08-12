@@ -20,10 +20,7 @@ import (
 )
 
 func TestUpdateStatus(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
-		defer DeleteTestDeliveryServiceServersCreated(t)
-		CreateTestDeliveryServiceServers(t)
-
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 		GetTestUpdateStatus(t)
 	})
 }

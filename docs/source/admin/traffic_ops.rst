@@ -444,8 +444,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 		:ignore_unknown_routes: If ``false`` (default) return an error and prevent startup if unknown route IDs are found. Otherwise, log a warning and continue startup.
 
 :use_ims:
+
     .. versionadded:: 5.0
-    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
+	    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
 
 Example cdn.conf
 ''''''''''''''''

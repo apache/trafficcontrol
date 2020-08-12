@@ -52,7 +52,7 @@ func GetConfigFileCDNCacheURL(toData *config.TOData, fileName string) (string, s
 		if ds.Type != nil && (*ds.Type == tc.DSTypeAnyMap || *ds.Type == tc.DSTypeSteering) {
 			continue
 		}
-		if len(dssMap[*ds.ID]) == 0 {
+		if len(dssMap[*ds.ID]) == 0 && ds.Topology == nil {
 			continue
 		}
 		dsesWithServers = append(dsesWithServers, ds)

@@ -39,8 +39,9 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/torequtil"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 )
 
 type TOClient struct {
@@ -75,9 +76,9 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 	deliveryServices := []tc.DeliveryServiceNullable{}
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
-		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID)
+		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID, nil)
 		if err != nil {
-			if errStr := strings.ToLower(err.Error()); strings.Contains(errStr, "not found") || strings.Contains(errStr, "not impl") {
+			if IsUnsupportedErr(err) {
 				unsupported = true
 				return nil
 			}
@@ -94,4 +95,59 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 		return nil, false, errors.New("getting delivery services: " + err.Error())
 	}
 	return deliveryServices, false, nil
+}
+
+func (cl *TOClient) GetTopologies() ([]tc.Topology, bool, error) {
+	topologies := []tc.Topology{}
+	unsupported := false
+	err := torequtil.GetRetry(cl.NumRetries, "topologies", &topologies, func(obj interface{}) error {
+		toTopologies, reqInf, err := cl.C.GetTopologies(nil)
+		if err != nil {
+			if IsUnsupportedErr(err) {
+				unsupported = true
+				return nil
+			}
+			return errors.New("getting topologies from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		topologies := obj.(*[]tc.Topology)
+		*topologies = toTopologies
+		return nil
+	})
+	if unsupported {
+		return nil, true, nil
+	}
+	if err != nil {
+		return nil, false, errors.New("getting topologies: " + err.Error())
+	}
+	return topologies, false, nil
+}
+
+func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.ServerUpdateStatus, bool, error) {
+	status := tc.ServerUpdateStatus{}
+	unsupported := false
+	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), &status, func(obj interface{}) error {
+		toStatus, reqInf, err := cl.C.GetServerUpdateStatus(string(cacheHostName), nil)
+		if err != nil {
+			if IsUnsupportedErr(err) {
+				unsupported = true
+				return nil
+			}
+			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		status := obj.(*tc.ServerUpdateStatus)
+		*status = toStatus
+		return nil
+	})
+	if unsupported {
+		return tc.ServerUpdateStatus{}, true, nil
+	}
+	if err != nil {
+		return tc.ServerUpdateStatus{}, false, errors.New("getting server update status: " + err.Error())
+	}
+	return status, false, nil
+}
+
+func IsUnsupportedErr(err error) bool {
+	errStr := strings.ToLower(err.Error())
+	return strings.Contains(errStr, "not found") || strings.Contains(errStr, "not impl")
 }

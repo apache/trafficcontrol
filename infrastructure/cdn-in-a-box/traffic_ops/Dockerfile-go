@@ -49,7 +49,7 @@ ARG TRAFFIC_OPS_RPM=traffic_ops/traffic_ops.rpm
 
 COPY $TRAFFIC_OPS_RPM /
 RUN to_rpm_filename="$(basename $TRAFFIC_OPS_RPM)" && \
-    rpm --install --nodeps --verbose --hash "$to_rpm_filename" && \
+    rpm -Uvh --nodeps "$to_rpm_filename" && \
     rm "$to_rpm_filename"
 
 COPY enroller/server_template.json \

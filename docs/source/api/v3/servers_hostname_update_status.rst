@@ -92,4 +92,4 @@ Each object in the returned array\ [1]_ will contain the following fields:
 		"parent_reval_pending": false
 	}]
 
-.. [1] Despite that the returned object is an array, exactly one server's information is requested and thus returned. That is to say, the array should always have a length of exactly one.
+.. [1] The returned object is an array, and there is no guarantee that one server exists for a given hostname. However, for each server in the array, that server's update status will be accurate for the server with that particular server ID.

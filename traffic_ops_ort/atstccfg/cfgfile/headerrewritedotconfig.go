@@ -70,7 +70,7 @@ func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (stri
 		if server.CDNName != *tcDS.CDNName {
 			continue
 		}
-		if _, ok := dsServerIDs[server.ID]; !ok {
+		if _, ok := dsServerIDs[server.ID]; !ok && tcDS.Topology == nil {
 			continue
 		}
 		cfgServer, err := atscfg.HeaderRewriteServerFromServerNotNullable(server)
@@ -80,5 +80,5 @@ func GetConfigFileCDNHeaderRewrite(toData *config.TOData, fileName string) (stri
 		assignedEdges = append(assignedEdges, cfgServer)
 	}
 
-	return atscfg.MakeHeaderRewriteDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedEdges), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
+	return atscfg.MakeHeaderRewriteDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedEdges, dsName), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
 }
