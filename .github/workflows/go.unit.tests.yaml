@@ -25,6 +25,7 @@ on:
       - traffic_monitor/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_ops_ort/atstccfg/**.go
+      - traffic_stats/**.go
   create:
   pull_request:
     paths:
@@ -33,6 +34,7 @@ on:
       - traffic_monitor/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_ops_ort/atstccfg/**.go
+      - traffic_stats/**.go
     types: [opened, reopened, edited, synchronize]
 
 jobs:
@@ -45,4 +47,4 @@ jobs:
     - name: Run unit tests
       uses: ./.github/actions/go-test
       with:
-        dir: ./grove/... ./lib/... ./traffic_monitor/... ./traffic_ops/traffic_ops_golang/... ./traffic_ops_ort/atstccfg/...
+        dir: ./grove/... ./lib/... ./traffic_monitor/... ./traffic_ops/traffic_ops_golang/... ./traffic_ops_ort/atstccfg/... ./traffic_stats/...
