@@ -17,88 +17,26 @@
 
 name: Go Unit Tests
 
-# on:
-#   push:
-#     paths:
-#       - grove/**.go
-#       - lib/**.go
-#       - traffic_monitor/**.go
-#       - traffic_ops/traffic_ops_golang/**.go
-#       - traffic_ops_ort/atstccfg/**.go
-#   create:
-#   pull_request:
-#     paths:
-#       - grove/**.go
-#       - lib/**.go
-#       - traffic_monitor/**.go
-#       - traffic_ops/traffic_ops_golang/**.go
-#       - traffic_ops_ort/atstccfg/**.go
-#     types: [opened, reopened, edited, synchronize]
-
-# jobs:
-#   grove:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@master
-#     - name: Run Grove unit tests
-#       uses: ./.github/actions/go-test
-#       with:
-#         dir: ./grove/...
-
-#   lib:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@master
-#     - name: Run lib unit tests
-#       uses: ./.github/actions/go-test
-#       with:
-#         dir: ./lib/...
-
-#   monitor:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@master
-#     - name: Run Traffic Monitor unit tests
-#       uses: ./.github/actions/go-test
-#       with:
-#         dir: ./traffic_monitor/...
-
-#   ops:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@master
-#     - name: Run Traffic Ops unit tests
-#       uses: ./.github/actions/go-test
-#       with:
-#         dir: ./traffic_ops/traffic_ops_golang/...
-
-#   ort:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@master
-#     - name: Run Traffic Ops ORT unit tests
-#       uses: ./.github/actions/go-test
-#       with:
-#         dir: ./traffic_ops_ort/atstccfg/...
-
 on:
   push:
+    paths:
+      - grove/**.go
+      - lib/**.go
+      - traffic_monitor/**.go
+      - traffic_ops/traffic_ops_golang/**.go
+      - traffic_ops_ort/atstccfg/**.go
   create:
   pull_request:
+    paths:
+      - grove/**.go
+      - lib/**.go
+      - traffic_monitor/**.go
+      - traffic_ops/traffic_ops_golang/**.go
+      - traffic_ops_ort/atstccfg/**.go
     types: [opened, reopened, edited, synchronize]
 
 jobs:
-  grove:
+  test:
     runs-on: ubuntu-latest
 
     steps:
