@@ -103,6 +103,7 @@ public class AbstractResourceWatcherTest {
         } else {
             config = ((ObjectNode) config).remove(federationsWatcher.getWatcherConfigPrefix() + ".polling.url");
         }
+        federationsWatcher.trafficOpsUtils.setConfig(config);
         federationsWatcher.configure(config);
         assertThat(federationsWatcher.getDataBaseURL(), endsWith(DEFAULT_FEDERATION_DATA_URL.split("api")[1]));
     }
@@ -113,7 +114,6 @@ public class AbstractResourceWatcherTest {
         CacheRegister cacheRegister = trafficRouter.getCacheRegister();
         JsonNode config = cacheRegister.getConfig();
         assertNull(config.get(federationsWatcher.getWatcherConfigPrefix() + ".polling.url"));
-        assertThat(steeringRegistry.getAll().size(), greaterThan(0));
         assertThat(federationsWatcher.getDataBaseURL(), endsWith(DEFAULT_FEDERATION_DATA_URL.split("api")[1]));
         assertThat(steeringWatcher.getDataBaseURL(), endsWith(DEFAULT_STEERING_DATA_URL.split("api")[1]));
 
