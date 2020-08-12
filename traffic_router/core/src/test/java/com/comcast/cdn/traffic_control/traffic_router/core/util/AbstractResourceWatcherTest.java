@@ -73,7 +73,13 @@ public class AbstractResourceWatcherTest {
         TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
         CacheRegister cacheRegister = trafficRouter.getCacheRegister();
         JsonNode config = cacheRegister.getConfig();
-        oldFedUrl = config.get(federationsWatcher.getWatcherConfigPrefix() + ".polling.url") != null ? config.get(federationsWatcher.getWatcherConfigPrefix() + ".polling.url").asText() : "";
+
+        if(config.get(federationsWatcher.getWatcherConfigPrefix() + ".polling.url") != null) {
+            oldFedUrl = config.get(federationsWatcher.getWatcherConfigPrefix() + ".polling.url").asText();
+            config = ((ObjectNode) config).remove(federationsWatcher.getWatcherConfigPrefix() + ".polling.url");
+            federationsWatcher.trafficOpsUtils.setConfig(config);
+            federationsWatcher.configure(config);
+        }
 
         while (!federationsWatcher.isLoaded()) {
             LOGGER.info("Waiting for a valid federations database before proceeding");
