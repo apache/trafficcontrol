@@ -50,7 +50,11 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		dnsXmlId: "dns-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		httpXmlId: "http-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		steeringXmlId: "http-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
-		longDesc: "This is only a test delivery service that should be disposed of by Automated UI Testing."
+		longDesc: "This is only a test delivery service that should be disposed of by Automated UI Testing.",
+		staticDNShostName: "static-dns-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
+		staticDNSTTL: 50,
+		staticDNSAddress: "cdn.test.com."
+
 	};
 
 	it('should open delivery services page', function() {
@@ -322,6 +326,29 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.selectFormDropdown, 1);
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
 		pageData.selectFormSubmitButton.click();
+		element.all(by.css('tbody tr')).then(function(totalRows) {
+			expect(totalRows.length).toBe(1);
+		});
+	});
+
+	it('should add a required Static DNS entry to the HTTP delivery service', function() {
+		pageData.dsLink.click();
+		console.log('Adding Static DNS entry to ' + mockVals.httpXmlId);
+		pageData.moreBtn.click();
+		pageData.viewStaticCapabilitiesMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+/static-dns-entries");
+		pageData.addStaticDNSBtn.click();
+		// set host name
+		pageData.host.sendKeys(mockVals.staticDNShostName);
+		// set type ID to CNAME_RECORD's id
+		pageData.staticDNStypeId.click();
+		commonFunctions.selectDropdownbyNum(pageData.staticDNStypeId, 3);
+		// set ttl
+		pageData.ttl.sendKeys(mockVals.staticDNSTTL);
+		// set address
+		pageData.address.sendKeys(mockVals.staticDNSAddress);
+		expect(pageData.createButton.isEnabled()).toBe(true);
+		pageData.createButton.click();
 		element.all(by.css('tbody tr')).then(function(totalRows) {
 			expect(totalRows.length).toBe(1);
 		});

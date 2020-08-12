@@ -21,11 +21,11 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{::deliveryService.xmlId}}</a></li>
+            <li><a name="dsLink" ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{::deliveryService.xmlId}}</a></li>
             <li class="active">Static DNS Entries</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Create Delivery Service Static Dns Entry" ng-click="createStaticDnsEntry(deliveryService.id)"><i class="fa fa-plus"></i></button>
+            <button name="addStaticDNSBtn" class="btn btn-primary" title="Create Delivery Service Static Dns Entry" ng-click="createStaticDnsEntry(deliveryService.id)"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
