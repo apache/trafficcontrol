@@ -17,9 +17,10 @@ package v3
 
 import (
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCRConfig(t *testing.T) {

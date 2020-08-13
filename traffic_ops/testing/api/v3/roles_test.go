@@ -16,12 +16,12 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -137,7 +137,7 @@ func UpdateTestRoles(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
 	}
-	t.Logf("got response: %+v\n", resp)
+	t.Logf("got response: %+v", resp)
 	remoteRole := resp[0]
 	expectedRole := "new admin2"
 	remoteRole.Name = &expectedRole

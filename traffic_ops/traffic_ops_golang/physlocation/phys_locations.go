@@ -39,7 +39,7 @@ type TOPhysLocation struct {
 	tc.PhysLocationNullable
 }
 
-func (v *TOPhysLocation) GetLastUpdated() (error, *tc.TimeNoMod) {
+func (v *TOPhysLocation) GetLastUpdated() (*tc.TimeNoMod, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "phys_location")
 }
 

@@ -2,7 +2,6 @@ package rfc
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -97,19 +96,18 @@ func ParseETag(e string) (time.Time, error) {
 	return t, nil
 }
 
+// ParseEtagsList parses a list of etags and returns the time equivalent string for each of the etags.
 func ParseEtagsList(eTags []string) []string {
-	var tagTimes []string
-	if eTags != nil {
-		for _, tag := range eTags {
-			tag = strings.TrimSpace(tag)
-			t, err := ParseETag(`"` + tag + `"`)
-			if err != nil {
-				log.Warnf("Couldn't parse etag %v. err: %v", tag, err.Error())
-				continue
-			}
-			tagTime := t.Format("2006-01-02 15:04:05.000000-07")
-			tagTimes = append(tagTimes, `"`+tagTime+`"`)
+	tagTimes := make([]string, 0, len(eTags))
+	for _, tag := range eTags {
+		tag = strings.TrimSpace(tag)
+		t, err := ParseETag(`"` + tag + `"`)
+		// errors are recoverable, keep going through the list of etags
+		if err != nil {
+			continue
 		}
+		tagTime := t.Format("2006-01-02 15:04:05.000000-07")
+		tagTimes = append(tagTimes, `"`+tagTime+`"`)
 	}
 	return tagTimes
 }

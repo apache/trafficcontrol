@@ -780,7 +780,7 @@ func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	err, existingLastUpdated := api.GetLastUpdated(inf.Tx, *ds.ID, "deliveryservice")
+	existingLastUpdated, err := api.GetLastUpdated(inf.Tx, *ds.ID, "deliveryservice")
 	if err != nil {
 		return nil, http.StatusNotFound, errors.New("no deliveryservice found with this id"), nil
 	}

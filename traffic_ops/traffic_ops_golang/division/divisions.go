@@ -40,7 +40,7 @@ type TODivision struct {
 	tc.DivisionNullable
 }
 
-func (v *TODivision) GetLastUpdated() (error, *tc.TimeNoMod) {
+func (v *TODivision) GetLastUpdated() (*tc.TimeNoMod, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "division")
 }
 

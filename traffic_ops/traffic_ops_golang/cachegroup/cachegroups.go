@@ -532,7 +532,7 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 		cg.FallbackToClosest = &fbc
 	}
 
-	e, existingLastUpdated := api.GetLastUpdated(cg.ReqInfo.Tx, *cg.ID, "cachegroup")
+	existingLastUpdated, e := api.GetLastUpdated(cg.ReqInfo.Tx, *cg.ID, "cachegroup")
 	if e != nil {
 		return errors.New("no cachegroup found with this id"), nil, http.StatusNotFound
 	}

@@ -45,7 +45,7 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
-func (v *TODeliveryServiceRequest) GetLastUpdated() (error, *tc.TimeNoMod) {
+func (v *TODeliveryServiceRequest) GetLastUpdated() (*tc.TimeNoMod, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "deliveryservice_request")
 }
 
@@ -388,7 +388,7 @@ func (req *deliveryServiceRequestAssignment) Update(h http.Header) (error, error
 	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.AssigneeID = assigneeID
 
-	err, existingLastUpdated := api.GetLastUpdated(req.ReqInfo.Tx, *req.ID, "deliveryservice_request")
+	existingLastUpdated, err := api.GetLastUpdated(req.ReqInfo.Tx, *req.ID, "deliveryservice_request")
 	if err != nil {
 		return errors.New("no delivery service request found with this id"), nil, http.StatusNotFound
 	}

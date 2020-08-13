@@ -40,7 +40,7 @@ type TODeliveryServiceRequestComment struct {
 	tc.DeliveryServiceRequestCommentNullable
 }
 
-func (v *TODeliveryServiceRequestComment) GetLastUpdated() (error, *tc.TimeNoMod) {
+func (v *TODeliveryServiceRequestComment) GetLastUpdated() (*tc.TimeNoMod, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "deliveryservice_request_comment")
 }
 

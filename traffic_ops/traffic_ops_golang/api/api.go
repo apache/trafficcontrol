@@ -987,24 +987,24 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 	}
 }
 
-// GetLastUpdated checks for the resource in the database, and returns its last_updated timestamp, if available
-func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (error, *tc.TimeNoMod) {
+// GetLastUpdated checks for the resource in the database, and returns its last_updated timestamp, if available.
+func GetLastUpdated(tx *sqlx.Tx, ID int, tableName string) (*tc.TimeNoMod, error) {
 	lastUpdated := tc.TimeNoMod{}
 	rows, err := tx.Query(`select last_updated from `+tableName+` where id=$1`, ID)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 	defer rows.Close()
 	if !rows.Next() {
-		return errors.New("no resource found with this id"), nil
+		return nil, errors.New("no resource found with this id")
 	}
 	if err := rows.Scan(&lastUpdated); err != nil {
-		return err, nil
+		return nil, err
 	}
-	return nil, &lastUpdated
+	return &lastUpdated, nil
 }
 
-// IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers
+// IsUnmodified returns a boolean, saying whether or not the resource in question was modified since the time specified in the headers.
 func IsUnmodified(h http.Header, existingLastUpdated *tc.TimeNoMod) bool {
 	_, iumsTime := rfc.GetETagOrIfUnmodifiedSinceTime(h)
 	existingEtag := rfc.ETag(existingLastUpdated.Time)

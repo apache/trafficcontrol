@@ -45,7 +45,7 @@ type TORole struct {
 	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
 }
 
-func (v *TORole) GetLastUpdated() (error, *tc.TimeNoMod) {
+func (v *TORole) GetLastUpdated() (*tc.TimeNoMod, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "role")
 }
 

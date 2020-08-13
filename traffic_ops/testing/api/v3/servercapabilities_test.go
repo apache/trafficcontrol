@@ -16,8 +16,9 @@ package v3
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestServerCapabilities(t *testing.T) {

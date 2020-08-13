@@ -266,7 +266,7 @@ func (user *TOUser) Update(h http.Header) (error, error, int) {
 			return nil, err, http.StatusInternalServerError
 		}
 	}
-	err, existingLastUpdated := api.GetLastUpdated(user.ReqInfo.Tx, *user.ID, "tm_user")
+	existingLastUpdated, err := api.GetLastUpdated(user.ReqInfo.Tx, *user.ID, "tm_user")
 	if err != nil {
 		return errors.New("no server found with this id"), nil, http.StatusNotFound
 	}

@@ -1073,7 +1073,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err, existingLastUpdated := api.GetLastUpdated(inf.Tx, *server.ID, "server")
+	existingLastUpdated, err := api.GetLastUpdated(inf.Tx, *server.ID, "server")
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server found with this id"), nil)
 		return

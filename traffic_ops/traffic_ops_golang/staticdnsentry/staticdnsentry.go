@@ -38,7 +38,7 @@ type TOStaticDNSEntry struct {
 	tc.StaticDNSEntryNullable
 }
 
-func (v *TOStaticDNSEntry) GetLastUpdated() (error, *tc.TimeNoMod) {
+func (v *TOStaticDNSEntry) GetLastUpdated() (*tc.TimeNoMod, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "staticdnsentry")
 }
 

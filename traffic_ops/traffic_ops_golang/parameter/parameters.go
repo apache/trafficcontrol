@@ -55,7 +55,7 @@ type TOParameter struct {
 	tc.ParameterNullable
 }
 
-func (v *TOParameter) GetLastUpdated() (error, *tc.TimeNoMod) {
+func (v *TOParameter) GetLastUpdated() (*tc.TimeNoMod, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "parameter")
 }
 

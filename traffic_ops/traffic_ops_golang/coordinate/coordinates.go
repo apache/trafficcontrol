@@ -51,7 +51,7 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 
-func (v *TOCoordinate) GetLastUpdated() (error, *tc.TimeNoMod) {
+func (v *TOCoordinate) GetLastUpdated() (*tc.TimeNoMod, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "coordinate")
 }
 
