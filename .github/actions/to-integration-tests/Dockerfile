@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2
+FROM golang:1.14.2-alpine
 
-RUN apk add --no-cache openssl
+RUN apt install openssl
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
 
 COPY entrypoint.sh /entrypoint.sh
