@@ -33,7 +33,7 @@ name: dbconf.yml
 
 test:
   driver: postgres
-  open: host=postgres port=5432 user=traffic_ops password=twelve dbname=to_test sslmode=disable
+  open: host=postgres port=5432 user=traffic_ops password=twelve dbname=traffic_ops sslmode=disable
 
 ' > dbconf.yml
 
