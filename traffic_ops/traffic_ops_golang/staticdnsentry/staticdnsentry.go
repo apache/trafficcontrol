@@ -115,9 +115,10 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required)
 	}
 
-	ttl := *staticDNSEntry.TTL
-	if ttl == 0 {
-		ttlErr = validation.Validate(staticDNSEntry.TTL, is.Digit)
+	if staticDNSEntry.TTL != nil {
+		if *staticDNSEntry.TTL == 0 {
+			ttlErr = validation.Validate(staticDNSEntry.TTL, is.Digit)
+		}
 	} else {
 		ttlErr = validation.Validate(staticDNSEntry.TTL, validation.Required)
 	}
