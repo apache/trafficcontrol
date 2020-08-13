@@ -17,7 +17,7 @@
 
 FROM golang:1.14.2-alpine
 
-RUN apt install openssl
+RUN apt-get install openssl
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
 
 COPY entrypoint.sh /entrypoint.sh
