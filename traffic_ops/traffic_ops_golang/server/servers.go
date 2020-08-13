@@ -604,15 +604,15 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func selectMaxLastUpdatedQuery(where string) string {
+func selectMaxLastUpdatedQuery(queryAddition string, where string) string {
 	return `SELECT max(t) from (
 		SELECT max(s.last_updated) as t from server s JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id 
-FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id ` + where +
+JOIN type t ON s.type = t.id ` +
+queryAddition + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }
@@ -688,7 +688,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	serversList := []tc.ServerNullable{}
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(queryAddition, where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return serversList, 0, nil, nil, http.StatusNotModified, &maxTime
