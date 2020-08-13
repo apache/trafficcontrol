@@ -48,10 +48,15 @@ godir=src/github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg
 
 %install
 mkdir -p ${RPM_BUILD_ROOT}/opt/ort
+mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
+mkdir -p "${RPM_BUILD_ROOT}"/var/log/ort
+
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/opt/ort
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/opt/ort
 
 src=src/github.com/apache/trafficcontrol/traffic_ops/ort/atstccfg
+cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/build/atstccfg.logrotate "${RPM_BUILD_ROOT}"/etc/logrotate.d/atstccfg
+touch ${RPM_BUILD_ROOT}/var/log/ort/atstccfg.log
 cp -p "$src"/atstccfg ${RPM_BUILD_ROOT}/opt/ort
 
 %clean
@@ -64,5 +69,8 @@ rm -rf ${RPM_BUILD_ROOT}
 /opt/ort/traffic_ops_ort.pl
 /opt/ort/supermicro_udev_mapper.pl
 /opt/ort/atstccfg
+
+%config(noreplace) /etc/logrotate.d/atstccfg
+%config(noreplace) /var/log/ort/atstccfg.log
 
 %changelog
