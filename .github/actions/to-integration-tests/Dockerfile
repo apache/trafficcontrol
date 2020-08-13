@@ -15,10 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2
+FROM golang:1.14.2-buster
 
-RUN lsb_release
-RUN apt-get install openssl git gcc postgresql-client
+RUN apt-get update &&\
+	apt-get install-y --no-install-recommends openssl git gcc postgresql-client-11 &&\
+	rm -rf /var/lib/apt/lists/*
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
 RUN mv $GOPATH/bin/goose /bin/
 
