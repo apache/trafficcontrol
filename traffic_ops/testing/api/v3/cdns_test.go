@@ -67,7 +67,7 @@ func GetTestCDNsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
 	for _, cdn := range testData.CDNs {
-		futureTime := time.Now().AddDate(0,0,1)
+		futureTime := time.Now().AddDate(0, 0, 1)
 		time := futureTime.Format(time.RFC1123)
 		header.Set(rfc.IfModifiedSince, time)
 		_, reqInf, err := TOSession.GetCDNByName(cdn.Name, header)
