@@ -214,21 +214,24 @@ makeCFG() {
 CODE="0"
 
 makeCFG
-if [ ! /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf ]; then
+/usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf
+if [ "$?" -gt "0" ]; then
 	CODE="1"
 fi
 rm traffic-ops-test.conf
 
 cd ../v2
 makeCFG
-if [ ! /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf ]; then
+ /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf
+if [ "$?" -gt "0" ]; then
 	CODE="1"
 fi
 rm traffic-ops-test.conf
 
 cd ../v3
 makeCFG
-if [ ! /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf ]; then
+ /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf
+if [ "$?" -gt "0" ]; then
 	CODE="1"
 fi
 rm traffic-ops-test
