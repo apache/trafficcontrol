@@ -33,7 +33,7 @@ name: dbconf.yml
 
 test:
   driver: postgres
-  open: host=localhost port=5432 user=traffic_ops password=twelve dbname=to_test sslmode=disable
+  open: host=postgres port=5432 user=traffic_ops password=twelve dbname=to_test sslmode=disable
 
 ' > dbconf.yml
 
@@ -109,7 +109,7 @@ cat <<-EOF >database.conf
 {
         "description": "Local PostgreSQL database on port 5432",
         "dbname": "traffic_ops",
-        "hostname": "localhost",
+        "hostname": "postgres",
         "user": "traffic_ops",
         "password": "twelve",
         "port": "5432",
@@ -154,7 +154,7 @@ cat <<-EOF >traffic-ops-test.conf
     "trafficOpsDB": {
         "dbname": "traffic_ops",
         "description": "Test database to_test",
-        "hostname": "localhost",
+        "hostname": "postgres",
         "password": "twelve",
         "port": "5432",
         "type": "Pg",
