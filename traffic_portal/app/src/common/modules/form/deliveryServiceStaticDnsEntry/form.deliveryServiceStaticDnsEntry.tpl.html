@@ -50,9 +50,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsStaticDnsEntryForm.ttl), 'has-feedback': hasError(dsStaticDnsEntryForm.ttl)}">
                 <label for="ttl" class="control-label col-md-2 col-sm-2 col-xs-12">TTL *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="ttl" name="ttl" type="number" class="form-control" ng-model="staticDnsEntry.ttl" min="0" step="1" required>
+                    <input id="ttl" name="ttl" type="number" class="form-control" ng-model="staticDnsEntry.ttl" min="0" step="1" ng-pattern="/^\d+$/" required>
                     <small class="input-error" ng-show="hasPropertyError(dsStaticDnsEntryForm.ttl, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(dsStaticDnsEntryForm.ttl, 'step') || hasPropertyError(dsStaticDnsEntryForm.ttl, 'min')">Whole Number</small>
+                    <small class="input-error" ng-show="hasPropertyError(dsStaticDnsEntryForm.ttl, 'step') || hasPropertyError(dsStaticDnsEntryForm.ttl, 'min') || hasPropertyError(dsStaticDnsEntryForm.ttl, 'pattern')">Whole Number</small>
                     <span ng-show="hasError(dsStaticDnsEntryForm.ttl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
