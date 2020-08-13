@@ -16,6 +16,7 @@ package v3
 */
 
 import (
+	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/url"
@@ -79,7 +80,7 @@ func GetTestServersIMSAfterChange(t *testing.T, header http.Header) {
 func GetTestServersIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	params := url.Values{}
@@ -264,6 +265,13 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatalf("Got null ID for server '%s'", hostName)
 	}
 
+	originalHostname := *resp.Response[0].HostName
+	originalXMPIDD := *resp.Response[0].XMPPID
+	// Creating idParam to get server when hostname changes.
+	id := fmt.Sprintf("%v", *resp.Response[0].ID)
+	idParam := url.Values{}
+	idParam.Add("id", id)
+
 	infs := remoteServer.Interfaces
 	if len(infs) < 1 {
 		t.Fatalf("Expected server '%s' to have at least one network interface", hostName)
@@ -272,22 +280,25 @@ func UpdateTestServers(t *testing.T) {
 
 	updatedServerInterface := "bond1"
 	updatedServerRack := "RR 119.03"
+	updatedHostName := "atl-edge-01"
+	updatedXMPPID := "change-it"
 
-	// update rack and interfaceName values on server
+	// update rack, interfaceName and hostName values on server
 	inf.Name = updatedServerInterface
 	infs[0] = inf
 	remoteServer.Interfaces = infs
 	remoteServer.Rack = &updatedServerRack
+	remoteServer.HostName = &updatedHostName
 
 	alerts, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
 	}
 
-	// Retrieve the server to check rack and interfaceName values were updated
-	resp, _, err = TOSession.GetServers(&params, nil)
+	// Retrieve the server to check rack, interfaceName, hostName values were updated
+	resp, _, err = TOSession.GetServers(&idParam, nil)
 	if err != nil {
-		t.Errorf("cannot GET Server by ID: %v - %v", remoteServer.HostName, err)
+		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
@@ -319,6 +330,30 @@ func UpdateTestServers(t *testing.T) {
 
 	if remoteServer.TypeID == nil {
 		t.Fatalf("Cannot test server type change update; server '%s' had nil type ID", hostName)
+	}
+
+	//Check change in hostname with no change to xmppid
+	if originalHostname == *respServer.HostName && originalXMPIDD == *respServer.XMPPID {
+		t.Errorf("HostName didn't change. Expected: #{updatedHostName}, actual: #{originalHostname}")
+	}
+
+	//Check to verify XMPPID never gets updated
+	remoteServer.XMPPID = &updatedXMPPID
+	al, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	if err != nil {
+		t.Logf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, al)
+	}
+
+	//Change back hostname and xmppid to its original name for other tests to pass
+	remoteServer.HostName = &originalHostname
+	remoteServer.XMPPID = &originalXMPIDD
+	alert, _, err := TOSession.UpdateServerByID(*remoteServer.ID, remoteServer)
+	if err != nil {
+		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
+	}
+	resp, _, err = TOSession.GetServers(&params, nil)
+	if err != nil {
+		t.Errorf("cannot GET Server by hostName: %v - %v", originalHostname, err)
 	}
 
 	// Assign server to DS and then attempt to update to a different type

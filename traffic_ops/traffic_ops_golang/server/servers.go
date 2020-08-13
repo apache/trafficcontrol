@@ -47,6 +47,7 @@ import (
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -150,7 +151,6 @@ INSERT INTO server (
 	ilo_ip_gateway,
 	ilo_username,
 	ilo_password,
-	interface_name,
 	mgmt_ip_address,
 	mgmt_ip_netmask,
 	mgmt_ip_gateway,
@@ -177,7 +177,6 @@ INSERT INTO server (
 	:ilo_ip_gateway,
 	:ilo_username,
 	:ilo_password,
-	:interface_name,
 	:mgmt_ip_address,
 	:mgmt_ip_netmask,
 	:mgmt_ip_gateway,
@@ -255,7 +254,6 @@ UPDATE server SET
 	tcp_port=:tcp_port,
 	type=:server_type_id,
 	upd_pending=:upd_pending,
-	xmpp_id=:xmpp_id,
 	xmpp_passwd=:xmpp_passwd
 WHERE id=:id
 RETURNING
@@ -860,7 +858,7 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerNullable, tx *sqlx.Tx
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err := rows.StructScan(&s); err != nil {
-			log.Error.Printf("could not scan mid servers: %s\n", err)
+			log.Errorf("could not scan mid servers: %s\n", err)
 			return nil, nil, err, http.StatusInternalServerError
 		}
 		if s.ID == nil {
@@ -984,6 +982,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	//Get original xmppid
+	origSer, _, userErr, sysErr, _, _ := getServers(r.Header, inf.Params, inf.Tx, inf.User, false)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	originalXMPPID := *origSer[0].XMPPID
+	changeXMPPID := false
+
 	var server tc.ServerNullableV2
 	var interfaces []tc.ServerInterfaceInfo
 	if inf.Version.Major >= 3 {
@@ -991,6 +998,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewDecoder(r.Body).Decode(&newServer); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
+		}
+		if *newServer.XMPPID != originalXMPPID {
+			changeXMPPID = true
 		}
 		serviceInterface, err := validateV3(&newServer, tx)
 		if err != nil {
@@ -1010,7 +1020,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-
+		if *server.XMPPID != originalXMPPID {
+			changeXMPPID = true
+		}
 		err := validateV2(&server, tx)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1052,6 +1064,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	if userErr, sysErr, errCode = checkTypeChangeSafety(server.CommonServerProperties, inf.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if changeXMPPID {
+		api.WriteAlerts(w, r, http.StatusBadRequest, tc.CreateAlerts(tc.ErrorLevel, fmt.Sprintf("server cannot be updated due to requested XMPPID change. XMPIDD is immutable")))
 		return
 	}
 
@@ -1169,6 +1186,9 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	str := uuid.New().String()
+	server.XMPPID = &str
+
 	if err := validateV2(&server, tx); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
@@ -1223,6 +1243,9 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
+
+	str := uuid.New().String()
+	server.XMPPID = &str
 
 	serviceInterface, err := validateV3(&server, tx)
 	if err != nil {

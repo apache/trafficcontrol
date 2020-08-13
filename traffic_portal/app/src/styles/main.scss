@@ -92,6 +92,7 @@ body.nav-sm .container.body .main-content {
 }
 
 .dropdown-menu-right {
+  min-width: 200px;
   left: auto !important; // Reset the default from `.dropdown-menu`
   right: 0 !important;
 }
@@ -121,12 +122,19 @@ body.nav-sm .container.body .main-content {
     font-size: 24px;
   }
 
-  button {
-    margin: 8px 6px 4px 0;
+  .input-group-addon > label {
+    color: gray;
+    font-weight: normal;
+    margin-bottom: 0;
   }
 
-  .btn-group {
-    margin-top: -4px;
+  .text-input {
+    margin: 5px 6px 4px 0;
+
+    #pageSize {
+      width: 85px;
+    }
+
   }
 
 }

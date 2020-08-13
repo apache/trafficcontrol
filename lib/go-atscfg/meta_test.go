@@ -114,8 +114,11 @@ func TestMakeMetaConfig(t *testing.T) {
 
 	scopeParams := map[string]string{"custom.config": string(tc.ATSConfigMetaDataConfigFileScopeProfiles)}
 
+	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.Topology{}
+
 	cfgPath := "/etc/foo/trafficserver"
-	cfg, err := MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cfgPath)
+	cfg, err := MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cgs, topologies, cfgPath)
 	if err != nil {
 		t.Fatalf("MakeMetaObj: " + err.Error())
 	}
@@ -291,7 +294,7 @@ func TestMakeMetaConfig(t *testing.T) {
 	}
 
 	server.Type = "MID"
-	cfg, err = MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cfgPath)
+	cfg, err = MakeMetaObj(serverHostName, server, tmURL, tmReverseProxyURL, locationParams, uriSignedDSes, scopeParams, dses, cgs, topologies, cfgPath)
 	if err != nil {
 		t.Fatalf("MakeMetaObj: " + err.Error())
 	}

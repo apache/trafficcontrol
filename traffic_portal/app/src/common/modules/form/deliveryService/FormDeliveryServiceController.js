@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel, userModel) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -43,6 +43,13 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
                         $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant.parentId, []);
                         tenantUtils.addLevels($scope.tenants);
                     });
+            });
+    };
+
+    var getServiceCategories = function() {
+        serviceCategoryService.getServiceCategories()
+            .then(function(result) {
+                $scope.serviceCategories = result;
             });
     };
 
@@ -306,6 +313,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         getCDNs();
         getProfiles();
         getTenants();
+        getServiceCategories();
         if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
             // add an empty one so the dynamic form widget is visible. empty strings get stripped out on save anyhow.
             $scope.deliveryService.consistentHashQueryParams = [ '' ];
@@ -315,5 +323,5 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'topologies', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel', 'userModel'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'topologies', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel', 'userModel', 'serviceCategoryService'];
 module.exports = FormDeliveryServiceController;

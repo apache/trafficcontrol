@@ -43,11 +43,13 @@ RUN yum install -y \
     echo "ERROR INSTALLING PACKAGES"
 
 ADD $TRAFFIC_PORTAL_RPM /
-RUN yum install -y /$(basename $TRAFFIC_PORTAL_RPM) && \
+RUN rpm -Uvh /$(basename $TRAFFIC_PORTAL_RPM) && \
     rm /$(basename $TRAFFIC_PORTAL_RPM)
 
 ADD enroller/server_template.json \
     traffic_portal/run.sh \
     traffic_ops/to-access.sh /
+
+EXPOSE 443
 
 CMD /run.sh

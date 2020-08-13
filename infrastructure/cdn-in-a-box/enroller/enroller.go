@@ -18,7 +18,6 @@ package main
 // under the License.
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -33,7 +32,7 @@ import (
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	"github.com/apache/trafficcontrol/traffic_ops/client"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/fsnotify.v1"
 )
@@ -49,18 +48,10 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 	return session{s}, err
 }
 
-func printJSON(label string, b interface{}) {
-	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.SetIndent(``, `  `)
-	enc.Encode(b)
-	log.Infoln(label, buf.String())
-}
-
 func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
-	parameters, _, err := s.GetParameters()
+	parameters, _, err := s.GetParameters(nil)
 	if err != nil {
 		return m, err
 	}
@@ -73,7 +64,7 @@ func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
 }
 
 func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
-	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n))
+	dses, _, err := s.GetDeliveryServiceByXMLIDNullable(url.QueryEscape(n), nil)
 	if err != nil {
 		return -1, err
 	}
@@ -230,7 +221,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId)
+	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullable(dss.XmlId, nil)
 	if err != nil {
 		return err
 	}
@@ -242,18 +233,20 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	}
 	dsID := *dses[0].ID
 
+	params := &url.Values{}
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
-		servers, _, err := toSession.GetServerByHostName(sn)
+		params.Set("hostName", sn)
+		servers, _, err := toSession.GetServers(params, nil)
 		if err != nil {
 			return err
 		}
-		if len(servers) == 0 {
+		if len(servers.Response) == 0 {
 			return errors.New("no server with hostName " + sn)
 		}
-		serverIDs = append(serverIDs, servers[0].ID)
+		serverIDs = append(serverIDs, *servers.Response[0].ID)
 	}
-	_, err = toSession.CreateDeliveryServiceServers(dsID, serverIDs, true)
+	_, _, err = toSession.CreateDeliveryServiceServers(dsID, serverIDs, true)
 	if err != nil {
 		log.Infof("error creating DeliveryServiceServer: %s\n", err)
 	}
@@ -354,7 +347,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 			}
 
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByName(n)
+				profiles, _, err := toSession.GetProfileByName(n, nil)
 				if err != nil {
 					return err
 				}
@@ -509,12 +502,6 @@ func enrollUser(toSession *session, r io.Reader) error {
 	return err
 }
 
-// using documented import form for profiles
-type profileImport struct {
-	Profile    tc.Profile             `json:"profile"`
-	Parameters []tc.ParameterNullable `json:"parameters"`
-}
-
 // enrollProfile takes a json file and creates a Profile object using the TO API
 func enrollProfile(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
@@ -537,7 +524,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByName(profile.Name)
+	profiles, _, err := toSession.GetProfileByName(profile.Name, nil)
 
 	createProfile := false
 	if err != nil || len(profiles) == 0 {
@@ -559,7 +546,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
 			}
 		}
-		profiles, _, err = toSession.GetProfileByName(profile.Name)
+		profiles, _, err = toSession.GetProfileByName(profile.Name, nil)
 		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
 		}
@@ -602,8 +589,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			}
 			eparam, err = toSession.getParameter(param)
 			if err != nil {
-				log.Infof("error getting new parameter %+v\n", param)
-				eparam, err = toSession.getParameter(param)
+				log.Infof("error getting new parameter %+v: \n", param)
 				log.Infof(err.Error())
 				continue
 			}
@@ -635,7 +621,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 // enrollServer takes a json file and creates a Server object using the TO API
 func enrollServer(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.Server
+	var s tc.ServerNullable
 	err := dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Infof("error decoding Server: %s\n", err)
@@ -750,7 +736,7 @@ func (dw *dirWatcher) watch(watchdir, t string, f func(*session, io.Reader) erro
 		if err != nil {
 			return err
 		}
-		defer fh.Close()
+		defer log.Close(fh, "could not close file")
 		return f(toSession, fh)
 	}
 }
@@ -770,7 +756,7 @@ func startServer(httpPort string, toSession *session, dispatcher map[string]func
 	baseEP := "/api/2.0/"
 	for d, f := range dispatcher {
 		http.HandleFunc(baseEP+d, func(w http.ResponseWriter, r *http.Request) {
-			defer r.Body.Close()
+			defer log.Close(r.Body, "could not close reader")
 			f(toSession, r.Body)
 		})
 	}
@@ -876,7 +862,7 @@ func main() {
 	if len(watchDir) != 0 {
 		log.Infoln("Watching directory " + watchDir)
 		dw, err := startWatching(watchDir, &toSession, dispatcher)
-		defer dw.Close()
+		defer log.Close(dw, "could not close dirwatcher")
 		if err != nil {
 			log.Errorf("dirwatcher on %s failed: %s", watchDir, err.Error())
 		}
@@ -888,7 +874,7 @@ func main() {
 		panic(err)
 	}
 	log.Infoln("Created " + startedFile)
-	f.Close()
+	log.Close(f, "could not close file")
 
 	var waitforever chan struct{}
 	<-waitforever

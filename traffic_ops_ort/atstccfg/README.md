@@ -27,9 +27,9 @@ atstccfg is a tool for generating configuration files server-side on ATC cache s
 atstccfg -h
 atstccfg -v
 atstccfg -l
-atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [-y] -n CACHE_NAME
-atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] -n CACHE_NAME -d DATA
-atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] -n CACHE_NAME -a REVAL_STATUS -q QUEUE_STATUS
+atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [-y] [--dir TSROOT] -n CACHE_NAME
+atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [--dir TSROOT] -n CACHE_NAME -d DATA
+atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [--dir TSROOT] -n CACHE_NAME -a REVAL_STATUS -q QUEUE_STATUS
 ```
 The available options are:
 ```
@@ -47,6 +47,11 @@ The available options are:
     disables normal output. Valid values are update-status, packages, chkconfig,
     system-info, and statuses. Output is in JSON-encoded format. For specifics,
     refer to the official documentation.
+--dir string
+    Specifies a directory path in which to place Trafficserver configuration
+    files in the event that "location" Parameters aren't found for them. If this
+    is not given and location Parameters aren't found for required files,
+    atstccfg will exit with an error.
 -h, --help
     Print usage information and exit.
 -i, --log-location-info string

@@ -19,7 +19,7 @@ FROM golang:1.14.2-alpine3.11 AS integration-builder
 
 RUN apk add --no-cache --update git gcc
 
-RUN go get -u golang.org/x/net/publicsuffix golang.org/x/crypto/scrypt golang.org/x/sys/unix
+RUN go get -u golang.org/x/net/publicsuffix golang.org/x/crypto/scrypt
 RUN go get -u github.com/jstemmer/go-junit-report
 RUN cd /go/src/github.com/jstemmer/go-junit-report && go build
 
@@ -28,7 +28,6 @@ COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/inf
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
-COPY ./grove/ /go/src/github.com/apache/trafficcontrol/grove/
 COPY ./traffic_ops/v1-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v1-client/
 COPY ./traffic_ops/v2-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v2-client/
 COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
