@@ -15,8 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-ubuntu
+FROM golang:1.14.2
 
+RUN lsb_release
 RUN apt-get install openssl git gcc postgresql-client
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
 RUN mv $GOPATH/bin/goose /bin/
