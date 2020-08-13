@@ -24,6 +24,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestServers(t *testing.T) {
@@ -39,6 +41,7 @@ func TestServers(t *testing.T) {
 		GetTestServers(t)
 		GetTestServersIMSAfterChange(t, header)
 		GetTestServersQueryParameters(t)
+		UniqueIPProfileTestServers(t)
 	})
 }
 
@@ -243,6 +246,74 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Errorf("Error getting servers by parentCacheGroup: %v", err)
 	}
 	params.Del("parentCacheGroup")
+}
+
+func UniqueIPProfileTestServers(t *testing.T) {
+	serversResp, _, err := TOSession.GetServers(nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(serversResp.Response) < 1 {
+		t.Fatal("expected more than 0 servers")
+	}
+	xmppId := "unique"
+	server := serversResp.Response[0]
+	_, _, err = TOSession.CreateServer(tc.ServerNullable{
+		CommonServerProperties: tc.CommonServerProperties{
+			Cachegroup: server.Cachegroup,
+			CDNName:    server.CDNName,
+			DomainName: util.StrPtr("mydomain"),
+			FQDN:       util.StrPtr("myfqdn"),
+			FqdnTime:   time.Time{},
+			HostName:   util.StrPtr("myhostname"),
+			HTTPSPort:  util.IntPtr(443),
+			LastUpdated: &tc.TimeNoMod{
+				Time:  time.Time{},
+				Valid: false,
+			},
+			PhysLocation: server.PhysLocation,
+			Profile:      server.Profile,
+			StatusID:     server.StatusID,
+			Type:         server.Type,
+			UpdPending:   util.BoolPtr(false),
+			XMPPID:       &xmppId,
+		},
+		Interfaces: server.Interfaces,
+	})
+
+	if err == nil {
+		t.Error("expected an error when updating a server with an ipaddress that already exists on another server with the same profile")
+		// Cleanup, don't want to break other tests
+		pathParams := url.Values{}
+		pathParams.Add("xmppid", xmppId)
+		server, _, err := TOSession.GetServers(&pathParams, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _, err = TOSession.DeleteServerByID(*server.Response[0].ID)
+		if err != nil {
+			t.Fatalf("unable to delete server: %v", err)
+		}
+	}
+
+	var changed bool
+	for i, interf := range server.Interfaces {
+		if interf.Monitor {
+			for j, ip := range interf.IPAddresses {
+				if ip.ServiceAddress {
+					server.Interfaces[i].IPAddresses[j].Address = "127.0.0.1/24"
+					changed = true
+				}
+			}
+		}
+	}
+	if !changed {
+		t.Fatal("did not find ip address to update")
+	}
+	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	if err != nil {
+		t.Fatalf("expected update to pass: %s", err)
+	}
 }
 
 func UpdateTestServers(t *testing.T) {
