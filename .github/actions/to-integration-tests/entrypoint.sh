@@ -25,8 +25,8 @@ ln -s "$PWD" "$SRCDIR/trafficcontrol"
 
 cd "$SRCDIR/trafficcontrol/traffic_ops/app/db"
 
-/usr/local/go/bin/go get ./...
-/usr/local/go/bin/go build ./admin.go
+# /usr/local/go/bin/go get ./...
+# /usr/local/go/bin/go build ./admin.go
 
 echo 'version: "1.0"
 name: dbconf.yml
@@ -37,11 +37,18 @@ test:
 
 ' > dbconf.yml
 
-cd ..
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./create_tables.sql
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./seeds.sql
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./patches.sql
 
-./db/admin --env="test" reset
+goose --env=test --path="$PWD" up
+
+# cd ..
+
+# ./db/admin --env="test" reset
 
 cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
+
 
 /usr/local/go/bin/go get ./...
 /usr/local/go/bin/go build .
