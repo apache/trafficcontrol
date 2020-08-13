@@ -17,7 +17,7 @@
 
 FROM golang:1.14.2
 
-RUN apt-get install openssl git gcc
+RUN apt-get install openssl git gcc postgresql
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
 RUN mv $GOPATH/bin/goose /bin/
 
