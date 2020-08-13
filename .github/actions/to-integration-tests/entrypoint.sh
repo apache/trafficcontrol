@@ -34,10 +34,10 @@ test:
 
 ' > dbconf.yml
 
-psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./create_tables.sql
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./create_tables.sql >/dev/null
 goose --env=test --path="$PWD" up
-psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./seeds.sql
-psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./patches.sql
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./seeds.sql >/dev/null
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./patches.sql >/dev/null
 
 cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 
@@ -101,68 +101,68 @@ A22D22wvfs7CE3cUz/8UnvLM3kbTTu1WbbBbrHjAV47sAHjW/ckTqeo=
 
 cat <<-EOF >cdn.conf
 {
-    "hypnotoad" : {
-        "listen" : [
-            "https://not-a-real-host.test:1?cert=$PWD/localhost.crt&key=$PWD/localhost.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
-        ],
-        "user" : "trafops",
-        "group" : "trafops",
-        "heartbeat_timeout" : 20,
-        "pid_file" : "/var/run/traffic_ops.pid",
-        "workers" : 12
-    },
-    "use_ims": true,
-    "traffic_ops_golang" : {
-        "insecure": true,
-        "port" : "6443",
-        "log_location_error": "stderr",
-        "log_location_warning": "stderr",
-        "log_location_info": "stderr",
-        "log_location_debug": "stderr",
-        "log_location_event": "stderr",
-        "max_db_connections": 20,
-        "db_conn_max_lifetime_seconds": 60,
-        "db_query_timeout_seconds": 20,
-        "supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
-    },
-    "cors" : {
-        "access_control_allow_origin" : "*"
-    },
-    "to" : {
-        "base_url" : "https://localhost",
-        "email_from" : "no-reply@traffic-ops.test",
-        "no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
-    },
-    "portal" : {
-        "base_url" : "https://not-a-real-host.test/#!/",
-        "email_from" : "no-reply@traffic-portal.test",
-        "pass_reset_path" : "user",
-        "user_register_path" : "user"
-    },
-    "secrets" : [
-        "blahblah"
-    ],
-    "geniso" : {
-        "iso_root_path" : "/opt/traffic_ops/app/public"
-    },
-    "inactivity_timeout" : 60,
-    "smtp" : {
-        "enabled" : false
-    },
-    "InfluxEnabled": false
+	"hypnotoad" : {
+		"listen" : [
+			"https://not-a-real-host.test:1?cert=$PWD/localhost.crt&key=$PWD/localhost.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+		],
+		"user" : "trafops",
+		"group" : "trafops",
+		"heartbeat_timeout" : 20,
+		"pid_file" : "/var/run/traffic_ops.pid",
+		"workers" : 12
+	},
+	"use_ims": true,
+	"traffic_ops_golang" : {
+		"insecure": true,
+		"port" : "6443",
+		"log_location_error": "stderr",
+		"log_location_warning": "stderr",
+		"log_location_info": "stderr",
+		"log_location_debug": "stderr",
+		"log_location_event": "stderr",
+		"max_db_connections": 20,
+		"db_conn_max_lifetime_seconds": 60,
+		"db_query_timeout_seconds": 20,
+		"supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
+	},
+	"cors" : {
+		"access_control_allow_origin" : "*"
+	},
+	"to" : {
+		"base_url" : "https://localhost",
+		"email_from" : "no-reply@traffic-ops.test",
+		"no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
+	},
+	"portal" : {
+		"base_url" : "https://not-a-real-host.test/#!/",
+		"email_from" : "no-reply@traffic-portal.test",
+		"pass_reset_path" : "user",
+		"user_register_path" : "user"
+	},
+	"secrets" : [
+		"blahblah"
+	],
+	"geniso" : {
+		"iso_root_path" : "/opt/traffic_ops/app/public"
+	},
+	"inactivity_timeout" : 60,
+	"smtp" : {
+		"enabled" : false
+	},
+	"InfluxEnabled": false
 }
 EOF
 
 cat <<-EOF >database.conf
 {
-        "description": "Local PostgreSQL database on port 5432",
-        "dbname": "traffic_ops",
-        "hostname": "postgres",
-        "user": "traffic_ops",
-        "password": "twelve",
-        "port": "5432",
-        "ssl": false,
-        "type": "Pg"
+	"description": "Local PostgreSQL database on port 5432",
+	"dbname": "traffic_ops",
+	"hostname": "postgres",
+	"user": "traffic_ops",
+	"password": "twelve",
+	"port": "5432",
+	"ssl": false,
+	"type": "Pg"
 }
 EOF
 
@@ -170,48 +170,70 @@ EOF
 
 cd ../testing/api/v1
 
-cat <<-EOF >traffic-ops-test.conf
-{
-    "default": {
-        "logLocations": {
-            "debug": "stdout",
-            "error": "stdout",
-            "event": "stdout",
-            "info": "stdout",
-            "warning": "stdout"
-        },
-        "session": {
-            "timeoutInSecs": 60
-        }
-    },
-    "trafficOps": {
-        "URL": "https://localhost:6443",
-        "password": "twelve",
-        "users": {
-            "disallowed": "disallowed",
-            "operations": "operations",
-            "admin": "admin",
-            "federation": "federation",
-            "portal": "portal",
-            "readOnly": "readOnly",
-            "extension": "extension"
-        }
-    },
-    "trafficOpsDB": {
-        "dbname": "traffic_ops",
-        "description": "Test database to_test",
-        "hostname": "postgres",
-        "password": "twelve",
-        "port": "5432",
-        "type": "Pg",
-        "user": "traffic_ops"
-    }
+makeCFG() {
+	cat <<-EOF >traffic-ops-test.conf
+	{
+		"default": {
+			"logLocations": {
+				"debug": "stdout",
+				"error": "stdout",
+				"event": "stdout",
+				"info": "stdout",
+				"warning": "stdout"
+			},
+			"session": {
+				"timeoutInSecs": 60
+			}
+		},
+		"trafficOps": {
+			"URL": "https://localhost:6443",
+			"password": "twelve",
+			"users": {
+				"disallowed": "disallowed",
+				"operations": "operations",
+				"admin": "admin",
+				"federation": "federation",
+				"portal": "portal",
+				"readOnly": "readOnly",
+				"extension": "extension"
+			}
+		},
+		"trafficOpsDB": {
+			"dbname": "traffic_ops",
+			"description": "Test database to_test",
+			"hostname": "postgres",
+			"password": "twelve",
+			"port": "5432",
+			"type": "Pg",
+			"user": "traffic_ops"
+		}
+	}
+	EOF
 }
-EOF
 
-/usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf
+CODE="0"
+
+makeCFG
+if [ ! /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf ]; then
+	CODE="1"
+fi
+rm traffic-ops-test.conf
+
+cd ../v2
+makeCFG
+if [ ! /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf ]; then
+	CODE="1"
+fi
+rm traffic-ops-test.conf
+
+cd ../v3
+makeCFG
+if [ ! /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf ]; then
+	CODE="1"
+fi
+rm traffic-ops-test
 
 cat ../traffic_ops_golang/out.log
 cat ../traffic_ops_golang/err.log
 
-exit $?
+exit "$CODE"
