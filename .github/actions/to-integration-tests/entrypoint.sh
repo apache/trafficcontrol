@@ -25,9 +25,6 @@ ln -s "$PWD" "$SRCDIR/trafficcontrol"
 
 cd "$SRCDIR/trafficcontrol/traffic_ops/app/db"
 
-# /usr/local/go/bin/go get ./...
-# /usr/local/go/bin/go build ./admin.go
-
 echo 'version: "1.0"
 name: dbconf.yml
 
@@ -42,21 +39,11 @@ goose --env=test --path="$PWD" up
 psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./seeds.sql
 psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./patches.sql
 
-
-# cd ..
-
-# ./db/admin --env="test" reset
-
 cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 
 
 /usr/local/go/bin/go get ./...
 /usr/local/go/bin/go build .
-
-# openssl req -x509 -out localhost.crt -keyout localhost.key \
-#   -newkey rsa:2048 -nodes -sha256 \
-#   -subj '/CN=localhost' -extensions EXT -config <( \
-#    printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
 
 echo "
 -----BEGIN CERTIFICATE-----
@@ -178,8 +165,6 @@ cat <<-EOF >database.conf
         "type": "Pg"
 }
 EOF
-
-
 
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>err.log &
 
