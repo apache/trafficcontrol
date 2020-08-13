@@ -50,7 +50,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:11.9
+        image: postgres:11
         env:
           POSTGRES_USER: traffic_ops
           POSTGRES_PASSWORD: twelve
