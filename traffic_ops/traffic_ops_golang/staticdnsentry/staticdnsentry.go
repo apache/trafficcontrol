@@ -96,7 +96,7 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 		return err
 	}
 
-	var addressErr error
+	var addressErr, ttlErr error
 	switch typeStr {
 	case "A_RECORD":
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.IPv4)
@@ -115,11 +115,18 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required)
 	}
 
+	ttl := *staticDNSEntry.TTL
+	if ttl == 0 {
+		ttlErr = validation.Validate(staticDNSEntry.TTL, is.Digit)
+	} else {
+		ttlErr = validation.Validate(staticDNSEntry.TTL, validation.Required)
+	}
+
 	errs := validation.Errors{
 		"host":              validation.Validate(staticDNSEntry.Host, validation.Required, is.DNSName),
 		"address":           addressErr,
 		"deliveryserviceId": validation.Validate(staticDNSEntry.DeliveryServiceID, validation.Required),
-		"ttl":               validation.Validate(staticDNSEntry.TTL, validation.Required),
+		"ttl":               ttlErr,
 		"typeId":            validation.Validate(staticDNSEntry.TypeID, validation.Required),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
