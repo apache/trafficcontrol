@@ -611,7 +611,8 @@ JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id ` + where +
+JOIN type t ON s.type = t.id 
+FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }

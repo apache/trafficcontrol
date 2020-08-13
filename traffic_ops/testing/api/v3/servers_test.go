@@ -17,12 +17,13 @@ package v3
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/url"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 func TestServers(t *testing.T) {
@@ -166,6 +167,17 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}
+
+	currentTime := time.Now().UTC().Add(5 * time.Second)
+	time := currentTime.Format(time.RFC1123)
+	var header http.Header
+	header = make(map[string][]string)
+	header.Set(rfc.IfModifiedSince, time)
+	_, reqInf, _ := TOSession.GetServers(&params, header)
+	if reqInf.StatusCode != http.StatusNotModified {
+		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
+	}
+
 	params.Del("dsId")
 
 	resp, _, err := TOSession.GetServers(nil, nil)

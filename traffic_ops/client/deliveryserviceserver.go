@@ -88,13 +88,13 @@ func (to *Session) AssignServersToDeliveryService(servers []string, xmlId string
 }
 
 // GetDeliveryServiceServers gets all delivery service servers, with the default API limit.
-func (to *Session) GetDeliveryServiceServers() (tc.DeliveryServiceServerResponse, ReqInf, error) {
-	return to.getDeliveryServiceServers(url.Values{})
+func (to *Session) GetDeliveryServiceServers(h http.Header) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+	return to.getDeliveryServiceServers(url.Values{}, h)
 }
 
 // GetDeliveryServiceServersN gets all delivery service servers, with a limit of n.
 func (to *Session) GetDeliveryServiceServersN(n int) (tc.DeliveryServiceServerResponse, ReqInf, error) {
-	return to.getDeliveryServiceServers(url.Values{"limit": []string{strconv.Itoa(n)}})
+	return to.getDeliveryServiceServers(url.Values{"limit": []string{strconv.Itoa(n)}}, nil)
 }
 
 // GetDeliveryServiceServersWithLimits gets all delivery service servers, allowing specifying the limit of mappings to return, the delivery services to return, and the servers to return.
@@ -121,16 +121,19 @@ func (to *Session) GetDeliveryServiceServersWithLimits(limit int, deliveryServic
 		vals.Set("serverids", strings.Join(serverIDStrs, ","))
 	}
 
-	return to.getDeliveryServiceServers(vals)
+	return to.getDeliveryServiceServers(vals, nil)
 }
 
-func (to *Session) getDeliveryServiceServers(urlQuery url.Values) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+func (to *Session) getDeliveryServiceServers(urlQuery url.Values, h http.Header) (tc.DeliveryServiceServerResponse, ReqInf, error) {
 	route := apiBase + `/deliveryserviceserver`
 	if qry := urlQuery.Encode(); qry != "" {
 		route += `?` + qry
 	}
-	reqResp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
+	reqResp, remoteAddr, err := to.request(http.MethodGet, route, nil, h)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if reqResp != nil {
+		reqInf.StatusCode = reqResp.StatusCode
+	}
 	if err != nil {
 		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
 	}
