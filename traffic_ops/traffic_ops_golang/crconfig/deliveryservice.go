@@ -481,6 +481,7 @@ order by dr.set_number asc
 		return nil, nil, errors.New("querying deliveryservices: " + err.Error())
 	}
 	defer rows.Close()
+	// a map to keep track of the ds name and the last order of the regex for that ds
 	dsNameOrderMap := make(map[string]int)
 
 	for rows.Next() {
@@ -514,6 +515,8 @@ order by dr.set_number asc
 			continue
 		}
 
+		// If there are gaps between two or more DS regex orders, do not add these missing orders in the final list.
+		// Instead, skip over them and add the next regex with a valid order
 		if dsmatchsets[dsname][dsNameOrderMap[dsname]] == nil {
 			dsmatchsets[dsname][dsNameOrderMap[dsname]] = &tc.MatchSet{}
 		}
