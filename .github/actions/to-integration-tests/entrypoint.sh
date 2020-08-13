@@ -39,7 +39,7 @@ test:
 
 cd ..
 
-./db/admin --env="test" upgrade
+./db/admin --env="test" reset
 
 cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 
