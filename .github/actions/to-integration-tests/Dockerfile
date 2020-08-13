@@ -17,7 +17,7 @@
 
 FROM golang:1.14.2-alpine
 
-RUN apk add --no-cache openssl git
+RUN apk add --no-cache openssl git gcc
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
 
 COPY entrypoint.sh /entrypoint.sh
