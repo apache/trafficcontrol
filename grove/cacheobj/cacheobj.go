@@ -18,14 +18,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 type CacheObj struct {
 	Body             []byte
 	ReqHeaders       http.Header
 	RespHeaders      http.Header
-	RespCacheControl web.CacheControl
+	RespCacheControl rfc.CacheControlMap
 	Code             int
 	OriginCode       int
 	ProxyURL         string
@@ -48,7 +48,7 @@ func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL
 		Body:             bytes,
 		ReqHeaders:       reqHeader,
 		RespHeaders:      respHeader,
-		RespCacheControl: web.ParseCacheControl(respHeader),
+		RespCacheControl: rfc.ParseCacheControl(respHeader),
 		Code:             code,
 		OriginCode:       originCode,
 		ProxyURL:         proxyURL,
@@ -62,4 +62,19 @@ func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL
 	// copyHeader(respHeader, &obj.respHeaders)
 	obj.Size = obj.ComputeSize()
 	return obj
+}
+
+// CanReuse is a helper wrapping
+// github.com/apache/trafficcontrol/lib/go-rfc.CanReuseStored, returning a
+// boolean rather than an enumerated "Reuse" value, for when it's known whether
+// MustRevalidate can be used.
+func CanReuse(
+	reqHeader http.Header,
+	reqCacheControl rfc.CacheControlMap,
+	cacheObj *CacheObj,
+	strictRFC bool,
+	revalidateCanReuse bool,
+) bool {
+	canReuse := rfc.CanReuseStored(reqHeader, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, strictRFC)
+	return canReuse == rfc.ReuseCan || (canReuse == rfc.ReuseMustRevalidate && revalidateCanReuse)
 }
