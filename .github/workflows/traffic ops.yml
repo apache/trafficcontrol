@@ -23,7 +23,7 @@ on:
     types: [opened, reopened, edited, synchronize]
 
 jobs:
-  unit tests:
+  unit_tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,7 +34,7 @@ jobs:
       with:
         dir: ./traffic_ops/traffic_ops_golang/...
 
-  go fmt:
+  go_fmt:
     runs-on: ubuntu-latest
 
     steps:
@@ -45,7 +45,7 @@ jobs:
       with:
         dir: ./traffic_ops/traffic_ops_golang/...
 
-  API tests:
+  API_tests:
     runs-on: ubuntu-latest
 
     services:
