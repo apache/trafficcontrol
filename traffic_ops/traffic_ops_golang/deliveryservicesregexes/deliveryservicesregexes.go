@@ -344,6 +344,9 @@ func validateDSRegexType(tx *sql.Tx, typeID int) error {
 
 func validateDSRegexOrder(tx *sql.Tx, dsID int, order int) error {
 	var ds int
+	if order < 0 {
+		return errors.New("cannot add regex with order < 0")
+	}
 	err := tx.QueryRow(`
 select deliveryservice from deliveryservice_regex 
 where deliveryservice = $1 and set_number = $2`,

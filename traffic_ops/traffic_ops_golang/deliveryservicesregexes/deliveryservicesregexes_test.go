@@ -56,4 +56,11 @@ func TestValidateDSRegexOrder(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expect no error, got %v", err.Error())
 	}
+	err = validateDSRegexOrder(tx, 1, -1)
+	if err == nil {
+		t.Fatal("Expect error saying cannot add regex with order < 0, got nothing")
+	}
+	if err.Error() != "cannot add regex with order < 0" {
+		t.Errorf("Expected error detail to be 'cannot add regex with order <0', got %v", err.Error())
+	}
 }
