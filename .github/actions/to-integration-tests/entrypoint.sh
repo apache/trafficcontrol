@@ -224,6 +224,9 @@ cat <<-EOF >traffic-ops-test.conf
 }
 EOF
 
-go test -v --cfg ./traffic-ops-test
+/usr/local/bin/go test -v --cfg ./traffic-ops-test
+
+cat ../traffic_ops_golang/out.log
+cat ../traffic_ops_golang/err.log
 
 exit $?
