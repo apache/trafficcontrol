@@ -38,10 +38,10 @@ test:
 ' > dbconf.yml
 
 psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./create_tables.sql
+goose --env=test --path="$PWD" up
 psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./seeds.sql
 psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./patches.sql
 
-goose --env=test --path="$PWD" up
 
 # cd ..
 
