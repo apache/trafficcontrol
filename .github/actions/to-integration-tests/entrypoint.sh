@@ -22,6 +22,14 @@ GOPATH="$(mktemp -d)"
 SRCDIR="$GOPATH/src/github.com/apache"
 mkdir -p "$SRCDIR"
 ln -s "$PWD" "$SRCDIR/trafficcontrol"
+
+cd "$SRCDIR/trafficcontrol/traffic_ops/app/db"
+
+/usr/local/go/bin/go get ./...
+/usr/local/go/bin/go build .
+
+./admin --env="test" upgrade
+
 cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 
 /usr/local/go/bin/go get ./...
@@ -36,7 +44,7 @@ cat <<-EOF >cdn.conf
 {
     "hypnotoad" : {
         "listen" : [
-            "$TO_PERL_SCHEME://$TO_PERL_FQDN:$TO_PERL_PORT?cert=$PWD/localhost.crt&key=$PWD/localhost.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+            "https://not-a-real-host.test:1?cert=$PWD/localhost.crt&key=$PWD/localhost.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
         ],
         "user" : "trafops",
         "group" : "trafops",
@@ -99,6 +107,8 @@ cat <<-EOF >database.conf
 }
 EOF
 
+
+
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>err.log &
 
 cd ../testing/api/v1
@@ -141,5 +151,7 @@ cat <<-EOF >traffic-ops-test.conf
     }
 }
 EOF
+
+go test -v --cfg ./traffic-ops-test
 
 exit $?
