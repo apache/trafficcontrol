@@ -28,6 +28,15 @@ cd "$SRCDIR/trafficcontrol/traffic_ops/app/db"
 /usr/local/go/bin/go get ./...
 /usr/local/go/bin/go build ./admin.go
 
+echo 'version: "1.0"
+name: dbconf.yml
+
+test:
+  driver: postgres
+  open: host=localhost port=5432 user=traffic_ops password=twelve dbname=to_test sslmode=disable
+
+' > dbconf.yml
+
 cd ..
 
 ./db/admin --env="test" upgrade
