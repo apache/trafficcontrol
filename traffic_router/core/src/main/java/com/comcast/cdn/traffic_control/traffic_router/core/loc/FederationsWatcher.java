@@ -25,6 +25,7 @@ public class FederationsWatcher extends AbstractResourceWatcher {
     public static final String DEFAULT_FEDERATION_DATA_URL = "https://${toHostname}/api/2.0/federations/all";
     public FederationsWatcher() {
         setDatabaseUrl(DEFAULT_FEDERATION_DATA_URL);
+        setDefaultDatabaseUrl(DEFAULT_FEDERATION_DATA_URL);
     }
 
     @Override
