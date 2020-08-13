@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -e
+set -ex
 
 GOPATH="$(mktemp -d)"
 SRCDIR="$GOPATH/src/github.com/apache"
@@ -26,7 +26,7 @@ ln -s "$PWD" "$SRCDIR/trafficcontrol"
 cd "$SRCDIR/trafficcontrol/traffic_ops/app/db"
 
 /usr/local/go/bin/go get ./...
-/usr/local/go/bin/go build .
+/usr/local/go/bin/go build ./admin.go
 
 ./admin --env="test" upgrade
 
