@@ -19,6 +19,7 @@ FROM golang:1.14.2
 
 RUN apt-get install openssl git gcc
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
+RUN mv $GOPATH/bin/goose /bin/
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod a+x /entrypoint.sh
