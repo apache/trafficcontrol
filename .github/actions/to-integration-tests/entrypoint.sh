@@ -28,7 +28,9 @@ cd "$SRCDIR/trafficcontrol/traffic_ops/app/db"
 /usr/local/go/bin/go get ./...
 /usr/local/go/bin/go build ./admin.go
 
-./admin --env="test" upgrade
+cd ..
+
+./db/admin --env="test" upgrade
 
 cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 
