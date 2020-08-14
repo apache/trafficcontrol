@@ -36,8 +36,6 @@ const (
 	ContentDisposition = "Content-Disposition" // RFC6266
 	ContentEncoding    = "Content-Encoding"    // RFC7231§3.1.2.2
 	ContentType        = "Content-Type"        // RFC7231§3.1.1.5
-	IfModifiedSince    = "If-Modified-Since"   // RFC7232§3.3
-	LastModified       = "Last-Modified"       // RFC7232§2.2
 	Vary               = "Vary"                // RFC7231§7.1.4
 )
 
@@ -46,7 +44,6 @@ const (
 const (
 	ApplicationJSON           = "application/json"         // RFC4627§6
 	ApplicationOctetStream    = "application/octet-stream" // RFC2046§4.5.2
-	Vary                      = "Vary"                     // RFC7231§7.1.4
 	ContentTypeMultiPartMixed = "multipart/mixed"          // RFC1341§7.2
 	ContentTypeTextPlain      = "text/plain"               // RFC2046§4.1
 	Gzip                      = "gzip"                     // RFC7230§4.2.3
@@ -169,6 +166,7 @@ func ParseHTTPDate(d string) (time.Time, bool) {
 // FormatHTTPDate formats t as an RFC7231§7.1.1 HTTP-date.
 func FormatHTTPDate(t time.Time) string {
 	return t.Format(time.RFC1123)
+}
 
 // GetHTTPDeltaSeconds is a helper function which gets an HTTP Delta Seconds
 // from the given map (which is typically a `http.Header` or `CacheControl`).

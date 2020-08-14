@@ -207,7 +207,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	//CNAME_RECORD: missing a trailing period
 	expectedAddressMissingPeriod := "cdn.test.com"
 	remoteStaticDNSEntry.Address = expectedAddressMissingPeriod
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, nil)
 	t.Log("Status Code [expect 400]: ", status)
 	if err != nil {
 		t.Logf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)

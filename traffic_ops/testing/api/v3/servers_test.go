@@ -379,7 +379,7 @@ func UniqueIPProfileTestServers(t *testing.T) {
 	if !changed {
 		t.Fatal("did not find ip address to update")
 	}
-	_, _, err = TOSession.UpdateServerByID(*server.ID, server)
+	_, _, err = TOSession.UpdateServerByID(*server.ID, server, nil)
 	if err != nil {
 		t.Fatalf("expected update to pass: %s", err)
 	}
