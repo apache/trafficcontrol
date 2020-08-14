@@ -38,6 +38,8 @@ type Config struct {
 	TrafficOpsDB TrafficOpsDB `json:"trafficOpsDB"`
 	Default      Default      `json:"default"`
 	UseIMS       bool         `json:"use_ims"`
+	// Sets whether or not to perform tests that must proxy to Perl
+	NoPerl bool `json:"noPerl"`
 }
 
 // TrafficOps - config section
