@@ -226,6 +226,11 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validateDSRegexOrder(tx, inf.IntParams["dsid"], dsr.SetNumber); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
 	regexID := 0
 	if err := tx.QueryRow(`INSERT INTO regex (pattern, type) VALUES ($1, $2) RETURNING id`, dsr.Pattern, dsr.Type).Scan(&regexID); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting deliveryserviceregex regex: "+err.Error()))
@@ -298,6 +303,11 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validateDSRegexOrder(tx, inf.IntParams["dsid"], dsr.SetNumber); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
 	if err := validateDSRegexType(tx, dsr.Type); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
@@ -330,6 +340,21 @@ func Put(w http.ResponseWriter, r *http.Request) {
 func validateDSRegexType(tx *sql.Tx, typeID int) error {
 	_, err := tc.ValidateTypeID(tx, &typeID, "regex")
 	return err
+}
+
+func validateDSRegexOrder(tx *sql.Tx, dsID int, order int) error {
+	var ds int
+	if order < 0 {
+		return errors.New("cannot add regex with order < 0")
+	}
+	err := tx.QueryRow(`
+select deliveryservice from deliveryservice_regex 
+where deliveryservice = $1 and set_number = $2`,
+		dsID, order).Scan(&ds)
+	if err == nil {
+		return errors.New("cannot add regex, another regex with the same order exists")
+	}
+	return nil
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
