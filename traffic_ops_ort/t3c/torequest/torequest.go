@@ -1452,7 +1452,7 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) (bool, erro
 		updateResult = true
 		log.Errorln("Traffic Ops is signaling that an update is ready to be applied but, none was found! Clearing update state in Traffic Ops anyway.")
 	} else if *syncdsUpdate == UpdateTropsNotNeeded {
-		log.Errorln("Traffic Ops does not require and update at this time")
+		log.Errorln("Traffic Ops does not require an update at this time")
 		return true, nil
 	} else if *syncdsUpdate == UpdateTropsFailed {
 		log.Errorln("Traffic Ops requires an update but, applying the update locally failed.  Traffic Ops is not being updated.")
