@@ -109,6 +109,7 @@ ADD infrastructure/cdn-in-a-box/enroller/server_template.json \
 
 COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
      infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+     infrastructure/cdn-in-a-box/traffic_ops/set-to-ips-from-dns.sh \
      /usr/local/sbin/
 
 ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data

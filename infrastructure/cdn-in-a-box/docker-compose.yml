@@ -92,7 +92,6 @@ services:
     # TODO: change to expose: "60443" to limit to containers
     volumes:
       - ./traffic_ops/ca:/ca
-      - ./traffic_ops/set-to-ips-from-dns.sh:/usr/local/sbin/set-to-ips-from-dns.sh
       - shared:/shared
 
   # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
