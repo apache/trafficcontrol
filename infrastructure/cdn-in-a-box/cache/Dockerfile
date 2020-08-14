@@ -67,8 +67,7 @@ ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic
 
 ARG ORT_RPM=infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
 ADD $ORT_RPM /
-RUN yum install -y /$(basename $ORT_RPM) &&\
-    rm /$(basename $ORT_RPM) && \
-    yum -y clean all
+RUN rpm -Uvh --nodeps /$(basename $ORT_RPM) &&\
+    rm /$(basename $ORT_RPM)
 
 CMD /run.sh

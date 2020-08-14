@@ -257,15 +257,6 @@ var TableParentServersController = function(servers, $scope, $state, $uibModal, 
 			click: function ($itemScope) {
 				locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/delivery-services');
 			}
-		},
-		{
-			text: 'View Config Files',
-			displayed: function ($itemScope) {
-				return serverUtils.isCache($itemScope.s);
-			},
-			click: function ($itemScope) {
-				locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/config-files');
-			}
 		}
 	];
 

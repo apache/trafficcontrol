@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
@@ -52,9 +53,23 @@ func GetConfigFileCDNHeaderRewriteMid(toData *config.TOData, fileName string) (s
 		return "", "", "", errors.New("converting ds to config ds: " + err.Error())
 	}
 
+	assignedServers := map[int]struct{}{}
+	for _, dss := range toData.DeliveryServiceServers {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			continue
+		}
+		if *dss.DeliveryService != *tcDS.ID {
+			continue
+		}
+		assignedServers[*dss.Server] = struct{}{}
+	}
+
 	serverCGs := map[tc.CacheGroupName]struct{}{}
 	for _, sv := range toData.Servers {
 		if sv.CDNName != toData.Server.CDNName {
+			continue
+		}
+		if _, ok := assignedServers[sv.ID]; !ok && (tcDS.Topology == nil || *tcDS.Topology == "") {
 			continue
 		}
 		if tc.CacheStatus(sv.Status) != tc.CacheStatusReported && tc.CacheStatus(sv.Status) != tc.CacheStatusOnline {
@@ -99,6 +114,8 @@ func GetConfigFileCDNHeaderRewriteMid(toData *config.TOData, fileName string) (s
 		}
 		assignedMids = append(assignedMids, cfgServer)
 	}
+
+	log.Infof("MakeHeaderRewriteMidDotConfig ds "+*tcDS.XMLID+" got mids %+v\n", len(assignedMids))
 
 	return atscfg.MakeHeaderRewriteMidDotConfig(tc.CDNName(toData.Server.CDNName), toData.TOToolName, toData.TOURL, cfgDS, assignedMids), atscfg.ContentTypeHeaderRewriteDotConfig, atscfg.LineCommentHeaderRewriteDotConfig, nil
 }

@@ -82,6 +82,14 @@ type APIResponseWithSummary struct {
 	} `json:"summary"`
 }
 
+// GoneHandler is an http.Handler function that just writes a 410 Gone response
+// back to the client, along with an error-level alert stating that the endpoint
+// is no longer available.
+func GoneHandler(w http.ResponseWriter, r *http.Request) {
+	err := errors.New("This endpoint is no longer available; please consult documentation")
+	HandleErr(w, r, nil, http.StatusGone, err, nil)
+}
+
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {

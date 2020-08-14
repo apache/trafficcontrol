@@ -46,6 +46,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
 
     public LetsEncryptDnsChallengeWatcher() {
         setDatabaseUrl(DEFAULT_LE_DNS_CHALLENGE_URL);
+        setDefaultDatabaseUrl(DEFAULT_LE_DNS_CHALLENGE_URL);
     }
 
     @Override

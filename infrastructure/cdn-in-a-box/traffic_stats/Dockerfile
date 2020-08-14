@@ -35,7 +35,7 @@ RUN yum install -y epel-release && \
     yum clean all
 
 ADD $TRAFFIC_TS_RPM /
-RUN yum install -y /$(basename $TRAFFIC_TS_RPM) \
+RUN rpm -Uvh /$(basename $TRAFFIC_TS_RPM) && \
     rm /$(basename $TRAFFIC_TS_RPM)
 
 ADD enroller/server_template.json \

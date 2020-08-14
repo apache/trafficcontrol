@@ -55,7 +55,6 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    // todo: change to use query param when it is supported
     this.updateDeliveryService = function(ds) {
         // strip out any falsy values or duplicates from consistentHashQueryParams
         ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(function(i){return i;});

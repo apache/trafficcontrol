@@ -537,12 +537,15 @@ func TestV3Validations(t *testing.T) {
 
 	typeCols := []string{"name", "use_in_table"}
 	cdnCols := []string{"cdn"}
+	ipCols := []string{"id", "address"}
 	typeRows := sqlmock.NewRows(typeCols).AddRow("EDGE", "server")
 	cdnRows := sqlmock.NewRows(cdnCols).AddRow(*testServer.CDNID)
+	ipRows := sqlmock.NewRows(ipCols)
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
-	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
+	mock.ExpectQuery("SELECT cdn").WillReturnRows(cdnRows)
+	mock.ExpectQuery("SELECT s.ID").WillReturnRows(ipRows)
 
 	tx := db.MustBegin().Tx
 

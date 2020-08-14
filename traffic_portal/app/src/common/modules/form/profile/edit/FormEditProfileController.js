@@ -27,6 +27,9 @@ var FormEditProfileController = function(profile, $scope, $controller, $uibModal
             .then(function(result) {
                 messageModel.setMessages(result.alerts, true);
                 locationUtils.navigateToPath('/profiles');
+            },
+            function() {
+                // do nothing
             });
     };
 

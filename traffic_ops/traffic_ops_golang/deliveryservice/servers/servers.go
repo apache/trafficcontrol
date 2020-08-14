@@ -816,7 +816,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 
 func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) from (
-		SELECT max(dss.last_updated) as t from deliveryservice_server dss ` + where +
+		SELECT max(dss.last_updated) as t from deliveryservice_server dss JOIN deliveryservice ds ON ds.id = dss.deliveryservice ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`
 }
