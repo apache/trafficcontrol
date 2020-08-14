@@ -234,7 +234,7 @@ if [ "$?" -gt "0" ]; then
 fi
 rm traffic-ops-test
 
-cat ../traffic_ops_golang/out.log
-cat ../traffic_ops_golang/err.log
+cat ../../../traffic_ops_golang/out.log
+cat ../../../traffic_ops_golang/err.log
 
 exit "$CODE"
