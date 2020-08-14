@@ -113,11 +113,11 @@ cat <<-EOF >cdn.conf
 	"traffic_ops_golang" : {
 		"insecure": true,
 		"port" : "6443",
-		"log_location_error": "stderr",
+		"log_location_error": "stderr,
 		"log_location_warning": "stderr",
-		"log_location_info": "stderr",
-		"log_location_debug": "stderr",
-		"log_location_event": "stderr",
+		"log_location_info": null,
+		"log_location_debug": null,
+		"log_location_event": null,
 		"max_db_connections": 20,
 		"db_conn_max_lifetime_seconds": 60,
 		"db_query_timeout_seconds": 20,
@@ -173,11 +173,11 @@ makeCFG() {
 	{
 		"default": {
 			"logLocations": {
-				"debug": "stdout",
-				"error": "stdout",
-				"event": "stdout",
-				"info": "stdout",
-				"warning": "stdout"
+				"debug": "stderr",
+				"error": "stderr",
+				"event": "stderr",
+				"info": "stderr",
+				"warning": "stderr"
 			},
 			"session": {
 				"timeoutInSecs": 60
