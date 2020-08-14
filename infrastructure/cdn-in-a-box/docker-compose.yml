@@ -260,8 +260,6 @@ services:
     env_file:
       - variables.env
     volumes:
-      - ./dns/set-self-dns.sh:/usr/local/sbin/set-self-dns.sh
-      - ./dns/set-dns-update.sh:/usr/local/sbin/set-dns-update.sh
       - shared:/shared
     hostname: dns
     domainname: infra.ciab.test
