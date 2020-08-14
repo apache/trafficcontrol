@@ -326,6 +326,9 @@ func (to *Session) GetServerIDDeliveryServices(server int, header http.Header) (
 
 	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

@@ -2,12 +2,13 @@ package ims
 
 import (
 	"database/sql"
+	"net/http"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
-	"net/http"
-	"time"
 )
 
 /*
@@ -60,7 +61,7 @@ func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]
 			defer rows.Close()
 		}
 		if err != nil {
-			log.Warnf("Couldn't get the max last updated time: %v", err)
+			log.Errorf("Couldn't get the max last updated time: %v", err)
 			return runSecond, maxTime
 		}
 		if err == sql.ErrNoRows {
