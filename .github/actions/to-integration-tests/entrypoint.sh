@@ -113,7 +113,7 @@ cat <<-EOF >cdn.conf
 	"traffic_ops_golang" : {
 		"insecure": true,
 		"port" : "6443",
-		"log_location_error": "stderr,
+		"log_location_error": "stderr",
 		"log_location_warning": "stderr",
 		"log_location_info": null,
 		"log_location_debug": null,
