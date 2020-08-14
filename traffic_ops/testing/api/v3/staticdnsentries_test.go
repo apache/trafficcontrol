@@ -48,19 +48,23 @@ func TestStaticDNSEntries(t *testing.T) {
 }
 
 func UpdateTestStaticDNSEntriesWithHeaders(t *testing.T, header http.Header) {
-	firstStaticDNSEntry := testData.StaticDNSEntries[0]
-	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
-	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host, header)
-	if err != nil {
-		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", firstStaticDNSEntry.Host, err)
-	}
-	remoteStaticDNSEntry := resp[0]
-	expectedAddress := "192.168.0.2"
-	remoteStaticDNSEntry.Address = expectedAddress
+	if len(testData.StaticDNSEntries) > 0 {
+		firstStaticDNSEntry := testData.StaticDNSEntries[0]
+		// Retrieve the StaticDNSEntries by name so we can get the id for the Update
+		resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host, header)
+		if err != nil {
+			t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", firstStaticDNSEntry.Host, err)
+		}
+		if len(resp) > 0 {
+			remoteStaticDNSEntry := resp[0]
+			expectedAddress := "192.168.0.2"
+			remoteStaticDNSEntry.Address = expectedAddress
 
-	_, _, status, _ := TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, header)
-	if status != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", status)
+			_, _, status, _ := TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, header)
+			if status != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", status)
+			}
+		}
 	}
 }
 
@@ -126,27 +130,30 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v", firstStaticDNSEntry.Host, err)
 	}
-	remoteStaticDNSEntry := resp[0]
-	expectedAddress := "192.168.0.2"
-	remoteStaticDNSEntry.Address = expectedAddress
-	var alert tc.Alerts
-	var status int
-	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, nil)
-	t.Log("Status Code: ", status)
-	if err != nil {
-		t.Errorf("cannot UPDATE StaticDNSEntries using url: %v - %v", err, alert)
-	}
+	if len(resp) > 0 {
+		remoteStaticDNSEntry := resp[0]
+		expectedAddress := "192.168.0.2"
+		remoteStaticDNSEntry.Address = expectedAddress
+		var alert tc.Alerts
+		var status int
+		alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, nil)
+		t.Log("Status Code: ", status)
+		if err != nil {
+			t.Errorf("cannot UPDATE StaticDNSEntries using url: %v - %v", err, alert)
+		}
 
-	// Retrieve the StaticDNSEntries to check StaticDNSEntries name got updated
-	resp, _, err = TOSession.GetStaticDNSEntryByID(remoteStaticDNSEntry.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET StaticDNSEntries by name: '$%s', %v", firstStaticDNSEntry.Host, err)
+		// Retrieve the StaticDNSEntries to check StaticDNSEntries name got updated
+		resp, _, err = TOSession.GetStaticDNSEntryByID(remoteStaticDNSEntry.ID, nil)
+		if err != nil {
+			t.Errorf("cannot GET StaticDNSEntries by name: '$%s', %v", firstStaticDNSEntry.Host, err)
+		}
+		if len(resp) > 0 {
+			respStaticDNSEntry := resp[0]
+			if respStaticDNSEntry.Address != expectedAddress {
+				t.Errorf("results do not match actual: %s, expected: %s", respStaticDNSEntry.Address, expectedAddress)
+			}
+		}
 	}
-	respStaticDNSEntry := resp[0]
-	if respStaticDNSEntry.Address != expectedAddress {
-		t.Errorf("results do not match actual: %s, expected: %s", respStaticDNSEntry.Address, expectedAddress)
-	}
-
 }
 
 func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {

@@ -56,15 +56,17 @@ func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
-	remoteParameter := resp[0]
-	expectedParameterValue := "UPDATED"
-	remoteParameter.Value = expectedParameterValue
-	_, reqInf, err := TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter, header)
-	if err == nil {
-		t.Errorf("Expected error about precondition failed, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	if len(resp) > 0 {
+		remoteParameter := resp[0]
+		expectedParameterValue := "UPDATED"
+		remoteParameter.Value = expectedParameterValue
+		_, reqInf, err := TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter, header)
+		if err == nil {
+			t.Errorf("Expected error about precondition failed, but got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
@@ -113,25 +115,28 @@ func UpdateTestParameters(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
-	remoteParameter := resp[0]
-	expectedParameterValue := "UPDATED"
-	remoteParameter.Value = expectedParameterValue
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
-	}
+	if len(resp) > 0 {
+		remoteParameter := resp[0]
+		expectedParameterValue := "UPDATED"
+		remoteParameter.Value = expectedParameterValue
+		var alert tc.Alerts
+		alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+		}
 
-	// Retrieve the Parameter to check Parameter name got updated
-	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		// Retrieve the Parameter to check Parameter name got updated
+		resp, _, err = TOSession.GetParameterByID(remoteParameter.ID, nil)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		if len(resp) > 0 {
+			respParameter := resp[0]
+			if respParameter.Value != expectedParameterValue {
+				t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
+			}
+		}
 	}
-	respParameter := resp[0]
-	if respParameter.Value != expectedParameterValue {
-		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
-	}
-
 }
 
 func GetTestParametersIMS(t *testing.T) {

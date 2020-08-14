@@ -47,20 +47,24 @@ func TestRegions(t *testing.T) {
 }
 
 func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
-	firstRegion := testData.Regions[0]
-	// Retrieve the Region by region so we can get the id for the Update
-	resp, _, err := TOSession.GetRegionByName(firstRegion.Name, header)
-	if err != nil {
-		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
-	}
-	remoteRegion := resp[0]
-	remoteRegion.Name = "OFFLINE-TEST"
-	_, reqInf, err := TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, header)
-	if err == nil {
-		t.Errorf("Expected error about precondition failed, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	if len(testData.Regions) > 0 {
+		firstRegion := testData.Regions[0]
+		// Retrieve the Region by region so we can get the id for the Update
+		resp, _, err := TOSession.GetRegionByName(firstRegion.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteRegion := resp[0]
+			remoteRegion.Name = "OFFLINE-TEST"
+			_, reqInf, err := TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
 	}
 }
 
@@ -125,32 +129,35 @@ func UpdateTestRegions(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
 	}
-	remoteRegion := resp[0]
-	expectedRegion := "OFFLINE-TEST"
-	remoteRegion.Name = expectedRegion
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
-	}
+	if len(resp) > 0 {
+		remoteRegion := resp[0]
+		expectedRegion := "OFFLINE-TEST"
+		remoteRegion.Name = expectedRegion
+		var alert tc.Alerts
+		alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
+		}
 
-	// Retrieve the Region to check region got updated
-	resp, _, err = TOSession.GetRegionByID(remoteRegion.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
-	}
-	respRegion := resp[0]
-	if respRegion.Name != expectedRegion {
-		t.Errorf("results do not match actual: %s, expected: %s", respRegion.Name, expectedRegion)
-	}
+		// Retrieve the Region to check region got updated
+		resp, _, err = TOSession.GetRegionByID(remoteRegion.ID, nil)
+		if err != nil {
+			t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
+		}
+		if len(resp) > 0 {
+			respRegion := resp[0]
+			if respRegion.Name != expectedRegion {
+				t.Errorf("results do not match actual: %s, expected: %s", respRegion.Name, expectedRegion)
+			}
 
-	// Set the name back to the fixture value so we can delete it after
-	remoteRegion.Name = firstRegion.Name
-	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
+			// Set the name back to the fixture value so we can delete it after
+			remoteRegion.Name = firstRegion.Name
+			alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion, nil)
+			if err != nil {
+				t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
+			}
+		}
 	}
-
 }
 
 func GetTestRegions(t *testing.T) {

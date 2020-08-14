@@ -49,21 +49,23 @@ func TestProfiles(t *testing.T) {
 }
 
 func UpdateTestProfilesWithHeaders(t *testing.T, header http.Header) {
-	firstProfile := testData.Profiles[0]
-	// Retrieve the Profile by name so we can get the id for the Update
-	resp, _, err := TOSession.GetProfileByName(firstProfile.Name, header)
-	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
-	}
-	remoteProfile := resp[0]
-	remoteProfile.Description = "UPDATED"
-
-	_, reqInf, err := TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile, header)
-	if err == nil {
-		t.Errorf("Expected error about precondition failed, but got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+	if len(testData.Profiles) > 0 {
+		firstProfile := testData.Profiles[0]
+		// Retrieve the Profile by name so we can get the id for the Update
+		resp, _, err := TOSession.GetProfileByName(firstProfile.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+		}
+		if len(resp) > 0 {
+			remoteProfile := resp[0]
+			_, reqInf, err := TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		}
 	}
 }
 
@@ -238,23 +240,27 @@ func UpdateTestProfiles(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
-	remoteProfile := resp[0]
-	expectedProfileDesc := "UPDATED"
-	remoteProfile.Description = expectedProfileDesc
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
-	}
+	if len(resp) > 0 {
+		remoteProfile := resp[0]
+		expectedProfileDesc := "UPDATED"
+		remoteProfile.Description = expectedProfileDesc
+		var alert tc.Alerts
+		alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
+		}
 
-	// Retrieve the Profile to check Profile name got updated
-	resp, _, err = TOSession.GetProfileByID(remoteProfile.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
-	}
-	respProfile := resp[0]
-	if respProfile.Description != expectedProfileDesc {
-		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
+		// Retrieve the Profile to check Profile name got updated
+		resp, _, err = TOSession.GetProfileByID(remoteProfile.ID, nil)
+		if err != nil {
+			t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+		}
+		if len(resp) > 0 {
+			respProfile := resp[0]
+			if respProfile.Description != expectedProfileDesc {
+				t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
+			}
+		}
 	}
 
 }

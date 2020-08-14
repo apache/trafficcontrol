@@ -59,23 +59,25 @@ func UpdateTestCacheGroupsWithHeaders(t *testing.T, h http.Header) {
 	if err != nil {
 		t.Errorf("cannot GET CACHEGROUP by name: %v - %v", *firstCG.Name, err)
 	}
-	cg := resp[0]
-	expectedShortName := "blah"
-	cg.ShortName = &expectedShortName
+	if len(resp) > 0 {
+		cg := resp[0]
+		expectedShortName := "blah"
+		cg.ShortName = &expectedShortName
 
-	// fix the type id for test
-	typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID, h)
-	if err != nil {
-		t.Error("could not lookup a typeID for this cachegroup")
-	}
-	cg.TypeID = &typeResp[0].ID
+		// fix the type id for test
+		typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID, h)
+		if err != nil {
+			t.Error("could not lookup a typeID for this cachegroup")
+		}
+		cg.TypeID = &typeResp[0].ID
 
-	_, reqInf, err := TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, h)
-	if err == nil {
-		t.Errorf("Expected an error showing Precondition Failed, got none")
-	}
-	if reqInf.StatusCode != http.StatusPreconditionFailed {
-		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		_, reqInf, err := TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, h)
+		if err == nil {
+			t.Errorf("Expected an error showing Precondition Failed, got none")
+		}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
@@ -259,6 +261,9 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET CACHEGROUP by name: %v - %v", *firstCG.Name, err)
 	}
+	if len(resp) == 0 {
+		t.Fatal("got an empty response for cachegroups")
+	}
 	cg := resp[0]
 	expectedShortName := "blah"
 	cg.ShortName = &expectedShortName
@@ -268,13 +273,18 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if err != nil {
 		t.Error("could not lookup a typeID for this cachegroup")
 	}
+	if len(typeResp) == 0 {
+		t.Fatal("got an empty response for types")
+	}
 	cg.TypeID = &typeResp[0].ID
-
 	updResp, _, err := TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
 
+	if updResp == nil {
+		t.Fatal("could not update cachegroup by ID, got nil response")
+	}
 	// Check response to make sure fields aren't null
 	if cg.ParentName != nil && updResp.Response.ParentName == nil {
 		t.Error("Parent cachegroup is null in response when it should have a value")
@@ -297,6 +307,9 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by name: '%s', %v", *firstCG.Name, err)
 	}
+	if len(resp) == 0 {
+		t.Fatal("got an empty response for cachegroups")
+	}
 	cg = resp[0]
 	if *cg.ShortName != expectedShortName {
 		t.Errorf("results do not match actual: %s, expected: %s", *cg.ShortName, expectedShortName)
@@ -311,10 +324,15 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
-
+	if updResp == nil {
+		t.Fatal("could not update cachegroup by ID, got nil response")
+	}
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
 	if *cg.Latitude != expectedLat {
@@ -331,10 +349,15 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
-
+	if updResp == nil {
+		t.Fatal("could not update cachegroup by ID, got nil response")
+	}
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
 	if !reflect.DeepEqual(expectedMethods, *cg.LocalizationMethods) {
@@ -349,6 +372,9 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by name: '$%s', %v", firstEdgeCGName, err)
 	}
+	if len(resp) == 0 {
+		t.Fatal("got an empty response for cachegroups")
+	}
 	cg = resp[0]
 	if *cg.Name != firstEdgeCGName {
 		t.Errorf("results do not match actual: %s, expected: %s", *cg.ShortName, firstEdgeCGName)
@@ -361,10 +387,15 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
-
+	if updResp == nil {
+		t.Fatal("could not update cachegroup by ID, got nil response")
+	}
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
 	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
@@ -378,10 +409,15 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v)", err, updResp)
 	}
-
+	if updResp == nil {
+		t.Fatal("could not update cachegroup by ID, got nil response")
+	}
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
 	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
@@ -395,10 +431,15 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
-
+	if updResp == nil {
+		t.Fatal("could not update cachegroup by ID, got nil response")
+	}
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("got an empty response for cachegroups")
 	}
 	cg = resp[0]
 	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {

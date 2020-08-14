@@ -51,14 +51,16 @@ func UpdateTestCDNFederationsWithHeaders(t *testing.T, h http.Header) {
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
 		}
-		expectedCName := "new.cname."
-		fed.Response[0].CName = &expectedCName
-		_, reqInf, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id, h)
-		if err == nil {
-			t.Errorf("Expected an error saying precondition failed, but got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+		if fed != nil && len(fed.Response) > 0 {
+			expectedCName := "new.cname."
+			fed.Response[0].CName = &expectedCName
+			_, reqInf, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id, h)
+			if err == nil {
+				t.Errorf("Expected an error saying precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
 		}
 	}
 }
@@ -97,35 +99,35 @@ func CreateTestCDNFederations(t *testing.T) {
 }
 
 func UpdateTestCDNFederations(t *testing.T) {
-
 	for _, id := range fedIDs {
 		fed, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
 		}
-
 		expectedCName := "new.cname."
-		fed.Response[0].CName = &expectedCName
-		resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id, nil)
-		if err != nil {
-			t.Errorf("cannot PUT federation by id: %v", err)
-		}
-		bytes, _ := json.Marshal(resp)
-		t.Logf("PUT Response: %s\n", bytes)
+		if fed != nil && len(fed.Response) > 0 {
+			fed.Response[0].CName = &expectedCName
+			resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id, nil)
+			if err != nil {
+				t.Errorf("cannot PUT federation by id: %v", err)
+			}
+			bytes, _ := json.Marshal(resp)
+			t.Logf("PUT Response: %s\n", bytes)
 
-		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
-		if err != nil {
-			t.Errorf("cannot GET federation by id after PUT: %v", err)
+			resp2, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
+			if err != nil {
+				t.Errorf("cannot GET federation by id after PUT: %v", err)
+			}
+			bytes, _ = json.Marshal(resp2)
+			t.Logf("GET Response: %s\n", bytes)
+			if resp2 != nil && len(resp2.Response) > 0 {
+				if resp2.Response[0].CName == nil {
+					log.Errorln("CName is nil after updating")
+				} else if *resp2.Response[0].CName != expectedCName {
+					t.Errorf("results do not match actual: %s, expected: %s", *resp2.Response[0].CName, expectedCName)
+				}
+			}
 		}
-		bytes, _ = json.Marshal(resp2)
-		t.Logf("GET Response: %s\n", bytes)
-
-		if resp2.Response[0].CName == nil {
-			log.Errorln("CName is nil after updating")
-		} else if *resp2.Response[0].CName != expectedCName {
-			t.Errorf("results do not match actual: %s, expected: %s", *resp2.Response[0].CName, expectedCName)
-		}
-
 	}
 }
 
