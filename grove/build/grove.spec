@@ -10,18 +10,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Summary: Grove HTTP Caching Proxy
-Name: grove
-Version: %{version}
-Release: %{build_number}
-License: Apache License, Version 2.0
-Group: Base System/System Tools
-Prefix: /usr/sbin/%{name}
-Source: %{_sourcedir}/%{name}-%{version}.tgz
-URL: https://github.com/apache/trafficcontrol/%{name}
+Summary:      Grove HTTP Caching Proxy
+Name:         grove
+Version:      %{version}
+Release:      %{build_number}
+License:      Apache License, Version 2.0
+Group:        Base System/System Tools
+Prefix:       /usr/sbin/%{name}
+Source:       %{_sourcedir}/%{name}-%{version}.tgz
+URL:          https://github.com/apache/trafficcontrol/%{name}
 Distribution: CentOS Linux
-Vendor: Apache Software Foundation
-BuildRoot: %{buildroot}
+Vendor:       Apache Software Foundation
+BuildRoot:    %{buildroot}
 
 # %define PACKAGEDIR %{prefix}
 

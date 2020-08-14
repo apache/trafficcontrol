@@ -26,6 +26,7 @@ import (
 	"mime/multipart"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -36,8 +37,8 @@ import (
 )
 
 // GetAllConfigs gets all config files for cfg.CacheHostName.
-func GetAllConfigs(toData *config.TOData, revalOnly bool) ([]config.ATSConfigFile, error) {
-	meta, err := GetMeta(toData)
+func GetAllConfigs(toData *config.TOData, revalOnly bool, dir string) ([]config.ATSConfigFile, error) {
+	meta, err := GetMeta(toData, dir)
 	if err != nil {
 		return nil, errors.New("creating meta: " + err.Error())
 	}
@@ -50,7 +51,7 @@ func GetAllConfigs(toData *config.TOData, revalOnly bool) ([]config.ATSConfigFil
 		}
 		txt, contentType, lineComment, err := GetConfigFile(toData, fi)
 		if err != nil {
-			return nil, errors.New("getting config file '" + fi.APIURI + "': " + err.Error())
+			return nil, errors.New("getting config file '" + fi.FileNameOnDisk + "': " + err.Error())
 		}
 		if fi.FileNameOnDisk == atscfg.SSLMultiCertConfigFileName {
 			hasSSLMultiCertConfig = true
@@ -75,6 +76,7 @@ const HdrLineComment = "Line-Comment"
 
 // WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
 func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
+	sort.Sort(ATSConfigFiles(configs))
 	w := multipart.NewWriter(output)
 
 	// Create a unique boundary. Because we're using a text encoding, we need to make sure the boundary text doesn't occur in any body.
@@ -111,6 +113,18 @@ func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
 		return errors.New("closing multipart writer and writing final boundary: " + err.Error())
 	}
 	return nil
+}
+
+// ATSConfigFiles implements sort.Interface to sort by path.
+type ATSConfigFiles []config.ATSConfigFile
+
+func (p ATSConfigFiles) Len() int      { return len(p) }
+func (p ATSConfigFiles) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p ATSConfigFiles) Less(i, j int) bool {
+	if p[i].Location != p[j].Location {
+		return p[i].Location < p[j].Location
+	}
+	return p[i].FileNameOnDisk < p[j].FileNameOnDisk
 }
 
 var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)

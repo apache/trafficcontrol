@@ -65,6 +65,7 @@ type Cfg struct {
 	TOTimeout       time.Duration
 	TOURL           *url.URL
 	TOUser          string
+	Dir             string
 }
 
 type TCCfg struct {
@@ -89,16 +90,17 @@ func GetCfg() (Cfg, error) {
 	logLocationWarnPtr := flag.StringP("log-location-warning", "w", "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null.")
 	logLocationInfoPtr := flag.StringP("log-location-info", "i", "stderr", "Where to log information messages. May be a file path, stdout, stderr, or null.")
 	toInsecurePtr := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
-	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 30000, "Timeout in seconds for Traffic Ops requests.")
+	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 30000, "Timeout in milliseconds for Traffic Ops requests.")
 	versionPtr := flag.BoolP("version", "v", false, "Print version information and exit.")
 	listPluginsPtr := flag.BoolP("list-plugins", "l", false, "Print the list of plugins.")
 	helpPtr := flag.BoolP("help", "h", false, "Print usage information and exit")
 	cacheHostNamePtr := flag.StringP("cache-host-name", "n", "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	getDataPtr := flag.StringP("get-data", "d", "", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
 	setQueueStatusPtr := flag.StringP("set-queue-status", "q", "", "POSTs to Traffic Ops setting the queue status of the server. Must be 'true' or 'false'. Requires --set-reval-status also be set")
-	setRevalStatusPtr := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revaliate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
+	setRevalStatusPtr := flag.StringP("set-reval-status", "a", "", "POSTs to Traffic Ops setting the revalidate status of the server. Must be 'true' or 'false'. Requires --set-queue-status also be set")
 	revalOnlyPtr := flag.BoolP("revalidate-only", "y", false, "Whether to exclude files not named 'regex_revalidate.config'")
 	disableProxyPtr := flag.BoolP("traffic-ops-disable-proxy", "p", false, "Whether to not use the Traffic Ops proxy specified in the GLOBAL Parameter tm.rev_proxy.url")
+	dirPtr := flag.StringP("dir", "D", "", "ATS config directory, used for config files without location parameters or with relative paths. May be blank. If blank and any required config file location parameter is missing or relative, will error.")
 
 	flag.Parse()
 
@@ -128,6 +130,7 @@ func GetCfg() (Cfg, error) {
 	setRevalStatus := *setRevalStatusPtr
 	revalOnly := *revalOnlyPtr
 	disableProxy := *disableProxyPtr
+	dir := *dirPtr
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -137,8 +140,15 @@ func GetCfg() (Cfg, error) {
 	if toUser == "" {
 		toUser = os.Getenv("TO_USER")
 	}
+
+	// TO_PASSWORD is preferred over TO_PASS, as it's the one commonly used by
+	// Traffic Control tools. Hopefully, we'll be able to get rid of TO_PASS
+	// entirely in the near future, to make this less confusing.
 	if toPass == "" {
 		toPass = os.Getenv("TO_PASS")
+	}
+	if toPass == "" {
+		toPass = os.Getenv("TO_PASSWORD")
 	}
 
 	usageStr := "Usage: ./" + AppName + " --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
@@ -179,6 +189,7 @@ func GetCfg() (Cfg, error) {
 		SetQueueStatus:  setQueueStatus,
 		RevalOnly:       revalOnly,
 		DisableProxy:    disableProxy,
+		Dir:             dir,
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
@@ -286,4 +297,8 @@ type TOData struct {
 
 	// SSLKeys must be all the ssl keys for the server's cdn.
 	SSLKeys []tc.CDNSSLKeys
+
+	// Topologies must be all the topologies for the server's cdn.
+	// May incude topologies of other cdns.
+	Topologies []tc.Topology
 }

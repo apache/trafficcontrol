@@ -924,6 +924,20 @@
             "name": "use_tenancy",
             "secure": false,
             "value": "1"
+        },
+        {
+            "configFile": "cache.config",
+            "lastUpdated": "2018-01-19T19:01:21.501151+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "configFile": "hosting.config",
+            "lastUpdated": "2018-01-19T19:01:21.501151+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver"
         }
     ],
     "physLocations": [

@@ -108,8 +108,16 @@ function getTrafficOpsUri() {
 }
 
 function getTrafficOpsCdn() {
+	const cdnName = document.getElementById("cdn-name");
+	const discIconContainer = document.getElementById("icon-disc-holder");
 	ajax("/publish/ConfigDoc", function(r) {
-		document.getElementById("cdn-name").textContent = JSON.parse(r).cdnName || "unknown";
+		let opsConfig = JSON.parse(r);
+		cdnName.textContent = opsConfig.cdnName || "unknown";
+		if (opsConfig.usingDummyTO === false) {
+		    discIconContainer.hidden = true;
+		} else {
+			discIconContainer.hidden = false;
+		}
 	});
 }
 
@@ -232,8 +240,8 @@ function getDsStats() {
 
 		for (const [dsName, deliveryService] of deliveryServices) {
 			const row = table.insertRow(0);
-			const available = !deliveryService.isAvailable || !deliveryService.isAvailable[0] || !deliveryService.isAvailable[0].value === "true";
-			if (available) {
+			const available = deliveryService.isAvailable && deliveryService.isAvailable[0] && deliveryService.isAvailable[0].value === "true";
+			if (!available) {
 				row.classList.add("error");
 			}
 

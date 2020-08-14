@@ -18,6 +18,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -35,21 +36,21 @@ func (to *Session) CreateCDNFederationByName(f tc.CDNFederation, CDNName string)
 
 	data := tc.CreateCDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations", apiBase, CDNName)
-	inf, err := makeReq(to, "POST", url, jsonReq, &data)
+	inf, err := makeReq(to, "POST", url, jsonReq, &data, nil)
 	return &data, inf, err
 }
 
-func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationResponse, ReqInf, error) {
+func (to *Session) GetCDNFederationsByName(CDNName string, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations", apiBase, CDNName)
-	inf, err := get(to, url, &data)
+	inf, err := get(to, url, &data, header)
 	return &data, inf, err
 }
 
-func (to *Session) GetCDNFederationsByID(CDNName string, ID int) (*tc.CDNFederationResponse, ReqInf, error) {
+func (to *Session) GetCDNFederationsByID(CDNName string, ID int, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations?id=%v", apiBase, CDNName, ID)
-	inf, err := get(to, url, &data)
+	inf, err := get(to, url, &data, header)
 	return &data, inf, err
 }
 
@@ -61,13 +62,13 @@ func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, 
 
 	data := tc.UpdateCDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, CDNName, ID)
-	inf, err := makeReq(to, "PUT", url, jsonReq, &data)
+	inf, err := makeReq(to, "PUT", url, jsonReq, &data, nil)
 	return &data, inf, err
 }
 
 func (to *Session) DeleteCDNFederationByID(CDNName string, ID int) (*tc.DeleteCDNFederationResponse, ReqInf, error) {
 	data := tc.DeleteCDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations/%d", apiBase, CDNName, ID)
-	inf, err := makeReq(to, "DELETE", url, nil, &data)
+	inf, err := makeReq(to, "DELETE", url, nil, &data, nil)
 	return &data, inf, err
 }

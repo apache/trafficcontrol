@@ -92,7 +92,7 @@ func TestGetType(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.TypeNullable{},
 	}
-	types, userErr, sysErr, _ := obj.Read()
+	types, userErr, sysErr, _, _ := obj.Read(nil, false)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}

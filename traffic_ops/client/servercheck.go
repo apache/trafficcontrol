@@ -48,6 +48,6 @@ func (to *Session) GetServersChecks() ([]tc.GenericServerCheck, tc.Alerts, ReqIn
 		Response []tc.GenericServerCheck `json:"response"`
 	}
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
-	reqInf, err := get(to, API_SERVERCHECK, &response)
+	reqInf, err := get(to, API_SERVERCHECK, &response, nil)
 	return response.Response, response.Alerts, reqInf, err
 }

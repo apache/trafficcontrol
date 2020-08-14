@@ -23,5 +23,5 @@
 # - https://github.com/docker/compose/pull/6865
 # - https://docs.docker.com/develop/develop-images/build_enhancements/
 *
-!infrastructure/cdn-in-a-box/enroller/
-!infrastructure/cdn-in-a-box/traffic_ops/
+!enroller/
+!traffic_ops/

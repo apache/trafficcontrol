@@ -26,7 +26,7 @@ const (
 
 // Ping returns a static json object to show that traffic_ops is responsive
 func (to *Session) Ping() (map[string]string, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_PING, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_PING, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

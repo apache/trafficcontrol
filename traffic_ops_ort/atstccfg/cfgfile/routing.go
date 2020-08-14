@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
@@ -37,29 +38,15 @@ var scopeConfigFileFuncs = map[string]func(toData *config.TOData, fileName strin
 
 // GetConfigFile returns the text of the generated config file, the MIME Content Type of the config file, and any error.
 func GetConfigFile(toData *config.TOData, fileInfo tc.ATSConfigMetaDataConfigFile) (string, string, string, error) {
-	path := fileInfo.APIURI
-	// TODO remove the URL path parsing. It's a legacy from when config files were endpoints in the meta config.
-	// We should replace it with actually calling the right file and name directly.
 	start := time.Now()
 	defer func() {
-		log.Infof("GetConfigFile %v took %v\n", path, time.Since(start).Round(time.Millisecond))
+		log.Infof("GetConfigFile %v took %v\n", fileInfo.FileNameOnDisk, time.Since(start).Round(time.Millisecond))
 	}()
-
-	pathParts := strings.Split(path, "/")
-	if len(pathParts) < 8 {
-		return "", "", "", errors.New("unknown config file '" + path + "'")
+	log.Infoln("GetConfigFile scope '" + fileInfo.Scope + "' fileName '" + fileInfo.FileNameOnDisk + "'")
+	if scopeConfigFileFunc, ok := scopeConfigFileFuncs[fileInfo.Scope]; ok {
+		return scopeConfigFileFunc(toData, fileInfo.FileNameOnDisk)
 	}
-	scope := pathParts[3]
-	resource := pathParts[4]
-	fileName := pathParts[7]
-
-	log.Infoln("GetConfigFile scope '" + scope + "' resource '" + resource + "' fileName '" + fileName + "'")
-
-	if scopeConfigFileFunc, ok := scopeConfigFileFuncs[scope]; ok {
-		return scopeConfigFileFunc(toData, fileName)
-	}
-
-	return "", "", "", errors.New("unknown config file '" + fileInfo.APIURI + "'")
+	return "", "", "", errors.New("unknown config file '" + fileInfo.FileNameOnDisk + "'")
 }
 
 type ConfigFilePrefixSuffixFunc struct {
@@ -181,7 +168,12 @@ func GetConfigFileServer(toData *config.TOData, fileName string) (string, string
 	contentType := ""
 	lineComment := ""
 	err := error(nil)
-	if getCfgFunc, ok := ServerConfigFileFuncs()[fileName]; ok {
+
+	if strings.HasPrefix(fileName, atscfg.HeaderRewriteFirstPrefix) ||
+		strings.HasPrefix(fileName, atscfg.HeaderRewriteInnerPrefix) ||
+		strings.HasPrefix(fileName, atscfg.HeaderRewriteLastPrefix) {
+		txt, contentType, lineComment, err = GetConfigFileServerTopologyHeaderRewrite(toData, fileName)
+	} else if getCfgFunc, ok := ServerConfigFileFuncs()[fileName]; ok {
 		txt, contentType, lineComment, err = getCfgFunc(toData)
 	} else {
 		txt, contentType, lineComment, err = GetConfigFileServerUnknownConfig(toData, fileName)

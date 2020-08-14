@@ -13,6 +13,8 @@
 .. limitations under the License.
 ..
 
+.. _dev-traffic-ops:
+
 ***********
 Traffic Ops
 ***********

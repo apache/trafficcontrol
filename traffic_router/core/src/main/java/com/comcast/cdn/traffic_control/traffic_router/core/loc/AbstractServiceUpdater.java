@@ -45,6 +45,7 @@ public abstract class AbstractServiceUpdater {
 	private static final Logger LOGGER = Logger.getLogger(AbstractServiceUpdater.class);
 
 	protected String dataBaseURL;
+	protected String defaultDatabaseURL;
 	protected String databaseName;
 	protected ScheduledExecutorService executorService;
 	private long pollingInterval;
@@ -218,6 +219,10 @@ public abstract class AbstractServiceUpdater {
 
 	public void setDatabaseUrl(final String url) {
 		this.dataBaseURL = url;
+	}
+
+	public void setDefaultDatabaseUrl(final String url) {
+		this.defaultDatabaseURL = url;
 	}
 
 	/**

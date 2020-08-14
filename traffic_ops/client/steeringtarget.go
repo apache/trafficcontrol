@@ -35,7 +35,7 @@ func (to *Session) CreateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 	}
 
 	resp := (*http.Response)(nil)
-	if resp, reqInf.RemoteAddr, err = to.request(http.MethodPost, apiBase+`/steering/`+strconv.Itoa(int(*st.DeliveryServiceID))+`/targets`, reqBody); err != nil {
+	if resp, reqInf.RemoteAddr, err = to.request(http.MethodPost, apiBase+`/steering/`+strconv.Itoa(int(*st.DeliveryServiceID))+`/targets`, reqBody, nil); err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
@@ -58,7 +58,7 @@ func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 		return tc.Alerts{}, reqInf, err
 	}
 	resp := (*http.Response)(nil)
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+`/steering/`+strconv.Itoa(int(*st.DeliveryServiceID))+`/targets/`+strconv.Itoa(int(*st.TargetID)), reqBody)
+	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+`/steering/`+strconv.Itoa(int(*st.DeliveryServiceID))+`/targets/`+strconv.Itoa(int(*st.TargetID)), reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -69,7 +69,7 @@ func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 }
 
 func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering/`+strconv.Itoa(dsID)+`/targets`, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering/`+strconv.Itoa(dsID)+`/targets`, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -84,7 +84,7 @@ func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, Re
 }
 
 func (to *Session) DeleteSteeringTarget(dsID int, targetID int) (tc.Alerts, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodDelete, apiBase+`/steering/`+strconv.Itoa(dsID)+`/targets/`+strconv.Itoa(targetID), nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, apiBase+`/steering/`+strconv.Itoa(dsID)+`/targets/`+strconv.Itoa(targetID), nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

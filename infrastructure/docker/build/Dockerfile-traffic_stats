@@ -43,7 +43,7 @@ RUN curl -LO https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
 
 ###
 
-ADD infrastructure/docker/build/clean_build.sh /
+ADD build/clean_build.sh /
 CMD /clean_build.sh traffic_stats
 
 # vi:syntax=Dockerfile

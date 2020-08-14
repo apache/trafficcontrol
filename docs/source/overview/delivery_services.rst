@@ -189,6 +189,8 @@ This field in general contains the contents of the a configuration file used by 
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
 
+.. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
+
 .. _ds-ecs:
 
 EDNS0 Client Subnet Enabled
@@ -233,6 +235,16 @@ The maximum bytes per second a :term:`cache server` will deliver on any single T
 	+==============+=================================================================================+=======================================+
 	| FQPacingRate | Traffic Ops source code, Delivery Service objects returned by the :ref:`to-api` | unchanged (``int``, ``integer`` etc.) |
 	+--------------+---------------------------------------------------------------------------------+---------------------------------------+
+
+.. _ds-first-header-rw-rules:
+
+First Header Rewrite Rules
+--------------------------
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`First-tier cache servers`.
+
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
 
 .. _ds-geo-limit:
 
@@ -405,6 +417,26 @@ Initial Dispersion
 ------------------
 The number of :term:`Edge-tier cache servers` across which a particular asset will be distributed within each :term:`Cache Group`. For most use-cases, this should be 1, meaning that all clients requesting a particular asset will be directed to 1 :term:`cache server` per :term:`Cache Group`. Depending on the popularity and size of assets, consider increasing this number in order to spread the request load across more than 1 :term:`cache server`. The larger this number, the more copies of a particular asset are stored in a :term:`Cache Group`, which can "pollute" caches (if load distribution is unnecessary) and decreases caching efficiency (due to cache misses if the asset is not requested enough to stay "fresh" in all the caches).
 
+.. _ds-inner-header-rw-rules:
+
+Inner Header Rewrite Rules
+--------------------------
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Inner-tier cache servers`.
+
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
+
+.. _ds-last-header-rw-rules:
+
+Last Header Rewrite Rules
+-------------------------
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Last-tier cache servers`.
+
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
+
 .. _ds-logs-enabled:
 
 Logs Enabled
@@ -502,6 +534,8 @@ Mid Header Rewrite Rules
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Mid-tier cache servers`.
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+
+.. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
 
 .. _ds-origin-url:
 
@@ -626,6 +660,14 @@ Describes how HTTP "Range Requests" should be handled by the Delivery Service at
 
 .. warning:: The definitions of each integral, unique identifier are hidden in implementations in each :abbr:`ATC (Apache Traffic Control)` component. Different components will handle invalid values differently, and there's no actual enforcement that the stored integral, unique identifier actually be within the representable range.
 
+.. _ds-slice-block-size:
+
+Range Slice Request Block Size
+-------------------------------------
+The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
+
+This can only and must be set if the :ref:`ds-range-request-handling` is set to ``3``.
+
 .. _ds-raw-remap:
 
 Raw Remap Text
@@ -707,6 +749,12 @@ Servers
 -------
 Servers can be assigned to Delivery Services using the :ref:`tp-configure-servers` and :ref:`tp-services-delivery-service` Traffic Portal sections, or by directly using the :ref:`to-api-deliveryserviceserver` endpoint. Only :term:`Edge-tier cache servers` can be assigned to a Delivery Service, and once they are so assigned they will begin to serve content for the Delivery Service (after updates are queued and then applied). Any servers assigned to a Delivery Service must also belong to the same CDN_ as the Delivery Service itself. At least one server must be assigned to a Delivery Service in order for it to serve any content.
 
+.. _ds-service-category:
+
+Service Category
+----------------
+A service category is a tag that describes the type of content being delivered by the Delivery Service. Some example values are: "Linear" and "VOD"
+
 .. _ds-signing-algorithm:
 
 Signing Algorithm
@@ -735,14 +783,6 @@ Keys for either algorithm can be generated within :ref:`Traffic Portal <tp-servi
 
 .. _ds-ssl-key-version:
 
-Range Slice Request Block Size
--------------------------------------
-The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
-
-This can only and must be set if the :ref:`ds-range-request-handling` is set to ``3``.
-
-.. _ds-slice-block-size:
-
 SSL Key Version
 ---------------
 An integer that describes the version of the SSL key(s) - if any - used by this Delivery Service. This is incremented whenever Traffic Portal generates new SSL keys for the Delivery Service.
@@ -770,6 +810,12 @@ The :term:`Tenant` who owns this Delivery Service. They (and their parents, if a
 	+==========+==============================================+========================================================+
 	| TenantID | Go code and :ref:`to-api` requests/responses | Integral, unique identifier (``bigint``, ``int`` etc.) |
 	+----------+----------------------------------------------+--------------------------------------------------------+
+
+.. _ds-topology:
+
+Topology
+--------
+A structure composed of :term:`Cache Groups` and parent relationships, which is assignable to one or more :term:`Delivery Services`.
 
 .. _ds-tr-resp-headers:
 

@@ -142,7 +142,7 @@ func TestReadCacheGroups(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.CacheGroupNullable{},
 	}
-	cachegroups, userErr, sysErr, _ := obj.Read()
+	cachegroups, userErr, sysErr, _, _ := obj.Read(nil, false)
 
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
@@ -332,7 +332,7 @@ func TestBadTypeParamCacheGroups(t *testing.T) {
 		api.APIInfoImpl{&reqInfo},
 		tc.CacheGroupNullable{},
 	}
-	_, userErr, _, sc := obj.Read()
+	_, userErr, _, sc, _ := obj.Read(nil, false)
 	if sc != http.StatusBadRequest {
 		t.Errorf("Read expected status code: Bad Request, actual: %v ", sc)
 	}

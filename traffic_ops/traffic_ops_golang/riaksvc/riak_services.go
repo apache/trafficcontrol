@@ -261,7 +261,7 @@ WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
 	defer rows.Close()
 	servers := []ServerAddr{}
 	if riakPort == nil {
-		riakPort = util.UintPtr(DefaultRiakPort)
+		riakPort = util.UIntPtr(DefaultRiakPort)
 	}
 	portStr := strconv.Itoa(int(*riakPort))
 	for rows.Next() {

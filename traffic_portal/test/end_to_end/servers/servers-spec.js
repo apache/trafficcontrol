@@ -30,20 +30,19 @@ describe('Traffic Portal Servers Test Suite', function() {
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",
-		ipNetmask: "255.255.255.252",
-		ipGateway: "10.42.80.117",
 		interfaceMtu: "9000",
 	};
 
 	it('should go to the Servers page', function() {
-		console.log('Looading Configure/Servers');
+		console.log('Loading Configure/Servers');
 		browser.setLocation("servers");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
 	it('should open new Servers form page', function() {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
-		browser.driver.findElement(by.name('createServersButton')).click();
+		pageData.moreBtn.click();
+		pageData.createServerMenuItem.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/new");
 	});
 
@@ -58,13 +57,9 @@ describe('Traffic Portal Servers Test Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
 		element(by.css("#type [label='EDGE']")).click();
 		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
+		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
 		pageData.interfaceName.sendKeys(mockVals.interfaceName);
 		pageData.ipAddress.sendKeys(mockVals.ipAddress);
-		pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
-		pageData.ipGateway.sendKeys(mockVals.ipGateway);
-		pageData.ipIsService.click();
-		pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
-		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
@@ -83,7 +78,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	it('should verify the new Server and then update Server', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
-		element(by.cssContainingText('.ag-cell', mockVals.hostName)).click()
+		element(by.cssContainingText('.ag-cell', mockVals.hostName)).click();
 		browser.sleep(1000);
 		pageData.domainName.clear();
 		pageData.domainName.sendKeys('testupdated.com');

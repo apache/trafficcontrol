@@ -257,9 +257,9 @@ func getMockMonitorDSLowThresholds(name tc.DeliveryServiceName) tc.TMDeliverySer
 	}
 }
 
-func getMockMonitorConfig(dses []tc.DeliveryServiceName) tc.TrafficMonitorConfigMap {
-	mc := tc.TrafficMonitorConfigMap{
-		TrafficServer:   map[string]tc.TrafficServer{},
+func getMockMonitorConfig(dses []tc.DeliveryServiceName) tc.LegacyTrafficMonitorConfigMap {
+	mc := tc.LegacyTrafficMonitorConfigMap{
+		TrafficServer:   map[string]tc.LegacyTrafficServer{},
 		CacheGroup:      map[string]tc.TMCacheGroup{},
 		Config:          map[string]interface{}{},
 		TrafficMonitor:  map[string]tc.TrafficMonitor{},

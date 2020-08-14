@@ -135,29 +135,36 @@ const StatNameKBPS = "kbps"
 const StatNameMaxKBPS = "maxKbps"
 
 func addCapacity(cap CapData, ds tc.DeliveryServiceName, cacheStats tmcache.Stats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64) CapData {
-	for cacheName, stats := range cacheStats.Caches {
+	for cacheName, interfaces := range cacheStats.Caches {
+		if _, ok := interfaces[tc.CacheInterfacesAggregate]; !ok {
+			log.Warnf("No %s interface on cache server %s", tc.CacheInterfacesAggregate, cacheName)
+			continue
+		}
 		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
 			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' in CacheStats but not CRConfig, skipping")
 			continue
 		}
+
 		if _, ok := cache.DeliveryServices[string(ds)]; !ok {
 			continue
 		}
 		if cache.ServerType == nil || !strings.HasPrefix(string(*cache.ServerType), string(tc.CacheTypeEdge)) {
 			continue
 		}
-		if len(stats[StatNameKBPS]) < 1 || len(stats[StatNameMaxKBPS]) < 1 {
+
+		stat := interfaces[tc.CacheInterfacesAggregate]
+		if len(stat[StatNameKBPS]) < 1 || len(stat[StatNameMaxKBPS]) < 1 {
 			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats has no kbps or maxKbps, skipping")
 			continue
 		}
 
-		kbps, err := statToFloat(stats[StatNameKBPS][0].Val)
+		kbps, err := statToFloat(stat[StatNameKBPS][0].Val)
 		if err != nil {
 			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats kbps is not a number, skipping")
 			continue
 		}
-		maxKBPS, err := statToFloat(stats[StatNameMaxKBPS][0].Val)
+		maxKBPS, err := statToFloat(stat[StatNameMaxKBPS][0].Val)
 		if err != nil {
 			log.Warnln("Getting delivery service capacity: delivery service '" + string(ds) + "' cache '" + string(cacheName) + "' CacheStats maxKps is not a number, skipping")
 			continue
@@ -182,6 +189,7 @@ func addCapacity(cap CapData, ds tc.DeliveryServiceName, cacheStats tmcache.Stat
 			continue // don't add capacity for OFFLINE or other statuses
 		}
 		cap.Capacity += maxKBPS - thresholds[*cache.Profile]
+
 	}
 	return cap
 }

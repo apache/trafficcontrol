@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -45,6 +46,9 @@ func (v *TOType) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOType) InsertQuery() string           { return insertQuery() }
 func (v *TOType) NewReadObj() interface{}       { return &tc.TypeNullable{} }
 func (v *TOType) SelectQuery() string           { return selectQuery() }
+func (v *TOType) SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName)
+}
 func (v *TOType) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name":       dbhelpers.WhereColumnInfo{"typ.name", nil},
@@ -98,7 +102,9 @@ func (typ *TOType) Validate() error {
 	return nil
 }
 
-func (tp *TOType) Read() ([]interface{}, error, error, int) { return api.GenericRead(tp) }
+func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, tp, useIMS)
+}
 
 func (tp *TOType) Update() (error, error, int) {
 	if !tp.AllowMutation(false) {
@@ -156,6 +162,13 @@ func (tp *TOType) loadUseInTable() (error, error, string) {
 	}
 
 	return nil, nil, useInTable
+}
+
+func selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` typ ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='type') as res`
 }
 
 func selectQuery() string {

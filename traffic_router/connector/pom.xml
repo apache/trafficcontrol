@@ -43,7 +43,7 @@
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
 					<rulesets>
-						<ruleset>file://${project.basedir}/build/pmd/ruleset.xml</ruleset>
+						<ruleset>${project.basedir}${file.separator}build${file.separator}pmd${file.separator}ruleset.xml</ruleset>
 					</rulesets>
 				</configuration>
 			</plugin>

@@ -57,7 +57,9 @@ func getCapacity(tx *sql.Tx) (CapacityResp, error) {
 	if err != nil {
 		return CapacityResp{}, errors.New("getting monitors: " + err.Error())
 	}
-
+	if len(monitors) == 0 {
+		return CapacityResp{}, errors.New("no monitors found")
+	}
 	return getMonitorsCapacity(tx, monitors)
 }
 
@@ -102,7 +104,7 @@ func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (Capacity
 		return CapacityResp{}, errors.New("getting profile thresholds: " + err.Error())
 	}
 
-	cap, err := getCapacityData(monitors, thresholds, client)
+	cap, err := getCapacityData(monitors, thresholds, client, tx)
 	if err != nil {
 		return CapacityResp{}, errors.New("getting capacity from monitors: " + err.Error())
 	} else if cap.Capacity == 0 {
@@ -120,7 +122,7 @@ func getMonitorsCapacity(tx *sql.Tx, monitors map[tc.CDNName][]string) (Capacity
 // getCapacityData attempts to get the CDN capacity from each monitor. If one fails, it tries the next.
 // The first monitor for which all data requests succeed is used.
 // Only if all monitors for a CDN fail is an error returned, from the last monitor tried.
-func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]float64, client *http.Client) (CapData, error) {
+func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]float64, client *http.Client, tx *sql.Tx) (CapData, error) {
 	cap := CapData{}
 	for cdn, monitorFQDNs := range monitors {
 		err := error(nil)
@@ -143,7 +145,8 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 				log.Warnln("getCapacity failed to get CacheStats from cdn '" + string(cdn) + " monitor '" + monitorFQDN + "', trying next monitor: " + err.Error())
 				continue
 			}
-			cap = addCapacity(cap, cacheStats, crStates, crConfig, thresholds)
+
+			cap = addCapacity(cap, cacheStats, crStates, crConfig, thresholds, tx)
 			break
 		}
 		if err != nil {
@@ -153,7 +156,12 @@ func getCapacityData(monitors map[tc.CDNName][]string, thresholds map[string]flo
 	return cap, nil
 }
 
-func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64) CapData {
+func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crConfig tc.CRConfig, thresholds map[string]float64, tx *sql.Tx) CapData {
+	serviceInterfaces, err := getServiceInterfaces(tx)
+	if err != nil {
+		log.Errorf("couldn't get the service interfaces for servers. err: %v", err.Error())
+		return cap
+	}
 	for cacheName, stats := range cacheStats.Caches {
 		cache, ok := crConfig.ContentServers[string(cacheName)]
 		if !ok {
@@ -166,23 +174,67 @@ func addCapacity(cap CapData, cacheStats CacheStats, crStates tc.CRStates, crCon
 		if !strings.HasPrefix(*cache.ServerType, string(tc.CacheTypeEdge)) {
 			continue
 		}
-		if len(stats.KBPS) < 1 || len(stats.MaxKBPS) < 1 {
+		if _, ok := serviceInterfaces[string(cacheName)]; !ok {
+			log.Errorf("no service interface found for server with host name %v", cacheName)
+			continue
+		}
+		kbps, maxKbps, err := getStatsFromServiceInterface(stats[tc.InterfaceName(serviceInterfaces[string(cacheName)])])
+		if err != nil {
+			log.Errorf("couldn't get service interface stats for %v. err: %v", cacheName, err.Error())
 			continue
 		}
 		if string(*cache.ServerStatus) == string(tc.CacheStatusReported) || string(*cache.ServerStatus) == string(tc.CacheStatusOnline) {
 			if crStates.Caches[cacheName].IsAvailable {
-				cap.Available += float64(stats.KBPS[0].Value)
+				cap.Available += kbps
 			} else {
-				cap.Unavailable += float64(stats.KBPS[0].Value)
+				cap.Unavailable += kbps
 			}
 		} else if string(*cache.ServerStatus) == string(tc.CacheStatusAdminDown) {
-			cap.Maintenance += float64(stats.KBPS[0].Value)
+			cap.Maintenance += kbps
 		} else {
 			continue // don't add capacity for OFFLINE or other statuses
 		}
-		cap.Capacity += float64(stats.MaxKBPS[0].Value) - thresholds[*cache.Profile]
+		cap.Capacity += maxKbps - thresholds[*cache.Profile]
 	}
 	return cap
+}
+
+func getStatsFromServiceInterface(stats CacheStat) (float64, float64, error) {
+	var kbps, maxKbps float64
+	if len(stats.KBPS) < 1 ||
+		len(stats.MaxKBPS) < 1 {
+		return kbps, maxKbps, errors.New("no kbps/ maxKbps stats to return")
+	}
+	kbps = stats.KBPS[0].Value
+	maxKbps = stats.MaxKBPS[0].Value
+	return kbps, maxKbps, nil
+}
+
+func getServiceInterfaces(tx *sql.Tx) (map[string]string, error) {
+	query := `
+SELECT s.host_name, i.interface FROM ip_address i
+JOIN server s ON s.id = i.server
+WHERE i.service_address=true
+`
+	rows, err := tx.Query(query)
+	if err != nil {
+		log.Errorf("couldn't get service interfaces %v", err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	resultMap := make(map[string]string)
+	for rows.Next() {
+		hostname := ""
+		serviceinterface := ""
+		err = rows.Scan(&hostname, &serviceinterface)
+		if err != nil {
+			log.Errorf("error unmarshalling response %v", err.Error())
+			continue
+		}
+		resultMap[hostname] = serviceinterface
+	}
+	return resultMap, nil
 }
 
 func getEdgeProfileHealthThresholdBandwidth(tx *sql.Tx) (map[string]float64, error) {
@@ -221,7 +273,7 @@ AND pa.name = 'health.threshold.availableBandwidthInKbps'
 
 // CacheStats contains the Monitor CacheStats needed by Cachedata. It is NOT the full object served by the Monitor, but only the data required by the caches stats endpoint.
 type CacheStats struct {
-	Caches map[tc.CacheName]CacheStat `json:"caches"`
+	Caches map[tc.CacheName]map[tc.InterfaceName]CacheStat `json:"caches"`
 }
 
 type CacheStat struct {

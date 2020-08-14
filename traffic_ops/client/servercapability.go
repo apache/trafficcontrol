@@ -37,7 +37,7 @@ func (to *Session) CreateServerCapability(sc tc.ServerCapability) (*tc.ServerCap
 	if err != nil {
 		return nil, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVER_CAPABILITIES, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_SERVER_CAPABILITIES, reqBody, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -50,9 +50,15 @@ func (to *Session) CreateServerCapability(sc tc.ServerCapability) (*tc.ServerCap
 }
 
 // GetServerCapabilities returns all the server capabilities.
-func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_SERVER_CAPABILITIES, nil)
+func (to *Session) GetServerCapabilities(header http.Header) ([]tc.ServerCapability, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_SERVER_CAPABILITIES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.ServerCapability{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -67,10 +73,16 @@ func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, ReqInf, error
 }
 
 // GetServerCapability returns the given server capability by name.
-func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqInf, error) {
+func (to *Session) GetServerCapability(name string, header http.Header) (*tc.ServerCapability, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", API_SERVER_CAPABILITIES, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return nil, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -90,7 +102,7 @@ func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqIn
 // DeleteServerCapability deletes the given server capability by name.
 func (to *Session) DeleteServerCapability(name string) (tc.Alerts, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", API_SERVER_CAPABILITIES, url.QueryEscape(name))
-	resp, remoteAddr, err := to.request(http.MethodDelete, reqUrl, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, reqUrl, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

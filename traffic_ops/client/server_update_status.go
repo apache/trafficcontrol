@@ -36,7 +36,7 @@ func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus) (*tc
 	}
 
 	path := fmt.Sprintf("%s/servers/%d/status", apiBase, serverID)
-	resp, remoteAddr, err := to.request(http.MethodPut, path, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, path, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return nil, reqInf, err
@@ -70,7 +70,7 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool) (tc.Serv
 	}
 
 	path := fmt.Sprintf("%s/servers/%d/queue_update", apiBase, serverID)
-	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody)
+	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return resp, reqInf, err
@@ -100,7 +100,7 @@ func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool
 	}
 	path += strings.Join(queryParams, `&`)
 
-	resp, remoteAddr, err := to.request(http.MethodPost, path, nil)
+	resp, remoteAddr, err := to.request(http.MethodPost, path, nil, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return reqInf, err

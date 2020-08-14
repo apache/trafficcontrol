@@ -34,7 +34,7 @@ func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+`/jobs`, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+`/jobs`, reqBody, nil)
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
 	}
@@ -67,7 +67,7 @@ func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, ReqIn
 		}
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodGet, path, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -162,7 +162,7 @@ func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc
 		}
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodGet, path, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

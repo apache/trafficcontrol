@@ -21,7 +21,6 @@ package cfgfile
 
 import (
 	"bytes"
-
 	"math/rand"
 	"strings"
 	"testing"
@@ -29,6 +28,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 )
 
@@ -125,7 +125,8 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	// TODO expand fake data. Currently, it's only making a remap.config.
 	toData := MakeFakeTOData()
 	revalOnly := false
-	configs, err := GetAllConfigs(toData, revalOnly)
+	cfgPath := "/etc/trafficserver/"
+	configs, err := GetAllConfigs(toData, revalOnly, cfgPath)
 	if err != nil {
 		t.Fatalf("error getting configs: " + err.Error())
 	}
@@ -138,7 +139,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	configStr = removeComments(configStr)
 
 	for i := 0; i < 10; i++ {
-		configs2, err := GetAllConfigs(toData, revalOnly)
+		configs2, err := GetAllConfigs(toData, revalOnly, cfgPath)
 		if err != nil {
 			t.Fatalf("error getting configs2: " + err.Error())
 		}
@@ -268,7 +269,7 @@ func randDS() *tc.DeliveryServiceNullable {
 	ds.MissLong = randFloat64()
 	ds.MultiSiteOrigin = randBool()
 	ds.OriginShield = randStr()
-	ds.OrgServerFQDN = randStr()
+	ds.OrgServerFQDN = util.StrPtr("http://" + *(randStr()))
 	ds.ProfileDesc = randStr()
 	ds.ProfileID = randInt()
 	ds.ProfileName = randStr()

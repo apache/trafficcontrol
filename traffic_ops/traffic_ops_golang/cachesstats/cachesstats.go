@@ -214,7 +214,7 @@ SELECT
   cg.name as cachegroup,
   st.name as status,
   p.name as profile,
-  s.ip_address
+  (select address from ip_address where s.id = ip_address.server and service_address = true AND family(address) = 4) as ip
 FROM
   server s
   JOIN cachegroup cg ON s.cachegroup = cg.id

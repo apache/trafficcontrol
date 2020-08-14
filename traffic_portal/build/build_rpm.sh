@@ -1,7 +1,4 @@
-#!/bin/bash
-#
-#
-#
+#!/usr/bin/env sh
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,37 +11,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# shellcheck shell=ash
+trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0}" >/dev/stderr; exit $exit_code' EXIT;
+set -o errexit -o nounset -o pipefail;
 
 #----------------------------------------
-function importFunctions() {
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
-	export TP_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TP_DIR")
+importFunctions() {
+	local script scriptdir
+	script="$(realpath "$0")"
+	scriptdir="$(dirname "$script")"
+	TP_DIR='' TC_DIR=''
+	TP_DIR="$(dirname "$scriptdir")"
+	TC_DIR="$(dirname "$TP_DIR")"
+	export TP_DIR TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
+	if [ ! -r "$functions_sh" ]; then
 		echo "error: can't find $functions_sh"
-		exit 1
+		return 1
 	fi
 	. "$functions_sh"
 }
 
 
 # ---------------------------------------
-function initBuildArea() {
+initBuildArea() {
 	echo "Initializing the build area."
-	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
+	(mkdir -p "$RPMBUILD"
+	 cd "$RPMBUILD"
+	 mkdir -p SPECS SOURCES RPMS SRPMS BUILD BUILDROOT) || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
 	# tar/gzip the source
-	local ts_dest=$(createSourceDir traffic_portal)
+	local tp_dest
+	tp_dest="$(createSourceDir traffic_portal)"
 	cd "$TP_DIR" || \
-		 { echo "Could not cd to $TP_DIR: $?"; exit 1; }
-	rsync -av ./ "$ts_dest"/ || \
-		 { echo "Could not copy to $to_dest: $?"; exit 1; }
-	cp -r "$TP_DIR"/ "$ts_dest" || { echo "Could not copy $TP_DIR to $ts_dest: $?"; exit 1; }
+		 { echo "Could not cd to $TP_DIR: $?"; return 1; }
+	rsync -av ./ "$tp_dest"/ || \
+		 { echo "Could not copy to $to_dest: $?"; return 1; }
+	cp -r "$TP_DIR"/ "$tp_dest" || { echo "Could not copy $TP_DIR to $tp_dest: $?"; return 1; }
 
-	tar -czvf "$ts_dest".tgz -C "$RPMBUILD"/SOURCES $(basename $ts_dest) || { echo "Could not create tar archive $ts_dest.tgz: $?"; exit 1; }
-	cp "$TP_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; exit 1; }
+	tar -czvf "$tp_dest".tgz -C "$RPMBUILD"/SOURCES "$(basename "$tp_dest")" || { echo "Could not create tar archive ${tp_dest}.tgz: $?"; return 1; }
+	cp "$TP_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; return 1; }
 
 	echo "The build area has been initialized."
 }
@@ -52,6 +58,6 @@ function initBuildArea() {
 # ---------------------------------------
 
 importFunctions
-checkEnvironment npm node
+checkEnvironment -i npm,bower,grunt,compass,rsync
 initBuildArea
 buildRpm traffic_portal

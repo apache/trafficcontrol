@@ -49,7 +49,7 @@ func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorCon
 // GetTrafficMonitorConfig returns the monitoring configuration for the CDN named by 'cdn'.
 func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {
 	url := fmt.Sprintf(API_CDN_MONITORING_CONFIG, cdn)
-	resp, remoteAddr, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

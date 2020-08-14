@@ -20,7 +20,9 @@ package physlocation
  */
 
 import (
+	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -98,12 +100,20 @@ func (pl *TOPhysLocation) Validate() error {
 	return nil
 }
 
-func (pl *TOPhysLocation) Read() ([]interface{}, error, error, int) {
+func (pl *TOPhysLocation) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	if _, ok := pl.APIInfo().Params["orderby"]; !ok {
 		pl.APIInfo().Params["orderby"] = "name"
 	}
-	return api.GenericRead(pl)
+	return api.GenericRead(h, pl, useIMS)
 }
+func (v *TOPhysLocation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(pl.last_updated) as t FROM phys_location pl
+JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='phys_location') as res`
+}
+
 func (pl *TOPhysLocation) Update() (error, error, int) { return api.GenericUpdate(pl) }
 func (pl *TOPhysLocation) Create() (error, error, int) { return api.GenericCreate(pl) }
 func (pl *TOPhysLocation) Delete() (error, error, int) { return api.GenericDelete(pl) }

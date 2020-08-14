@@ -129,6 +129,8 @@ var TableParentServersController = function(servers, $scope, $state, $uibModal, 
 	};
 
 	$scope.servers = servers;
+	$scope.serverNetInfo = new Map(servers.map(function(s){return [s.id, serverUtils.toLegacyIPInfo(s.interfaces)];}));
+
 
 	$scope.columns = [
 		{ "name": "Cache Group", "visible": true, "searchable": true },
@@ -254,15 +256,6 @@ var TableParentServersController = function(servers, $scope, $state, $uibModal, 
 			},
 			click: function ($itemScope) {
 				locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/delivery-services');
-			}
-		},
-		{
-			text: 'View Config Files',
-			displayed: function ($itemScope) {
-				return serverUtils.isCache($itemScope.s);
-			},
-			click: function ($itemScope) {
-				locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/config-files');
 			}
 		}
 	];

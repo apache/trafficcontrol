@@ -28,7 +28,7 @@ func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFe
 		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
 		resp   tc.FederationFederationResolversResponse
 	)
-	httpResp, remoteAddr, err := to.request(http.MethodGet, path, nil)
+	httpResp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return resp, reqInf, err
@@ -57,7 +57,7 @@ func (to *Session) AssignFederationFederationResolver(fedID int, resolverIDs []i
 		return resp, reqInf, err
 	}
 
-	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody)
+	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody, nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return resp, reqInf, err

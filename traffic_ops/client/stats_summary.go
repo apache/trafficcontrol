@@ -44,7 +44,7 @@ func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.S
 	if len(param) > 0 {
 		url = fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
 	}
-	reqInf, err := get(to, url, &resp)
+	reqInf, err := get(to, url, &resp, nil)
 	return resp, reqInf, err
 }
 
@@ -59,7 +59,7 @@ func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummary
 	}
 	url := fmt.Sprintf("%s?%s", API_STATS_SUMMARY, param.Encode())
 
-	reqInf, err := get(to, url, &resp)
+	reqInf, err := get(to, url, &resp, nil)
 	return resp, reqInf, err
 }
 

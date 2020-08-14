@@ -53,7 +53,7 @@ func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, repla
 
 func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alerts, ReqInf, error) {
 	route := apiBase + `/deliveryserviceserver/` + strconv.Itoa(dsID) + "/" + strconv.Itoa(serverID)
-	reqResp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqResp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
@@ -71,7 +71,7 @@ func (to *Session) AssignServersToDeliveryService(servers []string, xmlId string
 	route := fmt.Sprintf(API_DELIVERY_SERVICES_SERVERS, xmlId)
 	dss := tc.DeliveryServiceServers{ServerNames: servers, XmlId: xmlId}
 	reqBody, err := json.Marshal(&dss)
-	reqResp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
+	reqResp, remoteAddr, err := to.request(http.MethodPost, route, reqBody, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if reqResp != nil {
 		reqInf.StatusCode = reqResp.StatusCode
@@ -129,7 +129,7 @@ func (to *Session) getDeliveryServiceServers(urlQuery url.Values) (tc.DeliverySe
 	if qry := urlQuery.Encode(); qry != "" {
 		route += `?` + qry
 	}
-	reqResp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqResp, remoteAddr, err := to.request(http.MethodGet, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())

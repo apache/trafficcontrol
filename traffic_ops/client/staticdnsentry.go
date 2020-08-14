@@ -31,7 +31,7 @@ const (
 
 func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	if sdns.CacheGroupID == 0 && sdns.CacheGroupName != "" {
-		p, _, err := to.GetCacheGroupNullableByName(sdns.CacheGroupName)
+		p, _, err := to.GetCacheGroupNullableByName(sdns.CacheGroupName, nil)
 		if err != nil {
 			return err
 		}
@@ -45,7 +45,7 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	}
 
 	if sdns.DeliveryServiceID == 0 && sdns.DeliveryService != "" {
-		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(sdns.DeliveryService)
+		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(sdns.DeliveryService, nil)
 		if err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	}
 
 	if sdns.TypeID == 0 && sdns.Type != "" {
-		types, _, err := to.GetTypeByName(sdns.Type)
+		types, _, err := to.GetTypeByName(sdns.Type, nil)
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntry) (tc.Alerts, ReqI
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_STATIC_DNS_ENTRIES, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_STATIC_DNS_ENTRIES, reqBody, nil)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -103,7 +103,7 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.
 		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody)
+	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody, nil)
 	if resp != nil {
 		defer resp.Body.Close()
 		var alerts tc.Alerts
@@ -116,9 +116,15 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.
 }
 
 // GetStaticDNSEntries returns a list of Static DNS Entrys.
-func (to *Session) GetStaticDNSEntries() ([]tc.StaticDNSEntry, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_STATIC_DNS_ENTRIES, nil)
+func (to *Session) GetStaticDNSEntries(header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_STATIC_DNS_ENTRIES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.StaticDNSEntry{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -130,10 +136,16 @@ func (to *Session) GetStaticDNSEntries() ([]tc.StaticDNSEntry, ReqInf, error) {
 }
 
 // GetStaticDNSEntryByID GETs a Static DNS Entry by the Static DNS Entry's ID.
-func (to *Session) GetStaticDNSEntryByID(id int) ([]tc.StaticDNSEntry, ReqInf, error) {
+func (to *Session) GetStaticDNSEntryByID(id int, header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.StaticDNSEntry{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -148,10 +160,16 @@ func (to *Session) GetStaticDNSEntryByID(id int) ([]tc.StaticDNSEntry, ReqInf, e
 }
 
 // GetStaticDNSEntriesByHost GETs a Static DNS Entry by the Static DNS Entry's host.
-func (to *Session) GetStaticDNSEntriesByHost(host string) ([]tc.StaticDNSEntry, ReqInf, error) {
+func (to *Session) GetStaticDNSEntriesByHost(host string, header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
 	url := fmt.Sprintf("%s?host=%s", API_STATIC_DNS_ENTRIES, host)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+		if reqInf.StatusCode == http.StatusNotModified {
+			return []tc.StaticDNSEntry{}, reqInf, nil
+		}
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -168,7 +186,7 @@ func (to *Session) GetStaticDNSEntriesByHost(host string) ([]tc.StaticDNSEntry, 
 // DeleteStaticDNSEntryByID DELETEs a Static DNS Entry by ID.
 func (to *Session) DeleteStaticDNSEntryByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

@@ -21,18 +21,18 @@
 %global no_commits %(git log astats_over_http.c | grep '^commit' | wc -l)
 %global _find_debuginfo_dwz_opts %{nil}
 
-Name:		astats_over_http
-Version:	1.3.0
-Release:	%{no_commits}.%{commit}%{?dist}
-Epoch:    434
-Summary:	Apache Traffic Server %{name} plugin
-Vendor:		Comcast
-Group:		Applications/Communications
-License:	Apache License, Version 2.0
-URL:		https://github.com/apache/trafficcontrol/tree/master/traffic_server/plugins/astats_over_http
-BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Requires:	trafficserver >= 6011
-BuildRequires:	trafficserver >= 6011
+Name:       astats_over_http
+Version:    1.3.0
+Release:    %{no_commits}.%{commit}%{?dist}
+Epoch:      434
+Summary:    Apache Traffic Server %{name} plugin
+Vendor:     Comcast
+Group:      Applications/Communications
+License:    Apache License, Version 2.0
+URL:        https://github.com/apache/trafficcontrol/tree/master/traffic_server/plugins/astats_over_http
+BuildRoot:  %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+Requires: trafficserver >= 6011
+BuildRequires:  trafficserver >= 6011
 
 %description
 Apache Traffic Server plugin

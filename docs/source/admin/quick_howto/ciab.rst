@@ -38,7 +38,9 @@ The CDN in a Box directory is found within the Traffic Control repository at :fi
 
 .. note:: These can also be specified via the ``RPM`` variable to a direct Docker build of the component - with the exception of Traffic Router, which instead accepts ``JDK8_RPM`` to specify a Java Development Kit RPM,  ``TRAFFIC_ROUTER_RPM`` to specify a Traffic Router RPM, and  ``TOMCAT_RPM`` to specify an Apache Tomcat RPM.
 
-These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)`\ [2]_ from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
+These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)` from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
+
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make native`` instead of ``make`` to build the RPMs quickly. Another option is running ``make -j4`` to build 4 components at once, if your computer can handle it.
 
 .. tip:: When updating CDN-in-a-Box, there is no need to remove old images before building new ones. Docker detects which files are updated and only reuses cached layers that have not changed.
 
@@ -66,7 +68,7 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 	| Traffic Monitor                 | Web interface and API on port 80                               | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Ops                     | Main API endpoints on port 6443, with a direct route to the    | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
-	|                                 | Perl API on port 60443\ [3]_                                   |                                       |                                           |
+	|                                 | Perl API on port 60443\ [2]_                                   |                                       |                                           |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Ops PostgresQL Database | PostgresQL connections accepted on port 5432 (database name:   | ``DB_USER`` in `variables.env`_       | ``DB_USER_PASS`` in `variables.env`_      |
 	|                                 | ``DB_NAME`` in `variables.env`_)                               |                                       |                                           |
@@ -131,8 +133,7 @@ variables.env
 .. note:: While these port settings can be changed without hampering the function of the CDN in a Box system, note that changing a port without also changing the matching port-mapping in :file:`infrastructure/cdn-in-a-box/docker-compose.yml` for the affected service *will* make it unreachable from the host.
 
 .. [1] It is perfectly possible to build and run all containers without Docker Compose, but it's not recommended and not covered in this guide.
-.. [2] Consider ``make -j`` to build quickly, if your computer can handle multiple builds at once.
-.. [3] Please do NOT use the Perl endpoints directly. The CDN will only work properly if everything hits the Go API, which will proxy to the Perl endpoints as needed.
+.. [2] Please do NOT use the Perl endpoints directly. The CDN will only work properly if everything hits the Go API, which will proxy to the Perl endpoints as needed.
 
 X.509 SSL/TLS Certificates
 ==========================

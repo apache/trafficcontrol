@@ -36,7 +36,7 @@ const (
 //  key:   Name of OS
 //  value: Directory where the ISO source can be found
 func (to *Session) GetOSVersions() (map[string]string, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_OSVERSIONS, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_OSVERSIONS, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

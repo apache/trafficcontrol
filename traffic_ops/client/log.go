@@ -30,7 +30,7 @@ const (
 // GetLogsByQueryParams gets a list of logs filtered by query params.
 func (to *Session) GetLogsByQueryParams(queryParams string) ([]tc.Log, ReqInf, error) {
 	URI := API_LOGS + queryParams
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

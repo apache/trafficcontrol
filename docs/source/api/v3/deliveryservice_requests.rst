@@ -101,6 +101,7 @@ Response Structure
 	:ecsEnabled:                            A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 	:edgeHeaderRewrite:                     A set of :ref:`ds-edge-header-rw-rules`
 	:exampleURLs:                           An array of :ref:`ds-example-urls`
+	:firstHeaderRewrite:                    A set of :ref:`ds-first-header-rw-rules`
 	:fqPacingRate:                          The :ref:`ds-fqpr`
 	:geoLimit:                              An integer that defines the :ref:`ds-geo-limit`
 	:geoLimitCountries:                     A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
@@ -112,7 +113,9 @@ Response Structure
 	:id:                                    An integral, unique identifier for this :term:`Delivery Service`
 	:infoUrl:                               An :ref:`ds-info-url`
 	:initialDispersion:                     The :ref:`ds-initial-dispersion`
+	:innerHeaderRewrite:                    A set of :ref:`ds-inner-header-rw-rules`
 	:ipv6RoutingEnabled:                    A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+	:lastHeaderRewrite:                     A set of :ref:`ds-last-header-rw-rules`
 	:lastUpdated:                           The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
 	:logsEnabled:                           A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 	:longDesc:                              The :ref:`ds-longdesc` of this :term:`Delivery Service`
@@ -147,6 +150,7 @@ Response Structure
 	:sslKeyVersion:                         This integer indicates the :ref:`ds-ssl-key-version`
 	:tenant:                                The name of the :term:`Tenant` who owns this :term:`origin`
 	:tenantId:                              The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+	:topology:                              The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
 	:trRequestHeaders:                      If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 	:trResponseHeaders:                     If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 	:type:                                  The :ref:`ds-types` of this :term:`Delivery Service`
@@ -201,6 +205,7 @@ Response Structure
 					"dnsBypassTtl": null,
 					"dscp": 0,
 					"edgeHeaderRewrite": null,
+					"firstHeaderRewrite": null,
 					"geoLimit": 0,
 					"geoLimitCountries": null,
 					"geoLimitRedirectURL": null,
@@ -211,7 +216,9 @@ Response Structure
 					"id": 1,
 					"infoUrl": null,
 					"initialDispersion": 1,
+					"innerHeaderRewrite": null,
 					"ipv6RoutingEnabled": true,
+					"lastHeaderRewrite": null,
 					"lastUpdated": "0001-01-01 00:00:00+00",
 					"logsEnabled": true,
 					"longDesc": "Apachecon North America 2018",
@@ -244,6 +251,7 @@ Response Structure
 					"signed": false,
 					"sslKeyVersion": 1,
 					"tenantId": 1,
+					"topology": null,
 					"type": "HTTP",
 					"typeId": 1,
 					"xmlId": "demo1",
@@ -314,6 +322,7 @@ Request Structure
 	:ecsEnabled:                    A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 	:edgeHeaderRewrite:             A set of :ref:`ds-edge-header-rw-rules`
 	:exampleURLs:                   An array of :ref:`ds-example-urls`
+	:firstHeaderRewrite:            A set of :ref:`ds-first-header-rw-rules`
 	:fqPacingRate:                  The :ref:`ds-fqpr`
 	:geoLimit:                      An integer that defines the :ref:`ds-geo-limit`
 	:geoLimitCountries:             A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
@@ -325,7 +334,9 @@ Request Structure
 	:id:                            An integral, unique identifier for this :term:`Delivery Service`
 	:infoUrl:                       An :ref:`ds-info-url`
 	:initialDispersion:             The :ref:`ds-initial-dispersion`
+	:innerHeaderRewrite:            A set of :ref:`ds-inner-header-rw-rules`
 	:ipv6RoutingEnabled:            A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+	:lastHeaderRewrite:             A set of :ref:`ds-last-header-rw-rules`
 	:lastUpdated:                   The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
 	:logsEnabled:                   A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 	:longDesc:                      The :ref:`ds-longdesc` of this :term:`Delivery Service`
@@ -360,6 +371,7 @@ Request Structure
 	:sslKeyVersion:                 This integer indicates the :ref:`ds-ssl-key-version`
 	:tenant:                        The name of the :term:`Tenant` who owns this :term:`origin`
 	:tenantId:                      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+	:topology:                      The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
 	:trRequestHeaders:              If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 	:trResponseHeaders:             If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 	:type:                          The :ref:`ds-types` of this :term:`Delivery Service`
@@ -395,6 +407,7 @@ Request Structure
 			"dnsBypassTtl": null,
 			"dscp": 0,
 			"edgeHeaderRewrite": null,
+			"firstHeaderRewrite": null,
 			"geoLimit": 0,
 			"geoLimitCountries": null,
 			"geoLimitRedirectURL": null,
@@ -405,7 +418,9 @@ Request Structure
 			"id": 1,
 			"infoUrl": null,
 			"initialDispersion": 1,
+			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
+			"lastHeaderRewrite": null,
 			"lastUpdated": "2020-02-13 16:43:54+00",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
@@ -449,6 +464,7 @@ Request Structure
 			"fqPacingRate": null,
 			"signingAlgorithm": null,
 			"tenant": "root",
+			"topology": null,
 			"trResponseHeaders": null,
 			"trRequestHeaders": null,
 			"consistentHashRegex": null,
@@ -495,6 +511,7 @@ Response Structure
 	:ecsEnabled:                            A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 	:edgeHeaderRewrite:                     A set of :ref:`ds-edge-header-rw-rules`
 	:exampleURLs:                           An array of :ref:`ds-example-urls`
+	:firstHeaderRewrite:                    A set of :ref:`ds-first-header-rw-rules`
 	:fqPacingRate:                          The :ref:`ds-fqpr`
 	:geoLimit:                              An integer that defines the :ref:`ds-geo-limit`
 	:geoLimitCountries:                     A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
@@ -506,7 +523,9 @@ Response Structure
 	:id:                                    An integral, unique identifier for this :term:`Delivery Service`
 	:infoUrl:                               An :ref:`ds-info-url`
 	:initialDispersion:                     The :ref:`ds-initial-dispersion`
+	:innerHeaderRewrite:                    A set of :ref:`ds-inner-header-rw-rules`
 	:ipv6RoutingEnabled:                    A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+	:lastHeaderRewrite:                     A set of :ref:`ds-last-header-rw-rules`
 	:lastUpdated:                           The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
 	:logsEnabled:                           A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 	:longDesc:                              The :ref:`ds-longdesc` of this :term:`Delivery Service`
@@ -541,6 +560,7 @@ Response Structure
 	:sslKeyVersion:                         This integer indicates the :ref:`ds-ssl-key-version`
 	:tenant:                                The name of the :term:`Tenant` who owns this :term:`origin`
 	:tenantId:                              The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+	:topology:                              The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
 	:trRequestHeaders:                      If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 	:trResponseHeaders:                     If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 	:type:                                  The :ref:`ds-types` of this :term:`Delivery Service`
@@ -600,6 +620,7 @@ Response Structure
 				"dnsBypassTtl": null,
 				"dscp": 0,
 				"edgeHeaderRewrite": null,
+				"firstHeaderRewrite": null,
 				"geoLimit": 0,
 				"geoLimitCountries": null,
 				"geoLimitRedirectURL": null,
@@ -610,7 +631,9 @@ Response Structure
 				"id": 1,
 				"infoUrl": null,
 				"initialDispersion": 1,
+				"innerHeaderRewrite": null,
 				"ipv6RoutingEnabled": true,
+				"lastHeaderRewrite": null,
 				"lastUpdated": "0001-01-01 00:00:00+00",
 				"logsEnabled": true,
 				"longDesc": "Apachecon North America 2018",
@@ -643,6 +666,7 @@ Response Structure
 				"signed": false,
 				"sslKeyVersion": 1,
 				"tenantId": 1,
+				"topology": null,
 				"type": "HTTP",
 				"typeId": 1,
 				"xmlId": "demo1",
@@ -710,6 +734,7 @@ Request Structure
 	:ecsEnabled:                    A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 	:edgeHeaderRewrite:             A set of :ref:`ds-edge-header-rw-rules`
 	:exampleURLs:                   An array of :ref:`ds-example-urls`
+	:firstHeaderRewrite:            A set of :ref:`ds-first-header-rw-rules`
 	:fqPacingRate:                  The :ref:`ds-fqpr`
 	:geoLimit:                      An integer that defines the :ref:`ds-geo-limit`
 	:geoLimitCountries:             A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
@@ -721,7 +746,9 @@ Request Structure
 	:id:                            An integral, unique identifier for this :term:`Delivery Service`
 	:infoUrl:                       An :ref:`ds-info-url`
 	:initialDispersion:             The :ref:`ds-initial-dispersion`
+	:innerHeaderRewrite:            A set of :ref:`ds-inner-header-rw-rules`
 	:ipv6RoutingEnabled:            A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+	:lastHeaderRewrite:             A set of :ref:`ds-last-header-rw-rules`
 	:lastUpdated:                   The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
 	:logsEnabled:                   A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 	:longDesc:                      The :ref:`ds-longdesc` of this :term:`Delivery Service`
@@ -756,6 +783,7 @@ Request Structure
 	:sslKeyVersion:                 This integer indicates the :ref:`ds-ssl-key-version`
 	:tenant:                        The name of the :term:`Tenant` who owns this :term:`origin`
 	:tenantId:                      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+	:topology:                      The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
 	:trRequestHeaders:              If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 	:trResponseHeaders:             If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 	:type:                          The :ref:`ds-types` of this :term:`Delivery Service`
@@ -811,6 +839,7 @@ Request Structure
 			"dnsBypassTtl": null,
 			"dscp": 0,
 			"edgeHeaderRewrite": null,
+			"firstHeaderRewrite": null,
 			"geoLimit": 0,
 			"geoLimitCountries": null,
 			"geoLimitRedirectURL": null,
@@ -821,7 +850,9 @@ Request Structure
 			"id": 1,
 			"infoUrl": null,
 			"initialDispersion": 1,
+			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
+			"lastHeaderRewrite": null,
 			"lastUpdated": "0001-01-01 00:00:00+00",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
@@ -854,6 +885,7 @@ Request Structure
 			"signed": false,
 			"sslKeyVersion": 1,
 			"tenantId": 1,
+			"topology": null,
 			"type": "HTTP",
 			"typeId": 1,
 			"xmlId": "demo1",
@@ -907,10 +939,11 @@ Response Structure
 	:dnsBypassIp:                           A :ref:`ds-dns-bypass-ip`
 	:dnsBypassIp6:                          A :ref:`ds-dns-bypass-ipv6`
 	:dnsBypassTtl:                          The :ref:`ds-dns-bypass-ttl`
-	:dscp:                                          A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+	:dscp:                                  A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
 	:ecsEnabled:                            A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
 	:edgeHeaderRewrite:                     A set of :ref:`ds-edge-header-rw-rules`
 	:exampleURLs:                           An array of :ref:`ds-example-urls`
+	:firstHeaderRewrite:                    A set of :ref:`ds-first-header-rw-rules`
 	:fqPacingRate:                          The :ref:`ds-fqpr`
 	:geoLimit:                              An integer that defines the :ref:`ds-geo-limit`
 	:geoLimitCountries:                     A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
@@ -922,7 +955,9 @@ Response Structure
 	:id:                                    An integral, unique identifier for this :term:`Delivery Service`
 	:infoUrl:                               An :ref:`ds-info-url`
 	:initialDispersion:                     The :ref:`ds-initial-dispersion`
+	:innerHeaderRewrite:                    A set of :ref:`ds-inner-header-rw-rules`
 	:ipv6RoutingEnabled:                    A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+	:lastHeaderRewrite:                     A set of :ref:`ds-last-header-rw-rules`
 	:lastUpdated:                           The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
 	:logsEnabled:                           A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 	:longDesc:                              The :ref:`ds-longdesc` of this :term:`Delivery Service`
@@ -957,6 +992,7 @@ Response Structure
 	:sslKeyVersion:                         This integer indicates the :ref:`ds-ssl-key-version`
 	:tenant:                                The name of the :term:`Tenant` who owns this :term:`origin`
 	:tenantId:                              The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+	:topology:                              The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
 	:trRequestHeaders:                      If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 	:trResponseHeaders:                     If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 	:type:                                  The :ref:`ds-types` of this :term:`Delivery Service`
@@ -1016,6 +1052,7 @@ Response Structure
 				"dnsBypassTtl": null,
 				"dscp": 0,
 				"edgeHeaderRewrite": null,
+				"firstHeaderRewrite": null,
 				"geoLimit": 0,
 				"geoLimitCountries": null,
 				"geoLimitRedirectURL": null,
@@ -1026,7 +1063,9 @@ Response Structure
 				"id": 1,
 				"infoUrl": null,
 				"initialDispersion": 1,
+				"innerHeaderRewrite": null,
 				"ipv6RoutingEnabled": true,
+				"lastHeaderRewrite": null,
 				"lastUpdated": "0001-01-01 00:00:00+00",
 				"logsEnabled": true,
 				"longDesc": "Apachecon North America 2018",
@@ -1059,6 +1098,7 @@ Response Structure
 				"signed": false,
 				"sslKeyVersion": 1,
 				"tenantId": 1,
+				"topology": null,
 				"type": "HTTP",
 				"typeId": 1,
 				"xmlId": "demo1",

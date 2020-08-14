@@ -23,14 +23,14 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
-
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 func randResultStatHistory() ResultStatHistory {
@@ -137,7 +137,7 @@ func TestStatsMarshall(t *testing.T) {
 	filter := DummyFilterNever{}
 	params := url.Values{}
 	beforeStatsMarshall := time.Now()
-	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.TrafficMonitorConfigMap{}, cache.Kbpses{}, filter, params)
+	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.LegacyTrafficMonitorConfigMap{}, cache.Kbpses{}, filter, params)
 	afterStatsMarshall := time.Now()
 	if err != nil {
 		t.Fatalf("StatsMarshall return expected nil err, actual err: %v", err)
@@ -165,5 +165,19 @@ func TestStatsMarshall(t *testing.T) {
 	}
 	if len(stats.Caches) > 0 {
 		t.Errorf(`unmarshalling stats.Caches expected empty, actual %+v`, stats.Caches)
+	}
+}
+
+func TestSystemComputedStats(t *testing.T) {
+	stats := cache.ComputedStats()
+
+	for stat, function := range stats {
+		if strings.HasPrefix(stat, "system.") {
+			computedStat := function(cache.ResultInfo{}, tc.LegacyTrafficServer{}, tc.TMProfile{}, tc.IsAvailable{})
+			_, err := newStatEqual([]cache.ResultStatVal{{Val: float64(0)}}, computedStat)
+			if err != nil {
+				t.Errorf("expected no errors from newStatEqual: %s", err)
+			}
+		}
 	}
 }

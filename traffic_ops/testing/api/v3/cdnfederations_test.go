@@ -17,10 +17,9 @@ package v3
 
 import (
 	"encoding/json"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 var fedIDs []int
@@ -68,7 +67,7 @@ func CreateTestCDNFederations(t *testing.T) {
 func UpdateTestCDNFederations(t *testing.T) {
 
 	for _, id := range fedIDs {
-		fed, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		fed, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
 		}
@@ -82,7 +81,7 @@ func UpdateTestCDNFederations(t *testing.T) {
 		bytes, _ := json.Marshal(resp)
 		t.Logf("PUT Response: %s\n", bytes)
 
-		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if err != nil {
 			t.Errorf("cannot GET federation by id after PUT: %v", err)
 		}
@@ -106,7 +105,7 @@ func GetTestCDNFederations(t *testing.T) {
 	// clean up fedIDs connection?)
 
 	for _, id := range fedIDs {
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		data, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if err != nil {
 			t.Errorf("could not GET federations: " + err.Error())
 		}
@@ -126,7 +125,7 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 		t.Fatal("not enough federation resolvers to test")
 	}
 
-	frs, _, err := TOSession.GetFederationResolvers()
+	frs, _, err := TOSession.GetFederationResolvers(nil)
 	if err != nil {
 		t.Fatalf("Unexpected error getting Federation Resolvers: %v", err)
 	}
@@ -234,7 +233,7 @@ func DeleteTestCDNFederations(t *testing.T) {
 		bytes, err := json.Marshal(resp)
 		t.Logf("DELETE Response: %s\n", bytes)
 
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		data, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
 		if len(data.Response) != 0 {
 			t.Error("expected federation to be deleted")
 		}

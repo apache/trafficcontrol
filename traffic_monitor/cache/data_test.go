@@ -49,27 +49,11 @@ func randAvailableStatuses() AvailableStatuses {
 	a := AvailableStatuses{}
 	num := 100
 	for i := 0; i < num; i++ {
-		a[tc.CacheName(randStr())] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
+		cacheName := tc.CacheName(randStr())
+		a[cacheName] = make(map[string]AvailableStatus)
+		a[cacheName][randStr()] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
 	}
 	return a
-}
-
-func TestAvailableStatusesCopy(t *testing.T) {
-	num := 100
-	for i := 0; i < num; i++ {
-		a := randAvailableStatuses()
-		b := a.Copy()
-
-		if !reflect.DeepEqual(a, b) {
-			t.Errorf("expected a and b DeepEqual, actual copied map not equal: a: %v b: %v", a, b)
-		}
-
-		// verify a and b don't point to the same map
-		a[tc.CacheName(randStr())] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
-		if reflect.DeepEqual(a, b) {
-			t.Errorf("expected a != b, actual a and b point to the same map: a: %+v", a)
-		}
-	}
 }
 
 func randStrIfaceMap() map[string]interface{} {
@@ -245,6 +229,26 @@ func TestResultHistoryCopy(t *testing.T) {
 		a[tc.CacheName(randStr())] = randResultSlice()
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map: %+v", a)
+		}
+	}
+}
+
+func TestAvailableStatusesCopy(t *testing.T) {
+	num := 100
+	for i := 0; i < num; i++ {
+		a := randAvailableStatuses()
+		b := a.Copy()
+
+		if !reflect.DeepEqual(a, b) {
+			t.Errorf("expected a and b DeepEqual, actual copied map not equal: a: %v b: %v", a, b)
+		}
+
+		cacheName := tc.CacheName(randStr())
+		a[cacheName] = make(map[string]AvailableStatus)
+		// verify a and b don't point to the same map
+		a[cacheName][randStr()] = AvailableStatus{Available: AvailableTuple{randBool(), randBool()}, Status: randStr()}
+		if reflect.DeepEqual(a, b) {
+			t.Errorf("expected a != b, actual a and b point to the same map: a: %+v", a)
 		}
 	}
 }

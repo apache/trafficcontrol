@@ -25,6 +25,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"net/http"
+	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -36,7 +38,6 @@ type TOServerCapability struct {
 
 func (v *TOServerCapability) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOServerCapability) NewReadObj() interface{}       { return &tc.ServerCapability{} }
-
 func (v *TOServerCapability) InsertQuery() string {
 	return `
 INSERT INTO server_capability (
@@ -100,6 +101,15 @@ func (v *TOServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (v *TOServerCapability) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
-func (v *TOServerCapability) Create() (error, error, int)              { return api.GenericCreateNameBasedID(v) }
-func (v *TOServerCapability) Delete() (error, error, int)              { return api.GenericDelete(v) }
+func (v *TOServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, v, useIMS)
+}
+func (v *TOServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(sc.last_updated) as t from server_capability sc ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(l.last_updated) as t from last_deleted l where l.table_name='server_capability') as res`
+}
+
+func (v *TOServerCapability) Create() (error, error, int) { return api.GenericCreateNameBasedID(v) }
+func (v *TOServerCapability) Delete() (error, error, int) { return api.GenericDelete(v) }

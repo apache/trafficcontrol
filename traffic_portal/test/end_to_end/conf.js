@@ -17,34 +17,11 @@
  * under the License.
  */
 
-exports.config = {
-	framework: 'jasmine',
-	seleniumAddress: 'http://localhost:4444/wd/hub',
-	baseUrl: 'https://localhost:4443',
-	getPageTimeout: 30000,
+const fs = require('fs');
+const path = require('path');
 
-	capabilities: {
-		'browserName': 'chrome',
-		'acceptInsecureCerts' : true
-	},
-	params: {
-		adminUser: 'admin',
-		adminPassword: 'twelve'
-	},
-	jasmineNodeOpts: {defaultTimeoutInterval: 600000},
-
-	suites: {
-		allTests: [
-			'login/login-spec.js',
-			'CDNs/cdns-spec.js',
-			'cacheGroups/cache-groups-spec.js',
-			'profiles/profiles-spec.js',
-			'divisions/divisions-spec.js',
-			'regions/regions-spec.js',
-			'physLocations/phys-locations-spec.js',
-			'serverCapabilities/server-capabilities-spec.js',
-			'servers/servers-spec.js',
-			'deliveryServices/delivery-services-spec.js'
-		]
-	}
-};
+exports.config = JSON.parse(
+  fs.readFileSync(
+    path.join(process.cwd(), 'conf.json')
+  ).toString()
+);

@@ -51,6 +51,16 @@ services:
   trafficrouter:
     ports:
       - "5005:5005" # JPDA debugging port
+  trafficstats:
+    build:
+      context: .
+      dockerfile: traffic_stats/Dockerfile-debug
+    image: trafficstats-debug
+    ports:
+      - "2346:2346" #Delve debugging port
+    depends_on:
+      - trafficstats-nondebug
+
   # The trafficmonitor-nondebug service exists to ensure that the trafficmonitor
   # base image exists before building trafficmonitor-debug.
   trafficmonitor-nondebug:
@@ -66,10 +76,10 @@ services:
   trafficops-go-nondebug:
     image: trafficops-go
     build:
-      context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile-go
+      context: .
+      dockerfile: traffic_ops/Dockerfile-go
       args:
-        TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
+        TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
     command: /usr/bin/true
   # The trafficops-perl-nondebug service exists to ensure that the trafficops-perl
   # base image exists before building trafficmonitor-debug.
@@ -80,4 +90,14 @@ services:
       dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
       args:
         TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
+    command: /usr/bin/true
+  # The trafficstats-nondebug service exists to ensure that the trafficstats
+  # base image exists before building trafficstats-debug.
+  trafficstats-nondebug:
+    image: trafficstats
+    build:
+      context: .
+      dockerfile: traffic_stats/Dockerfile
+      args:
+        TRAFFIC_STATS_RPM: traffic_stats/traffic_stats.rpm
     command: /usr/bin/true

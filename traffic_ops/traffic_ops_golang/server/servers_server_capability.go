@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/jmoiron/sqlx"
@@ -70,7 +71,6 @@ func (ssc *TOServerServerCapability) ParamColumns() map[string]dbhelpers.WhereCo
 
 }
 func (ssc *TOServerServerCapability) DeleteQuery() string { return scDeleteQuery() }
-
 func (ssc TOServerServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{
 		{ServerQueryParam, api.GetIntKey},
@@ -125,8 +125,15 @@ func (ssc *TOServerServerCapability) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 
-func (ssc *TOServerServerCapability) Read() ([]interface{}, error, error, int) {
-	return api.GenericRead(ssc)
+func (ssc *TOServerServerCapability) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	return api.GenericRead(h, ssc, useIMS)
+}
+func (v *TOServerServerCapability) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(sc.last_updated) as t from server_server_capability sc
+JOIN server s ON sc.server = s.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='server_server_capability') as res`
 }
 
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {

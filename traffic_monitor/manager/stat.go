@@ -246,7 +246,7 @@ func processStatResults(
 	lastStatEndTimes map[tc.CacheName]time.Time,
 	lastStatDurationsThreadsafe threadsafe.DurationMap,
 	unpolledCaches threadsafe.UnpolledCaches,
-	mc tc.TrafficMonitorConfigMap,
+	mc tc.LegacyTrafficMonitorConfigMap,
 	precomputedData map[tc.CacheName]cache.PrecomputedData,
 	lastResults map[tc.CacheName]cache.Result,
 	localStates peer.CRStatesThreadsafe,

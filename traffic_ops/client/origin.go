@@ -32,7 +32,7 @@ const (
 
 func originIDs(to *Session, origin *tc.Origin) error {
 	if origin.CachegroupID == nil && origin.Cachegroup != nil {
-		p, _, err := to.GetCacheGroupNullableByName(*origin.Cachegroup)
+		p, _, err := to.GetCacheGroupNullableByName(*origin.Cachegroup, nil)
 		if err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
-		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(*origin.DeliveryService)
+		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(*origin.DeliveryService, nil)
 		if err != nil {
 			return err
 		}
@@ -54,7 +54,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {
-		profiles, _, err := to.GetProfileByName(*origin.Profile)
+		profiles, _, err := to.GetProfileByName(*origin.Profile, nil)
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.CoordinateID == nil && origin.Coordinate != nil {
-		coordinates, _, err := to.GetCoordinateByName(*origin.Coordinate)
+		coordinates, _, err := to.GetCoordinateByName(*origin.Coordinate, nil)
 		if err != nil {
 			return err
 		}
@@ -76,7 +76,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.TenantID == nil && origin.Tenant != nil {
-		tenant, _, err := to.TenantByName(*origin.Tenant)
+		tenant, _, err := to.TenantByName(*origin.Tenant, nil)
 		if err != nil {
 			return err
 		}
@@ -100,7 +100,7 @@ func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, Req
 	if err != nil {
 		return nil, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_ORIGINS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_ORIGINS, reqBody, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -127,7 +127,7 @@ func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailR
 		return nil, reqInf, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_ORIGINS, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody, nil)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -142,7 +142,7 @@ func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailR
 // GET a list of Origins by a query parameter string
 func (to *Session) GetOriginsByQueryParams(queryParams string) ([]tc.Origin, ReqInf, error) {
 	URI := API_ORIGINS + queryParams
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -180,7 +180,7 @@ func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]tc.Origin, ReqInf, e
 // DELETE an Origin by ID
 func (to *Session) DeleteOriginByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_ORIGINS, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

@@ -22,8 +22,10 @@ package request
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -76,7 +78,10 @@ func (req TODeliveryServiceRequest) GetType() string {
 }
 
 // Read implements the api.Reader interface
-func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
+func (req *TODeliveryServiceRequest) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
+	deliveryServiceRequests := []interface{}{}
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
 		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},
@@ -100,11 +105,21 @@ func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(p, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	}
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(req.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return deliveryServiceRequests, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 	tenantIDs, err := tenant.GetUserTenantIDListTx(req.APIInfo().Tx.Tx, req.APIInfo().User.TenantID)
 	if err != nil {
-		return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
 
@@ -113,20 +128,29 @@ func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
 
 	rows, err := req.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("dsr querying: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("dsr querying: " + err.Error()), http.StatusInternalServerError, &maxTime
 	}
 	defer rows.Close()
 
-	deliveryServiceRequests := []interface{}{}
 	for rows.Next() {
 		var s TODeliveryServiceRequest
 		if err = rows.StructScan(&s); err != nil {
-			return nil, nil, errors.New("dsr scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("dsr scanning: " + err.Error()), http.StatusInternalServerError, &maxTime
 		}
 		deliveryServiceRequests = append(deliveryServiceRequests, s)
 	}
 
-	return deliveryServiceRequests, nil, nil, http.StatusOK
+	return deliveryServiceRequests, nil, nil, http.StatusOK, &maxTime
+}
+
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(r.last_updated) as t FROM deliveryservice_request r
+	JOIN tm_user a ON r.author_id = a.id
+	LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
+	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_request') as res`
 }
 
 func selectDeliveryServiceRequestsQuery() string {

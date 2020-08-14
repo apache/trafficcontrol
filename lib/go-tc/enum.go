@@ -52,8 +52,14 @@ type CacheGroupName string
 // DeliveryServiceName is the name of a CDN delivery service.
 type DeliveryServiceName string
 
+// TopologyName is the name of a topology of cachegroups.
+type TopologyName string
+
 // CacheType is the type (or tier) of a CDN cache.
 type CacheType string
+
+// InterfaceName is the name of the server interface
+type InterfaceName string
 
 const OriginLocationType = "ORG_LOC"
 
@@ -83,6 +89,18 @@ const (
 )
 
 const GlobalProfileName = "GLOBAL"
+
+// ParameterName represents the name of a Traffic Ops parameter meant to belong in a Traffic Ops config file.
+type ParameterName string
+
+// UseRevalPendingParameterName is the name of a parameter which tells whether or not Traffic Ops should use pending revalidation jobs.
+const UseRevalPendingParameterName = ParameterName("use_reval_pending")
+
+// ConfigFileName represents the name of a Traffic Ops config file.
+type ConfigFileName string
+
+// GlobalConfigFileName is the name of the global Traffic Ops config file.
+const GlobalConfigFileName = ConfigFileName("global")
 
 func (c CacheName) String() string {
 	return string(c)
@@ -175,6 +193,9 @@ const DSProtocolHTTP = 0
 const DSProtocolHTTPS = 1
 const DSProtocolHTTPAndHTTPS = 2
 const DSProtocolHTTPToHTTPS = 3
+
+// CacheInterfacesAggregate represent the interface that stores aggregate data for each interface on the cache
+const CacheInterfacesAggregate = "aggregate"
 
 // CacheStatus represents the Traffic Server status set in Traffic Ops (online, offline, admin_down, reported). The string values of this type should match the Traffic Ops values.
 type CacheStatus string

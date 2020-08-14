@@ -31,7 +31,7 @@ RUN curl -Lo go.tgz https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
     ln -s /usr/local/go/bin/go /usr/bin/go && \
     rm go.tgz
 
-ADD infrastructure/docker/build/clean_build.sh /
+ADD build/clean_build.sh /
 CMD /clean_build.sh traffic_ops_ort
 
 #vi:syntax=Dockerfile

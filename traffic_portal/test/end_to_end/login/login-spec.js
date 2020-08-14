@@ -36,7 +36,6 @@ describe('Traffic Portal Login Test Suite', function() {
 		browser.driver.findElement(by.name('loginPass')).sendKeys('badPassword');
 		browser.driver.findElement(by.name('loginSubmit')).click();
 		browser.sleep(250);
-		browser.debugger();
 		expect(browser.driver.findElement(by.css('div.ng-binding')).getText()).toEqual('Invalid username or password.');
 	});
 
@@ -45,7 +44,6 @@ describe('Traffic Portal Login Test Suite', function() {
 		browser.driver.findElement(by.name('loginUsername')).sendKeys(browser.params.adminUser);
 		browser.driver.findElement(by.name('loginPass')).sendKeys(browser.params.adminPassword);
 		browser.driver.findElement(by.name('loginSubmit')).click();
-		browser.debugger();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 });

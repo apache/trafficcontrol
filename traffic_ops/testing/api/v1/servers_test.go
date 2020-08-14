@@ -71,13 +71,12 @@ func UpdateTestServers(t *testing.T) {
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
 	if err != nil {
-		t.Errorf("cannot UPDATE Server by hostname: %v - %v", err, alert)
+		t.Errorf("cannot UPDATE Server by ID: %v - %v", err, alert)
 	}
-
 	// Retrieve the server to check rack and interfaceName values were updated
 	resp, _, err = TOSession.GetServerByID(remoteServer.ID)
 	if err != nil {
-		t.Errorf("cannot GET Server by ID: %v - %v", remoteServer.HostName, err)
+		t.Errorf("cannot GET Server by ID: %v - %v", remoteServer.ID, err)
 	}
 
 	respServer := resp[0]

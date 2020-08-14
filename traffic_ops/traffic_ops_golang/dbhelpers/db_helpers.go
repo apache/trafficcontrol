@@ -214,7 +214,6 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 	} else {
 		where += " AND " + tenantColumnName + " = ANY(CAST(:accessibleTenants AS bigint[]))"
 	}
-
 	queryValues["accessibleTenants"] = pq.Array(tenantIDs)
 
 	return where, queryValues

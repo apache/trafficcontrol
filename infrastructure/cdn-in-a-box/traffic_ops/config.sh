@@ -83,6 +83,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "pid_file" : "/var/run/traffic_ops.pid",
         "workers" : 12
     },
+    "use_ims": true,
     "traffic_ops_golang" : {
         "insecure": true,
         "port" : "$TO_PORT",
@@ -112,7 +113,8 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
             "ignore_unknown_routes": false,
             "perl_routes": [],
             "disabled_routes": []
-        }
+        },
+        "supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
     },
     "cors" : {
         "access_control_allow_origin" : "*"

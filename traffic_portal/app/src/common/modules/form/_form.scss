@@ -40,6 +40,63 @@
 	}
 }
 
+/* Shim for forms without bootstrap */
+.has-error {
+	color: #a94442;
+
+	input, select, textarea {
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	}
+}
+
+.bordered-item {
+	border-bottom: 1px solid gray;
+	padding-bottom: 5px;
+	margin-bottom: 5px;
+}
+
+button.right-button {
+	float: right;
+}
+
+.form-control-columns {
+	display: grid;
+	grid-template-columns: 16.66666667% auto;
+	grid-row-gap: 15px;
+
+	label {
+		text-align: right;
+		padding-right: 2em;
+		line-height: 2.4;
+	}
+
+	fieldset {
+		grid-column: 2;
+
+		div, li {
+			display: grid;
+			grid-template-columns: auto 1fr;
+		}
+
+		div {
+			grid-column-gap: 20px;
+		}
+
+		li {
+			grid-column-gap: 10px;
+		}
+
+		small.input-error {
+			grid-column: 2;
+		}
+
+		input[type="checkbox"] {
+			align-self: center;
+			justify-self: start;
+		}
+	}
+}
+
 .btn-link.request-status {
 	font-size: 20px;
 	color: #cd1323;
@@ -79,6 +136,7 @@ form label.has-tooltip {
 			width: max-content;
 			max-width: inherit;
 			cursor: auto;
+			line-height: 1.428;
 		}
 	}
 

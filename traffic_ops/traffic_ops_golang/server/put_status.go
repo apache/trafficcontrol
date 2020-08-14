@@ -108,13 +108,42 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 // queueUpdatesOnChildCaches queues updates on child caches of the given cdnID and parentCachegroupID and returns an error (if one occurs).
 func queueUpdatesOnChildCaches(tx *sql.Tx, cdnID, parentCachegroupID int) error {
 	q := `
+/* topology_descendants finds the descendant topology nodes of the topology node
+ * for the cachegroup containing server $2.
+ */
+WITH RECURSIVE topology_descendants AS (
+/* This is the base case of the recursive CTE, the topology node for the
+ * cachegroup containing cachegroup $2.
+ */
+	SELECT tcp.parent child, NULL cachegroup
+	FROM cachegroup c
+	JOIN topology_cachegroup tc ON c."name" = tc.cachegroup
+	JOIN topology_cachegroup_parents tcp ON tc.id = tcp.parent
+	WHERE c.id = $2
+UNION ALL
+/* Find all direct topology child nodes tc of a given topology descendant td. */
+	SELECT tcp.child, tc.cachegroup
+	FROM topology_descendants td, topology_cachegroup_parents tcp
+	JOIN topology_cachegroup tc ON tcp.child = tc.id
+	WHERE td.child = tcp.parent
+/* server_topology_descendants is the set of every server whose cachegroup is a
+ * descendant topology node found by topology_descendants.
+ */
+), server_topology_descendants AS (
+SELECT c.id
+FROM cachegroup c
+JOIN topology_descendants td ON c."name" = td.cachegroup
+)
 UPDATE server
-SET    upd_pending = TRUE
-WHERE  server.cdn_id = $1
-       AND server.cachegroup IN (SELECT id
-                                 FROM   cachegroup
-                                 WHERE  parent_cachegroup_id = $2
-                                        OR secondary_parent_cachegroup_id = $2)
+SET upd_pending = TRUE
+WHERE (server.cdn_id = $1
+	   AND server.cachegroup IN (
+			SELECT id
+			FROM cachegroup
+			WHERE parent_cachegroup_id = $2
+				OR secondary_parent_cachegroup_id = $2
+			))
+		OR server.cachegroup IN (SELECT stc.id FROM server_topology_descendants stc)
 `
 	if _, err := tx.Exec(q, cdnID, parentCachegroupID); err != nil {
 		return errors.New("queueing updates on child caches: " + err.Error())

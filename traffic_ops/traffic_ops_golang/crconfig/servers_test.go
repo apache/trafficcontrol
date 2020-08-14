@@ -22,9 +22,11 @@ package crconfig
 import (
 	"context"
 	"fmt"
+	"github.com/lib/pq"
 	"math/rand"
 	"net"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,6 +35,8 @@ import (
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
+
+type StringArray pq.StringArray
 
 func randBool() *bool {
 	b := rand.Int()%2 == 0
@@ -46,6 +50,14 @@ func randStr() *string {
 		s += string(chars[rand.Intn(len(chars))])
 	}
 	return &s
+}
+func randStrArray() []string {
+	num := 100
+	sArray := make([]string, num)
+	for i := 0; i < num; i++ {
+		sArray[i] = *randStr()
+	}
+	return sArray
 }
 func randInt() *int {
 	i := rand.Int()
@@ -109,6 +121,7 @@ func randServer(ipService bool, ip6Service bool) tc.CRConfigTrafficOpsServer {
 
 	return tc.CRConfigTrafficOpsServer{
 		CacheGroup:      cachegroup,
+		Capabilities:    randStrArray(),
 		Fqdn:            randStr(),
 		HashCount:       randInt(),
 		HashId:          randStr(),
@@ -217,12 +230,13 @@ func ExpectedGetAllServers(params map[string]ServerParams, ipIsService bool, ip6
 }
 
 func MockGetAllServers(mock sqlmock.Sqlmock, expected map[string]ServerUnion, cdn string, ipIsService bool, ip6IsService bool) {
-	serverRows := sqlmock.NewRows([]string{"id", "host_name", "cachegroup", "fqdn", "hashid", "https_port", "tcp_port", "profile_name", "routing_disabled", "status", "type"})
+	serverRows := sqlmock.NewRows([]string{"id", "host_name", "cachegroup", "fqdn", "hashid", "https_port", "tcp_port", "profile_name", "routing_disabled", "status", "type", "capabilities"})
 	interfaceRows := sqlmock.NewRows([]string{"max_bandwidth", "monitor", "mtu", "name", "server"})
 	ipRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "interface", "server"})
 	i := 1
 	for name, s := range expected {
-		serverRows = serverRows.AddRow(i, name, *s.CacheGroup, *s.Fqdn, *s.HashId, *s.HttpsPort, *s.Port, *s.Profile, s.RoutingDisabled, *s.ServerStatus, *s.ServerType)
+		capabilities := "{" + strings.Join(s.Capabilities, ",") + "}"
+		serverRows = serverRows.AddRow(i, name, *s.CacheGroup, *s.Fqdn, *s.HashId, *s.HttpsPort, *s.Port, *s.Profile, s.RoutingDisabled, *s.ServerStatus, *s.ServerType, capabilities)
 		if s.InterfaceName == nil {
 			i++
 			continue
@@ -538,7 +552,7 @@ func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]tc.Delive
 }
 
 func MockGetServerDSes(mock sqlmock.Sqlmock, expected map[tc.CacheName]map[string][]string, cdn string) {
-	rows := sqlmock.NewRows([]string{"ds", "ds_type", "routing_name", "pattern"})
+	rows := sqlmock.NewRows([]string{"ds", "ds_type", "routing_name", "pattern", "hasTopology"})
 	dsmap := map[string][]string{}
 	for _, dses := range expected {
 		for ds, patterns := range dses {
@@ -548,7 +562,7 @@ func MockGetServerDSes(mock sqlmock.Sqlmock, expected map[tc.CacheName]map[strin
 
 	for ds, patterns := range dsmap {
 		for _, pattern := range patterns {
-			rows = rows.AddRow(ds, "DNS", "", pattern)
+			rows = rows.AddRow(ds, "DNS", "", pattern, false)
 		}
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)

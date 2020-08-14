@@ -20,6 +20,8 @@ cpanfile.snapshot
 rpm/build.number
 rpmbuild/
 docs/build/*
+/grove/grove
+/grove/grovetccfg/grovetccfg
 local
 traffic_ops_extensions/log/*
 traffic_ops_extensions/lib/Extensions/InfluxDB/log/*

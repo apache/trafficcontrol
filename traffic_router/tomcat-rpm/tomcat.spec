@@ -54,15 +54,15 @@ rm -rf ${RPM_BUILD_ROOT}
 # This here takes care of stopping and removing tomcat before installing new files
 %pretrans
 if [[ -e "/etc/init.d/tomcat" ]]; then
-  echo "Disabling and stopping SysV tomcat service..."
-  chkconfig tomcat off
-  service stop tomcat
+	echo "Disabling and stopping SysV tomcat service..."
+	chkconfig tomcat off
+	service stop tomcat
 fi
 
 if [ -d /opt/apache-tomcat-* ]; then
-  echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
-  rm -rf /opt/apache-tomcat-*
-  rm -rf /opt/tomcat
+	echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
+	rm -rf /opt/apache-tomcat-*
+	rm -rf /opt/tomcat
 fi
 
 %pre

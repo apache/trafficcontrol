@@ -95,7 +95,55 @@ func TestMakeParentDotConfig(t *testing.T) {
 		},
 	}
 
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos)
+	server := tc.Server{
+		CachegroupID: 42,
+		Cachegroup:   "myCG",
+		CDNName:      "myCDN",
+		CDNID:        43,
+		DomainName:   "serverdomain.example.net",
+		HostName:     "myserver",
+		ID:           44,
+		IPAddress:    "192.168.2.1",
+		ProfileID:    46,
+		Profile:      "MyProfileName",
+		TCPPort:      80,
+		Type:         "EDGE",
+	}
+
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
+
+	topologies := []tc.Topology{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	parentConfigParams := []tc.Parameter{}
+	cgs := []tc.CacheGroupNullable{}
+
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -202,14 +250,60 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 		},
 	}
 
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos)
+	server := tc.Server{
+		CachegroupID: 42,
+		Cachegroup:   "myCG",
+		CDNName:      "myCDN",
+		CDNID:        43,
+		DomainName:   "serverdomain.example.net",
+		HostName:     "myserver",
+		ID:           44,
+		IPAddress:    "192.168.2.1",
+		ProfileID:    46,
+		Profile:      "MyProfileName",
+		TCPPort:      80,
+		Type:         "EDGE",
+	}
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
+
+	topologies := []tc.Topology{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	parentConfigParams := []tc.Parameter{}
+	cgs := []tc.CacheGroupNullable{}
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
 	lines := strings.Split(txt, "\n")
 
 	if len(lines) != 4 {
-		t.Fatalf("expected 4 lines (comment, ds, dot remap, and empty newline), actual: '%+v'", len(lines))
+		t.Fatalf("expected 4 lines (comment, ds, dot remap, and empty newline), actual: '%+v' text %v", len(lines), txt)
 	}
 
 	for _, line := range lines {
@@ -314,7 +408,54 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 		t.Fatal("server should have been top level, was not; cannot test MSO Secondary Parent")
 	}
 
-	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos)
+	server := tc.Server{
+		CachegroupID: 42,
+		Cachegroup:   "myCG",
+		CDNName:      "myCDN",
+		CDNID:        43,
+		DomainName:   "serverdomain.example.net",
+		HostName:     "myserver",
+		ID:           44,
+		IPAddress:    "192.168.2.1",
+		ProfileID:    46,
+		Profile:      "MyProfileName",
+		TCPPort:      80,
+		Type:         "EDGE",
+	}
+
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
+
+	topologies := []tc.Topology{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	parentConfigParams := []tc.Parameter{}
+	cgs := []tc.CacheGroupNullable{}
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
 
 	testComment(t, txt, serverName, toolName, toURL)
 
@@ -322,5 +463,431 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 
 	if !strings.Contains(txt, `secondary_parent="my-parent-1.my-parent-1-domain`) {
 		t.Errorf("expected secondary parent 'my-parent-1.my-parent-1-domain', actual: '%v'", txt)
+	}
+}
+
+func TestMakeParentDotConfigTopologies(t *testing.T) {
+	atsMajorVer := 7
+	serverName := "myserver"
+	toolName := "myToolName"
+	toURL := "https://myto.example.net"
+
+	parentConfigDSes := []ParentConfigDSTopLevel{
+		ParentConfigDSTopLevel{
+			ParentConfigDS: ParentConfigDS{
+				Name:            "ds0",
+				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
+				OriginFQDN:      "http://ds0.example.net",
+				MultiSiteOrigin: false,
+				Type:            tc.DSTypeHTTP,
+				QStringHandling: "ds0qstringhandling",
+				// no Topology - test that generation works right with a DS with and one without
+			},
+		},
+		ParentConfigDSTopLevel{
+			ParentConfigDS: ParentConfigDS{
+				Name:            "ds1",
+				QStringIgnore:   tc.QStringIgnoreDrop,
+				OriginFQDN:      "http://ds1.example.net",
+				MultiSiteOrigin: false,
+				Type:            tc.DSTypeDNS,
+				QStringHandling: "ds1qstringhandling",
+				Topology:        "t0",
+			},
+		},
+	}
+
+	serverInfo := &ServerInfo{
+		CacheGroupID:                  42,
+		CacheGroupName:                "edgeCG",
+		CDN:                           "myCDN",
+		CDNID:                         43,
+		DomainName:                    "serverdomain.example.net",
+		HostName:                      "myserver",
+		ID:                            44,
+		IP:                            "192.168.2.1",
+		ParentCacheGroupID:            45,
+		ParentCacheGroupType:          "myParentCGType",
+		ProfileID:                     46,
+		ProfileName:                   "MyProfileName",
+		Port:                          80,
+		SecondaryParentCacheGroupID:   47,
+		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
+		Type:                          "EDGE",
+	}
+
+	serverParams := map[string]string{
+		ParentConfigParamQStringHandling: "myQStringHandlingParam",
+		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
+		ParentConfigParamQString:         "myQstringParam",
+	}
+
+	parentInfos := map[OriginHost][]ParentInfo{
+		"ds1.example.net": []ParentInfo{
+			ParentInfo{
+				Host:            "my-parent-0",
+				Port:            80,
+				Domain:          "my-parent-0-domain",
+				Weight:          "1",
+				UseIP:           false,
+				Rank:            1,
+				IP:              "192.168.2.2",
+				PrimaryParent:   true,
+				SecondaryParent: true,
+			},
+		},
+	}
+
+	server := serverInfoToServer(serverInfo)
+	server.Cachegroup = "edgeCG"
+
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
+
+	topologies := []tc.Topology{
+		tc.Topology{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	parentConfigParams := []tc.Parameter{}
+	cgs := []tc.CacheGroupNullable{}
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
+
+	testComment(t, txt, serverName, toolName, toURL)
+
+	if !strings.Contains(txt, "dest_domain=ds0.example.net") {
+		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
+		t.Errorf("expected parent 'dest_domain=ds1.example.net', actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "qstring=myQStringHandlingParam") {
+		t.Errorf("expected qstring from param 'qstring=myQStringHandlingParam', actual: '%v'", txt)
+	}
+}
+
+// TestMakeParentDotConfigNotInTopologies tests when a given edge is NOT in a Topology, that it doesn't add a remap line.
+func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
+	atsMajorVer := 7
+	serverName := "myserver"
+	toolName := "myToolName"
+	toURL := "https://myto.example.net"
+
+	parentConfigDSes := []ParentConfigDSTopLevel{
+		ParentConfigDSTopLevel{
+			ParentConfigDS: ParentConfigDS{
+				Name:            "ds0",
+				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
+				OriginFQDN:      "http://ds0.example.net",
+				MultiSiteOrigin: false,
+				Type:            tc.DSTypeHTTP,
+				QStringHandling: "ds0qstringhandling",
+				Topology:        "t0",
+			},
+		},
+		ParentConfigDSTopLevel{
+			ParentConfigDS: ParentConfigDS{
+				Name:            "ds1",
+				QStringIgnore:   tc.QStringIgnoreDrop,
+				OriginFQDN:      "http://ds1.example.net",
+				MultiSiteOrigin: false,
+				Type:            tc.DSTypeDNS,
+				QStringHandling: "ds1qstringhandling",
+				// no Topology - test that generation works right with a DS with and one without
+			},
+		},
+	}
+
+	serverInfo := &ServerInfo{
+		CacheGroupID:                  42,
+		CDN:                           "myCDN",
+		CDNID:                         43,
+		DomainName:                    "serverdomain.example.net",
+		HostName:                      "myserver",
+		ID:                            44,
+		IP:                            "192.168.2.1",
+		ParentCacheGroupID:            45,
+		ParentCacheGroupType:          "myParentCGType",
+		ProfileID:                     46,
+		ProfileName:                   "MyProfileName",
+		Port:                          80,
+		SecondaryParentCacheGroupID:   47,
+		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
+		Type:                          "EDGE",
+	}
+
+	serverParams := map[string]string{
+		ParentConfigParamQStringHandling: "myQStringHandlingParam",
+		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
+		ParentConfigParamQString:         "myQstringParam",
+	}
+
+	parentInfos := map[OriginHost][]ParentInfo{
+		"ds1.example.net": []ParentInfo{
+			ParentInfo{
+				Host:            "my-parent-0",
+				Port:            80,
+				Domain:          "my-parent-0-domain",
+				Weight:          "1",
+				UseIP:           false,
+				Rank:            1,
+				IP:              "192.168.2.2",
+				PrimaryParent:   true,
+				SecondaryParent: true,
+			},
+		},
+	}
+
+	server := serverInfoToServer(serverInfo)
+	server.Cachegroup = "edgeCG"
+
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         45,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
+
+	topologies := []tc.Topology{
+		tc.Topology{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "otherEdgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	parentConfigParams := []tc.Parameter{}
+	cgs := []tc.CacheGroupNullable{}
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
+
+	testComment(t, txt, serverName, toolName, toURL)
+
+	if strings.Contains(txt, "dest_domain=ds0.example.net") {
+		t.Errorf("expected parent 'dest_domain=ds0.example.net' to NOT contain Topology DS without this edge: '%v'", txt)
+	}
+	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
+		t.Errorf("expected parent 'dest_domain=ds0.example.net', actual: '%v'", txt)
+	}
+}
+
+func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
+	atsMajorVer := 7
+	serverName := "myserver"
+	toolName := "myToolName"
+	toURL := "https://myto.example.net"
+
+	parentConfigDSes := []ParentConfigDSTopLevel{
+		ParentConfigDSTopLevel{
+			ParentConfigDS: ParentConfigDS{
+				Name:            "ds0",
+				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
+				OriginFQDN:      "http://ds0.example.net",
+				MultiSiteOrigin: false,
+				Type:            tc.DSTypeHTTP,
+				QStringHandling: "ds0qstringhandling",
+				Topology:        "t0",
+			},
+		},
+		ParentConfigDSTopLevel{
+			ParentConfigDS: ParentConfigDS{
+				Name:            "ds1",
+				QStringIgnore:   tc.QStringIgnoreDrop,
+				OriginFQDN:      "http://ds1.example.net",
+				MultiSiteOrigin: false,
+				Type:            tc.DSTypeDNS,
+				QStringHandling: "ds1qstringhandling",
+				Topology:        "t0",
+				RequiredCapabilities: map[ServerCapability]struct{}{
+					"FOO": {},
+				},
+			},
+		},
+		ParentConfigDSTopLevel{
+			ParentConfigDS: ParentConfigDS{
+				Name:            "ds2",
+				QStringIgnore:   tc.QStringIgnoreDrop,
+				OriginFQDN:      "http://ds2.example.net",
+				MultiSiteOrigin: false,
+				Type:            tc.DSTypeDNS,
+				QStringHandling: "ds2qstringhandling",
+				Topology:        "t0",
+				RequiredCapabilities: map[ServerCapability]struct{}{
+					"BAR": {},
+				},
+			},
+		},
+	}
+
+	serverInfo := &ServerInfo{
+		CacheGroupID:                  42,
+		CDN:                           "myCDN",
+		CDNID:                         43,
+		DomainName:                    "serverdomain.example.net",
+		HostName:                      "myserver",
+		ID:                            44,
+		IP:                            "192.168.2.1",
+		ParentCacheGroupID:            45,
+		ParentCacheGroupType:          "myParentCGType",
+		ProfileID:                     46,
+		ProfileName:                   "MyProfileName",
+		Port:                          80,
+		SecondaryParentCacheGroupID:   47,
+		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
+		Type:                          "EDGE",
+	}
+
+	serverParams := map[string]string{
+		ParentConfigParamQStringHandling: "myQStringHandlingParam",
+		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
+		ParentConfigParamQString:         "myQstringParam",
+	}
+
+	parentInfos := map[OriginHost][]ParentInfo{
+		"ds1.example.net": []ParentInfo{
+			ParentInfo{
+				Host:            "my-parent-0",
+				Port:            80,
+				Domain:          "my-parent-0-domain",
+				Weight:          "1",
+				UseIP:           false,
+				Rank:            1,
+				IP:              "192.168.2.2",
+				PrimaryParent:   true,
+				SecondaryParent: true,
+			},
+		},
+	}
+
+	server := serverInfoToServer(serverInfo)
+	server.Cachegroup = "edgeCG"
+
+	mid0 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid0",
+		ID:         45,
+		IPAddress:  "192.168.2.2",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	mid1 := &tc.Server{
+		Cachegroup: "midCG",
+		CDNName:    "myCDN",
+		CDNID:      43,
+		DomainName: "serverdomain.example.net",
+		HostName:   "mymid1",
+		ID:         46,
+		IPAddress:  "192.168.2.3",
+		ProfileID:  46,
+		Profile:    "MyProfileName",
+		TCPPort:    80,
+		Type:       "EDGE",
+	}
+	servers := []tc.Server{server, *mid0, *mid1}
+
+	topologies := []tc.Topology{
+		tc.Topology{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				tc.TopologyNode{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				tc.TopologyNode{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{
+		44: map[ServerCapability]struct{}{"FOO": {}},
+		45: map[ServerCapability]struct{}{"FOO": {}},
+		46: map[ServerCapability]struct{}{"FOO": {}},
+	}
+	parentConfigParams := []tc.Parameter{}
+	cgs := []tc.CacheGroupNullable{}
+
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos, server, servers, topologies, parentConfigParams, serverCapabilities, cgs)
+
+	testComment(t, txt, serverName, toolName, toURL)
+
+	if !strings.Contains(txt, "dest_domain=ds0.example.net") {
+		t.Errorf("expected parent 'dest_domain=ds0.example.net' without required capabilities: '%v'", txt)
+	}
+	if !strings.Contains(txt, "dest_domain=ds1.example.net") {
+		t.Errorf("expected parent 'dest_domain=ds1.example.net' with necessary required capabilities, actual: '%v'", txt)
+	}
+	if strings.Contains(txt, "dest_domain=ds2.example.net") {
+		t.Errorf("expected no parent 'dest_domain=ds2.example.net' without necessary required capabilities, actual: '%v'", txt)
 	}
 }

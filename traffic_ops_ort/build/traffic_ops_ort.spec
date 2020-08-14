@@ -16,16 +16,16 @@
 # RPM spec file for Traffic Stats (tm).
 #
 %define debug_package %{nil}
-Name:		traffic_ops_ort
-Summary:	Installs ORT script for Traffic Control caches
-Version:	%{traffic_control_version}
-Release:	%{build_number}
-License:	Apache License, Version 2.0
-Group:		Applications/Communications
-Source0:	traffic_ops_ort-%{version}.tgz
-URL:		https://github.com/apache/trafficcontrol/
-Vendor:		Apache Software Foundation
-Packager:	dev at trafficcontrol dot Apache dot org
+Name:     traffic_ops_ort
+Summary:  Installs ORT script for Traffic Control caches
+Version:  %{traffic_control_version}
+Release:  %{build_number}
+License:  Apache License, Version 2.0
+Group:    Applications/Communications
+Source0:  traffic_ops_ort-%{version}.tgz
+URL:      https://github.com/apache/trafficcontrol/
+Vendor:   Apache Software Foundation
+Packager: dev at trafficcontrol dot Apache dot org
 %{?el6:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-Digest-SHA}
 %{?el7:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-LWP-Protocol-https, perl-Digest-SHA}
 
@@ -41,18 +41,33 @@ tar xvf %{SOURCE0} -C $RPM_SOURCE_DIR
 # copy atstccfg binary
 godir=src/github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg
 ( mkdir -p "$godir" && \
-  cd "$godir" && \
-  cp "$TC_DIR"/traffic_ops_ort/atstccfg/atstccfg .
+	cd "$godir" && \
+	cp "$TC_DIR"/traffic_ops_ort/atstccfg/atstccfg .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
+# copy t3c binary
+got3cdir=src/github.com/apache/trafficcontrol/traffic_ops_ort/t3c
+( mkdir -p "$got3cdir" && \
+	cd "$got3cdir" && \
+	cp "$TC_DIR"/traffic_ops_ort/t3c/t3c .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 
 %install
 mkdir -p ${RPM_BUILD_ROOT}/opt/ort
+mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
+mkdir -p "${RPM_BUILD_ROOT}"/var/log/ort
+
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/opt/ort
 cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/opt/ort
 
-src=src/github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg
-cp -p "$src"/atstccfg ${RPM_BUILD_ROOT}/opt/ort
+src=src/github.com/apache/trafficcontrol/traffic_ops_ort
+cp -p ${RPM_SOURCE_DIR}/traffic_ops_ort-%{version}/build/atstccfg.logrotate "${RPM_BUILD_ROOT}"/etc/logrotate.d/atstccfg
+touch ${RPM_BUILD_ROOT}/var/log/ort/atstccfg.log
+cp -p "$src"/atstccfg/atstccfg ${RPM_BUILD_ROOT}/opt/ort
+
+t3csrc=src/github.com/apache/trafficcontrol/traffic_ops_ort/t3c
+cp -p "$t3csrc"/t3c ${RPM_BUILD_ROOT}/opt/ort
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
@@ -64,5 +79,9 @@ rm -rf ${RPM_BUILD_ROOT}
 /opt/ort/traffic_ops_ort.pl
 /opt/ort/supermicro_udev_mapper.pl
 /opt/ort/atstccfg
+/opt/ort/t3c
+
+%config(noreplace) /etc/logrotate.d/atstccfg
+%config(noreplace) /var/log/ort/atstccfg.log
 
 %changelog

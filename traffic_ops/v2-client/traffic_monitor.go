@@ -33,13 +33,13 @@ import (
 const API_CDN_MONITORING_CONFIG = apiBase + "/cdns/%s/configs/monitoring"
 
 // GetTrafficMonitorConfigMap is functionally identical to GetTrafficMonitorConfig, except that it
-// coerces the value returned by the API to the tc.TrafficMonitorConfigMap structure.
-func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, ReqInf, error) {
+// coerces the value returned by the API to the tc.LegacyTrafficMonitorConfigMap structure.
+func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.LegacyTrafficMonitorConfigMap, ReqInf, error) {
 	tmConfig, reqInf, err := to.GetTrafficMonitorConfig(cdn)
 	if err != nil {
 		return nil, reqInf, err
 	}
-	tmConfigMap, err := tc.TrafficMonitorTransformToMap(tmConfig)
+	tmConfigMap, err := tc.LegacyTrafficMonitorTransformToMap(tmConfig)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -47,7 +47,7 @@ func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorCon
 }
 
 // GetTrafficMonitorConfig returns the monitoring configuration for the CDN named by 'cdn'.
-func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {
+func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.LegacyTrafficMonitorConfig, ReqInf, error) {
 	url := fmt.Sprintf(API_CDN_MONITORING_CONFIG, cdn)
 	resp, remoteAddr, err := to.request("GET", url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -56,7 +56,7 @@ func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig
 	}
 	defer resp.Body.Close()
 
-	var data tc.TMConfigResponse
+	var data tc.LegacyTMConfigResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}

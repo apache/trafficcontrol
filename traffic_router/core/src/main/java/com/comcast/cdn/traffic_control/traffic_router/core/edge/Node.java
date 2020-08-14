@@ -19,7 +19,12 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,6 +46,8 @@ public class Node extends DefaultHashable {
 	private List<InetRecord> ipAddresses;
 	private List<InetRecord> unavailableIpAddresses;
 	private int port;
+	private final Map<String, Cache.DeliveryServiceReference> deliveryServices = new HashMap<>();
+	private final Set<String> capabilities = new HashSet<>();
 	private int httpsPort = 443;
 
 	public Node(final String id) {
@@ -76,15 +83,12 @@ public class Node extends DefaultHashable {
 		return id;
 	}
 
-	public List<InetRecord> getIpAddresses(final JsonNode ttls, final Resolver resolver) {
-		return getIpAddresses(ttls, resolver, true);
+	public List<InetRecord> getIpAddresses(final JsonNode ttls) {
+		return getIpAddresses(ttls, true);
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-	public List<InetRecord> getIpAddresses(final JsonNode ttls, final Resolver resolver, final boolean ip6RoutingEnabled) {
-		if(ipAddresses == null || ipAddresses.isEmpty()) {
-			ipAddresses = resolver.resolve(this.getFqdn()+".");
-		}
+	public List<InetRecord> getIpAddresses(final JsonNode ttls, final boolean ip6RoutingEnabled) {
 		if(ipAddresses == null) { return null; }
 		final List<InetRecord> ret = new ArrayList<InetRecord>();
 		for (final InetRecord ir : ipAddresses) {
@@ -117,6 +121,24 @@ public class Node extends DefaultHashable {
 		return new HashCodeBuilder(1, 31)
 		.append(getId())
 		.toHashCode();
+	}
+
+	public void addCapabilities(final Set<String> capabilities) {
+		this.capabilities.addAll(capabilities);
+	}
+
+	public Set<String> getCapabilities() {
+		return this.capabilities;
+	}
+
+	public void setDeliveryServices(final Collection<Cache.DeliveryServiceReference> deliveryServices) {
+		for (final Cache.DeliveryServiceReference deliveryServiceReference : deliveryServices) {
+			this.deliveryServices.put(deliveryServiceReference.getDeliveryServiceId(), deliveryServiceReference);
+		}
+	}
+
+	public boolean hasDeliveryService(final String deliveryServiceId) {
+		return deliveryServices.containsKey(deliveryServiceId);
 	}
 
 	public void setFqdn(final String fqdn) {

@@ -46,7 +46,7 @@ func (to *Session) GetAPICapabilities(capability string, order string) (tc.APICa
 		path = fmt.Sprintf("%s?%s", path, vals.Encode())
 	}
 
-	httpResp, remoteAddr, err := to.request(http.MethodGet, path, nil)
+	httpResp, remoteAddr, err := to.request(http.MethodGet, path, nil, nil)
 	reqInf.RemoteAddr = remoteAddr
 
 	if err != nil {

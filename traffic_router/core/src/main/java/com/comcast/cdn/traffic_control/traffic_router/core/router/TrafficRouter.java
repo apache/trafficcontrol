@@ -15,6 +15,52 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
+import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.Steering;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringGeolocationComparator;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringResult;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringTarget;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.TrafficRouterLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIp;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNodeException;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeo;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.log4j.Logger;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Type;
+import org.xbill.DNS.Zone;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -34,57 +80,26 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringResult;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringTarget;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.Steering;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
-import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.xbill.DNS.Name;
-import org.xbill.DNS.Type;
-import org.xbill.DNS.Zone;
-
-import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
-import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node;
-import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
-import com.comcast.cdn.traffic_control.traffic_router.core.edge.TrafficRouterLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringGeolocationComparator;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNodeException;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeo;
-import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
-import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
-import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIp;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
-
+/**
+ * TrafficRouter is the main router class that handles Traffic Router logic.
+ */
 @SuppressWarnings({"PMD.TooManyFields", "PMD.ExcessivePublicCount"})
 public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
+
+	/**
+	 * This is an HTTP Header the value of which, if present in a client HTTP request, should be
+	 * the XMLID of a Delivery Service to use as an explicit target in CLIENT_STEERING (thus
+	 * bypassing normal steering logic).
+	 */
 	public static final String XTC_STEERING_OPTION = "x-tc-steering-option";
+
+	/**
+	 * This is the key of a JSON object that is a configuration option that may be present in
+	 * "CRConfig" Snapshots. When this option is present, and is 'true', more Edge-Tier cache
+	 * servers will be provided in responses to steering requests (known as "Client Steering Forced
+	 * Diversity").
+	 */
 	public static final String CLIENT_STEERING_DIVERSITY = "client.steering.forced.diversity";
 	public static final String DNSSEC_ENABLED = "dnssec.enabled";
 	public static final String DNSSEC_ZONE_DIFFING = "dnssec.zone.diffing.enabled";
@@ -116,6 +131,11 @@ public class TrafficRouter {
 
 	private final Map<String, Geolocation> defaultGeolocationsOverride = new HashMap<String, Geolocation>();
 
+	/**
+	 * When instantiated, Traffic Router will try to read all of its various configuration files.
+	 *
+	 * @throws IOException when an error occurs reading in a configuration file.
+	 */
 	public TrafficRouter(final CacheRegister cr,
 			final GeolocationService geolocationService,
 			final GeolocationService geolocationService6,
@@ -194,6 +214,12 @@ public class TrafficRouter {
 		return cacheRegister;
 	}
 
+	/**
+	 * Selects a Delivery Service to service a request.
+	 *
+	 * @param request The request being served
+	 * @return A Delivery Service to use when servicing the request.
+	 */
 	protected DeliveryService selectDeliveryService(final Request request) {
 		if (cacheRegister == null) {
 			LOGGER.warn("no caches yet");
@@ -208,11 +234,31 @@ public class TrafficRouter {
 		return deliveryService;
 	}
 
+	/**
+	 * Sets the cache server and Delivery Service "states" based on input JSON.
+	 * <p>
+	 * The input {@code states} is expected to be an object with (at least) two keys:
+	 * "caches" and "deliveryServices", which contain the states of the cache servers and
+	 * Delivery Services, respectively. @see #setDsStates(JsonNode) and
+	 *  {@link #setCacheStates(JsonNode)} for the expected format of those objects themselves.
+	 * </p>
+	 * @return Always returns {@code true} when successful. On failure, throws.
+	 */
 	boolean setState(final JsonNode states) throws UnknownHostException {
 		setCacheStates(states.get("caches"));
 		setDsStates(states.get("deliveryServices"));
 		return true;
 	}
+
+	/**
+	 * Sets Delivery Service states based on the input JSON.
+	 * <p>
+	 * Delivery Services present in the input which aren't registered are ignored.
+	 * </p>
+	 * @param dsStates The input JSON object. Expected to be a map of Delivery Service XMLIDs to
+	 * "state" strings.
+	 * @return {@code false} iff dsStates was {@code null}, otherwise {@code true}.
+	 */
 	private boolean setDsStates(final JsonNode dsStates) {
 		if(dsStates == null) {
 			return false;
@@ -223,6 +269,16 @@ public class TrafficRouter {
 		}
 		return true;
 	}
+
+	/**
+	 * Sets {@link Cache} states based on the input JSON.
+	 * <p>
+	 * Caches present in the input which are not registered are ignored.
+	 * </p>
+	 * @param cacheStates The input JSON object. Expected to be a map of identifying Cache names
+	 * to "state" strings.
+	 * @return {@code false} iff cacheStates was {@code null}, otherwise {@code true}.
+	 */
 	private boolean setCacheStates(final JsonNode cacheStates) {
 		if(cacheStates == null) {
 			return false;
@@ -250,10 +306,27 @@ public class TrafficRouter {
 		return anonymousIpService;
 	}
 
+	/**
+	 * Geo-locates the client returning a physical location for routing purposes.
+	 *
+	 * @param clientIP The client's network location - as a {@link String}. This should ideally be
+	 * an IP address, but trailing port number specifications are stripped.
+	 * @throws GeolocationException if the client could not be located.
+	 */
 	public Geolocation getLocation(final String clientIP) throws GeolocationException {
 		return clientIP.contains(":") ? geolocationService6.location(clientIP) : geolocationService.location(clientIP);
 	}
 
+	/**
+	 * Retrieves a service for geo-locating clients for a specific Delivery Service.
+	 *
+	 * @param geolocationProvider The name of the provider for geo-location information (currently
+	 * only "Maxmind" and "Neustar" are supported)
+	 * @param deliveryServiceId Currently only used for logging error information, should be an
+	 * identifier for a Delivery Service
+	 * @return A {@link #GeolocationService} that can be used to geo-locate clients <em>or</em>
+	 * {@code null} if an error occurs.
+	 */
 	private GeolocationService getGeolocationService(final String geolocationProvider, final String deliveryServiceId) {
 		if (applicationContext == null) {
 			LOGGER.error("ApplicationContext not set unable to use custom geolocation service providers");
@@ -278,15 +351,46 @@ public class TrafficRouter {
 		return null;
 	}
 
+	/**
+	 * Retrieves a location for a given client being served a given Delivery Service using a
+	 * specific provider.
+	 * @param clientIP The client's network location - as a {@link String}. This should ideally be
+	 * an IP address, but trailing port number specifications are stripped.
+	 * @param geolocationProvider The name of the provider for geo-location information (currently
+	 * only "Maxmind" and "Neustar" are supported)
+	 * @param deliveryServiceId Currently only used for logging error information, should be an
+	 * identifier for a Delivery Service
+	 * @throws GeolocationException if the client could not be located.
+	 */
 	public Geolocation getLocation(final String clientIP, final String geolocationProvider, final String deliveryServiceId) throws GeolocationException {
 		final GeolocationService customGeolocationService = getGeolocationService(geolocationProvider, deliveryServiceId);
 		return customGeolocationService != null ? customGeolocationService.location(clientIP) : getLocation(clientIP);
 	}
 
+	/**
+	 * Retrives a location for a given client being served a given Delivery Service.
+	 * @param clientIP The client's network location - as a {@link String}. This should ideally be
+	 * an IP address, but trailing port number specifications are stripped.
+	 * @param deliveryService The Delivery Service being served to the client.
+	 * @throws GeolocationException if the client could not be located.
+	 */
 	public Geolocation getLocation(final String clientIP, final DeliveryService deliveryService) throws GeolocationException {
 		return getLocation(clientIP, deliveryService.getGeolocationProvider(), deliveryService.getId());
 	}
 
+	/**
+	 * Gets a {@link #List} of {@link Cache}s that are capabable of serving a given Delivery Service.
+	 * <p>
+	 * The caches chosen are from the closest, non-empty, cache location to the client's physical
+	 * location, up to the Location Limit ({@link DeliveryService#getLocationLimit()}) of the
+	 * Delivery Service being served.
+	 * </p>
+	 * @param ds The Delivery Service being served.
+	 * @param clientLocation The physical location of the requesting client.
+	 * @param track The {@link #Track} object on which a result location shall be set, should one be found
+	 * @return A {@link #List} of {@link Cache}s that should be used to service a request should such a collection be found, or
+	 * {@code null} if the no applicable {@link Cache}s could be found.
+	 */
 	public List<Cache> getCachesByGeo(final DeliveryService ds, final Geolocation clientLocation, final Track track) throws GeolocationException {
 		int locationsTested = 0;
 
@@ -314,10 +418,28 @@ public class TrafficRouter {
 		return null;
 	}
 
+	/**
+	 * Selects {@link Cache}s to serve a request for a Delivery Service.
+	 * <p>
+	 * This is equivalent to calling
+	 * {@link #selectCaches(HTTPRequest, DeliveryService, Track, boolean)} with the "deep" parameter
+	 * set to {@code true}.
+	 * </p>
+	 * @param request The HTTP request made by the client.
+	 * @param ds The Delivery Service being served.
+	 * @param track The {@link #Track} object that tracks how requests are served
+	 */
 	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
 		return selectCaches(request, ds, track, true);
 	}
 
+	/**
+	 * Selects {@link Cache}s to serve a request for a Delivery Service.
+	 * @param request The HTTP request made by the client.
+	 * @param ds The Delivery Service being served.
+	 * @param track The {@link #Track} object that tracks how requests are served
+	 * @param enableDeep Sets whether or not "Deep Caching" may be used.
+	 */
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track, final boolean enableDeep) throws GeolocationException {
 		CacheLocation cacheLocation;
@@ -361,6 +483,14 @@ public class TrafficRouter {
 		return caches;
 	}
 
+	/**
+	 * Selects {@link Cache}s to serve a request for a Delivery Service based on a given location.
+	 * @param clientIp The requesting client's IP address - as a String.
+	 * @param deliveryService The Delivery Service being served.
+	 * @param cacheLocation A selected {@link CacheLocation} from which {@link Cache}s will be
+	 * extracted based on the client's location.
+	 * @param track The {@link #Track} object that tracks how requests are served
+	 */
 	public List<Cache> selectCachesByGeo(final String clientIp, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
 		Geolocation clientLocation = null;
 
@@ -397,6 +527,12 @@ public class TrafficRouter {
 		return caches;
 	}
 
+	/**
+	 * Routes a single DNS request.
+	 * @param request The client request being routed.
+	 * @param track A "tracker" that tracks the results of routing.
+	 * @return The final result of routing.
+	 */
 	public DNSRouteResult route(final DNSRequest request, final Track track) throws GeolocationException {
 		final DeliveryService ds = selectDeliveryService(request);
 
@@ -677,6 +813,18 @@ public class TrafficRouter {
 		return addresses;
 	}
 
+	/**
+	 * Extracts the IP Addresses from a set of caches based on a Delivery Service's configuration
+	 * @param ds The Delivery Service being served. If this DS does not have "IPv6 routing enabled",
+	 * then the IPAddresses returned will not include IPv6 addresses.
+	 * @param caches The list of caches chosen to serve ds. If the length of this list is greater
+	 * than the maximum allowed IP addresses in a DNS response by the
+	 * {@link DeliveryService#getMaxDnsIps()()} of the requested Delivery Service, the maximum
+	 * allowed number will be chosen from the list at random.
+	 * @param request The request being served - used for consistent hashing when caches must be
+	 * chosen at random
+	 * @return The IP Addresses of the passed caches. In general, these may be IPv4 or IPv6.
+	 */
 	public List<InetRecord> inetRecordsFromCaches(final DeliveryService ds, final List<Cache> caches, final Request request) {
 		final List<InetRecord> addresses = new ArrayList<>();
 		final int maxDnsIps = ds.getMaxDnsIps();
@@ -708,12 +856,24 @@ public class TrafficRouter {
 		}
 
 		for (final Cache cache : selectedCaches) {
-			addresses.addAll(cache.getIpAddresses(ds.getTtls(), zoneManager, ds.isIp6RoutingEnabled()));
+			addresses.addAll(cache.getIpAddresses(ds.getTtls(), ds.isIp6RoutingEnabled()));
 		}
 
 		return addresses;
 	}
 
+	/**
+	 * Geo-locates the client based on their IP address and the Delivery Service they requested.
+	 * <p>
+	 * This is optimized over {@link #getLocation(String, DeliveryService)} because
+	 * @param clientIp The IP Address of the requesting client.
+	 * @param track A state-tracking object, it will be notified of the calculated client location
+	 * for optimization of future queries.
+	 * @param deliveryService The Delivery Service being served. Currently only used for logging
+	 * error information.
+	 * @return The client's calculated geographic location
+	 * @throws GeolocationException
+	 */
 	public Geolocation getClientGeolocation(final String clientIp, final Track track, final DeliveryService deliveryService) throws GeolocationException {
 		if (track != null && track.isClientGeolocationQueried()) {
 			return track.getClientGeolocation();
@@ -735,6 +895,17 @@ public class TrafficRouter {
 		return clientGeolocation;
 	}
 
+	/**
+	 * Geo-locates the client based on their IP address and the Delivery Service they requested.
+	 * @param clientIp The IP Address of the requesting client.
+	 * @param ds The Delivery Service being served. If the client's location is blocked by this
+	 * Delivery Service, the returned location will instead be the appropriate fallback/miss
+	 * location.
+	 * @param cacheLocation If this is not 'null', its location will be used in lieu of calculating
+	 * one for the client.
+	 * @return The client's calculated geographic location (or the appropriate fallback/miss
+	 * location).
+	 */
 	public Geolocation getClientLocation(final String clientIp, final DeliveryService ds, final Location cacheLocation, final Track track) throws GeolocationException {
 		if (cacheLocation != null) {
 			return cacheLocation.getGeolocation();
@@ -744,18 +915,64 @@ public class TrafficRouter {
 		return ds.supportLocation(clientGeolocation);
 	}
 
+	/**
+	 * Selects caches to service requests for a Delivery Service from a cache location based on
+	 * Coverage Zone configuration.
+	 * <p>
+	 * This is equivalent to calling {@link #selectCachesByCZ(DeliveryService, CacheLocation, Track)}
+	 * with a 'null' "track" argument.
+	 * </p>
+	 * @param ds The Delivery Service being served.
+	 * @param cacheLocation The location from which caches will be selected.
+	 * @return All of the caches in the given location capable of serving ds.
+	 */
 	public List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation) {
 		return selectCachesByCZ(ds, cacheLocation, null);
 	}
 
+	/**
+	 * Selects caches to service requests for a Delivery Service from a cache location based on
+	 * Coverage Zone Configuration.
+	 * @param deliveryServiceId An identifier for the {@link DeliveryService} being served.
+	 * @param cacheLocationId An identifier for the {@link CacheLocation} from which caches will be
+	 * selected.
+	 * @return All of the caches in the given location capable of serving the identified Delivery
+	 * Service.
+	 */
 	public List<Cache> selectCachesByCZ(final String deliveryServiceId, final String cacheLocationId, final Track track) {
 		return selectCachesByCZ(cacheRegister.getDeliveryService(deliveryServiceId), cacheRegister.getCacheLocation(cacheLocationId), track);
 	}
 
+	/**
+	 * Selects caches to service requests for a Delivery Service from a cache location based on
+	 * Coverage Zone Configuration.
+	 * <p>
+	 * This is equivalent to calling {@link #selectCachesByCZ(DeliveryService, CacheLocation, Track, ResultType)}
+	 * with the "result" argument set to {@link #ResultType.CZ}.
+	 * </p>
+	 * @param ds The Delivery Service being served.
+	 * @param cacheLocation The location from which caches will be selected
+	 * @return All of the caches in the given location capable of serving ds.
+	 */
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
 		return selectCachesByCZ(ds, cacheLocation, track, ResultType.CZ); // ResultType.CZ was the original default before DDC
 	}
 
+	/**
+	 * Selects caches to service requests for a Delivery Service from a cache location based on
+	 * Coverage Zone Configuration.
+	 * <p>
+	 * Obviously, at this point, the location from which to select caches must already be known.
+	 * So it's totally possible that that decision wasn't made based on Coverage Zones at all,
+	 * that's just the default routing result chosen by a common caller of this method
+	 * ({@link #selectCachesByCZ(DeliveryService, CacheLocation, Track)}).
+	 * </p>
+	 * @param ds The Delivery Service being served.
+	 * @param cacheLocation The location from which caches will be selected.
+	 * @param result The type of routing result that resulted in the returned caches being selected.
+	 * This is used for tracking routing results.
+	 * @return All of the caches in the given location capable of serving ds.
+	 */
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track, final ResultType result) {
 		if (cacheLocation == null || ds == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
@@ -882,10 +1099,13 @@ public class TrafficRouter {
 	/**
 	 * Constructs a string to be used in consistent hashing
 	 * <p>
-	 * If `regex` is `null` or empty - or if an error occurs applying it -, returns `requestPath` unaltered.
+	 * If {@code regex} is {@code null} or empty - or if an error occurs applying it -, returns
+	 * {@code requestPath} unaltered.
 	 * </p>
-	 * @param regex A regular expression matched against the client's request path to extract information important to consistent hashing
-	 * @param requestPath The client's request path - e.g. '/some/path' from 'https://example.com/some/path'
+	 * @param regex A regular expression matched against the client's request path to extract
+	 * information important to consistent hashing
+	 * @param requestPath The client's request path - e.g. {@code /some/path} from
+	 * {@code https://example.com/some/path}
 	 * @return The parts of requestPath that matched regex
 	 */
 	public String buildPatternBasedHashString(final String regex, final String requestPath) {
@@ -917,7 +1137,14 @@ public class TrafficRouter {
 		return requestPath;
 	}
 
-	@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.NPathComplexity" })
+	/**
+	 * Routes an HTTP request.
+	 * @param request The request being routed.
+	 * @return The result of routing the HTTP request.
+	 * @throws MalformedURLException
+	 * @throws GeolocationException
+	 */
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
@@ -928,6 +1155,12 @@ public class TrafficRouter {
 		}
 	}
 
+	/**
+	 * Routes an HTTP request that isn't for a CLIENT_STEERING-type Delivery Service.
+	 * @param request The request being routed.
+	 * @return The result of routing this HTTP request.
+	 * @throws MalformedURLException if a URL cannot be constructed to return to the client
+	 */
 	@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.NPathComplexity" })
 	public HTTPRouteResult singleRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService deliveryService = getDeliveryService(request, track);
@@ -999,6 +1232,12 @@ public class TrafficRouter {
 		return caches;
 	}
 
+	/**
+	 * Gets all the possible steering results for a request to a Delivery Service.
+	 * @param request The client HTTP request.
+	 * @param entryDeliveryService The steering Delivery Service being served.
+	 * @return All of the possible steering results for routing request through entryDeliveryService.
+	 */
 	@SuppressWarnings({"PMD.NPathComplexity"})
 	private List<SteeringResult> getSteeringResults(final HTTPRequest request, final Track track, final DeliveryService entryDeliveryService) {
 
@@ -1034,6 +1273,12 @@ public class TrafficRouter {
 		return steeringResults.isEmpty() ? null : steeringResults;
 	}
 
+	/**
+	 * Gets the Delivery Service that matches the client HTTP request.
+	 * @param request The client HTTP request.
+	 * @return The Delivery Service corresponding to the request if one can be found, otherwise
+	 * {@code null}.
+	 */
 	private DeliveryService getDeliveryService(final HTTPRequest request, final Track track) {
 		final String xtcSteeringOption = request.getHeaderValue(XTC_STEERING_OPTION);
 		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request), request, xtcSteeringOption);
@@ -1053,6 +1298,12 @@ public class TrafficRouter {
 		return deliveryService;
 	}
 
+	/**
+	 * Checks if the TLS settings on the client HTTP request match those of the Delivery Service
+	 * it's requesting.
+	 * @param request The client HTTP request.
+	 * @param deliveryService The Delivery Service being served.
+	 */
 	private boolean isTlsMismatch(final HTTPRequest request, final DeliveryService deliveryService) {
 		if (request.isSecure() && !deliveryService.isSslEnabled()) {
 			return true;
@@ -1065,6 +1316,12 @@ public class TrafficRouter {
 		return false;
 	}
 
+	/**
+	 * Finds a network subnet for the given IP address based on Deep Coverage Zone configuration.
+	 * @param ip The IP address to look up.
+	 * @return A network subnet  capable of serving requests for the given IP, or {@code null} if
+	 * one couldn't be found.
+	 */
 	protected NetworkNode getDeepNetworkNode(final String ip) {
 		try {
 			return NetworkNode.getDeepInstance().getNetwork(ip);
@@ -1074,6 +1331,12 @@ public class TrafficRouter {
 		return null;
 	}
 
+	/**
+	 * Finds a network subnet for the given IP address based on Coverage Zone configuration.
+	 * @param ip The IP address to look up.
+	 * @return A network subnet capable of serving requests for the given IP, or {@code null} if
+	 * one couldn't be found.
+	 */
 	protected NetworkNode getNetworkNode(final String ip) {
 		try {
 			return NetworkNode.getInstance().getNetwork(ip);
@@ -1191,11 +1454,12 @@ public class TrafficRouter {
 	}
 
 	/**
-	 * Chooses a {@link Cache} for a Delivery Service based on the Coverage Zone File given a clients IP and request *path*.
-	 *
+	 * Chooses a {@link Cache} for a Delivery Service based on the Coverage Zone File given a
+	 * client's IP and request *path*.
 	 * @param ip The client's IP address
 	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
-	 * @param requestPath The client's requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
+	 * @param requestPath The client's requested path - e.g.
+	 * {@code http://test.example.com/request/path} &rarr; {@code /request/path}
 	 * @return A cache object chosen to serve the client's request
 	 */
 	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath) {
@@ -1203,13 +1467,15 @@ public class TrafficRouter {
 	}
 
 	/**
-	 * Chooses a {@link Cache} for a Delivery Service based on the Coverage Zone File or Deep Coverage Zone File given a clients IP and request *path*.
-	 *
+	 * Chooses a cache for a Delivery Service based on the Coverage Zone File or Deep Coverage Zone
+	 * File given a client's IP and request *path*.
 	 * @param ip The client's IP address
 	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
-	 * @param requestPath The client's requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
-	 * @param useDeep if `true` will attempt to use Deep Coverage Zones - otherwise will only use Coverage Zone File
-	 * @return A cache object chosen to serve the client's request
+	 * @param requestPath The client's requested path - e.g.
+	 * {@code http://test.example.com/request/path} &rarr; {@code /request/path}
+	 * @param useDeep if {@code true} will attempt to use Deep Coverage Zones - otherwise will only
+	 * use Coverage Zone File
+	 * @return A {@link Cache} object chosen to serve the client's request
 	 */
 	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath, final boolean useDeep) {
 		final HTTPRequest r = new HTTPRequest();
@@ -1218,6 +1484,16 @@ public class TrafficRouter {
 		return consistentHashForCoverageZone(ip, deliveryServiceId, r, useDeep);
 	}
 
+	/**
+	 * Chooses a cache for a Delivery Service based on the Coverage Zone File or Deep Coverage Zone
+	 * File given a client's IP and request.
+	 * @param ip The client's IP address
+	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
+	 * @param request The client's HTTP request
+	 * @param useDeep if {@code true} will attempt to use Deep Coverage Zones - otherwise will only
+	 * use Coverage Zone File
+	 * @return A {@link Cache} object chosen to serve the client's request
+	 */
 	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final HTTPRequest request, final boolean useDeep) {
 		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		if (deliveryService == null) {
@@ -1237,11 +1513,12 @@ public class TrafficRouter {
 	}
 
 	/**
-	 * Chooses a {@link Cache} for a Delivery Service based on GeoLocation given a clients IP and request *path*.
-	 *
+	 * Chooses a {@link Cache} for a Delivery Service based on GeoLocation given a client's IP and
+	 * request *path*.
 	 * @param ip The client's IP address
 	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
-	 * @param requestPath The client's requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
+	 * @param requestPath The client's requested path - e.g.
+	 * {@code http://test.example.com/request/path} &rarr; {@code /request/path}
 	 * @return A cache object chosen to serve the client's request
 	 */
 	public Cache consistentHashForGeolocation(final String ip, final String deliveryServiceId, final String requestPath) {
@@ -1251,6 +1528,14 @@ public class TrafficRouter {
 		return consistentHashForGeolocation(ip, deliveryServiceId, r);
 	}
 
+	/**
+	 * Chooses a {@link Cache} for a Delivery Service based on GeoLocation given a client's IP and
+	 * request.
+	 * @param ip The client's IP address
+	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
+	 * @param request The client's HTTP request
+	 * @return A cache object chosen to serve the client's request
+	 */
 	public Cache consistentHashForGeolocation(final String ip, final String deliveryServiceId, final HTTPRequest request) {
 		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		if (deliveryService == null) {
@@ -1280,6 +1565,13 @@ public class TrafficRouter {
 		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 	}
 
+	/**
+	 * Builds a string to be used for consistent hashing based on a client's request *path*.
+	 * @param deliveryServiceId The "xml_id" of a Delivery Service, the consistent hash settings of
+	 * which will be used to build the consistent hashing string.
+	 * @param requestPath The client's requested path.
+	 * @return A string suitable for using in consistent hashing.
+	 */
 	public String buildPatternBasedHashStringDeliveryService(final String deliveryServiceId, final String requestPath) {
 		final HTTPRequest r = new HTTPRequest();
 		r.setPath(requestPath);
@@ -1287,10 +1579,16 @@ public class TrafficRouter {
 		return buildPatternBasedHashString(cacheRegister.getDeliveryService(deliveryServiceId), r);
 	}
 
+	/**
+	 * Returns whether or not the given Delivery Service is of the STEERING or CLIENT_STEERING type.
+	 */
 	private boolean isSteeringDeliveryService(final DeliveryService deliveryService) {
 		return deliveryService != null && steeringRegistry.has(deliveryService.getId());
 	}
 
+	/**
+	 * Checks whether the given client's HTTP request is for a CLIENT_STEERING Delivery Service.
+	 */
 	private boolean isMultiRouteRequest(final HTTPRequest request) {
 		final DeliveryService deliveryService = cacheRegister.getDeliveryService(request);
 
@@ -1301,6 +1599,16 @@ public class TrafficRouter {
 		return steeringRegistry.get(deliveryService.getId()).isClientSteering();
 	}
 
+	/**
+	 * Gets a geographic location for the client based on their IP address.
+	 * @param clientIP The client's IP address as a string.
+	 * @param deliveryService The Delivery Service the client is requesting. This is used to
+	 * determine the appropriate location if the client cannot be located, or is blocked by RGB
+	 * or Anonymous Blocking rules.
+	 * @return The client's calculated geographic location, or {@code null} if they cannot be
+	 * geo-located (and deliveryService has no default "miss" location set) or if the client is
+	 * blocked by the Delivery Service's settings.
+	 */
 	protected Geolocation getClientLocationByCoverageZoneOrGeo(final String clientIP, final DeliveryService deliveryService) {
 		Geolocation clientLocation;
 		final NetworkNode networkNode = getNetworkNode(clientIP);
@@ -1316,6 +1624,16 @@ public class TrafficRouter {
 		return deliveryService.supportLocation(clientLocation);
 	}
 
+	/**
+	 * Sorts the provided steering results by their geographic proximity to the client and their
+	 * configured ordering and weights.
+	 * @param steeringResults The results to be sorted. They are sorted "in place" - this modifies
+	 * the list directly.
+	 * @param clientIP The client's IP address as a string. This is used to calculate their
+	 * geographic location.
+	 * @param deliveryService The Delivery Service being served. This is used to help geo-locate the
+	 * client according to blocking and fallback configuration.
+	 */
 	protected void geoSortSteeringResults(final List<SteeringResult> steeringResults, final String clientIP, final DeliveryService deliveryService) {
 		if (clientIP == null || clientIP.isEmpty()
 				|| steeringResults.stream().allMatch(t -> t.getSteeringTarget().getGeolocation() == null)) {
@@ -1359,11 +1677,12 @@ public class TrafficRouter {
 	}
 
  	/**
-	 * Chooses a {@link Cache} for a Steering Delivery Service target based on the Coverage Zone File given a clients IP and request *path*.
-	 *
+	 * Chooses a {@link Cache} for a Steering Delivery Service target based on the Coverage Zone
+	 * File given a clients IP and request *path*.
 	 * @param ip The client's IP address
 	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
-	 * @param requestPath The client's requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
+	 * @param requestPath The client's requested path - e.g.
+	 * {@code http://test.example.com/request/path} &rarr; {@code /request/path}
 	 * @return A cache object chosen to serve the client's request
 	 */
 	public Cache consistentHashSteeringForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath) {
@@ -1373,6 +1692,14 @@ public class TrafficRouter {
 		return consistentHashSteeringForCoverageZone(ip, deliveryServiceId, r);
 	}
 
+ 	/**
+	 * Chooses a {@link Cache} for a Steering Delivery Service target based on the Coverage Zone
+	 * File given a clients IP and request.
+	 * @param ip The client's IP address
+	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
+	 * @param requestPath The client's HTTP request
+	 * @return A cache object chosen to serve the client's request
+	 */
 	public Cache consistentHashSteeringForCoverageZone(final String ip, final String deliveryServiceId, final HTTPRequest request) {
 		final DeliveryService deliveryService = consistentHashDeliveryService(deliveryServiceId, request);
 		if (deliveryService == null) {
@@ -1395,8 +1722,9 @@ public class TrafficRouter {
 	 * Chooses a target Delivery Service of a given Delivery Service to service a given request path
 	 *
 	 * @param deliveryServiceId The "xml_id" of the Delivery Service being requested
-	 * @param requestPath The requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
-	 * @return The chosen target Delivery Service
+	 * @param requestPath The requested path - e.g.
+	 * {@code http://test.example.com/request/path} &rarr; {@code /request/path}
+	 * @return The chosen target Delivery Service, or null if one could not be determined.
 	*/
 	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final String requestPath) {
 		final HTTPRequest r = new HTTPRequest();
@@ -1405,10 +1733,26 @@ public class TrafficRouter {
 		return consistentHashDeliveryService(deliveryServiceId, r);
 	}
 
+	/**
+	 * Chooses a target Delivery Service of a given Delivery Service to service a given request.
+	 *
+	 * @param deliveryServiceId The "xml_id" of the Delivery Service being requested
+	 * @param request The client's HTTP request
+	 * @return The chosen target Delivery Service, or null if one could not be determined.
+	*/
 	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final HTTPRequest request) {
 		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), request, "");
 	}
 
+	/**
+	 * Chooses a target Delivery Service of a given Delivery Service to service a given request and
+	 * {@link #XTC_STEERING_OPTION} value.
+	 *
+	 * @param deliveryServiceId The "xml_id" of the Delivery Service being requested
+	 * @param request The client's HTTP request
+	 * @param xtcSteeringOption The value of the client's {@link #XTC_STEERING_OPTION} HTTP Header.
+	 * @return The chosen target Delivery Service, or null if one could not be determined.
+	*/
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public DeliveryService consistentHashDeliveryService(final DeliveryService deliveryService, final HTTPRequest request, final String xtcSteeringOption) {
 		if (deliveryService == null) {
@@ -1505,6 +1849,20 @@ public class TrafficRouter {
 		return caches;
 	}
 
+	/**
+	 * Gets a DNS zone that contains a given name.
+	 * @param qname The DNS name that the returned zone will contain. This can include wildcards.
+	 * @param qtype The
+	 * <a href="https://javadoc.io/doc/dnsjava/dnsjava/latest/org/xbill/DNS/Type.html"> of the
+	 * record which will be returned for DNS queries for the returned zone.
+	 * @param clientAddress The IP address of the client making the DNS request. The zone that is
+	 * ultimately returned can depend on blocking configuration for a requested Delivery Service,
+	 * if the qname represents a Delivery Service routing name.
+	 * @param isDnssecRequest Tells whether or not the request was made using DNSSEC, which will
+	 * control whether or not the returned zone is signed.
+	 * @param builder Used to build a zone if one has not already been created containing qname.
+	 * @return A zone containing records of type qtype that contains qname. This can be null
+	 */
 	public Zone getZone(final Name qname, final int qtype, final InetAddress clientAddress, final boolean isDnssecRequest, final DNSAccessRecord.Builder builder) {
 		return zoneManager.getZone(qname, qtype, clientAddress, isDnssecRequest, builder);
 	}
