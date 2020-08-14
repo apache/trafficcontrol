@@ -100,13 +100,18 @@ func srvAPICacheStates(
 
 // interfaceStatus returns the status of the given interface, both qualitatively
 // as a human-readable string and as a boolean indicating its availability.
-func interfaceStatus(inf tc.ServerInterfaceInfo, vitalsMap map[string]cache.Vitals) (string, bool) {
+func interfaceStatus(inf tc.ServerInterfaceInfo, result cache.Result) (string, bool) {
+	var cacheError = ""
+	if result.Error != nil {
+		cacheError = "; " + result.Error.Error()
+	}
+	vitalsMap := result.InterfaceVitals
 	vitals, ok := vitalsMap[inf.Name]
 	if !ok {
-		return "not found in health polling data", false
+		return "not found in health polling data" + cacheError, false
 	}
 	if inf.MaxBandwidth != nil && *inf.MaxBandwidth < uint64(vitals.KbpsOut) {
-		return "maximum bandwidth exceeded", false
+		return "maximum bandwidth exceeded" + cacheError, false
 	}
 	return "available", true
 }
@@ -170,7 +175,7 @@ func createCacheStatuses(
 			}
 
 			if healthOk {
-				infStatus.Status, infStatus.Available = interfaceStatus(inf, health[0].InterfaceVitals)
+				infStatus.Status, infStatus.Available = interfaceStatus(inf, health[0])
 			}
 
 			if lastStat, ok := lastStats.Caches[tc.CacheName(cacheName)]; !ok {
