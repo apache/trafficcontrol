@@ -516,7 +516,7 @@ order by dr.set_number asc
 		}
 
 		// If there are gaps between two or more DS regex orders, do not add these missing orders in the final list.
-		// Instead, skip over them and add the next regex with a valid order
+		// Instead, skip over them and add the next regex with a valid order.
 		if dsmatchsets[dsname][dsNameOrderMap[dsname]] == nil {
 			dsmatchsets[dsname][dsNameOrderMap[dsname]] = &tc.MatchSet{}
 		}
