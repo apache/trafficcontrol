@@ -199,13 +199,12 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/edge/Dockerfile
     domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: edge
     volumes:
-      - ./edge/run.sh:/opt/init.d/99-run.sh
       - shared:/shared
 
   # mid cache
@@ -213,13 +212,12 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/mid/Dockerfile
     domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: mid
     volumes:
-      - ./mid/run.sh:/opt/init.d/99-run.sh
       - shared:/shared
 
   # origin provides the content to be distributed through the CDN caches

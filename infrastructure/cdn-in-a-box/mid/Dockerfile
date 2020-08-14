@@ -21,7 +21,7 @@
 # Based on CentOS 7.2
 ############################################################
 
-FROM centos:7
+FROM centos:7 AS common-cache-server-layers
 
 EXPOSE 80
 
@@ -73,5 +73,9 @@ ARG ORT_RPM=infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
 ADD $ORT_RPM /
 RUN rpm -Uvh --nodeps /$(basename $ORT_RPM) &&\
     rm /$(basename $ORT_RPM)
+
+FROM common-cache-server-layers AS mid
+
+COPY infrastructure/cdn-in-a-box/mid/init.d/ /opt/init.d/
 
 CMD /run.sh
