@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -ex
-
 GOPATH="$(mktemp -d)"
 SRCDIR="$GOPATH/src/github.com/apache"
 mkdir -p "$SRCDIR"
