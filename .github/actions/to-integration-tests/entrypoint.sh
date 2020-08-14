@@ -204,7 +204,9 @@ makeCFG() {
 			"port": "5432",
 			"type": "Pg",
 			"user": "traffic_ops"
-		}
+		},
+		"noPerl": true,
+		"noISO": true
 	}
 	EOF
 }
