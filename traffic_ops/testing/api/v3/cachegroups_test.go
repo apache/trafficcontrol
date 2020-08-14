@@ -71,7 +71,7 @@ func GetTestCacheGroupsAfterChangeIMS(t *testing.T, header http.Header) {
 func GetTestCacheGroupsByShortNameIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, cg := range testData.CacheGroups {
@@ -88,7 +88,7 @@ func GetTestCacheGroupsByShortNameIMS(t *testing.T) {
 func GetTestCacheGroupsByNameIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, cg := range testData.CacheGroups {
@@ -105,7 +105,7 @@ func GetTestCacheGroupsByNameIMS(t *testing.T) {
 func GetTestCacheGroupsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	_, reqInf, err := TOSession.GetCacheGroupsByQueryParams(url.Values{}, header)

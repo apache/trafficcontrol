@@ -47,7 +47,7 @@ func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header ht
 		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	_, reqInf, err = TOSession.GetDeliveryServiceRequestComments(header)
@@ -113,7 +113,7 @@ func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 func GetTestDeliveryServiceRequestCommentsIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	_, reqInf, err := TOSession.GetDeliveryServiceRequestComments(header)

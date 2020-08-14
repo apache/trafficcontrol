@@ -198,7 +198,6 @@ func (to *Session) GetFirstServer(params *url.Values, header http.Header) (tc.Se
 	return firstServer, reqInf, err
 }
 
-
 // GetServerDetailsByHostName GETs Servers by the Server hostname.
 func (to *Session) GetServerDetailsByHostName(hostName string, header http.Header) ([]tc.ServerDetailV30, ReqInf, error) {
 	v := url.Values{}
@@ -327,6 +326,9 @@ func (to *Session) GetServerIDDeliveryServices(server int, header http.Header) (
 
 	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		reqInf.StatusCode = resp.StatusCode
+	}
 	if err != nil {
 		return nil, reqInf, err
 	}

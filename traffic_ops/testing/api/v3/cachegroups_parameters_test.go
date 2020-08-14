@@ -81,7 +81,7 @@ func GetTestCacheGroupParameters(t *testing.T) {
 func GetTestCacheGroupParametersIMS(t *testing.T) {
 	var header http.Header
 	header = make(map[string][]string)
-	futureTime := time.Now().AddDate(0,0,1)
+	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, cgp := range testData.CacheGroupParameterRequests {

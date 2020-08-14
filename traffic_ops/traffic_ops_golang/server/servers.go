@@ -26,8 +26,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net"
 	"net/http"
 	"strconv"
@@ -35,17 +33,18 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
-
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -427,7 +426,9 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 	}
 	var errs []error
 	var serviceAddrV4Found bool
+	var ipv4 string
 	var serviceAddrV6Found bool
+	var ipv6 string
 	var serviceInterface string
 	for _, iface := range s.Interfaces {
 
@@ -468,11 +469,13 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 						errs = append(errs, fmt.Errorf("interfaces: address '%s' of interface '%s' is marked as a service address, but an IPv4 service address appears earlier in the list", addr.Address, iface.Name))
 					}
 					serviceAddrV4Found = true
+					ipv4 = addr.Address
 				} else {
 					if serviceAddrV6Found {
 						errs = append(errs, fmt.Errorf("interfaces: address '%s' of interface '%s' is marked as a service address, but an IPv6 service address appears earlier in the list", addr.Address, iface.Name))
 					}
 					serviceAddrV6Found = true
+					ipv6 = addr.Address
 				}
 			}
 		}
@@ -483,6 +486,39 @@ func validateV3(s *tc.ServerNullable, tx *sql.Tx) (string, error) {
 	}
 
 	errs = append(errs, validateCommon(&s.CommonServerProperties, tx)...)
+
+	query := `
+SELECT s.ID, ip.address FROM server s 
+JOIN profile p on p.Id = s.Profile
+JOIN interface i on i.server = s.ID
+JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
+WHERE i.monitor = true
+and p.id = $1
+`
+	var rows *sql.Rows
+	var err error
+	//ProfileID already validated
+	if s.ID != nil {
+		rows, err = tx.Query(query+" and s.id != $2", *s.ProfileID, *s.ID)
+	} else {
+		rows, err = tx.Query(query, *s.ProfileID)
+	}
+	if err != nil {
+		errs = append(errs, errors.New("unable to determine service address uniqueness"))
+	} else if rows != nil {
+		defer rows.Close()
+		for rows.Next() {
+			var id int
+			var ipaddress string
+			err = rows.Scan(&id, &ipaddress)
+			if err != nil {
+				errs = append(errs, errors.New("unable to determine service address uniqueness"))
+			} else if (ipaddress == ipv4 || ipaddress == ipv6) && (s.ID == nil || *s.ID != id) {
+				errs = append(errs, errors.New(fmt.Sprintf("there exists a server with id %v on the same profile that has the same service address %s", id, ipaddress)))
+			}
+		}
+	}
+
 	return serviceInterface, util.JoinErrs(errs)
 }
 
@@ -604,14 +640,15 @@ func ReadID(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func selectMaxLastUpdatedQuery(where string) string {
+func selectMaxLastUpdatedQuery(queryAddition string, where string) string {
 	return `SELECT max(t) from (
 		SELECT max(s.last_updated) as t from server s JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id ` + where +
+JOIN type t ON s.type = t.id ` +
+		queryAddition + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }
@@ -687,7 +724,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 
 	serversList := []tc.ServerNullable{}
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(queryAddition, where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return serversList, 0, nil, nil, http.StatusNotModified, &maxTime

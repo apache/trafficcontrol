@@ -80,7 +80,7 @@ $ua->timeout(30);
 $ua->ssl_opts(verify_hostname => 0);
 $ua->cookie_jar( {} );
 
-my $login_url = "$b_url/api/1.2/user/login";
+my $login_url = "$b_url/api/2.0/user/login";
 TRACE "posting $login_url";
 my $req = HTTP::Request->new( 'POST', $login_url );
 $req->header( 'Content-Type' => 'application/json' );
