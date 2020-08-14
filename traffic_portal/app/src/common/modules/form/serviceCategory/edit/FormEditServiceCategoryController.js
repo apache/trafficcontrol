@@ -60,7 +60,7 @@ var FormEditServiceCategoryController = function(serviceCategory, $scope, $contr
             }
         });
         modalInstance.result.then(function() {
-            deleteServiceCategory(serviceCategory.name);
+            deleteServiceCategory(serviceCategory);
         }, function () {
             // do nothing
         });
