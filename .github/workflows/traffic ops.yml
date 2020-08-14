@@ -15,35 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Traffic Ops Push CI
+name: Traffic Ops Go client/API integration tests
 
 on:
   push:
+  create:
   pull_request:
     types: [opened, reopened, edited, synchronize]
 
 jobs:
-  unit_tests:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@master
-    - name: Run Go unit tests
-      uses: ./.github/actions/go-test
-      with:
-        dir: ./traffic_ops/traffic_ops_golang/...
-
-  go_fmt:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@master
-    - name: Go fmt Traffic Ops
-      uses: ./.github/actions/go-fmt/
-      with:
-        dir: ./traffic_ops/traffic_ops_golang/...
 
   API_tests:
     runs-on: ubuntu-latest
