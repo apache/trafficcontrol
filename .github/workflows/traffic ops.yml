@@ -19,8 +19,16 @@ name: Traffic Ops Go client/API integration tests
 
 on:
   push:
+    paths:
+      - traffic_ops/traffic_ops_golang/**.go
+      - traffic_ops/testing/api/**.go
+      - traffic_ops/*client/**.go
   create:
   pull_request:
+    paths:
+      - traffic_ops/traffic_ops_golang/**.go
+      - traffic_ops/testing/api/**.go
+      - traffic_ops/*client/**.go
     types: [opened, reopened, edited, synchronize]
 
 jobs:
