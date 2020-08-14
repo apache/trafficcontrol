@@ -648,7 +648,7 @@ JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id ` +
-queryAddition + where +
+		queryAddition + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='server') as res`
 }
