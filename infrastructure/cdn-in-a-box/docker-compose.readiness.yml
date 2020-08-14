@@ -43,8 +43,6 @@ services:
     domainname: infra.ciab.test
     volumes:
       - shared:/shared
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
 
 volumes:
   shared:

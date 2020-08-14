@@ -47,6 +47,10 @@ ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
     /
 
+COPY dns/set-dns.sh \
+     dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 EXPOSE 80
 ADD traffic_monitor/run.sh /
 CMD /run.sh

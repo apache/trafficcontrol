@@ -65,6 +65,10 @@ RUN touch /var/log/ort.log && \
 
 ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
 
+COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
+     infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+     /usr/local/sbin/
+
 ARG ORT_RPM=infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
 ADD $ORT_RPM /
 RUN rpm -Uvh --nodeps /$(basename $ORT_RPM) &&\
