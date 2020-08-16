@@ -20,7 +20,7 @@ name: CDN-in-a-Box CI
 on: push
 
 jobs:
-  ciab-build:
+  build-rpms:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,5 +33,18 @@ jobs:
       with:
         name: atc-rpms
         path: ${{ github.workspace }}/dist/*.rpm
+
+  ciab-build:
+    runs-on: ubuntu-latest
+    needs: build-rpms
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Download RPMs
+      uses: actions/download-artifact@v2
+      with:
+        name: atc-rpms
+        path: ${{ github.workspace }}/dist/
     - name: Start CDN-in-a-Box
       uses: ./.github/actions/run-ciab
