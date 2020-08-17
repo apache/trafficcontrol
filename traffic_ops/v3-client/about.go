@@ -1,3 +1,10 @@
+// Package client implements methods for interacting with the Traffic Ops API.
+//
+// Warning: Using the un-versioned import path ("client") is deprecated, and the
+// ability to do so will be removed in ATC 6.0 - please use versioned client
+// imports (e.g. "v3-client") instead
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +19,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-
-package client
 
 import (
 	"encoding/json"
