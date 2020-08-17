@@ -334,7 +334,8 @@ func validateURL(u *url.URL) error {
 }
 
 func isCommandAvailable(name string) bool {
-	cmd := exec.Command("/bin/sh", "-c", name, "--version")
+	command := name + " --version"
+	cmd := exec.Command("/bin/sh", "-c", command)
 	if err := cmd.Run(); err != nil {
 		return false
 	}
