@@ -193,46 +193,47 @@ func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physL
 		return nil, errors.New("orderBy '" + orderBy + "' not permitted")
 	}
 
-	const JumboFrameBPS = 9000
+	dataFetchQuery := `,
+cg.name AS cachegroup,
+cdn.name AS cdn_name,
+ARRAY(select deliveryservice from deliveryservice_server where server = server.id),
+server.domain_name,
+server.guid,
+server.host_name,
+server.https_port,
+server.ilo_ip_address,
+server.ilo_ip_gateway,
+server.ilo_ip_netmask,
+server.ilo_password,
+server.ilo_username,
+(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_ip,
+(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_ip6,
+(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_gateway,
+(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_gateway6,
+(SELECT host(netmask(ip_address.address)) FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_netmask,
+(SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS interface_name,
+(SELECT mtu FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id)) AS interface_mtu,
+server.mgmt_ip_address,
+server.mgmt_ip_gateway,
+server.mgmt_ip_netmask,
+server.offline_reason,
+pl.name as phys_location,
+p.name as profile,
+p.description as profile_desc,
+server.rack,
+server.router_host_name,
+server.router_port_name,
+st.name as status,
+server.tcp_port,
+t.name as server_type,
+server.xmpp_id,
+server.xmpp_passwd
+`
 
-	q := `
+	queryFormatString := `
 SELECT
-	cg.name AS cachegroup,
-	cdn.name AS cdn_name,
-	ARRAY(select deliveryservice from deliveryservice_server where server = server.id),
-	server.domain_name,
-	server.guid,
-	server.host_name,
-	server.https_port,
-	server.id,
-	server.ilo_ip_address,
-	server.ilo_ip_gateway,
-	server.ilo_ip_netmask,
-	server.ilo_password,
-	server.ilo_username,
-	` + InterfacesArray + ` AS interfaces,
-	(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_ip,
-	(SELECT address FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_ip6,
-	(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_gateway,
-	(SELECT gateway FROM ip_address WHERE service_address = true AND family(address) = 6 AND server = server.id) AS service_gateway6,
-	(SELECT host(netmask(ip_address.address)) FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS service_netmask,
-	(SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id) AS interface_name,
-	(SELECT mtu FROM interface WHERE server.id = interface.server AND interface.name = (SELECT interface FROM ip_address WHERE service_address = true AND family(address) = 4 AND server = server.id)) AS interface_mtu,
-	server.mgmt_ip_address,
-	server.mgmt_ip_gateway,
-	server.mgmt_ip_netmask,
-	server.offline_reason,
-	pl.name as phys_location,
-	p.name as profile,
-	p.description as profile_desc,
-	server.rack,
-	server.router_host_name,
-	server.router_port_name,
-	st.name as status,
-	server.tcp_port,
-	t.name as server_type,
-	server.xmpp_id,
-	server.xmpp_passwd
+	server.id
+	%v
 FROM server
 JOIN cachegroup cg ON server.cachegroup = cg.id
 JOIN cdn ON server.cdn_id = cdn.id
@@ -275,7 +276,6 @@ JOIN type t ON server.type = t.id
 	defer rows.Close()
 	sIDs := []int{}
 	servers := []tc.ServerDetailV30{}
-	serverInterfaceInfo := []tc.ServerInterfaceInfo{}
 
 	serviceAddress := util.StrPtr("")
 	service6Address := util.StrPtr("")
@@ -287,7 +287,7 @@ JOIN type t ON server.type = t.id
 
 	for rows.Next() {
 		s := tc.ServerDetailV30{}
-		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, pq.Array(&serverInterfaceInfo), &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
+		if err := rows.Scan(&s.ID, &s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &serviceAddress, &service6Address, &serviceGateway, &service6Gateway, &serviceNetmask, &serviceInterface, &serviceMtu, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
 		s.ServerInterfaces = &[]tc.ServerInterfaceInfo{}
