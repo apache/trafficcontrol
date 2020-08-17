@@ -55,10 +55,12 @@ jobs:
       with:
         version: 1
     - name: Run API v2 tests
+      if: {{ $always }}
       uses: ./.github/actions/to-integration-tests
       with:
         version: 2
     - name: Run API v3 tests
+      if: {{ $always }}
       uses: ./.github/actions/to-integration-tests
       with:
         version: 3
