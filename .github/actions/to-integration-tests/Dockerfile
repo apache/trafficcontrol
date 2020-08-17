@@ -15,9 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-alpine
+FROM golang:1.14.2-buster
 
-RUN apk add --no-cache gettext git gcc
+RUN apt-get update &&\
+	apt-get install -y --no-install-recommends gettext-base git gcc &&\
+	rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
 RUN chmod a+x /entrypoint.sh
