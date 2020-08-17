@@ -95,34 +95,26 @@ mv /database.json ./database.conf
 
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>err.log &
 
-cd ../testing/api/v1
+if [ -z "$INPUT_VERSION" ]; then
+	INPUT_VERSION="3";
+fi
 
-CODE="0"
+cd "../testing/api/v$INPUT_VERSION"
 
 cp /traffic-ops-test.json ./traffic-ops-test.conf
 /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf
-if [ "$?" -gt "0" ]; then
-	CODE="1"
-fi
+CODE="$?"
 rm traffic-ops-test.conf
 
-cd ../v2
-cp /traffic-ops-test.json ./traffic-ops-test.conf
- /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf
-if [ "$?" -gt "0" ]; then
-	CODE="1"
+# TODO - make these build artifacts
+if [ -f ../../../traffic_ops_golang/out.log ]; then
+	cat ../../../traffic_ops_golang/out.log
+	rm ../.../../traffic_ops_golang/out.log
 fi
-rm traffic-ops-test.conf
 
-cd ../v3
-cp /traffic-ops-test.json ./traffic-ops-test.conf
- /usr/local/go/bin/go test -v --cfg ./traffic-ops-test.conf
-if [ "$?" -gt "0" ]; then
-	CODE="1"
+if [ -f ../../../traffic_ops_golang/err.log ]; then
+	cat ../../../traffic_ops_golang/err.log >&2
+	rm ../../../traffic_ops_golang/err.log
 fi
-rm traffic-ops-test.conf
-
-cat ../../../traffic_ops_golang/out.log
-cat ../../../traffic_ops_golang/err.log
 
 exit "$CODE"

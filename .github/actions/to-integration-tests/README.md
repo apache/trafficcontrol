@@ -21,6 +21,13 @@
 This action runs the Traffic Ops Go client integration tests with the Traffic
 Ops API.
 
+## Inputs
+
+### `version`
+**Required** Major API version to test e.g. 1, 2, 3 etc.
+
+## Outputs
+
 ### `exit-code`
 1 if the Go program(s) could be built successfully.
 

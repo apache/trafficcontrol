@@ -50,5 +50,15 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
-    - name: Run API tests
+    - name: Run API v1 tests
       uses: ./.github/actions/to-integration-tests
+      with:
+        version: 1
+    - name: Run API v2 tests
+      uses: ./.github/actions/to-integration-tests
+      with:
+        version: 2
+    - name: Run API v3 tests
+      uses: ./.github/actions/to-integration-tests
+      with:
+        version: 3

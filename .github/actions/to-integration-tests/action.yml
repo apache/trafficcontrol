@@ -20,3 +20,5 @@ description: 'Runs Traffic Ops Go client/API integration tests'
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  args:
+    - ${{ inputs.version }}
