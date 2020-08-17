@@ -114,11 +114,10 @@ EXECUTE PROCEDURE before_ip_address_table();
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-DROP FUNCTION IF EXISTS before_server_table();
-DROP FUNCTION IF EXISTS before_ip_address_table();
-
 DROP TRIGGER IF EXISTS before_update_server_trigger ON server;
 DROP TRIGGER IF EXISTS before_create_server_trigger ON server;
 DROP TRIGGER IF EXISTS before_update_ip_address_trigger ON ip_address;
 DROP TRIGGER IF EXISTS before_create_ip_address_trigger ON ip_address;
 
+DROP FUNCTION IF EXISTS before_server_table();
+DROP FUNCTION IF EXISTS before_ip_address_table();
