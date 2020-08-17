@@ -181,6 +181,36 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
 	}
 
+	foundTopDs := false
+	const topDsXmlId = "ds-top"
+	for _, ds := range dses {
+		if (*ds.XMLID != topDsXmlId) {
+			continue
+		}
+		foundTopDs = true
+		break
+	}
+	if !foundTopDs {
+		t.Fatalf("unable to find deliveryservice %s", topDsXmlId);
+	}
+	params.Set("dsId", strconv.Itoa(*ds.ID))
+	expectedHostnames := map[string]bool {
+		"atlanta-edge-01": true,
+		"atlanta-mid-16": true,
+	}
+	response, _, err := TOSession.GetServers(&params, nil)
+	if err != nil {
+		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s", err)
+	}
+	if len(response.Response) == 0 {
+		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s", err)
+	}
+	for _, server := range response.Response {
+		if _, exists := expectedHostnames[*server.HostName]; !exists {
+			t.Fatalf("expected hostnames %v, actual %s actual: ", expectedHostnames, *server.HostName)
+		}
+	}
+
 	params.Del("dsId")
 
 	resp, _, err := TOSession.GetServers(nil)
