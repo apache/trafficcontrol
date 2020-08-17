@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added debugging functionality to CDN-in-a-Box for Traffic Stats.
 
 ### Fixed
+- Fixed #3400 - Allow "0" as a TTL value for Static DNS entries
 - Fixed #4743 - Validate absolute DNS name requirement on Static DNS entry for CNAME type [Related github issue](https://github.com/apache/trafficcontrol/issues/4743)
 - Fixed #4848 - `GET /api/x/cdns/capacity` gives back 500, with the message `capacity was zero`
 - Fixed #2156 - Renaming a host in TC, does not impact xmpp_id and thereby hashid [Related github issue](https://github.com/apache/trafficcontrol/issues/2156)

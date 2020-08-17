@@ -52,7 +52,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		steeringXmlId: "http-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		longDesc: "This is only a test delivery service that should be disposed of by Automated UI Testing.",
 		staticDNShostName: "static-dns-xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
-		staticDNSTTL: 50,
+		staticDNSTTL: 0,
 		staticDNSAddress: "cdn.test.com."
 
 	};
