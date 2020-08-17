@@ -20,7 +20,7 @@ FROM golang:1.14.2-buster
 RUN apt-get update &&\
 	apt-get install -y --no-install-recommends git gcc gettext-base postgresql-client-11 &&\
 	rm -rf /var/lib/apt/lists/*
-RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
+RUN go get -v bitbucket.org/liamstask/goose/cmd/goose
 RUN mv $GOPATH/bin/goose /bin/
 
 COPY entrypoint.sh dbconf.yml /
