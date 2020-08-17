@@ -17,7 +17,7 @@
 
 FROM golang:1.14.2-alpine
 
-RUN apk add --no-cache git gcc gettext-base postgresql-client
+RUN apk add --no-cache git gcc gettext postgresql-client
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
 RUN mv $GOPATH/bin/goose /bin/
 
