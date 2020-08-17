@@ -15,9 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-alpine
+FROM golang:1.14.2-buster
 
-RUN apk add --no-cache git gcc gettext postgresql-client
+RUN apt-get update &&\
+	apt-get install -y --no-install-recommends git gcc gettext-base postgresql-client-11 &&\
+	rm -rf /var/lib/apt/lists/*
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
 RUN mv $GOPATH/bin/goose /bin/
 
