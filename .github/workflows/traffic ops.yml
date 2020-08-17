@@ -50,6 +50,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
+    - name: Initialize Traffic Ops Database
+      uses: ./.github/actions/todb-init
     - name: Run API v1 tests
       uses: ./.github/actions/to-integration-tests
       with:

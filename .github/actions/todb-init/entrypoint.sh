@@ -1,3 +1,4 @@
+#!/bin/sh -l
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,11 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-alpine
+set -e
 
-RUN apk add --no-cache gettext
+cd "traffic_ops/app/db"
 
-COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
-RUN chmod a+x /entrypoint.sh
+mv /dbconf.yml ./
 
-ENTRYPOINT /entrypoint.sh
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./create_tables.sql >/dev/null
+goose --env=test --path="$PWD" up
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./seeds.sql >/dev/null
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./patches.sql >/dev/null

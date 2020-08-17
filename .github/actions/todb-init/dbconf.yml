@@ -14,12 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+version: "1.0"
+name: dbconf.yml
 
-FROM golang:1.14.2-alpine
+test:
+  driver: postgres
+  open: host=postgres port=5432 user=traffic_ops password=twelve dbname=traffic_ops sslmode=disable
 
-RUN apk add --no-cache gettext
-
-COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
-RUN chmod a+x /entrypoint.sh
-
-ENTRYPOINT /entrypoint.sh

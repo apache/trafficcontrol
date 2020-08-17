@@ -17,19 +17,14 @@
   under the License.
 -->
 
-# to-integration-tests Docker action
-This action runs the Traffic Ops Go client integration tests with the Traffic
-Ops API.
-
-## Inputs
-
-### `version`
-**Required** Major API version to test e.g. 1, 2, 3 etc.
+# todb-init Docker action
+This action initializes a Traffic Ops database in a locally running PostgresQL
+instance.
 
 ## Outputs
 
 ### `exit-code`
-1 if the Go program(s) could be built successfully.
+1 if the database initialized successfully.
 
 ## Example usage
 ```yaml
@@ -51,10 +46,5 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: initialize database
-        uses: ./.github/actions/todb-init
-      - name: Run API v5 tests
-        uses: ./.github/actions/to-integration-tests
-        with:
-          version: 5
+      - name: ./.github/actions/todb-init
 ```

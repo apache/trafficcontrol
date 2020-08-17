@@ -21,15 +21,6 @@ SRCDIR="$GOPATH/src/github.com/apache"
 mkdir -p "$SRCDIR"
 ln -s "$PWD" "$SRCDIR/trafficcontrol"
 
-cd "$SRCDIR/trafficcontrol/traffic_ops/app/db"
-
-mv /dbconf.yml ./
-
-psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./create_tables.sql >/dev/null
-goose --env=test --path="$PWD" up
-psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./seeds.sql >/dev/null
-psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./patches.sql >/dev/null
-
 cd "$SRCDIR/trafficcontrol/traffic_ops/traffic_ops_golang"
 
 

@@ -15,11 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-alpine
-
-RUN apk add --no-cache gettext
-
-COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
-RUN chmod a+x /entrypoint.sh
-
-ENTRYPOINT /entrypoint.sh
+name: 'todb-init'
+description: 'Initializes a Traffic Ops database using a local PostgreSQL instance'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

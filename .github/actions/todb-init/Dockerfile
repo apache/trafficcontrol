@@ -17,9 +17,11 @@
 
 FROM golang:1.14.2-alpine
 
-RUN apk add --no-cache gettext
+RUN apk add --no-cache git gcc gettext-base postgresql-client
+RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
+RUN mv $GOPATH/bin/goose /bin/
 
-COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
+COPY entrypoint.sh dbconf.yml /
 RUN chmod a+x /entrypoint.sh
 
 ENTRYPOINT /entrypoint.sh
