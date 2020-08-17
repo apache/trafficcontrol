@@ -17,6 +17,10 @@
 
 name: 'to-integration-tests'
 description: 'Runs Traffic Ops Go client/API integration tests'
+inputs:
+  version:
+    description: 'Version of Traffic Ops API against which to run tests, e.g. 1, 2, 3, etc.'
+    required: true
 runs:
   using: 'docker'
   image: 'Dockerfile'
