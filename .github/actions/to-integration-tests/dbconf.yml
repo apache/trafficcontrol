@@ -14,16 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+version: "1.0"
+name: dbconf.yml
 
-FROM golang:1.14.2-buster
+test:
+  driver: postgres
+  open: host=postgres port=5432 user=traffic_ops password=twelve dbname=traffic_ops sslmode=disable
 
-RUN apt-get update &&\
-	apt-get install -y --no-install-recommends git gcc postgresql-client-11 envsubst &&\
-	rm -rf /var/lib/apt/lists/*
-RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
-RUN mv $GOPATH/bin/goose /bin/
-
-COPY entrypoint.sh database.json traffic-ops-test.json dbconf.yml cdn.json /
-RUN chmod a+x /entrypoint.sh
-
-ENTRYPOINT /entrypoint.sh
