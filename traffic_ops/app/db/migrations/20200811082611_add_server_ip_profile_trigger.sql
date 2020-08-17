@@ -121,3 +121,4 @@ DROP TRIGGER IF EXISTS before_create_ip_address_trigger ON ip_address;
 
 DROP FUNCTION IF EXISTS before_server_table();
 DROP FUNCTION IF EXISTS before_ip_address_table();
+
