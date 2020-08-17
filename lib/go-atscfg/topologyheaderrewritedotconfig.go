@@ -56,7 +56,10 @@ func MakeTopologyHeaderRewriteDotConfig(
 ) string {
 	text := GenericHeaderComment(server.HostName, toToolName, toURL)
 
-	cacheGroups := MakeCGMap(cacheGroupArr)
+	cacheGroups, err := MakeCGMap(cacheGroupArr)
+	if err != nil {
+		log.Errorln("making topology header rewrite config, config will be malformed! : " + err.Error())
+	}
 
 	if ds.Topology == nil || *ds.Topology == "" {
 		log.Errorln("Config generation: Topology Header Rewrite called for DS '" + *ds.XMLID + "' with no Topology! This should never be called, a DS with no topology should never have a First, Inner, or Last Header Rewrite config in the list of config files! Returning blank config!")

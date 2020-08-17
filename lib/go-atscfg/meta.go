@@ -105,7 +105,10 @@ func AddMetaObjConfigDir(
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
 ) (tc.ATSConfigMetaData, error) {
-	cacheGroups := MakeCGMap(cacheGroupArr)
+	cacheGroups, err := MakeCGMap(cacheGroupArr)
+	if err != nil {
+		log.Errorln("making meta config, config will be malformed! : " + err.Error())
+	}
 
 	// Note there may be multiple files with the same name in different directories.
 	configFilesM := map[string][]tc.ATSConfigMetaDataConfigFile{} // map[fileShortName]tc.ATSConfigMetaDataConfigFile

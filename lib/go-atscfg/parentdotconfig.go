@@ -119,7 +119,6 @@ type ParentConfigDSTopLevelSortByName []ParentConfigDSTopLevel
 func (s ParentConfigDSTopLevelSortByName) Len() int      { return len(([]ParentConfigDSTopLevel)(s)) }
 func (s ParentConfigDSTopLevelSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s ParentConfigDSTopLevelSortByName) Less(i, j int) bool {
-	// TODO make this match the Perl sort "foreach my $ds ( sort @{ $data->{dslist} } )" ?
 	return strings.Compare(string(s[i].Name), string(s[j].Name)) < 0
 }
 
@@ -165,27 +164,69 @@ type OriginURI struct {
 	Port   string
 }
 
+// FilterParentDSes takes the list of Delivery Services, and returns the Delivery Services to be used in parent.config.
+// Removes services which:
+// - are not assigned, if the server is not top-level and the service doesn't have a Topology
+// - not HTTP or DNS (e.g. Steering, AnyMap)
+// - have no origins (e.g. Steering, AnyMap)
+// isTopLevelCache is whether the server is a top-level cache, as defined by classic CacheGroup parentage. If the service has a Topology, this is ignored.
+func FilterParentDSes(dses []tc.DeliveryServiceNullable, server *tc.Server, isTopLevelCache bool) ([]tc.DeliveryServiceNullable, error) {
+
+	parentServerDSes := map[int]map[int]struct{}{} // map[serverID][dsID] // cgServerDSes
+	for _, dss := range cgDSServers {
+		if dss.Server == nil || dss.DeliveryService == nil {
+			return "", "", "", errors.New("getting parent.config cachegroup parent server delivery service servers: got dss with nil members!")
+		}
+		if parentServerDSes[*dss.Server] == nil {
+			parentServerDSes[*dss.Server] = map[int]struct{}{}
+		}
+		parentServerDSes[*dss.Server][*dss.DeliveryService] = struct{}{}
+	}
+
+	newDSes := []tc.DeliveryServiceNullable{}
+	for _, ds := range dses {
+		if tcDS.ID == nil {
+			return nil, errors.New("got delivery service with nil ID")
+		}
+		if !isTopLevelCache && ds.Topology == nil {
+			if _, ok := parentServerDSes[toData.Server.ID][*tcDS.ID]; !ok {
+				continue // skip DSes not assigned to this server.
+			}
+		}
+
+	}
+
+}
+
 func MakeParentDotConfig(
-	serverInfo *ServerInfo, // getServerInfoByHost OR getServerInfoByID
 	atsMajorVer int, // GetATSMajorVersion (TODO: determine if the cache itself [ORT via Yum] should produce this data, rather than asking TO?)
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
 	toURL string, // tm.url global parameter (TODO: cache itself?)
+	dses []tc.DeliveryServiceNullable,
 	parentConfigDSes []ParentConfigDSTopLevel, // getParentConfigDSTopLevel(cdn) OR getParentConfigDS(server) (TODO determine how to handle non-top missing MSO?)
 	serverParams map[string]string, // getParentConfigServerProfileParams(serverID)
 	parentInfos map[OriginHost][]ParentInfo, // getParentInfo(profileID, parentCachegroupID, secondaryParentCachegroupID)
-	server tc.Server,
+	server *tc.Server,
 	servers []tc.Server,
 	topologies []tc.Topology,
 	tcParentConfigParams []tc.Parameter,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	cacheGroupArr []tc.CacheGroupNullable,
 ) string {
-	cacheGroups := MakeCGMap(cacheGroupArr)
+	cacheGroups, err := MakeCGMap(cacheGroupArr)
+	if err != nil {
+		log.Errorln("making parent.config, making CacheGroup map, config will be malformed! : " + err.Error())
+	}
+
+	serverParentCGData, err := GetParentCacheGroupData(server, cacheGroups)
+	if err != nil {
+		log.Errorln("making parent.config, getting server parent cachegroup data, config will be malformed! : " + err.Error())
+	}
 
 	sort.Sort(ParentConfigDSTopLevelSortByName(parentConfigDSes))
 
 	nameVersionStr := GetNameVersionStringFromToolNameAndURL(toToolName, toURL)
-	hdr := HeaderCommentWithTOVersionStr(serverInfo.HostName, nameVersionStr)
+	hdr := HeaderCommentWithTOVersionStr(server.HostName, nameVersionStr)
 
 	textArr := []string{}
 	processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
@@ -218,7 +259,7 @@ func MakeParentDotConfig(
 			if txt != "" { // will be empty with no error if this server isn't in the Topology, or if it doesn't have the Required Capabilities
 				textArr = append(textArr, txt)
 			}
-		} else if serverInfo.IsTopLevelCache() {
+		} else if IsTopLevelCache(serverParentCGData) {
 			log.Infoln("parent.config generating top level line for ds '" + ds.Name + "'")
 			parentQStr := "ignore"
 			if ds.QStringHandling == "" && ds.MSOAlgorithm == tc.AlgorithmConsistentHash && ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp {
@@ -320,7 +361,7 @@ func MakeParentDotConfig(
 
 	// TODO determine if this is necessary. It's super-dangerous, and moreover ignores Server Capabilitites.
 	defaultDestText := ""
-	if !serverInfo.IsTopLevelCache() {
+	if !IsTopLevelCache(serverParentCGData) {
 		parents, secondaryParents := getParentStrs(ParentConfigDSTopLevel{}, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
 		defaultDestText = `dest_domain=. ` + parents
 		if serverParams[ParentConfigParamAlgorithm] == tc.AlgorithmConsistentHash {
@@ -340,7 +381,7 @@ func MakeParentDotConfig(
 }
 
 func GetTopologyParentConfigLine(
-	server tc.Server,
+	server *tc.Server,
 	servers []tc.Server,
 	ds ParentConfigDSTopLevel,
 	serverParams map[string]string,
@@ -451,7 +492,7 @@ func getTopologyQueryString(ds ParentConfigDSTopLevel, serverParams map[string]s
 
 // serverParentageParams gets the Parameters used for parent= line, or defaults if they don't exist
 // Returns the Parameters used for parent= lines, for the given server.
-func serverParentageParams(sv tc.Server, params []ParameterWithProfilesMap) ProfileCache {
+func serverParentageParams(sv *tc.Server, params []ParameterWithProfilesMap) ProfileCache {
 	// TODO deduplicate with atstccfg/parentdotconfig.go
 	profileCache := DefaultProfileCache()
 	profileCache.Port = sv.TCPPort
@@ -485,7 +526,7 @@ func serverParentageParams(sv tc.Server, params []ParameterWithProfilesMap) Prof
 	return profileCache
 }
 
-func serverParentStr(sv tc.Server, params []ParameterWithProfilesMap) string {
+func serverParentStr(sv *tc.Server, params []ParameterWithProfilesMap) string {
 	svParams := serverParentageParams(sv, params)
 	if svParams.NotAParent {
 		return ""
@@ -500,7 +541,7 @@ func serverParentStr(sv tc.Server, params []ParameterWithProfilesMap) string {
 }
 
 func GetTopologyParents(
-	server tc.Server,
+	server *tc.Server,
 	ds ParentConfigDSTopLevel,
 	servers []tc.Server,
 	parentConfigParams []ParameterWithProfilesMap, // all params with configFile parent.confign
@@ -562,13 +603,13 @@ func GetTopologyParents(
 			continue
 		}
 		if sv.Cachegroup == parentCG {
-			parentStr := serverParentStr(sv, parentConfigParams)
+			parentStr := serverParentStr(&sv, parentConfigParams)
 			if parentStr != "" { // will be empty if server is not_a_parent (possibly other reasons)
 				parentStrs = append(parentStrs, parentStr)
 			}
 		}
 		if sv.Cachegroup == secondaryParentCG {
-			secondaryParentStrs = append(secondaryParentStrs, serverParentStr(sv, parentConfigParams))
+			secondaryParentStrs = append(secondaryParentStrs, serverParentStr(&sv, parentConfigParams))
 		}
 	}
 	return parentStrs, secondaryParentStrs, nil
@@ -694,7 +735,7 @@ func getMSOParentStrs(ds ParentConfigDSTopLevel, parentInfos []ParentInfo, atsMa
 }
 
 func MakeParentInfo(
-	server *ServerInfo,
+	serverParentCGData ServerParentCacheGroupData,
 	serverDomain string, // getCDNDomainByProfileID(tx, server.ProfileID)
 	profileCaches map[ProfileID]ProfileCache, // getServerParentCacheGroupProfiles(tx, server)
 	originServers map[OriginHost][]CGServer, // getServerParentCacheGroupProfiles(tx, server)
@@ -721,8 +762,8 @@ func MakeParentInfo(
 				UseIP:           profile.UseIP,
 				Rank:            profile.Rank,
 				IP:              row.ServerIP,
-				PrimaryParent:   server.ParentCacheGroupID == row.CacheGroupID,
-				SecondaryParent: server.SecondaryParentCacheGroupID == row.CacheGroupID,
+				PrimaryParent:   serverParentCGData.ParentID == row.CacheGroupID,
+				SecondaryParent: serverParentCGData.SecondaryParentID == row.CacheGroupID,
 				Capabilities:    row.Capabilities,
 			}
 			if parentInf.Port < 1 {

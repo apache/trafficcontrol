@@ -63,7 +63,11 @@ func MakeRemapDotConfig(
 	atsMajorVersion := getATSMajorVersion(serverParams)
 	serverPackageParamData := makeServerPackageParamData(server, serverParams)
 	cacheURLConfigParams := ParamsToMap(FilterParams(serverParams, CacheURLParameterConfigFile, "", "", ""))
-	cacheGroups := MakeCGMap(cacheGroupArr)
+	cacheGroups, err := MakeCGMap(cacheGroupArr)
+	if err != nil {
+		log.Errorln("making remap.config, config will be malformed! : " + err.Error())
+	}
+
 	nameTopologies := MakeTopologyNameMap(topologies)
 
 	hdr := GenericHeaderComment(server.HostName, toToolName, toURL)

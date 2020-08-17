@@ -42,7 +42,7 @@ const ContentTypeTextASCII = `text/plain; charset=us-ascii`
 const LineCommentHash = "#"
 
 type TopologyName string
-
+type CacheGroupType string
 type ServerCapability string
 
 type ServerInfo struct {
@@ -68,6 +68,86 @@ type ServerInfo struct {
 func (s *ServerInfo) IsTopLevelCache() bool {
 	return (s.ParentCacheGroupType == tc.CacheGroupOriginTypeName || s.ParentCacheGroupID == InvalidID) &&
 		(s.SecondaryParentCacheGroupType == tc.CacheGroupOriginTypeName || s.SecondaryParentCacheGroupID == InvalidID)
+}
+
+func MakeCGMap(cgs []tc.CacheGroupNullable) (map[tc.CacheGroupName]tc.CacheGroupNullable, error) {
+	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullable{}
+	for _, cg := range cgs {
+		if cg.Name == nil {
+			return nil, errors.New("got cachegroup with nil name!'")
+		}
+		cgMap[tc.CacheGroupName(*cg.Name)] = cg
+	}
+	return cgMap, nil
+}
+
+type ServerParentCacheGroupData struct {
+	ParentID            int
+	ParentType          CacheGroupType
+	SecondaryParentID   int
+	SecondaryParentType CacheGroupType
+}
+
+// GetParentCacheGroupData returns the parent CacheGroup IDs and types for the given server.
+// Takes a server and a CG map. To create a CGMap from an API CacheGroup slice, use MakeCGMap.
+// If server's CacheGroup has no parent or secondary parent, returns InvalidID and "" with no error.
+func GetParentCacheGroupData(server *tc.Server, cgMap map[tc.CacheGroupName]tc.CacheGroupNullable) (ServerParentCacheGroupData, error) {
+	serverCG, ok := cgMap[tc.CacheGroupName(server.Cachegroup)]
+	if !ok {
+		return ServerParentCacheGroupData{}, errors.New("server '" + server.HostName + "' cachegroup '" + server.Cachegroup + "' not found in CacheGroups")
+	}
+
+	parentCGID := InvalidID
+	parentCGType := ""
+	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
+		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.ParentName)]
+		if !ok {
+			return ServerParentCacheGroupData{}, errors.New("server '" + server.HostName + "' cachegroup '" + server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+		}
+		if parentCG.ID == nil {
+			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+		}
+		parentCGID = *parentCG.ID
+
+		if parentCG.Type == nil {
+			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+		}
+		parentCGType = *parentCG.Type
+	}
+
+	secondaryParentCGID := InvalidID
+	secondaryParentCGType := ""
+	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
+		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.SecondaryParentName)]
+		if !ok {
+			return ServerParentCacheGroupData{}, errors.New("server '" + server.HostName + "' cachegroup '" + server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+		}
+
+		if parentCG.ID == nil {
+			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
+		}
+		secondaryParentCGID = *parentCG.ID
+		if parentCG.Type == nil {
+			return ServerParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil Type!'")
+		}
+
+		secondaryParentCGType = *parentCG.Type
+	}
+
+	return ServerParentCacheGroupData{
+		ParentID:            parentCGID,
+		ParentType:          CacheGroupType(parentCGType),
+		SecondaryParentID:   secondaryParentCGID,
+		SecondaryParentType: CacheGroupType(secondaryParentCGType),
+	}, nil
+}
+
+// IsTopLevelCache returns whether server is a top-level cache, as defined by traditional CacheGroup parentage.
+// This does not consider Topologies, and should not be used if the Delivery Service being considered has a Topology.
+// Takes a ServerParentCacheGroupData, which may be created via GetParentCacheGroupData.
+func IsTopLevelCache(s ServerParentCacheGroupData) bool {
+	return (s.ParentType == tc.CacheGroupOriginTypeName || s.ParentID == InvalidID) &&
+		(s.SecondaryParentType == tc.CacheGroupOriginTypeName || s.SecondaryParentID == InvalidID)
 }
 
 func HeaderCommentWithTOVersionStr(name string, nameVersionStr string) string {
@@ -242,18 +322,6 @@ func MakeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology 
 		topoNames[TopologyName(to.Name)] = to
 	}
 	return topoNames
-}
-
-func MakeCGMap(cgs []tc.CacheGroupNullable) map[tc.CacheGroupName]tc.CacheGroupNullable {
-	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullable{}
-	for _, cg := range cgs {
-		if cg.Name == nil {
-			log.Errorln("ATS config generation: got cachegroup with nil name, skipping!")
-			continue
-		}
-		cgMap[tc.CacheGroupName(*cg.Name)] = cg
-	}
-	return cgMap
 }
 
 type ParameterWithProfiles struct {
