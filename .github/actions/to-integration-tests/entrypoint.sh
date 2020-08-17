@@ -120,7 +120,7 @@ cp /traffic-ops-test.json ./traffic-ops-test.conf
 if [ "$?" -gt "0" ]; then
 	CODE="1"
 fi
-rm traffic-ops-test
+rm traffic-ops-test.conf
 
 cat ../../../traffic_ops_golang/out.log
 cat ../../../traffic_ops_golang/err.log
