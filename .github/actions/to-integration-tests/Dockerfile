@@ -17,7 +17,7 @@
 
 FROM golang:1.14.2-alpine
 
-RUN apk add --no-cache gettext
+RUN apk add --no-cache gettext git gcc
 
 COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
 RUN chmod a+x /entrypoint.sh
