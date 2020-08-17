@@ -18,7 +18,7 @@
 FROM golang:1.14.2-buster
 
 RUN apt-get update &&\
-	apt-get install -y --no-install-recommends git gcc postgresql-client-11 envsubst &&\
+	apt-get install -y --no-install-recommends git gcc postgresql-client-11 gettext-base &&\
 	rm -rf /var/lib/apt/lists/*
 RUN go get -v bitbucket.org/liamstask/goose/cmd/goose github.com/lib/pq
 RUN mv $GOPATH/bin/goose /bin/
