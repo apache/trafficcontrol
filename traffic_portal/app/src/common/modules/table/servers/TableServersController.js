@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServersController = function(servers, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel, $document) {
+var TableServersController = function(tableName, servers, filter, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel, $document) {
 	/**** Table cell formatters/renderers ****/
 
 	// browserify can't handle classes...
@@ -314,7 +314,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		paginationPageSize: $scope.pageSize,
 		rowBuffer: 0,
 		onColumnResized: function(params) {
-			localStorage.setItem("servers_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
 		},
 		tooltipShowDelay: 500,
 		allowContextMenuWithControlKey: true,
@@ -568,13 +568,13 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 
 	$scope.onQuickSearchChanged = function() {
 		$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
-		localStorage.setItem("servers_quick_search", $scope.quickSearch);
+		localStorage.setItem(tableName + "_quick_search", $scope.quickSearch);
 	};
 
 	$scope.onPageSizeChanged = function() {
 		const value = Number($scope.pageSize);
 		$scope.gridOptions.api.paginationSetPageSize(value);
-		localStorage.setItem("servers_page_size", value);
+		localStorage.setItem(tableName + "_page_size", value);
 	};
 
 	$scope.clearColFilters = function() {
@@ -585,7 +585,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	angular.element(document).ready(function () {
 		try {
 			// need to create the show/hide column checkboxes and bind to the current visibility
-			const colstates = JSON.parse(localStorage.getItem("servers_table_columns"));
+			const colstates = JSON.parse(localStorage.getItem(tableName + "_table_columns"));
 			if (colstates) {
 				if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
 					console.error("Failed to load stored column state: one or more columns not found");
@@ -594,36 +594,38 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 				$scope.gridOptions.api.sizeColumnsToFit();
 			}
 		} catch (e) {
-			console.error("Failure to retrieve required column info from localStorage (key=servers_table_columns):", e);
+			console.error("Failure to retrieve required column info from localStorage (key=" + tableName + "_table_columns):", e);
 		}
 
 		try {
-			const filterState = JSON.parse(localStorage.getItem("servers_table_filters"));
+			const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters")) || {};
+			// apply any filter provided to the controller
+			Object.assign(filterState, filter);
 			$scope.gridOptions.api.setFilterModel(filterState);
 		} catch (e) {
 			console.error("Failure to load stored filter state:", e);
 		}
 
 		$scope.gridOptions.api.addEventListener("filterChanged", function() {
-			localStorage.setItem("servers_table_filters", JSON.stringify($scope.gridOptions.api.getFilterModel()));
+			localStorage.setItem(tableName + "_table_filters", JSON.stringify($scope.gridOptions.api.getFilterModel()));
 		});
 
 		try {
-			const sortState = JSON.parse(localStorage.getItem("servers_table_sort"));
+			const sortState = JSON.parse(localStorage.getItem(tableName + "_table_sort"));
 			$scope.gridOptions.api.setSortModel(sortState);
 		} catch (e) {
 			console.error("Failure to load stored sort state:", e);
 		}
 
 		try {
-			$scope.quickSearch = localStorage.getItem("servers_quick_search");
+			$scope.quickSearch = localStorage.getItem(tableName + "_quick_search");
 			$scope.gridOptions.api.setQuickFilter($scope.quickSearch);
 		} catch (e) {
 			console.error("Failure to load stored quick search:", e);
 		}
 
 		try {
-			const ps = localStorage.getItem("servers_page_size");
+			const ps = localStorage.getItem(tableName + "_page_size");
 			if (ps && ps > 0) {
 				$scope.pageSize = Number(ps);
 				$scope.gridOptions.api.paginationSetPageSize($scope.pageSize);
@@ -633,18 +635,18 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 		}
 
 		$scope.gridOptions.api.addEventListener("sortChanged", function() {
-			localStorage.setItem("servers_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
+			localStorage.setItem(tableName + "_table_sort", JSON.stringify($scope.gridOptions.api.getSortModel()));
 		});
 
 		$scope.gridOptions.api.addEventListener("columnMoved", function() {
-			localStorage.setItem("servers_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
+			localStorage.setItem(tableName + "_table_columns", JSON.stringify($scope.gridOptions.columnApi.getColumnState()));
 		});
 
 		$scope.gridOptions.api.addEventListener("columnVisible", function() {
 			$scope.gridOptions.api.sizeColumnsToFit();
 			try {
 				colStates = $scope.gridOptions.columnApi.getColumnState();
-				localStorage.setItem("servers_table_columns", JSON.stringify(colStates));
+				localStorage.setItem(tableName + "_table_columns", JSON.stringify(colStates));
 			} catch (e) {
 				console.error("Failed to store column defs to local storage:", e);
 			}
@@ -665,5 +667,5 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 	});
 };
 
-TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel", "$document"];
+TableServersController.$inject = ['tableName', 'servers', 'filter', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel", "$document"];
 module.exports = TableServersController;
