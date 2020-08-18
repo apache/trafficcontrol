@@ -468,102 +468,54 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		);
 	};
 
-	$scope.confirmCDNQueueServerUpdates = function(cdn) {
-		let params;
-		if (cdn) {
-			params = {
-				title: 'Queue Server Updates: ' + cdn.name,
-				message: 'Are you sure you want to queue server updates for all ' + cdn.name + ' servers?'
-			};
-			const modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-				controller: 'DialogConfirmController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					}
+	$scope.confirmCDNQueueServerUpdates = function() {
+		const params = {
+			title: 'Queue Server Updates',
+			message: "Please select a CDN"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
 				}
-			});
-			modalInstance.result.then(function() {
-				cdnService.queueServerUpdates(cdn.id).then($scope.refresh);
-			}, function () {
-				// this is just a cancel event from closing the dialog, do nothing
-			});
-		} else {
-			params = {
-				title: 'Queue Server Updates',
-				message: "Please select a CDN"
-			};
-			const modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-				controller: 'DialogSelectController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					},
-					collection: function(cdnService) {
-						return cdnService.getCDNs();
-					}
-				}
-			});
-			modalInstance.result.then(function(cdn) {
-				cdnService.queueServerUpdates(cdn.id).then($scope.refresh);
-			}, function () {
-				// do nothing
-			});
-		}
+			}
+		});
+		modalInstance.result.then(function(cdn) {
+			cdnService.queueServerUpdates(cdn.id).then($scope.refresh);
+		}, function () {
+			// do nothing
+		});
 	};
 
-	$scope.confirmCDNClearServerUpdates = function(cdn) {
-		let params;
-		if (cdn) {
-			params = {
-				title: 'Clear Server Updates: ' + cdn.name,
-				message: 'Are you sure you want to clear server updates for all ' + cdn.name + ' servers?'
-			};
-			const modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-				controller: 'DialogConfirmController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					}
+	$scope.confirmCDNClearServerUpdates = function() {
+		const params = {
+			title: 'Clear Server Updates',
+			message: "Please select a CDN"
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
 				}
-			});
-			modalInstance.result.then(function() {
-				cdnService.clearServerUpdates(cdn.id).then($scope.refresh);
-			}, function () {
-				// do nothing
-			});
-
-
-		} else {
-			params = {
-				title: 'Clear Server Updates',
-				message: "Please select a CDN"
-			};
-			const modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-				controller: 'DialogSelectController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					},
-					collection: function(cdnService) {
-						return cdnService.getCDNs();
-					}
-				}
-			});
-			modalInstance.result.then(function(cdn) {
-				cdnService.clearServerUpdates(cdn.id).then($scope.refresh);
-			}, function () {
-				// do nothing
-			});
-		}
+			}
+		});
+		modalInstance.result.then(function(cdn) {
+			cdnService.clearServerUpdates(cdn.id).then($scope.refresh);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.onQuickSearchChanged = function() {
