@@ -105,39 +105,6 @@ SELECT
 	s.xmpp_passwd
 ` + serversFromAndJoin
 
-const InterfacesArray = `
-ARRAY ( SELECT (
-		json_build_object (
-			'ipAddresses',
-			ARRAY (
-				SELECT (
-					json_build_object (
-						'address', ip_address.address,
-						'gateway', ip_address.gateway,
-						'serviceAddress', ip_address.service_address
-					)
-				)
-				FROM ip_address
-				WHERE ip_address.interface = interface.name
-				AND ip_address.server = server.id
-			),
-			'maxBandwidth', interface.max_bandwidth,
-			'monitor', interface.monitor,
-			'mtu', interface.mtu,
-			'name', interface.name
-		)
-	)
-	FROM interface
-	WHERE interface.server = server.id
-)`
-const SelectInterfacesQuery = `
-SELECT ( ` + InterfacesArray + `
-	) AS interfaces,
-server.id
-FROM server
-WHERE server.id = ANY ($1)
-`
-
 const insertQuery = `
 INSERT INTO server (
 	cachegroup,
