@@ -20,11 +20,15 @@ import (
    limitations under the License.
 */
 
-func (to *Session) GetDomains(header http.Header) ([]tc.Domain, ReqInf, error) {
+func (to *Session) GetDomainsWithHdr(header http.Header) ([]tc.Domain, ReqInf, error) {
 	var data tc.DomainsResponse
 	inf, err := get(to, apiBase+"/cdns/domains", &data, header)
 	if err != nil {
 		return nil, inf, err
 	}
 	return data.Response, inf, nil
+}
+
+func (to *Session) GetDomains() ([]tc.Domain, ReqInf, error) {
+	return to.GetDomainsWithHdr(nil)
 }

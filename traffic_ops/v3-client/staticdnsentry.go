@@ -31,7 +31,7 @@ const (
 
 func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	if sdns.CacheGroupID == 0 && sdns.CacheGroupName != "" {
-		p, _, err := to.GetCacheGroupNullableByName(sdns.CacheGroupName, nil)
+		p, _, err := to.GetCacheGroupNullableByName(sdns.CacheGroupName)
 		if err != nil {
 			return err
 		}
@@ -45,7 +45,7 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	}
 
 	if sdns.DeliveryServiceID == 0 && sdns.DeliveryService != "" {
-		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(sdns.DeliveryService, nil)
+		dses, _, err := to.GetDeliveryServiceByXMLIDNullable(sdns.DeliveryService)
 		if err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	}
 
 	if sdns.TypeID == 0 && sdns.Type != "" {
-		types, _, err := to.GetTypeByName(sdns.Type, nil)
+		types, _, err := to.GetTypeByName(sdns.Type)
 		if err != nil {
 			return err
 		}
@@ -103,7 +103,7 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.
 		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
-	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody, nil)
+	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody)
 	if resp != nil {
 		defer resp.Body.Close()
 		var alerts tc.Alerts
@@ -115,8 +115,7 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.
 	return tc.Alerts{}, reqInf, 0, errClient
 }
 
-// GetStaticDNSEntries returns a list of Static DNS Entrys.
-func (to *Session) GetStaticDNSEntries(header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
+func (to *Session) GetStaticDNSEntriesWithHdr(header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_STATIC_DNS_ENTRIES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -135,8 +134,12 @@ func (to *Session) GetStaticDNSEntries(header http.Header) ([]tc.StaticDNSEntry,
 	return data.Response, reqInf, nil
 }
 
-// GetStaticDNSEntryByID GETs a Static DNS Entry by the Static DNS Entry's ID.
-func (to *Session) GetStaticDNSEntryByID(id int, header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
+// GetStaticDNSEntries returns a list of Static DNS Entrys.
+func (to *Session) GetStaticDNSEntries() ([]tc.StaticDNSEntry, ReqInf, error) {
+	return to.GetStaticDNSEntriesWithHdr(nil)
+}
+
+func (to *Session) GetStaticDNSEntryByIDWithHdr(id int, header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_STATIC_DNS_ENTRIES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -159,8 +162,12 @@ func (to *Session) GetStaticDNSEntryByID(id int, header http.Header) ([]tc.Stati
 	return data.Response, reqInf, nil
 }
 
-// GetStaticDNSEntriesByHost GETs a Static DNS Entry by the Static DNS Entry's host.
-func (to *Session) GetStaticDNSEntriesByHost(host string, header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
+// GetStaticDNSEntryByID GETs a Static DNS Entry by the Static DNS Entry's ID.
+func (to *Session) GetStaticDNSEntryByID(id int) ([]tc.StaticDNSEntry, ReqInf, error) {
+	return to.GetStaticDNSEntryByIDWithHdr(id, nil)
+}
+
+func (to *Session) GetStaticDNSEntriesByHostWithHdr(host string, header http.Header) ([]tc.StaticDNSEntry, ReqInf, error) {
 	url := fmt.Sprintf("%s?host=%s", API_STATIC_DNS_ENTRIES, host)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -181,6 +188,11 @@ func (to *Session) GetStaticDNSEntriesByHost(host string, header http.Header) ([
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GetStaticDNSEntriesByHost GETs a Static DNS Entry by the Static DNS Entry's host.
+func (to *Session) GetStaticDNSEntriesByHost(host string) ([]tc.StaticDNSEntry, ReqInf, error) {
+	return to.GetStaticDNSEntriesByHostWithHdr(host, nil)
 }
 
 // DeleteStaticDNSEntryByID DELETEs a Static DNS Entry by ID.

@@ -34,7 +34,7 @@ const (
 // CreateRegion creates a Region.
 func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 	if region.Division == 0 && region.DivisionName != "" {
-		divisions, _, err := to.GetDivisionByName(region.DivisionName, nil)
+		divisions, _, err := to.GetDivisionByName(region.DivisionName)
 		if err != nil {
 			return tc.Alerts{}, ReqInf{}, err
 		}
@@ -80,8 +80,7 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 	return alerts, reqInf, nil
 }
 
-// GetRegions returns a list of regions.
-func (to *Session) GetRegions(header http.Header) ([]tc.Region, ReqInf, error) {
+func (to *Session) GetRegionsWithHdr(header http.Header) ([]tc.Region, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_REGIONS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -100,8 +99,12 @@ func (to *Session) GetRegions(header http.Header) ([]tc.Region, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GetRegionByID GETs a Region by the Region ID.
-func (to *Session) GetRegionByID(id int, header http.Header) ([]tc.Region, ReqInf, error) {
+// GetRegions returns a list of regions.
+func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
+	return to.GetRegionsWithHdr(nil)
+}
+
+func (to *Session) GetRegionByIDWithHdr(id int, header http.Header) ([]tc.Region, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -124,8 +127,12 @@ func (to *Session) GetRegionByID(id int, header http.Header) ([]tc.Region, ReqIn
 	return data.Response, reqInf, nil
 }
 
-// GetRegionByName GETs a Region by the Region name.
-func (to *Session) GetRegionByName(name string, header http.Header) ([]tc.Region, ReqInf, error) {
+// GetRegionByID GETs a Region by the Region ID.
+func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
+	return to.GetRegionByIDWithHdr(id, nil)
+}
+
+func (to *Session) GetRegionByNameWithHdr(name string, header http.Header) ([]tc.Region, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_REGIONS, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -146,6 +153,11 @@ func (to *Session) GetRegionByName(name string, header http.Header) ([]tc.Region
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GetRegionByName GETs a Region by the Region name.
+func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
+	return to.GetRegionByNameWithHdr(name, nil)
 }
 
 // DeleteRegionByID DELETEs a Region by ID.

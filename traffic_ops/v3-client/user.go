@@ -28,38 +28,53 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// GetUsers returns all users accessible from current user
-func (to *Session) GetUsers(header http.Header) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUsersWithHdr(header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users", apiBase)
 	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
-// GetUsersByRole returns all users accessible from current user for a given role
-func (to *Session) GetUsersByRole(roleName string, header http.Header) ([]tc.User, ReqInf, error) {
+// GetUsers returns all users accessible from current user
+func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
+	return to.GetUsersWithHdr(nil)
+}
+
+func (to *Session) GetUsersByRoleWithHdr(roleName string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users?role=%s", apiBase, url.QueryEscape(roleName))
 	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
-func (to *Session) GetUserByID(id int, header http.Header) ([]tc.User, ReqInf, error) {
+// GetUsersByRole returns all users accessible from current user for a given role
+func (to *Session) GetUsersByRole(roleName string) ([]tc.User, ReqInf, error) {
+	return to.GetUsersByRoleWithHdr(roleName, nil)
+}
+
+func (to *Session) GetUserByIDWithHdr(id int, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users/%d", apiBase, id)
 	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
-func (to *Session) GetUserByUsername(username string, header http.Header) ([]tc.User, ReqInf, error) {
+func (to *Session) GetUserByID(id int) ([]tc.User, ReqInf, error) {
+	return to.GetUserByIDWithHdr(id, nil)
+}
+
+func (to *Session) GetUserByUsernameWithHdr(username string, header http.Header) ([]tc.User, ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("%s/users?username=%s", apiBase, username)
 	inf, err := get(to, route, &data, header)
 	return data.Response, inf, err
 }
 
-// GetUserCurrent gets information about the current user
-func (to *Session) GetUserCurrent(header http.Header) (*tc.UserCurrent, ReqInf, error) {
+func (to *Session) GetUserByUsername(username string) ([]tc.User, ReqInf, error) {
+	return to.GetUserByUsernameWithHdr(username, nil)
+}
+
+func (to *Session) GetUserCurrentWithHdr(header http.Header) (*tc.UserCurrent, ReqInf, error) {
 	route := apiBase + `/user/current`
 	resp := tc.UserCurrentResponse{}
 	reqInf, err := get(to, route, &resp, header)
@@ -67,6 +82,11 @@ func (to *Session) GetUserCurrent(header http.Header) (*tc.UserCurrent, ReqInf, 
 		return nil, reqInf, err
 	}
 	return &resp.Response, reqInf, nil
+}
+
+// GetUserCurrent gets information about the current user
+func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
+	return to.GetUserCurrentWithHdr(nil)
 }
 
 // UpdateCurrentUser replaces the current user data with the provided tc.User structure.
@@ -97,7 +117,7 @@ func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf,
 // CreateUser creates a user
 func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
-		tenant, _, err := to.TenantByName(*user.Tenant, nil)
+		tenant, _, err := to.TenantByName(*user.Tenant)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
@@ -111,7 +131,7 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 	}
 
 	if user.RoleName != nil && *user.RoleName != "" {
-		roles, _, _, err := to.GetRoleByName(*user.RoleName, nil)
+		roles, _, _, err := to.GetRoleByName(*user.RoleName)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}

@@ -22,7 +22,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func (to *Session) Steering(header http.Header) ([]tc.Steering, ReqInf, error) {
+func (to *Session) SteeringWithHdr(header http.Header) ([]tc.Steering, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering`, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -41,4 +41,8 @@ func (to *Session) Steering(header http.Header) ([]tc.Steering, ReqInf, error) {
 	}{}
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, err
+}
+
+func (to *Session) Steering() ([]tc.Steering, ReqInf, error) {
+	return to.SteeringWithHdr(nil)
 }

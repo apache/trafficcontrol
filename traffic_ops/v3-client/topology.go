@@ -51,8 +51,7 @@ func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, ReqInf
 	return &topResp, reqInf, nil
 }
 
-// GetTopologies returns all topologies.
-func (to *Session) GetTopologies(header http.Header) ([]tc.Topology, ReqInf, error) {
+func (to *Session) GetTopologiesWithHdr(header http.Header) ([]tc.Topology, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, ApiTopologies, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -71,8 +70,12 @@ func (to *Session) GetTopologies(header http.Header) ([]tc.Topology, ReqInf, err
 	return data.Response, reqInf, nil
 }
 
-// GetTopology returns the given topology by name.
-func (to *Session) GetTopology(name string, header http.Header) (*tc.Topology, ReqInf, error) {
+// GetTopologies returns all topologies.
+func (to *Session) GetTopologies() ([]tc.Topology, ReqInf, error) {
+	return to.GetTopologiesWithHdr(nil)
+}
+
+func (to *Session) GetTopologyWithHdr(name string, header http.Header) (*tc.Topology, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", ApiTopologies, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -93,6 +96,11 @@ func (to *Session) GetTopology(name string, header http.Header) (*tc.Topology, R
 		return &data.Response[0], reqInf, nil
 	}
 	return nil, reqInf, fmt.Errorf("expected one topology in response, instead got: %+v", data.Response)
+}
+
+// GetTopology returns the given topology by name.
+func (to *Session) GetTopology(name string) (*tc.Topology, ReqInf, error) {
+	return to.GetTopologyWithHdr(name, nil)
 }
 
 // UpdateTopology updates a Topology by name.

@@ -25,7 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func (to *Session) Federations(header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
+func (to *Session) FederationsWithHdr(header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	type FederationResponse struct {
 		Response []tc.AllDeliveryServiceFederationsMapping `json:"response"`
 	}
@@ -34,7 +34,11 @@ func (to *Session) Federations(header http.Header) ([]tc.AllDeliveryServiceFeder
 	return data.Response, inf, err
 }
 
-func (to *Session) AllFederations(header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
+func (to *Session) Federations() ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
+	return to.FederationsWithHdr(nil)
+}
+
+func (to *Session) AllFederationsWithHdr(header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	type FederationResponse struct {
 		Response []tc.AllDeliveryServiceFederationsMapping `json:"response"`
 	}
@@ -43,7 +47,11 @@ func (to *Session) AllFederations(header http.Header) ([]tc.AllDeliveryServiceFe
 	return data.Response, inf, err
 }
 
-func (to *Session) AllFederationsForCDN(cdnName string, header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
+func (to *Session) AllFederations() ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
+	return to.AllFederationsWithHdr(nil)
+}
+
+func (to *Session) AllFederationsForCDNWithHdr(cdnName string, header http.Header) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
 	// because the Federations JSON array is heterogeneous (array members may be a AllFederation or AllFederationCDN), we have to try decoding each separately.
 	type FederationResponse struct {
 		Response []json.RawMessage `json:"response"`
@@ -69,6 +77,10 @@ func (to *Session) AllFederationsForCDN(cdnName string, header http.Header) ([]t
 	return feds, inf, nil
 }
 
+func (to *Session) AllFederationsForCDN(cdnName string) ([]tc.AllDeliveryServiceFederationsMapping, ReqInf, error) {
+	return to.AllFederationsForCDNWithHdr(cdnName, nil)
+}
+
 func (to *Session) CreateFederationDeliveryServices(federationID int, deliveryServiceIDs []int, replace bool) (ReqInf, error) {
 	req := tc.FederationDSPost{DSIDs: deliveryServiceIDs, Replace: &replace}
 	jsonReq, err := json.Marshal(req)
@@ -80,14 +92,18 @@ func (to *Session) CreateFederationDeliveryServices(federationID int, deliverySe
 	return inf, err
 }
 
-// GetFederationDeliveryServices Returns a given Federation's Delivery Services
-func (to *Session) GetFederationDeliveryServices(federationID int, header http.Header) ([]tc.FederationDeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetFederationDeliveryServicesWithHdr(federationID int, header http.Header) ([]tc.FederationDeliveryServiceNullable, ReqInf, error) {
 	type FederationDSesResponse struct {
 		Response []tc.FederationDeliveryServiceNullable `json:"response"`
 	}
 	data := FederationDSesResponse{}
 	inf, err := get(to, fmt.Sprintf("%s/federations/%v/deliveryservices", apiBase, federationID), &data, header)
 	return data.Response, inf, err
+}
+
+// GetFederationDeliveryServices Returns a given Federation's Delivery Services
+func (to *Session) GetFederationDeliveryServices(federationID int) ([]tc.FederationDeliveryServiceNullable, ReqInf, error) {
+	return to.GetFederationDeliveryServicesWithHdr(federationID, nil)
 }
 
 // DeleteFederationDeliveryService Deletes a given Delivery Service from a Federation
@@ -118,14 +134,18 @@ func (to *Session) CreateFederationUsers(federationID int, userIDs []int, replac
 	return alerts, inf, err
 }
 
-// GetFederationUsers Returns a given Federation's Users
-func (to *Session) GetFederationUsers(federationID int, header http.Header) ([]tc.FederationUser, ReqInf, error) {
+func (to *Session) GetFederationUsersWithHdr(federationID int, header http.Header) ([]tc.FederationUser, ReqInf, error) {
 	type FederationUsersResponse struct {
 		Response []tc.FederationUser `json:"response"`
 	}
 	data := FederationUsersResponse{}
 	inf, err := get(to, fmt.Sprintf("%s/federations/%v/users", apiBase, federationID), &data, header)
 	return data.Response, inf, err
+}
+
+// GetFederationUsers Returns a given Federation's Users
+func (to *Session) GetFederationUsers(federationID int) ([]tc.FederationUser, ReqInf, error) {
+	return to.GetFederationUsersWithHdr(federationID, nil)
 }
 
 // DeleteFederationUser Deletes a given User from a Federation

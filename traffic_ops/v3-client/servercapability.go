@@ -49,8 +49,7 @@ func (to *Session) CreateServerCapability(sc tc.ServerCapability) (*tc.ServerCap
 	return &scResp, reqInf, nil
 }
 
-// GetServerCapabilities returns all the server capabilities.
-func (to *Session) GetServerCapabilities(header http.Header) ([]tc.ServerCapability, ReqInf, error) {
+func (to *Session) GetServerCapabilitiesWithHdr(header http.Header) ([]tc.ServerCapability, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_SERVER_CAPABILITIES, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -72,8 +71,12 @@ func (to *Session) GetServerCapabilities(header http.Header) ([]tc.ServerCapabil
 	return data.Response, reqInf, nil
 }
 
-// GetServerCapability returns the given server capability by name.
-func (to *Session) GetServerCapability(name string, header http.Header) (*tc.ServerCapability, ReqInf, error) {
+// GetServerCapabilities returns all the server capabilities.
+func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, ReqInf, error) {
+	return to.GetServerCapabilitiesWithHdr(nil)
+}
+
+func (to *Session) GetServerCapabilityWithHdr(name string, header http.Header) (*tc.ServerCapability, ReqInf, error) {
 	reqUrl := fmt.Sprintf("%s?name=%s", API_SERVER_CAPABILITIES, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -97,6 +100,11 @@ func (to *Session) GetServerCapability(name string, header http.Header) (*tc.Ser
 		return &data.Response[0], reqInf, nil
 	}
 	return nil, reqInf, fmt.Errorf("expected one server capability in response, instead got: %+v", data.Response)
+}
+
+// GetServerCapability returns the given server capability by name.
+func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqInf, error) {
+	return to.GetServerCapabilityWithHdr(name, nil)
 }
 
 // DeleteServerCapability deletes the given server capability by name.

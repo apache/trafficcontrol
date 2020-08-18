@@ -40,7 +40,7 @@ func GetTestFederationResolversIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetFederationResolvers(header)
+	_, reqInf, err := TOSession.GetFederationResolversWithHdr(header)
 	if err != nil {
 		t.Fatalf("could not GET Federation resolvers: %v", err)
 	}
@@ -55,7 +55,7 @@ func GetTestFederationResolvers(t *testing.T) {
 		t.Fatal("no federation resolvers test data")
 	}
 
-	frs, _, err := TOSession.GetFederationResolvers(nil)
+	frs, _, err := TOSession.GetFederationResolvers()
 	if err != nil {
 		t.Errorf("Unexpected error getting Federation Resolvers: %v", err)
 	}
@@ -75,7 +75,7 @@ func GetTestFederationResolvers(t *testing.T) {
 
 func getFRByIDTest(testFr tc.FederationResolver) func(*testing.T) {
 	return func(t *testing.T) {
-		fr, _, err := TOSession.GetFederationResolverByID(*testFr.ID, nil)
+		fr, _, err := TOSession.GetFederationResolverByID(*testFr.ID)
 		if err != nil {
 			t.Fatalf("Unexpected error getting Federation Resolver by ID %d: %v", *testFr.ID, err)
 		}
@@ -87,7 +87,7 @@ func getFRByIDTest(testFr tc.FederationResolver) func(*testing.T) {
 
 func getFRByIPTest(testFr tc.FederationResolver) func(*testing.T) {
 	return func(t *testing.T) {
-		fr, _, err := TOSession.GetFederationResolverByIPAddress(*testFr.IPAddress, nil)
+		fr, _, err := TOSession.GetFederationResolverByIPAddress(*testFr.IPAddress)
 		if err != nil {
 			t.Fatalf("Unexpected error getting Federation Resolver by IP %s: %v", *testFr.IPAddress, err)
 		}
@@ -99,7 +99,7 @@ func getFRByIPTest(testFr tc.FederationResolver) func(*testing.T) {
 
 func getFRByTypeTest(testFr tc.FederationResolver) func(*testing.T) {
 	return func(t *testing.T) {
-		frs, _, err := TOSession.GetFederationResolversByType(*testFr.Type, nil)
+		frs, _, err := TOSession.GetFederationResolversByType(*testFr.Type)
 		if err != nil {
 			t.Fatalf("Unexpected error getting Federation Resolvers by Type %s: %v", *testFr.Type, err)
 		}
@@ -150,7 +150,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 			t.Fatal("testData Federation Resolver has nil Type")
 		}
 
-		tid, _, err := TOSession.GetTypeByName(*fr.Type, nil)
+		tid, _, err := TOSession.GetTypeByName(*fr.Type)
 		if err != nil {
 			t.Fatalf("Couldn't get an ID for type %s", *fr.Type)
 		}
@@ -202,7 +202,7 @@ func CreateTestFederationResolvers(t *testing.T) {
 }
 
 func DeleteTestFederationResolvers(t *testing.T) {
-	frs, _, err := TOSession.GetFederationResolvers(nil)
+	frs, _, err := TOSession.GetFederationResolvers()
 	if err != nil {
 		t.Errorf("Unexpected error getting Federation Resolvers: %v", err)
 	}

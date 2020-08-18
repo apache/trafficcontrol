@@ -40,18 +40,26 @@ func (to *Session) CreateCDNFederationByName(f tc.CDNFederation, CDNName string)
 	return &data, inf, err
 }
 
-func (to *Session) GetCDNFederationsByName(CDNName string, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
+func (to *Session) GetCDNFederationsByNameWithHdr(CDNName string, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations", apiBase, CDNName)
 	inf, err := get(to, url, &data, header)
 	return &data, inf, err
 }
 
-func (to *Session) GetCDNFederationsByID(CDNName string, ID int, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
+func (to *Session) GetCDNFederationsByName(CDNName string) (*tc.CDNFederationResponse, ReqInf, error) {
+	return to.GetCDNFederationsByNameWithHdr(CDNName, nil)
+}
+
+func (to *Session) GetCDNFederationsByIDWithHdr(CDNName string, ID int, header http.Header) (*tc.CDNFederationResponse, ReqInf, error) {
 	data := tc.CDNFederationResponse{}
 	url := fmt.Sprintf("%s/cdns/%s/federations?id=%v", apiBase, CDNName, ID)
 	inf, err := get(to, url, &data, header)
 	return &data, inf, err
+}
+
+func (to *Session) GetCDNFederationsByID(CDNName string, ID int) (*tc.CDNFederationResponse, ReqInf, error) {
+	return to.GetCDNFederationsByIDWithHdr(CDNName, ID, nil)
 }
 
 func (to *Session) UpdateCDNFederationsByID(f tc.CDNFederation, CDNName string, ID int) (*tc.UpdateCDNFederationResponse, ReqInf, error) {

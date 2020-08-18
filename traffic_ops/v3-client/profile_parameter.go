@@ -68,8 +68,7 @@ func (to *Session) CreateMultipleProfileParameters(pps []tc.ProfileParameter) (t
 	return alerts, reqInf, nil
 }
 
-// Returns a list of Profile Parameters
-func (to *Session) GetProfileParameters(header http.Header) ([]tc.ProfileParameter, ReqInf, error) {
+func (to *Session) GetProfileParametersWithHdr(header http.Header) ([]tc.ProfileParameter, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_PROFILE_PARAMETERS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
@@ -88,8 +87,12 @@ func (to *Session) GetProfileParameters(header http.Header) ([]tc.ProfileParamet
 	return data.Response, reqInf, nil
 }
 
-// GET a Profile Parameter by the Parameter
-func (to *Session) GetProfileParameterByQueryParams(queryParams string, header http.Header) ([]tc.ProfileParameter, ReqInf, error) {
+// Returns a list of Profile Parameters
+func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error) {
+	return to.GetProfileParametersWithHdr(nil)
+}
+
+func (to *Session) GetProfileParameterByQueryParamsWithHdr(queryParams string, header http.Header) ([]tc.ProfileParameter, ReqInf, error) {
 	URI := API_PROFILE_PARAMETERS + queryParams
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -110,6 +113,11 @@ func (to *Session) GetProfileParameterByQueryParams(queryParams string, header h
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GET a Profile Parameter by the Parameter
+func (to *Session) GetProfileParameterByQueryParams(queryParams string) ([]tc.ProfileParameter, ReqInf, error) {
+	return to.GetProfileParameterByQueryParamsWithHdr(queryParams, nil)
 }
 
 // DELETE a Parameter by Parameter

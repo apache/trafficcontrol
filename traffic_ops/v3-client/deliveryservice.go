@@ -114,9 +114,13 @@ const (
 // GetDeliveryServicesByServer returns all of the (tenant-visible) Delivery Services assigned to
 // the server identified by the integral, unique identifier 'id'.
 func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	return to.GetDeliveryServicesByServerWithHdr(id, nil)
+}
+
+func (to *Session) GetDeliveryServicesByServerWithHdr(id int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var data tc.DeliveryServicesNullableResponse
 
-	reqInf, err := get(to, fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), &data, nil)
+	reqInf, err := get(to, fmt.Sprintf(API_SERVER_DELIVERY_SERVICES, id), &data, header)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -124,8 +128,7 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceNull
 	return data.Response, reqInf, nil
 }
 
-// GetDeliveryServicesNullable returns a slice of Delivery Services.
-func (to *Session) GetDeliveryServicesNullable(header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+func (to *Session) GetDeliveryServicesNullableWithHdr(header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
@@ -136,9 +139,12 @@ func (to *Session) GetDeliveryServicesNullable(header http.Header) ([]tc.Deliver
 	return data.Response, reqInf, nil
 }
 
-// GetDeliveryServicesByCDNID returns the (tenant-visible) Delivery Services within the CDN identified
-// by the integral, unique identifier 'cdnID'.
-func (to *Session) GetDeliveryServicesByCDNID(cdnID int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+// GetDeliveryServicesNullable returns a slice of Delivery Services.
+func (to *Session) GetDeliveryServicesNullable() ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	return to.GetDeliveryServicesNullableWithHdr(nil)
+}
+
+func (to *Session) GetDeliveryServicesByCDNIDWithHdr(cdnID int, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
@@ -149,9 +155,13 @@ func (to *Session) GetDeliveryServicesByCDNID(cdnID int, header http.Header) ([]
 	return data.Response, reqInf, nil
 }
 
-// GetDeliveryServiceNullable returns the Delivery Service identified by the integral, unique identifier
-// 'id' (which must be passed as a string).
-func (to *Session) GetDeliveryServiceNullable(id string, header http.Header) (*tc.DeliveryServiceNullable, ReqInf, error) {
+// GetDeliveryServicesByCDNID returns the (tenant-visible) Delivery Services within the CDN identified
+// by the integral, unique identifier 'cdnID'.
+func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	return to.GetDeliveryServicesByCDNIDWithHdr(cdnID, nil)
+}
+
+func (to *Session) GetDeliveryServiceNullableWithHdr(id string, header http.Header) (*tc.DeliveryServiceNullable, ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
 	}{}
@@ -165,10 +175,13 @@ func (to *Session) GetDeliveryServiceNullable(id string, header http.Header) (*t
 	return &data.Response[0], reqInf, nil
 }
 
-// GetDeliveryServiceByXMLIDNullable returns the Delivery Service identified by the passed XMLID.
-// The length of the returned slice should always be 1 when the request is succesful - if it isn't
-// something very wicked has happened to Traffic Ops.
-func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+// GetDeliveryServiceNullable returns the Delivery Service identified by the integral, unique identifier
+// 'id' (which must be passed as a string).
+func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNullable, ReqInf, error) {
+	return to.GetDeliveryServiceNullableWithHdr(id, nil)
+}
+
+func (to *Session) GetDeliveryServiceByXMLIDNullableWithHdr(XMLID string, header http.Header) ([]tc.DeliveryServiceNullable, ReqInf, error) {
 	var data tc.DeliveryServicesNullableResponse
 	reqInf, err := get(to, API_DELIVERY_SERVICES+"?xmlId="+XMLID, &data, header)
 	if err != nil {
@@ -178,10 +191,17 @@ func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string, header http.H
 	return data.Response, reqInf, nil
 }
 
+// GetDeliveryServiceByXMLIDNullable returns the Delivery Service identified by the passed XMLID.
+// The length of the returned slice should always be 1 when the request is succesful - if it isn't
+// something very wicked has happened to Traffic Ops.
+func (to *Session) GetDeliveryServiceByXMLIDNullable(XMLID string) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	return to.GetDeliveryServiceByXMLIDNullableWithHdr(XMLID, nil)
+}
+
 // CreateDeliveryServiceNullable creates the DeliveryService it's passed.
 func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable) (*tc.CreateDeliveryServiceNullableResponse, error) {
 	if ds.TypeID == nil && ds.Type != nil {
-		ty, _, err := to.GetTypeByName(ds.Type.String(), nil)
+		ty, _, err := to.GetTypeByName(ds.Type.String())
 		if err != nil {
 			return nil, err
 		}
@@ -192,7 +212,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {
-		cdns, _, err := to.GetCDNByName(*ds.CDNName, nil)
+		cdns, _, err := to.GetCDNByName(*ds.CDNName)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +223,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
-		profiles, _, err := to.GetProfileByName(*ds.ProfileName, nil)
+		profiles, _, err := to.GetProfileByName(*ds.ProfileName)
 		if err != nil {
 			return nil, err
 		}
@@ -214,7 +234,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {
-		ten, _, err := to.TenantByName(*ds.Tenant, nil)
+		ten, _, err := to.TenantByName(*ds.Tenant)
 		if err != nil {
 			return nil, err
 		}
@@ -261,9 +281,7 @@ func (to *Session) DeleteDeliveryService(id string) (*tc.DeleteDeliveryServiceRe
 	return &data, nil
 }
 
-// GetDeliveryServiceHealth gets the 'health' of the Delivery Service identified by the
-// integral, unique identifier 'id' (which must be passed as a string).
-func (to *Session) GetDeliveryServiceHealth(id string, header http.Header) (*tc.DeliveryServiceHealth, ReqInf, error) {
+func (to *Session) GetDeliveryServiceHealthWithHdr(id string, header http.Header) (*tc.DeliveryServiceHealth, ReqInf, error) {
 	var data tc.DeliveryServiceHealthResponse
 	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_HEALTH, id), &data, nil)
 	if err != nil {
@@ -273,9 +291,13 @@ func (to *Session) GetDeliveryServiceHealth(id string, header http.Header) (*tc.
 	return &data.Response, reqInf, nil
 }
 
-// GetDeliveryServiceCapacity gets the 'capacity' of the Delivery Service identified by the
+// GetDeliveryServiceHealth gets the 'health' of the Delivery Service identified by the
 // integral, unique identifier 'id' (which must be passed as a string).
-func (to *Session) GetDeliveryServiceCapacity(id string, header http.Header) (*tc.DeliveryServiceCapacity, ReqInf, error) {
+func (to *Session) GetDeliveryServiceHealth(id string) (*tc.DeliveryServiceHealth, ReqInf, error) {
+	return to.GetDeliveryServiceHealthWithHdr(id, nil)
+}
+
+func (to *Session) GetDeliveryServiceCapacityWithHdr(id string, header http.Header) (*tc.DeliveryServiceCapacity, ReqInf, error) {
 	var data tc.DeliveryServiceCapacityResponse
 	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_CAPACITY, id), &data, header)
 	if err != nil {
@@ -285,9 +307,19 @@ func (to *Session) GetDeliveryServiceCapacity(id string, header http.Header) (*t
 	return &data.Response, reqInf, nil
 }
 
+// GetDeliveryServiceCapacity gets the 'capacity' of the Delivery Service identified by the
+// integral, unique identifier 'id' (which must be passed as a string).
+func (to *Session) GetDeliveryServiceCapacity(id string) (*tc.DeliveryServiceCapacity, ReqInf, error) {
+	return to.GetDeliveryServiceCapacityWithHdr(id, nil)
+}
+
 // GetDeliveryServiceServer returns associations between Delivery Services and servers using the
 // provided pagination controls.
-func (to *Session) GetDeliveryServiceServer(page, limit string, header http.Header) ([]tc.DeliveryServiceServer, ReqInf, error) {
+func (to *Session) GetDeliveryServiceServer(page, limit string) ([]tc.DeliveryServiceServer, ReqInf, error) {
+	return to.GetDeliveryServiceServerWithHdr(page, limit, nil)
+}
+
+func (to *Session) GetDeliveryServiceServerWithHdr(page, limit string, header http.Header) ([]tc.DeliveryServiceServer, ReqInf, error) {
 	var data tc.DeliveryServiceServerResponse
 	reqInf, err := get(to, API_DELIVERY_SERVICE_SERVER+"?page="+page+"&limit="+limit, &data, header)
 	if err != nil {
@@ -299,7 +331,11 @@ func (to *Session) GetDeliveryServiceServer(page, limit string, header http.Head
 
 // GetDeliveryServiceRegexes returns the "Regexes" (Regular Expressions) used by all (tenant-visible)
 // Delivery Services.
-func (to *Session) GetDeliveryServiceRegexes(header http.Header) ([]tc.DeliveryServiceRegexes, ReqInf, error) {
+func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, ReqInf, error) {
+	return to.GetDeliveryServiceRegexesWithHdr(nil)
+}
+
+func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.DeliveryServiceRegexes, ReqInf, error) {
 	var data tc.DeliveryServiceRegexResponse
 	reqInf, err := get(to, API_DELIVERY_SERVICES_REGEXES, &data, header)
 	if err != nil {
@@ -311,7 +347,11 @@ func (to *Session) GetDeliveryServiceRegexes(header http.Header) ([]tc.DeliveryS
 
 // GetDeliveryServiceSSLKeysByID returns information about the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
-func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string, header http.Header) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
+func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
+	return to.GetDeliveryServiceSSLKeysByIDWithHdr(XMLID, nil)
+}
+
+func (to *Session) GetDeliveryServiceSSLKeysByIDWithHdr(XMLID string, header http.Header) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
 	var data tc.DeliveryServiceSSLKeysResponse
 	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICE_XMLID_SSL_KEYS, XMLID), &data, header)
 	if err != nil {
@@ -321,9 +361,7 @@ func (to *Session) GetDeliveryServiceSSLKeysByID(XMLID string, header http.Heade
 	return &data.Response, reqInf, nil
 }
 
-// GetDeliveryServicesEligible returns the servers eligible for assignment to the Delivery
-// Service identified by the integral, unique identifier 'dsID'.
-func (to *Session) GetDeliveryServicesEligible(dsID int, header http.Header) ([]tc.DSServer, ReqInf, error) {
+func (to *Session) GetDeliveryServicesEligibleWithHdr(dsID int, header http.Header) ([]tc.DSServer, ReqInf, error) {
 	resp := struct {
 		Response []tc.DSServer `json:"response"`
 	}{Response: []tc.DSServer{}}
@@ -335,9 +373,19 @@ func (to *Session) GetDeliveryServicesEligible(dsID int, header http.Header) ([]
 	return resp.Response, reqInf, nil
 }
 
+// GetDeliveryServicesEligible returns the servers eligible for assignment to the Delivery
+// Service identified by the integral, unique identifier 'dsID'.
+func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServer, ReqInf, error) {
+	return to.GetDeliveryServicesEligibleWithHdr(dsID, nil)
+}
+
+func (to *Session) GetDeliveryServiceURLSigKeys(dsName string) (tc.URLSigKeys, ReqInf, error) {
+	return to.GetDeliveryServiceURLSigKeysWithHdr(dsName, nil)
+}
+
 // GetDeliveryServiceURLSigKeys returns the URL-signing keys used by the Delivery Service
 // identified by the XMLID 'dsName'.
-func (to *Session) GetDeliveryServiceURLSigKeys(dsName string, header http.Header) (tc.URLSigKeys, ReqInf, error) {
+func (to *Session) GetDeliveryServiceURLSigKeysWithHdr(dsName string, header http.Header) (tc.URLSigKeys, ReqInf, error) {
 	data := struct {
 		Response tc.URLSigKeys `json:"response"`
 	}{}
@@ -349,9 +397,13 @@ func (to *Session) GetDeliveryServiceURLSigKeys(dsName string, header http.Heade
 	return data.Response, reqInf, nil
 }
 
+func (to *Session) GetDeliveryServiceURISigningKeys(dsName string) ([]byte, ReqInf, error) {
+	return to.GetDeliveryServiceURISigningKeysWithHdr(dsName, nil)
+}
+
 // GetDeliveryServiceURISigningKeys returns the URI-signing keys used by the Delivery Service
 // identified by the XMLID 'dsName'. The result is not parsed.
-func (to *Session) GetDeliveryServiceURISigningKeys(dsName string, header http.Header) ([]byte, ReqInf, error) {
+func (to *Session) GetDeliveryServiceURISigningKeysWithHdr(dsName string, header http.Header) ([]byte, ReqInf, error) {
 	data := json.RawMessage{}
 	reqInf, err := get(to, fmt.Sprintf(API_DELIVERY_SERVICES_URI_SIGNING_KEYS, dsName), &data, header)
 	if err != nil {

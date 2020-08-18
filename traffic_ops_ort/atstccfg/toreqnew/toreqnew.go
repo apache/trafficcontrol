@@ -76,7 +76,7 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]tc.DeliveryServiceNulla
 	deliveryServices := []tc.DeliveryServiceNullable{}
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
-		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID, nil)
+		toDSes, reqInf, err := cl.C.GetDeliveryServicesByCDNID(cdnID)
 		if err != nil {
 			if IsUnsupportedErr(err) {
 				unsupported = true
@@ -101,7 +101,7 @@ func (cl *TOClient) GetTopologies() ([]tc.Topology, bool, error) {
 	topologies := []tc.Topology{}
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "topologies", &topologies, func(obj interface{}) error {
-		toTopologies, reqInf, err := cl.C.GetTopologies(nil)
+		toTopologies, reqInf, err := cl.C.GetTopologies()
 		if err != nil {
 			if IsUnsupportedErr(err) {
 				unsupported = true
@@ -126,7 +126,7 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.Server
 	status := tc.ServerUpdateStatus{}
 	unsupported := false
 	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), &status, func(obj interface{}) error {
-		toStatus, reqInf, err := cl.C.GetServerUpdateStatus(string(cacheHostName), nil)
+		toStatus, reqInf, err := cl.C.GetServerUpdateStatus(string(cacheHostName))
 		if err != nil {
 			if IsUnsupportedErr(err) {
 				unsupported = true

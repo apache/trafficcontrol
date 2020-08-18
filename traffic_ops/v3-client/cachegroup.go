@@ -35,7 +35,7 @@ const (
 // Create a CacheGroup.
 func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
 	if cachegroup.TypeID == nil && cachegroup.Type != nil {
-		ty, _, err := to.GetTypeByName(*cachegroup.Type, nil)
+		ty, _, err := to.GetTypeByName(*cachegroup.Type)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
@@ -46,7 +46,7 @@ func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*
 	}
 
 	if cachegroup.ParentCachegroupID == nil && cachegroup.ParentName != nil {
-		p, _, err := to.GetCacheGroupNullableByName(*cachegroup.ParentName, nil)
+		p, _, err := to.GetCacheGroupNullableByName(*cachegroup.ParentName)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
@@ -57,7 +57,7 @@ func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*
 	}
 
 	if cachegroup.SecondaryParentCachegroupID == nil && cachegroup.SecondaryParentName != nil {
-		p, _, err := to.GetCacheGroupNullableByName(*cachegroup.SecondaryParentName, nil)
+		p, _, err := to.GetCacheGroupNullableByName(*cachegroup.SecondaryParentName)
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
@@ -109,8 +109,7 @@ func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroup
 	return &cachegroupResp, reqInf, nil
 }
 
-// Returns a list of CacheGroups.
-func (to *Session) GetCacheGroupsNullable(header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
+func (to *Session) GetCacheGroupsNullableWithHdr(header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_CACHEGROUPS, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -125,8 +124,12 @@ func (to *Session) GetCacheGroupsNullable(header http.Header) ([]tc.CacheGroupNu
 	return data.Response, reqInf, nil
 }
 
-// GET a CacheGroup by the CacheGroup ID.
-func (to *Session) GetCacheGroupNullableByID(id int, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
+// Returns a list of CacheGroups.
+func (to *Session) GetCacheGroupsNullable() ([]tc.CacheGroupNullable, ReqInf, error) {
+	return to.GetCacheGroupsNullableWithHdr(nil)
+}
+
+func (to *Session) GetCacheGroupNullableByIDWithHdr(id int, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%v", API_CACHEGROUPS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -143,8 +146,12 @@ func (to *Session) GetCacheGroupNullableByID(id int, header http.Header) ([]tc.C
 	return data.Response, reqInf, nil
 }
 
-// GET a CacheGroup by the CacheGroup name.
-func (to *Session) GetCacheGroupNullableByName(name string, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
+// GET a CacheGroup by the CacheGroup ID.
+func (to *Session) GetCacheGroupNullableByID(id int) ([]tc.CacheGroupNullable, ReqInf, error) {
+	return to.GetCacheGroupNullableByIDWithHdr(id, nil)
+}
+
+func (to *Session) GetCacheGroupNullableByNameWithHdr(name string, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", API_CACHEGROUPS, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -167,8 +174,12 @@ func (to *Session) GetCacheGroupNullableByName(name string, header http.Header) 
 	return data.Response, reqInf, nil
 }
 
-// GET a CacheGroup by the CacheGroup short name.
-func (to *Session) GetCacheGroupNullableByShortName(shortName string, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
+// GET a CacheGroup by the CacheGroup name.
+func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNullable, ReqInf, error) {
+	return to.GetCacheGroupNullableByNameWithHdr(name, nil)
+}
+
+func (to *Session) GetCacheGroupNullableByShortNameWithHdr(shortName string, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
 	route := fmt.Sprintf("%s?shortName=%s", API_CACHEGROUPS, url.QueryEscape(shortName))
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil, header)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -191,6 +202,11 @@ func (to *Session) GetCacheGroupNullableByShortName(shortName string, header htt
 	return data.Response, reqInf, nil
 }
 
+// GET a CacheGroup by the CacheGroup short name.
+func (to *Session) GetCacheGroupNullableByShortName(shortName string) ([]tc.CacheGroupNullable, ReqInf, error) {
+	return to.GetCacheGroupNullableByShortNameWithHdr(shortName, nil)
+}
+
 // DELETE a CacheGroup by ID.
 func (to *Session) DeleteCacheGroupByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_CACHEGROUPS, id)
@@ -208,7 +224,11 @@ func (to *Session) DeleteCacheGroupByID(id int) (tc.Alerts, ReqInf, error) {
 }
 
 // GetCacheGroupsByQueryParams gets cache groups by the given query parameters.
-func (to *Session) GetCacheGroupsByQueryParams(qparams url.Values, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
+func (to *Session) GetCacheGroupsByQueryParams(qparams url.Values) ([]tc.CacheGroupNullable, ReqInf, error) {
+	return to.GetCacheGroupsByQueryParamsWithHdr(qparams, nil)
+}
+
+func (to *Session) GetCacheGroupsByQueryParamsWithHdr(qparams url.Values, header http.Header) ([]tc.CacheGroupNullable, ReqInf, error) {
 	route := API_CACHEGROUPS
 	if len(qparams) > 0 {
 		route += "?" + qparams.Encode()

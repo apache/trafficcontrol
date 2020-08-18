@@ -41,7 +41,7 @@ func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 }
 
 func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top", nil)
+	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds-top")
 	if err != nil {
 		t.Fatalf("cannot GET delivery service 'ds-top': %s", err.Error())
 	}
@@ -51,7 +51,7 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	if ds[0].Topology == nil {
 		t.Fatal("expected delivery service: 'ds-top' to have a non-nil Topology, actual: nil")
 	}
-	serversResp, _, err := TOSession.GetServers(nil, nil)
+	serversResp, _, err := TOSession.GetServers(nil)
 	servers := []tc.ServerNullable{}
 	for _, s := range serversResp.Response {
 		if s.CDNID != nil && *s.CDNID == *ds[0].CDNID && s.Type == tc.CacheTypeEdge.String() {
@@ -123,7 +123,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		t.Run(ctc.description, func(t *testing.T) {
 			params := url.Values{}
 			params.Add("hostName", ctc.serverName)
-			resp, _, err := TOSession.GetServers(&params, nil)
+			resp, _, err := TOSession.GetServers(&params)
 			if err != nil {
 				t.Fatalf("cannot GET Server by hostname: %v", err)
 			}
@@ -158,7 +158,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 }
 
 func CreateTestMSODSServerWithReqCap(t *testing.T) {
-	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("msods1"), nil, nil)
+	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("msods1"), nil)
 	if err != nil {
 		t.Fatalf("GET delivery service required capabilites: %v", err)
 	}
@@ -171,7 +171,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	// TODO: DON'T hard-code server hostnames!
 	params := url.Values{}
 	params.Add("hostName", "denver-mso-org-01")
-	resp, _, err := TOSession.GetServers(&params, nil)
+	resp, _, err := TOSession.GetServers(&params)
 	if err != nil {
 		t.Fatalf("GET server denver-mso-org-01: %v", err)
 	}
@@ -186,7 +186,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Make sure server has no caps to ensure test correctness
-	sccs, _, err := TOSession.GetServerServerCapabilities(s.ID, nil, nil, nil)
+	sccs, _, err := TOSession.GetServerServerCapabilities(s.ID, nil, nil)
 	if err != nil {
 		t.Fatalf("GET server server capabilities for denver-mso-org-01: %v", err)
 	}
@@ -195,7 +195,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Is origin included in eligible servers even though it doesnt have required capability
-	eServers, _, err := TOSession.GetDeliveryServicesEligible(*dsReqCap[0].DeliveryServiceID, nil)
+	eServers, _, err := TOSession.GetDeliveryServicesEligible(*dsReqCap[0].DeliveryServiceID)
 	if err != nil {
 		t.Fatalf("GET delivery service msods1 eligible servers: %v", err)
 	}
@@ -252,7 +252,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
 
-	dsServers, _, err := TOSession.GetDeliveryServiceServers(nil)
+	dsServers, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
 		t.Errorf("GET delivery service servers: %v", err)
 	}
@@ -272,7 +272,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Errorf("DELETE delivery service server: %v", err)
 	}
 
-	dsServers, _, err = TOSession.GetDeliveryServiceServers(nil)
+	dsServers, _, err = TOSession.GetDeliveryServiceServers()
 	if err != nil {
 		t.Errorf("GET delivery service servers: %v", err)
 	}
@@ -290,7 +290,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 }
 
 func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullable, tc.ServerNullable) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable(nil)
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
 	}
@@ -298,7 +298,7 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceNullable, tc.Serve
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
-	resp, _, err := TOSession.GetServers(nil, nil)
+	resp, _, err := TOSession.GetServers(nil)
 	if err != nil {
 		t.Fatalf("cannot GET Servers: %v", err)
 	}
