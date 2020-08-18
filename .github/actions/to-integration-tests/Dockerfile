@@ -18,7 +18,7 @@
 FROM golang:1.14.2-alpine
 
 ENV CGO_ENABLED=0
-RUN apk-add gettext git
+RUN apk add --no-cache gettext git
 
 COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
 RUN chmod a+x /entrypoint.sh
