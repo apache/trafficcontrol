@@ -15,13 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-buster
+FROM golang:1.14.2-alpine
 
-RUN apt-get update &&\
-	apt-get install -y --no-install-recommends git gcc gettext-base postgresql-client-11 &&\
-	rm -rf /var/lib/apt/lists/*
-RUN go get -v bitbucket.org/liamstask/goose/cmd/goose
-RUN mv $GOPATH/bin/goose /bin/
+RUN apk add --no-cache git gcc gettext postgresql-client musl-dev &&\
+	go get -v bitbucket.org/liamstask/goose/cmd/goose &&\
+	mv $GOPATH/bin/goose /bin/ &&\
+	apk del git gcc musl-dev
+
 
 COPY entrypoint.sh dbconf.yml /
 RUN chmod a+x /entrypoint.sh

@@ -15,11 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.14.2-buster
+FROM golang:1.14.2-alpine
 
-RUN apt-get update &&\
-	apt-get install -y --no-install-recommends gettext-base git gcc &&\
-	rm -rf /var/lib/apt/lists/*
+ENV CGO_ENABLED=0
+RUN apk-add gettext git
 
 COPY entrypoint.sh database.json traffic-ops-test.json cdn.json /
 RUN chmod a+x /entrypoint.sh
