@@ -31,7 +31,16 @@ module.exports = angular.module('trafficPortal.private.cdns.servers', [])
 								return cdnService.getCDN($stateParams.cdnId);
 							},
 							servers: function($stateParams, serverService) {
-								return serverService.getServers({ cdn: $stateParams.cdnId, orderby: 'hostName' });
+								return serverService.getServers({ orderby: 'hostName' });
+							},
+							filter: function(cdn) {
+								return {
+									cdnName: {
+										filterType: "text",
+										type: "equals",
+										filter: cdn.name
+									}
+								}
 							}
 						}
 					}
